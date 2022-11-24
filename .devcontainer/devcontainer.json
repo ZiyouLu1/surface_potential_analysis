@@ -1,9 +1,7 @@
 {
   "name": "Python Dev Environment",
 
-  "build": {
-    "dockerfile": ".Dockerfile"
-  }
+  "build": { "dockerfile": ".Dockerfile" },
   // Features to add to the dev container. More info: https://containers.dev/implementors/features.
   // "features": {},
 
@@ -11,7 +9,7 @@
   // "forwardPorts": [],
 
   // Use 'postCreateCommand' to run commands after the container is created.
-  // "postCreateCommand": "uname -a",
+  "postCreateCommand": "pip install -r requirements.txt"
 
   // Configure tool-specific properties.
   // "customizations": {},
