@@ -1,6 +1,6 @@
 import math
 from functools import cached_property
-from typing import Any, Tuple, TypedDict
+from typing import Any, Tuple
 
 import numpy as np
 import scipy.special
@@ -8,6 +8,7 @@ from numpy.typing import NDArray
 from scipy.constants import hbar
 
 from energy_data import EnergyInterpolation
+from sho_config import SHOConfig
 
 
 def calculate_sho_wavefunction(z_points, sho_omega, mass, n):
@@ -24,20 +25,11 @@ def check_hermite_normalization(z_points, sho_omega, mass, n):
     pass
 
 
-class SurfaceHamiltonianConfig(TypedDict):
-    sho_omega: float
-    """Angular frequency (in rad s-1) of the sho we will fit using"""
-    mass: float
-    """Mass in Kg"""
-    z_offset: float
-    """z position of the nz=0 position in the sho well"""
-
-
 class SurfaceHamiltonian:
 
     _potential: EnergyInterpolation
 
-    _config: SurfaceHamiltonianConfig
+    _config: SHOConfig
 
     _resolution: Tuple[int, int, int]
 
@@ -47,7 +39,7 @@ class SurfaceHamiltonian:
         self,
         resolution: Tuple[int, int, int],
         potential: EnergyInterpolation,
-        config: SurfaceHamiltonianConfig,
+        config: SHOConfig,
     ) -> None:
 
         self._potential = potential
@@ -190,5 +182,5 @@ if __name__ == "__main__":
         "delta_y": 2 * np.pi * hbar,
         "dz": 1,
     }
-    config: SurfaceHamiltonianConfig = {"mass": 1, "sho_omega": 1 / hbar, "z_offset": 0}
+    config: SHOConfig = {"mass": 1, "sho_omega": 1 / hbar, "z_offset": 0}
     hamiltonian = SurfaceHamiltonian((2, 2, 2), data, config)

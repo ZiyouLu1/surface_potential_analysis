@@ -23,7 +23,6 @@ class TestSurfaceHamiltonian(unittest.TestCase):
         }
 
         extended = repeat_original_data(data)
-        print(np.array(extended["points"]).shape)
         self.assertTrue(np.array_equal(np.array(extended["points"]).shape, (6, 6, 2)))
 
     def test_repeat_original_data_spacing(self) -> None:
@@ -76,7 +75,6 @@ class TestSurfaceHamiltonian(unittest.TestCase):
         }
 
         extended = extend_z_data(data)
-
         self.assertTrue(np.array_equal(extended["points"], [[[1, 1, 1, 2, 3, 3, 3]]]))
         self.assertTrue(
             np.array_equal(extended["z_points"], [-2.0, -1.0, 0.0, 1.0, 4.0, 7.0, 10.0])

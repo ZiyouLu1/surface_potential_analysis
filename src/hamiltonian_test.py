@@ -5,7 +5,8 @@ import numpy as np
 from scipy.constants import hbar
 
 from energy_data import EnergyInterpolation
-from hamiltonian import SurfaceHamiltonian, SurfaceHamiltonianConfig
+from hamiltonian import SurfaceHamiltonian
+from sho_config import SHOConfig
 
 
 def generate_random_potential(width=5):
@@ -29,7 +30,7 @@ def generate_symmetrical_points(height, width=5):
 
 class TestSurfaceHamiltonian(unittest.TestCase):
     def test_diagonal_energies(self) -> None:
-        config: SurfaceHamiltonianConfig = {
+        config: SHOConfig = {
             "mass": 1,
             "sho_omega": 1 / hbar,
             "z_offset": 0,
@@ -54,7 +55,7 @@ class TestSurfaceHamiltonian(unittest.TestCase):
 
         xt, yt, zt = np.meshgrid(range(nkx), range(nky), range(nz), indexing="ij")
         expected = np.array([xt.ravel(), yt.ravel(), zt.ravel()]).T
-        config: SurfaceHamiltonianConfig = {
+        config: SHOConfig = {
             "mass": 1,
             "sho_omega": 1 / hbar,
             "z_offset": 0,
@@ -78,7 +79,7 @@ class TestSurfaceHamiltonian(unittest.TestCase):
         nky = random.randrange(1, 20)
         nz = random.randrange(1, 100)
 
-        config: SurfaceHamiltonianConfig = {
+        config: SHOConfig = {
             "mass": 1,
             "sho_omega": 1 / hbar,
             "z_offset": 0,
@@ -96,7 +97,7 @@ class TestSurfaceHamiltonian(unittest.TestCase):
             self.assertEqual(i, hamiltonian.get_index(*c))
 
     def test_get_sho_potential(self) -> None:
-        config: SurfaceHamiltonianConfig = {
+        config: SHOConfig = {
             "mass": 1,
             "sho_omega": 1,
             "z_offset": -2,
@@ -116,7 +117,7 @@ class TestSurfaceHamiltonian(unittest.TestCase):
         ny = random.randrange(2, 20)
         nz = random.randrange(2, 100)
 
-        config: SurfaceHamiltonianConfig = {
+        config: SHOConfig = {
             "mass": 1,
             "sho_omega": 1,
             "z_offset": -20,
@@ -146,7 +147,7 @@ class TestSurfaceHamiltonian(unittest.TestCase):
         ny = random.randrange(2, 10) * 2
         x_points = np.linspace(0, 2 * np.pi * hbar, num=nx)
         y_points = np.linspace(0, 2 * np.pi * hbar, num=ny)
-        config: SurfaceHamiltonianConfig = {
+        config: SHOConfig = {
             "mass": 1,
             "sho_omega": 1,
             "z_offset": -2,
@@ -166,7 +167,7 @@ class TestSurfaceHamiltonian(unittest.TestCase):
         x_points = np.linspace(0, 2 * np.pi * hbar, 4, endpoint=False).tolist()
         y_points = np.linspace(0, 2 * np.pi * hbar, 4, endpoint=False).tolist()
 
-        config: SurfaceHamiltonianConfig = {
+        config: SHOConfig = {
             "mass": 1,
             "sho_omega": 1,
             "z_offset": -2,
@@ -209,7 +210,7 @@ class TestSurfaceHamiltonian(unittest.TestCase):
         y_points = np.linspace(0, 2 * np.pi * hbar, ny).tolist()
 
         points = generate_symmetrical_points(nz, nx)
-        config: SurfaceHamiltonianConfig = {
+        config: SHOConfig = {
             "mass": 1,
             "sho_omega": 1,
             "z_offset": -2,
@@ -232,7 +233,7 @@ class TestSurfaceHamiltonian(unittest.TestCase):
         y_points = np.linspace(0, 2 * np.pi * hbar, ny).tolist()
 
         resolution = (2, 2, 2)
-        config: SurfaceHamiltonianConfig = {
+        config: SHOConfig = {
             "mass": 1,
             "sho_omega": 1,
             "z_offset": -20,

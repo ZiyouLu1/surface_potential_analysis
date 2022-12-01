@@ -206,8 +206,9 @@ def extend_z_data(data: EnergyData, extend_by: int = 2) -> EnergyData:
     z_extended_points = np.zeros(shape=(old_shape[0], old_shape[1], z_len))
 
     z_extended_points[:, :, extend_by:-extend_by] = old_points
-    z_extended_points[:, :, :extend_by] = old_points[:, :, 0]
-    z_extended_points[:, :, -extend_by:] = old_points[:, :, -1]
+    for x in range(extend_by):
+        z_extended_points[:, :, x] = old_points[:, :, 0]
+        z_extended_points[:, :, -(x + 1)] = old_points[:, :, -1]
 
     z_points = np.zeros(shape=(z_len))
     z_points[extend_by:-extend_by] = np.array(data["z_points"])
@@ -272,22 +273,25 @@ def generate_interpolator(
 def interpolate_energies_grid(
     data: EnergyData, shape: Tuple[int, int, int] = (40, 40, 100)
 ) -> EnergyData:
-
-    x_points = list(np.linspace(data["x_points"][0], data["x_points"][-1], shape[0]))
-    y_points = list(np.linspace(data["y_points"][0], data["y_points"][-1], shape[1]))
+    delta_x = get_xy_points_delta(data["x_points"])
+    x_points = np.linspace(
+        data["x_points"][0], data["x_points"][0] + delta_x, shape[0], endpoint=False
+    )
+    delta_y = get_xy_points_delta(data["y_points"])
+    y_points = np.linspace(
+        data["y_points"][0], data["y_points"][0] + delta_y, shape[1], endpoint=False
+    )
     z_points = list(np.linspace(data["z_points"][0], data["z_points"][-1], shape[2]))
 
     interpolator = generate_interpolator(data)
     xt, yt, zt = np.meshgrid(x_points, y_points, z_points, indexing="ij")
     test_points = np.array([xt.ravel(), yt.ravel(), zt.ravel()]).T
-    points: List[List[List[float]]] = (
-        interpolator(test_points, method="quintic").reshape(*shape).tolist()
-    )
+    points = interpolator(test_points, method="quintic").reshape(*shape)
 
     return {
-        "points": points,
-        "x_points": x_points,
-        "y_points": y_points,
+        "points": points.tolist(),
+        "x_points": x_points.tolist(),
+        "y_points": y_points.tolist(),
         "z_points": z_points,
     }
 

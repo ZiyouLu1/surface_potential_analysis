@@ -33,7 +33,7 @@
     "xlabel",
     "ylabel"
   ],
-  "python.linting.flake8Args": ["--ignore=E501,W503"],
+  "python.linting.flake8Args": ["--ignore=E501,W503,E203,E301"],
   "python.testing.unittestArgs": ["-v", "-s", "./src", "-p", "*test.py"],
   "python.testing.pytestEnabled": false,
   "python.testing.unittestEnabled": true,
