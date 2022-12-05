@@ -1,9 +1,12 @@
 import math
+from typing import Tuple
 
 import matplotlib.pyplot as plt
 import numpy as np
 
-from energy_data import EnergyData, add_back_symmetry_points
+from energy_data import EnergyData, EnergyInterpolation, add_back_symmetry_points
+from hamiltonian import SurfaceHamiltonian
+from sho_config import SHOConfig
 
 
 def plot_z_direction_energy_data(
@@ -115,6 +118,8 @@ def plot_xz_plane_energy(data: EnergyData) -> None:
 
     axs[0][1].sharey(axs[0][0])
     axs[0][2].sharey(axs[0][0])
+    axs[1][0].sharex(axs[0][0])
+    axs[1][2].sharex(axs[0][2])
 
     axs[0][0].set_xlabel("x Position")
     axs[0][0].set_ylabel("z position /m")
@@ -126,6 +131,75 @@ def plot_xz_plane_energy(data: EnergyData) -> None:
     axs[1][2].set_title("Equilibrium Energies")
 
     fig.suptitle("Plot of energy through several planes perpendicular to xy")
+    fig.tight_layout()
+    fig.show()
+    fig.savefig("temp.png")
+
+
+def plot_interpolation_with_sho(
+    interpolation: EnergyInterpolation, sho_config: SHOConfig
+):
+    fig, ax = plt.subplots()
+
+    points = np.array(interpolation["points"])
+    middle_x_index = math.floor(points.shape[0] / 2)
+    middle_y_index = math.floor(points.shape[1] / 2)
+    start_z = sho_config["z_offset"]
+    end_z = interpolation["dz"] * (points.shape[2] - 1) + sho_config["z_offset"]
+    z_points = np.linspace(start_z, end_z, points.shape[2])
+
+    ax.plot(z_points, points[middle_x_index, middle_y_index])
+    sho_pot = 0.5 * sho_config["mass"] * (sho_config["sho_omega"] * z_points) ** 2
+    ax.plot(z_points, sho_pot)
+
+    max_potential = 1e-18
+    ax.set_ylim(0, max_potential)
+
+    fig.tight_layout()
+    fig.show()
+    fig.savefig("temp.png")
+
+
+def plot_energy_eigenvalues(hamiltonian: SurfaceHamiltonian):
+    fig, ax = plt.subplots()
+    for e in hamiltonian.eigenvalues:
+        ax.plot([0, 1], [e, e])
+
+    fig.tight_layout()
+    fig.show()
+    fig.savefig("temp.png")
+
+
+def plot_ground_state(hamiltonian: SurfaceHamiltonian):
+    amin = np.argmin(hamiltonian.eigenvalues)
+    eigenvector = hamiltonian.eigenvectors[:, amin]
+    fig, ax = plt.subplots()
+
+    z_points = np.linspace(hamiltonian.z_points[0], hamiltonian.z_points[-1], 1000)
+    points = np.array(
+        [(hamiltonian.delta_x / 2, hamiltonian.delta_y / 2, z) for z in z_points]
+    )
+    wfn = np.abs(hamiltonian.calculate_wavefunction(points, eigenvector))
+    z_max = z_points[np.argmax(wfn)]
+    ax.plot(z_points - z_max, wfn, label="Z direction")
+
+    x_points = np.linspace(hamiltonian.x_points[0], hamiltonian.x_points[-1], 1000)
+    points = np.array([(x, hamiltonian.delta_y / 2, z_max) for x in x_points])
+    ax.plot(
+        x_points - hamiltonian.delta_x / 2,
+        np.abs(hamiltonian.calculate_wavefunction(points, eigenvector)),
+        label="X-Y direction through bridge",
+    )
+
+    points = np.array([(x, x, z_max) for x in x_points])
+    ax.plot(
+        np.sqrt(2) * (x_points - hamiltonian.delta_x / 2),
+        np.abs(hamiltonian.calculate_wavefunction(points, eigenvector)),
+        label="X-Y direction through Top",
+    )
+    ax.set_title("Plot of the ground state wavefunction about the probability maximum")
+    ax.legend()
+
     fig.tight_layout()
     fig.show()
     fig.savefig("temp.png")

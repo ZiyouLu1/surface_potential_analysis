@@ -13,6 +13,20 @@ class EnergyData(TypedDict):
     points: List[List[List[float]]]
 
 
+def load_energy_data(path: Path) -> EnergyData:
+    with path.open("r") as f:
+        out = json.load(f)
+        # TODO
+        out["sho_omega"] = 1
+        out["mass"] = 1
+        return out
+
+
+def save_energy_data(data: EnergyData, path: Path) -> None:
+    with path.open("w") as f:
+        json.dump(data, f)
+
+
 class EnergyInterpolation(TypedDict):
     delta_x: float
     delta_y: float
@@ -49,16 +63,6 @@ def as_interpolation(data: EnergyData) -> EnergyInterpolation:
         raise AssertionError("z Points Not evenly spaced")
 
     return {"delta_x": delta_x, "delta_y": delta_y, "dz": dz, "points": data["points"]}
-
-
-def load_raw_energy_data() -> EnergyData:
-    path = Path(__file__).parent / "data" / "raw_energies.json"
-    with path.open("r") as f:
-        out = json.load(f)
-        # TODO
-        out["sho_omega"] = 1
-        out["mass"] = 1
-        return out
 
 
 def normalize_energy(data: EnergyData) -> EnergyData:
@@ -269,7 +273,6 @@ def generate_interpolator(
     )
 
 
-# TODO: symmetry, extend beyond
 def interpolate_energies_grid(
     data: EnergyData, shape: Tuple[int, int, int] = (40, 40, 100)
 ) -> EnergyData:

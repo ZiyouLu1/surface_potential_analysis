@@ -12,6 +12,7 @@
   "editor.formatOnSave": true,
   "cSpell.words": [
     "dtype",
+    "eigenstates",
     "hbar",
     "ifft",
     "imshow",
@@ -19,6 +20,8 @@
     "matplotlib",
     "meshgrid",
     "ncols",
+    "ndkx",
+    "ndky",
     "nrows",
     "prefactor",
     "pyplot",
@@ -39,5 +42,6 @@
   "python.testing.unittestEnabled": true,
   "[json]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"
-  }
+  },
+  "rust-analyzer.linkedProjects": ["./src/hamiltonian_diag/Cargo.toml"]
 }

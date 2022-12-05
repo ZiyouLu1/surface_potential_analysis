@@ -40,8 +40,8 @@ class TestSurfaceHamiltonian(unittest.TestCase):
         extended = repeat_original_data(data)
         expected_xy_points = np.linspace(-delta_xy, 2 * delta_xy, 3 * (n_xy - 1) + 1)
 
-        self.assertTrue(np.array_equal(expected_xy_points[:-1], extended["x_points"]))
-        self.assertTrue(np.array_equal(expected_xy_points[:-1], extended["y_points"]))
+        self.assertTrue(np.allclose(expected_xy_points[:-1], extended["x_points"]))
+        self.assertTrue(np.allclose(expected_xy_points[:-1], extended["y_points"]))
 
     def test_add_back_symmetry_points(self) -> None:
         delta_xy = 2 * np.pi * hbar

@@ -22,7 +22,7 @@ def get_minimum_coordinate(arr: ArrayLike) -> Tuple[int, ...]:
 
 
 def generate_sho_config_minimum(
-    interpolation: EnergyInterpolation, mass: float
+    interpolation: EnergyInterpolation, mass: float, initial_guess: float = 1.0
 ) -> SHOConfig:
     points = np.array(interpolation["points"])
     min_coord = get_minimum_coordinate(points)
@@ -33,7 +33,7 @@ def generate_sho_config_minimum(
     far_edge_energy = z_points[-1]
     # We choose a region that is suitably harmonic
     # ie we cut off the tail of the potential
-    fit_max_energy = 0.8 * far_edge_energy
+    fit_max_energy = 0.5 * far_edge_energy
     above_threshold = (z_indexes > min_z) & (z_points > fit_max_energy)
     # Stops at the first above threshold
     max_index: int = int(np.argmax(above_threshold) - 1)
@@ -51,6 +51,7 @@ def generate_sho_config_minimum(
         f=fitting_f,
         xdata=np.arange(min_index, max_index + 1) * interpolation["dz"] + z_offset,
         ydata=z_points[min_index : max_index + 1],
+        p0=[initial_guess],
     )
     # TODO: Change meaning of x_offset
     return {"mass": mass, "sho_omega": opt_params[0], "z_offset": z_offset}
