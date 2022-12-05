@@ -1,3 +1,4 @@
+#![warn(clippy::all, clippy::pedantic, clippy::nursery, clippy::cargo)]
 use std::{collections::HashMap, f64::consts::PI};
 
 use pyo3::prelude::*;
@@ -18,27 +19,27 @@ const fn hermite_coefficient(n: i64, m: i64) -> i64 {
         _ => 0,
     }
 }
-
+#[allow(clippy::cast_precision_loss)]
 fn hermite_val(x: f64, n: u32) -> f64 {
-    return (0..=n)
+    (0..=n)
         .map(|m| (hermite_coefficient(n.into(), m.into()) as f64) * x.powi(m.try_into().unwrap()))
-        .sum();
+        .sum()
 }
 
 fn calculate_sho_wavefunction(z_points: Vec<f64>, sho_omega: f64, mass: f64, n: u32) -> Vec<f64> {
     let norm = ((sho_omega * mass) / REDUCED_PLANCK_CONSTANT).sqrt();
-    let prefactor = (norm / (((2_u32.pow(n) * factorial(n)) as f64) * PI.sqrt())).sqrt();
-    return z_points
+    let prefactor = (norm / (f64::from(2_u32.pow(n) * factorial(n)) * PI.sqrt())).sqrt();
+    z_points
         .into_iter()
         .map(|p| -> f64 {
             let normalized_p = p * norm;
             let hermite_val = hermite_val(normalized_p, n);
             prefactor * hermite_val * f64::exp(-normalized_p.powi(2) / 2.0)
         })
-        .collect();
+        .collect()
 }
 
-const PLANCK_CONSTANT: f64 = 6.62607015E-34;
+const PLANCK_CONSTANT: f64 = 6.626_070_15E-34;
 const REDUCED_PLANCK_CONSTANT: f64 = PLANCK_CONSTANT / (2.0 * PI);
 
 struct SHOConfig {
@@ -65,20 +66,20 @@ impl SurfaceHamiltonian {
     }
 
     fn get_nx(&self) -> usize {
-        return self.ft_potential.len();
+        self.ft_potential.len()
     }
 
     fn get_ny(&self) -> usize {
-        return self.ft_potential[0].len();
+        self.ft_potential[0].len()
     }
 
     fn get_nz(&self) -> usize {
-        return self.ft_potential[0][0].len();
+        self.ft_potential[0][0].len()
     }
 
     fn get_z_points(&self) -> Vec<f64> {
         (0..self.get_nz())
-            .map(|i| self.dz * (i as f64) + self.sho_config.z_offset)
+            .map(|i| self.dz.mul_add(i as f64, self.sho_config.z_offset))
             .collect()
     }
 
@@ -124,7 +125,7 @@ impl SurfaceHamiltonian {
                             .sum::<f64>()
                             * self.dz;
                         g_points.insert((ndkx, ndky, *nz1, *nz2), out);
-                        return out;
+                        out
                     })
                     .collect()
             })
