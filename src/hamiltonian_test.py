@@ -355,29 +355,16 @@ class TestSurfaceHamiltonian(unittest.TestCase):
                     self.assertAlmostEqual(sho_norm, 0.0)
 
     def test_get_sho_rust(self) -> None:
-        config: SHOConfig = {
-            "mass": hbar**2,
-            "sho_omega": 1 / hbar,
-            "z_offset": 0,
-        }
-        data: EnergyInterpolation = {
-            "points": np.zeros(shape=(2, 2, 2)).tolist(),
-            "delta_x": 2 * np.pi * hbar,
-            "delta_y": 2 * np.pi * hbar,
-            "dz": 1,
-        }
-        hamiltonian = SurfaceHamiltonian((2, 2, 10), data, config)
+
+        mass = hbar**2 * random.random()
+        sho_omega = random.random() / hbar
+        z_points = np.linspace(-20 * random.random(), 20 * random.random(), 1000)
 
         for n in range(10):
-            actual = hamiltonian_diag.calculate_sho_wavefunction(
-                n,
-                hamiltonian.get_ft_potential().tolist(),
-                hamiltonian.dz,
-                hamiltonian.mass,
-                hamiltonian.sho_omega,
-                hamiltonian.z_offset,
+            actual = hamiltonian_diag.get_sho_wavefunction(
+                z_points.tolist(), sho_omega, mass, n
             )
-            expected = hamiltonian._calculate_sho_wavefunction_points(n)
+            expected = calculate_sho_wavefunction(z_points, sho_omega, mass, n)
 
             np.testing.assert_allclose(actual, expected)
 

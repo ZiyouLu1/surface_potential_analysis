@@ -169,6 +169,23 @@ def plot_energy_eigenvalues(hamiltonian: SurfaceHamiltonian):
     fig.savefig("temp.png")
 
 
+def moving_average(a, n=10):
+    ret = np.cumsum(a, dtype=float)
+    ret[n:] = ret[n:] - ret[:-n]
+    return ret[n - 1 :] / n
+
+
+def plot_density_of_states(hamiltonian: SurfaceHamiltonian):
+    fig, ax = plt.subplots()
+    eigenvalues = hamiltonian.eigenvalues
+    de = eigenvalues[1:] - eigenvalues[0:-1]
+    ax.plot(1 / moving_average(de))
+
+    fig.tight_layout()
+    fig.show()
+    fig.savefig("temp.png")
+
+
 def plot_ground_state(hamiltonian: SurfaceHamiltonian):
     amin = np.argmin(hamiltonian.eigenvalues)
     eigenvector = hamiltonian.eigenvectors[:, amin]

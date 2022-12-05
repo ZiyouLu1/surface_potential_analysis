@@ -11,7 +11,11 @@ from energy_data import (
     truncate_energy,
 )
 from hamiltonian import SurfaceHamiltonian
-from plot_energy_data import plot_ground_state, plot_interpolation_with_sho
+from plot_energy_data import (
+    plot_density_of_states,
+    plot_ground_state,
+    plot_interpolation_with_sho,
+)
 from sho_config import SHOConfig, generate_sho_config_minimum
 
 
@@ -85,7 +89,7 @@ if __name__ == "__main__":
     # h._calculate_off_diagonal_energies_fast()
     # print((datetime.now() - t1).total_seconds())
     # print(h._calculate_off_diagonal_energies())
-    plot_ground_state(h)
+    plot_density_of_states(h)
     # plot_energy_eigenvalues(h)
 
     input()
