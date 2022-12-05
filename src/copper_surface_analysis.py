@@ -1,4 +1,3 @@
-from datetime import datetime
 from pathlib import Path
 from typing import Tuple
 
@@ -12,12 +11,7 @@ from energy_data import (
     truncate_energy,
 )
 from hamiltonian import SurfaceHamiltonian
-from plot_energy_data import (
-    plot_energy_eigenvalues,
-    plot_ground_state,
-    plot_interpolation_with_sho,
-    plot_xz_plane_energy,
-)
+from plot_energy_data import plot_ground_state, plot_interpolation_with_sho
 from sho_config import SHOConfig, generate_sho_config_minimum
 
 
