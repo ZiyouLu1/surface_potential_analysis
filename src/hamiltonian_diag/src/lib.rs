@@ -48,7 +48,7 @@ struct SHOConfig {
     z_offset: f64,
 }
 struct SurfaceHamiltonian {
-    resolution: [usize; 3],
+    resolution: (i64, i64, usize),
     sho_config: SHOConfig,
     ft_potential: Vec<Vec<Vec<f64>>>,
     dz: f64,
@@ -56,11 +56,10 @@ struct SurfaceHamiltonian {
 
 impl SurfaceHamiltonian {
     fn coordinates(&self) -> Vec<(i64, i64, usize)> {
-        (0..self.resolution[0])
+        (-self.resolution.0..=self.resolution.0)
             .flat_map(|x| {
-                (0..self.resolution[1]).flat_map(move |y| {
-                    (0..self.resolution[2]).map(move |z| (x as i64, y as i64, z))
-                })
+                (-self.resolution.1..=self.resolution.1)
+                    .flat_map(move |y| (0..self.resolution.2).map(move |z| (x, y, z)))
             })
             .collect()
     }
@@ -94,7 +93,7 @@ impl SurfaceHamiltonian {
 
     fn calculate_off_diagonal_energies(&self) -> Vec<Vec<f64>> {
         let coordinates = self.coordinates();
-        let cache: Vec<Vec<f64>> = (0..self.resolution[2])
+        let cache: Vec<Vec<f64>> = (0..self.resolution.2)
             .map(|nz| -> Vec<f64> { self.calculate_sho_wavefunction(nz.try_into().unwrap()) })
             .collect();
 
@@ -165,7 +164,11 @@ fn get_hamiltonian(
     let hamiltonian = SurfaceHamiltonian {
         dz,
         ft_potential,
-        resolution,
+        resolution: (
+            resolution[0].try_into().unwrap(),
+            resolution[1].try_into().unwrap(),
+            resolution[2],
+        ),
         sho_config,
     };
     Ok(hamiltonian.calculate_off_diagonal_energies())
@@ -197,7 +200,7 @@ mod test {
                 vec![vec![0.0, 0.0], vec![0.0, 0.0]],
                 vec![vec![0.0, 0.0], vec![0.0, 0.0]],
             ],
-            resolution: [2, 2, 2],
+            resolution: (2, 2, 2),
             sho_config,
         };
 

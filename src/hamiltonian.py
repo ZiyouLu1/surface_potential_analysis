@@ -1,7 +1,7 @@
 import datetime
 import math
-from functools import cache, cached_property
-from typing import Any, Tuple
+from functools import cache, cached_property, wraps
+from typing import Any, Callable, Tuple, TypeVar
 
 import numpy as np
 import scipy.special
@@ -11,6 +11,20 @@ from scipy.constants import hbar
 import hamiltonian_diag
 from energy_data import EnergyInterpolation
 from sho_config import SHOConfig
+
+F = TypeVar("F", bound=Callable)
+
+
+def timed(f: F) -> F:
+    @wraps(f)
+    def wrap(*args, **kw):
+        ts = datetime.datetime.now()
+        result = f(*args, **kw)
+        te = datetime.datetime.now()
+        print(f"func:{f.__name__} took: {(te - ts).total_seconds()} sec")
+        return result
+
+    return wrap
 
 
 def calculate_sho_wavefunction(z_points, sho_omega, mass, n) -> NDArray:
@@ -42,42 +56,14 @@ class SurfaceHamiltonian:
         self._config = config
         self._resolution = resolution
 
-        if (2 * self._resolution[0]) > self.Nx:
+        if (2 * self.Nkx) > self.Nx:
             print("Warning: max(ndkx) > Nx, some over sampling will occur")
-        if (2 * self._resolution[1]) > self.Ny:
+        if (2 * self.Nky) > self.Ny:
             print("Warning: max(ndky) > Ny, some over sampling will occur")
 
     @property
     def points(self):
         return np.array(self._potential["points"])
-
-    @property
-    def x_points(self):
-        """
-        Calculate the lattice coordinates in the x direction
-
-        Note: We don't store the 'nth' pixel
-        """
-        return np.linspace(0, self.delta_x, self.Nx, endpoint=False)
-
-    @property
-    def y_points(self):
-        """
-        Calculate the lattice coordinates in the y direction
-
-        Note: We don't store the 'nth' pixel
-        """
-        return np.linspace(0, self.delta_y, self.Ny, endpoint=False)
-
-    @property
-    def z_points(self):
-        z_start = self.z_offset
-        z_end = self.z_offset + (self.Nz - 1) * self.dz
-        return np.linspace(z_start, z_end, self.Nz)
-
-    @property
-    def z_offset(self):
-        return self._config["z_offset"]
 
     @property
     def mass(self):
@@ -86,6 +72,10 @@ class SurfaceHamiltonian:
     @property
     def sho_omega(self):
         return self._config["sho_omega"]
+
+    @property
+    def z_offset(self):
+        return self._config["z_offset"]
 
     @property
     def delta_x(self) -> float:
@@ -100,6 +90,23 @@ class SurfaceHamiltonian:
         return self.points.shape[0]
 
     @property
+    def Nkx(self) -> int:
+        return 2 * self._resolution[0] + 1
+
+    @property
+    def x_points(self):
+        """
+        Calculate the lattice coordinates in the x direction
+
+        Note: We don't store the 'nth' pixel
+        """
+        return np.linspace(0, self.delta_x, self.Nx, endpoint=False)
+
+    @property
+    def nkx_points(self):
+        return np.arange(-self._resolution[0], self._resolution[0] + 1, dtype=int)
+
+    @property
     def delta_y(self) -> float:
         return self._potential["delta_y"]
 
@@ -111,7 +118,24 @@ class SurfaceHamiltonian:
     def Ny(self) -> int:
         return self.points.shape[1]
 
-    @cached_property
+    @property
+    def Nky(self) -> int:
+        return 2 * self._resolution[1] + 1
+
+    @property
+    def y_points(self):
+        """
+        Calculate the lattice coordinates in the y direction
+
+        Note: We don't store the 'nth' pixel
+        """
+        return np.linspace(0, self.delta_y, self.Ny, endpoint=False)
+
+    @property
+    def nky_points(self):
+        return np.arange(-self._resolution[1], self._resolution[1] + 1, dtype=int)
+
+    @property
     def dz(self) -> float:
         return self._potential["dz"]
 
@@ -119,59 +143,67 @@ class SurfaceHamiltonian:
     def Nz(self) -> int:
         return self.points.shape[2]
 
-    @cached_property
-    def coordinates(self) -> NDArray:
-        return np.array([x for x in np.ndindex(*self._resolution)])
+    @property
+    def Nkz(self) -> int:
+        return self._resolution[2]
+
+    @property
+    def z_points(self):
+        z_start = self.z_offset
+        z_end = self.z_offset + (self.Nz - 1) * self.dz
+        return np.linspace(z_start, z_end, self.Nz)
+
+    @property
+    def nz_points(self):
+        return np.arange(self.Nkz, dtype=int)
 
     @cached_property
-    def hamiltonian(self) -> NDArray:
-        t1 = datetime.datetime.now()
-        diagonal_energies = np.diag(self._calculate_diagonal_energy())
-        t2 = datetime.datetime.now()
-        print((t2 - t1).total_seconds())
+    def coordinates(self) -> NDArray:
+        xt, yt, zt = np.meshgrid(
+            self.nkx_points,
+            self.nky_points,
+            self.nz_points,
+            indexing="ij",
+        )
+        return np.array([xt.ravel(), yt.ravel(), zt.ravel()]).T
+
+    @cache
+    def hamiltonian(self, kx: float, ky: float) -> NDArray:
+        diagonal_energies = np.diag(self._calculate_diagonal_energy(kx, ky))
         other_energies = self._calculate_off_diagonal_energies_fast()
-        print((datetime.datetime.now() - t2).total_seconds())
 
         energies = diagonal_energies + other_energies
         if not np.allclose(energies, energies.conjugate().T):
             raise AssertionError("hamiltonian is not hermitian")
         return energies
 
-    _eigenvalues: None | NDArray = None
-    _eigenvectors: None | NDArray = None
+    def eigenvalues(self, kx: float, ky: float) -> NDArray:
+        e, _ = self._calculate_eigenvalues(kx, ky)
+        return e
 
-    @property
-    def eigenvalues(self) -> NDArray:
-        if self._eigenvalues is None:
-            e, _ = self._calculate_eigenvalues()
-            return e
-        return self._eigenvalues
+    def eigenvectors(self, kx: float, ky: float) -> NDArray:
+        _, e = self._calculate_eigenvalues(kx, ky)
+        return e
 
-    @property
-    def eigenvectors(self) -> NDArray:
-        if self._eigenvectors is None:
-            _, e = self._calculate_eigenvalues()
-            return e
-        return self._eigenvectors
-
-    def _calculate_eigenvalues(self) -> Tuple[NDArray, NDArray]:
-        w, v = np.linalg.eigh(self.hamiltonian)
+    @cache
+    def _calculate_eigenvalues(self, kx: float, ky: float) -> Tuple[NDArray, NDArray]:
+        w, v = np.linalg.eigh(self.hamiltonian(kx, ky))
         self._eigenvalues = w
         self._eigenvectors = v
         return (w, v)
 
-    def _calculate_diagonal_energy(self) -> NDArray[Any]:
+    @timed
+    def _calculate_diagonal_energy(self, kx: float, ky: float) -> NDArray[Any]:
+        kx_coords, ky_coords, nz_coords = self.coordinates.T
 
-        x_coords, y_coords, z_coords = self.coordinates.T
-
-        x_energy = (hbar * self.dkx * x_coords) ** 2 / (2 * self.mass)
-        y_energy = (hbar * self.dky * y_coords) ** 2 / (2 * self.mass)
-        z_energy = (hbar * self.sho_omega) * (z_coords + 0.5)
+        x_energy = (hbar * (self.dkx * kx_coords + kx)) ** 2 / (2 * self.mass)
+        y_energy = (hbar * (self.dky * ky_coords + ky)) ** 2 / (2 * self.mass)
+        z_energy = (hbar * self.sho_omega) * (nz_coords + 0.5)
         return x_energy + y_energy + z_energy
 
     def get_index(self, nkx: int, nky: int, nz: int) -> int:
-        ikx = nkx * self._resolution[1] * self._resolution[2]
-        iky = nky * self._resolution[2]
+        ikx = (nkx + self._resolution[0]) * self.Nky * self.Nkz
+        iky = (nky + self._resolution[1]) * self.Nkz
         return ikx + iky + nz
 
     @cache
@@ -213,6 +245,8 @@ class SurfaceHamiltonian:
 
         return self.dz * fourier_transform
 
+    @cache
+    @timed
     def _calculate_off_diagonal_energies_fast(self) -> NDArray:
 
         return np.array(

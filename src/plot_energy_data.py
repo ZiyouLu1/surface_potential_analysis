@@ -2,52 +2,51 @@ import math
 
 import matplotlib.pyplot as plt
 import numpy as np
+import scipy.constants
+from matplotlib.axes import Axes
+from matplotlib.figure import Figure
 
 from energy_data import EnergyData, EnergyInterpolation, add_back_symmetry_points
 from hamiltonian import SurfaceHamiltonian
 from sho_config import SHOConfig
 
 
+def plot_z_direction_energy_comparison(
+    data: EnergyData, otherData: EnergyData, ax: Axes | None = None
+) -> tuple[Figure, Axes]:
+    fig, a = (ax.get_figure(), ax) if ax is not None else plt.subplots()
+    plot_z_direction_energy_data(data, ax=a)
+    plot_z_direction_energy_data(otherData, ax=a, ls="--")
+
+    return fig, a
+
+
 def plot_z_direction_energy_data(
-    data: EnergyData, otherData: EnergyData | None = None
-) -> None:
-    fig, ax = plt.subplots()
+    data: EnergyData,
+    ax: Axes | None = None,
+    ls=None,
+) -> tuple[Figure, Axes]:
+    fig, a = (ax.get_figure(), ax) if ax is not None else plt.subplots()
 
     heights = data["z_points"]
-    points = np.array(data["points"])
+    points = np.array(data["points"], dtype=float)
     middle_x_index = math.floor(points.shape[0] / 2)
-    max_potential = 1e-18
 
     top_energy = points[0, 0]
     bridge_energy = points[middle_x_index, 0]
     hollow_energy = points[middle_x_index, math.floor(points.shape[1] / 2)]
 
-    ax.plot(heights, top_energy, label="Top Site")
-    ax.plot(heights, bridge_energy, label="Bridge Site")
-    ax.plot(heights, hollow_energy, label="Hollow Site")
+    a.plot(heights, top_energy, label="Top Site", ls=ls)
+    a.plot(heights, bridge_energy, label="Bridge Site", ls=ls)
+    a.plot(heights, hollow_energy, label="Hollow Site", ls=ls)
 
-    if otherData is not None:
-        heights = otherData["z_points"]
-        points = np.array(otherData["points"])
-        middle_x_index = math.floor(points.shape[0] / 2)
+    a.set_title("Plot of energy at the Top and Hollow sites")
+    a.set_ylabel("Energy / J")
+    a.set_xlabel("relative z position /m")
 
-        top_energy = points[0, 0]
-        bridge_energy = points[middle_x_index, 0]
-        hollow_energy = points[middle_x_index, math.floor(points.shape[1] / 2)]
+    a.legend()
 
-        ax.plot(heights, top_energy, label="Top Site", ls="--")
-        ax.plot(heights, bridge_energy, label="Bridge Site", ls="--")
-        ax.plot(heights, hollow_energy, label="Hollow Site", ls="--")
-
-    ax.set_title("Plot of energy at the Top and Hollow sites")
-    ax.set_ylabel("Energy / J")
-    ax.set_xlabel("relative z position /m")
-    ax.set_ylim(bottom=0, top=max_potential)
-    ax.legend()
-
-    fig.tight_layout()
-    fig.show()
-    fig.savefig("temp.png")
+    return fig, a
 
 
 def plot_x_direction_energy_data(data: EnergyData) -> None:
@@ -136,9 +135,9 @@ def plot_xz_plane_energy(data: EnergyData) -> None:
 
 
 def plot_interpolation_with_sho(
-    interpolation: EnergyInterpolation, sho_config: SHOConfig
-):
-    fig, ax = plt.subplots()
+    interpolation: EnergyInterpolation, sho_config: SHOConfig, ax: Axes | None = None
+) -> tuple[Figure, Axes]:
+    fig, a = (ax.get_figure(), ax) if ax is not None else plt.subplots()
 
     points = np.array(interpolation["points"])
     middle_x_index = math.floor(points.shape[0] / 2)
@@ -147,26 +146,24 @@ def plot_interpolation_with_sho(
     end_z = interpolation["dz"] * (points.shape[2] - 1) + sho_config["z_offset"]
     z_points = np.linspace(start_z, end_z, points.shape[2])
 
-    ax.plot(z_points, points[middle_x_index, middle_y_index])
+    a.plot(z_points, points[middle_x_index, middle_y_index])
     sho_pot = 0.5 * sho_config["mass"] * (sho_config["sho_omega"] * z_points) ** 2
-    ax.plot(z_points, sho_pot)
+    a.plot(z_points, sho_pot)
 
     max_potential = 1e-18
-    ax.set_ylim(0, max_potential)
+    a.set_ylim(0, max_potential)
 
-    fig.tight_layout()
-    fig.show()
-    fig.savefig("temp.png")
+    return fig, a
 
 
-def plot_energy_eigenvalues(hamiltonian: SurfaceHamiltonian):
-    fig, ax = plt.subplots()
-    for e in hamiltonian.eigenvalues:
-        ax.plot([0, 1], [e, e])
+def plot_energy_eigenvalues(
+    hamiltonian: SurfaceHamiltonian, ax: Axes | None = None
+) -> tuple[Figure, Axes]:
+    fig, a = (ax.get_figure(), ax) if ax is not None else plt.subplots()
+    for e in hamiltonian.eigenvalues(0, 0):
+        a.plot([0, 1], [e, e])
 
-    fig.tight_layout()
-    fig.show()
-    fig.savefig("temp.png")
+    return fig, a
 
 
 def moving_average(a, n=10):
@@ -175,21 +172,24 @@ def moving_average(a, n=10):
     return ret[n - 1 :] / n
 
 
-def plot_density_of_states(hamiltonian: SurfaceHamiltonian):
-    fig, ax = plt.subplots()
-    eigenvalues = hamiltonian.eigenvalues
+def plot_density_of_states(
+    hamiltonian: SurfaceHamiltonian, ax: Axes | None = None
+) -> tuple[Figure, Axes]:
+    fig, a = (ax.get_figure(), ax) if ax is not None else plt.subplots()
+    eigenvalues = hamiltonian.eigenvalues(0, 0)
     de = eigenvalues[1:] - eigenvalues[0:-1]
-    ax.plot(1 / moving_average(de))
+    a.plot(1 / moving_average(de))
 
-    fig.tight_layout()
-    fig.show()
-    fig.savefig("temp.png")
+    return fig, a
 
 
-def plot_ground_state(hamiltonian: SurfaceHamiltonian):
-    amin = np.argmin(hamiltonian.eigenvalues)
-    eigenvector = hamiltonian.eigenvectors[:, amin]
-    fig, ax = plt.subplots()
+def plot_nth_eigenvector(
+    hamiltonian: SurfaceHamiltonian, n=0, ax: Axes | None = None
+) -> tuple[Figure, Axes]:
+    eigenvalue_index = np.argpartition(hamiltonian.eigenvalues(0, 0), n)[n]
+    eigenvector = hamiltonian.eigenvectors(0, 0)[:, eigenvalue_index]
+
+    fig, a = (ax.get_figure(), ax) if ax is not None else plt.subplots()
 
     z_points = np.linspace(hamiltonian.z_points[0], hamiltonian.z_points[-1], 1000)
     points = np.array(
@@ -197,25 +197,67 @@ def plot_ground_state(hamiltonian: SurfaceHamiltonian):
     )
     wfn = np.abs(hamiltonian.calculate_wavefunction(points, eigenvector))
     z_max = z_points[np.argmax(wfn)]
-    ax.plot(z_points - z_max, wfn, label="Z direction")
+    a.plot(z_points - z_max, wfn, label="Z direction")
 
     x_points = np.linspace(hamiltonian.x_points[0], hamiltonian.x_points[-1], 1000)
     points = np.array([(x, hamiltonian.delta_y / 2, z_max) for x in x_points])
-    ax.plot(
+    a.plot(
         x_points - hamiltonian.delta_x / 2,
         np.abs(hamiltonian.calculate_wavefunction(points, eigenvector)),
-        label="X-Y direction through bridge",
+        label="X-Y through bridge",
     )
 
     points = np.array([(x, x, z_max) for x in x_points])
-    ax.plot(
+    a.plot(
         np.sqrt(2) * (x_points - hamiltonian.delta_x / 2),
         np.abs(hamiltonian.calculate_wavefunction(points, eigenvector)),
-        label="X-Y direction through Top",
+        label="X-Y through Top",
     )
-    ax.set_title("Plot of the ground state wavefunction about the probability maximum")
-    ax.legend()
+    a.set_title(f"Plot of the n={n} wavefunction")
+    a.legend()
+
+    return (fig, a)
+
+
+def plot_first_4_eigenvectors(hamiltonian: SurfaceHamiltonian) -> Figure:
+    fig, axs = plt.subplots(2, 2)
+    axes = [axs[0][0], axs[1][0], axs[0][1], axs[1][1]]
+    for (n, ax) in enumerate(axes):
+        plot_nth_eigenvector(hamiltonian, n, ax=ax)
 
     fig.tight_layout()
-    fig.show()
-    fig.savefig("temp.png")
+
+    return fig
+
+
+def plot_lowest_band_in_x(
+    hamiltonian: SurfaceHamiltonian, ax: Axes | None = None
+) -> tuple[Figure, Axes]:
+    fig, a = (ax.get_figure(), ax) if ax is not None else plt.subplots()
+
+    kxs = np.linspace(-hamiltonian.dkx, hamiltonian.dkx, 7)
+    eigenvalues = [hamiltonian.eigenvalues(kx, 0) for kx in kxs]
+    lowest_eigenvalues = [np.min(e) for e in eigenvalues]
+
+    a.plot(kxs, lowest_eigenvalues)
+    return fig, a
+
+
+def plot_eigenvalue_occupation(
+    hamiltonian: SurfaceHamiltonian, temperature: float = 50.0, ax: Axes | None = None
+) -> tuple[Figure, Axes]:
+    fig, a = (ax.get_figure(), ax) if ax is not None else plt.subplots()
+
+    eigenvalues = hamiltonian.eigenvalues(0, 0)
+    normalized_eigenvalues = eigenvalues - np.min(hamiltonian.eigenvalues(0, 0))
+    beta = 1 / (scipy.constants.Boltzmann * temperature)
+    occupations = np.exp(-normalized_eigenvalues * beta)
+    a.plot(occupations / np.sum(occupations))
+
+    a.set_xlabel("Eigenvalue Index")
+    a.set_ylabel("Occupation Probability")
+    a.set_title(
+        "Plot of occupation probability according to the Boltzmann distribution"
+    )
+
+    return fig, a

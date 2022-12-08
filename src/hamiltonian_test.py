@@ -36,9 +36,9 @@ def generate_random_diagonal_hamiltonian():
     ny = random.randrange(2, 10)
     nz = random.randrange(2, 100)
 
-    nkx = random.randrange(2, 10)
-    nky = random.randrange(2, 10)
-    nkz = random.randrange(2, 10)
+    nkx = random.randrange(1, 5)
+    nky = random.randrange(1, 5)
+    nkz = random.randrange(1, 5)
     resolution = (nkx, nky, nkz)
     config: SHOConfig = {
         "mass": 1,
@@ -75,20 +75,39 @@ class TestSurfaceHamiltonian(unittest.TestCase):
             "delta_y": 2 * np.pi * hbar,
             "dz": 1,
         }
-        hamiltonian = SurfaceHamiltonian((2, 2, 2), data, config)
+        hamiltonian = SurfaceHamiltonian((1, 1, 2), data, config)
 
-        expected = np.array([0.5, 1.5, 1.0, 2.0, 1.0, 2.0, 1.5, 2.5])
-        diagonal_energy = hamiltonian._calculate_diagonal_energy()
+        expected = np.array(
+            [
+                1.5,
+                2.5,
+                1.0,
+                2.0,
+                1.5,
+                2.5,
+                1.0,
+                2.0,
+                0.5,
+                1.5,
+                1.0,
+                2.0,
+                1.5,
+                2.5,
+                1.0,
+                2.0,
+                1.5,
+                2.5,
+            ]
+        )
+        diagonal_energy = hamiltonian._calculate_diagonal_energy(0, 0)
 
         np.testing.assert_equal(diagonal_energy, expected)
 
     def test_get_all_coordinates(self) -> None:
-        nkx = random.randrange(1, 20)
-        nky = random.randrange(1, 20)
-        nz = random.randrange(1, 100)
+        Nkx = random.randrange(1, 20)
+        Nky = random.randrange(1, 20)
+        Nz = random.randrange(1, 100)
 
-        xt, yt, zt = np.meshgrid(range(nkx), range(nky), range(nz), indexing="ij")
-        expected = np.array([xt.ravel(), yt.ravel(), zt.ravel()]).T
         config: SHOConfig = {
             "mass": 1,
             "sho_omega": 1 / hbar,
@@ -100,13 +119,10 @@ class TestSurfaceHamiltonian(unittest.TestCase):
             "delta_y": 2 * np.pi * hbar,
             "dz": 1,
         }
-        hamiltonian = SurfaceHamiltonian((nkx, nky, nz), data, config)
+        hamiltonian = SurfaceHamiltonian((Nkx, Nky, Nz), data, config)
         coords = hamiltonian.coordinates
-        for (e, a) in zip(expected, coords):
-            self.assertEqual(e[0], a[0])
-            self.assertEqual(e[1], a[1])
-            self.assertEqual(e[2], a[2])
-            self.assertEqual(3, len(a))
+        for (i, (nkx, nky, nz)) in enumerate(coords):
+            self.assertEqual(hamiltonian.get_index(nkx, nky, nz), i)
 
     def test_get_index(self) -> None:
         nkx = random.randrange(1, 20)
@@ -255,10 +271,10 @@ class TestSurfaceHamiltonian(unittest.TestCase):
 
     def test_get_off_diagonal_energies_zero(self) -> None:
         hamiltonian = generate_random_diagonal_hamiltonian()
-        resolution = hamiltonian._resolution
 
         actual = hamiltonian._calculate_off_diagonal_energies()
-        expected_shape = (np.prod(resolution), np.prod(resolution))
+        n_points = hamiltonian.Nkx * hamiltonian.Nky * hamiltonian.Nkz
+        expected_shape = (n_points, n_points)
         np.testing.assert_equal(actual, np.zeros(shape=expected_shape))
 
     def test_is_almost_hermitian(self) -> None:
@@ -278,16 +294,16 @@ class TestSurfaceHamiltonian(unittest.TestCase):
             "delta_y": 2 * np.pi * hbar,
             "dz": 1,
         }
-        hamiltonian = SurfaceHamiltonian((10, 10, 10), data, config)
+        hamiltonian = SurfaceHamiltonian((5, 5, 10), data, config)
 
         np.testing.assert_allclose(
-            hamiltonian.hamiltonian, hamiltonian.hamiltonian.conjugate().T
+            hamiltonian.hamiltonian(0, 0), hamiltonian.hamiltonian(0, 0).conjugate().T
         )
 
     def test_get_eigenvalues_diag(self) -> None:
         hamiltonian = generate_random_diagonal_hamiltonian()
         print(hamiltonian.hamiltonian)
-        print(hamiltonian._eigenvalues)
+        print(hamiltonian.eigenvalues(0, 0))
 
     def test_calculate_sho_wavefunction(self) -> None:
         mass = hbar**2
@@ -347,7 +363,7 @@ class TestSurfaceHamiltonian(unittest.TestCase):
             for iz2 in range(10):
                 sho_1 = hamiltonian._calculate_sho_wavefunction_points(iz1)
                 sho_2 = hamiltonian._calculate_sho_wavefunction_points(iz2)
-                sho_norm = hamiltonian.dz * np.sum(sho_1 * sho_2)
+                sho_norm = hamiltonian.dz * np.sum(sho_1 * sho_2, dtype=float)
 
                 if iz1 == iz2:
                     self.assertAlmostEqual(sho_norm, 1.0)

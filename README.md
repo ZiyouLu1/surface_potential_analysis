@@ -3,6 +3,7 @@
 To install the rust package run
 
 ```shell
+cd src\\hamiltonian_diag
 maturin develop --profile release
 ```
 
