@@ -1,12 +1,19 @@
 import math
+from typing import Iterable, Literal
 
 import matplotlib.pyplot as plt
 import numpy as np
 import scipy.constants
 from matplotlib.axes import Axes
 from matplotlib.figure import Figure
+from matplotlib.lines import Line2D
 
-from energy_data import EnergyData, EnergyInterpolation, add_back_symmetry_points
+from energy_data import (
+    EnergyData,
+    EnergyEigenstates,
+    EnergyInterpolation,
+    add_back_symmetry_points,
+)
 from hamiltonian import SurfaceHamiltonian
 from sho_config import SHOConfig
 
@@ -174,13 +181,51 @@ def moving_average(a, n=10):
 
 def plot_density_of_states(
     hamiltonian: SurfaceHamiltonian, ax: Axes | None = None
-) -> tuple[Figure, Axes]:
+) -> tuple[Figure, Axes, Line2D]:
     fig, a = (ax.get_figure(), ax) if ax is not None else plt.subplots()
     eigenvalues = hamiltonian.eigenvalues(0, 0)
     de = eigenvalues[1:] - eigenvalues[0:-1]
-    a.plot(1 / moving_average(de))
+    (line,) = a.plot(1 / moving_average(de))
 
-    return fig, a
+    return fig, a, line
+
+
+def plot_eigenvector_z(
+    hamiltonian: SurfaceHamiltonian,
+    eigenvector: Iterable[float],
+    ax: Axes | None = None,
+) -> tuple[Figure, Axes, Line2D]:
+    fig, a = (ax.get_figure(), ax) if ax is not None else plt.subplots()
+
+    z_points = np.linspace(hamiltonian.z_points[0], hamiltonian.z_points[-1], 1000)
+    points = np.array(
+        [(hamiltonian.delta_x / 2, hamiltonian.delta_y / 2, z) for z in z_points]
+    )
+
+    wfn = np.abs(hamiltonian.calculate_wavefunction(points, eigenvector))
+    (line,) = a.plot(z_points, wfn)
+
+    return fig, a, line
+
+
+def plot_eigenvector_through_bridge(
+    hamiltonian: SurfaceHamiltonian,
+    eigenvector: Iterable[float],
+    ax: Axes | None = None,
+    view: Literal["abs"] | Literal["angle"] = "abs",
+) -> tuple[Figure, Axes, Line2D]:
+    fig, ax1 = (ax.get_figure(), ax) if ax is not None else plt.subplots()
+
+    x_points = np.linspace(hamiltonian.x_points[0], hamiltonian.x_points[-1], 1000)
+    points = np.array([(x, hamiltonian.delta_y / 2, 0) for x in x_points])
+    wfn = hamiltonian.calculate_wavefunction(points, eigenvector)
+    ##TODO: wfn = wfn * exp(1j*np.angle(wfn[middle]))
+    (line,) = ax1.plot(
+        x_points - hamiltonian.delta_x / 2,
+        np.abs(wfn) if view == "abs" else np.angle(wfn),
+    )
+
+    return fig, ax1, line
 
 
 def plot_nth_eigenvector(
@@ -191,23 +236,14 @@ def plot_nth_eigenvector(
 
     fig, a = (ax.get_figure(), ax) if ax is not None else plt.subplots()
 
-    z_points = np.linspace(hamiltonian.z_points[0], hamiltonian.z_points[-1], 1000)
-    points = np.array(
-        [(hamiltonian.delta_x / 2, hamiltonian.delta_y / 2, z) for z in z_points]
-    )
-    wfn = np.abs(hamiltonian.calculate_wavefunction(points, eigenvector))
-    z_max = z_points[np.argmax(wfn)]
-    a.plot(z_points - z_max, wfn, label="Z direction")
+    _, _, line = plot_eigenvector_z(hamiltonian, eigenvector, ax)
+    line.set_label("Z direction")
+
+    _, _, line = plot_eigenvector_through_bridge(hamiltonian, eigenvector, ax)
+    line.set_label("X-Y through bridge")
 
     x_points = np.linspace(hamiltonian.x_points[0], hamiltonian.x_points[-1], 1000)
-    points = np.array([(x, hamiltonian.delta_y / 2, z_max) for x in x_points])
-    a.plot(
-        x_points - hamiltonian.delta_x / 2,
-        np.abs(hamiltonian.calculate_wavefunction(points, eigenvector)),
-        label="X-Y through bridge",
-    )
-
-    points = np.array([(x, x, z_max) for x in x_points])
+    points = np.array([(x, x, 0) for x in x_points])
     a.plot(
         np.sqrt(2) * (x_points - hamiltonian.delta_x / 2),
         np.abs(hamiltonian.calculate_wavefunction(points, eigenvector)),
@@ -230,34 +266,39 @@ def plot_first_4_eigenvectors(hamiltonian: SurfaceHamiltonian) -> Figure:
     return fig
 
 
-def plot_lowest_band_in_x(
-    hamiltonian: SurfaceHamiltonian, ax: Axes | None = None
-) -> tuple[Figure, Axes]:
+def plot_lowest_band_in_kx(
+    eigenstates: EnergyEigenstates, ax: Axes | None = None
+) -> tuple[Figure, Axes, Line2D]:
     fig, a = (ax.get_figure(), ax) if ax is not None else plt.subplots()
 
-    kxs = np.linspace(-hamiltonian.dkx, hamiltonian.dkx, 7)
-    eigenvalues = [hamiltonian.eigenvalues(kx, 0) for kx in kxs]
-    lowest_eigenvalues = [np.min(e) for e in eigenvalues]
+    kx_points = eigenstates["kx_points"]
+    eigenvalues = eigenstates["eigenvalues"]
 
-    a.plot(kxs, lowest_eigenvalues)
-    return fig, a
+    (line,) = a.plot(kx_points, eigenvalues)
+    return fig, a, line
 
 
-def plot_eigenvalue_occupation(
+def plot_bands_occupation(
     hamiltonian: SurfaceHamiltonian, temperature: float = 50.0, ax: Axes | None = None
-) -> tuple[Figure, Axes]:
+) -> tuple[Figure, Axes, Line2D]:
     fig, a = (ax.get_figure(), ax) if ax is not None else plt.subplots()
 
     eigenvalues = hamiltonian.eigenvalues(0, 0)
     normalized_eigenvalues = eigenvalues - np.min(hamiltonian.eigenvalues(0, 0))
     beta = 1 / (scipy.constants.Boltzmann * temperature)
     occupations = np.exp(-normalized_eigenvalues * beta)
-    a.plot(occupations / np.sum(occupations))
+    (line,) = a.plot(occupations / np.sum(occupations))
 
-    a.set_xlabel("Eigenvalue Index")
-    a.set_ylabel("Occupation Probability")
-    a.set_title(
-        "Plot of occupation probability according to the Boltzmann distribution"
-    )
+    return fig, a, line
 
-    return fig, a
+
+def plot_eigenstate_positions(
+    eigenstates: EnergyEigenstates, ax: Axes | None = None
+) -> tuple[Figure, Axes, Line2D]:
+    fig, ax1 = (ax.get_figure(), ax) if ax is not None else plt.subplots()
+
+    (line,) = ax1.plot(eigenstates["kx_points"], eigenstates["ky_points"])
+    line.set_linestyle(None)
+    line.set_marker("x")
+
+    return fig, ax1, line

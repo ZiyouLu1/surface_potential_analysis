@@ -15,11 +15,7 @@ class EnergyData(TypedDict):
 
 def load_energy_data(path: Path) -> EnergyData:
     with path.open("r") as f:
-        out = json.load(f)
-        # TODO
-        out["sho_omega"] = 1
-        out["mass"] = 1
-        return out
+        return json.load(f)
 
 
 def save_energy_data(data: EnergyData, path: Path) -> None:
@@ -33,6 +29,28 @@ class EnergyInterpolation(TypedDict):
     dz: float
     # Note - points should exclude the 'nth' point
     points: List[List[List[float]]]
+
+
+class EnergyEigenstates(TypedDict):
+    kx_points: List[float]
+    ky_points: List[float]
+    resolution: Tuple[int, int, int]
+    eigenvalues: List[float]
+    eigenvectors: List[List[float]]
+
+
+def save_energy_eigenstates(data: EnergyEigenstates, path: Path) -> None:
+    with path.open("w") as f:
+        json.dump(data, f)
+
+
+def load_energy_eigenstates(path: Path) -> EnergyEigenstates:
+    with path.open("r") as f:
+        out = json.load(f)
+        # print(np.array(out["eigenvectors"]).shape)
+        # out["eigenvectors"] = np.array(out["eigenvectors"])[:, 0, 0].tolist()
+        # save_energy_eigenstates(out, path)
+        return out
 
 
 def get_xy_points_delta(points: List[float]):

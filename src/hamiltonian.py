@@ -1,15 +1,15 @@
 import datetime
 import math
 from functools import cache, cached_property, wraps
-from typing import Any, Callable, Tuple, TypeVar
+from typing import Any, Callable, Iterable, Tuple, TypeVar
 
 import numpy as np
 import scipy.special
-from numpy.typing import NDArray
+from numpy.typing import ArrayLike, NDArray
 from scipy.constants import hbar
 
 import hamiltonian_diag
-from energy_data import EnergyInterpolation
+from energy_data import EnergyEigenstates, EnergyInterpolation
 from sho_config import SHOConfig
 
 F = TypeVar("F", bound=Callable)
@@ -21,10 +21,10 @@ def timed(f: F) -> F:
         ts = datetime.datetime.now()
         result = f(*args, **kw)
         te = datetime.datetime.now()
-        print(f"func:{f.__name__} took: {(te - ts).total_seconds()} sec")
+        print(f"func: {f.__name__} took: {(te - ts).total_seconds()} sec")
         return result
 
-    return wrap
+    return wrap  # type: ignore
 
 
 def calculate_sho_wavefunction(z_points, sho_omega, mass, n) -> NDArray:
@@ -178,19 +178,23 @@ class SurfaceHamiltonian:
         return energies
 
     def eigenvalues(self, kx: float, ky: float) -> NDArray:
-        e, _ = self._calculate_eigenvalues(kx, ky)
-        return e
+        w, _ = self._calculate_eigenvalues(kx, ky)
+        return w
 
     def eigenvectors(self, kx: float, ky: float) -> NDArray:
-        _, e = self._calculate_eigenvalues(kx, ky)
-        return e
+        """
+        Returns the eigenvalues as a list of vectors,
+        ie v[i] is the eigenvector associated to the eigenvalue w[i]
+        """
+        _, v = self._calculate_eigenvalues(kx, ky)
+        return v
 
     @cache
+    @timed
     def _calculate_eigenvalues(self, kx: float, ky: float) -> Tuple[NDArray, NDArray]:
+        print(kx, ky)
         w, v = np.linalg.eigh(self.hamiltonian(kx, ky))
-        self._eigenvalues = w
-        self._eigenvectors = v
-        return (w, v)
+        return (w, v.transpose())
 
     @timed
     def _calculate_diagonal_energy(self, kx: float, ky: float) -> NDArray[Any]:
@@ -284,7 +288,10 @@ class SurfaceHamiltonian:
 
         return hamiltonian
 
-    def calculate_wavefunction(self, points: NDArray, eigenvector: NDArray) -> NDArray:
+    def calculate_wavefunction(
+        self, points: ArrayLike, eigenvector: Iterable[float]
+    ) -> NDArray:
+        points = np.array(points)
         out = np.zeros(shape=(points.shape[0]), dtype=complex)
         for (e, [nkx, nky, nz]) in zip(eigenvector, self.coordinates):
             out += (
@@ -296,6 +303,30 @@ class SurfaceHamiltonian:
                 * np.exp(1j * nky * self.dky * points[:, 1])
             )
         return out
+
+
+def calculate_energy_eigenstates(
+    hamiltonian: SurfaceHamiltonian, kx_points: NDArray, ky_points: NDArray
+) -> EnergyEigenstates:
+    eigenvalues = [
+        hamiltonian.eigenvalues(round(abs(kx)), round(abs(ky)))
+        for (kx, ky) in zip(kx_points, ky_points)
+    ]
+    arg_min_eigenvalue = [np.argmin(e) for e in eigenvalues]
+
+    eigenvectors = [
+        hamiltonian.eigenvectors(round(abs(kx)), round(abs(ky)))[
+            arg_min_eigenvalue
+        ].tolist()
+        for (kx, ky) in zip(kx_points, ky_points)
+    ]
+    return {
+        "kx_points": kx_points.tolist(),
+        "ky_points": ky_points.tolist(),
+        "resolution": hamiltonian._resolution,
+        "eigenvalues": [e[arg] for (arg, e) in zip(arg_min_eigenvalue, eigenvalues)],
+        "eigenvectors": eigenvectors,
+    }
 
 
 if __name__ == "__main__":

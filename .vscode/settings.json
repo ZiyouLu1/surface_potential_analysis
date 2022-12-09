@@ -33,6 +33,7 @@
     "vmax",
     "vmin",
     "wavefunction",
+    "wavepacket",
     "Wavevector",
     "xlabel",
     "ylabel"
