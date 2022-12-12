@@ -6,12 +6,14 @@ import numpy as np
 import scipy.constants
 from matplotlib.axes import Axes
 from matplotlib.figure import Figure
+from matplotlib.image import AxesImage
 from matplotlib.lines import Line2D
 
 from energy_data import (
     EnergyData,
     EnergyEigenstates,
     EnergyInterpolation,
+    SurfaceWavepacket,
     add_back_symmetry_points,
 )
 from hamiltonian import SurfaceHamiltonian
@@ -302,3 +304,22 @@ def plot_eigenstate_positions(
     line.set_marker("x")
 
     return fig, ax1, line
+
+
+def plot_eigenvector_2D(
+    hamiltonian: SurfaceHamiltonian,
+    eigenvector: Iterable[float],
+    ax: Axes | None = None,
+) -> tuple[Figure, Axes, AxesImage]:
+    fig, ax1 = (ax.get_figure(), ax) if ax is not None else plt.subplots()
+
+    x_points = np.linspace(0, hamiltonian.delta_x, 30)
+    y_points = np.linspace(0, hamiltonian.delta_y, 30)
+
+    xv, yv = np.meshgrid(x_points, y_points)
+    points = np.array([xv.ravel(), yv.ravel(), np.zeros_like(xv.ravel())])
+
+    X = hamiltonian.calculate_wavefunction(points, eigenvector).reshape(xv.shape)
+    im = ax1.imshow(X)
+    im.set_extent((x_points[0], x_points[-1], y_points[0], y_points[-1]))
+    return (fig, ax1, im)

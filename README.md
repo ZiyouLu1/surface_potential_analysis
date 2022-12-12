@@ -8,3 +8,5 @@ maturin develop --profile release
 ```
 
 after activating the virtual environment
+
+maturin build -r --target x86_64-unknown-linux-gnu

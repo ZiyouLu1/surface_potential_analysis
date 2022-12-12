@@ -1,6 +1,7 @@
 import datetime
 import math
 from functools import cache, cached_property, wraps
+from pathlib import Path
 from typing import Any, Callable, Iterable, Tuple, TypeVar
 
 import numpy as np
@@ -9,7 +10,13 @@ from numpy.typing import ArrayLike, NDArray
 from scipy.constants import hbar
 
 import hamiltonian_diag
-from energy_data import EnergyEigenstates, EnergyInterpolation
+from energy_data import (
+    EnergyEigenstates,
+    EnergyInterpolation,
+    append_energy_eigenstates,
+    load_energy_eigenstates,
+    save_energy_eigenstates,
+)
 from sho_config import SHOConfig
 
 F = TypeVar("F", bound=Callable)
@@ -31,10 +38,13 @@ def calculate_sho_wavefunction(z_points, sho_omega, mass, n) -> NDArray:
     norm = (sho_omega * mass / hbar) ** 0.5
     normalized_z = z_points * norm
 
-    prefactor = np.sqrt(norm / (2**n * math.factorial(n) * np.sqrt(np.pi)))
+    prefactor = math.sqrt((norm / (2**n)) / (math.factorial(n) * math.sqrt(math.pi)))
     hermite = scipy.special.eval_hermite(n, normalized_z)
     exponential = np.exp(-np.square(normalized_z) / 2)
     return prefactor * hermite * exponential
+
+
+DEBUG_CHECKS = False
 
 
 class SurfaceHamiltonian:
@@ -167,13 +177,12 @@ class SurfaceHamiltonian:
         )
         return np.array([xt.ravel(), yt.ravel(), zt.ravel()]).T
 
-    @cache
     def hamiltonian(self, kx: float, ky: float) -> NDArray:
         diagonal_energies = np.diag(self._calculate_diagonal_energy(kx, ky))
         other_energies = self._calculate_off_diagonal_energies_fast()
 
         energies = diagonal_energies + other_energies
-        if not np.allclose(energies, energies.conjugate().T):
+        if DEBUG_CHECKS and not np.allclose(energies, energies.conjugate().T):
             raise AssertionError("hamiltonian is not hermitian")
         return energies
 
@@ -192,9 +201,8 @@ class SurfaceHamiltonian:
     @cache
     @timed
     def _calculate_eigenvalues(self, kx: float, ky: float) -> Tuple[NDArray, NDArray]:
-        print(kx, ky)
         w, v = np.linalg.eigh(self.hamiltonian(kx, ky))
-        return (w, v.transpose())
+        return (w, v.T)
 
     @timed
     def _calculate_diagonal_energy(self, kx: float, ky: float) -> NDArray[Any]:
@@ -223,14 +231,8 @@ class SurfaceHamiltonian:
         subtracted_potential = self.get_sho_subtracted_points()
         fft_potential = np.fft.ifft2(subtracted_potential, axes=(0, 1))
 
-        if not np.all(np.isreal(np.real_if_close(fft_potential))):
+        if DEBUG_CHECKS and not np.all(np.isreal(np.real_if_close(fft_potential))):
             raise AssertionError("FFT was not real!")
-        return np.real_if_close(fft_potential)
-
-    @cache
-    def get_ft_potential_fast(self) -> NDArray:
-        subtracted_potential = self.get_sho_subtracted_points()
-        fft_potential = np.fft.ifft2(subtracted_potential, axes=(0, 1))
         return np.real_if_close(fft_potential)
 
     @cache
@@ -255,7 +257,7 @@ class SurfaceHamiltonian:
 
         return np.array(
             hamiltonian_diag.get_hamiltonian(
-                self.get_ft_potential_fast().tolist(),  # Takes abt 0.3s for a 10s run
+                self.get_ft_potential().tolist(),
                 self._resolution,
                 self.dz,
                 self.mass,
@@ -305,6 +307,34 @@ class SurfaceHamiltonian:
         return out
 
 
+def generate_energy_eigenstates_grid(
+    path: Path, hamiltonian: SurfaceHamiltonian, grid_size=5
+) -> EnergyEigenstates:
+    data: EnergyEigenstates = {
+        "kx_points": [],
+        "ky_points": [],
+        "resolution": hamiltonian._resolution,
+        "eigenvalues": [],
+        "eigenvectors": [],
+    }
+    # save_energy_eigenstates(data, path)
+
+    for kx in [
+        hamiltonian.dkx / 2
+    ]:  # np.linspace(0, hamiltonian.dkx / 2, grid_size + 1)[:]:
+        for ky in np.linspace(0, hamiltonian.dky / 2, grid_size + 1):
+            eigenvalues = hamiltonian.eigenvalues(kx, ky)
+            a_min = np.argmin(eigenvalues)
+
+            eigenvalue = eigenvalues[a_min]
+            eigenvector = hamiltonian.eigenvectors(kx, ky)[a_min].tolist()
+            append_energy_eigenstates(path, kx, ky, eigenvalue, eigenvector)
+            print(hamiltonian._calculate_eigenvalues.cache_info())
+            hamiltonian._calculate_eigenvalues.cache_clear()
+
+    return load_energy_eigenstates(path)
+
+
 def calculate_energy_eigenstates(
     hamiltonian: SurfaceHamiltonian, kx_points: NDArray, ky_points: NDArray
 ) -> EnergyEigenstates:
@@ -315,10 +345,8 @@ def calculate_energy_eigenstates(
     arg_min_eigenvalue = [np.argmin(e) for e in eigenvalues]
 
     eigenvectors = [
-        hamiltonian.eigenvectors(round(abs(kx)), round(abs(ky)))[
-            arg_min_eigenvalue
-        ].tolist()
-        for (kx, ky) in zip(kx_points, ky_points)
+        hamiltonian.eigenvectors(round(abs(kx)), round(abs(ky)))[arg].tolist()
+        for (kx, ky, arg) in zip(kx_points, ky_points, arg_min_eigenvalue)
     ]
     return {
         "kx_points": kx_points.tolist(),

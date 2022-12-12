@@ -46,11 +46,43 @@ def save_energy_eigenstates(data: EnergyEigenstates, path: Path) -> None:
 
 def load_energy_eigenstates(path: Path) -> EnergyEigenstates:
     with path.open("r") as f:
-        out = json.load(f)
-        # print(np.array(out["eigenvectors"]).shape)
-        # out["eigenvectors"] = np.array(out["eigenvectors"])[:, 0, 0].tolist()
-        # save_energy_eigenstates(out, path)
-        return out
+        return json.load(f)
+
+
+def append_energy_eigenstates(
+    path: Path, kx: float, ky: float, eigenvalue: float, eigenvector: List[float]
+) -> None:
+    with path.open("r") as f:
+        data: EnergyEigenstates = json.load(f)
+        data["kx_points"].append(kx)
+        data["ky_points"].append(ky)
+        data["eigenvalues"].append(eigenvalue)
+        data["eigenvectors"].append(eigenvector)
+
+    with path.open("w") as f:
+        json.dump(data, f)
+
+
+def mirror_energy_eigenstates(data: EnergyEigenstates) -> EnergyEigenstates:
+    kx_points = np.concatenate(
+        [np.tile(data["kx_points"], 2), -np.tile(data["kx_points"], 2)]
+    )
+    ky_points = np.tile(
+        np.concatenate([data["ky_points"], -np.array(data["ky_points"])]), 2
+    )
+
+    return {
+        "eigenvalues": np.tile(data["eigenvalues"], 4).tolist(),
+        "eigenvectors": np.tile(data["eigenvectors"], 4).tolist(),
+        "resolution": data["resolution"],
+        "kx_points": kx_points.tolist(),
+        "ky_points": ky_points.tolist(),
+    }
+
+
+class SurfaceWavepacket(TypedDict):
+    resolution: Tuple[int, int, int]
+    eigenvectors: List[List[float]]
 
 
 def get_xy_points_delta(points: List[float]):

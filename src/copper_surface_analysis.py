@@ -1,10 +1,11 @@
 from pathlib import Path
-from typing import Tuple
+from typing import List, Tuple
 
 import matplotlib.pyplot as plt
 import numpy as np
 
 from energy_data import (
+    SurfaceWavepacket,
     as_interpolation,
     fill_surface_from_z_maximum,
     interpolate_energies_grid,
@@ -15,7 +16,11 @@ from energy_data import (
     save_energy_eigenstates,
     truncate_energy,
 )
-from hamiltonian import SurfaceHamiltonian, calculate_energy_eigenstates
+from hamiltonian import (
+    SurfaceHamiltonian,
+    calculate_energy_eigenstates,
+    generate_energy_eigenstates_grid,
+)
 from plot_energy_data import (
     plot_bands_occupation,
     plot_eigenstate_positions,
@@ -171,8 +176,6 @@ def plot_copper_bands_occupation():
 
 def generate_eigenstates_data():
     h1 = generate_hamiltonian(resolution=(14, 14, 10))
-    h2 = generate_hamiltonian(resolution=(12, 12, 10))
-    h3 = generate_hamiltonian(resolution=(12, 12, 12))
 
     kx_points = np.linspace(-h1.dkx / 2, h1.dkx / 2, 11)
     ky_points = np.zeros_like(kx_points)
@@ -181,32 +184,74 @@ def generate_eigenstates_data():
     # path = Path(__file__).parent / "data" / "copper_eigenstates_14_14_10.json"
     # save_energy_eigenstates(eigenstates1, path)
 
+    # h2 = generate_hamiltonian(resolution=(12, 12, 10))
     # eigenstates2 = calculate_energy_eigenstates(h2, kx_points, ky_points)
     # path = Path(__file__).parent / "data" / "copper_eigenstates_12_12_10.json"
     # save_energy_eigenstates(eigenstates2, path)
 
-    eigenstates3 = calculate_energy_eigenstates(h3, kx_points, ky_points)
-    path = Path(__file__).parent / "data" / "copper_eigenstates_12_12_12.json"
-    save_energy_eigenstates(eigenstates3, path)
+    # h3 = generate_hamiltonian(resolution=(12, 12, 12))
+    # eigenstates3 = calculate_energy_eigenstates(h3, kx_points, ky_points)
+    # path = Path(__file__).parent / "data" / "copper_eigenstates_12_12_12.json"
+    # save_energy_eigenstates(eigenstates3, path)
+
+    # h = generate_hamiltonian(resolution=(12, 12, 14))
+    # eigenstates = calculate_energy_eigenstates(h, kx_points, ky_points)
+    # path = Path(__file__).parent / "data" / "copper_eigenstates_12_12_14.json"
+    # save_energy_eigenstates(eigenstates, path)
+
+    # h = generate_hamiltonian(resolution=(12, 12, 15))
+    # eigenstates = calculate_energy_eigenstates(h, kx_points, ky_points)
+    # path = Path(__file__).parent / "data" / "copper_eigenstates_12_12_15.json"
+    # save_energy_eigenstates(eigenstates, path)
+
+    # h6 = generate_hamiltonian(resolution=(13, 13, 15))
+    # eigenstates6 = calculate_energy_eigenstates(h6, kx_points, ky_points)
+    # path = Path(__file__).parent / "data" / "copper_eigenstates_12_12_16.json"
+    # save_energy_eigenstates(eigenstates6, path)
+
+    h = generate_hamiltonian(resolution=(10, 10, 15))
+    eigenstates = calculate_energy_eigenstates(h, kx_points, ky_points)
+    path = Path(__file__).parent / "data" / "copper_eigenstates_10_10_15.json"
+    save_energy_eigenstates(eigenstates, path)
+
+    # h = generate_hamiltonian(resolution=(13, 13, 15))
+    # eigenstates = calculate_energy_eigenstates(h, kx_points, ky_points)
+    # path = Path(__file__).parent / "data" / "copper_eigenstates_13_13_15.json"
+    # save_energy_eigenstates(eigenstates, path)
 
 
 def analyze_eigenvalue_convergence():
-    path = Path(__file__).parent / "data" / "copper_eigenstates_14_14_10.json"
-    eigenstates1 = load_energy_eigenstates(path)
-
-    path = Path(__file__).parent / "data" / "copper_eigenstates_12_12_10.json"
-    eigenstates2 = load_energy_eigenstates(path)
-
-    path = Path(__file__).parent / "data" / "copper_eigenstates_12_12_12.json"
-    eigenstates3 = load_energy_eigenstates(path)
 
     fig, ax = plt.subplots()
-    _, _, l1 = plot_lowest_band_in_kx(eigenstates1, ax=ax)
-    l1.set_label("(14,14,10)")
-    _, _, l2 = plot_lowest_band_in_kx(eigenstates2, ax=ax)
-    l2.set_label("(12,12,10)")
-    _, _, l3 = plot_lowest_band_in_kx(eigenstates3, ax=ax)
-    l3.set_label("(12,12,12)")
+    # path = Path(__file__).parent / "data" / "copper_eigenstates_14_14_10.json"
+    # eigenstates = load_energy_eigenstates(path)
+    # _, _, ln = plot_lowest_band_in_kx(eigenstates, ax=ax)
+    # ln.set_label("(14,14,10)")
+
+    path = Path(__file__).parent / "data" / "copper_eigenstates_12_12_10.json"
+    eigenstates = load_energy_eigenstates(path)
+    _, _, ln = plot_lowest_band_in_kx(eigenstates, ax=ax)
+    ln.set_label("(12,12,10)")
+
+    path = Path(__file__).parent / "data" / "copper_eigenstates_12_12_12.json"
+    eigenstates = load_energy_eigenstates(path)
+    _, _, ln = plot_lowest_band_in_kx(eigenstates, ax=ax)
+    ln.set_label("(12,12,12)")
+
+    path = Path(__file__).parent / "data" / "copper_eigenstates_12_12_14.json"
+    eigenstates = load_energy_eigenstates(path)
+    _, _, ln = plot_lowest_band_in_kx(eigenstates, ax=ax)
+    ln.set_label("(12,12,14)")
+
+    path = Path(__file__).parent / "data" / "copper_eigenstates_12_12_15.json"
+    eigenstates = load_energy_eigenstates(path)
+    _, _, ln = plot_lowest_band_in_kx(eigenstates, ax=ax)
+    ln.set_label("(12,12,15)")
+
+    path = Path(__file__).parent / "data" / "copper_eigenstates_10_10_15.json"
+    eigenstates = load_energy_eigenstates(path)
+    _, _, ln = plot_lowest_band_in_kx(eigenstates, ax=ax)
+    ln.set_label("(10,10,15)")
 
     ax.set_title(
         "Plot of energy against k for the lowest band of Copper for $K_y=0$\n"
@@ -222,29 +267,26 @@ def analyze_eigenvalue_convergence():
 
 
 def analyze_eigenvector_convergence_z():
-    path = Path(__file__).parent / "data" / "copper_eigenstates_14_14_10.json"
-    eigenstates1 = load_energy_eigenstates(path)
-
-    path = Path(__file__).parent / "data" / "copper_eigenstates_12_12_10.json"
-    eigenstates2 = load_energy_eigenstates(path)
-
-    path = Path(__file__).parent / "data" / "copper_eigenstates_12_12_12.json"
-    eigenstates3 = load_energy_eigenstates(path)
 
     fig, ax = plt.subplots()
-    h1 = generate_hamiltonian(resolution=(14, 14, 10))
-    _, _, l1 = plot_eigenvector_z(h1, eigenstates1["eigenvectors"][0], ax=ax)
-    l1.set_label("(14,14,10) kx=G/2")
-    h2 = generate_hamiltonian(resolution=(12, 12, 10))
-    _, _, l2 = plot_eigenvector_z(h2, eigenstates2["eigenvectors"][0], ax=ax)
-    l2.set_label("(12,12,10) kx=G/2")
 
-    h1 = generate_hamiltonian(resolution=(14, 14, 10))
-    _, _, l1 = plot_eigenvector_z(h1, eigenstates1["eigenvectors"][5], ax=ax)
-    l1.set_label("(14,14,10)")
-    h2 = generate_hamiltonian(resolution=(12, 12, 10))
-    _, _, l2 = plot_eigenvector_z(h2, eigenstates2["eigenvectors"][5], ax=ax)
-    l2.set_label("(12,12,10)")
+    path = Path(__file__).parent / "data" / "copper_eigenstates_10_10_15.json"
+    eigenstates = load_energy_eigenstates(path)
+    h = generate_hamiltonian(resolution=eigenstates["resolution"])
+    _, _, ln = plot_eigenvector_z(h, eigenstates["eigenvectors"][0], ax=ax)
+    ln.set_label("(10,10,15) kx=G/2")
+
+    path = Path(__file__).parent / "data" / "copper_eigenstates_12_12_14.json"
+    eigenstates = load_energy_eigenstates(path)
+    h2 = generate_hamiltonian(resolution=eigenstates["resolution"])
+    _, _, l2 = plot_eigenvector_z(h2, eigenstates["eigenvectors"][0], ax=ax)
+    l2.set_label("(12,12,14) kx=G/2")
+
+    path = Path(__file__).parent / "data" / "copper_eigenstates_12_12_15.json"
+    eigenstates = load_energy_eigenstates(path)
+    h = generate_hamiltonian(resolution=eigenstates["resolution"])
+    _, _, ln = plot_eigenvector_z(h, eigenstates["eigenvectors"][0], ax=ax)
+    ln.set_label("(12,12,15) kx=G/2")
 
     ax.set_title(
         "Plot of energy against k for the lowest band of Copper for $K_y=0$\n"
@@ -256,33 +298,39 @@ def analyze_eigenvector_convergence_z():
 
 
 def analyze_eigenvector_convergence_through_bridge():
-    path = Path(__file__).parent / "data" / "copper_eigenstates_14_14_10.json"
-    eigenstates1 = load_energy_eigenstates(path)
 
-    path = Path(__file__).parent / "data" / "copper_eigenstates_12_12_10.json"
-    eigenstates2 = load_energy_eigenstates(path)
-
-    path = Path(__file__).parent / "data" / "copper_eigenstates_12_12_12.json"
-    eigenstates3 = load_energy_eigenstates(path)
+    path = Path(__file__).parent / "data" / "copper_eigenstates_12_12_15.json"
+    eigenstates = load_energy_eigenstates(path)
 
     fig, ax = plt.subplots()
     ax2 = ax.twinx()
-    h1 = generate_hamiltonian(resolution=(14, 14, 10))
-    _, _, l1 = plot_eigenvector_through_bridge(
-        h1, eigenstates1["eigenvectors"][5], ax=ax
-    )
+
+    path = Path(__file__).parent / "data" / "copper_eigenstates_12_12_15.json"
+    eigenstates = load_energy_eigenstates(path)
+    h = generate_hamiltonian(resolution=eigenstates["resolution"])
+    _, _, ln = plot_eigenvector_through_bridge(h, eigenstates["eigenvectors"][5], ax=ax)
     _, _, _ = plot_eigenvector_through_bridge(
-        h1, eigenstates1["eigenvectors"][5], ax=ax2, view="angle"
+        h, eigenstates["eigenvectors"][5], ax=ax2, view="angle"
     )
-    l1.set_label("(14,14,10)")
-    h2 = generate_hamiltonian(resolution=(12, 12, 10))
-    _, _, l2 = plot_eigenvector_through_bridge(
-        h2, eigenstates2["eigenvectors"][5], ax=ax
-    )
+    ln.set_label("(12,12,15)")
+
+    path = Path(__file__).parent / "data" / "copper_eigenstates_12_12_14.json"
+    eigenstates = load_energy_eigenstates(path)
+    h = generate_hamiltonian(resolution=eigenstates["resolution"])
+    _, _, ln = plot_eigenvector_through_bridge(h, eigenstates["eigenvectors"][5], ax=ax)
     _, _, _ = plot_eigenvector_through_bridge(
-        h2, eigenstates2["eigenvectors"][5], ax=ax2, view="angle"
+        h, eigenstates["eigenvectors"][5], ax=ax2, view="angle"
     )
-    l2.set_label("(12,12,10)")
+    ln.set_label("(12,12,14)")
+
+    path = Path(__file__).parent / "data" / "copper_eigenstates_10_10_15.json"
+    eigenstates = load_energy_eigenstates(path)
+    h = generate_hamiltonian(resolution=eigenstates["resolution"])
+    _, _, ln = plot_eigenvector_through_bridge(h, eigenstates["eigenvectors"][5], ax=ax)
+    _, _, _ = plot_eigenvector_through_bridge(
+        h, eigenstates["eigenvectors"][5], ax=ax2, view="angle"
+    )
+    ln.set_label("(10,10,15)")
 
     ax2.set_ylim(-np.pi, np.pi)
     ax.set_title(
@@ -295,31 +343,53 @@ def analyze_eigenvector_convergence_through_bridge():
 
 
 def generate_eigenstates_grid():
-    h = generate_hamiltonian(resolution=(12, 12, 12))
+    h = generate_hamiltonian(resolution=(12, 12, 15))
 
-    vkx, vky = np.meshgrid(
-        np.linspace(-h.dkx / 2, h.dkx / 2, 11),
-        np.linspace(-h.dky / 2, h.dky / 2, 11),
-    )
-
-    kx_points = vkx.ravel()
-    ky_points = vky.ravel()
-
-    eigenstates1 = calculate_energy_eigenstates(h, kx_points, ky_points)
     path = Path(__file__).parent / "data" / "copper_eigenstates_grid.json"
-    save_energy_eigenstates(eigenstates1, path)
+
+    eigenstates = generate_energy_eigenstates_grid(path, h, grid_size=5)
 
 
-def generate_wavepacket():
+def get_wavepacket_phases(
+    eigenvectors: List[List[float]], resolution: Tuple[int, int, int]
+):
+    h = generate_hamiltonian(resolution=resolution)
+    origin_point = [h.delta_x / 2, h.delta_y / 2, 0]
+
+    phases = []
+    for vector in eigenvectors:
+        point_at_origin = h.calculate_wavefunction([origin_point], vector)[0]
+        phases.append(np.angle(point_at_origin))
+    return phases
+
+
+def generate_wavepacket() -> SurfaceWavepacket:
     path = Path(__file__).parent / "data" / "copper_eigenstates_grid.json"
     eigenstates = load_energy_eigenstates(path)
 
     plot_eigenstate_positions(eigenstates)
 
+    eigenvectors = eigenstates["eigenvectors"]
+
+    phases = get_wavepacket_phases(eigenvectors, eigenstates["resolution"])
+
+    fixed_phase_eigenvectors = np.divide(eigenvectors, phases)
+
+    wavepacket_eigenvectors = np.sum(fixed_phase_eigenvectors, axis=0) / len(
+        eigenvectors
+    )
+
+    return {
+        "eigenvectors": wavepacket_eigenvectors.tolist(),
+        "resolution": eigenstates["resolution"],
+    }
+
 
 if __name__ == "__main__":
-    generate_eigenstates_data()
+    generate_eigenstates_grid()
     # generate_eigenstates_data()
-    analyze_eigenvalue_convergence()
+    # generate_eigenstates_data()
+    # analyze_eigenvalue_convergence()
+    # analyze_eigenvector_convergence_z()
+    # analyze_eigenvector_convergence_through_bridge()
     print("Done")
-    input()

@@ -233,28 +233,6 @@ class TestSurfaceHamiltonian(unittest.TestCase):
 
         self.assertTrue(np.all(np.isreal(hamiltonian.get_ft_potential())))
 
-    def test_get_fft_fast(self) -> None:
-        width = random.randrange(1, 10) * 2
-        nz = random.randrange(2, 100)
-
-        points = generate_symmetrical_points(nz, width)
-        config: SHOConfig = {
-            "mass": 1,
-            "sho_omega": 1,
-            "z_offset": -2,
-        }
-        data: EnergyInterpolation = {
-            "points": points.tolist(),
-            "delta_x": 2 * np.pi * hbar,
-            "delta_y": 2 * np.pi * hbar,
-            "dz": 1,
-        }
-        hamiltonian = SurfaceHamiltonian((2, 2, 2), data, config)
-
-        np.testing.assert_allclose(
-            hamiltonian.get_ft_potential(), hamiltonian.get_ft_potential_fast()
-        )
-
     def test_get_fft_normalization(self) -> None:
         hamiltonian = generate_random_diagonal_hamiltonian()
         z_points = np.random.rand(hamiltonian.Nz)
@@ -359,8 +337,8 @@ class TestSurfaceHamiltonian(unittest.TestCase):
         }
         hamiltonian = SurfaceHamiltonian((1, 1, 10), data, config)
 
-        for iz1 in range(10):
-            for iz2 in range(10):
+        for iz1 in range(12):
+            for iz2 in range(12):
                 sho_1 = hamiltonian._calculate_sho_wavefunction_points(iz1)
                 sho_2 = hamiltonian._calculate_sho_wavefunction_points(iz2)
                 sho_norm = hamiltonian.dz * np.sum(sho_1 * sho_2, dtype=float)
@@ -376,7 +354,7 @@ class TestSurfaceHamiltonian(unittest.TestCase):
         sho_omega = random.random() / hbar
         z_points = np.linspace(-20 * random.random(), 20 * random.random(), 1000)
 
-        for n in range(10):
+        for n in range(14):
             actual = hamiltonian_diag.get_sho_wavefunction(
                 z_points.tolist(), sho_omega, mass, n
             )
@@ -409,7 +387,7 @@ class TestSurfaceHamiltonian(unittest.TestCase):
             "dz": 1,
         }
 
-        hamiltonian = SurfaceHamiltonian((2, 2, 3), data, config)
+        hamiltonian = SurfaceHamiltonian((1, 1, 14), data, config)
 
         np.testing.assert_allclose(
             hamiltonian._calculate_off_diagonal_energies_fast(),

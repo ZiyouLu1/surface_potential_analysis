@@ -3,7 +3,7 @@ use std::{collections::HashMap, f64::consts::PI};
 
 use pyo3::prelude::*;
 
-fn factorial(n: u32) -> u32 {
+fn factorial(n: u64) -> u64 {
     (1..=n).product()
 }
 #[must_use]
@@ -28,13 +28,16 @@ fn hermite_val(x: f64, n: u32) -> f64 {
 
 fn calculate_sho_wavefunction(z_points: Vec<f64>, sho_omega: f64, mass: f64, n: u32) -> Vec<f64> {
     let norm = ((sho_omega * mass) / REDUCED_PLANCK_CONSTANT).sqrt();
-    let prefactor = (norm / (f64::from(2_u32.pow(n) * factorial(n)) * PI.sqrt())).sqrt();
+    let factorial: f64 = factorial(n.into()) as f64;
+    let prefactor = (norm / factorial) / (PI.sqrt() * 2_f64.powi(n.try_into().unwrap()));
+    let sqrt_prefactor = prefactor.sqrt();
+
     z_points
         .into_iter()
         .map(|p| -> f64 {
             let normalized_p = p * norm;
             let hermite_val = hermite_val(normalized_p, n);
-            prefactor * hermite_val * f64::exp(-normalized_p.powi(2) / 2.0)
+            sqrt_prefactor * hermite_val * f64::exp(-normalized_p.powi(2) / 2.0)
         })
         .collect()
 }
