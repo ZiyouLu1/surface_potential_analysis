@@ -33,20 +33,19 @@
     "vmax",
     "vmin",
     "wavefunction",
+    "wavefunctions",
     "wavepacket",
     "Wavevector",
     "xlabel",
     "ylabel"
   ],
   "python.linting.flake8Args": ["--ignore=E501,W503,E203,E301"],
-  "python.testing.unittestArgs": ["-v", "-s", "./src", "-p", "*test.py"],
+  "python.testing.unittestArgs": ["-v", "-s", "./tests", "-p", "*test.py"],
   "python.testing.pytestEnabled": false,
   "python.testing.unittestEnabled": true,
   "[json]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
-  "rust-analyzer.linkedProjects": [
-    "./src/hamiltonian_diag/Cargo.toml"
-  ],
+  "rust-analyzer.linkedProjects": ["./src/hamiltonian_generator/Cargo.toml"],
   "rust-analyzer.checkOnSave.command": "clippy"
 }

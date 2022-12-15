@@ -1,12 +1,12 @@
 # surface_potential_analysis
 
-To install the rust package run
+To install the two packages run
 
 ```shell
-cd src\\hamiltonian_diag
-maturin develop --profile release
+pip install -e ./src/surface_potential_analysis
+pip install ./src/hamiltonian_generator
 ```
 
-after activating the virtual environment
+Note hamiltonian_generator is a dependency of surface_potential_analysis but I couldn't figure out how to add local deps to pyproject.toml. Best practice is to do this all in a virtual environment.
 
-maturin build -r --target x86_64-unknown-linux-gnu
+Functions can then be imported and run from main.py.
