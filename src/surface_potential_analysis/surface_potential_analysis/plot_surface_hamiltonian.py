@@ -44,7 +44,7 @@ def plot_density_of_states(
 
 def plot_eigenvector_z(
     hamiltonian: SurfaceHamiltonian,
-    eigenvector: Iterable[float],
+    eigenvector: Iterable[complex],
     ax: Axes | None = None,
 ) -> tuple[Figure, Axes, Line2D]:
     fig, a = (ax.get_figure(), ax) if ax is not None else plt.subplots()
@@ -62,7 +62,7 @@ def plot_eigenvector_z(
 
 def plot_eigenvector_through_bridge(
     hamiltonian: SurfaceHamiltonian,
-    eigenvector: Iterable[float],
+    eigenvector: Iterable[complex],
     ax: Axes | None = None,
     view: Literal["abs"] | Literal["angle"] = "abs",
 ) -> tuple[Figure, Axes, Line2D]:
@@ -137,8 +137,8 @@ def plot_bands_occupation(
 
 def plot_wavefunction_difference_in_xy(
     hamiltonian: SurfaceHamiltonian,
-    eigenvector1: Iterable[float],
-    eigenvector2: Iterable[float],
+    eigenvector1: Iterable[complex],
+    eigenvector2: Iterable[complex],
     ax: Axes | None = None,
     y_point=0.0,
 ) -> tuple[Figure, Axes, AxesImage]:
@@ -161,7 +161,7 @@ def plot_wavefunction_difference_in_xy(
 
 def plot_wavefunction_in_xy(
     hamiltonian: SurfaceHamiltonian,
-    eigenvector: Iterable[float],
+    eigenvector: Iterable[complex],
     ax: Axes | None = None,
     y_point=0.0,
 ) -> tuple[Figure, Axes, AxesImage]:

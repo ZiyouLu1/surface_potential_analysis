@@ -1,6 +1,8 @@
 #![warn(clippy::all, clippy::pedantic, clippy::nursery, clippy::cargo)]
+
 use std::{collections::HashMap, f64::consts::PI};
 
+use num_complex::{Complex, Complex64};
 use pyo3::prelude::*;
 
 fn factorial(n: u64) -> u64 {
@@ -26,7 +28,7 @@ fn hermite_val(x: f64, n: u32) -> f64 {
         .sum()
 }
 
-fn calculate_sho_wavefunction(z_points: Vec<f64>, sho_omega: f64, mass: f64, n: u32) -> Vec<f64> {
+fn calculate_sho_wavefunction(z_points: &Vec<f64>, sho_omega: f64, mass: f64, n: u32) -> Vec<f64> {
     let norm = ((sho_omega * mass) / REDUCED_PLANCK_CONSTANT).sqrt();
     let factorial: f64 = factorial(n.into()) as f64;
     let prefactor = (norm / factorial) / (PI.sqrt() * 2_f64.powi(n.try_into().unwrap()));
@@ -45,28 +47,87 @@ fn calculate_sho_wavefunction(z_points: Vec<f64>, sho_omega: f64, mass: f64, n: 
 const PLANCK_CONSTANT: f64 = 6.626_070_15E-34;
 const REDUCED_PLANCK_CONSTANT: f64 = PLANCK_CONSTANT / (2.0 * PI);
 
-struct SHOConfig {
-    mass: f64,
-    sho_omega: f64,
-    z_offset: f64,
+struct EigenstateResolution(i64, i64, usize);
+
+impl EigenstateResolution {
+    fn coordinates(&self) -> Vec<(i64, i64, usize)> {
+        (-self.0..=self.0)
+            .flat_map(|x| (-self.1..=self.1).flat_map(move |y| (0..self.2).map(move |z| (x, y, z))))
+            .collect()
+    }
 }
+
+struct EigenstateConfig {
+    sho_omega: f64,
+    mass: f64,
+    delta_x: f64,
+    delta_y: f64,
+}
+
+struct Eigenstate {
+    config: EigenstateConfig,
+    resolution: EigenstateResolution,
+    vector: Vec<num_complex::Complex64>,
+    kx: f64,
+    ky: f64,
+}
+
+impl Eigenstate {
+    fn calculate_wavefunction(&self, points: &Vec<[f64; 3]>) -> Vec<Complex64> {
+        let coordinates = self.resolution.coordinates();
+        let z_points: Vec<f64> = points.iter().map(|p| p[2]).collect();
+
+        let cache: Vec<Vec<f64>> = (0..self.resolution.2)
+            .map(|nz| -> Vec<f64> {
+                calculate_sho_wavefunction(
+                    &z_points,
+                    self.config.sho_omega,
+                    self.config.mass,
+                    nz as u32,
+                )
+            })
+            .collect();
+
+        let dkx = self.config.dkx();
+        let dky = self.config.dky();
+
+        let mut out: Vec<Complex64> = vec![Complex::default(); points.len()];
+        for (eig, (nkx, nky, nz)) in self.vector.iter().zip(coordinates) {
+            for (i, wfn) in cache[nz].iter().enumerate() {
+                out[i] += wfn
+                    * eig
+                    * Complex {
+                        re: 0.0,
+                        im: ((nkx as f64) * dkx + self.kx) * points[i][0]
+                            + ((nky as f64) * dky + self.ky) * points[i][1],
+                    }
+                    .exp();
+            }
+        }
+
+        out
+    }
+}
+
+impl EigenstateConfig {
+    fn dkx(&self) -> f64 {
+        2.0 * PI / self.delta_x
+    }
+
+    fn dky(&self) -> f64 {
+        2.0 * PI / self.delta_y
+    }
+}
+
 struct SurfaceHamiltonian {
-    resolution: (i64, i64, usize),
-    sho_config: SHOConfig,
+    sho_config: EigenstateConfig,
+    resolution: EigenstateResolution,
     ft_potential: Vec<Vec<Vec<f64>>>,
     dz: f64,
+    z_offset: f64,
 }
 
 impl SurfaceHamiltonian {
-    fn coordinates(&self) -> Vec<(i64, i64, usize)> {
-        (-self.resolution.0..=self.resolution.0)
-            .flat_map(|x| {
-                (-self.resolution.1..=self.resolution.1)
-                    .flat_map(move |y| (0..self.resolution.2).map(move |z| (x, y, z)))
-            })
-            .collect()
-    }
-
     fn get_nx(&self) -> usize {
         self.ft_potential.len()
     }
@@ -81,13 +142,13 @@ impl SurfaceHamiltonian {
 
     fn get_z_points(&self) -> Vec<f64> {
         (0..self.get_nz())
-            .map(|i| self.dz.mul_add(i as f64, self.sho_config.z_offset))
+            .map(|i| self.dz.mul_add(i as f64, self.z_offset))
             .collect()
     }
 
     fn calculate_sho_wavefunction(&self, n: u32) -> Vec<f64> {
         calculate_sho_wavefunction(
-            self.get_z_points(),
+            &self.get_z_points(),
             self.sho_config.sho_omega,
             self.sho_config.mass,
             n,
@@ -95,7 +156,7 @@ impl SurfaceHamiltonian {
     }
 
     fn calculate_off_diagonal_energies(&self) -> Vec<Vec<f64>> {
-        let coordinates = self.coordinates();
+        let coordinates = self.resolution.coordinates();
         let cache: Vec<Vec<f64>> = (0..self.resolution.2)
             .map(|nz| -> Vec<f64> { self.calculate_sho_wavefunction(nz.try_into().unwrap()) })
             .collect();
@@ -136,18 +197,14 @@ impl SurfaceHamiltonian {
 }
 
 #[pyfunction]
-fn get_hermite_val(x: f64, n: u32) -> PyResult<f64> {
-    Ok(hermite_val(x, n))
+fn get_hermite_val(x: f64, n: u32) -> f64 {
+    hermite_val(x, n)
 }
 
 #[pyfunction]
-fn get_sho_wavefunction(
-    z_points: Vec<f64>,
-    sho_omega: f64,
-    mass: f64,
-    n: u32,
-) -> PyResult<Vec<f64>> {
-    Ok(calculate_sho_wavefunction(z_points, sho_omega, mass, n))
+#[allow(clippy::needless_pass_by_value)]
+fn get_sho_wavefunction(z_points: Vec<f64>, sho_omega: f64, mass: f64, n: u32) -> Vec<f64> {
+    calculate_sho_wavefunction(&z_points, sho_omega, mass, n)
 }
 
 #[pyfunction]
@@ -158,23 +215,58 @@ fn get_hamiltonian(
     mass: f64,
     sho_omega: f64,
     z_offset: f64,
-) -> PyResult<Vec<Vec<f64>>> {
-    let sho_config = SHOConfig {
+) -> Vec<Vec<f64>> {
+    let sho_config = EigenstateConfig {
         mass,
         sho_omega,
-        z_offset,
+        delta_x: 1.0,
+        delta_y: 1.0,
     };
     let hamiltonian = SurfaceHamiltonian {
         dz,
         ft_potential,
-        resolution: (
+        resolution: EigenstateResolution(
             resolution[0].try_into().unwrap(),
             resolution[1].try_into().unwrap(),
             resolution[2],
         ),
         sho_config,
+        z_offset,
     };
-    Ok(hamiltonian.calculate_off_diagonal_energies())
+    hamiltonian.calculate_off_diagonal_energies()
+}
+
+#[pyfunction]
+#[allow(clippy::too_many_arguments)]
+fn get_eigenstate_wavefunction(
+    resolution: [usize; 3],
+    delta_x: f64,
+    delta_y: f64,
+    mass: f64,
+    sho_omega: f64,
+    kx: f64,
+    ky: f64,
+    vector: Vec<Complex64>,
+    points: Vec<[f64; 3]>,
+) -> Vec<Complex64> {
+    let eigenstate = Eigenstate {
+        config: EigenstateConfig {
+            sho_omega,
+            mass,
+            delta_x,
+            delta_y,
+        },
+        kx,
+        ky,
+        resolution: EigenstateResolution(
+            resolution[0].try_into().unwrap(),
+            resolution[1].try_into().unwrap(),
+            resolution[2],
+        ),
+        vector,
+    };
+
+    eigenstate.calculate_wavefunction(&points)
 }
 
 /// A Python module implemented in Rust.
@@ -183,19 +275,21 @@ fn hamiltonian_generator(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(get_hamiltonian, m)?)?;
     m.add_function(wrap_pyfunction!(get_sho_wavefunction, m)?)?;
     m.add_function(wrap_pyfunction!(get_hermite_val, m)?)?;
+    m.add_function(wrap_pyfunction!(get_eigenstate_wavefunction, m)?)?;
     Ok(())
 }
 
 #[cfg(test)]
 mod test {
-    use crate::{SHOConfig, SurfaceHamiltonian};
+    use crate::{EigenstateConfig, EigenstateResolution, SurfaceHamiltonian};
 
     #[test]
     fn test_calculate_off_diagonal_energies() {
-        let sho_config = SHOConfig {
+        let sho_config = EigenstateConfig {
             mass: 1.0,
             sho_omega: 1.0,
-            z_offset: 0.0,
+            delta_x: 1.0,
+            delta_y: 1.0,
         };
         let hamiltonian = SurfaceHamiltonian {
             dz: 1.0,
@@ -203,8 +297,9 @@ mod test {
                 vec![vec![0.0, 0.0], vec![0.0, 0.0]],
                 vec![vec![0.0, 0.0], vec![0.0, 0.0]],
             ],
-            resolution: (2, 2, 2),
+            resolution: EigenstateResolution(2, 2, 2),
             sho_config,
+            z_offset: 0.0,
         };
 
         hamiltonian.calculate_off_diagonal_energies();

@@ -11,6 +11,7 @@ from surface_potential_analysis.energy_data.energy_data import EnergyInterpolati
 from surface_potential_analysis.energy_data.sho_config import EigenstateConfig
 from surface_potential_analysis.hamiltonian import (
     SurfaceHamiltonian,
+    calculate_eigenvalues,
     calculate_sho_wavefunction,
 )
 
@@ -381,6 +382,63 @@ class TestSurfaceHamiltonian(unittest.TestCase):
             hamiltonian._calculate_off_diagonal_energies_fast(),
             hamiltonian._calculate_off_diagonal_energies(),
         )
+
+    def test_eigenstate_normalization(self) -> None:
+        width = random.randrange(2, 10)
+        nz = 100
+        config: EigenstateConfig = {
+            "mass": hbar**2,
+            "sho_omega": 1 / hbar,
+            "delta_x": 2 * np.pi * hbar,
+            "delta_y": 2 * np.pi * hbar,
+        }
+
+        points = generate_symmetrical_points(nz, width)
+        data: EnergyInterpolation = {
+            "points": points.tolist(),
+            "dz": 1,
+        }
+
+        hamiltonian = SurfaceHamiltonian((1, 1, 14), data, config, 0)
+
+        kx = 0
+        ky = 0
+        eig_val, eig_vec = calculate_eigenvalues(hamiltonian, kx, ky)
+
+        np.testing.assert_allclose(
+            np.array([np.linalg.norm(x) for x in eig_vec]), np.ones_like(eig_val)
+        )
+
+    def test_calculate_wavefunction_fast(self) -> None:
+
+        config: EigenstateConfig = {
+            "mass": hbar**2,
+            "sho_omega": 1 / hbar,
+            "delta_x": 2 * np.pi * hbar,
+            "delta_y": 2 * np.pi * hbar,
+        }
+
+        data: EnergyInterpolation = {
+            "points": [],
+            "dz": 1,
+        }
+
+        resolution = (10, 10, 14)
+        hamiltonian = SurfaceHamiltonian(resolution, data, config, 0)
+        kx = 0
+        ky = 0
+
+        eigenvector = np.random.rand(hamiltonian.coordinates.shape[0])
+        points = [[1, 1, 1]]
+
+        expected = hamiltonian.calculate_wavefunction_slow(
+            points, eigenvector=eigenvector, kx=kx, ky=ky
+        )
+        actual = hamiltonian.calculate_wavefunction_fast(
+            points, eigenvector=eigenvector, kx=kx, ky=ky
+        )
+
+        np.testing.assert_allclose(expected, actual)
 
 
 if __name__ == "__main__":
