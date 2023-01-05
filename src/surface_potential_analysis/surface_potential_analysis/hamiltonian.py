@@ -3,7 +3,7 @@ import math
 import os
 from functools import cache, cached_property, wraps
 from pathlib import Path
-from typing import Any, Callable, Iterable, List, Tuple, TypeVar
+from typing import Any, Callable, List, Tuple, TypeVar
 
 import numpy as np
 import scipy.special
@@ -14,9 +14,11 @@ import hamiltonian_generator
 
 from .energy_data.energy_data import EnergyInterpolation
 from .energy_data.energy_eigenstates import (
+    Eigenstate,
     EnergyEigenstates,
     WavepacketGrid,
     append_energy_eigenstates,
+    get_eigenstate_list,
     save_energy_eigenstates,
 )
 from .energy_data.sho_config import EigenstateConfig
@@ -283,21 +285,21 @@ class SurfaceHamiltonian:
     def calculate_wavefunction_slow(
         self,
         points: ArrayLike,
-        eigenvector: Iterable[complex],
+        eigenstate: Eigenstate,
         cutoff: int | None = None,
-        kx: float = 0.0,
-        ky: float = 0.0,
     ) -> NDArray:
         points = np.array(points)
         out = np.zeros(shape=(points.shape[0]), dtype=complex)
 
-        eigenvector_array = np.array(eigenvector)
+        eigenvector_array = np.array(eigenstate["eigenvector"])
         coordinates = self.coordinates
         args = (
             np.arange(self.coordinates.shape[0])
             if cutoff is None
             else np.argsort(np.abs(eigenvector_array))[::-1][:cutoff]
         )
+        kx = eigenstate["kx"]
+        ky = eigenstate["ky"]
         for arg in args:
             (nkx, nky, nz) = coordinates[arg]
             e = eigenvector_array[arg]
@@ -316,9 +318,7 @@ class SurfaceHamiltonian:
     def calculate_wavefunction_fast(
         self,
         points: ArrayLike,
-        eigenvector: Iterable[complex],
-        kx: float = 0.0,
-        ky: float = 0.0,
+        eigenstate: Eigenstate,
     ) -> NDArray:
         return np.array(
             hamiltonian_generator.get_eigenstate_wavefunction(
@@ -327,9 +327,9 @@ class SurfaceHamiltonian:
                 self.delta_y,
                 self.mass,
                 self.sho_omega,
-                kx,
-                ky,
-                list(eigenvector),
+                eigenstate["kx"],
+                eigenstate["ky"],
+                eigenstate["eigenvector"],
                 np.array(points).tolist(),
             )
         )
@@ -345,6 +345,55 @@ def calculate_eigenvalues(
     """
     w, v = np.linalg.eigh(hamiltonian.hamiltonian(kx, ky))
     return (w, v.T)
+
+
+def calculate_wavepacket_grid_with_edge(
+    eigenstates: EnergyEigenstates,
+) -> WavepacketGrid:
+    hamiltonian = SurfaceHamiltonian(
+        resolution=eigenstates["resolution"],
+        config=eigenstates["eigenstate_config"],
+        potential={"dz": 0, "points": []},
+        potential_offset=0,
+    )
+
+    x_points = np.linspace(-hamiltonian.delta_x, hamiltonian.delta_x / 2, 25)  # 49 97
+    y_points = np.linspace(-hamiltonian.delta_y, hamiltonian.delta_y / 2, 25)
+    z_points = np.linspace(-hamiltonian.delta_y, hamiltonian.delta_y, 21)
+
+    xv, yv, zv = np.meshgrid(x_points, y_points, z_points)
+    points = np.array([xv.ravel(), yv.ravel(), zv.ravel()]).T
+
+    if not np.array_equal(xv, xv.ravel().reshape(xv.shape)):
+        raise AssertionError("Error unraveling points")
+
+    out = np.zeros_like(xv, dtype=complex)
+    max_kx_point = np.max(eigenstates["kx_points"])
+    max_ky_point = np.max(eigenstates["ky_points"])
+    min_kx_point = np.min(eigenstates["kx_points"])
+    min_ky_point = np.min(eigenstates["ky_points"])
+    for eigenstate in get_eigenstate_list(eigenstates):
+        print("pass")
+        wfn = hamiltonian.calculate_wavefunction_fast(
+            points,
+            eigenstate,
+        )
+
+        is_kx_edge = (
+            eigenstate["kx"] == max_kx_point or eigenstate["kx"] == min_kx_point
+        )
+        is_ky_edge = (
+            eigenstate["ky"] == max_ky_point or eigenstate["ky"] == min_ky_point
+        )
+        edge_factor = (0.5 if is_kx_edge else 1.0) * (0.5 if is_ky_edge else 1.0)
+        out += edge_factor * wfn.reshape(xv.shape) / len(eigenstates["eigenvectors"])
+
+    return {
+        "x_points": x_points.tolist(),
+        "y_points": y_points.tolist(),
+        "z_points": z_points.tolist(),
+        "points": out.tolist(),
+    }
 
 
 def calculate_wavepacket_grid(
@@ -368,27 +417,18 @@ def calculate_wavepacket_grid(
         raise AssertionError("Error unraveling points")
 
     out = np.zeros_like(xv, dtype=complex)
-    for (i, eigenvector) in enumerate(eigenstates["eigenvectors"]):
-        print(i)
+    for eigenstate in get_eigenstate_list(eigenstates):
+        print("pass")
         wfn = (
             hamiltonian.calculate_wavefunction_slow(
                 points,
-                eigenvector,
+                eigenstate,
                 cutoff=cutoff,
-                kx=eigenstates["kx_points"][i],
-                ky=eigenstates["ky_points"][i],
             )
             if cutoff is not None
-            else hamiltonian.calculate_wavefunction_fast(
-                points,
-                eigenvector,
-                kx=eigenstates["kx_points"][i],
-                ky=eigenstates["ky_points"][i],
-            )
+            else hamiltonian.calculate_wavefunction_fast(points, eigenstate)
         )
-        out += wfn.reshape(xv.shape)
-    # Normalize
-    out = out / len(eigenstates["eigenvectors"])
+        out += wfn.reshape(xv.shape) / len(eigenstates["eigenvectors"])
 
     return {
         "x_points": x_points.tolist(),
@@ -399,7 +439,7 @@ def calculate_wavepacket_grid(
 
 
 def generate_energy_eigenstates_grid(
-    path: Path, hamiltonian: SurfaceHamiltonian, grid_size=5
+    path: Path, hamiltonian: SurfaceHamiltonian, grid_size=5, include_zero=True
 ) -> None:
     data: EnergyEigenstates = {
         "kx_points": [],
@@ -412,17 +452,27 @@ def generate_energy_eigenstates_grid(
     save_energy_eigenstates(data, path)
 
     dkx = hamiltonian.dkx
-    kx_points = np.linspace(-dkx / 2, dkx / 2, 2 * grid_size + 1)
+    (kx_points, kx_step) = np.linspace(
+        -dkx / 2, dkx / 2, 2 * grid_size, endpoint=False, retstep=True
+    )
     dky = hamiltonian.dky
-    ky_points = np.linspace(-dky / 2, dky / 2, 2 * grid_size + 1)
-    for kx in kx_points[:-1]:
-        for ky in ky_points[:-1]:
+    (ky_points, ky_step) = np.linspace(
+        -dky / 2, dky / 2, 2 * grid_size, endpoint=False, retstep=True
+    )
+    if not include_zero:
+        kx_points += kx_step / 2
+        ky_points += ky_step / 2
+
+    for kx in kx_points:
+        for ky in ky_points:
             e_vals, e_vecs = calculate_eigenvalues(hamiltonian, kx, ky)
             a_min = np.argmin(e_vals)
 
             eigenvalue = e_vals[a_min]
             eigenvector = e_vecs[a_min].tolist()
-            append_energy_eigenstates(path, kx, ky, eigenvalue, eigenvector)
+            append_energy_eigenstates(
+                path, {"eigenvector": eigenvector, "kx": kx, "ky": ky}, eigenvalue
+            )
 
 
 def calculate_energy_eigenstates(
@@ -455,9 +505,9 @@ def get_wavepacket_phases(
     origin_point = [h.delta_x / 2, h.delta_y / 2, 0]
 
     phases: List[float] = []
-    for (i, vector) in enumerate(data["eigenvectors"]):
+    for eigenstate in get_eigenstate_list(data):
         point_at_origin = hamiltonian.calculate_wavefunction_fast(
-            [origin_point], vector, kx=data["kx_points"][i], ky=data["ky_points"][i]
+            [origin_point], eigenstate
         )
         phases.append(float(np.angle(point_at_origin[0])))
     return phases

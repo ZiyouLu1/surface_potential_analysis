@@ -1,4 +1,4 @@
-from typing import Iterable, Literal
+from typing import Literal
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -8,7 +8,11 @@ from matplotlib.figure import Figure
 from matplotlib.image import AxesImage
 from matplotlib.lines import Line2D
 
-from .energy_data.energy_eigenstates import EnergyEigenstates
+from .energy_data.energy_eigenstates import (
+    Eigenstate,
+    EnergyEigenstates,
+    get_eigenstate_list,
+)
 from .hamiltonian import SurfaceHamiltonian, calculate_eigenvalues
 
 
@@ -44,7 +48,7 @@ def plot_density_of_states(
 
 def plot_eigenvector_z(
     hamiltonian: SurfaceHamiltonian,
-    eigenvector: Iterable[complex],
+    eigenstate: Eigenstate,
     ax: Axes | None = None,
 ) -> tuple[Figure, Axes, Line2D]:
     fig, a = (ax.get_figure(), ax) if ax is not None else plt.subplots()
@@ -54,7 +58,7 @@ def plot_eigenvector_z(
         [(hamiltonian.delta_x / 2, hamiltonian.delta_y / 2, z) for z in z_points]
     )
 
-    wfn = np.abs(hamiltonian.calculate_wavefunction(points, eigenvector))
+    wfn = np.abs(hamiltonian.calculate_wavefunction_fast(points, eigenstate))
     (line,) = a.plot(z_points, wfn)
 
     return fig, a, line
@@ -62,7 +66,7 @@ def plot_eigenvector_z(
 
 def plot_eigenvector_through_bridge(
     hamiltonian: SurfaceHamiltonian,
-    eigenvector: Iterable[complex],
+    eigenstate: Eigenstate,
     ax: Axes | None = None,
     view: Literal["abs"] | Literal["angle"] = "abs",
 ) -> tuple[Figure, Axes, Line2D]:
@@ -70,8 +74,7 @@ def plot_eigenvector_through_bridge(
 
     x_points = np.linspace(hamiltonian.x_points[0], hamiltonian.x_points[-1], 1000)
     points = np.array([(x, hamiltonian.delta_y / 2, 0) for x in x_points])
-    wfn = hamiltonian.calculate_wavefunction(points, eigenvector)
-    ##TODO: wfn = wfn * exp(1j*np.angle(wfn[middle]))
+    wfn = hamiltonian.calculate_wavefunction_fast(points, eigenstate)
     (line,) = ax1.plot(
         x_points - hamiltonian.delta_x / 2,
         np.abs(wfn) if view == "abs" else np.angle(wfn),
@@ -101,7 +104,7 @@ def plot_nth_eigenvector(
     points = np.array([(x, x, 0) for x in x_points])
     a.plot(
         np.sqrt(2) * (x_points - hamiltonian.delta_x / 2),
-        np.abs(hamiltonian.calculate_wavefunction(points, eigenvector)),
+        np.abs(hamiltonian.calculate_wavefunction_fast(points, eigenvector)),
         label="X-Y through Top",
     )
     a.set_title(f"Plot of the n={n} wavefunction")
@@ -137,8 +140,8 @@ def plot_bands_occupation(
 
 def plot_wavefunction_difference_in_xy(
     hamiltonian: SurfaceHamiltonian,
-    eigenvector1: Iterable[complex],
-    eigenvector2: Iterable[complex],
+    eigenstate1: Eigenstate,
+    eigenstate2: Eigenstate,
     ax: Axes | None = None,
     y_point=0.0,
 ) -> tuple[Figure, Axes, AxesImage]:
@@ -150,8 +153,12 @@ def plot_wavefunction_difference_in_xy(
     xv, yv = np.meshgrid(x_points, y_points)
     points = np.array([xv.ravel(), yv.ravel(), y_point * np.ones_like(xv.ravel())]).T
 
-    wfn1 = hamiltonian.calculate_wavefunction(points, eigenvector1).reshape(xv.shape)
-    wfn2 = hamiltonian.calculate_wavefunction(points, eigenvector2).reshape(xv.shape)
+    wfn1 = hamiltonian.calculate_wavefunction_fast(points, eigenstate1).reshape(
+        xv.shape
+    )
+    wfn2 = hamiltonian.calculate_wavefunction_fast(points, eigenstate2).reshape(
+        xv.shape
+    )
     X = np.abs(wfn1) - np.abs(wfn2)
 
     im = ax1.imshow(np.abs(X))
@@ -161,7 +168,7 @@ def plot_wavefunction_difference_in_xy(
 
 def plot_wavefunction_in_xy(
     hamiltonian: SurfaceHamiltonian,
-    eigenvector: Iterable[complex],
+    eigenstate: Eigenstate,
     ax: Axes | None = None,
     y_point=0.0,
 ) -> tuple[Figure, Axes, AxesImage]:
@@ -173,7 +180,7 @@ def plot_wavefunction_in_xy(
     xv, yv = np.meshgrid(x_points, y_points)
     points = np.array([xv.ravel(), yv.ravel(), y_point * np.ones_like(xv.ravel())]).T
 
-    X = hamiltonian.calculate_wavefunction(points, eigenvector).reshape(xv.shape)
+    X = hamiltonian.calculate_wavefunction_fast(points, eigenstate).reshape(xv.shape)
     im = ax1.imshow(np.abs(X))
     im.set_extent((x_points[0], x_points[-1], y_points[0], y_points[-1]))
     return (fig, ax1, im)
@@ -193,15 +200,10 @@ def plot_wavepacket_in_xy(
     points = np.array([xv.ravel(), yv.ravel(), np.zeros_like(xv.ravel())]).T
 
     X = np.zeros_like(xv, dtype=complex)
-    for (i, eigenvector) in enumerate(eigenstates["eigenvectors"]):
-        print(i)
-        wfn = hamiltonian.calculate_wavefunction(points, eigenvector)
-        phases = (
-            eigenstates["kx_points"][i] * points[:, 0]
-            + eigenstates["ky_points"][i] * points[:, 1]
-        )
-        phase_factors = np.exp(1j * phases)
-        X += (phase_factors * wfn).reshape(xv.shape)
+    for eigenstate in get_eigenstate_list(eigenstates):
+        print("i")
+        wfn = hamiltonian.calculate_wavefunction_fast(points, eigenstate)
+        X += (wfn).reshape(xv.shape)
     im = ax1.imshow(np.abs(X / len(eigenstates["eigenvectors"])))
     im.set_extent((x_points[0], x_points[-1], y_points[0], y_points[-1]))
     return (fig, ax1, im)

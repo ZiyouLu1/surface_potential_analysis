@@ -6,7 +6,7 @@ from matplotlib.axes import Axes
 from matplotlib.figure import Figure
 from matplotlib.lines import Line2D
 
-from .energy_eigenstates import EnergyEigenstates, WavepacketGrid
+from .energy_eigenstates import EnergyEigenstates, WavepacketGrid, sort_wavepacket
 
 
 def plot_eigenstate_positions(
@@ -38,7 +38,9 @@ def plot_wavepacket_grid_xy(
     measure: Literal["real", "imag", "abs"] = "abs",
 ):
     fig, a = (ax.get_figure(), ax) if ax is not None else plt.subplots()
-    points = np.array(grid["points"])[:, :, z_ind]
+
+    sorted_grid = sort_wavepacket(grid)
+    points = np.array(sorted_grid["points"])[:, :, z_ind]
 
     if measure == "real":
         data = np.real(points)
@@ -50,10 +52,10 @@ def plot_wavepacket_grid_xy(
     img = a.imshow(data, origin="lower")
     img.set_extent(
         [
-            grid["x_points"][0],
-            grid["x_points"][-1],
-            grid["y_points"][0],
-            grid["y_points"][-1],
+            sorted_grid["x_points"][0],
+            sorted_grid["x_points"][-1],
+            sorted_grid["y_points"][0],
+            sorted_grid["y_points"][-1],
         ]
     )
     return fig, a, img

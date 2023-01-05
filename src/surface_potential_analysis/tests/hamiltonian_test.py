@@ -409,6 +409,46 @@ class TestSurfaceHamiltonian(unittest.TestCase):
             np.array([np.linalg.norm(x) for x in eig_vec]), np.ones_like(eig_val)
         )
 
+    def test_eigenstate_periodicity(self) -> None:
+        config: EigenstateConfig = {
+            "mass": hbar**2,
+            "sho_omega": 1 / hbar,
+            "delta_x": 2 * np.pi * hbar,
+            "delta_y": 2 * np.pi * hbar,
+        }
+        data: EnergyInterpolation = {
+            "points": [],
+            "dz": 1,
+        }
+
+        hamiltonian = SurfaceHamiltonian((1, 1, 14), data, config, 0)
+
+        kx = np.random.uniform(low=-hamiltonian.dkx / 2, high=hamiltonian.dkx / 2)
+        ky = np.random.uniform(low=-hamiltonian.dky / 2, high=hamiltonian.dky / 2)
+        eigenvector = np.random.rand(hamiltonian.coordinates.shape[0]).tolist()
+
+        x = np.random.uniform(low=0.0, high=hamiltonian.delta_x, size=100)
+        y = np.random.uniform(low=0.0, high=hamiltonian.delta_y, size=100)
+
+        center = hamiltonian.calculate_wavefunction_fast(
+            np.array([x, y, np.zeros_like(x)]).T.tolist(),
+            {"kx": kx, "ky": ky, "eigenvector": eigenvector},
+        )
+        x_offset = hamiltonian.calculate_wavefunction_fast(
+            np.array([x + hamiltonian.delta_x, y, np.zeros_like(x)]).T.tolist(),
+            {"kx": kx, "ky": ky, "eigenvector": eigenvector},
+        )
+        y_offset = hamiltonian.calculate_wavefunction_fast(
+            np.array([x, y + hamiltonian.delta_y, np.zeros_like(x)]).T.tolist(),
+            {"kx": kx, "ky": ky, "eigenvector": eigenvector},
+        )
+        np.testing.assert_allclose(
+            center, x_offset * np.exp(-1j * kx * hamiltonian.delta_x)
+        )
+        np.testing.assert_allclose(
+            center, y_offset * np.exp(-1j * ky * hamiltonian.delta_y)
+        )
+
     def test_calculate_wavefunction_fast(self) -> None:
 
         config: EigenstateConfig = {
@@ -428,14 +468,14 @@ class TestSurfaceHamiltonian(unittest.TestCase):
         kx = 0
         ky = 0
 
-        eigenvector = np.random.rand(hamiltonian.coordinates.shape[0])
+        eigenvector = np.random.rand(hamiltonian.coordinates.shape[0]).tolist()
         points = [[1, 1, 1]]
 
         expected = hamiltonian.calculate_wavefunction_slow(
-            points, eigenvector=eigenvector, kx=kx, ky=ky
+            points, {"eigenvector": eigenvector, "kx": kx, "ky": ky}
         )
         actual = hamiltonian.calculate_wavefunction_fast(
-            points, eigenvector=eigenvector, kx=kx, ky=ky
+            points, {"eigenvector": eigenvector, "kx": kx, "ky": ky}
         )
 
         np.testing.assert_allclose(expected, actual)
