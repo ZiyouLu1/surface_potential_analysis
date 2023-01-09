@@ -10,7 +10,6 @@ from ..energy_data.energy_eigenstate import (
 )
 from ..energy_data.wavepacket_grid import (
     calculate_wavepacket_grid,
-    calculate_wavepacket_grid_with_edge,
     save_wavepacket_grid,
 )
 from ..hamiltonian import generate_energy_eigenstates_grid
@@ -19,10 +18,10 @@ from .copper_surface_hamiltonian import generate_hamiltonian
 
 
 def generate_eigenstates_grid():
-    h = generate_hamiltonian(resolution=(12, 12, 15))
+    h = generate_hamiltonian(resolution=(12, 12, 16))
     path = get_data_path("copper_eigenstates_grid_4.json")
 
-    generate_energy_eigenstates_grid(path, h, grid_size=8)
+    generate_energy_eigenstates_grid(path, h, grid_size=4)
 
 
 def generate_eigenstates_grid_offset():
@@ -76,15 +75,6 @@ def remove_max_k_point(eigenstates: EnergyEigenstates) -> EnergyEigenstates:
     kx_point = np.max(eigenstates["kx_points"])
     ky_point = np.max(eigenstates["ky_points"])
     return filter_eigenstates_grid(eigenstates, [kx_point], [ky_point])
-
-
-def calculate_wavepacket_with_edge():
-    path = get_data_path("copper_eigenstates_grid_normalized2.json")
-    eigenstates = load_energy_eigenstates(path)
-
-    wavepacket = calculate_wavepacket_grid_with_edge(eigenstates)
-    path = get_data_path("copper_eigenstates_wavepacket_with_edge.json")
-    save_wavepacket_grid(wavepacket, path)
 
 
 def calculate_wavepacket():

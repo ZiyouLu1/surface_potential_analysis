@@ -246,7 +246,7 @@ class EigenstateConfigUtil:
 
 def get_minimum_coordinate(arr: ArrayLike) -> Tuple[int, ...]:
     points = np.array(arr)
-    return np.unravel_index(np.argmin(points), points.shape)
+    return np.unravel_index(np.argmin(points), points.shape)  # type: ignore
 
 
 def generate_sho_config_minimum(

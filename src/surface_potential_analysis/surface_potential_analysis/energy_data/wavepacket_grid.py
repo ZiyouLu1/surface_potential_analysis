@@ -156,50 +156,6 @@ def mask_negative_wavepacket(wavepacket: WavepacketGrid) -> WavepacketGrid:
     }
 
 
-def calculate_wavepacket_grid_with_edge(
-    eigenstates: EnergyEigenstates,
-) -> WavepacketGrid:
-    util = EigenstateConfigUtil(eigenstates["eigenstate_config"])
-
-    x_points = np.linspace(-util.delta_x, util.delta_x / 2, 25)  # 49 97
-    y_points = np.linspace(-util.delta_y, util.delta_y / 2, 25)
-    z_points = np.linspace(-util.delta_y, util.delta_y, 21)
-
-    xv, yv, zv = np.meshgrid(x_points, y_points, z_points)
-    points = np.array([xv.ravel(), yv.ravel(), zv.ravel()]).T
-
-    if not np.array_equal(xv, xv.ravel().reshape(xv.shape)):
-        raise AssertionError("Error unraveling points")
-
-    out = np.zeros_like(xv, dtype=complex)
-    max_kx_point = np.max(eigenstates["kx_points"])
-    max_ky_point = np.max(eigenstates["ky_points"])
-    min_kx_point = np.min(eigenstates["kx_points"])
-    min_ky_point = np.min(eigenstates["ky_points"])
-    for eigenstate in get_eigenstate_list(eigenstates):
-        print("pass")
-        wfn = util.calculate_wavefunction_fast(
-            eigenstate,
-            points,
-        )
-
-        is_kx_edge = (
-            eigenstate["kx"] == max_kx_point or eigenstate["kx"] == min_kx_point
-        )
-        is_ky_edge = (
-            eigenstate["ky"] == max_ky_point or eigenstate["ky"] == min_ky_point
-        )
-        edge_factor = (0.5 if is_kx_edge else 1.0) * (0.5 if is_ky_edge else 1.0)
-        out += edge_factor * wfn.reshape(xv.shape) / len(eigenstates["eigenvectors"])
-
-    return {
-        "x_points": x_points.tolist(),
-        "y_points": y_points.tolist(),
-        "z_points": z_points.tolist(),
-        "points": out.tolist(),
-    }
-
-
 def calculate_wavepacket_grid(
     eigenstates: EnergyEigenstates, cutoff: int | None = None
 ) -> WavepacketGrid:
@@ -218,7 +174,7 @@ def calculate_wavepacket_grid(
 
     out = np.zeros_like(xv, dtype=complex)
     for eigenstate in get_eigenstate_list(eigenstates):
-        print("pass")
+        print(eigenstate["kx"], eigenstate["ky"])
         wfn = (
             util.calculate_wavefunction_slow(
                 eigenstate,

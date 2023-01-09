@@ -39,6 +39,7 @@ def plot_copper_nc_data():
 
 def plot_copper_9h_data():
     data = normalize_energy(load_9h_copper_data())
+    # data_s = normalize_energy(load_simple_copper_data())
     data_7h = normalize_energy(load_raw_copper_data())
 
     fig, ax = plot_z_direction_energy_data(data)
