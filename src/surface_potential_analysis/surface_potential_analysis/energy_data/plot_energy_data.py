@@ -75,7 +75,7 @@ def plot_x_direction_energy_data(data: EnergyData) -> None:
     fig.savefig("temp.png")
 
 
-def plot_xz_plane_energy(data: EnergyData) -> None:
+def plot_xz_plane_energy(data: EnergyData) -> Figure:
     fig, axs = plt.subplots(nrows=2, ncols=3)
 
     with_symmetry = add_back_symmetry_points(data)
@@ -127,5 +127,4 @@ def plot_xz_plane_energy(data: EnergyData) -> None:
 
     fig.suptitle("Plot of energy through several planes perpendicular to xy")
     fig.tight_layout()
-    fig.show()
-    fig.savefig("temp.png")
+    return fig

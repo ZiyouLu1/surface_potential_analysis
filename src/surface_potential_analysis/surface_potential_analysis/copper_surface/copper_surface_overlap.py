@@ -1,6 +1,6 @@
 import numpy as np
 
-from ..energy_data.energy_eigenstates import (
+from ..energy_data.wavepacket_grid import (
     calculate_volume_element,
     load_wavepacket_grid,
     symmetrize_wavepacket,

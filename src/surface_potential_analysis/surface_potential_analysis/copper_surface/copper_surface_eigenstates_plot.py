@@ -1,17 +1,13 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-from ..energy_data.energy_eigenstates import (
-    get_eigenstate_list,
-    load_energy_eigenstates,
+from ..energy_data.energy_eigenstate import get_eigenstate_list, load_energy_eigenstates
+from ..energy_data.plot_eigenstate import (
+    plot_eigenstate_through_bridge,
+    plot_eigenstate_z,
 )
 from ..energy_data.plot_energy_eigenstates import plot_lowest_band_in_kx
-from ..plot_surface_hamiltonian import (
-    plot_eigenvector_through_bridge,
-    plot_eigenvector_z,
-)
 from .copper_surface_data import get_data_path, save_figure
-from .copper_surface_hamiltonian import generate_hamiltonian
 
 
 def analyze_eigenvalue_convergence():
@@ -62,20 +58,23 @@ def analyze_eigenvector_convergence_z():
 
     path = get_data_path("copper_eigenstates_10_10_15.json")
     eigenstates = load_energy_eigenstates(path)
-    h = generate_hamiltonian(resolution=eigenstates["resolution"])
-    _, _, ln = plot_eigenvector_z(h, get_eigenstate_list(eigenstates)[0], ax=ax)
+    _, _, ln = plot_eigenstate_z(
+        eigenstates["eigenstate_config"], get_eigenstate_list(eigenstates)[0], ax=ax
+    )
     ln.set_label("(10,10,15) kx=G/2")
 
     path = get_data_path("copper_eigenstates_12_12_14.json")
     eigenstates = load_energy_eigenstates(path)
-    h2 = generate_hamiltonian(resolution=eigenstates["resolution"])
-    _, _, l2 = plot_eigenvector_z(h2, get_eigenstate_list(eigenstates)[0], ax=ax)
+    _, _, l2 = plot_eigenstate_z(
+        eigenstates["eigenstate_config"], get_eigenstate_list(eigenstates)[0], ax=ax
+    )
     l2.set_label("(12,12,14) kx=G/2")
 
     path = get_data_path("copper_eigenstates_12_12_15.json")
     eigenstates = load_energy_eigenstates(path)
-    h = generate_hamiltonian(resolution=eigenstates["resolution"])
-    _, _, ln = plot_eigenvector_z(h, get_eigenstate_list(eigenstates)[0], ax=ax)
+    _, _, ln = plot_eigenstate_z(
+        eigenstates["eigenstate_config"], get_eigenstate_list(eigenstates)[0], ax=ax
+    )
     ln.set_label("(12,12,15) kx=G/2")
 
     ax.set_title(
@@ -97,34 +96,40 @@ def analyze_eigenvector_convergence_through_bridge():
 
     path = get_data_path("copper_eigenstates_12_12_15.json")
     eigenstates = load_energy_eigenstates(path)
-    h = generate_hamiltonian(resolution=eigenstates["resolution"])
-    _, _, ln = plot_eigenvector_through_bridge(
-        h, get_eigenstate_list(eigenstates)[5], ax=ax
+    _, _, ln = plot_eigenstate_through_bridge(
+        eigenstates["eigenstate_config"], get_eigenstate_list(eigenstates)[5], ax=ax
     )
-    _, _, _ = plot_eigenvector_through_bridge(
-        h, get_eigenstate_list(eigenstates)[5], ax=ax2, view="angle"
+    _, _, _ = plot_eigenstate_through_bridge(
+        eigenstates["eigenstate_config"],
+        get_eigenstate_list(eigenstates)[5],
+        ax=ax2,
+        view="angle",
     )
     ln.set_label("(12,12,15)")
 
     path = get_data_path("copper_eigenstates_12_12_14.json")
     eigenstates = load_energy_eigenstates(path)
-    h = generate_hamiltonian(resolution=eigenstates["resolution"])
-    _, _, ln = plot_eigenvector_through_bridge(
-        h, get_eigenstate_list(eigenstates)[5], ax=ax
+    _, _, ln = plot_eigenstate_through_bridge(
+        eigenstates["eigenstate_config"], get_eigenstate_list(eigenstates)[5], ax=ax
     )
-    _, _, _ = plot_eigenvector_through_bridge(
-        h, get_eigenstate_list(eigenstates)[5], ax=ax2, view="angle"
+    _, _, _ = plot_eigenstate_through_bridge(
+        eigenstates["eigenstate_config"],
+        get_eigenstate_list(eigenstates)[5],
+        ax=ax2,
+        view="angle",
     )
     ln.set_label("(12,12,14)")
 
     path = get_data_path("copper_eigenstates_10_10_15.json")
     eigenstates = load_energy_eigenstates(path)
-    h = generate_hamiltonian(resolution=eigenstates["resolution"])
-    _, _, ln = plot_eigenvector_through_bridge(
-        h, get_eigenstate_list(eigenstates)[5], ax=ax
+    _, _, ln = plot_eigenstate_through_bridge(
+        eigenstates["eigenstate_config"], get_eigenstate_list(eigenstates)[5], ax=ax
     )
-    _, _, _ = plot_eigenvector_through_bridge(
-        h, get_eigenstate_list(eigenstates)[5], ax=ax2, view="angle"
+    _, _, _ = plot_eigenstate_through_bridge(
+        eigenstates["eigenstate_config"],
+        get_eigenstate_list(eigenstates)[5],
+        ax=ax2,
+        view="angle",
     )
     ln.set_label("(10,10,15)")
 

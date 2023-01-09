@@ -5,93 +5,11 @@ from typing import List, Tuple, TypedDict
 import numpy as np
 import scipy
 
-from .sho_config import EigenstateConfig
-
-
-class Eigenstate(TypedDict):
-    kx: float
-    ky: float
-    eigenvector: List[complex]
-
-
-class EnergyEigenstates(TypedDict):
-    eigenstate_config: EigenstateConfig
-    kx_points: List[float]
-    ky_points: List[float]
-    resolution: Tuple[int, int, int]
-    eigenvalues: List[float]
-    eigenvectors: List[List[complex]]
-
-
-class EnergyEigenstatesRaw(TypedDict):
-    eigenstate_config: EigenstateConfig
-    kx_points: List[float]
-    ky_points: List[float]
-    resolution: Tuple[int, int, int]
-    eigenvalues: List[float]
-    eigenvectors_re: List[List[float]]
-    eigenvectors_im: List[List[float]]
-
-
-def save_energy_eigenstates(data: EnergyEigenstates, path: Path) -> None:
-    with path.open("w") as f:
-        out: EnergyEigenstatesRaw = {
-            "eigenstate_config": data["eigenstate_config"],
-            "eigenvalues": data["eigenvalues"],
-            "eigenvectors_re": np.real(data["eigenvectors"]).tolist(),
-            "eigenvectors_im": np.imag(data["eigenvectors"]).tolist(),
-            "kx_points": data["kx_points"],
-            "ky_points": data["ky_points"],
-            "resolution": data["resolution"],
-        }
-        json.dump(out, f)
-
-
-def load_energy_eigenstates(path: Path) -> EnergyEigenstates:
-    with path.open("r") as f:
-        out = json.load(f)
-
-        eigenvectors = (
-            np.array(out["eigenvectors"])
-            if out.get("eigenvectors_im", None) is None
-            else np.array(out["eigenvectors_re"])
-            + 1j * np.array(out["eigenvectors_im"])
-        )
-
-        return {
-            "eigenstate_config": out["eigenstate_config"],
-            "eigenvalues": out["eigenvalues"],
-            "eigenvectors": eigenvectors.tolist(),
-            "kx_points": out["kx_points"],
-            "ky_points": out["ky_points"],
-            "resolution": out["resolution"],
-        }
-
-
-def append_energy_eigenstates(
-    path: Path, eigenstate: Eigenstate, eigenvalue: float
-) -> None:
-    with path.open("r") as f:
-        data: EnergyEigenstatesRaw = json.load(f)
-        data["kx_points"].append(eigenstate["kx"])
-        data["ky_points"].append(eigenstate["ky"])
-        data["eigenvalues"].append(eigenvalue)
-        data["eigenvectors_re"].append(np.real(eigenstate["eigenvector"]).tolist())
-        data["eigenvectors_im"].append(np.imag(eigenstate["eigenvector"]).tolist())
-
-    with path.open("w") as f:
-        json.dump(data, f)
-
-
-def get_eigenstate_list(eigenstates: EnergyEigenstates) -> List[Eigenstate]:
-    return [
-        {
-            "eigenvector": eigenvector,
-            "kx": eigenstates["kx_points"][i],
-            "ky": eigenstates["ky_points"][i],
-        }
-        for (i, eigenvector) in enumerate(eigenstates["eigenvectors"])
-    ]
+from surface_potential_analysis.energy_data.energy_eigenstate import (
+    EigenstateConfigUtil,
+    EnergyEigenstates,
+    get_eigenstate_list,
+)
 
 
 class WavepacketGrid(TypedDict):
@@ -235,4 +153,89 @@ def mask_negative_wavepacket(wavepacket: WavepacketGrid) -> WavepacketGrid:
         "x_points": wavepacket["x_points"],
         "y_points": wavepacket["y_points"],
         "z_points": wavepacket["z_points"],
+    }
+
+
+def calculate_wavepacket_grid_with_edge(
+    eigenstates: EnergyEigenstates,
+) -> WavepacketGrid:
+    util = EigenstateConfigUtil(eigenstates["eigenstate_config"])
+
+    x_points = np.linspace(-util.delta_x, util.delta_x / 2, 25)  # 49 97
+    y_points = np.linspace(-util.delta_y, util.delta_y / 2, 25)
+    z_points = np.linspace(-util.delta_y, util.delta_y, 21)
+
+    xv, yv, zv = np.meshgrid(x_points, y_points, z_points)
+    points = np.array([xv.ravel(), yv.ravel(), zv.ravel()]).T
+
+    if not np.array_equal(xv, xv.ravel().reshape(xv.shape)):
+        raise AssertionError("Error unraveling points")
+
+    out = np.zeros_like(xv, dtype=complex)
+    max_kx_point = np.max(eigenstates["kx_points"])
+    max_ky_point = np.max(eigenstates["ky_points"])
+    min_kx_point = np.min(eigenstates["kx_points"])
+    min_ky_point = np.min(eigenstates["ky_points"])
+    for eigenstate in get_eigenstate_list(eigenstates):
+        print("pass")
+        wfn = util.calculate_wavefunction_fast(
+            eigenstate,
+            points,
+        )
+
+        is_kx_edge = (
+            eigenstate["kx"] == max_kx_point or eigenstate["kx"] == min_kx_point
+        )
+        is_ky_edge = (
+            eigenstate["ky"] == max_ky_point or eigenstate["ky"] == min_ky_point
+        )
+        edge_factor = (0.5 if is_kx_edge else 1.0) * (0.5 if is_ky_edge else 1.0)
+        out += edge_factor * wfn.reshape(xv.shape) / len(eigenstates["eigenvectors"])
+
+    return {
+        "x_points": x_points.tolist(),
+        "y_points": y_points.tolist(),
+        "z_points": z_points.tolist(),
+        "points": out.tolist(),
+    }
+
+
+def calculate_wavepacket_grid(
+    eigenstates: EnergyEigenstates, cutoff: int | None = None
+) -> WavepacketGrid:
+
+    util = EigenstateConfigUtil(eigenstates["eigenstate_config"])
+
+    x_points = np.linspace(-util.delta_x, util.delta_x / 2, 49)  # 97
+    y_points = np.linspace(-util.delta_y, util.delta_y / 2, 49)
+    z_points = np.linspace(-util.delta_y, util.delta_y, 21)
+
+    xv, yv, zv = np.meshgrid(x_points, y_points, z_points)
+    points = np.array([xv.ravel(), yv.ravel(), zv.ravel()]).T
+
+    if not np.array_equal(xv, xv.ravel().reshape(xv.shape)):
+        raise AssertionError("Error unraveling points")
+
+    out = np.zeros_like(xv, dtype=complex)
+    for eigenstate in get_eigenstate_list(eigenstates):
+        print("pass")
+        wfn = (
+            util.calculate_wavefunction_slow(
+                eigenstate,
+                points,
+                cutoff=cutoff,
+            )
+            if cutoff is not None
+            else util.calculate_wavefunction_fast(
+                eigenstate,
+                points,
+            )
+        )
+        out += wfn.reshape(xv.shape) / len(eigenstates["eigenvectors"])
+
+    return {
+        "x_points": x_points.tolist(),
+        "y_points": y_points.tolist(),
+        "z_points": z_points.tolist(),
+        "points": out.tolist(),
     }

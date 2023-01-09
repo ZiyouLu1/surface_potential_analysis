@@ -48,3 +48,12 @@ def plot_copper_bands_occupation():
     )
     fig.show()
     save_figure(fig, "copper_bands_occupation.png")
+
+
+def compare_first_5_bands():
+    hamiltonian = generate_hamiltonian(resolution=(12, 12, 15))
+
+    eigenvalues, _ = calculate_eigenvalues(hamiltonian, 0, 0)
+    sorted_eigenvalues = np.sort(eigenvalues)
+    print(sorted_eigenvalues[:5])
+    print((sorted_eigenvalues - sorted_eigenvalues[0])[:5])

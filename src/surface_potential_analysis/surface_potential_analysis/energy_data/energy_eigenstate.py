@@ -1,0 +1,315 @@
+import json
+from functools import cached_property
+from pathlib import Path
+from typing import List, Tuple, TypedDict
+
+import numpy as np
+import scipy
+from numpy.typing import ArrayLike, NDArray
+
+import hamiltonian_generator
+
+from .energy_data import EnergyInterpolation
+from .sho_wavefunction import calculate_sho_wavefunction
+
+
+class EigenstateConfig(TypedDict):
+    resolution: Tuple[int, int, int]
+    """Resolution in x,y,z to produce the eigenstates in"""
+    sho_omega: float
+    """Angular frequency (in rad s-1) of the sho we will fit using"""
+    mass: float
+    """Mass in Kg"""
+    delta_x: float
+    """maximum extent in the x direction"""
+    delta_y: float
+    """maximum extent in the x direction"""
+
+
+class Eigenstate(TypedDict):
+    kx: float
+    ky: float
+    eigenvector: List[complex]
+
+
+class EnergyEigenstates(TypedDict):
+    eigenstate_config: EigenstateConfig
+    kx_points: List[float]
+    ky_points: List[float]
+    eigenvalues: List[float]
+    eigenvectors: List[List[complex]]
+
+
+class EnergyEigenstatesRaw(TypedDict):
+    eigenstate_config: EigenstateConfig
+    kx_points: List[float]
+    ky_points: List[float]
+    eigenvalues: List[float]
+    eigenvectors_re: List[List[float]]
+    eigenvectors_im: List[List[float]]
+
+
+def save_energy_eigenstates(data: EnergyEigenstates, path: Path) -> None:
+    with path.open("w") as f:
+        out: EnergyEigenstatesRaw = {
+            "eigenstate_config": data["eigenstate_config"],
+            "eigenvalues": data["eigenvalues"],
+            "eigenvectors_re": np.real(data["eigenvectors"]).tolist(),
+            "eigenvectors_im": np.imag(data["eigenvectors"]).tolist(),
+            "kx_points": data["kx_points"],
+            "ky_points": data["ky_points"],
+        }
+        json.dump(out, f)
+
+
+def load_energy_eigenstates(path: Path) -> EnergyEigenstates:
+    with path.open("r") as f:
+        out = json.load(f)
+
+        eigenvectors = (
+            np.array(out["eigenvectors"])
+            if out.get("eigenvectors_im", None) is None
+            else np.array(out["eigenvectors_re"])
+            + 1j * np.array(out["eigenvectors_im"])
+        )
+
+        if out["eigenstate_config"].get("resolution") is None:
+            out["eigenstate_config"]["resolution"] = out["resolution"]
+
+        return {
+            "eigenstate_config": out["eigenstate_config"],
+            "eigenvalues": out["eigenvalues"],
+            "eigenvectors": eigenvectors.tolist(),
+            "kx_points": out["kx_points"],
+            "ky_points": out["ky_points"],
+        }
+
+
+def append_energy_eigenstates(
+    path: Path, eigenstate: Eigenstate, eigenvalue: float
+) -> None:
+    with path.open("r") as f:
+        data: EnergyEigenstatesRaw = json.load(f)
+        data["kx_points"].append(eigenstate["kx"])
+        data["ky_points"].append(eigenstate["ky"])
+        data["eigenvalues"].append(eigenvalue)
+        data["eigenvectors_re"].append(np.real(eigenstate["eigenvector"]).tolist())
+        data["eigenvectors_im"].append(np.imag(eigenstate["eigenvector"]).tolist())
+
+    with path.open("w") as f:
+        json.dump(data, f)
+
+
+def get_eigenstate_list(eigenstates: EnergyEigenstates) -> List[Eigenstate]:
+    return [
+        {
+            "eigenvector": eigenvector,
+            "kx": eigenstates["kx_points"][i],
+            "ky": eigenstates["ky_points"][i],
+        }
+        for (i, eigenvector) in enumerate(eigenstates["eigenvectors"])
+    ]
+
+
+def calculate_wavefunction_fast(
+    config: EigenstateConfig, eigenstate: Eigenstate, points: ArrayLike
+) -> NDArray:
+    return np.array(
+        hamiltonian_generator.get_eigenstate_wavefunction(
+            config["resolution"],
+            config["delta_x"],
+            config["delta_y"],
+            config["mass"],
+            config["sho_omega"],
+            eigenstate["kx"],
+            eigenstate["ky"],
+            eigenstate["eigenvector"],
+            np.array(points).tolist(),
+        ),
+        dtype=complex,
+    )
+
+
+class EigenstateConfigUtil:
+
+    _config: EigenstateConfig
+
+    def __init__(self, config: EigenstateConfig) -> None:
+        self._config = config
+
+    @property
+    def resolution(self):
+        return self._config["resolution"]
+
+    @property
+    def mass(self):
+        return self._config["mass"]
+
+    @property
+    def sho_omega(self):
+        return self._config["sho_omega"]
+
+    @property
+    def delta_x(self) -> float:
+        return self._config["delta_x"]
+
+    @cached_property
+    def dkx(self) -> float:
+        return 2 * np.pi / self.delta_x
+
+    @property
+    def Nkx(self) -> int:
+        return 2 * self.resolution[0] + 1
+
+    @property
+    def nkx_points(self):
+        return np.arange(-self.resolution[0], self.resolution[0] + 1, dtype=int)
+
+    @property
+    def delta_y(self) -> float:
+        return self._config["delta_y"]
+
+    @cached_property
+    def dky(self) -> float:
+        return 2 * np.pi / (self.delta_y)
+
+    @property
+    def Nky(self) -> int:
+        return 2 * self.resolution[1] + 1
+
+    @property
+    def nky_points(self):
+        return np.arange(-self.resolution[1], self.resolution[1] + 1, dtype=int)
+
+    @property
+    def Nkz(self) -> int:
+        return self.resolution[2]
+
+    @property
+    def nz_points(self):
+        return np.arange(self.Nkz, dtype=int)
+
+    @cached_property
+    def coordinates(self) -> NDArray:
+        xt, yt, zt = np.meshgrid(
+            self.nkx_points,
+            self.nky_points,
+            self.nz_points,
+            indexing="ij",
+        )
+        return np.array([xt.ravel(), yt.ravel(), zt.ravel()]).T
+
+    def get_index(self, nkx: int, nky: int, nz: int) -> int:
+        ikx = (nkx + self.resolution[0]) * self.Nky * self.Nkz
+        iky = (nky + self.resolution[1]) * self.Nkz
+        return ikx + iky + nz
+
+    def calculate_wavefunction_slow(
+        self,
+        eigenstate: Eigenstate,
+        points: ArrayLike,
+        cutoff: int | None = None,
+    ) -> NDArray:
+        points = np.array(points)
+        out = np.zeros(shape=(points.shape[0]), dtype=complex)
+
+        eigenvector_array = np.array(eigenstate["eigenvector"])
+        coordinates = self.coordinates
+        args = (
+            np.arange(self.coordinates.shape[0])
+            if cutoff is None
+            else np.argsort(np.abs(eigenvector_array))[::-1][:cutoff]
+        )
+        kx = eigenstate["kx"]
+        ky = eigenstate["ky"]
+        for arg in args:
+            (nkx, nky, nz) = coordinates[arg]
+            e = eigenvector_array[arg]
+            x_phase = (nkx * self.dkx + kx) * points[:, 0]
+            y_phase = (nky * self.dky + ky) * points[:, 1]
+            out += (
+                e
+                * calculate_sho_wavefunction(
+                    points[:, 2], self.sho_omega, self.mass, nz
+                )
+                * np.exp(1j * (x_phase + y_phase))
+            )
+        return out
+
+    def calculate_wavefunction_fast(
+        self,
+        eigenstate: Eigenstate,
+        points: ArrayLike,
+    ) -> NDArray:
+        return calculate_wavefunction_fast(self._config, eigenstate, points)
+
+
+def get_minimum_coordinate(arr: ArrayLike) -> Tuple[int, ...]:
+    points = np.array(arr)
+    return np.unravel_index(np.argmin(points), points.shape)
+
+
+def generate_sho_config_minimum(
+    interpolation: EnergyInterpolation, mass: float, initial_guess: float = 1.0
+) -> Tuple[float, float]:
+    points = np.array(interpolation["points"])
+    min_coord = get_minimum_coordinate(points)
+    min_z = min_coord[2]
+    z_points = points[min_coord[0], min_coord[1]]
+    z_indexes = np.arange(z_points.shape[0])
+
+    far_edge_energy = z_points[-1]
+    # We choose a region that is suitably harmonic
+    # ie we cut off the tail of the potential
+    fit_max_energy = 0.5 * far_edge_energy
+    above_threshold = (z_indexes > min_z) & (z_points > fit_max_energy)
+    # Stops at the first above threshold
+    max_index: int = int(np.argmax(above_threshold) - 1)
+    above_threshold = (z_indexes < min_z) & (z_points > fit_max_energy)
+
+    # Search backwards, stops at the first above threshold
+    min_index: int = z_points.shape[0] - np.argmax(above_threshold[::-1])
+
+    z_offset = -interpolation["dz"] * min_z
+    # Fit E = 1/2 * m * sho_omega ** 2 * z**2
+    def fitting_f(z, sho_omega):
+        return 0.5 * mass * (sho_omega * z) ** 2
+
+    opt_params, _cov = scipy.optimize.curve_fit(
+        f=fitting_f,
+        xdata=np.arange(min_index, max_index + 1) * interpolation["dz"] + z_offset,
+        ydata=z_points[min_index : max_index + 1],
+        p0=[initial_guess],
+    )
+    # TODO: Change meaning of x_offset
+    return opt_params[0], z_offset
+
+
+def get_bloch_phases(
+    data: EnergyEigenstates,
+):
+    util = EigenstateConfigUtil(data["eigenstate_config"])
+    origin_point = [util.delta_x / 2, util.delta_y / 2, 0]
+
+    phases: List[float] = []
+    for eigenstate in get_eigenstate_list(data):
+        point_at_origin = util.calculate_wavefunction_fast(eigenstate, [origin_point])
+        phases.append(float(np.angle(point_at_origin[0])))
+    return phases
+
+
+def normalize_eigenstate_phase(data: EnergyEigenstates) -> EnergyEigenstates:
+
+    eigenvectors = data["eigenvectors"]
+
+    phases = get_bloch_phases(data)
+    phase_factor = np.real_if_close(np.exp(-1j * np.array(phases)))
+    fixed_phase_eigenvectors = np.multiply(eigenvectors, phase_factor[:, np.newaxis])
+
+    return {
+        "eigenvalues": data["eigenvalues"],
+        "eigenvectors": fixed_phase_eigenvectors.tolist(),
+        "kx_points": data["kx_points"],
+        "ky_points": data["ky_points"],
+        "eigenstate_config": data["eigenstate_config"],
+    }

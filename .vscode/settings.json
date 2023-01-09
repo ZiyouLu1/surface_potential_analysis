@@ -11,6 +11,9 @@
   },
   "editor.formatOnSave": true,
   "cSpell.words": [
+    "arange",
+    "argmax",
+    "argmin",
     "dtype",
     "eigenstate",
     "eigenstates",
@@ -35,9 +38,13 @@
     "wavefunction",
     "wavefunctions",
     "wavepacket",
+    "wavepackets",
     "Wavevector",
+    "xdata",
     "xlabel",
-    "ylabel"
+    "ydata",
+    "ylabel",
+    "ylim"
   ],
   "python.linting.flake8Args": ["--ignore=E501,W503,E203,E301,E302"],
   "python.testing.unittestArgs": ["-v", "-s", "./tests", "-p", "*test.py"],
@@ -47,5 +54,6 @@
     "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
   "rust-analyzer.linkedProjects": ["./src/hamiltonian_generator/Cargo.toml"],
-  "rust-analyzer.checkOnSave.command": "clippy"
+  "rust-analyzer.checkOnSave.command": "clippy",
+  "python.analysis.extraPaths": ["./src/surface_potential_analysis"]
 }

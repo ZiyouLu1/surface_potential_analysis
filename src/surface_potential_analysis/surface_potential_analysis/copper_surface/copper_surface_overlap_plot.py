@@ -6,13 +6,13 @@ import numpy as np
 from matplotlib.image import AxesImage
 from numpy.typing import NDArray
 
-from ..energy_data.energy_eigenstates import (
+from ..energy_data.plot_energy_eigenstates import plot_wavepacket_grid_xy
+from ..energy_data.wavepacket_grid import (
     calculate_volume_element,
     load_wavepacket_grid,
     mask_negative_wavepacket,
     symmetrize_wavepacket,
 )
-from ..energy_data.plot_energy_eigenstates import plot_wavepacket_grid_xy
 from .copper_surface_data import get_data_path, save_figure
 
 

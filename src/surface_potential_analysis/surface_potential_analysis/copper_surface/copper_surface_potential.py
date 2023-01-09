@@ -24,6 +24,11 @@ def load_nc_raw_copper_data():
     return load_energy_data(path)
 
 
+def load_9h_copper_data():
+    path = get_data_path("copper_9h_raw_energies.json")
+    return load_energy_data(path)
+
+
 def load_clean_copper_data():
     data = load_raw_copper_data()
     data = normalize_energy(data)

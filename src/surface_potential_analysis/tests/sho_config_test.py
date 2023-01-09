@@ -4,7 +4,9 @@ import unittest
 import numpy as np
 
 from surface_potential_analysis.energy_data.energy_data import EnergyInterpolation
-from surface_potential_analysis.energy_data.sho_config import generate_sho_config_minimum
+from surface_potential_analysis.energy_data.energy_eigenstate import (
+    generate_sho_config_minimum,
+)
 
 
 class TestSurfaceHamiltonian(unittest.TestCase):

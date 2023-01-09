@@ -8,7 +8,7 @@ from scipy.constants import hbar
 
 import hamiltonian_generator
 from surface_potential_analysis.energy_data.energy_data import EnergyInterpolation
-from surface_potential_analysis.energy_data.sho_config import EigenstateConfig
+from surface_potential_analysis.energy_data.energy_eigenstate import EigenstateConfig
 from surface_potential_analysis.hamiltonian import (
     SurfaceHamiltonian,
     calculate_eigenvalues,
@@ -35,7 +35,7 @@ def generate_symmetrical_points(height, width=5):
     return np.swapaxes([generate_random_potential(width) for _ in range(height)], 0, -1)
 
 
-def generate_random_diagonal_hamiltonian():
+def generate_random_diagonal_hamiltonian() -> SurfaceHamiltonian:
     nx = random.randrange(2, 10)
     ny = random.randrange(2, 10)
     nz = random.randrange(2, 100)
@@ -43,25 +43,26 @@ def generate_random_diagonal_hamiltonian():
     nkx = random.randrange(1, 5)
     nky = random.randrange(1, 5)
     nkz = random.randrange(1, 5)
-    resolution = (nkx, nky, nkz)
+
     z_offset = 20 * random.random()
     config: EigenstateConfig = {
         "mass": 1,
         "sho_omega": 1,
         "delta_x": 2 * np.pi * hbar,
         "delta_y": 2 * np.pi * hbar,
+        "resolution": (nkx, nky, nkz),
     }
     data: EnergyInterpolation = {
         "points": np.zeros(shape=(nx, ny, nz)).tolist(),
         "dz": 1,
     }
-    hamiltonian = SurfaceHamiltonian(resolution, data, config, z_offset)
+    hamiltonian = SurfaceHamiltonian(config, data, z_offset)
 
     data2: EnergyInterpolation = {
         "points": np.tile(hamiltonian.get_sho_potential(), (nx, ny, 1)).tolist(),
         "dz": 1,
     }
-    return SurfaceHamiltonian(resolution, data2, config, z_offset)
+    return SurfaceHamiltonian(config, data2, z_offset)
 
 
 class TestSurfaceHamiltonian(unittest.TestCase):
@@ -72,12 +73,13 @@ class TestSurfaceHamiltonian(unittest.TestCase):
             "sho_omega": 1 / hbar,
             "delta_x": 2 * np.pi * hbar,
             "delta_y": 2 * np.pi * hbar,
+            "resolution": (1, 1, 2),
         }
         data: EnergyInterpolation = {
             "points": [[[0, 0], [0, 0]], [[0, 0], [0, 0]]],
             "dz": 1,
         }
-        hamiltonian = SurfaceHamiltonian((1, 1, 2), data, config, z_offset)
+        hamiltonian = SurfaceHamiltonian(config, data, z_offset)
 
         expected = np.array(
             [
@@ -116,12 +118,13 @@ class TestSurfaceHamiltonian(unittest.TestCase):
             "sho_omega": 1 / hbar,
             "delta_x": 2 * np.pi * hbar,
             "delta_y": 2 * np.pi * hbar,
+            "resolution": (Nkx, Nky, Nz),
         }
         data: EnergyInterpolation = {
             "points": [[[0, 0], [0, 0]], [[0, 0], [0, 0]]],
             "dz": 1,
         }
-        hamiltonian = SurfaceHamiltonian((Nkx, Nky, Nz), data, config, z_offset)
+        hamiltonian = SurfaceHamiltonian(config, data, z_offset)
         coords = hamiltonian.coordinates
         for (i, (nkx, nky, nz)) in enumerate(coords):
             self.assertEqual(hamiltonian.get_index(nkx, nky, nz), i)
@@ -136,12 +139,13 @@ class TestSurfaceHamiltonian(unittest.TestCase):
             "sho_omega": 1 / hbar,
             "delta_x": 2 * np.pi * hbar,
             "delta_y": 2 * np.pi * hbar,
+            "resolution": (nkx, nky, nz),
         }
         data: EnergyInterpolation = {
             "points": [[[0, 0], [0, 0]], [[0, 0], [0, 0]]],
             "dz": 1,
         }
-        hamiltonian = SurfaceHamiltonian((nkx, nky, nz), data, config, 0)
+        hamiltonian = SurfaceHamiltonian(config, data, 0)
 
         coords = hamiltonian.coordinates
         for (i, c) in enumerate(coords):
@@ -153,12 +157,13 @@ class TestSurfaceHamiltonian(unittest.TestCase):
             "sho_omega": 1,
             "delta_x": 2 * np.pi * hbar,
             "delta_y": 2 * np.pi * hbar,
+            "resolution": (2, 2, 2),
         }
         data: EnergyInterpolation = {
             "points": np.zeros(shape=(2, 2, 5)).tolist(),
             "dz": 1,
         }
-        hamiltonian = SurfaceHamiltonian((2, 2, 2), data, config, -2)
+        hamiltonian = SurfaceHamiltonian(config, data, -2)
         expected = [2.0, 0.5, 0.0, 0.5, 2.0]
         np.testing.assert_equal(expected, hamiltonian.get_sho_potential())
 
@@ -173,24 +178,25 @@ class TestSurfaceHamiltonian(unittest.TestCase):
             "sho_omega": 1,
             "delta_x": 2 * np.pi * hbar,
             "delta_y": 2 * np.pi * hbar,
+            "resolution": (2, 2, 2),
         }
         data: EnergyInterpolation = {
             "points": np.zeros(shape=(nx, ny, nz)).tolist(),
             "dz": 1,
         }
-        hamiltonian = SurfaceHamiltonian((2, 2, 2), data, config, z_offset)
+        hamiltonian = SurfaceHamiltonian(config, data, z_offset)
 
         data2: EnergyInterpolation = {
             "points": np.tile(hamiltonian.get_sho_potential(), (nx, ny, 1)).tolist(),
             "dz": 1,
         }
-        hamiltonian = SurfaceHamiltonian((2, 2, 2), data2, config, z_offset)
+        hamiltonian = SurfaceHamiltonian(config, data2, z_offset)
         actual = hamiltonian.get_sho_subtracted_points()
         expected = np.zeros(shape=(nx, ny, nz))
 
         np.testing.assert_allclose(expected, actual)
 
-    def test_delta_x(self):
+    def test_delta_x(self) -> None:
         nx = random.randrange(2, 10) * 2
         ny = random.randrange(2, 10) * 2
         x_points = np.linspace(0, 2 * np.pi * hbar, num=nx)
@@ -200,12 +206,13 @@ class TestSurfaceHamiltonian(unittest.TestCase):
             "sho_omega": 1,
             "delta_x": x_points[-1],
             "delta_y": y_points[-1],
+            "resolution": (2, 2, 2),
         }
         data: EnergyInterpolation = {
             "points": np.zeros(shape=(nx - 1, ny - 1, 5)).tolist(),
             "dz": 1,
         }
-        hamiltonian = SurfaceHamiltonian((2, 2, 2), data, config, -2)
+        hamiltonian = SurfaceHamiltonian(config, data, -2)
 
         self.assertAlmostEqual(x_points[-1], hamiltonian.delta_x)
         self.assertAlmostEqual(y_points[-1], hamiltonian.delta_y)
@@ -220,12 +227,13 @@ class TestSurfaceHamiltonian(unittest.TestCase):
             "sho_omega": 1,
             "delta_x": 2 * np.pi * hbar,
             "delta_y": 2 * np.pi * hbar,
+            "resolution": (2, 2, 2),
         }
         data: EnergyInterpolation = {
             "points": points.tolist(),
             "dz": 1,
         }
-        hamiltonian = SurfaceHamiltonian((2, 2, 2), data, config, -2)
+        hamiltonian = SurfaceHamiltonian(config, data, -2)
 
         self.assertTrue(np.all(np.isreal(hamiltonian.get_ft_potential())))
 
@@ -262,12 +270,13 @@ class TestSurfaceHamiltonian(unittest.TestCase):
             "sho_omega": 1,
             "delta_x": 2 * np.pi * hbar,
             "delta_y": 2 * np.pi * hbar,
+            "resolution": (5, 5, 10),
         }
         data: EnergyInterpolation = {
             "points": points.tolist(),
             "dz": 1,
         }
-        hamiltonian = SurfaceHamiltonian((5, 5, 10), data, config, -2)
+        hamiltonian = SurfaceHamiltonian(config, data, -2)
 
         np.testing.assert_allclose(
             hamiltonian.hamiltonian(0, 0), hamiltonian.hamiltonian(0, 0).conjugate().T
@@ -276,7 +285,7 @@ class TestSurfaceHamiltonian(unittest.TestCase):
     def test_calculate_sho_wavefunction(self) -> None:
         mass = hbar**2
         sho_omega = 1 / hbar
-        z_points = np.linspace(-10, 10, 11)
+        z_points = np.linspace(-10, 10, np.random.randint(0, 1000))
 
         norm = np.sqrt(mass * sho_omega / hbar)
 
@@ -320,12 +329,13 @@ class TestSurfaceHamiltonian(unittest.TestCase):
             "sho_omega": 1 / hbar,
             "delta_x": 2 * np.pi * hbar,
             "delta_y": 2 * np.pi * hbar,
+            "resolution": (1, 1, 10),
         }
         data: EnergyInterpolation = {
             "points": np.zeros(shape=(nx, ny, nz)).tolist(),
             "dz": z_width / (nz - 1),
         }
-        hamiltonian = SurfaceHamiltonian((1, 1, 10), data, config, z_offset)
+        hamiltonian = SurfaceHamiltonian(config, data, z_offset)
 
         for iz1 in range(12):
             for iz2 in range(12):
@@ -370,13 +380,14 @@ class TestSurfaceHamiltonian(unittest.TestCase):
             "sho_omega": 1 / hbar,
             "delta_x": 2 * np.pi * hbar,
             "delta_y": 2 * np.pi * hbar,
+            "resolution": (1, 1, 14),
         }
         data: EnergyInterpolation = {
             "points": np.zeros(shape=(nx, ny, nz)).tolist(),
             "dz": 1,
         }
 
-        hamiltonian = SurfaceHamiltonian((1, 1, 14), data, config, 0)
+        hamiltonian = SurfaceHamiltonian(config, data, 0)
 
         np.testing.assert_allclose(
             hamiltonian._calculate_off_diagonal_energies_fast(),
@@ -391,6 +402,7 @@ class TestSurfaceHamiltonian(unittest.TestCase):
             "sho_omega": 1 / hbar,
             "delta_x": 2 * np.pi * hbar,
             "delta_y": 2 * np.pi * hbar,
+            "resolution": (1, 1, 14),
         }
 
         points = generate_symmetrical_points(nz, width)
@@ -399,14 +411,14 @@ class TestSurfaceHamiltonian(unittest.TestCase):
             "dz": 1,
         }
 
-        hamiltonian = SurfaceHamiltonian((1, 1, 14), data, config, 0)
+        hamiltonian = SurfaceHamiltonian(config, data, 0)
 
         kx = 0
         ky = 0
-        eig_val, eig_vec = calculate_eigenvalues(hamiltonian, kx, ky)
+        eig_val, eig_states = calculate_eigenvalues(hamiltonian, kx, ky)
 
         np.testing.assert_allclose(
-            np.array([np.linalg.norm(x) for x in eig_vec]), np.ones_like(eig_val)
+            np.array([np.linalg.norm(x["eigenvector"]) for x in eig_states]), np.ones_like(eig_val)
         )
 
     def test_eigenstate_periodicity(self) -> None:
@@ -415,13 +427,14 @@ class TestSurfaceHamiltonian(unittest.TestCase):
             "sho_omega": 1 / hbar,
             "delta_x": 2 * np.pi * hbar,
             "delta_y": 2 * np.pi * hbar,
+            "resolution": (1, 1, 14),
         }
         data: EnergyInterpolation = {
             "points": [],
             "dz": 1,
         }
 
-        hamiltonian = SurfaceHamiltonian((1, 1, 14), data, config, 0)
+        hamiltonian = SurfaceHamiltonian(config, data, 0)
 
         kx = np.random.uniform(low=-hamiltonian.dkx / 2, high=hamiltonian.dkx / 2)
         ky = np.random.uniform(low=-hamiltonian.dky / 2, high=hamiltonian.dky / 2)
@@ -431,16 +444,16 @@ class TestSurfaceHamiltonian(unittest.TestCase):
         y = np.random.uniform(low=0.0, high=hamiltonian.delta_y, size=100)
 
         center = hamiltonian.calculate_wavefunction_fast(
-            np.array([x, y, np.zeros_like(x)]).T.tolist(),
             {"kx": kx, "ky": ky, "eigenvector": eigenvector},
+            np.array([x, y, np.zeros_like(x)]).T.tolist(),
         )
         x_offset = hamiltonian.calculate_wavefunction_fast(
-            np.array([x + hamiltonian.delta_x, y, np.zeros_like(x)]).T.tolist(),
             {"kx": kx, "ky": ky, "eigenvector": eigenvector},
+            np.array([x + hamiltonian.delta_x, y, np.zeros_like(x)]).T.tolist(),
         )
         y_offset = hamiltonian.calculate_wavefunction_fast(
-            np.array([x, y + hamiltonian.delta_y, np.zeros_like(x)]).T.tolist(),
             {"kx": kx, "ky": ky, "eigenvector": eigenvector},
+            np.array([x, y + hamiltonian.delta_y, np.zeros_like(x)]).T.tolist(),
         )
         np.testing.assert_allclose(
             center, x_offset * np.exp(-1j * kx * hamiltonian.delta_x)
@@ -456,6 +469,7 @@ class TestSurfaceHamiltonian(unittest.TestCase):
             "sho_omega": 1 / hbar,
             "delta_x": 2 * np.pi * hbar,
             "delta_y": 2 * np.pi * hbar,
+            "resolution": (10, 10, 14),
         }
 
         data: EnergyInterpolation = {
@@ -463,8 +477,7 @@ class TestSurfaceHamiltonian(unittest.TestCase):
             "dz": 1,
         }
 
-        resolution = (10, 10, 14)
-        hamiltonian = SurfaceHamiltonian(resolution, data, config, 0)
+        hamiltonian = SurfaceHamiltonian(config, data, 0)
         kx = 0
         ky = 0
 
@@ -472,10 +485,10 @@ class TestSurfaceHamiltonian(unittest.TestCase):
         points = [[1, 1, 1]]
 
         expected = hamiltonian.calculate_wavefunction_slow(
-            points, {"eigenvector": eigenvector, "kx": kx, "ky": ky}
+            {"eigenvector": eigenvector, "kx": kx, "ky": ky}, points
         )
         actual = hamiltonian.calculate_wavefunction_fast(
-            points, {"eigenvector": eigenvector, "kx": kx, "ky": ky}
+            {"eigenvector": eigenvector, "kx": kx, "ky": ky}, points
         )
 
         np.testing.assert_allclose(expected, actual)

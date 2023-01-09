@@ -1,5 +1,9 @@
 # surface_potential_analysis
 
+Code to produce localized wavepackets for periodic potential energy surfaces.
+
+## Installing
+
 To install the two packages run
 
 ```shell
