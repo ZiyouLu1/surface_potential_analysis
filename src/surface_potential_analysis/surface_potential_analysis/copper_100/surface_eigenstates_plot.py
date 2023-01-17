@@ -7,7 +7,7 @@ from ..energy_data.plot_eigenstate import (
     plot_eigenstate_z,
 )
 from ..energy_data.plot_energy_eigenstates import plot_lowest_band_in_kx
-from .copper_surface_data import get_data_path, save_figure
+from .surface_data import get_data_path, save_figure
 
 
 def analyze_eigenvalue_convergence():

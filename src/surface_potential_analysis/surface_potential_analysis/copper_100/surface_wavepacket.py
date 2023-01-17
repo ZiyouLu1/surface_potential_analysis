@@ -15,8 +15,8 @@ from ..energy_data.wavepacket_grid import (
     save_wavepacket_grid,
 )
 from ..hamiltonian import generate_energy_eigenstates_grid
-from .copper_surface_data import get_data_path
-from .copper_surface_hamiltonian import generate_hamiltonian
+from .surface_data import get_data_path
+from .surface_hamiltonian import generate_hamiltonian
 
 
 def generate_eigenstates_grid():

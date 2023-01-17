@@ -6,7 +6,7 @@ from ..energy_data.energy_eigenstate import (
     generate_sho_config_minimum,
 )
 from ..hamiltonian import SurfaceHamiltonianUtil
-from .copper_surface_potential import load_interpolated_copper_data
+from .surface_potential import load_interpolated_copper_data
 
 
 def generate_hamiltonian(resolution: Tuple[int, int, int] = (1, 1, 1)):

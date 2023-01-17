@@ -2,8 +2,8 @@ import numpy as np
 
 from ..energy_data.energy_eigenstate import save_energy_eigenstates
 from ..hamiltonian import calculate_energy_eigenstates
-from .copper_surface_data import get_data_path
-from .copper_surface_hamiltonian import generate_hamiltonian
+from .surface_data import get_data_path
+from .surface_hamiltonian import generate_hamiltonian
 
 
 def generate_eigenstates_data():

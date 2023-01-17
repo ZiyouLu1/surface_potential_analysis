@@ -6,14 +6,14 @@ import numpy as np
 from matplotlib.image import AxesImage
 from numpy.typing import NDArray
 
-from ..energy_data.plot_energy_eigenstates import plot_wavepacket_grid_xy
+from ..energy_data.plot_wavepacket_grid import plot_wavepacket_grid_xy
 from ..energy_data.wavepacket_grid import (
     calculate_volume_element,
     load_wavepacket_grid,
     mask_negative_wavepacket,
     symmetrize_wavepacket,
 )
-from .copper_surface_data import get_data_path, save_figure
+from .surface_data import get_data_path, save_figure
 
 
 def plot_overlap_factor():
@@ -30,7 +30,7 @@ def plot_overlap_factor():
     print(points.shape)
 
     fig, _, img = plot_wavepacket_grid_xy(wavepacket, z_ind=10, measure="real")
-    img.set_norm("symlog")
+    img.set_norm("symlog")  # type: ignore
     fig.show()
 
     path = get_data_path("copper_eigenstates_wavepacket_interpolated.json")
@@ -47,7 +47,7 @@ def plot_overlap_factor():
     print(points.shape)
 
     fig, _, img = plot_wavepacket_grid_xy(interpolated, z_ind=50, measure="real")
-    img.set_norm("symlog")
+    img.set_norm("symlog")  # type: ignore
     fig.show()
     save_figure(fig, "Plot of interpolated wavepacket grid at z=0")
 
@@ -81,12 +81,12 @@ def plot_masked_overlap_factor():
         masked, z_ind=overlap_fraction.shape[2] // 2, measure="real", ax=axs[0]
     )
     axs[0].set_title("Z=0")
-    img.set_norm("symlog")
+    img.set_norm("symlog")  # type: ignore
 
     _, _, img = plot_wavepacket_grid_xy(
-        masked, z_ind=max_index[2], measure="real", ax=axs[1]
+        masked, z_ind=int(max_index[2]), measure="real", ax=axs[1]
     )
-    img.set_norm("symlog")
+    img.set_norm("symlog")  # type: ignore
     axs[1].set_title("Max overlap z")
     fig.show()
     save_figure(fig, "Z=0 and max overlap height wavefunction comparison")
@@ -135,27 +135,27 @@ def plot_overlap_fraction_2D(overlap_fraction: NDArray):
     fig, ax = plt.subplots(2, 3)
 
     im = ax[0][0].imshow(overlap_fraction[:, :, 9])
-    im.set_norm("symlog")
+    im.set_norm("symlog")  # type: ignore
     im.set_clim(0, max_fraction)
 
     im = ax[0][1].imshow(overlap_fraction[:, :, 10])
-    im.set_norm("symlog")
+    im.set_norm("symlog")  # type: ignore
     im.set_clim(0, max_fraction)
 
     im = ax[0][2].imshow(overlap_fraction[:, :, 11])
-    im.set_norm("symlog")
+    im.set_norm("symlog")  # type: ignore
     im.set_clim(0, max_fraction)
 
     im = ax[1][0].imshow(overlap_fraction[:, :, 12])
-    im.set_norm("symlog")
+    im.set_norm("symlog")  # type: ignore
     im.set_clim(0, max_fraction)
 
     im = ax[1][1].imshow(overlap_fraction[:, :, 13])
-    im.set_norm("symlog")
+    im.set_norm("symlog")  # type: ignore
     im.set_clim(0, max_fraction)
 
     im = ax[1][2].imshow(overlap_fraction[:, :, 14])
-    im.set_norm("symlog")
+    im.set_norm("symlog")  # type: ignore
     im.set_clim(0, max_fraction)
 
     fig.suptitle("Plot of overlap fraction in the xy plane")
@@ -166,11 +166,11 @@ def plot_overlap_fraction_2D(overlap_fraction: NDArray):
     ims: List[List[AxesImage]] = []
     for z in range(overlap_fraction.shape[2]):
         im = axs.imshow(overlap_fraction[:, :, z], animated=True)
-        im.set_norm("symlog")
+        im.set_norm("symlog")  # type: ignore
         im.set_clim(0, max_fraction)
         ims.append([im])
     im = axs.imshow(overlap_fraction[:, :, 0])
-    im.set_norm("symlog")
+    im.set_norm("symlog")  # type: ignore
     im.set_clim(0, max_fraction)
     ani = matplotlib.animation.ArtistAnimation(
         fig, ims, interval=100, blit=True, repeat_delay=50

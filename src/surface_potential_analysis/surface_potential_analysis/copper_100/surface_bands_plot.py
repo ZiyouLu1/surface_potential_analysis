@@ -3,8 +3,8 @@ import numpy as np
 from ..energy_data.plot_energy_eigenstates import plot_lowest_band_in_kx
 from ..hamiltonian import calculate_energy_eigenstates
 from ..plot_surface_hamiltonian import plot_bands_occupation, plot_first_4_eigenvectors
-from .copper_surface_data import save_figure
-from .copper_surface_hamiltonian import generate_hamiltonian
+from .surface_data import save_figure
+from .surface_hamiltonian import generate_hamiltonian
 
 
 def plot_first_copper_bands():

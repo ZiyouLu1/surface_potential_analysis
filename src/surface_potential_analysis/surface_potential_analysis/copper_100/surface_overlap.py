@@ -5,7 +5,7 @@ from ..energy_data.wavepacket_grid import (
     load_wavepacket_grid,
     symmetrize_wavepacket,
 )
-from .copper_surface_data import get_data_path
+from .surface_data import get_data_path
 
 
 def calculate_overlap_factor():

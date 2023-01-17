@@ -27,8 +27,8 @@ from ..energy_data.plot_wavepacket_grid import (
     plot_wavepacket_in_xy,
 )
 from ..energy_data.wavepacket_grid import load_wavepacket_grid, symmetrize_wavepacket
-from .copper_surface_data import get_data_path, save_figure
-from .copper_surface_wavepacket import normalize_eigenstate_phase
+from .surface_data import get_data_path, save_figure
+from .surface_wavepacket import normalize_eigenstate_phase
 
 
 def plot_wavepacket_points():

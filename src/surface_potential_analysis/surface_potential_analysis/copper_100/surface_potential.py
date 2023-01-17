@@ -6,7 +6,7 @@ from ..energy_data.energy_data import (
     save_energy_grid,
     truncate_energy,
 )
-from .copper_surface_data import get_data_path
+from .surface_data import get_data_path
 
 
 def load_raw_copper_data():

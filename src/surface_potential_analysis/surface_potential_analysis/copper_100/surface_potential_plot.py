@@ -7,8 +7,8 @@ from ..energy_data.energy_data_plot import (
     plot_z_direction_energy_comparison,
     plot_z_direction_energy_data,
 )
-from .copper_surface_data import get_data_path, save_figure
-from .copper_surface_potential import (
+from .surface_data import get_data_path, save_figure
+from .surface_potential import (
     load_9h_copper_data,
     load_interpolated_copper_data,
     load_nc_raw_copper_data,
