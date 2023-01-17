@@ -5,15 +5,17 @@ from matplotlib.axes import Axes
 from matplotlib.figure import Figure
 from matplotlib.lines import Line2D
 
+from surface_potential_analysis.energy_data.energy_eigenstate import Eigenstate
+
 from .energy_data.plot_eigenstate import (
     plot_eigenstate_through_bridge,
     plot_eigenstate_z,
 )
-from .hamiltonian import SurfaceHamiltonian, calculate_eigenvalues
+from .hamiltonian import SurfaceHamiltonianUtil, calculate_eigenvalues
 
 
 def plot_energy_eigenvalues(
-    hamiltonian: SurfaceHamiltonian, ax: Axes | None = None
+    hamiltonian: SurfaceHamiltonianUtil, ax: Axes | None = None
 ) -> tuple[Figure, Axes]:
     fig, a = (ax.get_figure(), ax) if ax is not None else plt.subplots()
 
@@ -31,7 +33,7 @@ def moving_average(a, n=10):
 
 
 def plot_density_of_states(
-    hamiltonian: SurfaceHamiltonian, ax: Axes | None = None
+    hamiltonian: SurfaceHamiltonianUtil, ax: Axes | None = None
 ) -> tuple[Figure, Axes, Line2D]:
     fig, a = (ax.get_figure(), ax) if ax is not None else plt.subplots()
 
@@ -42,16 +44,9 @@ def plot_density_of_states(
     return fig, a, line
 
 
-def plot_nth_eigenvector(
-    hamiltonian: SurfaceHamiltonian, n=0, ax: Axes | None = None
+def plot_eigenstate(
+    hamiltonian: SurfaceHamiltonianUtil, eigenstate: Eigenstate, ax: Axes | None = None
 ) -> tuple[Figure, Axes]:
-
-    e_vals, e_vecs = calculate_eigenvalues(
-        hamiltonian, hamiltonian.dkx / 2, hamiltonian.dky / 2
-    )
-
-    eigenvalue_index = np.argpartition(e_vals, n)[n]
-    eigenstate = e_vecs[eigenvalue_index]
 
     fig, a = (ax.get_figure(), ax) if ax is not None else plt.subplots()
 
@@ -68,17 +63,38 @@ def plot_nth_eigenvector(
         np.abs(hamiltonian.calculate_wavefunction_fast(eigenstate, points)),
         label="X-Y through Top",
     )
-    a.set_title(f"Plot of the n={n} wavefunction")
     a.legend()
 
     return (fig, a)
 
 
-def plot_first_4_eigenvectors(hamiltonian: SurfaceHamiltonian) -> Figure:
+def plot_nth_eigenstate(
+    hamiltonian: SurfaceHamiltonianUtil, n=0, ax: Axes | None = None
+):
+    e_vals, e_vecs = hamiltonian.calculate_eigenvalues(
+        hamiltonian.dkx / 2, hamiltonian.dky / 2
+    )
+
+    eigenvalue_index = np.argpartition(e_vals, n)[n]
+    eigenstate = e_vecs[eigenvalue_index]
+    fig, a = plot_eigenstate(hamiltonian, eigenstate, ax)
+    a.set_title(f"Plot of the n={n} wavefunction")
+    return fig, a
+
+
+def plot_first_4_eigenvectors(hamiltonian: SurfaceHamiltonianUtil) -> Figure:
     fig, axs = plt.subplots(2, 2)
     axes = [axs[0][0], axs[1][0], axs[0][1], axs[1][1]]
+
+    e_vals, e_vecs = hamiltonian.calculate_eigenvalues(
+        hamiltonian.dkx / 2, hamiltonian.dky / 2
+    )
+
     for (n, ax) in enumerate(axes):
-        plot_nth_eigenvector(hamiltonian, n, ax=ax)
+        eigenvalue_index = np.argpartition(e_vals, n)[n]
+        eigenstate = e_vecs[eigenvalue_index]
+        plot_eigenstate(hamiltonian, eigenstate, ax=ax)
+        ax.set_title(f"Plot of the n={n} wavefunction")
 
     fig.tight_layout()
 
@@ -86,7 +102,9 @@ def plot_first_4_eigenvectors(hamiltonian: SurfaceHamiltonian) -> Figure:
 
 
 def plot_bands_occupation(
-    hamiltonian: SurfaceHamiltonian, temperature: float = 50.0, ax: Axes | None = None
+    hamiltonian: SurfaceHamiltonianUtil,
+    temperature: float = 50.0,
+    ax: Axes | None = None,
 ) -> tuple[Figure, Axes, Line2D]:
     fig, a = (ax.get_figure(), ax) if ax is not None else plt.subplots()
 

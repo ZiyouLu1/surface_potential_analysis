@@ -1,11 +1,11 @@
-from surface_potential_analysis.copper_surface.copper_surface_hamiltonian import (
+from surface_potential_analysis.copper_100.copper_surface_hamiltonian import (
     generate_hamiltonian,
 )
 
 from ..energy_data.energy_data import as_interpolation, get_xy_points_delta
 from ..energy_data.energy_eigenstate import EigenstateConfig
 from ..energy_data.plot_sho_wavefunction import plot_interpolation_with_sho
-from ..plot_surface_hamiltonian import plot_nth_eigenvector
+from ..plot_surface_hamiltonian import plot_nth_eigenstate
 from .copper_surface_potential import load_interpolated_copper_data
 
 
@@ -27,7 +27,7 @@ def plot_interpolation_with_sho_config() -> None:
 
 def plot_copper_ground_eigenvector():
     h = generate_hamiltonian(resolution=(12, 12, 10))
-    fig, _ = plot_nth_eigenvector(h)
+    fig, _ = plot_nth_eigenstate(h)
 
     fig.show()
     input()

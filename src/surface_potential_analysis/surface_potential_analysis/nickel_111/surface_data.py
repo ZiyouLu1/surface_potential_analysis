@@ -9,9 +9,9 @@ def get_out_path(filename: str) -> Path:
     out_folder = (
         Path(out_folder_env)
         if out_folder_env is not None
-        else Path(__file__).parent.parent.parent.parent / "out"
+        else Path(__file__).parent.parent.parent.parent.parent / "out"
     )
-    return out_folder / filename
+    return out_folder / "nickel_111" / filename
 
 
 def save_figure(fig: Figure, filename: str) -> None:
@@ -24,6 +24,6 @@ def get_data_path(filename: str) -> Path:
     data_folder = (
         Path(data_folder_env)
         if data_folder_env is not None
-        else Path(__file__).parent.parent.parent.parent / "data"
+        else Path(__file__).parent.parent.parent.parent.parent / "data"
     )
-    return data_folder / filename
+    return data_folder / "nickel_111" / filename

@@ -1,15 +1,11 @@
-import surface_potential_analysis.copper_surface as csa
+import surface_potential_analysis.copper_111 as copper_111_sa
 
 if __name__ == "__main__":
-    # csa.copper_surface_bands_plot.compare_first_5_bands()
-    # csa.copper_surface_wavepacket.calculate_wavepacket_offset()
-    # csa.copper_surface_wavepacket.calculate_wavepacket_4_points()
-    # csa.copper_surface_wavepacket.generate_eigenstates_grid()
-    # csa.copper_surface_wavepacket_plot.plot_wavefunction_3D()
-    # csa.copper_surface_hamiltonian_plot.plot_copper_ground_eigenvector()
-    csa.copper_surface_potential_plot.plot_copper_9h_data()
-    # csa.copper_surface_potential_plot.compare_bridge_hollow_energy()
-    # csa.copper_surface_potential_plot.plot_copper_interpolated_data()
-    # csa.copper_surface_wavepacket.calculate_wavepacket_offset()
+    # nsa.nickel_surface_potential_plot.plot_raw_data_points()
+    copper_111_sa.surface_potential_plot.plot_john_interpolated_points()
+    # nsa.nickel_surface_potential_plot.plot_john_interpolated_points()
+    # csa.copper_surface_wavepacket_plot.analyze_wavepacket_grid_1_points()
     # csa.copper_surface_wavepacket_plot.compare_wavefunction_4_8_points()
-    # csa.copper_surface_wavepacket_plot.plot_wavefunction_3D()
+    # csa.copper_surface_bands_plot.compare_first_5_bands()
+    # csa.copper_surface_potential_plot.plot_copper_relaxed_data()
+    # csa.copper_surface_bands_plot.plot_first_4_eigenstates()

@@ -10,7 +10,7 @@ import hamiltonian_generator
 from surface_potential_analysis.energy_data.energy_data import EnergyInterpolation
 from surface_potential_analysis.energy_data.energy_eigenstate import EigenstateConfig
 from surface_potential_analysis.hamiltonian import (
-    SurfaceHamiltonian,
+    SurfaceHamiltonianUtil,
     calculate_eigenvalues,
     calculate_sho_wavefunction,
 )
@@ -35,7 +35,7 @@ def generate_symmetrical_points(height, width=5):
     return np.swapaxes([generate_random_potential(width) for _ in range(height)], 0, -1)
 
 
-def generate_random_diagonal_hamiltonian() -> SurfaceHamiltonian:
+def generate_random_diagonal_hamiltonian() -> SurfaceHamiltonianUtil:
     nx = random.randrange(2, 10)
     ny = random.randrange(2, 10)
     nz = random.randrange(2, 100)
@@ -56,13 +56,13 @@ def generate_random_diagonal_hamiltonian() -> SurfaceHamiltonian:
         "points": np.zeros(shape=(nx, ny, nz)).tolist(),
         "dz": 1,
     }
-    hamiltonian = SurfaceHamiltonian(config, data, z_offset)
+    hamiltonian = SurfaceHamiltonianUtil(config, data, z_offset)
 
     data2: EnergyInterpolation = {
         "points": np.tile(hamiltonian.get_sho_potential(), (nx, ny, 1)).tolist(),
         "dz": 1,
     }
-    return SurfaceHamiltonian(config, data2, z_offset)
+    return SurfaceHamiltonianUtil(config, data2, z_offset)
 
 
 class TestSurfaceHamiltonian(unittest.TestCase):
@@ -79,7 +79,7 @@ class TestSurfaceHamiltonian(unittest.TestCase):
             "points": [[[0, 0], [0, 0]], [[0, 0], [0, 0]]],
             "dz": 1,
         }
-        hamiltonian = SurfaceHamiltonian(config, data, z_offset)
+        hamiltonian = SurfaceHamiltonianUtil(config, data, z_offset)
 
         expected = np.array(
             [
@@ -124,7 +124,7 @@ class TestSurfaceHamiltonian(unittest.TestCase):
             "points": [[[0, 0], [0, 0]], [[0, 0], [0, 0]]],
             "dz": 1,
         }
-        hamiltonian = SurfaceHamiltonian(config, data, z_offset)
+        hamiltonian = SurfaceHamiltonianUtil(config, data, z_offset)
         coords = hamiltonian.coordinates
         for (i, (nkx, nky, nz)) in enumerate(coords):
             self.assertEqual(hamiltonian.get_index(nkx, nky, nz), i)
@@ -145,7 +145,7 @@ class TestSurfaceHamiltonian(unittest.TestCase):
             "points": [[[0, 0], [0, 0]], [[0, 0], [0, 0]]],
             "dz": 1,
         }
-        hamiltonian = SurfaceHamiltonian(config, data, 0)
+        hamiltonian = SurfaceHamiltonianUtil(config, data, 0)
 
         coords = hamiltonian.coordinates
         for (i, c) in enumerate(coords):
@@ -163,7 +163,7 @@ class TestSurfaceHamiltonian(unittest.TestCase):
             "points": np.zeros(shape=(2, 2, 5)).tolist(),
             "dz": 1,
         }
-        hamiltonian = SurfaceHamiltonian(config, data, -2)
+        hamiltonian = SurfaceHamiltonianUtil(config, data, -2)
         expected = [2.0, 0.5, 0.0, 0.5, 2.0]
         np.testing.assert_equal(expected, hamiltonian.get_sho_potential())
 
@@ -184,13 +184,13 @@ class TestSurfaceHamiltonian(unittest.TestCase):
             "points": np.zeros(shape=(nx, ny, nz)).tolist(),
             "dz": 1,
         }
-        hamiltonian = SurfaceHamiltonian(config, data, z_offset)
+        hamiltonian = SurfaceHamiltonianUtil(config, data, z_offset)
 
         data2: EnergyInterpolation = {
             "points": np.tile(hamiltonian.get_sho_potential(), (nx, ny, 1)).tolist(),
             "dz": 1,
         }
-        hamiltonian = SurfaceHamiltonian(config, data2, z_offset)
+        hamiltonian = SurfaceHamiltonianUtil(config, data2, z_offset)
         actual = hamiltonian.get_sho_subtracted_points()
         expected = np.zeros(shape=(nx, ny, nz))
 
@@ -212,7 +212,7 @@ class TestSurfaceHamiltonian(unittest.TestCase):
             "points": np.zeros(shape=(nx - 1, ny - 1, 5)).tolist(),
             "dz": 1,
         }
-        hamiltonian = SurfaceHamiltonian(config, data, -2)
+        hamiltonian = SurfaceHamiltonianUtil(config, data, -2)
 
         self.assertAlmostEqual(x_points[-1], hamiltonian.delta_x)
         self.assertAlmostEqual(y_points[-1], hamiltonian.delta_y)
@@ -233,7 +233,7 @@ class TestSurfaceHamiltonian(unittest.TestCase):
             "points": points.tolist(),
             "dz": 1,
         }
-        hamiltonian = SurfaceHamiltonian(config, data, -2)
+        hamiltonian = SurfaceHamiltonianUtil(config, data, -2)
 
         self.assertTrue(np.all(np.isreal(hamiltonian.get_ft_potential())))
 
@@ -276,7 +276,7 @@ class TestSurfaceHamiltonian(unittest.TestCase):
             "points": points.tolist(),
             "dz": 1,
         }
-        hamiltonian = SurfaceHamiltonian(config, data, -2)
+        hamiltonian = SurfaceHamiltonianUtil(config, data, -2)
 
         np.testing.assert_allclose(
             hamiltonian.hamiltonian(0, 0), hamiltonian.hamiltonian(0, 0).conjugate().T
@@ -335,7 +335,7 @@ class TestSurfaceHamiltonian(unittest.TestCase):
             "points": np.zeros(shape=(nx, ny, nz)).tolist(),
             "dz": z_width / (nz - 1),
         }
-        hamiltonian = SurfaceHamiltonian(config, data, z_offset)
+        hamiltonian = SurfaceHamiltonianUtil(config, data, z_offset)
 
         for iz1 in range(12):
             for iz2 in range(12):
@@ -387,7 +387,7 @@ class TestSurfaceHamiltonian(unittest.TestCase):
             "dz": 1,
         }
 
-        hamiltonian = SurfaceHamiltonian(config, data, 0)
+        hamiltonian = SurfaceHamiltonianUtil(config, data, 0)
 
         np.testing.assert_allclose(
             hamiltonian._calculate_off_diagonal_energies_fast(),
@@ -411,14 +411,15 @@ class TestSurfaceHamiltonian(unittest.TestCase):
             "dz": 1,
         }
 
-        hamiltonian = SurfaceHamiltonian(config, data, 0)
+        hamiltonian = SurfaceHamiltonianUtil(config, data, 0)
 
         kx = 0
         ky = 0
         eig_val, eig_states = calculate_eigenvalues(hamiltonian, kx, ky)
 
         np.testing.assert_allclose(
-            np.array([np.linalg.norm(x["eigenvector"]) for x in eig_states]), np.ones_like(eig_val)
+            np.array([np.linalg.norm(x["eigenvector"]) for x in eig_states]),
+            np.ones_like(eig_val),
         )
 
     def test_eigenstate_periodicity(self) -> None:
@@ -434,7 +435,7 @@ class TestSurfaceHamiltonian(unittest.TestCase):
             "dz": 1,
         }
 
-        hamiltonian = SurfaceHamiltonian(config, data, 0)
+        hamiltonian = SurfaceHamiltonianUtil(config, data, 0)
 
         kx = np.random.uniform(low=-hamiltonian.dkx / 2, high=hamiltonian.dkx / 2)
         ky = np.random.uniform(low=-hamiltonian.dky / 2, high=hamiltonian.dky / 2)
@@ -477,7 +478,7 @@ class TestSurfaceHamiltonian(unittest.TestCase):
             "dz": 1,
         }
 
-        hamiltonian = SurfaceHamiltonian(config, data, 0)
+        hamiltonian = SurfaceHamiltonianUtil(config, data, 0)
         kx = 0
         ky = 0
 

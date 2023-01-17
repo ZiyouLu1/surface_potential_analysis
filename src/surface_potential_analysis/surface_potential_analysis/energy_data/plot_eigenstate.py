@@ -18,7 +18,7 @@ def get_eigenstate_frame(
     img = ax.imshow(data)
     img.set_extent(extent)
     img.set_clim(*clim)
-    img.set_norm("symlog")
+    img.set_norm("symlog")  # type: ignore
     return img
 
 

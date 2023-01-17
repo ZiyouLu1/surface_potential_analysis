@@ -1,8 +1,14 @@
+from typing import Literal
+
 import matplotlib.pyplot as plt
 import numpy as np
+from matplotlib.axes import Axes
 
 from ..energy_data.energy_eigenstate import (
+    Eigenstate,
+    EigenstateConfig,
     EigenstateConfigUtil,
+    filter_eigenstates_n_point,
     get_eigenstate_list,
     load_energy_eigenstates,
 )
@@ -26,7 +32,7 @@ from .copper_surface_wavepacket import normalize_eigenstate_phase
 
 
 def plot_wavepacket_points():
-    path = get_data_path("copper_eigenstates_grid_offset.json")
+    path = get_data_path("copper_eigenstates_grid_5.json")
     eigenstates = load_energy_eigenstates(path)
     fig, _, _ = plot_eigenstate_positions(eigenstates)
 
@@ -73,7 +79,7 @@ def plot_localized_wavepacket_grid():
 
 
 def plot_wavefunction_3D():
-    path = get_data_path("copper_eigenstates_wavepacket_1_point.json")
+    path = get_data_path("copper_eigenstates_wavepacket_flat_band.json")
     path = get_data_path("copper_eigenstates_wavepacket.json")
     path = get_data_path("copper_eigenstates_wavepacket_offset.json")
     wavepacket = load_wavepacket_grid(path)
@@ -94,18 +100,21 @@ def compare_wavefunction_4_8_points():
     path = get_data_path("copper_eigenstates_wavepacket.json")
     wavepacket_8 = load_wavepacket_grid(path)
 
+    path = get_data_path("copper_eigenstates_wavepacket_5.json")
+    wavepacket_4_larger_k = load_wavepacket_grid(path)
+
     path = get_data_path("copper_eigenstates_wavepacket_with_edge.json")
     wavepacket_edge = load_wavepacket_grid(path)
 
     path = get_data_path("copper_eigenstates_wavepacket_4_point.json")
     wavepacket_4 = load_wavepacket_grid(path)
 
-    path = get_data_path("copper_eigenstates_wavepacket_1_point.json")
+    path = get_data_path("copper_eigenstates_wavepacket_flat_band.json")
     wavepacket_1 = load_wavepacket_grid(path)
 
     fig, ax = plt.subplots()
-    _, _, l1 = plot_wavepacket_grid_x(wavepacket_edge, y_ind=24, z_ind=10, ax=ax)
-    l1.set_label("8 point grid edge")
+    # _, _, l1 = plot_wavepacket_grid_x(wavepacket_edge, y_ind=24, z_ind=10, ax=ax)
+    # l1.set_label("8 point grid edge")
     _, _, l2 = plot_wavepacket_grid_x(wavepacket_4, y_ind=48, z_ind=10, ax=ax)
     l2.set_label("4 point grid")
     _, _, l3 = plot_wavepacket_grid_x(wavepacket_offset, y_ind=48, z_ind=10, ax=ax)
@@ -114,6 +123,8 @@ def compare_wavefunction_4_8_points():
     l4.set_label("8 point grid")
     _, _, l5 = plot_wavepacket_grid_x(wavepacket_1, y_ind=48, z_ind=10, ax=ax)
     l5.set_label("1 point grid")
+    _, _, l6 = plot_wavepacket_grid_x(wavepacket_4_larger_k, y_ind=48, z_ind=10, ax=ax)
+    l6.set_label("4 point grid, larger k")
 
     ax.legend()
     ax.set_yscale("symlog")
@@ -142,6 +153,10 @@ def compare_wavefunction_4_8_points():
         wavepacket_1, y_ind=48, z_ind=10, ax=ax, measure="real"
     )
     l5.set_label("1 point grid")
+    _, _, l6 = plot_wavepacket_grid_x(
+        wavepacket_4_larger_k, y_ind=48, z_ind=10, ax=ax, measure="real"
+    )
+    l6.set_label("4 point grid, larger k")
 
     ax.legend()
     ax.set_yscale("symlog")
@@ -336,3 +351,89 @@ def test_block_wavefunction_fixed_phase_similarity():
                 np.sum(np.sum(reshaped[i], axis=0), axis=0),
                 np.sum(np.sum(reshaped[j], axis=0), axis=0),
             )
+
+
+def plot_eigenstate_difference_in_z(
+    config: EigenstateConfig,
+    eig1: Eigenstate,
+    eig2: Eigenstate,
+    measure: Literal["abs", "rel"] = "abs",
+    ax: Axes | None = None,
+):
+    fig, ax1 = (ax.get_figure(), ax) if ax is not None else plt.subplots()
+
+    util = EigenstateConfigUtil(config)
+    z_points = np.linspace(-util.delta_x / 2, util.delta_x / 2, 100)
+    points = [[util.delta_x / 2, util.delta_y / 2, pz] for pz in z_points]
+
+    wfn0 = util.calculate_wavefunction_fast(eig1, points)
+    wfn3 = util.calculate_wavefunction_fast(eig2, points)
+    (line,) = ax1.plot(z_points, np.abs(wfn0))
+    line.set_label(f"({eig1['kx']:.3E}, {eig1['ky']:.3E})")
+    (line,) = ax1.plot(z_points, np.abs(wfn3))
+    line.set_label(f"({eig2['kx']:.3E}, {eig2['ky']:.3E})")
+
+    ax2 = ax1.twinx()
+    if measure == "abs":
+        (line,) = ax2.plot(z_points, np.abs(wfn0 - wfn3))
+    else:
+        (line,) = ax2.plot(z_points, np.abs(wfn0 - wfn3) / np.abs(wfn0))
+    line.set_label("difference")
+    line.set_linestyle("dashed")
+
+    fig.legend()
+    return fig, ax2, line
+
+
+def analyze_wavepacket_grid_1_points():
+    path = get_data_path("copper_eigenstates_grid_4.json")
+    eigenstates = load_energy_eigenstates(path)
+    filtered = filter_eigenstates_n_point(eigenstates, n=1)
+
+    normalized = normalize_eigenstate_phase(eigenstates)
+    filtered_normalized = filter_eigenstates_n_point(normalized, n=1)
+
+    util = EigenstateConfigUtil(filtered_normalized["eigenstate_config"])
+
+    zero_point = [0, 0, 0]
+    origin_point = [util.delta_x / 2, util.delta_y / 2, 0]
+    next_origin_point = [-util.delta_x / 2, util.delta_y / 2, 0]
+    points = [origin_point, next_origin_point, zero_point]
+    for eigenstate in get_eigenstate_list(filtered):
+        print(util.calculate_wavefunction_fast(eigenstate, points))
+        print(np.abs(util.calculate_wavefunction_fast(eigenstate, points)))
+    print("")
+    for eigenstate in get_eigenstate_list(filtered_normalized):
+        print(util.calculate_wavefunction_fast(eigenstate, points))
+        print(np.abs(util.calculate_wavefunction_fast(eigenstate, points)))
+
+    print(filtered_normalized["eigenstate_config"]["resolution"])
+
+    eigenstates = get_eigenstate_list(filtered_normalized)
+    fig, _, _ = plot_eigenstate_difference_in_z(
+        filtered_normalized["eigenstate_config"], eigenstates[0], eigenstates[3]
+    )
+    fig.tight_layout()
+    fig.show()
+
+    path = get_data_path("copper_eigenstates_grid_5.json")
+    eigenstates = load_energy_eigenstates(path)
+    normalized = normalize_eigenstate_phase(eigenstates)
+    filtered_normalized = filter_eigenstates_n_point(normalized, n=1)
+
+    print(filtered_normalized["eigenstate_config"]["resolution"])
+
+    eigenstates = get_eigenstate_list(filtered_normalized)
+    fig, _, _ = plot_eigenstate_difference_in_z(
+        filtered_normalized["eigenstate_config"], eigenstates[0], eigenstates[3]
+    )
+    fig.tight_layout()
+    fig.show()
+
+    fig, _, _ = plot_eigenstate_difference_in_z(
+        filtered_normalized["eigenstate_config"], eigenstates[1], eigenstates[2]
+    )
+    fig.tight_layout()
+    fig.show()
+
+    input()

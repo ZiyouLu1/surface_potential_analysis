@@ -5,7 +5,7 @@ import numpy as np
 from scipy.constants import hbar
 
 from surface_potential_analysis.energy_data.energy_data import (
-    EnergyData,
+    EnergyGrid,
     add_back_symmetry_points,
     extend_z_data,
     repeat_original_data,
@@ -15,7 +15,7 @@ from surface_potential_analysis.energy_data.energy_data import (
 class TestSurfaceHamiltonian(unittest.TestCase):
     def test_repeat_original_data_shape(self) -> None:
 
-        data: EnergyData = {
+        data: EnergyGrid = {
             "points": [[[0, 0], [0, 0]], [[0, 0], [0, 0]]],
             "x_points": [0, 2 * np.pi * hbar],
             "y_points": [0, 2 * np.pi * hbar],
@@ -30,7 +30,7 @@ class TestSurfaceHamiltonian(unittest.TestCase):
         n_xy = random.randrange(1, 10) * 2 + 1
         xy_points = np.linspace(0, delta_xy, n_xy)
 
-        data: EnergyData = {
+        data: EnergyGrid = {
             "points": np.zeros(shape=(n_xy - 1, n_xy - 1, 2)).tolist(),
             "x_points": xy_points[:-1].tolist(),
             "y_points": xy_points[:-1].tolist(),
@@ -51,7 +51,7 @@ class TestSurfaceHamiltonian(unittest.TestCase):
         points_xy_plane = np.array([[1, 2, 1], [2, 4, 2], [1, 2, 1]])
         points = np.swapaxes(np.tile(points_xy_plane, (2, 1, 1)), 0, -1)
 
-        data: EnergyData = {
+        data: EnergyGrid = {
             "points": points[:-1, :-1].tolist(),
             "x_points": xy_points[:-1].tolist(),
             "y_points": xy_points[:-1].tolist(),
@@ -67,7 +67,7 @@ class TestSurfaceHamiltonian(unittest.TestCase):
     def test_extend_z_data(self) -> None:
         points = [[[1.0, 2.0, 3.0]]]
 
-        data: EnergyData = {
+        data: EnergyGrid = {
             "points": points,
             "x_points": [0],
             "y_points": [0],

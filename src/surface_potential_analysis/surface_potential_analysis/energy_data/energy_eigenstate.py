@@ -313,3 +313,39 @@ def normalize_eigenstate_phase(data: EnergyEigenstates) -> EnergyEigenstates:
         "ky_points": data["ky_points"],
         "eigenstate_config": data["eigenstate_config"],
     }
+
+
+def filter_eigenstates_grid(
+    eigenstates: EnergyEigenstates, kx_points: List[float], ky_points: List[float]
+) -> EnergyEigenstates:
+    filtered_kx = np.zeros_like(eigenstates["kx_points"], dtype=bool)
+    for kx in kx_points:
+        filtered_kx = np.logical_or(filtered_kx, np.equal(eigenstates["kx_points"], kx))
+
+    filtered_ky = np.zeros_like(eigenstates["kx_points"], dtype=bool)
+    for ky in ky_points:
+        filtered_ky = np.logical_or(filtered_ky, np.equal(eigenstates["ky_points"], ky))
+
+    filtered = np.logical_and(filtered_kx, filtered_ky)
+
+    return {
+        "eigenstate_config": eigenstates["eigenstate_config"],
+        "eigenvalues": np.array(eigenstates["eigenvalues"])[filtered].tolist(),
+        "eigenvectors": np.array(eigenstates["eigenvectors"])[filtered].tolist(),
+        "kx_points": np.array(eigenstates["kx_points"])[filtered].tolist(),
+        "ky_points": np.array(eigenstates["ky_points"])[filtered].tolist(),
+    }
+
+
+def filter_eigenstates_n_point(eigenstates: EnergyEigenstates, n: int):
+    """Given Energy Eigenstates produce a reduced grid spacing"""
+    # For an 8 point grid we have eigenstate_len of 16
+    eigenstate_len = np.unique(eigenstates["kx_points"]).shape[0]
+    # We want an 8x8 grid of eigenstates, so for an 8 point grid we take every 2 points
+    take_every = eigenstate_len // (2 * n)
+    if take_every == 0:
+        raise Exception("Not enough k-points in the grid")
+
+    kx_points = np.sort(np.unique(eigenstates["kx_points"]))[0::take_every].tolist()
+    ky_points = np.sort(np.unique(eigenstates["ky_points"]))[0::take_every].tolist()
+    return filter_eigenstates_grid(eigenstates, kx_points, ky_points)

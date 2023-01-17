@@ -6,19 +6,45 @@ import numpy as np
 import scipy.interpolate
 
 
-class EnergyData(TypedDict):
+class EnergyPoints(TypedDict):
+    x_points: List[float]
+    y_points: List[float]
+    z_points: List[float]
+    points: List[float]
+
+
+def load_energy_points(path: Path) -> EnergyPoints:
+    with path.open("r") as f:
+        return json.load(f)
+
+
+def save_energy_points(data: EnergyPoints, path: Path) -> None:
+    with path.open("w") as f:
+        json.dump(data, f)
+
+
+def get_energy_points_xy_locations(data: EnergyPoints) -> List[Tuple[float, float]]:
+    x_points = np.array(data["x_points"])
+    return [
+        (x, y)
+        for x in np.unique(x_points)
+        for y in np.unique(np.array(data["y_points"])[x_points == x])
+    ]
+
+
+class EnergyGrid(TypedDict):
     x_points: List[float]
     y_points: List[float]
     z_points: List[float]
     points: List[List[List[float]]]
 
 
-def load_energy_data(path: Path) -> EnergyData:
+def load_energy_grid(path: Path) -> EnergyGrid:
     with path.open("r") as f:
         return json.load(f)
 
 
-def save_energy_data(data: EnergyData, path: Path) -> None:
+def save_energy_grid(data: EnergyGrid, path: Path) -> None:
     with path.open("w") as f:
         json.dump(data, f)
 
@@ -34,7 +60,7 @@ def get_xy_points_delta(points: List[float]):
     return (len(points)) * (points[-1] - points[0]) / (len(points) - 1)
 
 
-def as_interpolation(data: EnergyData) -> EnergyInterpolation:
+def as_interpolation(data: EnergyGrid) -> EnergyInterpolation:
     """
     Converts between energy data and energy interpolation,
     assuming the x,y,z points are evenly spaced
@@ -59,7 +85,7 @@ def as_interpolation(data: EnergyData) -> EnergyInterpolation:
     return {"dz": dz, "points": data["points"]}
 
 
-def normalize_energy(data: EnergyData) -> EnergyData:
+def normalize_energy(data: EnergyGrid) -> EnergyGrid:
     points = np.array(data["points"], dtype=float)
     normalized_points = points - points.min()
     return {
@@ -73,7 +99,7 @@ def normalize_energy(data: EnergyData) -> EnergyData:
 # Attempt to fill from one corner.
 # We don't have enough points (or the Hydrogen is not fixed enough)
 # to be able to 'fill' the whole region we want
-def fill_subsurface_from_corner(data: EnergyData) -> EnergyData:
+def fill_subsurface_from_corner(data: EnergyGrid) -> EnergyGrid:
     points = np.array(data["points"], dtype=float)
     points_to_fill: Set[Tuple[int, int, int]] = set([(0, 0, 0)])
     fill_level = 1.6
@@ -108,7 +134,7 @@ def fill_subsurface_from_corner(data: EnergyData) -> EnergyData:
     }
 
 
-def fill_subsurface_from_hollow_sample(data: EnergyData) -> EnergyData:
+def fill_subsurface_from_hollow_sample(data: EnergyGrid) -> EnergyGrid:
     points = np.array(data["points"], dtype=float)
 
     # Number of points to fill
@@ -128,7 +154,7 @@ def fill_subsurface_from_hollow_sample(data: EnergyData) -> EnergyData:
 # Fills the surface below the maximum pof the potential
 # Since at the bridge point the maximum is at r-> infty we must take
 # the maximum within the first half of the data
-def fill_surface_from_z_maximum(data: EnergyData) -> EnergyData:
+def fill_surface_from_z_maximum(data: EnergyGrid) -> EnergyGrid:
     points = np.array(data["points"], dtype=float)
     max_arg = np.argmax(points[:, :, :10], axis=2, keepdims=True)
     max_val = np.max(points[:, :, :10], axis=2, keepdims=True)
@@ -146,8 +172,8 @@ def fill_surface_from_z_maximum(data: EnergyData) -> EnergyData:
 
 
 def truncate_energy(
-    data: EnergyData, *, cutoff=2e-17, n: int = 1, offset: float = 2e-18
-) -> EnergyData:
+    data: EnergyGrid, *, cutoff=2e-17, n: int = 1, offset: float = 2e-18
+) -> EnergyGrid:
     points = np.array(data["points"], dtype=float)
     truncated_points = (
         cutoff * np.log(1 + ((points + offset) / cutoff) ** n) ** (1 / n) - offset
@@ -161,8 +187,8 @@ def truncate_energy(
 
 
 def repeat_original_data(
-    data: EnergyData, x_padding: int = 1, y_padding: int = 1
-) -> EnergyData:
+    data: EnergyGrid, x_padding: int = 1, y_padding: int = 1
+) -> EnergyGrid:
     """Repeat the original data using the x, y symmetry to improve the interpolation convergence"""
 
     points = np.array(data["points"])
@@ -197,7 +223,7 @@ def repeat_original_data(
     }
 
 
-def extend_z_data(data: EnergyData, extend_by: int = 2) -> EnergyData:
+def extend_z_data(data: EnergyGrid, extend_by: int = 2) -> EnergyGrid:
     old_points = np.array(data["points"])
     old_shape = old_points.shape
     z_len = old_shape[2] + 2 * extend_by
@@ -233,7 +259,7 @@ def extend_z_data(data: EnergyData, extend_by: int = 2) -> EnergyData:
     }
 
 
-def add_back_symmetry_points(data: EnergyData) -> EnergyData:
+def add_back_symmetry_points(data: EnergyGrid) -> EnergyGrid:
     points = np.array(data["points"])
     nx = points.shape[0] + 1
     ny = points.shape[1] + 1
@@ -258,7 +284,7 @@ def add_back_symmetry_points(data: EnergyData) -> EnergyData:
 
 
 def generate_interpolator(
-    data: EnergyData,
+    data: EnergyGrid,
 ) -> scipy.interpolate.RegularGridInterpolator:
     fixed_data = add_back_symmetry_points(extend_z_data(repeat_original_data(data)))
     return scipy.interpolate.RegularGridInterpolator(
@@ -268,8 +294,8 @@ def generate_interpolator(
 
 
 def interpolate_energies_grid(
-    data: EnergyData, shape: Tuple[int, int, int] = (40, 40, 100)
-) -> EnergyData:
+    data: EnergyGrid, shape: Tuple[int, int, int] = (40, 40, 100)
+) -> EnergyGrid:
     delta_x = get_xy_points_delta(data["x_points"])
     x_points = np.linspace(
         data["x_points"][0], data["x_points"][0] + delta_x, shape[0], endpoint=False
@@ -295,8 +321,8 @@ def interpolate_energies_grid(
 
 # Uses spline interpolation to increase the Z resolution
 def interpolate_energies_spline(
-    data: EnergyData, shape: Tuple[int, int, int] = (40, 40, 1000)
-) -> EnergyData:
+    data: EnergyGrid, shape: Tuple[int, int, int] = (40, 40, 1000)
+) -> EnergyGrid:
     old_points = np.array(data["points"])
     z_points = list(np.linspace(data["z_points"][0], data["z_points"][-1], shape[2]))
 

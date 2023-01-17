@@ -1,7 +1,7 @@
 import numpy as np
 
 from ..energy_data.plot_energy_eigenstates import plot_lowest_band_in_kx
-from ..hamiltonian import calculate_eigenvalues, calculate_energy_eigenstates
+from ..hamiltonian import calculate_energy_eigenstates
 from ..plot_surface_hamiltonian import plot_bands_occupation, plot_first_4_eigenvectors
 from .copper_surface_data import save_figure
 from .copper_surface_hamiltonian import generate_hamiltonian
@@ -16,7 +16,7 @@ def plot_first_copper_bands():
 
 def list_first_copper_band_energies():
     h = generate_hamiltonian(resolution=(12, 12, 15))
-    e_vals, _ = calculate_eigenvalues(h, 0, 0)
+    e_vals, _ = h.calculate_eigenvalues(0, 0)
     print(list(np.sort(e_vals)[:40]))
 
 
@@ -53,7 +53,15 @@ def plot_copper_bands_occupation():
 def compare_first_5_bands():
     hamiltonian = generate_hamiltonian(resolution=(12, 12, 15))
 
-    eigenvalues, _ = calculate_eigenvalues(hamiltonian, 0, 0)
+    eigenvalues, _ = hamiltonian.calculate_eigenvalues(0, 0)
     sorted_eigenvalues = np.sort(eigenvalues)
     print(sorted_eigenvalues[:5])
     print((sorted_eigenvalues - sorted_eigenvalues[0])[:5])
+
+
+def plot_first_4_eigenstates():
+    hamiltonian = generate_hamiltonian(resolution=(12, 12, 15))
+
+    fig = plot_first_4_eigenvectors(hamiltonian)
+    fig.show()
+    input()

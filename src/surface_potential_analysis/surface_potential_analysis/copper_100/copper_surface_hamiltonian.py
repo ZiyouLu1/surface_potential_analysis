@@ -5,7 +5,7 @@ from ..energy_data.energy_eigenstate import (
     EigenstateConfig,
     generate_sho_config_minimum,
 )
-from ..hamiltonian import SurfaceHamiltonian
+from ..hamiltonian import SurfaceHamiltonianUtil
 from .copper_surface_potential import load_interpolated_copper_data
 
 
@@ -21,7 +21,7 @@ def generate_hamiltonian(resolution: Tuple[int, int, int] = (1, 1, 1)):
     }
 
     z_offset = -1.840551985155284e-10
-    return SurfaceHamiltonian(config, interpolation, z_offset)
+    return SurfaceHamiltonianUtil(config, interpolation, z_offset)
 
 
 def generate_sho_config():

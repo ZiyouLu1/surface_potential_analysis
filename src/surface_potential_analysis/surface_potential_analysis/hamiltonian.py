@@ -36,7 +36,7 @@ def timed(f: F) -> F:
     return wrap  # type: ignore
 
 
-class SurfaceHamiltonian(EigenstateConfigUtil):
+class SurfaceHamiltonianUtil(EigenstateConfigUtil):
 
     _potential: EnergyInterpolation
 
@@ -203,6 +203,7 @@ class SurfaceHamiltonian(EigenstateConfigUtil):
 
         return hamiltonian
 
+    @timed
     def calculate_eigenvalues(self, kx, ky) -> Tuple[List[float], List[Eigenstate]]:
         """
         Returns the eigenvalues as a list of vectors,
@@ -212,15 +213,14 @@ class SurfaceHamiltonian(EigenstateConfigUtil):
         return (w.tolist(), [{"eigenvector": vec, "kx": kx, "ky": ky} for vec in v.T])
 
 
-@timed
 def calculate_eigenvalues(
-    hamiltonian: SurfaceHamiltonian, kx: float, ky: float
+    hamiltonian: SurfaceHamiltonianUtil, kx: float, ky: float
 ) -> Tuple[List[float], List[Eigenstate]]:
     return hamiltonian.calculate_eigenvalues(kx, ky)
 
 
 def generate_energy_eigenstates_grid(
-    path: Path, hamiltonian: SurfaceHamiltonian, grid_size=5, include_zero=True
+    path: Path, hamiltonian: SurfaceHamiltonianUtil, grid_size=5, include_zero=True
 ) -> None:
     data: EnergyEigenstates = {
         "kx_points": [],
@@ -245,7 +245,7 @@ def generate_energy_eigenstates_grid(
 
     for kx in kx_points:
         for ky in ky_points:
-            e_vals, e_states = calculate_eigenvalues(hamiltonian, kx, ky)
+            e_vals, e_states = hamiltonian.calculate_eigenvalues(kx, ky)
             a_min = np.argmin(e_vals)
 
             eigenvalue = e_vals[a_min]
@@ -254,12 +254,12 @@ def generate_energy_eigenstates_grid(
 
 
 def calculate_energy_eigenstates(
-    hamiltonian: SurfaceHamiltonian, kx_points: NDArray, ky_points: NDArray
+    hamiltonian: SurfaceHamiltonianUtil, kx_points: NDArray, ky_points: NDArray
 ) -> EnergyEigenstates:
     eigenvalues = []
     eigenvectors = []
     for (kx, ky) in zip(kx_points, ky_points):
-        e_vals, e_states = calculate_eigenvalues(hamiltonian, kx, ky)
+        e_vals, e_states = hamiltonian.calculate_eigenvalues(kx, ky)
         a_min = np.argmin(e_vals)
 
         eigenvalues.append(e_vals[a_min])
