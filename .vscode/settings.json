@@ -55,5 +55,10 @@
   },
   "rust-analyzer.linkedProjects": ["./src/hamiltonian_generator/Cargo.toml"],
   "rust-analyzer.checkOnSave.command": "clippy",
-  "python.analysis.extraPaths": ["./src/surface_potential_analysis"]
+  "python.analysis.extraPaths": [
+    "./src/surface_potential_analysis",
+    "./src/copper_100",
+    "./src/nickel_111",
+    "./src/copper_111"
+  ]
 }

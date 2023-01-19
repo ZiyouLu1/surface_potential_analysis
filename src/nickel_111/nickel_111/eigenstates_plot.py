@@ -1,0 +1,39 @@
+import matplotlib.pyplot as plt
+
+from surface_potential_analysis.energy_eigenstate import load_energy_eigenstates
+from surface_potential_analysis.plot_energy_eigenstates import plot_lowest_band_in_kx
+
+from .surface_data import get_data_path
+
+
+def analyze_band_convergence():
+    fig, ax = plt.subplots()
+
+    path = get_data_path("eigenstates_12_12_13.json")
+    eigenstates = load_energy_eigenstates(path)
+    _, _, ln = plot_lowest_band_in_kx(eigenstates, ax=ax)
+    ln.set_label("(12,12,13)")
+
+    path = get_data_path("eigenstates_12_12_14.json")
+    eigenstates = load_energy_eigenstates(path)
+    _, _, ln = plot_lowest_band_in_kx(eigenstates, ax=ax)
+    ln.set_label("(12,12,14)")
+
+    path = get_data_path("eigenstates_10_10_13.json")
+    eigenstates = load_energy_eigenstates(path)
+    _, _, ln = plot_lowest_band_in_kx(eigenstates, ax=ax)
+    ln.set_label("(10,10,13)")
+
+    path = get_data_path("eigenstates_14_14_13.json")
+    eigenstates = load_energy_eigenstates(path)
+    _, _, ln = plot_lowest_band_in_kx(eigenstates, ax=ax)
+    ln.set_label("(14,14,13)")
+
+    ax.legend()
+    ax.set_title(
+        "Plot of lowest band energies\n"
+        "showing convergence for an eigenstate grid of (12,12,14)"
+    )
+
+    fig.show()
+    input()

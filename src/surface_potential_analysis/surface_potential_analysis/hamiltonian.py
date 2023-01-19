@@ -10,8 +10,8 @@ from scipy.constants import hbar
 
 import hamiltonian_generator
 
-from .energy_data.energy_data import EnergyInterpolation
-from .energy_data.energy_eigenstate import (
+from .energy_data import EnergyInterpolation
+from .energy_eigenstate import (
     Eigenstate,
     EigenstateConfig,
     EigenstateConfigUtil,
@@ -19,7 +19,7 @@ from .energy_data.energy_eigenstate import (
     append_energy_eigenstates,
     save_energy_eigenstates,
 )
-from .energy_data.sho_wavefunction import calculate_sho_wavefunction
+from .sho_wavefunction import calculate_sho_wavefunction
 
 F = TypeVar("F", bound=Callable)
 

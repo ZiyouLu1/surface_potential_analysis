@@ -7,8 +7,8 @@ import scipy.special
 from scipy.constants import hbar
 
 import hamiltonian_generator
-from surface_potential_analysis.energy_data.energy_data import EnergyInterpolation
-from surface_potential_analysis.energy_data.energy_eigenstate import EigenstateConfig
+from surface_potential_analysis.energy_data import EnergyInterpolation
+from surface_potential_analysis.energy_eigenstate import EigenstateConfig
 from surface_potential_analysis.hamiltonian import (
     SurfaceHamiltonianUtil,
     calculate_eigenvalues,

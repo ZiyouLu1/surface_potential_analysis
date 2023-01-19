@@ -5,13 +5,9 @@ from matplotlib.axes import Axes
 from matplotlib.figure import Figure
 from matplotlib.lines import Line2D
 
-from surface_potential_analysis.energy_data.energy_eigenstate import Eigenstate
-
-from .energy_data.plot_eigenstate import (
-    plot_eigenstate_through_bridge,
-    plot_eigenstate_z,
-)
+from .energy_eigenstate import Eigenstate
 from .hamiltonian import SurfaceHamiltonianUtil, calculate_eigenvalues
+from .plot_eigenstate import plot_eigenstate_through_bridge, plot_eigenstate_z
 
 
 def plot_energy_eigenvalues(

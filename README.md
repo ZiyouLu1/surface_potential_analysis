@@ -7,6 +7,7 @@ Code to produce localized wavepackets for periodic potential energy surfaces.
 To install the two packages run
 
 ```shell
+pip install -e ./src/copper_100
 pip install -e ./src/surface_potential_analysis
 pip install ./src/hamiltonian_generator
 ```

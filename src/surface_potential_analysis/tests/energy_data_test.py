@@ -4,7 +4,7 @@ import unittest
 import numpy as np
 from scipy.constants import hbar
 
-from surface_potential_analysis.energy_data.energy_data import (
+from surface_potential_analysis.energy_data import (
     EnergyGrid,
     add_back_symmetry_points,
     extend_z_data,
