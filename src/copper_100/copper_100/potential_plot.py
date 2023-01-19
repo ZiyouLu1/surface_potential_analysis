@@ -1,3 +1,4 @@
+import matplotlib.pyplot as plt
 import numpy as np
 import scipy.constants
 
@@ -55,25 +56,25 @@ def plot_copper_9h_data():
 
 
 def plot_copper_relaxed_data():
-    path = get_data_path("copper_relaxed_raw_energies.json")
-    data = load_energy_grid(path)
 
     data_7h = load_raw_copper_data()
     data_7h_norm = normalize_energy(data_7h)
 
     min_points = np.array(data_7h["points"], dtype=float).min()
+
+    path = get_data_path("copper_relaxed_raw_energies.json")
+    data = load_energy_grid(path)
     normalized_points = np.array(data["points"]) - min_points
     data["points"] = normalized_points.tolist()
 
-    fig, ax, lines = plot_z_direction_energy_data(data)
+    fig, ax = plt.subplots()
+    _, _, lines = plot_z_direction_energy_data(data, ax)
+    for ln in lines:
+        ln.set_linestyle("")
+        ln.set_marker("x")
+
     _, _, _ = plot_z_direction_energy_data(data_7h_norm, ax)
-    (l1, l2, l3) = lines
-    l1.set_linestyle("")
-    l2.set_linestyle("")
-    l3.set_linestyle("")
-    l1.set_marker("x")
-    l2.set_marker("x")
-    l3.set_marker("x")
+
     ax.set_ylim(bottom=-0.1e-18, top=1e-18)
 
     fig.show()

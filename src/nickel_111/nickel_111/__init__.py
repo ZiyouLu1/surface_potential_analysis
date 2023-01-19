@@ -6,6 +6,7 @@ from . import (
     potential,
     potential_plot,
     surface_data,
+    wavepacket,
 )
 
 __all__ = [
@@ -16,4 +17,5 @@ __all__ = [
     "potential",
     "potential_plot",
     "surface_data",
+    "wavepacket",
 ]
