@@ -9,6 +9,7 @@ from numpy.typing import NDArray
 from scipy.constants import hbar
 
 import hamiltonian_generator
+from surface_potential_analysis.brillouin_zone import get_brillouin_points_copper_100
 
 from .energy_data import EnergyInterpolation
 from .energy_eigenstate import (
@@ -220,8 +221,13 @@ def calculate_eigenvalues(
 
 
 def generate_energy_eigenstates_grid(
-    path: Path, hamiltonian: SurfaceHamiltonianUtil, grid_size=5, include_zero=True
+    path: Path,
+    hamiltonian: SurfaceHamiltonianUtil,
+    k_points: NDArray,
+    *,
+    include_bands: List[int] | None = None,
 ) -> None:
+    include_bands = [0] if include_bands is None else include_bands
     data: EnergyEigenstates = {
         "kx_points": [],
         "ky_points": [],
@@ -231,6 +237,36 @@ def generate_energy_eigenstates_grid(
     }
     save_energy_eigenstates(data, path)
 
+    for (kx, ky) in k_points:
+        e_vals, e_states = hamiltonian.calculate_eigenvalues(kx, ky)
+        a_min = np.argpartition(e_vals, include_bands)
+
+        for idx in include_bands:
+            eigenvalue = e_vals[a_min[idx]]
+            eigenstate = e_states[a_min[idx]]
+            append_energy_eigenstates(path, eigenstate, eigenvalue)
+
+
+def generate_energy_eigenstates_grid_copper_100(
+    path: Path,
+    hamiltonian: SurfaceHamiltonianUtil,
+    *,
+    grid_size=4,
+    include_zero=True,
+    include_bands: List[int] | None = None,
+):
+    k_points = get_brillouin_points_copper_100(
+        hamiltonian._config, grid_size=grid_size, include_zero=include_zero
+    )
+
+    return generate_energy_eigenstates_grid(
+        path, hamiltonian, k_points, include_bands=include_bands
+    )
+
+
+def generate_eigenstates_grid_points_111(
+    hamiltonian: SurfaceHamiltonianUtil, *, grid_size=4, include_zero=True
+):
     dkx = hamiltonian.dkx
     (kx_points, kx_step) = np.linspace(
         -dkx / 2, dkx / 2, 2 * grid_size, endpoint=False, retstep=True
@@ -243,14 +279,9 @@ def generate_energy_eigenstates_grid(
         kx_points += kx_step / 2
         ky_points += ky_step / 2
 
-    for kx in kx_points:
-        for ky in ky_points:
-            e_vals, e_states = hamiltonian.calculate_eigenvalues(kx, ky)
-            a_min = np.argmin(e_vals)
-
-            eigenvalue = e_vals[a_min]
-            eigenstate = e_states[a_min]
-            append_energy_eigenstates(path, eigenstate, eigenvalue)
+    xv, yv = np.meshgrid(kx_points, ky_points)
+    k_points = np.array([xv.ravel(), yv.ravel()]).T
+    return k_points
 
 
 def calculate_energy_eigenstates(

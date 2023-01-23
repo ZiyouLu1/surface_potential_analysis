@@ -18,7 +18,11 @@ from surface_potential_analysis.plot_eigenstate import (
     plot_wavefunction_difference_in_xy,
 )
 from surface_potential_analysis.plot_energy_eigenstates import plot_eigenstate_positions
-from surface_potential_analysis.plot_wavepacket_grid import (
+from surface_potential_analysis.wavepacket_grid import (
+    load_wavepacket_grid,
+    symmetrize_wavepacket,
+)
+from surface_potential_analysis.wavepacket_grid_plot import (
     plot_wavepacket_grid_x,
     plot_wavepacket_grid_xy,
     plot_wavepacket_grid_xz,
@@ -26,13 +30,9 @@ from surface_potential_analysis.plot_wavepacket_grid import (
     plot_wavepacket_grid_z_2D,
     plot_wavepacket_in_xy,
 )
-from surface_potential_analysis.wavepacket_grid import (
-    load_wavepacket_grid,
-    symmetrize_wavepacket,
-)
 
 from .surface_data import get_data_path, save_figure
-from .wavepacket import normalize_eigenstate_phase
+from .wavepacket import normalize_eigenstate_phase_copper
 
 
 def plot_wavepacket_points():
@@ -238,11 +238,17 @@ def compare_wavefunction_2D():
     ax.set_title("(-dkx/2, 0) at z=0")
 
     y_point = config["delta_x"]
-    (_, ax, _) = plot_eigenstate_in_xy(config, eigenstate_list[0], axs[1][0], y_point)
+    (_, ax, _) = plot_eigenstate_in_xy(
+        config, eigenstate_list[0], axs[1][0], y_point=y_point
+    )
     ax.set_title("(-dkx/2, -dky/2) at z=delta_x")
-    (_, ax, _) = plot_eigenstate_in_xy(config, eigenstate_list[144], axs[1][1], y_point)
+    (_, ax, _) = plot_eigenstate_in_xy(
+        config, eigenstate_list[144], axs[1][1], y_point=y_point
+    )
     ax.set_title("(0,0) at z=delta_x")
-    (_, ax, _) = plot_eigenstate_in_xy(config, eigenstate_list[8], axs[1][2], y_point)
+    (_, ax, _) = plot_eigenstate_in_xy(
+        config, eigenstate_list[8], axs[1][2], y_point=y_point
+    )
     ax.set_title("(-dkx/2, 0) at z=delta_x")
 
     fig.tight_layout()
@@ -341,7 +347,7 @@ def test_block_wavefunction_fixed_phase_similarity():
     n_eigenvectors = len(eigenstates["eigenvectors"])
     resolution = eigenstates["eigenstate_config"]["resolution"]
 
-    normalized = normalize_eigenstate_phase(eigenstates)
+    normalized = normalize_eigenstate_phase_copper(eigenstates)
 
     fixed_phase_eigenvectors = np.array(normalized["eigenvectors"])
 
@@ -394,7 +400,7 @@ def analyze_wavepacket_grid_1_points():
     eigenstates = load_energy_eigenstates(path)
     filtered = filter_eigenstates_n_point(eigenstates, n=1)
 
-    normalized = normalize_eigenstate_phase(eigenstates)
+    normalized = normalize_eigenstate_phase_copper(eigenstates)
     filtered_normalized = filter_eigenstates_n_point(normalized, n=1)
 
     util = EigenstateConfigUtil(filtered_normalized["eigenstate_config"])
@@ -422,7 +428,7 @@ def analyze_wavepacket_grid_1_points():
 
     path = get_data_path("copper_eigenstates_grid_5.json")
     eigenstates = load_energy_eigenstates(path)
-    normalized = normalize_eigenstate_phase(eigenstates)
+    normalized = normalize_eigenstate_phase_copper(eigenstates)
     filtered_normalized = filter_eigenstates_n_point(normalized, n=1)
 
     print(filtered_normalized["eigenstate_config"]["resolution"])

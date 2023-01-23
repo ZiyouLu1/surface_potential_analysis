@@ -48,7 +48,9 @@ def plot_wavepacket_grid_xy(
 def plot_wavepacket_grid_z_2D(
     grid: WavepacketGrid,
     ax: Axes | None = None,
+    *,
     measure: Literal["real", "imag", "abs"] = "abs",
+    norm: Literal["symlog", "linear"] = "symlog"
 ):
     fig, axs = (ax.get_figure(), ax) if ax is not None else plt.subplots()
 
@@ -70,8 +72,7 @@ def plot_wavepacket_grid_z_2D(
         ]
     )
     img.set_clim(np.min(data), np.max(data))
-    img.set_norm("symlog")  # type: ignore
-
+    img.set_norm(norm)  # type: ignore
     ims: List[List[AxesImage]] = []
     for z_ind in range(points.shape[2]):
 
@@ -85,7 +86,7 @@ def plot_wavepacket_grid_z_2D(
             ]
         )
         img.set_clim(np.min(data), np.max(data))
-        img.set_norm("symlog")  # type: ignore
+        img.set_norm(norm)  # type: ignore
         ims.append([img])
 
     ani = matplotlib.animation.ArtistAnimation(fig, ims)
@@ -95,7 +96,13 @@ def plot_wavepacket_grid_z_2D(
 def plot_wavepacket_grid_y_2D(
     grid: WavepacketGrid,
     ax: Axes | None = None,
+    *,
     measure: Literal["real", "imag", "abs"] = "abs",
+    norm: Literal[
+        "linear",
+        "log",
+        "symlog",
+    ] = "symlog"
 ):
     fig, axs = (ax.get_figure(), ax) if ax is not None else plt.subplots()
 

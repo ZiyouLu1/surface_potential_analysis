@@ -4,6 +4,7 @@ from typing import List, Tuple, TypedDict
 
 import numpy as np
 import scipy
+from numpy.typing import NDArray
 
 from .energy_eigenstate import (
     EigenstateConfigUtil,
@@ -156,15 +157,31 @@ def mask_negative_wavepacket(wavepacket: WavepacketGrid) -> WavepacketGrid:
     }
 
 
+def calculate_wavepacket_grid_copper(
+    eigenstates: EnergyEigenstates,
+    *,
+    cutoff: int | None = None,
+    n_xyz: Tuple[int, int, int] = (49, 49, 21),
+):
+
+    util = EigenstateConfigUtil(eigenstates["eigenstate_config"])
+    x_points = np.linspace(-util.delta_x, util.delta_x / 2, n_xyz[0])  # 97
+    y_points = np.linspace(-util.delta_y, util.delta_y / 2, n_xyz[1])
+    z_points = np.linspace(-util.delta_y, util.delta_y, n_xyz[2])
+
+    return calculate_wavepacket_grid(eigenstates, x_points, y_points, z_points)
+
+
 def calculate_wavepacket_grid(
-    eigenstates: EnergyEigenstates, cutoff: int | None = None
+    eigenstates: EnergyEigenstates,
+    x_points: NDArray,
+    y_points: NDArray,
+    z_points: NDArray,
+    *,
+    cutoff: int | None = None,
 ) -> WavepacketGrid:
 
     util = EigenstateConfigUtil(eigenstates["eigenstate_config"])
-
-    x_points = np.linspace(-util.delta_x, util.delta_x / 2, 49)  # 97
-    y_points = np.linspace(-util.delta_y, util.delta_y / 2, 49)
-    z_points = np.linspace(-util.delta_y, util.delta_y, 21)
 
     xv, yv, zv = np.meshgrid(x_points, y_points, z_points)
     points = np.array([xv.ravel(), yv.ravel(), zv.ravel()]).T

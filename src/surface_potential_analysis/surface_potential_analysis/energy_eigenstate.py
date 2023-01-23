@@ -290,11 +290,8 @@ def generate_sho_config_minimum(
     return opt_params[0], z_offset
 
 
-def get_bloch_phases(
-    data: EnergyEigenstates,
-):
+def get_bloch_phases(data: EnergyEigenstates, origin_point: Tuple[float, float, float]):
     util = EigenstateConfigUtil(data["eigenstate_config"])
-    origin_point = [util.delta_x / 2, util.delta_y / 2, 0]
 
     phases: List[float] = []
     for eigenstate in get_eigenstate_list(data):
@@ -303,11 +300,13 @@ def get_bloch_phases(
     return phases
 
 
-def normalize_eigenstate_phase(data: EnergyEigenstates) -> EnergyEigenstates:
+def normalize_eigenstate_phase(
+    data: EnergyEigenstates, origin_point: Tuple[float, float, float]
+) -> EnergyEigenstates:
 
     eigenvectors = data["eigenvectors"]
 
-    phases = get_bloch_phases(data)
+    phases = get_bloch_phases(data, origin_point=origin_point)
     phase_factor = np.real_if_close(np.exp(-1j * np.array(phases)))
     fixed_phase_eigenvectors = np.multiply(eigenvectors, phase_factor[:, np.newaxis])
 

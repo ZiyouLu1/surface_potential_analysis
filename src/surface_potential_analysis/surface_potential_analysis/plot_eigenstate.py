@@ -23,7 +23,11 @@ def get_eigenstate_frame(
 
 
 def plot_eigenstate_3D(
-    config: EigenstateConfig, eigenstate: Eigenstate, ax: Axes | None = None
+    config: EigenstateConfig,
+    eigenstate: Eigenstate,
+    ax: Axes | None = None,
+    *,
+    measure: Literal["real", "imag", "abs"] = "abs"
 ) -> tuple[Figure, Axes, matplotlib.animation.ArtistAnimation]:
     fig, ax1 = (ax.get_figure(), ax) if ax is not None else plt.subplots()
     util = EigenstateConfigUtil(config)
@@ -36,7 +40,14 @@ def plot_eigenstate_3D(
 
     points = np.array([xv.ravel(), yv.ravel(), zv.ravel()]).T
     wfn = util.calculate_wavefunction_fast(eigenstate, points).reshape(xv.shape)
-    data = np.abs(wfn)
+
+    match measure:
+        case "real":
+            data = np.real(wfn)
+        case "imag":
+            data = np.imag(wfn)
+        case "abs":
+            data = np.abs(wfn)
 
     extent = [x_points[0], x_points[-1], y_points[0], y_points[-1]]
     clim = (np.min(data), np.max(data))
@@ -122,18 +133,27 @@ def plot_eigenstate_in_xy(
     config: EigenstateConfig,
     eigenstate: Eigenstate,
     ax: Axes | None = None,
+    *,
     y_point=0.0,
+    measure: Literal["real", "imag", "abs"] = "abs"
 ) -> tuple[Figure, Axes, AxesImage]:
     fig, ax1 = (ax.get_figure(), ax) if ax is not None else plt.subplots()
     util = EigenstateConfigUtil(config)
 
-    x_points = np.linspace(0, util.delta_x, 30)
-    y_points = np.linspace(0, util.delta_y, 30)
+    x_points = np.linspace(0, util.delta_x, 29, endpoint=False)
+    y_points = np.linspace(0, util.delta_y, 29, endpoint=False)
 
     xv, yv = np.meshgrid(x_points, y_points)
     points = np.array([xv.ravel(), yv.ravel(), y_point * np.ones_like(xv.ravel())]).T
 
-    X = util.calculate_wavefunction_fast(eigenstate, points).reshape(xv.shape)
-    im = ax1.imshow(np.abs(X))
+    wfn = util.calculate_wavefunction_fast(eigenstate, points).reshape(xv.shape)
+    match measure:
+        case "real":
+            data = np.real(wfn)
+        case "imag":
+            data = np.imag(wfn)
+        case "abs":
+            data = np.abs(wfn)
+    im = ax1.imshow(data)
     im.set_extent((x_points[0], x_points[-1], y_points[0], y_points[-1]))
     return (fig, ax1, im)

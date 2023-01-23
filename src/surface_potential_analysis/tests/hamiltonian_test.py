@@ -8,11 +8,15 @@ from scipy.constants import hbar
 
 import hamiltonian_generator
 from surface_potential_analysis.energy_data import EnergyInterpolation
-from surface_potential_analysis.energy_eigenstate import EigenstateConfig
+from surface_potential_analysis.energy_eigenstate import (
+    EigenstateConfig,
+    EigenstateConfigUtil,
+)
 from surface_potential_analysis.hamiltonian import (
     SurfaceHamiltonianUtil,
     calculate_eigenvalues,
     calculate_sho_wavefunction,
+    get_brillouin_points_copper_100,
 )
 
 
@@ -63,6 +67,27 @@ def generate_random_diagonal_hamiltonian() -> SurfaceHamiltonianUtil:
         "dz": 1,
     }
     return SurfaceHamiltonianUtil(config, data2, z_offset)
+
+
+def generate_eigenstates_grid_points_100(
+    config: EigenstateConfig, *, grid_size=4, include_zero=True
+):
+    util = EigenstateConfigUtil(config)
+    dkx = util.dkx
+    (kx_points, kx_step) = np.linspace(
+        -dkx / 2, dkx / 2, 2 * grid_size, endpoint=False, retstep=True
+    )
+    dky = util.dky
+    (ky_points, ky_step) = np.linspace(
+        -dky / 2, dky / 2, 2 * grid_size, endpoint=False, retstep=True
+    )
+    if not include_zero:
+        kx_points += kx_step / 2
+        ky_points += ky_step / 2
+
+    xv, yv = np.meshgrid(kx_points, ky_points)
+    k_points = np.array([xv.ravel(), yv.ravel()]).T
+    return k_points
 
 
 class TestSurfaceHamiltonian(unittest.TestCase):
@@ -492,6 +517,18 @@ class TestSurfaceHamiltonian(unittest.TestCase):
             {"eigenvector": eigenvector, "kx": kx, "ky": ky}, points
         )
 
+        np.testing.assert_allclose(expected, actual)
+
+    def test_generate_brillouin_zone_points_copper(self) -> None:
+        config: EigenstateConfig = {
+            "mass": hbar**2,
+            "sho_omega": 1 / hbar,
+            "delta_x": 2 * np.pi * hbar,
+            "delta_y": 2 * np.pi * hbar,
+            "resolution": (10, 10, 14),
+        }
+        expected = generate_eigenstates_grid_points_100(config)
+        actual = get_brillouin_points_copper_100(config)
         np.testing.assert_allclose(expected, actual)
 
 

@@ -6,13 +6,13 @@ import numpy as np
 from matplotlib.image import AxesImage
 from numpy.typing import NDArray
 
-from surface_potential_analysis.plot_wavepacket_grid import plot_wavepacket_grid_xy
 from surface_potential_analysis.wavepacket_grid import (
     calculate_volume_element,
     load_wavepacket_grid,
     mask_negative_wavepacket,
     symmetrize_wavepacket,
 )
+from surface_potential_analysis.wavepacket_grid_plot import plot_wavepacket_grid_xy
 
 from .surface_data import get_data_path, save_figure
 

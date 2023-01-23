@@ -26,8 +26,8 @@ def plot_eigenstate_positions(
 def plot_lowest_band_in_kx(eigenstates: EnergyEigenstates, ax: Axes | None = None):
     fig, a = (ax.get_figure(), ax) if ax is not None else plt.subplots()
 
-    kx_points = eigenstates["kx_points"]
-    eigenvalues = eigenstates["eigenvalues"]
+    kx_points = eigenstates["kx_points"][:6]
+    eigenvalues = eigenstates["eigenvalues"][:6]
 
     (line,) = a.plot(kx_points, eigenvalues)
     return fig, a, line
