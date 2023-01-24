@@ -1,8 +1,8 @@
 import numpy as np
 
+from surface_potential_analysis.energy_eigenstates_plot import plot_lowest_band_in_kx
 from surface_potential_analysis.hamiltonian import calculate_energy_eigenstates
-from surface_potential_analysis.plot_energy_eigenstates import plot_lowest_band_in_kx
-from surface_potential_analysis.plot_surface_hamiltonian import (
+from surface_potential_analysis.surface_hamiltonian_plot import (
     plot_bands_occupation,
     plot_first_4_eigenvectors,
 )
@@ -27,7 +27,7 @@ def list_first_copper_band_energies():
 def plot_copper_band_structure():
     h = generate_hamiltonian(resolution=(12, 12, 10))
 
-    kx_points = np.linspace(-h.dkx / 2, h.dkx / 2, 21)
+    kx_points = np.linspace(-h.dkx1[0] / 2, h.dkx1[0] / 2, 21)
     ky_points = np.zeros_like(kx_points)
     eigenstates = calculate_energy_eigenstates(h, kx_points, ky_points)
 

@@ -1,10 +1,9 @@
 import matplotlib.pyplot as plt
-import numpy as np
 from matplotlib.axes import Axes
 from matplotlib.figure import Figure
 from matplotlib.lines import Line2D
 
-from .energy_eigenstate import EnergyEigenstates
+from .energy_eigenstate import EigenstateConfigUtil, EnergyEigenstates
 
 
 def plot_eigenstate_positions(
@@ -15,10 +14,10 @@ def plot_eigenstate_positions(
     (line,) = ax1.plot(eigenstates["kx_points"], eigenstates["ky_points"])
     line.set_linestyle("None")
     line.set_marker("x")
-    dkx = 2 * np.pi / eigenstates["eigenstate_config"]["delta_x"]
-    dky = 2 * np.pi / eigenstates["eigenstate_config"]["delta_y"]
-    ax1.set_xlim(-dkx / 2, dkx / 2)
-    ax1.set_ylim(-dky / 2, dky / 2)
+
+    util = EigenstateConfigUtil(eigenstates["eigenstate_config"])
+    ax1.set_xlim(-(util.dkx1[0] + util.dkx2[0]) / 2, (util.dkx1[0] + util.dkx2[0]) / 2)
+    ax1.set_ylim(-(util.dkx1[1] + util.dkx2[1]) / 2, (util.dkx1[1] + util.dkx2[1]) / 2)
 
     return fig, ax1, line
 

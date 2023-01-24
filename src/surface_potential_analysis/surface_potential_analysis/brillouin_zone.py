@@ -9,7 +9,7 @@ from surface_potential_analysis.energy_eigenstate import (
 
 
 def get_point_fractions(grid_size=4, include_zero=True):
-
+    """Get the coordinates as fractions of the momentum vectors"""
     (kx_points, kx_step) = np.linspace(
         -0.5, 0.5, 2 * grid_size, endpoint=False, retstep=True
     )
@@ -33,21 +33,22 @@ def get_points_in_brillouin_zone(
 ):
     fractions = get_point_fractions(grid_size, include_zero)
 
+    # Multiply the dk reciprocal lattuice vectors by their corresponding fraction
+    # f1 * dk1 + f2 * dk2
     x_points = dk1[0] * fractions[:, 0] + dk2[0] * fractions[:, 1]
     y_points = dk1[1] * fractions[:, 0] + dk2[1] * fractions[:, 1]
 
-    out = np.array([x_points, y_points]).T
-    np.testing.assert_array_equal(out[:, 0], x_points)
-    np.testing.assert_array_equal(out[:, 1], y_points)
-    return out
+    return np.array([x_points, y_points]).T
 
 
-def get_brillouin_points_copper_100(
+def get_brillouin_points_irreducible_config(
     config: EigenstateConfig, *, grid_size=4, include_zero=True
 ):
+    """
+    If the eigenstate config is that of the irreducible unit cell
+    we can use the dkx of the lattuice to generate the brillouin zone points
+    """
     util = EigenstateConfigUtil(config)
-    dk1 = (util.dkx, 0)
-    dk2 = (0, util.dky)
     return get_points_in_brillouin_zone(
-        dk1, dk2, grid_size=grid_size, include_zero=include_zero
+        util.dkx1, util.dkx2, grid_size=grid_size, include_zero=include_zero
     )

@@ -8,7 +8,7 @@ from numpy.typing import NDArray
 
 from surface_potential_analysis.wavepacket_grid import (
     calculate_volume_element,
-    load_wavepacket_grid,
+    load_wavepacket_grid_legacy_as_legacy,
     mask_negative_wavepacket,
     symmetrize_wavepacket,
 )
@@ -19,7 +19,7 @@ from .surface_data import get_data_path, save_figure
 
 def plot_overlap_factor():
     path = get_data_path("copper_eigenstates_wavepacket.json")
-    wavepacket = symmetrize_wavepacket(load_wavepacket_grid(path))
+    wavepacket = symmetrize_wavepacket(load_wavepacket_grid_legacy_as_legacy(path))
 
     dv = calculate_volume_element(wavepacket)
 
@@ -37,7 +37,7 @@ def plot_overlap_factor():
     path = get_data_path("copper_eigenstates_wavepacket_interpolated.json")
     # interpolated = interpolate_wavepacket(wavepacket, (193, 193, 101))
     # save_wavepacket_grid(interpolated, path)
-    interpolated = load_wavepacket_grid(path)
+    interpolated = load_wavepacket_grid_legacy_as_legacy(path)
 
     dv = calculate_volume_element(interpolated)
     points = np.array(interpolated["points"])
@@ -57,7 +57,7 @@ def plot_masked_overlap_factor():
     # path = get_data_path("copper_eigenstates_wavepacket_4_point_interpolated.json")
     # interpolated = load_wavepacket_grid(path)
     path = get_data_path("copper_eigenstates_wavepacket.json")
-    wavepacket = symmetrize_wavepacket(load_wavepacket_grid(path))
+    wavepacket = symmetrize_wavepacket(load_wavepacket_grid_legacy_as_legacy(path))
 
     masked = mask_negative_wavepacket(wavepacket)
     dv = calculate_volume_element(masked)
@@ -183,7 +183,7 @@ def plot_overlap_fraction_2D(overlap_fraction: NDArray):
 
 def plot_8_point_overlap_fraction():
     path = get_data_path("copper_eigenstates_wavepacket.json")
-    wavepacket = symmetrize_wavepacket(load_wavepacket_grid(path))
+    wavepacket = symmetrize_wavepacket(load_wavepacket_grid_legacy_as_legacy(path))
 
     points = np.array(wavepacket["points"])
     points1 = points[0:65]
@@ -201,7 +201,7 @@ def plot_overlap_fraction_corrected():
     """
 
     path = get_data_path("copper_eigenstates_wavepacket.json")
-    wavepacket = symmetrize_wavepacket(load_wavepacket_grid(path))
+    wavepacket = symmetrize_wavepacket(load_wavepacket_grid_legacy_as_legacy(path))
 
     points = np.array(wavepacket["points"])
     points1 = points[0:65]

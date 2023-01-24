@@ -12,11 +12,11 @@ from .energy_eigenstate import (
     EnergyEigenstates,
     get_eigenstate_list,
 )
-from .wavepacket_grid import WavepacketGrid, sort_wavepacket
+from .wavepacket_grid import WavepacketGridLegacy, sort_wavepacket
 
 
 def plot_wavepacket_grid_xy(
-    grid: WavepacketGrid,
+    grid: WavepacketGridLegacy,
     z_ind=0,
     ax: Axes | None = None,
     measure: Literal["real", "imag", "abs"] = "abs",
@@ -46,7 +46,7 @@ def plot_wavepacket_grid_xy(
 
 
 def plot_wavepacket_grid_z_2D(
-    grid: WavepacketGrid,
+    grid: WavepacketGridLegacy,
     ax: Axes | None = None,
     *,
     measure: Literal["real", "imag", "abs"] = "abs",
@@ -94,7 +94,7 @@ def plot_wavepacket_grid_z_2D(
 
 
 def plot_wavepacket_grid_y_2D(
-    grid: WavepacketGrid,
+    grid: WavepacketGridLegacy,
     ax: Axes | None = None,
     *,
     measure: Literal["real", "imag", "abs"] = "abs",
@@ -146,7 +146,7 @@ def plot_wavepacket_grid_y_2D(
 
 
 def plot_wavepacket_grid_xz(
-    grid: WavepacketGrid,
+    grid: WavepacketGridLegacy,
     y_ind=0,
     ax: Axes | None = None,
     measure: Literal["real", "imag", "abs"] = "abs",
@@ -174,7 +174,7 @@ def plot_wavepacket_grid_xz(
 
 
 def plot_wavepacket_grid_x(
-    grid: WavepacketGrid,
+    grid: WavepacketGridLegacy,
     y_ind=0,
     z_ind=0,
     ax: Axes | None = None,
@@ -201,8 +201,8 @@ def plot_wavepacket_in_xy(
     fig, ax1 = (ax.get_figure(), ax) if ax is not None else plt.subplots()
     util = EigenstateConfigUtil(eigenstates["eigenstate_config"])
 
-    x_points = np.linspace(-util.delta_x, util.delta_x, 60)
-    y_points = np.linspace(0, util.delta_y, 30)
+    x_points = np.linspace(-util.delta_x1[0], util.delta_x1[0], 60)
+    y_points = np.linspace(0, util.delta_x2[1], 30)
 
     xv, yv = np.meshgrid(x_points, y_points)
     points = np.array([xv.ravel(), yv.ravel(), np.zeros_like(xv.ravel())]).T

@@ -2,7 +2,7 @@ import numpy as np
 
 from surface_potential_analysis.energy_data import as_interpolation, get_xy_points_delta
 from surface_potential_analysis.energy_eigenstate import EigenstateConfig
-from surface_potential_analysis.plot_sho_wavefunction import (
+from surface_potential_analysis.sho_wavefunction_plot import (
     plot_energy_with_sho_potential_at_minimum,
 )
 

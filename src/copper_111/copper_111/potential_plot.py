@@ -1,3 +1,5 @@
+import numpy as np
+
 from surface_potential_analysis.energy_data_plot import (
     compare_energy_grid_to_all_raw_points,
     plot_all_energy_points_z,
@@ -57,3 +59,19 @@ def compare_john_interpolation():
     fig.show()
     input()
     save_figure(fig, "raw_interpolation_comparison.png")
+
+
+def calculate_raw_fcc_hcp_energy_jump():
+    raw_points = load_raw_data()
+
+    x_points = np.array(raw_points["x_points"])
+    y_points = np.array(raw_points["y_points"])
+    points = np.array(raw_points["points"])
+
+    p1 = points[(x_points == np.max(x_points))]
+    p2 = points[np.logical_and(x_points == 0, y_points == np.max(y_points))]
+    p3 = points[np.logical_and(x_points == 0, y_points == 0)]
+
+    print(np.min(p1))  # 0.0
+    print(np.min(p2))  # 2.95E-21J
+    print(np.min(p3))  # 9.67E-20J

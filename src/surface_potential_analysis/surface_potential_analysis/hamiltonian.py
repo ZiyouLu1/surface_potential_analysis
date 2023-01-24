@@ -9,7 +9,9 @@ from numpy.typing import NDArray
 from scipy.constants import hbar
 
 import hamiltonian_generator
-from surface_potential_analysis.brillouin_zone import get_brillouin_points_copper_100
+from surface_potential_analysis.brillouin_zone import (
+    get_brillouin_points_irreducible_config,
+)
 
 from .energy_data import EnergyInterpolation
 from .energy_eigenstate import (
@@ -77,11 +79,8 @@ class SurfaceHamiltonianUtil(EigenstateConfigUtil):
 
         Note: We don't store the 'nth' pixel
         """
-        return np.linspace(0, self.delta_x, self.Nx, endpoint=False)
-
-    @property
-    def delta_y(self) -> float:
-        return self._config["delta_y"]
+        assert self.delta_x1[1] == 0
+        return np.linspace(0, self.delta_x1[0], self.Nx, endpoint=False)
 
     @property
     def Ny(self) -> int:
@@ -94,7 +93,8 @@ class SurfaceHamiltonianUtil(EigenstateConfigUtil):
 
         Note: We don't store the 'nth' pixel
         """
-        return np.linspace(0, self.delta_y, self.Ny, endpoint=False)
+        assert self.delta_x2[0] == 0
+        return np.linspace(0, self.delta_x2[1], self.Ny, endpoint=False)
 
     @property
     def dz(self) -> float:
@@ -125,8 +125,10 @@ class SurfaceHamiltonianUtil(EigenstateConfigUtil):
     def _calculate_diagonal_energy(self, kx: float, ky: float) -> NDArray[Any]:
         kx_coords, ky_coords, nz_coords = self.coordinates.T
 
-        x_energy = (hbar * (self.dkx * kx_coords + kx)) ** 2 / (2 * self.mass)
-        y_energy = (hbar * (self.dky * ky_coords + ky)) ** 2 / (2 * self.mass)
+        assert self.dkx1[1] == 0
+        assert self.dkx2[0] == 0
+        x_energy = (hbar * (self.dkx1[0] * kx_coords + kx)) ** 2 / (2 * self.mass)
+        y_energy = (hbar * (self.dkx2[1] * ky_coords + ky)) ** 2 / (2 * self.mass)
         z_energy = (hbar * self.sho_omega) * (nz_coords + 0.5)
         return x_energy + y_energy + z_energy
 
@@ -161,7 +163,7 @@ class SurfaceHamiltonianUtil(EigenstateConfigUtil):
         return np.array(
             hamiltonian_generator.get_hamiltonian(
                 self.get_ft_potential().tolist(),
-                self._config["resolution"],
+                self.resolution,
                 self.dz,
                 self.mass,
                 self.sho_omega,
@@ -214,12 +216,6 @@ class SurfaceHamiltonianUtil(EigenstateConfigUtil):
         return (w.tolist(), [{"eigenvector": vec, "kx": kx, "ky": ky} for vec in v.T])
 
 
-def calculate_eigenvalues(
-    hamiltonian: SurfaceHamiltonianUtil, kx: float, ky: float
-) -> Tuple[List[float], List[Eigenstate]]:
-    return hamiltonian.calculate_eigenvalues(kx, ky)
-
-
 def generate_energy_eigenstates_grid(
     path: Path,
     hamiltonian: SurfaceHamiltonianUtil,
@@ -255,33 +251,13 @@ def generate_energy_eigenstates_grid_copper_100(
     include_zero=True,
     include_bands: List[int] | None = None,
 ):
-    k_points = get_brillouin_points_copper_100(
+    k_points = get_brillouin_points_irreducible_config(
         hamiltonian._config, grid_size=grid_size, include_zero=include_zero
     )
 
     return generate_energy_eigenstates_grid(
         path, hamiltonian, k_points, include_bands=include_bands
     )
-
-
-def generate_eigenstates_grid_points_111(
-    hamiltonian: SurfaceHamiltonianUtil, *, grid_size=4, include_zero=True
-):
-    dkx = hamiltonian.dkx
-    (kx_points, kx_step) = np.linspace(
-        -dkx / 2, dkx / 2, 2 * grid_size, endpoint=False, retstep=True
-    )
-    dky = hamiltonian.dky
-    (ky_points, ky_step) = np.linspace(
-        -dky / 2, dky / 2, 2 * grid_size, endpoint=False, retstep=True
-    )
-    if not include_zero:
-        kx_points += kx_step / 2
-        ky_points += ky_step / 2
-
-    xv, yv = np.meshgrid(kx_points, ky_points)
-    k_points = np.array([xv.ravel(), yv.ravel()]).T
-    return k_points
 
 
 def calculate_energy_eigenstates(

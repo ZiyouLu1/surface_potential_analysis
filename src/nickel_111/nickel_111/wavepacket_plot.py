@@ -1,29 +1,24 @@
-import json
-from pathlib import Path
-from typing import List, Tuple
-
 import numpy as np
 from matplotlib import pyplot as plt
 
 from nickel_111.hamiltonian import generate_hamiltonian
 from nickel_111.wavepacket import get_brillouin_points_nickel_111
-from surface_potential_analysis.energy_eigenstate import (
-    EigenstateConfigUtil,
-    EnergyEigenstates,
-    EnergyEigenstatesRaw,
-    get_eigenstate_list,
-    load_energy_eigenstates,
-    normalize_eigenstate_phase,
-)
-from surface_potential_analysis.plot_eigenstate import (
+from surface_potential_analysis.eigenstate_plot import (
     plot_eigenstate_3D,
     plot_eigenstate_in_xy,
 )
-from surface_potential_analysis.plot_energy_eigenstates import plot_eigenstate_positions
+from surface_potential_analysis.energy_eigenstate import (
+    EigenstateConfigUtil,
+    EnergyEigenstates,
+    get_eigenstate_list,
+    load_energy_eigenstates_old,
+    normalize_eigenstate_phase,
+)
+from surface_potential_analysis.energy_eigenstates_plot import plot_eigenstate_positions
 from surface_potential_analysis.wavepacket_grid import (
     calculate_wavepacket_grid_copper,
-    load_wavepacket_grid,
-    save_wavepacket_grid,
+    load_wavepacket_grid_legacy_as_legacy,
+    save_wavepacket_grid_legacy,
 )
 from surface_potential_analysis.wavepacket_grid_plot import (
     plot_wavepacket_grid_y_2D,
@@ -33,27 +28,9 @@ from surface_potential_analysis.wavepacket_grid_plot import (
 from .surface_data import get_data_path, save_figure
 
 
-def load_energy_eigenstates_list(path: Path) -> List[EnergyEigenstates]:
-    with path.open("r") as f:
-        out: List[EnergyEigenstatesRaw] = json.load(f)
-
-        return [
-            {
-                "eigenstate_config": d["eigenstate_config"],
-                "eigenvalues": d["eigenvalues"],
-                "eigenvectors": (
-                    np.array(d["eigenvectors_re"]) + 1j * np.array(d["eigenvectors_im"])
-                ).tolist(),
-                "kx_points": d["kx_points"],
-                "ky_points": d["ky_points"],
-            }
-            for d in out
-        ]
-
-
 def plot_wavepacket_points():
-    path = get_data_path("eigenstates_grid.json")
-    eigenstates = load_energy_eigenstates(path)
+    path = get_data_path("eigenstates_grid_2.json")
+    eigenstates = load_energy_eigenstates_old(path)
     fig, _, _ = plot_eigenstate_positions(eigenstates)
 
     fig.show()
@@ -104,109 +81,102 @@ def plot_wavepacket_points_from_list():
     input()
 
 
+def select_single_k_eigenstates(
+    eigenstates: EnergyEigenstates, kx: float, ky: float
+) -> EnergyEigenstates:
+    point_filter = np.logical_and(
+        np.array(eigenstates["kx_points"]) == kx,
+        np.array(eigenstates["ky_points"]) == ky,
+    )
+    out: EnergyEigenstates = {
+        "kx_points": np.array(eigenstates["kx_points"])[point_filter].tolist(),
+        "ky_points": np.array(eigenstates["ky_points"])[point_filter].tolist(),
+        "eigenstate_config": eigenstates["eigenstate_config"],
+        "eigenvalues": np.array(eigenstates["eigenvalues"])[point_filter].tolist(),
+        "eigenvectors": np.array(eigenstates["eigenvectors"])[point_filter].tolist(),
+    }
+    return out
+
+
 def plot_wavepacket_points_at_z_origin_from_list():
     path = get_data_path("eigenstates_grid_2.json")
-    eigenstates = load_energy_eigenstates_list(path)
-    fig, _, _ = plot_eigenstate_positions(eigenstates[0])
+    eigenstates = select_single_k_eigenstates(load_energy_eigenstates_old(path), 0, 0)
+    fig, _, _ = plot_eigenstate_positions(eigenstates)
 
     fig.show()
 
-    eigenstate_list = get_eigenstate_list(eigenstates[0])
-    fig, _, _anim1 = plot_eigenstate_in_xy(
-        eigenstates[0]["eigenstate_config"], eigenstate_list[-1], measure="real"
-    )
+    eigenstate_list = get_eigenstate_list(eigenstates)
+    print([np.sum(np.square(np.abs(j["eigenvector"]))) for j in eigenstate_list])
+    config = eigenstates["eigenstate_config"]
 
+    fig, _, _anim1 = plot_eigenstate_in_xy(config, eigenstate_list[0], measure="real")
     fig.show()
 
-    eigenstate_list = get_eigenstate_list(eigenstates[1])
-    fig, _, _anim2 = plot_eigenstate_in_xy(
-        eigenstates[1]["eigenstate_config"], eigenstate_list[-1], measure="real"
-    )
-
+    fig, _, _anim2 = plot_eigenstate_in_xy(config, eigenstate_list[1], measure="real")
     fig.show()
 
-    eigenstate_list = get_eigenstate_list(eigenstates[2])
-    fig, _, _anim3 = plot_eigenstate_in_xy(
-        eigenstates[2]["eigenstate_config"], eigenstate_list[-1], measure="real"
-    )
-
+    fig, _, _anim3 = plot_eigenstate_in_xy(config, eigenstate_list[2], measure="real")
     fig.show()
 
-    eigenstate_list = get_eigenstate_list(eigenstates[3])
-    fig, _, _anim4 = plot_eigenstate_in_xy(
-        eigenstates[3]["eigenstate_config"], eigenstate_list[-1], measure="real"
-    )
-
+    fig, _, _anim4 = plot_eigenstate_in_xy(config, eigenstate_list[3], measure="real")
     fig.show()
     input()
 
 
 def plot_energy_of_first_bands():
     path = get_data_path("eigenstates_grid_2.json")
-    eigenstates = load_energy_eigenstates_list(path)
+    eigenstates = load_energy_eigenstates_old(path)
 
-    eigenvalues = [x["eigenvalues"][0] for x in eigenstates]
+    origin_k_eigenstates = select_single_k_eigenstates(eigenstates, 0, 0)
     fig, ax = plt.subplots()
-    (line,) = ax.plot(eigenvalues)
+
+    (line,) = ax.plot(origin_k_eigenstates["eigenvalues"])
     line.set_marker("x")
     line.set_linestyle("")
-    ax.set_title(
-        "Plot of the energy of the first 10 bands in the super-lattuice\n"
-        "showing a jump after the first 4 states"
-    )
+
+    ax.set_title("Plot of the energy of the first 4 bands in the super-lattuice")
 
     fig.show()
-    save_figure(fig, "nickel_super_lattice_energy_states.png")
+    save_figure(fig, "nickel_super_lattice_energy_4_band.png")
     input()
 
 
-def select_lowest_band_eigenstates(
-    eigenstates: List[EnergyEigenstates], origin_point: Tuple[float, float, float]
-) -> EnergyEigenstates:
-
-    out: EnergyEigenstates = {
-        "kx_points": [eigenstates[i]["kx_points"][0] for i in range(4)],
-        "ky_points": [eigenstates[i]["ky_points"][0] for i in range(4)],
-        "eigenstate_config": eigenstates[0]["eigenstate_config"],
-        "eigenvalues": [eigenstates[i]["eigenvalues"][0] for i in range(4)],
-        "eigenvectors": [eigenstates[i]["eigenvectors"][0] for i in range(4)],
-    }
-    return out
-
-
-def test_single_kpoint_wavepacket():
+def test_single_k_wavepacket():
     """
-    Figuring out how to produce a 'localised' wavepacket from a single k-point
+    Figuring out how to produce a 'localized' wavepacket from a single k-point
     ie only one site in the super cell
     """
 
     path = get_data_path("eigenstates_grid_2.json")
-    eigenstates = load_energy_eigenstates_list(path)
+    eigenstates = load_energy_eigenstates_old(path)
 
-    util = EigenstateConfigUtil(eigenstates[0]["eigenstate_config"])
+    util = EigenstateConfigUtil(eigenstates["eigenstate_config"])
 
     # Note we don't need to worry about 'repeats'
     # Ie at (1.0 * util.delta_x / 3, util.delta_y, 0),
     origins = [
-        (0, 1.0 * util.delta_y / 3, 0),
-        (0, 2.0 * util.delta_y / 3, 0),
-        (util.delta_x / 2, 0.5 * util.delta_y / 3, 0),
-        (util.delta_x / 2, 2.5 * util.delta_y / 3, 0),
+        (0, 1.0 * util.delta_x2[1] / 3, 0),
+        (0, 2.0 * util.delta_x2[1] / 3, 0),
+        (util.delta_x1[0] / 2, 0.5 * util.delta_x2[1] / 3, 0),
+        (util.delta_x1[0] / 2, 2.5 * util.delta_x2[1] / 3, 0),
     ]
 
-    lowest_band = select_lowest_band_eigenstates(eigenstates, origin_point=origins[0])
+    lowest_band = select_single_k_eigenstates(
+        eigenstates, eigenstates["kx_points"][0], eigenstates["ky_points"][0]
+    )
+    print(lowest_band)
 
     path = get_data_path("single_band_wavepacket_1.json")
     normalized1 = normalize_eigenstate_phase(lowest_band, origins[0])
     grid1 = calculate_wavepacket_grid_copper(normalized1)
-    save_wavepacket_grid(grid1, path)
-    grid1 = load_wavepacket_grid(path)
+    save_wavepacket_grid_legacy(grid1, path)
+    grid1 = load_wavepacket_grid_legacy_as_legacy(path)
 
     path = get_data_path("single_band_wavepacket_2.json")
     normalized2 = normalize_eigenstate_phase(lowest_band, origins[1])
     grid2 = calculate_wavepacket_grid_copper(normalized2)
-    save_wavepacket_grid(grid2, path)
-    grid2 = load_wavepacket_grid(path)
+    save_wavepacket_grid_legacy(grid2, path)
+    grid2 = load_wavepacket_grid_legacy_as_legacy(path)
 
     fig, ax, _anim1 = plot_wavepacket_grid_z_2D(grid1, norm="linear")
 
@@ -219,40 +189,18 @@ def test_single_kpoint_wavepacket():
     input()
 
 
-def plot_wavepacket():
-    path = get_data_path("eigenstates_wavepacket_0.json")
-    grid = load_wavepacket_grid(path)
+def plot_wavepacket_small():
+    path = get_data_path("eigenstates_wavepacket_0_small.json")
+    grid = load_wavepacket_grid_legacy_as_legacy(path)
     fig, ax, _anim0 = plot_wavepacket_grid_z_2D(grid, norm="symlog")
     fig.show()
 
-    # path = get_data_path("eigenstates_wavepacket_1.json")
-    # grid = load_wavepacket_grid(path)
-    # fig, ax, _anim1 = plot_wavepacket_grid_z_2D(grid, norm="linear")
-    # fig.show()
-
-    # path = get_data_path("eigenstates_wavepacket_2.json")
-    # grid = load_wavepacket_grid(path)
-    # fig, ax, _anim2 = plot_wavepacket_grid_z_2D(grid, norm="linear")
+    path = get_data_path("eigenstates_wavepacket_1_small.json")
+    grid = load_wavepacket_grid_legacy_as_legacy(path)
+    fig, ax, _anim1 = plot_wavepacket_grid_z_2D(grid, norm="symlog")
     fig.show()
 
     input()
-
-
-# dkx = hamiltonian.dkx
-#     (kx_points, kx_step) = np.linspace(
-#         -dkx / 2, dkx / 2, 2 * grid_size, endpoint=False, retstep=True
-#     )
-#     dky = hamiltonian.dky
-#     (ky_points, ky_step) = np.linspace(
-#         -dky / 2, dky / 2, 2 * grid_size, endpoint=False, retstep=True
-#     )
-#     if not include_zero:
-#         kx_points += kx_step / 2
-#         ky_points += ky_step / 2
-
-#     xv, yv = np.meshgrid(kx_points, ky_points)
-#     k_points = np.array([xv.ravel(), yv.ravel()]).T
-#     return k_points
 
 
 def plot_wavepacket_points_john():
@@ -281,7 +229,7 @@ def plot_wavepacket_points_john():
         ]
     )
     # = 2 x 2pi / delta_y
-    G1 = 2.9419
+    G1 = 2.9419 * 10**-10
     nqdim = 4
 
     qx_points = G1 * ((np.sqrt(3) / 2) * a[:, 0] + 0 * a[:, 1]) / nqdim

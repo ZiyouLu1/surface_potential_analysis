@@ -20,6 +20,7 @@
     "hbar",
     "ifft",
     "imshow",
+    "linestyle",
     "linspace",
     "matplotlib",
     "meshgrid",

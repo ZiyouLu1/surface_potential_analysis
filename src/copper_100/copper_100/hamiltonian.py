@@ -16,8 +16,8 @@ def generate_hamiltonian(resolution: Tuple[int, int, int] = (1, 1, 1)):
     config: EigenstateConfig = {
         "mass": 1.6735575e-27,
         "sho_omega": 117905964225836.06,
-        "delta_x": get_xy_points_delta(data["x_points"]),
-        "delta_y": get_xy_points_delta(data["y_points"]),
+        "delta_x1": (get_xy_points_delta(data["x_points"]), 0),
+        "delta_x2": (0, get_xy_points_delta(data["y_points"])),
         "resolution": resolution,
     }
 

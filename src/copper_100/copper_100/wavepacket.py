@@ -7,7 +7,7 @@ from surface_potential_analysis.energy_eigenstate import (
     EnergyEigenstates,
     filter_eigenstates_grid,
     filter_eigenstates_n_point,
-    load_energy_eigenstates,
+    load_energy_eigenstates_old,
     normalize_eigenstate_phase,
     save_energy_eigenstates,
 )
@@ -16,7 +16,7 @@ from surface_potential_analysis.hamiltonian import (
 )
 from surface_potential_analysis.wavepacket_grid import (
     calculate_wavepacket_grid_copper,
-    save_wavepacket_grid,
+    save_wavepacket_grid_legacy,
 )
 
 from .hamiltonian import generate_hamiltonian
@@ -25,7 +25,7 @@ from .surface_data import get_data_path
 
 def normalize_eigenstate_phase_copper(data: EnergyEigenstates):
     util = EigenstateConfigUtil(data["eigenstate_config"])
-    origin_point = (util.delta_x / 2, util.delta_y / 2, 0)
+    origin_point = (util.delta_x1[0] / 2, util.delta_x2[1] / 2, 0)
     return normalize_eigenstate_phase(data, origin_point)
 
 
@@ -47,7 +47,7 @@ def generate_eigenstates_grid_offset():
 
 def generate_normalized_eigenstates_grid():
     path = get_data_path("copper_eigenstates_grid_3.json")
-    eigenstates = load_energy_eigenstates(path)
+    eigenstates = load_energy_eigenstates_old(path)
 
     normalized = normalize_eigenstate_phase_copper(eigenstates)
     path = get_data_path("copper_eigenstates_grid_normalized3.json")
@@ -83,55 +83,55 @@ def remove_max_k_point(eigenstates: EnergyEigenstates) -> EnergyEigenstates:
 
 def generate_wavepacket_grid():
     path = get_data_path("copper_eigenstates_grid_5.json")
-    eigenstates = load_energy_eigenstates(path)
+    eigenstates = load_energy_eigenstates_old(path)
 
     normalized = normalize_eigenstate_phase_copper(eigenstates)
 
     wavepacket = calculate_wavepacket_grid_copper(normalized)
     path = get_data_path("copper_eigenstates_wavepacket_5.json")
-    save_wavepacket_grid(wavepacket, path)
+    save_wavepacket_grid_legacy(wavepacket, path)
 
 
 # Uses old data with repeating k point
 def generate_wavepacket_grid_old():
     path = get_data_path("copper_eigenstates_grid_normalized2.json")
-    eigenstates = load_energy_eigenstates(path)
+    eigenstates = load_energy_eigenstates_old(path)
     filtered = remove_max_k_point(eigenstates)
 
     wavepacket = calculate_wavepacket_grid_copper(filtered)
     path = get_data_path("copper_eigenstates_wavepacket.json")
-    save_wavepacket_grid(wavepacket, path)
+    save_wavepacket_grid_legacy(wavepacket, path)
 
 
 # Does not give good results
 def generate_wavepacket_grid_old_approx():
     path = get_data_path("copper_eigenstates_grid_normalized2.json")
-    eigenstates = load_energy_eigenstates(path)
+    eigenstates = load_energy_eigenstates_old(path)
     filtered = remove_max_k_point(eigenstates)
 
     wavepacket = calculate_wavepacket_grid_copper(filtered, cutoff=200)
     path = get_data_path("copper_eigenstates_wavepacket_approx2.json")
-    save_wavepacket_grid(wavepacket, path)
+    save_wavepacket_grid_legacy(wavepacket, path)
 
 
 def generate_wavepacket_grid_old_4_points():
     path = get_data_path("copper_eigenstates_grid_normalized2.json")
-    eigenstates = load_energy_eigenstates(path)
+    eigenstates = load_energy_eigenstates_old(path)
 
     filtered = filter_eigenstates_n_point(remove_max_k_point(eigenstates), n=4)
     wavepacket = calculate_wavepacket_grid_copper(filtered)
     path = get_data_path("copper_eigenstates_wavepacket_4_point_2.json")
-    save_wavepacket_grid(wavepacket, path)
+    save_wavepacket_grid_legacy(wavepacket, path)
 
 
 def generate_wavepacket_grid_old_4_points_approx():
     path = get_data_path("copper_eigenstates_grid_normalized2.json")
-    eigenstates = load_energy_eigenstates(path)
+    eigenstates = load_energy_eigenstates_old(path)
 
     filtered = filter_eigenstates_n_point(remove_max_k_point(eigenstates), n=4)
     wavepacket = calculate_wavepacket_grid_copper(filtered, cutoff=200)
     path = get_data_path("copper_eigenstates_wavepacket_4_point_approx.json")
-    save_wavepacket_grid(wavepacket, path)
+    save_wavepacket_grid_legacy(wavepacket, path)
 
 
 def filter_eigenstates_origin_point(eigenstates: EnergyEigenstates):
@@ -141,7 +141,7 @@ def filter_eigenstates_origin_point(eigenstates: EnergyEigenstates):
 # Generates a wavepacket as if the band was flat
 def generate_wavepacket_grid_flat_band():
     path = get_data_path("copper_eigenstates_grid_normalized2.json")
-    eigenstates = load_energy_eigenstates(path)
+    eigenstates = load_energy_eigenstates_old(path)
 
     filtered = remove_max_k_point((eigenstates))
     kx_points = filtered["kx_points"]
@@ -156,8 +156,8 @@ def generate_wavepacket_grid_flat_band():
     coords = np.array([xv.ravel(), yv.ravel(), zv.ravel()]).T
 
     points = np.array(wavepacket["points"]).ravel()
-    delta_x = eigenstates["eigenstate_config"]["delta_x"]
-    delta_y = eigenstates["eigenstate_config"]["delta_y"]
+    delta_x = eigenstates["eigenstate_config"]["delta_x1"][0]
+    delta_y = eigenstates["eigenstate_config"]["delta_x2"][1]
 
     wavepacket_points = np.zeros_like(points)
     for (kx, ky) in zip(kx_points, ky_points):
@@ -171,4 +171,4 @@ def generate_wavepacket_grid_flat_band():
     wavepacket["points"] = (wavepacket_points).reshape(xv.shape).tolist()
 
     path = get_data_path("copper_eigenstates_wavepacket_flat_band.json")
-    save_wavepacket_grid(wavepacket, path)
+    save_wavepacket_grid_legacy(wavepacket, path)

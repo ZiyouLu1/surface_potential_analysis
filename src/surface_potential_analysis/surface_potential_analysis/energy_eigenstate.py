@@ -20,10 +20,18 @@ class EigenstateConfig(TypedDict):
     """Angular frequency (in rad s-1) of the sho we will fit using"""
     mass: float
     """Mass in Kg"""
+    delta_x1: Tuple[float, float]
+    """maximum extent in the x direction"""
+    delta_x2: Tuple[float, float]
+    """maximum extent in the x direction"""
+
+
+class EigenstateConfigLegacy(TypedDict):
+    resolution: Tuple[int, int, int]
+    sho_omega: float
+    mass: float
     delta_x: float
-    """maximum extent in the x direction"""
     delta_y: float
-    """maximum extent in the x direction"""
 
 
 class Eigenstate(TypedDict):
@@ -40,6 +48,15 @@ class EnergyEigenstates(TypedDict):
     eigenvectors: List[List[complex]]
 
 
+class EnergyEigenstatesRawLegacy(TypedDict):
+    eigenstate_config: EigenstateConfigLegacy
+    kx_points: List[float]
+    ky_points: List[float]
+    eigenvalues: List[float]
+    eigenvectors_re: List[List[float]]
+    eigenvectors_im: List[List[float]]
+
+
 class EnergyEigenstatesRaw(TypedDict):
     eigenstate_config: EigenstateConfig
     kx_points: List[float]
@@ -47,6 +64,16 @@ class EnergyEigenstatesRaw(TypedDict):
     eigenvalues: List[float]
     eigenvectors_re: List[List[float]]
     eigenvectors_im: List[List[float]]
+
+
+def config_from_legacy(config: EigenstateConfigLegacy) -> EigenstateConfig:
+    return {
+        "resolution": config["resolution"],
+        "delta_x1": (config["delta_x"], 0),
+        "delta_x2": (0, config["delta_y"]),
+        "mass": config["mass"],
+        "sho_omega": config["sho_omega"],
+    }
 
 
 def save_energy_eigenstates(data: EnergyEigenstates, path: Path) -> None:
@@ -62,22 +89,16 @@ def save_energy_eigenstates(data: EnergyEigenstates, path: Path) -> None:
         json.dump(out, f)
 
 
-def load_energy_eigenstates(path: Path) -> EnergyEigenstates:
+def load_energy_eigenstates_old(path: Path) -> EnergyEigenstates:
     with path.open("r") as f:
-        out = json.load(f)
+        out: EnergyEigenstatesRawLegacy = json.load(f)
 
-        eigenvectors = (
-            np.array(out["eigenvectors"])
-            if out.get("eigenvectors_im", None) is None
-            else np.array(out["eigenvectors_re"])
-            + 1j * np.array(out["eigenvectors_im"])
+        eigenvectors = np.array(out["eigenvectors_re"]) + 1j * np.array(
+            out["eigenvectors_im"]
         )
 
-        if out["eigenstate_config"].get("resolution") is None:
-            out["eigenstate_config"]["resolution"] = out["resolution"]
-
         return {
-            "eigenstate_config": out["eigenstate_config"],
+            "eigenstate_config": config_from_legacy(out["eigenstate_config"]),
             "eigenvalues": out["eigenvalues"],
             "eigenvectors": eigenvectors.tolist(),
             "kx_points": out["kx_points"],
@@ -89,7 +110,7 @@ def append_energy_eigenstates(
     path: Path, eigenstate: Eigenstate, eigenvalue: float
 ) -> None:
     with path.open("r") as f:
-        data: EnergyEigenstatesRaw = json.load(f)
+        data: EnergyEigenstatesRawLegacy = json.load(f)
         data["kx_points"].append(eigenstate["kx"])
         data["ky_points"].append(eigenstate["ky"])
         data["eigenvalues"].append(eigenvalue)
@@ -114,11 +135,13 @@ def get_eigenstate_list(eigenstates: EnergyEigenstates) -> List[Eigenstate]:
 def calculate_wavefunction_fast(
     config: EigenstateConfig, eigenstate: Eigenstate, points: ArrayLike
 ) -> NDArray:
+    assert config["delta_x1"][1] == 0
+    assert config["delta_x2"][0] == 0
     return np.array(
         hamiltonian_generator.get_eigenstate_wavefunction(
             config["resolution"],
-            config["delta_x"],
-            config["delta_y"],
+            config["delta_x1"][0],
+            config["delta_x2"][1],
             config["mass"],
             config["sho_omega"],
             eigenstate["kx"],
@@ -149,13 +172,23 @@ class EigenstateConfigUtil:
     def sho_omega(self):
         return self._config["sho_omega"]
 
+    @cached_property
+    def _dk_prefactor(self):
+        # See https://physics.stackexchange.com/questions/340860/reciprocal-lattice-in-2d
+        x1_part = self.delta_x1[0] * self.delta_x2[1]
+        x2_part = self.delta_x1[1] * self.delta_x2[0]
+        return (2 * np.pi) / (x1_part - x2_part)
+
     @property
-    def delta_x(self) -> float:
-        return self._config["delta_x"]
+    def delta_x1(self) -> Tuple[float, float]:
+        return self._config["delta_x1"]
 
     @cached_property
-    def dkx(self) -> float:
-        return 2 * np.pi / self.delta_x
+    def dkx1(self) -> Tuple[float, float]:
+        return (
+            self._dk_prefactor * self.delta_x2[1],
+            -self._dk_prefactor * self.delta_x2[0],
+        )
 
     @property
     def Nkx(self) -> int:
@@ -166,12 +199,15 @@ class EigenstateConfigUtil:
         return np.arange(-self.resolution[0], self.resolution[0] + 1, dtype=int)
 
     @property
-    def delta_y(self) -> float:
-        return self._config["delta_y"]
+    def delta_x2(self) -> Tuple[float, float]:
+        return self._config["delta_x2"]
 
     @cached_property
-    def dky(self) -> float:
-        return 2 * np.pi / (self.delta_y)
+    def dkx2(self) -> Tuple[float, float]:
+        return (
+            -self._dk_prefactor * self.delta_x1[1],
+            self._dk_prefactor * self.delta_x1[0],
+        )
 
     @property
     def Nky(self) -> int:
@@ -223,10 +259,10 @@ class EigenstateConfigUtil:
         kx = eigenstate["kx"]
         ky = eigenstate["ky"]
         for arg in args:
-            (nkx, nky, nz) = coordinates[arg]
+            (nkx1, nkx2, nz) = coordinates[arg]
             e = eigenvector_array[arg]
-            x_phase = (nkx * self.dkx + kx) * points[:, 0]
-            y_phase = (nky * self.dky + ky) * points[:, 1]
+            x_phase = (nkx1 * self.dkx1[0] + nkx2 * self.dkx2[0] + kx) * points[:, 0]
+            y_phase = (nkx1 * self.dkx1[1] + nkx2 * self.dkx2[1] + ky) * points[:, 1]
             out += (
                 e
                 * calculate_sho_wavefunction(
@@ -286,7 +322,7 @@ def generate_sho_config_minimum(
         ydata=z_points[min_index : max_index + 1],
         p0=[initial_guess],
     )
-    # TODO: Change meaning of x_offset
+
     return opt_params[0], z_offset
 
 

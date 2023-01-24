@@ -10,7 +10,7 @@ from .surface_data import get_data_path
 def generate_eigenstates_data():
     h = generate_hamiltonian(resolution=(12, 12, 13))
 
-    kx_points = np.linspace(-h.dkx / 2, 0, 5)
+    kx_points = np.linspace(-h.dkx1[0] / 2, 0, 5)
     ky_points = np.zeros_like(kx_points)
 
     # eigenstates = calculate_energy_eigenstates(h, kx_points, ky_points)
