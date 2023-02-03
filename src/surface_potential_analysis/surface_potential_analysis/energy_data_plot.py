@@ -5,6 +5,7 @@ import matplotlib.animation
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.axes import Axes
+from matplotlib.collections import QuadMesh
 from matplotlib.figure import Figure
 from matplotlib.image import AxesImage
 from matplotlib.lines import Line2D
@@ -14,38 +15,62 @@ from .energy_data import (
     EnergyGrid,
     EnergyPoints,
     add_back_symmetry_points,
+    get_energy_grid_xy_points,
     get_energy_points_xy_locations,
 )
 
 
-def plot_z_direction_energy_comparison(
-    data: EnergyGrid, otherData: EnergyGrid, ax: Axes | None = None
-) -> Tuple[Figure, Axes]:
-    fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
-    plot_z_direction_energy_data(data, ax=ax)
-    plot_z_direction_energy_data(otherData, ax=ax, ls="--")
-
-    return fig, ax
-
-
-def plot_z_direction_energy_data(
-    data: EnergyGrid,
-    ax: Axes | None = None,
-    ls=None,
-) -> Tuple[Figure, Axes, Tuple[Line2D, Line2D, Line2D]]:
+def plot_energy_grid_points(
+    grid: EnergyGrid, *, ax: Axes | None = None
+) -> Tuple[Figure, Axes, Line2D]:
     fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
 
-    heights = data["z_points"]
+    points = get_energy_grid_xy_points(grid)
+    (line,) = ax.plot(points[:, 0], points[:, 1])
+    line.set_marker("x")
+    line.set_linestyle("")
+
+    return fig, ax, line
+
+
+def plot_energy_in_z_direction(
+    data: EnergyGrid, xy_ind: Tuple[int, int], *, ax: Axes | None = None
+) -> Tuple[Figure, Axes, Line2D]:
+    fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
+
     points = np.array(data["points"], dtype=float)
-    middle_x_index = math.floor(points.shape[0] / 2)
+    (line,) = ax.plot(data["z_points"], points[xy_ind[0], xy_ind[1]])
 
-    top_energy = points[0, 0]
-    bridge_energy = points[middle_x_index, 0]
-    hollow_energy = points[middle_x_index, math.floor(points.shape[1] / 2)]
+    return fig, ax, line
 
-    (l1,) = ax.plot(heights, top_energy, label="Top Site", ls=ls)
-    (l2,) = ax.plot(heights, bridge_energy, label="Bridge Site", ls=ls)
-    (l3,) = ax.plot(heights, hollow_energy, label="Hollow Site", ls=ls)
+
+def get_111_locations(data: EnergyGrid):
+    points = np.array(data["points"], dtype=float)
+    return {
+        "Top Site": (math.floor(points.shape[0] / 3), math.floor(points.shape[1] / 3)),
+        "Bridge Site": (
+            math.floor(5 * points.shape[0] / 6),
+            math.floor(5 * points.shape[1] / 6),
+        ),
+        "FCC Site": (0, 0),
+        "HCP Site": (
+            math.floor(2 * points.shape[0] / 3),
+            math.floor(2 * points.shape[1] / 3),
+        ),
+    }
+
+
+def plot_z_direction_energy_data_111(
+    data: EnergyGrid, *, ax: Axes | None = None
+) -> Tuple[Figure, Axes, Tuple[Line2D, Line2D, Line2D, Line2D]]:
+    fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
+
+    locations = get_111_locations(data)
+    lines: List[Line2D] = []
+    for (label, xy_ind) in locations.items():
+        _, _, line = plot_energy_in_z_direction(data, xy_ind, ax=ax)
+        line.set_label(label)
+        lines.append(line)
 
     ax.set_title("Plot of energy at the Top and Hollow sites")
     ax.set_ylabel("Energy / J")
@@ -53,15 +78,79 @@ def plot_z_direction_energy_data(
 
     ax.legend()
 
-    return fig, ax, (l1, l2, l3)
+    return fig, ax, (lines[0], lines[1], lines[2], lines[3])
 
 
+def plot_z_direction_energy_comparison_111(
+    data: EnergyGrid, otherData: EnergyGrid, ax: Axes | None = None
+) -> Tuple[Figure, Axes]:
+    fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
+    plot_z_direction_energy_data_111(data, ax=ax)
+    _, _, (l1, l2, l3, l4) = plot_z_direction_energy_data_111(otherData, ax=ax)
+    l1.set_linestyle("")
+    l1.set_marker("x")
+    l2.set_linestyle("")
+    l2.set_marker("x")
+    l3.set_linestyle("")
+    l3.set_marker("x")
+    l4.set_linestyle("")
+    l4.set_marker("x")
+
+    ax.legend()
+
+    return fig, ax
+
+
+def plot_z_direction_energy_data_100(
+    data: EnergyGrid, *, ax: Axes | None = None
+) -> Tuple[Figure, Axes, Tuple[Line2D, Line2D, Line2D]]:
+    fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
+
+    points = np.array(data["points"], dtype=float)
+    middle_x_index = math.floor(points.shape[0] / 2)
+
+    locations = {
+        "Top Site": (0, 0),
+        "Bridge Site": (middle_x_index, 0),
+        "Hollow Site": (middle_x_index, math.floor(points.shape[1] / 2)),
+    }
+    lines: List[Line2D] = []
+    for (label, xy_ind) in locations.items():
+        _, _, line = plot_energy_in_z_direction(data, xy_ind, ax=ax)
+        line.set_label(label)
+        lines.append(line)
+
+    ax.set_title("Plot of energy at the Top and Hollow sites")
+    ax.set_ylabel("Energy / J")
+    ax.set_xlabel("relative z position /m")
+
+    ax.legend()
+
+    return fig, ax, (lines[0], lines[1], lines[2])
+
+
+def plot_z_direction_energy_comparison_100(
+    data: EnergyGrid, otherData: EnergyGrid, ax: Axes | None = None
+) -> Tuple[Figure, Axes]:
+    fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
+    plot_z_direction_energy_data_100(data, ax=ax)
+    _, _, (l1, l2, l3) = plot_z_direction_energy_data_100(otherData, ax=ax)
+    l1.set_linestyle("")
+    l1.set_marker("x")
+    l2.set_linestyle("")
+    l2.set_marker("x")
+    l3.set_linestyle("")
+    l3.set_marker("x")
+
+    return fig, ax
+
+
+# Note assumes orthogonal
 def plot_x_direction_energy_data(data: EnergyGrid) -> None:
     fig, ax = plt.subplots()
 
-    with_symmetry = add_back_symmetry_points(data)
-    heights = with_symmetry["x_points"]
-    points = np.array(with_symmetry["points"])
+    points = np.array(add_back_symmetry_points(data["points"]))
+    heights = np.linspace(0, data["delta_x1"][0], points.shape[0])
     middle_x_index = math.floor(points.shape[0] / 2)
     middle_y_index = math.floor(points.shape[1] / 2)
     top_equilibrium = np.argmin(points[0, 0])
@@ -85,14 +174,14 @@ def plot_x_direction_energy_data(data: EnergyGrid) -> None:
     fig.savefig("temp.png")
 
 
+# Note assumes square grid
 def plot_xz_plane_energy(data: EnergyGrid) -> Figure:
     fig, axs = plt.subplots(nrows=2, ncols=3)
 
-    with_symmetry = add_back_symmetry_points(data)
-    x_points = np.array(with_symmetry["x_points"])
-    y_points = np.array(with_symmetry["y_points"])
-    z_points = np.array(with_symmetry["z_points"])
-    points = np.array(with_symmetry["points"])
+    points = np.array(add_back_symmetry_points(data["points"]))
+    x_points = np.linspace(0, data["delta_x1"][0], points.shape[0])
+    y_points = np.linspace(0, data["delta_x2"][1], points.shape[0])
+    z_points = np.array(data["z_points"])
     middle_x_index = math.floor(points.shape[0] / 2)
     middle_y_index = math.floor(points.shape[1] / 2)
     max_potential = 1e-18
@@ -185,6 +274,49 @@ def plot_energy_points_location(energy_points: EnergyPoints, ax: Axes | None = N
     return fig, ax, line
 
 
+def plot_energy_grid_in_xy(grid: EnergyGrid, z_ind: int, *, ax: Axes | None = None):
+    fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
+
+    points = np.array(grid["points"])
+    coordinates = get_energy_grid_xy_points(grid).reshape(
+        points.shape[0], points.shape[1], 2
+    )
+    mesh = ax.pcolormesh(
+        coordinates[:, :, 0],
+        coordinates[:, :, 1],
+        points[:, :, z_ind],
+        shading="nearest",
+    )
+    return (fig, ax, mesh)
+
+
+def animate_energy_grid_3D_in_xy(grid: EnergyGrid, *, ax: Axes | None = None):
+    fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
+
+    points = np.array(grid["points"])
+    clim = (np.min(points), np.max(points))
+    _, _, mesh = plot_energy_grid_in_xy(grid, 0, ax=ax)
+    mesh.set_clim(clim[0], clim[1])
+    mesh.set_norm("symlog")  # type: ignore
+
+    frames: List[List[QuadMesh]] = []
+    for z_ind in range(points.shape[2]):
+
+        _, _, mesh = plot_energy_grid_in_xy(grid, z_ind, ax=ax)
+        mesh.set_clim(clim[0], clim[1])
+        mesh.set_norm("symlog")  # type: ignore
+        frames.append([mesh])
+
+    ani = matplotlib.animation.ArtistAnimation(fig, frames)
+
+    ax.set_xlabel("X direction")
+    ax.set_ylabel("Y direction")
+
+    fig.colorbar(mesh, ax=ax, format="%4.1e")
+
+    return fig, ax, ani
+
+
 def get_energy_grid_frame(
     data: NDArray, ax: Axes, clim: Tuple[float, float], extent: Sequence[float]
 ) -> AxesImage:
@@ -195,42 +327,15 @@ def get_energy_grid_frame(
     return img
 
 
-def plot_energy_grid_3D_xy(data: EnergyGrid, ax: Axes | None = None):
+def animate_energy_grid_3D_in_xz(grid: EnergyGrid, *, ax: Axes | None = None):
     fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
 
-    points = np.array(data["points"])
+    points = np.array(grid["points"])
     extent = [
-        data["x_points"][0],
-        data["x_points"][-1],
-        data["y_points"][0],
-        data["y_points"][-1],
-    ]
-    clim = (np.min(points), np.max(points))
-    get_energy_grid_frame(points[:, :, 0].T, ax, clim, extent)
-
-    ims: List[List[AxesImage]] = []
-    for z_ind in range(points.shape[2]):
-
-        img = get_energy_grid_frame(points[:, :, z_ind].T, ax, clim, extent)
-        ims.append([img])
-
-    ani = matplotlib.animation.ArtistAnimation(fig, ims)
-
-    ax.set_xlabel("X direction")
-    ax.set_ylabel("Y direction")
-
-    return fig, ax, ani
-
-
-def plot_energy_grid_3D_xz(data: EnergyGrid, ax: Axes | None = None):
-    fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
-
-    points = np.array(data["points"])
-    extent = [
-        data["x_points"][0],
-        data["x_points"][-1],
-        data["z_points"][0],
-        data["z_points"][-1],
+        0,
+        grid["delta_x1"][0],
+        grid["z_points"][0],
+        grid["z_points"][-1],
     ]
     clim = (np.min(points), np.max(points))
     get_energy_grid_frame(points[:, 0, ::-1].T, ax, clim, extent)
@@ -250,13 +355,14 @@ def plot_energy_grid_3D_xz(data: EnergyGrid, ax: Axes | None = None):
 
 
 def compare_energy_grid_to_all_raw_points(
-    raw_points: EnergyPoints, grid: EnergyGrid, ax: Axes | None = None
+    raw_points: EnergyPoints, grid: EnergyGrid, *, ax: Axes | None = None
 ):
     fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
 
     points = get_energy_points_xy_locations(raw_points)
-    x_points = np.array(grid["x_points"])
-    y_points = np.array(grid["y_points"])
+    xy_points = get_energy_grid_xy_points(grid)
+    x_points = xy_points[:, 0]
+    y_points = xy_points[:, 1]
     grid_points = np.array(grid["points"])
 
     cols = ["C0", "C1", "C2", "C3", "C4", "C5", "C6", "C7", "C8", "C9"]
@@ -276,6 +382,7 @@ def compare_energy_grid_to_all_raw_points(
     return fig, ax
 
 
+# Note assumes grid is square!!
 def plot_energy_point_locations_on_grid(
     raw_points: EnergyPoints, grid: EnergyGrid, ax: Axes | None = None
 ):
@@ -293,10 +400,10 @@ def plot_energy_point_locations_on_grid(
     grid_z_points = np.array(grid["z_points"])
     grid_points = np.array(grid["points"])
     extent = [
-        grid["x_points"][0],
-        grid["x_points"][-1],
-        grid["y_points"][0],
-        grid["y_points"][-1],
+        0,
+        grid["delta_x1"][0] + grid["delta_x2"][0],
+        0,
+        grid["delta_x1"][1] + grid["delta_x2"][1],
     ]
     clim = (np.min(grid_points), np.max(grid_points))
 

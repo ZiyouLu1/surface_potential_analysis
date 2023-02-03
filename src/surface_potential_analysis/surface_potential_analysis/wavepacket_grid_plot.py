@@ -71,8 +71,8 @@ def plot_wavepacket_grid_z_2D(
             grid["y_points"][-1],
         ]
     )
-    img.set_clim(np.min(data), np.max(data))
     img.set_norm(norm)  # type: ignore
+    img.set_clim(np.min(data), np.max(data))
     ims: List[List[AxesImage]] = []
     for z_ind in range(points.shape[2]):
 
@@ -85,8 +85,8 @@ def plot_wavepacket_grid_z_2D(
                 grid["y_points"][-1],
             ]
         )
-        img.set_clim(np.min(data), np.max(data))
         img.set_norm(norm)  # type: ignore
+        img.set_clim(np.min(data), np.max(data))
         ims.append([img])
 
     ani = matplotlib.animation.ArtistAnimation(fig, ims)
@@ -117,8 +117,8 @@ def plot_wavepacket_grid_y_2D(
     ims: List[List[AxesImage]] = []
 
     img = axs.imshow(data[:, 0, ::-1].T)
-    img.set_clim(np.min(data), np.max(data))
     img.set_norm("symlog")  # type: ignore
+    img.set_clim(np.min(data), np.max(data))
     img.set_extent(
         [
             grid["x_points"][0],

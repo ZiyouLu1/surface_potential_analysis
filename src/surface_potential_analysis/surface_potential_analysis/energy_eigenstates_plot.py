@@ -1,4 +1,5 @@
 import matplotlib.pyplot as plt
+import numpy as np
 from matplotlib.axes import Axes
 from matplotlib.figure import Figure
 from matplotlib.lines import Line2D
@@ -16,8 +17,10 @@ def plot_eigenstate_positions(
     line.set_marker("x")
 
     util = EigenstateConfigUtil(eigenstates["eigenstate_config"])
-    ax1.set_xlim(-(util.dkx1[0] + util.dkx2[0]) / 2, (util.dkx1[0] + util.dkx2[0]) / 2)
-    ax1.set_ylim(-(util.dkx1[1] + util.dkx2[1]) / 2, (util.dkx1[1] + util.dkx2[1]) / 2)
+    dkx = np.abs(util.dkx1[0]) + np.abs(util.dkx2[0])
+    ax1.set_xlim(-(dkx) / 2, (dkx) / 2)
+    dky = np.abs(util.dkx1[1]) + np.abs(util.dkx2[1])
+    ax1.set_ylim(-(dky) / 2, (dky) / 2)
 
     return fig, ax1, line
 

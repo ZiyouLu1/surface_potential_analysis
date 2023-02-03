@@ -69,7 +69,7 @@ def generate_random_diagonal_hamiltonian() -> SurfaceHamiltonianUtil:
 
 
 def generate_eigenstates_grid_points_100(
-    config: EigenstateConfig, *, grid_size=4, include_zero=True
+    config: EigenstateConfig, *, grid_size=8, include_zero=True
 ):
     util = EigenstateConfigUtil(config)
     dkx = util.dkx1[0]
@@ -149,7 +149,7 @@ class TestSurfaceHamiltonian(unittest.TestCase):
             "dz": 1,
         }
         hamiltonian = SurfaceHamiltonianUtil(config, data, z_offset)
-        coords = hamiltonian.coordinates
+        coords = hamiltonian.eigenstate_indexes
         for (i, (nkx, nky, nz)) in enumerate(coords):
             self.assertEqual(hamiltonian.get_index(nkx, nky, nz), i)
 
@@ -171,7 +171,7 @@ class TestSurfaceHamiltonian(unittest.TestCase):
         }
         hamiltonian = SurfaceHamiltonianUtil(config, data, 0)
 
-        coords = hamiltonian.coordinates
+        coords = hamiltonian.eigenstate_indexes
         for (i, c) in enumerate(coords):
             self.assertEqual(i, hamiltonian.get_index(*c))
 
@@ -467,7 +467,7 @@ class TestSurfaceHamiltonian(unittest.TestCase):
         ky = np.random.uniform(
             low=-hamiltonian.dkx2[1] / 2, high=hamiltonian.dkx2[1] / 2
         )
-        eigenvector = np.random.rand(hamiltonian.coordinates.shape[0]).tolist()
+        eigenvector = np.random.rand(hamiltonian.eigenstate_indexes.shape[0]).tolist()
 
         x = np.random.uniform(low=0.0, high=hamiltonian.delta_x1[0], size=100)
         y = np.random.uniform(low=0.0, high=hamiltonian.delta_x2[1], size=100)
@@ -510,7 +510,7 @@ class TestSurfaceHamiltonian(unittest.TestCase):
         kx = 0
         ky = 0
 
-        eigenvector = np.random.rand(hamiltonian.coordinates.shape[0]).tolist()
+        eigenvector = np.random.rand(hamiltonian.eigenstate_indexes.shape[0]).tolist()
         points = [[1, 1, 1]]
 
         expected = hamiltonian.calculate_wavefunction_slow(

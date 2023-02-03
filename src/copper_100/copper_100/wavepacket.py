@@ -33,7 +33,7 @@ def generate_eigenstates_grid():
     h = generate_hamiltonian(resolution=(14, 14, 15))
     path = get_data_path("copper_eigenstates_grid_5.json")
 
-    generate_energy_eigenstates_grid_copper_100(path, h, grid_size=4)
+    generate_energy_eigenstates_grid_copper_100(path, h, size=(4, 4))
 
 
 def generate_eigenstates_grid_offset():
@@ -41,7 +41,7 @@ def generate_eigenstates_grid_offset():
     path = get_data_path("copper_eigenstates_grid_offset.json")
 
     generate_energy_eigenstates_grid_copper_100(
-        path, h, grid_size=4, include_zero=False
+        path, h, size=(4, 4), include_zero=False
     )
 
 

@@ -6,8 +6,10 @@ from typing import List, Tuple, TypedDict
 import numpy as np
 import scipy
 from numpy.typing import ArrayLike, NDArray
+from scipy.constants import hbar
 
 import hamiltonian_generator
+from surface_potential_analysis.brillouin_zone import get_points_in_brillouin_zone
 
 from .energy_data import EnergyInterpolation
 from .sho_wavefunction import calculate_sho_wavefunction
@@ -225,8 +227,13 @@ class EigenstateConfigUtil:
     def nz_points(self):
         return np.arange(self.Nkz, dtype=int)
 
+    @property
+    def characteristic_z(self) -> float:
+        """Get the characteristic Z length, given by sqrt(hbar / m * omega)"""
+        return np.sqrt(hbar / (self.mass * self.sho_omega))
+
     @cached_property
-    def coordinates(self) -> NDArray:
+    def eigenstate_indexes(self) -> NDArray:
         xt, yt, zt = np.meshgrid(
             self.nkx_points,
             self.nky_points,
@@ -250,9 +257,9 @@ class EigenstateConfigUtil:
         out = np.zeros(shape=(points.shape[0]), dtype=complex)
 
         eigenvector_array = np.array(eigenstate["eigenvector"])
-        coordinates = self.coordinates
+        coordinates = self.eigenstate_indexes
         args = (
-            np.arange(self.coordinates.shape[0])
+            np.arange(self.eigenstate_indexes.shape[0])
             if cutoff is None
             else np.argsort(np.abs(eigenvector_array))[::-1][:cutoff]
         )
@@ -389,3 +396,16 @@ def filter_eigenstates_n_point(eigenstates: EnergyEigenstates, n: int):
     kx_points = np.sort(np.unique(eigenstates["kx_points"]))[0::take_every].tolist()
     ky_points = np.sort(np.unique(eigenstates["ky_points"]))[0::take_every].tolist()
     return filter_eigenstates_grid(eigenstates, kx_points, ky_points)
+
+
+def get_brillouin_points_irreducible_config(
+    config: EigenstateConfig, *, size: Tuple[int, int] = (4, 4), include_zero=True
+):
+    """
+    If the eigenstate config is that of the irreducible unit cell
+    we can use the dkx of the lattuice to generate the brillouin zone points
+    """
+    util = EigenstateConfigUtil(config)
+    return get_points_in_brillouin_zone(
+        util.dkx1, util.dkx2, size=size, include_zero=include_zero
+    )

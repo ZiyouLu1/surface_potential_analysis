@@ -377,7 +377,7 @@ def plot_eigenstate_difference_in_z(
     fig, ax1 = (ax.get_figure(), ax) if ax is not None else plt.subplots()
 
     util = EigenstateConfigUtil(config)
-    z_points = np.linspace(-util.delta_x1[0] / 2, util.delta_x1[0] / 2, 100)
+    z_points = np.linspace(-util.characteristic_z * 2, util.characteristic_z * 2, 100)
     points = [[util.delta_x1[0] / 2, util.delta_x2[1] / 2, pz] for pz in z_points]
 
     wfn0 = util.calculate_wavefunction_fast(eig1, points)

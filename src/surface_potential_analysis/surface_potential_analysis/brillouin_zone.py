@@ -2,53 +2,53 @@ from typing import Tuple
 
 import numpy as np
 
-from surface_potential_analysis.energy_eigenstate import (
-    EigenstateConfig,
-    EigenstateConfigUtil,
-)
 
-
-def get_point_fractions(grid_size=4, include_zero=True):
+def get_point_fractions(shape: Tuple[int, int] = (8, 8), endpoint=True):
     """Get the coordinates as fractions of the momentum vectors"""
-    (kx_points, kx_step) = np.linspace(
-        -0.5, 0.5, 2 * grid_size, endpoint=False, retstep=True
-    )
-    (ky_points, ky_step) = np.linspace(
-        -0.5, 0.5, 2 * grid_size, endpoint=False, retstep=True
-    )
-    if not include_zero:
-        kx_points += kx_step / 2
-        ky_points += ky_step / 2
+    x1_points = np.linspace(0, 1, shape[0], endpoint=endpoint)
+    x2_points = np.linspace(0, 1, shape[1], endpoint=endpoint)
 
-    xv, yv = np.meshgrid(kx_points, ky_points)
-    return np.array([xv.ravel(), yv.ravel()]).T
+    x1v, x2v = np.meshgrid(x1_points, x2_points, indexing="ij")
+    return np.array([x1v.ravel(), x2v.ravel()]).T
+
+
+def grid_space(
+    vec1: Tuple[float, float],
+    vec2: Tuple[float, float],
+    shape: Tuple[int, int],
+    *,
+    endpoint=True,
+):
+    """
+    Layout points in a grid, with vec1, vec2 as the lattice vectors
+    """
+    fractions = get_point_fractions(shape, endpoint=endpoint)
+
+    # Multiply the dk reciprocal lattuice vectors by their corresponding fraction
+    # f1 * dk1 + f2 * dk2
+    x_points = vec1[0] * fractions[:, 0] + vec2[0] * fractions[:, 1]
+    y_points = vec1[1] * fractions[:, 0] + vec2[1] * fractions[:, 1]
+
+    return np.array([x_points, y_points]).T
 
 
 def get_points_in_brillouin_zone(
     dk1: Tuple[float, float],
     dk2: Tuple[float, float],
     *,
-    grid_size=4,
+    size: Tuple[int, int] = (4, 4),
     include_zero=True,
 ):
-    fractions = get_point_fractions(grid_size, include_zero)
+    points = grid_space(dk1, dk2, shape=(2 * size[0], 2 * size[1]), endpoint=False)
+    # Center points about k = 0
+    # if not include_zero also offset by half the step size
+    # note since endpoint is false 1 / 2 * size[0] is the fraction
+    # per step in the x direction
+    offset_fraction_x = 0.5 if include_zero else (0.5 - 1 / (4 * size[0]))
+    offset_kx = offset_fraction_x * (dk1[0] + dk2[0])
+    offset_fraction_y = 0.5 if include_zero else (0.5 - 1 / (4 * size[1]))
+    offset_ky = offset_fraction_y * (dk1[1] + dk2[1])
 
-    # Multiply the dk reciprocal lattuice vectors by their corresponding fraction
-    # f1 * dk1 + f2 * dk2
-    x_points = dk1[0] * fractions[:, 0] + dk2[0] * fractions[:, 1]
-    y_points = dk1[1] * fractions[:, 0] + dk2[1] * fractions[:, 1]
-
-    return np.array([x_points, y_points]).T
-
-
-def get_brillouin_points_irreducible_config(
-    config: EigenstateConfig, *, grid_size=4, include_zero=True
-):
-    """
-    If the eigenstate config is that of the irreducible unit cell
-    we can use the dkx of the lattuice to generate the brillouin zone points
-    """
-    util = EigenstateConfigUtil(config)
-    return get_points_in_brillouin_zone(
-        util.dkx1, util.dkx2, grid_size=grid_size, include_zero=include_zero
-    )
+    kx_points = points[:, 0] - offset_kx
+    ky_points = points[:, 1] - offset_ky
+    return np.array([kx_points, ky_points]).T

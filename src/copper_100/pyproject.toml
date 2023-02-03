@@ -1,12 +1,23 @@
-[build-system]
-requires = ["setuptools"]
-build-backend = "setuptools.build_meta"
-
-[project]
+[tool.poetry]
 name = "copper_100"
-requires-python = ">=3.7"
 version = "0.0.1"
-dependencies = [
-    "numpy","matplotlib","scipy"
-]
+description = ""
+authors = ["Matthew Ord <mo433@cam.ac.uk>"]
+readme = "README.md"
+packages = [{include = "copper_100"}]
 
+[tool.poetry.dependencies]
+python = "^3.11"
+numpy = "^1.24.1"
+matplotlib = "^3.6.3"
+scipy = "^1.10.0"
+surface_potential_analysis = { path = "../surface_potential_analysis/", develop = true }
+
+[tool.poetry.group.dev.dependencies]
+black = "^23.1.0"
+mypy = "^0.991"
+flake8 = "^6.0.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

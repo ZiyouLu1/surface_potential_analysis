@@ -9,9 +9,7 @@ from numpy.typing import NDArray
 from scipy.constants import hbar
 
 import hamiltonian_generator
-from surface_potential_analysis.brillouin_zone import (
-    get_brillouin_points_irreducible_config,
-)
+from surface_potential_analysis.brillouin_zone import grid_space
 
 from .energy_data import EnergyInterpolation
 from .energy_eigenstate import (
@@ -20,6 +18,7 @@ from .energy_eigenstate import (
     EigenstateConfigUtil,
     EnergyEigenstates,
     append_energy_eigenstates,
+    get_brillouin_points_irreducible_config,
     save_energy_eigenstates,
 )
 from .sho_wavefunction import calculate_sho_wavefunction
@@ -73,28 +72,18 @@ class SurfaceHamiltonianUtil(EigenstateConfigUtil):
         return self.points.shape[0]
 
     @property
-    def x_points(self):
-        """
-        Calculate the lattice coordinates in the x direction
-
-        Note: We don't store the 'nth' pixel
-        """
-        assert self.delta_x1[1] == 0
-        return np.linspace(0, self.delta_x1[0], self.Nx, endpoint=False)
-
-    @property
     def Ny(self) -> int:
         return self.points.shape[1]
 
     @property
-    def y_points(self):
+    def lattuice_coordinates(self) -> NDArray:
         """
-        Calculate the lattice coordinates in the y direction
-
-        Note: We don't store the 'nth' pixel
+        Lattice coordinates as calculated from delta_x1, delta_x2 with the origin at the center
+        Note we dont include the repeated symmetry point in the potential
         """
-        assert self.delta_x2[0] == 0
-        return np.linspace(0, self.delta_x2[1], self.Ny, endpoint=False)
+        return grid_space(
+            self.delta_x1, self.delta_x2, shape=(self.Nx, self.Ny), endpoint=False
+        )
 
     @property
     def dz(self) -> float:
@@ -123,12 +112,12 @@ class SurfaceHamiltonianUtil(EigenstateConfigUtil):
 
     @timed
     def _calculate_diagonal_energy(self, kx: float, ky: float) -> NDArray[Any]:
-        kx_coords, ky_coords, nz_coords = self.coordinates.T
+        kx1_coords, kx2_coords, nz_coords = self.eigenstate_indexes.T
 
-        assert self.dkx1[1] == 0
-        assert self.dkx2[0] == 0
-        x_energy = (hbar * (self.dkx1[0] * kx_coords + kx)) ** 2 / (2 * self.mass)
-        y_energy = (hbar * (self.dkx2[1] * ky_coords + ky)) ** 2 / (2 * self.mass)
+        kx_points = self.dkx1[0] * kx1_coords + self.dkx2[0] * kx2_coords + kx
+        x_energy = (hbar * kx_points) ** 2 / (2 * self.mass)
+        ky_points = self.dkx1[1] * kx1_coords + self.dkx2[1] * kx2_coords + ky
+        y_energy = (hbar * ky_points) ** 2 / (2 * self.mass)
         z_energy = (hbar * self.sho_omega) * (nz_coords + 0.5)
         return x_energy + y_energy + z_energy
 
@@ -184,11 +173,11 @@ class SurfaceHamiltonianUtil(EigenstateConfigUtil):
 
     def _calculate_off_diagonal_energies(self) -> NDArray:
 
-        n_coordinates = len(self.coordinates)
+        n_coordinates = len(self.eigenstate_indexes)
         hamiltonian = np.zeros(shape=(n_coordinates, n_coordinates))
 
-        for (index1, [nkx1, nky1, nz1]) in enumerate(self.coordinates):
-            for (index2, [nkx2, nky2, nz2]) in enumerate(self.coordinates):
+        for (index1, [nkx1, nky1, nz1]) in enumerate(self.eigenstate_indexes):
+            for (index2, [nkx2, nky2, nz2]) in enumerate(self.eigenstate_indexes):
                 # Number of jumps in units of dkx for this matrix element
 
                 # As k-> k+ Nx * dkx the ft potential is left unchanged
@@ -247,12 +236,12 @@ def generate_energy_eigenstates_grid_copper_100(
     path: Path,
     hamiltonian: SurfaceHamiltonianUtil,
     *,
-    grid_size=4,
+    size=(8, 8),
     include_zero=True,
     include_bands: List[int] | None = None,
 ):
     k_points = get_brillouin_points_irreducible_config(
-        hamiltonian._config, grid_size=grid_size, include_zero=include_zero
+        hamiltonian._config, size=size, include_zero=include_zero
     )
 
     return generate_energy_eigenstates_grid(

@@ -17,8 +17,8 @@ def get_eigenstate_frame(
 ) -> AxesImage:
     img = ax.imshow(data)
     img.set_extent(extent)
-    img.set_clim(*clim)
     img.set_norm("symlog")  # type: ignore
+    img.set_clim(*clim)
     return img
 
 
@@ -34,7 +34,7 @@ def plot_eigenstate_3D(
 
     x_points = np.linspace(0, util.delta_x1[0], 50)
     y_points = np.linspace(0, util.delta_x2[1], 50)
-    z_points = np.linspace(-util.delta_x1[0] / 2, util.delta_x1[0] / 2, 20)
+    z_points = np.linspace(-util.characteristic_z * 2, util.characteristic_z * 2, 20)
 
     xv, yv, zv = np.meshgrid(x_points, y_points, z_points)
 
@@ -74,7 +74,7 @@ def plot_eigenstate_z(
 
     util = EigenstateConfigUtil(config)
 
-    z_points = np.linspace(-util.delta_x1[0] / 2, util.delta_x1[0] / 2, 1000)
+    z_points = np.linspace(-util.characteristic_z * 2, util.characteristic_z * 2, 1000)
     points = np.array(
         [(util.delta_x1[0] / 2, util.delta_x2[1] / 2, z) for z in z_points]
     )
@@ -136,7 +136,7 @@ def plot_eigenstate_in_xy(
     eigenstate: Eigenstate,
     ax: Axes | None = None,
     *,
-    y_point=0.0,
+    z_point=0.0,
     measure: Literal["real", "imag", "abs"] = "abs"
 ) -> tuple[Figure, Axes, AxesImage]:
     fig, ax1 = (ax.get_figure(), ax) if ax is not None else plt.subplots()
@@ -146,7 +146,7 @@ def plot_eigenstate_in_xy(
     y_points = np.linspace(0, util.delta_x2[1], 29, endpoint=False)
 
     xv, yv = np.meshgrid(x_points, y_points)
-    points = np.array([xv.ravel(), yv.ravel(), y_point * np.ones_like(xv.ravel())]).T
+    points = np.array([xv.ravel(), yv.ravel(), z_point * np.ones_like(xv.ravel())]).T
 
     wfn = util.calculate_wavefunction_fast(eigenstate, points).reshape(xv.shape)
     match measure:
@@ -158,6 +158,68 @@ def plot_eigenstate_in_xy(
             data = np.abs(wfn)
     im = ax1.imshow(data)
     im.set_extent((x_points[0], x_points[-1], y_points[0], y_points[-1]))
+    return (fig, ax1, im)
+
+
+def plot_eigenstate_in_xz(
+    config: EigenstateConfig,
+    eigenstate: Eigenstate,
+    ax: Axes | None = None,
+    *,
+    y_point=0.0,
+    measure: Literal["real", "imag", "abs"] = "abs"
+) -> tuple[Figure, Axes, AxesImage]:
+    fig, ax1 = (ax.get_figure(), ax) if ax is not None else plt.subplots()
+    util = EigenstateConfigUtil(config)
+
+    x_points = np.linspace(0, util.delta_x1[0], 29, endpoint=False)
+    z_lim = 2 * util.characteristic_z
+    z_points = np.linspace(-z_lim, z_lim, 29, endpoint=True)
+
+    xv, zv = np.meshgrid(x_points, z_points)
+    points = np.array([xv.ravel(), y_point * np.ones_like(xv.ravel()), zv.ravel()]).T
+
+    wfn = util.calculate_wavefunction_fast(eigenstate, points).reshape(xv.shape)
+    match measure:
+        case "real":
+            data = np.real(wfn)
+        case "imag":
+            data = np.imag(wfn)
+        case "abs":
+            data = np.abs(wfn)
+    im = ax1.imshow(data[:, ::-1])
+    im.set_extent((x_points[0], x_points[-1], z_points[0], z_points[-1]))
+    return (fig, ax1, im)
+
+
+def plot_eigenstate_in_yz(
+    config: EigenstateConfig,
+    eigenstate: Eigenstate,
+    ax: Axes | None = None,
+    *,
+    x_point=0.0,
+    measure: Literal["real", "imag", "abs"] = "abs"
+) -> tuple[Figure, Axes, AxesImage]:
+    fig, ax1 = (ax.get_figure(), ax) if ax is not None else plt.subplots()
+    util = EigenstateConfigUtil(config)
+
+    y_points = np.linspace(0, util.delta_x2[1], 29, endpoint=False)
+    z_lim = 2 * util.characteristic_z
+    z_points = np.linspace(-z_lim, z_lim, 29, endpoint=True)
+
+    yv, zv = np.meshgrid(y_points, z_points)
+    points = np.array([x_point * np.ones_like(yv.ravel()), yv.ravel(), zv.ravel()]).T
+
+    wfn = util.calculate_wavefunction_fast(eigenstate, points).reshape(yv.shape)
+    match measure:
+        case "real":
+            data = np.real(wfn)
+        case "imag":
+            data = np.imag(wfn)
+        case "abs":
+            data = np.abs(wfn)
+    im = ax1.imshow(data[:, ::-1])
+    im.set_extent((y_points[0], y_points[-1], z_points[0], z_points[-1]))
     return (fig, ax1, im)
 
 

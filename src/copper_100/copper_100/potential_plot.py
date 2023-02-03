@@ -2,18 +2,23 @@ import matplotlib.pyplot as plt
 import numpy as np
 import scipy.constants
 
-from surface_potential_analysis.energy_data import load_energy_grid, normalize_energy
+from surface_potential_analysis.energy_data import (
+    load_energy_grid_legacy_as_legacy,
+    normalize_energy,
+)
 from surface_potential_analysis.energy_data_plot import (
     plot_xz_plane_energy,
-    plot_z_direction_energy_comparison,
-    plot_z_direction_energy_data,
+    plot_z_direction_energy_comparison_100,
+    plot_z_direction_energy_data_100,
 )
 
 from .potential import (
     load_9h_copper_data,
     load_interpolated_copper_data,
+    load_interpolated_relaxed_copper_data,
     load_nc_raw_copper_data,
     load_raw_copper_data,
+    load_relaxed_copper_data,
 )
 from .surface_data import get_data_path, save_figure
 
@@ -22,7 +27,7 @@ def plot_copper_raw_data():
     data = load_raw_copper_data()
     data = normalize_energy(data)
 
-    fig, ax, _ = plot_z_direction_energy_data(data)
+    fig, ax, _ = plot_z_direction_energy_data_100(data)
     ax.set_ylim(bottom=0, top=1e-18)
     fig.show()
     save_figure(fig, "copper_raw_data_z_direction.png")
@@ -33,7 +38,7 @@ def plot_copper_raw_data():
 def plot_copper_nc_data():
     data = normalize_energy(load_nc_raw_copper_data())
 
-    fig, ax, _ = plot_z_direction_energy_data(data)
+    fig, ax, _ = plot_z_direction_energy_data_100(data)
     ax.set_ylim(bottom=-0.1e-18, top=1e-18)
     fig.show()
     input()
@@ -46,8 +51,8 @@ def plot_copper_9h_data():
     data_7h = load_raw_copper_data()
     data_7h_norm = normalize_energy(data_7h)
 
-    fig, ax, _ = plot_z_direction_energy_data(data)
-    _, _, _ = plot_z_direction_energy_data(data_7h_norm, ax)
+    fig, ax, _ = plot_z_direction_energy_data_100(data)
+    _, _, _ = plot_z_direction_energy_data_100(data_7h_norm, ax)
     ax.set_ylim(bottom=-0.1e-18, top=1e-18)
 
     fig.show()
@@ -60,20 +65,12 @@ def plot_copper_relaxed_data():
     data_7h = load_raw_copper_data()
     data_7h_norm = normalize_energy(data_7h)
 
-    min_points = np.array(data_7h["points"], dtype=float).min()
-
-    path = get_data_path("copper_relaxed_raw_energies.json")
-    data = load_energy_grid(path)
-    normalized_points = np.array(data["points"]) - min_points
-    data["points"] = normalized_points.tolist()
+    data_relaxed = load_relaxed_copper_data()
+    data_relaxed_norm = normalize_energy(data_relaxed)
 
     fig, ax = plt.subplots()
-    _, _, lines = plot_z_direction_energy_data(data, ax)
-    for ln in lines:
-        ln.set_linestyle("")
-        ln.set_marker("x")
-
-    _, _, _ = plot_z_direction_energy_data(data_7h_norm, ax)
+    _, _, _ = plot_z_direction_energy_data_100(data_relaxed_norm, ax)
+    _, _, _ = plot_z_direction_energy_data_100(data_7h_norm, ax)
 
     ax.set_ylim(bottom=-0.1e-18, top=1e-18)
 
@@ -82,11 +79,26 @@ def plot_copper_relaxed_data():
     save_figure(fig, "copper_raw_data_z_direction_vs_relaxed.png")
 
 
+def plot_copper_relaxed_interpolated_data():
+    data = normalize_energy(load_interpolated_relaxed_copper_data())
+    raw_data = normalize_energy(load_relaxed_copper_data())
+
+    fig, ax = plot_z_direction_energy_comparison_100(data, raw_data)
+    ax.set_ylim(bottom=0, top=1e-18)
+    fig.show()
+    save_figure(fig, "relaxed_interpolated_data_comparison.png")
+
+    fig = plot_xz_plane_energy(data)
+    fig.show()
+    input()
+    save_figure(fig, "relaxed_interpolated_data_xy.png")
+
+
 def plot_copper_interpolated_data():
     data = load_interpolated_copper_data()
     raw_data = normalize_energy(load_raw_copper_data())
 
-    fig, ax = plot_z_direction_energy_comparison(data, raw_data)
+    fig, ax = plot_z_direction_energy_comparison_100(data, raw_data)
     ax.set_ylim(bottom=0, top=1e-18)
     fig.show()
     save_figure(fig, "copper_interpolated_data_comparison.png")
@@ -131,7 +143,7 @@ def compare_bridge_hollow_energy():
 
 def calculate_hollow_free_energy_jump():
     path = get_data_path("copper_relaxed_raw_energies.json")
-    data = load_energy_grid(path)
+    data = load_energy_grid_legacy_as_legacy(path)
 
     points = np.array(data["points"], dtype=float)
     middle_x_index = points.shape[0] // 2
