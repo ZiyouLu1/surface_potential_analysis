@@ -393,6 +393,27 @@ def interpolate_energy_grid_z_spline(data: EnergyGrid, nz: int = 100) -> EnergyG
     }
 
 
+def get_ft_phases(shape: Tuple[int, int]):
+    """
+    Get a list of list of [x1_phase, x2_phase] for the fourier transform
+    """
+    ft_indices = np.indices(shape).transpose((1, 2, 0))
+
+    x_indices = ft_indices[:, :, 0]
+    above_halfway = x_indices > shape[0] // 2
+    x_indices[above_halfway] = x_indices[above_halfway] - shape[0]
+    ft_indices[:, :, 0] = x_indices
+
+    y_indices = ft_indices[:, :, 1]
+    above_halfway = y_indices > shape[1] // 2
+    y_indices[above_halfway] = y_indices[above_halfway] - shape[1]
+    ft_indices[:, :, 1] = y_indices
+
+    # List of list of [x1_phase, x2_phase]
+    ft_phases = 2 * np.pi * ft_indices
+    return ft_phases
+
+
 def interpolate_points_fourier(
     points: List[List[float]], shape: Tuple[int, int]
 ) -> List[List[float]]:
@@ -401,10 +422,7 @@ def interpolate_points_fourier(
     a grid of points with the given shape using the fourier transform
     """
     ft_potential = np.fft.ifft2(points)
-
-    ft_indices = np.indices(ft_potential.shape).transpose((1, 2, 0))
-    # List of list of [x1_phase, x2_phase]
-    ft_phases = 2 * np.pi * ft_indices
+    ft_phases = get_ft_phases((ft_potential.shape[0], ft_potential.shape[1]))
 
     # List of [x1_frac, x2_frac] for the interpolated grid
     fractions = get_point_fractions(shape, endpoint=False)

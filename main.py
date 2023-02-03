@@ -1,4 +1,4 @@
-import copper_100
+import copper_111
 
 if __name__ == "__main__":
-    copper_100.eigenstates.generate_eigenstates_data()
+    copper_111.potential_plot.plot_raw_energy_grid_points()

@@ -29,8 +29,8 @@ def load_raw_data_grid() -> EnergyGrid:
 
 def load_cleaned_data_grid() -> EnergyGrid:
     data = load_raw_data_grid()
-    normalized = normalize_energy(data)  # 1.7e-19
-    return truncate_energy(normalized, cutoff=0.5e-19, n=6, offset=1e-20)
+    normalized = normalize_energy(data)
+    return truncate_energy(normalized, cutoff=3e-19, n=6, offset=1e-20)
 
 
 def load_john_interpolation() -> EnergyGrid:
@@ -372,6 +372,6 @@ def generate_reflected_data():
 def generate_interpolated_data():
     grid = load_cleaned_data_grid()
 
-    data = interpolate_energy_grid_fourier(grid, (40, 40, 100))
+    data = interpolate_energy_grid_fourier(grid, (48, 48, 100))
     path = get_data_path("interpolated_data.json")
     save_energy_grid(data, path)

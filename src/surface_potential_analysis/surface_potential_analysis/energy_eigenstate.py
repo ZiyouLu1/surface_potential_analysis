@@ -28,14 +28,6 @@ class EigenstateConfig(TypedDict):
     """maximum extent in the x direction"""
 
 
-class EigenstateConfigLegacy(TypedDict):
-    resolution: Tuple[int, int, int]
-    sho_omega: float
-    mass: float
-    delta_x: float
-    delta_y: float
-
-
 class Eigenstate(TypedDict):
     kx: float
     ky: float
@@ -50,15 +42,6 @@ class EnergyEigenstates(TypedDict):
     eigenvectors: List[List[complex]]
 
 
-class EnergyEigenstatesRawLegacy(TypedDict):
-    eigenstate_config: EigenstateConfigLegacy
-    kx_points: List[float]
-    ky_points: List[float]
-    eigenvalues: List[float]
-    eigenvectors_re: List[List[float]]
-    eigenvectors_im: List[List[float]]
-
-
 class EnergyEigenstatesRaw(TypedDict):
     eigenstate_config: EigenstateConfig
     kx_points: List[float]
@@ -66,16 +49,6 @@ class EnergyEigenstatesRaw(TypedDict):
     eigenvalues: List[float]
     eigenvectors_re: List[List[float]]
     eigenvectors_im: List[List[float]]
-
-
-def config_from_legacy(config: EigenstateConfigLegacy) -> EigenstateConfig:
-    return {
-        "resolution": config["resolution"],
-        "delta_x1": (config["delta_x"], 0),
-        "delta_x2": (0, config["delta_y"]),
-        "mass": config["mass"],
-        "sho_omega": config["sho_omega"],
-    }
 
 
 def save_energy_eigenstates(data: EnergyEigenstates, path: Path) -> None:
@@ -91,7 +64,49 @@ def save_energy_eigenstates(data: EnergyEigenstates, path: Path) -> None:
         json.dump(out, f)
 
 
-def load_energy_eigenstates_old(path: Path) -> EnergyEigenstates:
+def load_energy_eigenstates(path: Path) -> EnergyEigenstates:
+
+    with path.open("r") as f:
+        out: EnergyEigenstatesRaw = json.load(f)
+
+        eigenvectors = np.array(out["eigenvectors_re"]) + 1j * np.array(
+            out["eigenvectors_im"]
+        )
+
+        return {
+            "eigenstate_config": out["eigenstate_config"],
+            "eigenvalues": out["eigenvalues"],
+            "eigenvectors": eigenvectors.tolist(),
+            "kx_points": out["kx_points"],
+            "ky_points": out["ky_points"],
+        }
+
+
+def load_energy_eigenstates_legacy(path: Path) -> EnergyEigenstates:
+    class EigenstateConfigLegacy(TypedDict):
+        resolution: Tuple[int, int, int]
+        sho_omega: float
+        mass: float
+        delta_x: float
+        delta_y: float
+
+    class EnergyEigenstatesRawLegacy(TypedDict):
+        eigenstate_config: EigenstateConfigLegacy
+        kx_points: List[float]
+        ky_points: List[float]
+        eigenvalues: List[float]
+        eigenvectors_re: List[List[float]]
+        eigenvectors_im: List[List[float]]
+
+    def config_from_legacy(config: EigenstateConfigLegacy) -> EigenstateConfig:
+        return {
+            "resolution": config["resolution"],
+            "delta_x1": (config["delta_x"], 0),
+            "delta_x2": (0, config["delta_y"]),
+            "mass": config["mass"],
+            "sho_omega": config["sho_omega"],
+        }
+
     with path.open("r") as f:
         out: EnergyEigenstatesRawLegacy = json.load(f)
 
@@ -112,7 +127,7 @@ def append_energy_eigenstates(
     path: Path, eigenstate: Eigenstate, eigenvalue: float
 ) -> None:
     with path.open("r") as f:
-        data: EnergyEigenstatesRawLegacy = json.load(f)
+        data: EnergyEigenstatesRaw = json.load(f)
         data["kx_points"].append(eigenstate["kx"])
         data["ky_points"].append(eigenstate["ky"])
         data["eigenvalues"].append(eigenvalue)

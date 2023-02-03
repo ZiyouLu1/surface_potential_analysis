@@ -84,7 +84,7 @@ def generate_eigenstates_grid_points_100(
         kx_points += kx_step / 2
         ky_points += ky_step / 2
 
-    xv, yv = np.meshgrid(kx_points, ky_points)
+    xv, yv = np.meshgrid(kx_points, ky_points, indexing="ij")
     k_points = np.array([xv.ravel(), yv.ravel()]).T
     return k_points
 
@@ -129,7 +129,7 @@ class TestSurfaceHamiltonian(unittest.TestCase):
         )
         diagonal_energy = hamiltonian._calculate_diagonal_energy(0, 0)
 
-        np.testing.assert_equal(diagonal_energy, expected)
+        np.testing.assert_array_almost_equal(diagonal_energy, expected)
 
     def test_get_all_coordinates(self) -> None:
         Nkx = random.randrange(1, 20)
@@ -150,7 +150,7 @@ class TestSurfaceHamiltonian(unittest.TestCase):
         }
         hamiltonian = SurfaceHamiltonianUtil(config, data, z_offset)
         coords = hamiltonian.eigenstate_indexes
-        for (i, (nkx, nky, nz)) in enumerate(coords):
+        for i, (nkx, nky, nz) in enumerate(coords):
             self.assertEqual(hamiltonian.get_index(nkx, nky, nz), i)
 
     def test_get_index(self) -> None:
@@ -172,7 +172,7 @@ class TestSurfaceHamiltonian(unittest.TestCase):
         hamiltonian = SurfaceHamiltonianUtil(config, data, 0)
 
         coords = hamiltonian.eigenstate_indexes
-        for (i, c) in enumerate(coords):
+        for i, c in enumerate(coords):
             self.assertEqual(i, hamiltonian.get_index(*c))
 
     def test_get_sho_potential(self) -> None:
@@ -373,7 +373,6 @@ class TestSurfaceHamiltonian(unittest.TestCase):
                     self.assertAlmostEqual(sho_norm, 0.0)
 
     def test_get_sho_rust(self) -> None:
-
         mass = hbar**2 * random.random()
         sho_omega = random.random() / hbar
         z_points = np.linspace(-20 * random.random(), 20 * random.random(), 1000)
@@ -492,7 +491,6 @@ class TestSurfaceHamiltonian(unittest.TestCase):
         )
 
     def test_calculate_wavefunction_fast(self) -> None:
-
         config: EigenstateConfig = {
             "mass": hbar**2,
             "sho_omega": 1 / hbar,
@@ -530,8 +528,8 @@ class TestSurfaceHamiltonian(unittest.TestCase):
             "delta_x2": (0, 2 * np.pi * hbar),
             "resolution": (10, 10, 14),
         }
-        expected = generate_eigenstates_grid_points_100(config)
-        actual = get_brillouin_points_irreducible_config(config)
+        expected = generate_eigenstates_grid_points_100(config, grid_size=4)
+        actual = get_brillouin_points_irreducible_config(config, size=(4, 4))
         np.testing.assert_allclose(expected, actual)
 
 

@@ -7,7 +7,7 @@ from surface_potential_analysis.energy_data import EnergyInterpolation
 from surface_potential_analysis.energy_eigenstate import generate_sho_config_minimum
 
 
-class TestSurfaceHamiltonian(unittest.TestCase):
+class TestSHOConfig(unittest.TestCase):
     def test_generate_sho_config(self) -> None:
         sho_omega = random.randrange(1, 100)
         z_points = np.linspace(-50 * 1, 50 * 1, 101)

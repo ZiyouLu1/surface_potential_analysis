@@ -7,7 +7,7 @@ from surface_potential_analysis.energy_eigenstate import (
     EigenstateConfig,
     EigenstateConfigUtil,
     get_brillouin_points_irreducible_config,
-    load_energy_eigenstates_old,
+    load_energy_eigenstates_legacy,
     normalize_eigenstate_phase,
 )
 from surface_potential_analysis.hamiltonian import (
@@ -74,7 +74,7 @@ def generate_eigenstates_grid():
 
 def generate_wavepacket_grid():
     path = get_data_path("eigenstates_grid_2.json")
-    eigenstates = load_energy_eigenstates_old(path)
+    eigenstates = load_energy_eigenstates_legacy(path)
 
     util = EigenstateConfigUtil(eigenstates["eigenstate_config"])
 

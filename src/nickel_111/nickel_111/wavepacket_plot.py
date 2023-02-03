@@ -18,7 +18,7 @@ from surface_potential_analysis.energy_eigenstate import (
     EigenstateConfigUtil,
     EnergyEigenstates,
     get_eigenstate_list,
-    load_energy_eigenstates_old,
+    load_energy_eigenstates_legacy,
     normalize_eigenstate_phase,
 )
 from surface_potential_analysis.energy_eigenstates_plot import plot_eigenstate_positions
@@ -37,7 +37,7 @@ from .surface_data import get_data_path, save_figure
 
 def plot_wavepacket_points():
     path = get_data_path("eigenstates_grid_2.json")
-    eigenstates = load_energy_eigenstates_old(path)
+    eigenstates = load_energy_eigenstates_legacy(path)
     fig, _, _ = plot_eigenstate_positions(eigenstates)
 
     fig.show()
@@ -70,7 +70,9 @@ def select_single_k_eigenstates(
 
 def plot_wavepacket_points_in_yz_from_list():
     path = get_data_path("eigenstates_grid_2.json")
-    eigenstates = select_single_k_eigenstates(load_energy_eigenstates_old(path), 0, 0)
+    eigenstates = select_single_k_eigenstates(
+        load_energy_eigenstates_legacy(path), 0, 0
+    )
     fig, _, _ = plot_eigenstate_positions(eigenstates)
 
     fig.show()
@@ -94,7 +96,9 @@ def plot_wavepacket_points_in_yz_from_list():
 
 def plot_wavepacket_points_in_xz_from_list():
     path = get_data_path("eigenstates_grid_2.json")
-    eigenstates = select_single_k_eigenstates(load_energy_eigenstates_old(path), 0, 0)
+    eigenstates = select_single_k_eigenstates(
+        load_energy_eigenstates_legacy(path), 0, 0
+    )
     fig, _, _ = plot_eigenstate_positions(eigenstates)
 
     fig.show()
@@ -118,7 +122,9 @@ def plot_wavepacket_points_in_xz_from_list():
 
 def plot_wavepacket_points_in_xy_from_list():
     path = get_data_path("eigenstates_grid_2.json")
-    eigenstates = select_single_k_eigenstates(load_energy_eigenstates_old(path), 0, 0)
+    eigenstates = select_single_k_eigenstates(
+        load_energy_eigenstates_legacy(path), 0, 0
+    )
     fig, _, _ = plot_eigenstate_positions(eigenstates)
 
     fig.show()
@@ -143,7 +149,7 @@ def plot_wavepacket_points_in_xy_from_list():
 
 def plot_energy_of_first_bands():
     path = get_data_path("eigenstates_grid_2.json")
-    eigenstates = load_energy_eigenstates_old(path)
+    eigenstates = load_energy_eigenstates_legacy(path)
 
     origin_k_eigenstates = select_single_k_eigenstates(eigenstates, 0, 0)
     fig, ax = plt.subplots()
@@ -187,7 +193,7 @@ def test_single_k_wavepacket():
     """
 
     path = get_data_path("eigenstates_grid_2.json")
-    eigenstates = load_energy_eigenstates_old(path)
+    eigenstates = load_energy_eigenstates_legacy(path)
 
     util = EigenstateConfigUtil(eigenstates["eigenstate_config"])
 
@@ -260,7 +266,7 @@ def plot_wavepacket_small():
     fig.show()
 
     path = get_data_path("eigenstates_grid_2.json")
-    eigenstates = load_energy_eigenstates_old(path)
+    eigenstates = load_energy_eigenstates_legacy(path)
     eigenstates["eigenstate_config"] = get_irreducible_config_nickel_111_supercell(
         eigenstates["eigenstate_config"]
     )

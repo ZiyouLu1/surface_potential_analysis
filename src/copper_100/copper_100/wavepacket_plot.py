@@ -15,7 +15,7 @@ from surface_potential_analysis.energy_eigenstate import (
     EigenstateConfigUtil,
     filter_eigenstates_n_point,
     get_eigenstate_list,
-    load_energy_eigenstates_old,
+    load_energy_eigenstates_legacy,
 )
 from surface_potential_analysis.energy_eigenstates_plot import plot_eigenstate_positions
 from surface_potential_analysis.wavepacket_grid import (
@@ -37,7 +37,7 @@ from .wavepacket import normalize_eigenstate_phase_copper
 
 def plot_wavepacket_points():
     path = get_data_path("copper_eigenstates_grid_5.json")
-    eigenstates = load_energy_eigenstates_old(path)
+    eigenstates = load_energy_eigenstates_legacy(path)
     fig, _, _ = plot_eigenstate_positions(eigenstates)
 
     fig.show()
@@ -53,7 +53,7 @@ def plot_wavepacket_points():
 
 def plot_wavepacket_2D():
     path = get_data_path("copper_eigenstates_grid_normalized.json")
-    normalized = load_energy_eigenstates_old(path)
+    normalized = load_energy_eigenstates_legacy(path)
 
     fig, _, _ = plot_wavepacket_in_xy(normalized)
     fig.show()
@@ -224,7 +224,7 @@ def plot_wavefunction_xz_bridge():
 
 def compare_wavefunction_2D():
     path = get_data_path("copper_eigenstates_grid_normalized.json")
-    eigenstates = load_energy_eigenstates_old(path)
+    eigenstates = load_energy_eigenstates_legacy(path)
 
     config = eigenstates["eigenstate_config"]
     eigenstate_list = get_eigenstate_list(eigenstates)
@@ -275,7 +275,7 @@ def compare_wavefunction_2D():
 
 def test_wavefunction_similarity() -> None:
     path = get_data_path("copper_eigenstates_grid_normalized.json")
-    eigenstates = load_energy_eigenstates_old(path)
+    eigenstates = load_energy_eigenstates_legacy(path)
 
     config = eigenstates["eigenstate_config"]
     util = EigenstateConfigUtil(config)
@@ -314,7 +314,7 @@ def test_wavefunction_similarity() -> None:
 # How different are the bloch wavefunctions
 def calculate_eigenstate_cross_product() -> None:
     path = get_data_path("copper_eigenstates_grid_normalized.json")
-    eigenstates = load_energy_eigenstates_old(path)
+    eigenstates = load_energy_eigenstates_legacy(path)
 
     eigenvector1 = eigenstates["eigenvectors"][0]
     eigenvector2 = eigenstates["eigenvectors"][144]
@@ -327,7 +327,7 @@ def calculate_eigenstate_cross_product() -> None:
 
 def investigate_approximate_eigenstates():
     path = get_data_path("copper_eigenstates_grid_normalized.json")
-    eigenstates = load_energy_eigenstates_old(path)
+    eigenstates = load_energy_eigenstates_legacy(path)
 
     eigenvector = eigenstates["eigenvectors"][144]
     print(eigenvector.__len__())
@@ -346,7 +346,7 @@ def investigate_approximate_eigenstates():
 
 def test_block_wavefunction_fixed_phase_similarity():
     path = get_data_path("copper_eigenstates_grid.json")
-    eigenstates = load_energy_eigenstates_old(path)
+    eigenstates = load_energy_eigenstates_legacy(path)
 
     n_eigenvectors = len(eigenstates["eigenvectors"])
     resolution = eigenstates["eigenstate_config"]["resolution"]
@@ -401,7 +401,7 @@ def plot_eigenstate_difference_in_z(
 
 def analyze_wavepacket_grid_1_points():
     path = get_data_path("copper_eigenstates_grid_4.json")
-    eigenstates = load_energy_eigenstates_old(path)
+    eigenstates = load_energy_eigenstates_legacy(path)
     filtered = filter_eigenstates_n_point(eigenstates, n=1)
 
     normalized = normalize_eigenstate_phase_copper(eigenstates)
@@ -431,7 +431,7 @@ def analyze_wavepacket_grid_1_points():
     fig.show()
 
     path = get_data_path("copper_eigenstates_grid_5.json")
-    eigenstates = load_energy_eigenstates_old(path)
+    eigenstates = load_energy_eigenstates_legacy(path)
     normalized = normalize_eigenstate_phase_copper(eigenstates)
     filtered_normalized = filter_eigenstates_n_point(normalized, n=1)
 

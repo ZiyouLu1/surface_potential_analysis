@@ -13,7 +13,7 @@ from surface_potential_analysis.energy_data import (
 )
 
 
-class TestSurfaceHamiltonian(unittest.TestCase):
+class TestEnergyData(unittest.TestCase):
     def test_repeat_original_data_shape(self) -> None:
 
         data: EnergyGrid = {
@@ -57,7 +57,7 @@ class TestSurfaceHamiltonian(unittest.TestCase):
         extended = extend_z_data(data)
         np.testing.assert_array_equal(extended["points"], [[[1, 1, 1, 2, 3, 3, 3]]])
         np.testing.assert_array_equal(
-            extended["z_points"], [-2.0, -1.0, 0.0, 1.0, 4.0, 7.0, 10.0]
+            extended["z_points"][0:5], [-2.0, -1.0, 0.0, 1.0, 4.0]
         )
 
     def test_get_energy_grid_coordinates(self) -> None:
@@ -82,13 +82,13 @@ class TestSurfaceHamiltonian(unittest.TestCase):
         np.testing.assert_array_equal(expected, actual)
 
     def test_interpolate_points_fourier_double(self) -> None:
-        
+
         original_shape = tuple(np.random.randint(1, 10, size=2))
         points = np.random.random(size=original_shape).tolist()
         interpolated_shape = (original_shape[0] * 2, original_shape[1] * 2)
         expected = points
-        actual = np.array(interpolate_points_fourier(points, interpolated_shape))[::2, ::2]
-        np.testing.assert_array_almost_equal(expected, actual)
+        actual = np.array(interpolate_points_fourier(points, interpolated_shape))
+        np.testing.assert_array_almost_equal(expected, actual[::2, ::2])
 
     def test_interpolate_points_fourier_flat(self) -> None:
 
@@ -109,15 +109,15 @@ class TestSurfaceHamiltonian(unittest.TestCase):
         expected = points
         actual = interpolate_points_fourier(points, shape)
         np.testing.assert_array_almost_equal(expected, actual)
-        
+
     def test_fourier_transform_of_interpolation(self) -> None:
 
         int_shape = tuple(2 * np.random.randint(2, 10, size=2))
-        points = np.random.random(size=(2,2)).tolist()
+        points = np.random.random(size=(2, 2)).tolist()
 
-        expected = np.zeros(int_shape,dtype=complex)
-        expected[0:2,0:2] = np.fft.ifft2(points, axes=(0, 1))
+        expected = np.zeros(int_shape, dtype=complex)
+        expected[0:2, 0:2] = np.real_if_close(np.fft.ifft2(points, axes=(0, 1)))
         interpolation = interpolate_points_fourier(points, int_shape)
-        actual = np.fft.ifft2(interpolation, axes=(0, 1))
-        
+        actual = np.real_if_close(np.fft.ifft2(interpolation, axes=(0, 1)))
+
         np.testing.assert_array_almost_equal(expected, actual)

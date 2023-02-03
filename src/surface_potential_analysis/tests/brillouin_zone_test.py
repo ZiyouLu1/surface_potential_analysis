@@ -5,7 +5,7 @@ import numpy as np
 from surface_potential_analysis.brillouin_zone import get_points_in_brillouin_zone
 
 
-class TestSurfaceHamiltonian(unittest.TestCase):
+class TestBrillouinZone(unittest.TestCase):
     def test_get_points_in_brillouin_zone(self) -> None:
 
         actual = get_points_in_brillouin_zone(

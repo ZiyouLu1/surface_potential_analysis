@@ -83,6 +83,11 @@ def plot_interpolated_energy_grid_points():
     fig, ax, _ = plot_energy_grid_points(grid)
     fig.show()
 
+    raw = load_cleaned_data_grid()
+    fig, ax = plot_z_direction_energy_comparison_111(grid, raw)
+    ax.set_ylim(0, 0.2e-18)
+    fig.show()
+
     fig, ax, _ani = animate_energy_grid_3D_in_xy(grid)
     fig.show()
 
