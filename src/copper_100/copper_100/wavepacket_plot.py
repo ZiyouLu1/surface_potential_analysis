@@ -395,7 +395,7 @@ def plot_eigenstate_difference_in_z(
     line.set_label("difference")
     line.set_linestyle("dashed")
 
-    fig.legend()
+    ax1.legend()
     return fig, ax2, line
 
 

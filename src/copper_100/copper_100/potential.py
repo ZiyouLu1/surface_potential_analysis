@@ -1,9 +1,9 @@
 from surface_potential_analysis.energy_data import (
-    energy_grid_legacy_as_energy_grid,
     fill_surface_from_z_maximum,
+    interpolate_energy_grid_3D_spline,
     interpolate_energy_grid_fourier,
     load_energy_grid,
-    load_energy_grid_legacy_as_legacy,
+    load_energy_grid_legacy,
     normalize_energy,
     save_energy_grid,
     truncate_energy,
@@ -14,37 +14,42 @@ from .surface_data import get_data_path
 
 def load_raw_copper_data():
     path = get_data_path("copper_raw_energies.json")
-    return energy_grid_legacy_as_energy_grid(load_energy_grid_legacy_as_legacy(path))
+    return load_energy_grid_legacy(path)
 
 
 def load_relaxed_copper_data():
     path = get_data_path("raw_energies_relaxed_sp.json")
-    return energy_grid_legacy_as_energy_grid(load_energy_grid_legacy_as_legacy(path))
+    return load_energy_grid_legacy(path)
 
 
-def load_interpolated_relaxed_copper_data():
+def load_interpolated_relaxed_data():
     path = get_data_path("copper_interpolated_energies_relaxed.json")
+    return load_energy_grid(path)
+
+
+def load_spline_interpolated_relaxed_data():
+    path = get_data_path("copper_spline_interpolated_energies_relaxed.json")
     return load_energy_grid(path)
 
 
 def load_interpolated_copper_data():
     path = get_data_path("copper_interpolated_energies.json")
-    return energy_grid_legacy_as_energy_grid(load_energy_grid_legacy_as_legacy(path))
+    return load_energy_grid_legacy(path)
 
 
 def load_nc_raw_copper_data():
     path = get_data_path("copper_nc_raw_energies.json")
-    return energy_grid_legacy_as_energy_grid(load_energy_grid_legacy_as_legacy(path))
+    return load_energy_grid_legacy(path)
 
 
 def load_9h_copper_data():
     path = get_data_path("copper_9h_raw_energies.json")
-    return energy_grid_legacy_as_energy_grid(load_energy_grid_legacy_as_legacy(path))
+    return load_energy_grid_legacy(path)
 
 
 def load_simple_copper_data():
     path = get_data_path("copper_simple_raw_energies2.json")
-    return energy_grid_legacy_as_energy_grid(load_energy_grid_legacy_as_legacy(path))
+    return load_energy_grid_legacy(path)
 
 
 def load_clean_copper_data():
@@ -57,6 +62,15 @@ def load_clean_copper_data():
 
 def generate_interpolated_copper_data():
     data = load_relaxed_copper_data()
-    interpolated = interpolate_energy_grid_fourier(data, shape=(60, 60, 120))
+    normalized = normalize_energy(data)
+    interpolated = interpolate_energy_grid_fourier(normalized, shape=(60, 60, 120))
     path = get_data_path("copper_interpolated_energies_relaxed.json")
+    save_energy_grid(interpolated, path)
+
+
+def generate_interpolated_copper_data_3D_spline():
+    data = load_relaxed_copper_data()
+    normalized = normalize_energy(data)
+    interpolated = interpolate_energy_grid_3D_spline(normalized, shape=(60, 60, 120))
+    path = get_data_path("copper_spline_interpolated_energies_relaxed.json")
     save_energy_grid(interpolated, path)

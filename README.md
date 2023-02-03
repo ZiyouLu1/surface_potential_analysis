@@ -13,3 +13,8 @@ pip install -e ./src/nickel_111
 ```
 
 Functions can then be imported and run from main.py.
+To make sure surface_potential_analysis is also editable it is advised to then re-install it in editable mode
+
+```shell
+pip install -e ./src/surface_potential_analysis
+```

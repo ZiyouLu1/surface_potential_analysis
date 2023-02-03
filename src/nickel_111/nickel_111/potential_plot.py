@@ -22,7 +22,7 @@ def plot_raw_data_points():
     fig, ax = plot_all_energy_points_z(data)
     ax.set_ylim(0, 3 * 10**-19)
 
-    fig.legend()
+    ax.legend()
     fig.show()
     save_figure(fig, "nickel_raw_points_z.png")
     input()

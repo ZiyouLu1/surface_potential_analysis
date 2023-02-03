@@ -1,9 +1,9 @@
 import numpy as np
 
 from surface_potential_analysis.energy_data import (
-    EnergyGridLegacy,
+    EnergyGrid,
     EnergyPoints,
-    load_energy_grid_legacy_as_legacy,
+    load_energy_grid_legacy,
     load_energy_points,
 )
 
@@ -50,6 +50,6 @@ def generate_raw_unit_cell_data():
     print(fcc_points)
 
 
-def load_john_interpolation() -> EnergyGridLegacy:
+def load_john_interpolation() -> EnergyGrid:
     path = get_data_path("john_interpolated_data.json")
-    return load_energy_grid_legacy_as_legacy(path)
+    return load_energy_grid_legacy(path)

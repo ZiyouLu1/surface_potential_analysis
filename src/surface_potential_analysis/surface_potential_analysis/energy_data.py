@@ -94,43 +94,35 @@ def get_energy_grid_coordinates(grid: EnergyGrid) -> NDArray:
     )
 
 
-class EnergyGridLegacy(TypedDict):
-    x_points: List[float]
-    y_points: List[float]
-    z_points: List[float]
-    points: List[List[List[float]]]
+def load_energy_grid_legacy(path: Path) -> EnergyGrid:
+    class EnergyGridLegacy(TypedDict):
+        x_points: List[float]
+        y_points: List[float]
+        z_points: List[float]
+        points: List[List[List[float]]]
 
+    def get_xy_points_delta(points: List[float]):
+        # Note additional factor to account for 'missing' point
+        return (len(points)) * (points[-1] - points[0]) / (len(points) - 1)
 
-def load_energy_grid_legacy_as_legacy(path: Path) -> EnergyGridLegacy:
+    def energy_grid_legacy_as_energy_grid(data: EnergyGridLegacy) -> EnergyGrid:
+        x_delta = get_xy_points_delta(data["x_points"])
+        y_delta = get_xy_points_delta(data["y_points"])
+        return {
+            "delta_x1": (x_delta, 0),
+            "delta_x2": (0, y_delta),
+            "z_points": data["z_points"],
+            "points": data["points"],
+        }
+
     with path.open("r") as f:
-        return json.load(f)
-
-
-def save_energy_grid_legacy(data: EnergyGridLegacy, path: Path) -> None:
-    with path.open("w") as f:
-        json.dump(data, f)
-
-
-def energy_grid_legacy_as_energy_grid(data: EnergyGridLegacy) -> EnergyGrid:
-    x_delta = get_xy_points_delta(data["x_points"])
-    y_delta = get_xy_points_delta(data["y_points"])
-    return {
-        "delta_x1": (x_delta, 0),
-        "delta_x2": (0, y_delta),
-        "z_points": data["z_points"],
-        "points": data["points"],
-    }
+        return energy_grid_legacy_as_energy_grid(json.load(f))
 
 
 class EnergyInterpolation(TypedDict):
     dz: float
     # Note - points should exclude the 'nth' point
     points: List[List[List[float]]]
-
-
-def get_xy_points_delta(points: List[float]):
-    # Note additional factor to account for 'missing' point
-    return (len(points)) * (points[-1] - points[0]) / (len(points) - 1)
 
 
 def as_interpolation(data: EnergyGrid) -> EnergyInterpolation:
@@ -290,11 +282,14 @@ def extend_z_data(data: EnergyGrid, extend_by: int = 2) -> EnergyGrid:
         endpoint=False,
     )
     dz1 = data["z_points"][-1] - data["z_points"][-2]
-    z_points[-extend_by:] = np.linspace(
-        data["z_points"][-1],
-        data["z_points"][-1] + (extend_by * dz1),
-        extend_by + 1,
-    )[1:]
+    # Randomly spaced z points to reduce oscillation
+    z_points[-extend_by:] = np.sort(
+        np.random.uniform(
+            low=data["z_points"][-1],
+            high=data["z_points"][-1] + dz1,
+            size=extend_by,
+        )
+    )
 
     return {
         "points": z_extended_points.tolist(),
@@ -325,6 +320,7 @@ def generate_interpolator(
 ) -> scipy.interpolate.RegularGridInterpolator:
     fixed_data = extend_z_data(repeat_original_data(data))
     points = np.array(add_back_symmetry_points(fixed_data["points"]))
+
     if (data["delta_x1"][1] != 0) or (data["delta_x2"][0] != 0):
         raise AssertionError("Not orthogonal grid")
 
@@ -332,15 +328,15 @@ def generate_interpolator(
         -data["delta_x1"][0], 2 * data["delta_x1"][0], points.shape[0]
     )
     y_points = np.linspace(
-        -data["delta_x2"][0], 2 * data["delta_x2"][0], points.shape[1]
+        -data["delta_x2"][1], 2 * data["delta_x2"][1], points.shape[1]
     )
     return scipy.interpolate.RegularGridInterpolator(
         [x_points, y_points, fixed_data["z_points"]],
-        fixed_data["points"],
+        points,
     )
 
 
-def interpolate_energies_grid(
+def interpolate_energy_grid_3D_spline(
     data: EnergyGrid, shape: Tuple[int, int, int] = (40, 40, 100)
 ) -> EnergyGrid:
     """
@@ -370,7 +366,7 @@ def interpolate_energies_grid(
     }
 
 
-def interpolate_energies_spline(data: EnergyGrid, nz: int = 100) -> EnergyGrid:
+def interpolate_energy_grid_z_spline(data: EnergyGrid, nz: int = 100) -> EnergyGrid:
     """
     Uses spline interpolation to increase the Z resolution,
     spacing z linearly
@@ -459,4 +455,4 @@ def interpolate_energy_grid_fourier(
     in the xy plane of the energy grid, and a cubic spline to interpolate in the z direction
     """
     xy_interpolation = interpolate_energy_grid_xy_fourier(data, (shape[0], shape[1]))
-    return interpolate_energies_spline(xy_interpolation, shape[2])
+    return interpolate_energy_grid_z_spline(xy_interpolation, shape[2])

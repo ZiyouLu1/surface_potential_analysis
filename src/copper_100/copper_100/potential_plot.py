@@ -3,7 +3,7 @@ import numpy as np
 import scipy.constants
 
 from surface_potential_analysis.energy_data import (
-    load_energy_grid_legacy_as_legacy,
+    load_energy_grid_legacy,
     normalize_energy,
 )
 from surface_potential_analysis.energy_data_plot import (
@@ -15,10 +15,11 @@ from surface_potential_analysis.energy_data_plot import (
 from .potential import (
     load_9h_copper_data,
     load_interpolated_copper_data,
-    load_interpolated_relaxed_copper_data,
+    load_interpolated_relaxed_data,
     load_nc_raw_copper_data,
     load_raw_copper_data,
     load_relaxed_copper_data,
+    load_spline_interpolated_relaxed_data,
 )
 from .surface_data import get_data_path, save_figure
 
@@ -52,7 +53,7 @@ def plot_copper_9h_data():
     data_7h_norm = normalize_energy(data_7h)
 
     fig, ax, _ = plot_z_direction_energy_data_100(data)
-    _, _, _ = plot_z_direction_energy_data_100(data_7h_norm, ax)
+    _, _, _ = plot_z_direction_energy_data_100(data_7h_norm, ax=ax)
     ax.set_ylim(bottom=-0.1e-18, top=1e-18)
 
     fig.show()
@@ -69,8 +70,8 @@ def plot_copper_relaxed_data():
     data_relaxed_norm = normalize_energy(data_relaxed)
 
     fig, ax = plt.subplots()
-    _, _, _ = plot_z_direction_energy_data_100(data_relaxed_norm, ax)
-    _, _, _ = plot_z_direction_energy_data_100(data_7h_norm, ax)
+    _, _, _ = plot_z_direction_energy_data_100(data_relaxed_norm, ax=ax)
+    _, _, _ = plot_z_direction_energy_data_100(data_7h_norm, ax=ax)
 
     ax.set_ylim(bottom=-0.1e-18, top=1e-18)
 
@@ -80,7 +81,7 @@ def plot_copper_relaxed_data():
 
 
 def plot_copper_relaxed_interpolated_data():
-    data = normalize_energy(load_interpolated_relaxed_copper_data())
+    data = load_interpolated_relaxed_data()
     raw_data = normalize_energy(load_relaxed_copper_data())
 
     fig, ax = plot_z_direction_energy_comparison_100(data, raw_data)
@@ -90,8 +91,21 @@ def plot_copper_relaxed_interpolated_data():
 
     fig = plot_xz_plane_energy(data)
     fig.show()
-    input()
     save_figure(fig, "relaxed_interpolated_data_xy.png")
+
+    spline_data = load_spline_interpolated_relaxed_data()
+    raw_data = normalize_energy(load_relaxed_copper_data())
+
+    fig, ax = plot_z_direction_energy_comparison_100(spline_data, raw_data)
+    ax.set_ylim(bottom=0, top=1e-18)
+    fig.show()
+    save_figure(fig, "relaxed_interpolated_data_comparison.png")
+
+    fig = plot_xz_plane_energy(spline_data)
+    fig.show()
+    save_figure(fig, "relaxed_interpolated_data_xy.png")
+
+    input()
 
 
 def plot_copper_interpolated_data():
@@ -143,7 +157,7 @@ def compare_bridge_hollow_energy():
 
 def calculate_hollow_free_energy_jump():
     path = get_data_path("copper_relaxed_raw_energies.json")
-    data = load_energy_grid_legacy_as_legacy(path)
+    data = load_energy_grid_legacy(path)
 
     points = np.array(data["points"], dtype=float)
     middle_x_index = points.shape[0] // 2

@@ -15,16 +15,17 @@ def plot_energy_with_sho_potential(
     eigenstate_config: EigenstateConfig,
     z_offset: float,
     xy_ind: Tuple[int, int],
+    *,
     ax: Axes | None = None,
 ) -> tuple[Figure, Axes]:
-    fig, a = (ax.get_figure(), ax) if ax is not None else plt.subplots()
+    fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
 
     points = np.array(interpolation["points"])
     start_z = z_offset
     end_z = interpolation["dz"] * (points.shape[2] - 1) + z_offset
     z_points = np.linspace(start_z, end_z, points.shape[2])
 
-    (line1,) = a.plot(z_points, points[xy_ind[0], xy_ind[1]])
+    (line1,) = ax.plot(z_points, points[xy_ind[0], xy_ind[1]])
     line1.set_label("Potential at center point")
 
     sho_pot = (
@@ -32,16 +33,24 @@ def plot_energy_with_sho_potential(
         * eigenstate_config["mass"]
         * (eigenstate_config["sho_omega"] * z_points) ** 2
     )
-    (line2,) = a.plot(z_points, sho_pot)
+    (line2,) = ax.plot(z_points, sho_pot)
     line2.set_label("SHO Config")
+    ax.legend()
+    ax.set_title(
+        "Plot of the potential superimposed by the SHO potential\n"
+        "used to generate eigenstates"
+    )
+    ax.set_xlabel("Position /m")
+    ax.set_ylabel("Energy / J")
 
-    return fig, a
+    return fig, ax
 
 
 def plot_energy_with_sho_potential_at_hollow(
     interpolation: EnergyInterpolation,
     eigenstate_config: EigenstateConfig,
     z_offset: float,
+    *,
     ax: Axes | None = None,
 ) -> Tuple[Figure, Axes]:
     points = np.array(interpolation["points"])
@@ -50,7 +59,7 @@ def plot_energy_with_sho_potential_at_hollow(
     xy_ind = (middle_x_index, middle_y_index)
 
     fig, ax = plot_energy_with_sho_potential(
-        interpolation, eigenstate_config, z_offset, xy_ind, ax
+        interpolation, eigenstate_config, z_offset, xy_ind, ax=ax
     )
 
     max_potential = 1e-18
@@ -65,12 +74,12 @@ def plot_energy_with_sho_potential_at_minimum(
 ) -> Tuple[Figure, Axes]:
     points = np.array(interpolation["points"], dtype=float)
     arg_min = np.unravel_index(np.argmin(points), points.shape)
-    xy_ind = (arg_min[0], arg_min[1])
+    xy_ind = (int(arg_min[0]), int(arg_min[1]))
     print(arg_min)
-    z_offset = -interpolation["dz"] * arg_min[2]
+    z_offset = float(-interpolation["dz"] * arg_min[2])
 
     fig, ax = plot_energy_with_sho_potential(
-        interpolation, eigenstate_config, z_offset, xy_ind, ax
+        interpolation, eigenstate_config, z_offset, xy_ind, ax=ax
     )
 
     max_potential = 1e-18

@@ -1,6 +1,6 @@
 from typing import Tuple
 
-from surface_potential_analysis.energy_data import as_interpolation, get_xy_points_delta
+from surface_potential_analysis.energy_data import as_interpolation
 from surface_potential_analysis.energy_eigenstate import (
     EigenstateConfig,
     generate_sho_config_minimum,
@@ -16,8 +16,8 @@ def generate_hamiltonian(resolution: Tuple[int, int, int] = (1, 1, 1)):
     config: EigenstateConfig = {
         "mass": 1.6735575e-27,
         "sho_omega": 198226131917441.6,
-        "delta_x1": (get_xy_points_delta(data["x_points"]), 0),
-        "delta_x2": (0, get_xy_points_delta(data["y_points"])),
+        "delta_x1": data["delta_x1"],
+        "delta_x2": data["delta_x2"],
         "resolution": resolution,
     }
 

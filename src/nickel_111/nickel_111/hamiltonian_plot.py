@@ -1,6 +1,6 @@
 import numpy as np
 
-from surface_potential_analysis.energy_data import as_interpolation, get_xy_points_delta
+from surface_potential_analysis.energy_data import as_interpolation
 from surface_potential_analysis.energy_eigenstate import EigenstateConfig
 from surface_potential_analysis.sho_wavefunction_plot import (
     plot_energy_with_sho_potential_at_minimum,
@@ -16,8 +16,8 @@ def plot_interpolation_with_sho_config() -> None:
     config: EigenstateConfig = {
         "mass": 1.6735575e-27,
         "sho_omega": 198226131917441.6,  # 1.5e14,
-        "delta_x": get_xy_points_delta(data["x_points"]),
-        "delta_y": get_xy_points_delta(data["y_points"]),
+        "delta_x1": data["delta_x1"],
+        "delta_x2": data["delta_x2"],
         "resolution": (1, 1, 1),
     }
 
