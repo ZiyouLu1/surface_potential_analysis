@@ -494,8 +494,8 @@ class TestSurfaceHamiltonian(unittest.TestCase):
         config: EigenstateConfig = {
             "mass": hbar**2,
             "sho_omega": 1 / hbar,
-            "delta_x1": (2 * np.pi * hbar, 0),
-            "delta_x2": (0, 2 * np.pi * hbar),
+            "delta_x1": (2 * np.pi, 0),
+            "delta_x2": (0, 2 * np.pi),
             "resolution": (10, 10, 14),
         }
 

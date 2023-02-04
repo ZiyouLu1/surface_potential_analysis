@@ -152,13 +152,11 @@ def get_eigenstate_list(eigenstates: EnergyEigenstates) -> List[Eigenstate]:
 def calculate_wavefunction_fast(
     config: EigenstateConfig, eigenstate: Eigenstate, points: ArrayLike
 ) -> NDArray:
-    assert config["delta_x1"][1] == 0
-    assert config["delta_x2"][0] == 0
     return np.array(
         hamiltonian_generator.get_eigenstate_wavefunction(
             config["resolution"],
-            config["delta_x1"][0],
-            config["delta_x2"][1],
+            config["delta_x1"],
+            config["delta_x2"],
             config["mass"],
             config["sho_omega"],
             eigenstate["kx"],

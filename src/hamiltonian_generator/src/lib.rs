@@ -60,8 +60,8 @@ impl EigenstateResolution {
 struct EigenstateConfig {
     sho_omega: f64,
     mass: f64,
-    delta_x: f64,
-    delta_y: f64,
+    delta_x1: (f64, f64),
+    delta_x2: (f64, f64),
 }
 
 struct Eigenstate {
@@ -88,18 +88,20 @@ impl Eigenstate {
             })
             .collect();
 
-        let dkx = self.config.dkx();
-        let dky = self.config.dky();
+        let dkx1 = self.config.dkx1();
+        let dkx2 = self.config.dkx2();
 
         let mut out: Vec<Complex64> = vec![Complex::default(); points.len()];
-        for (eig, (nkx, nky, nz)) in self.vector.iter().zip(coordinates) {
+        for (eig, (nkx1, nkx2, nz)) in self.vector.iter().zip(coordinates) {
             for (i, wfn) in cache[nz].iter().enumerate() {
                 out[i] += wfn
                     * eig
                     * Complex {
-                        re: 0.0,
-                        im: ((nkx as f64) * dkx + self.kx) * points[i][0]
-                            + ((nky as f64) * dky + self.ky) * points[i][1],
+                        re: 0.0, //TODO
+                        im: ((nkx1 as f64) * dkx1.0 + (nkx2 as f64) * dkx2.0 + self.kx)
+                            * points[i][0]
+                            + ((nkx1 as f64) * dkx1.1 + (nkx2 as f64) * dkx2.1 + self.ky)
+                                * points[i][1],
                     }
                     .exp();
             }
@@ -110,12 +112,19 @@ impl Eigenstate {
 }
 
 impl EigenstateConfig {
-    fn dkx(&self) -> f64 {
-        2.0 * PI / self.delta_x
+    fn dk_prefactor(&self) -> f64 {
+        let x1_part = self.delta_x1.0 * self.delta_x2.1;
+        let x2_part = self.delta_x1.1 * self.delta_x2.0;
+        (2.0 * PI) / (x1_part - x2_part)
+    }
+    fn dkx1(&self) -> (f64, f64) {
+        let prefactor = self.dk_prefactor();
+        (prefactor * self.delta_x2.1, -prefactor * self.delta_x2.0)
     }
 
-    fn dky(&self) -> f64 {
-        2.0 * PI / self.delta_y
+    fn dkx2(&self) -> (f64, f64) {
+        let prefactor = self.dk_prefactor();
+        (-prefactor * self.delta_x1.1, prefactor * self.delta_x1.0)
     }
 }
 
@@ -128,11 +137,11 @@ struct SurfaceHamiltonian {
 }
 
 impl SurfaceHamiltonian {
-    fn get_nx(&self) -> usize {
+    fn get_nx1(&self) -> usize {
         self.ft_potential.len()
     }
 
-    fn get_ny(&self) -> usize {
+    fn get_nx2(&self) -> usize {
         self.ft_potential[0].len()
     }
 
@@ -165,17 +174,17 @@ impl SurfaceHamiltonian {
 
         coordinates
             .iter()
-            .map(|(nkx1, nky1, nz1)| -> Vec<f64> {
+            .map(|(nkx1_1, nkx2_1, nz1)| -> Vec<f64> {
                 coordinates
                     .iter()
-                    .map(|(nkx2, nky2, nz2)| -> f64 {
-                        let ndkx = (nkx2 - nkx1).rem_euclid(self.get_nx() as i64) as usize;
-                        let ndky = (nky2 - nky1).rem_euclid(self.get_ny() as i64) as usize;
-                        if let Some(a) = g_points.get(&(ndkx, ndky, *nz1, *nz2)) {
+                    .map(|(nkx1_2, nkx2_2, nz2)| -> f64 {
+                        let n_dkx1 = (nkx1_2 - nkx1_1).rem_euclid(self.get_nx1() as i64) as usize;
+                        let n_dkx2 = (nkx2_2 - nkx2_1).rem_euclid(self.get_nx2() as i64) as usize;
+                        if let Some(a) = g_points.get(&(n_dkx1, n_dkx2, *nz1, *nz2)) {
                             return *a;
                         }
 
-                        let ft_pot_points = &self.ft_potential[ndkx][ndky];
+                        let ft_pot_points = &self.ft_potential[n_dkx1][n_dkx2];
 
                         let sho1: &Vec<f64> = &cache[*nz1];
                         let sho2: &Vec<f64> = &cache[*nz2];
@@ -187,7 +196,7 @@ impl SurfaceHamiltonian {
                             .map(|((i, j), k)| i * j * k)
                             .sum::<f64>()
                             * self.dz;
-                        g_points.insert((ndkx, ndky, *nz1, *nz2), out);
+                        g_points.insert((n_dkx1, n_dkx2, *nz1, *nz2), out);
                         out
                     })
                     .collect()
@@ -208,7 +217,7 @@ fn get_sho_wavefunction(z_points: Vec<f64>, sho_omega: f64, mass: f64, n: u32) -
 }
 
 #[pyfunction]
-fn get_hamiltonian(
+fn calculate_off_diagonal_energies(
     ft_potential: Vec<Vec<Vec<f64>>>,
     resolution: [usize; 3],
     dz: f64,
@@ -219,8 +228,8 @@ fn get_hamiltonian(
     let sho_config = EigenstateConfig {
         mass,
         sho_omega,
-        delta_x: 1.0,
-        delta_y: 1.0,
+        delta_x1: (1.0, 0.0),
+        delta_x2: (0.0, 1.0),
     };
     let hamiltonian = SurfaceHamiltonian {
         dz,
@@ -240,8 +249,8 @@ fn get_hamiltonian(
 #[allow(clippy::too_many_arguments)]
 fn get_eigenstate_wavefunction(
     resolution: [usize; 3],
-    delta_x: f64,
-    delta_y: f64,
+    delta_x1: (f64, f64),
+    delta_x2: (f64, f64),
     mass: f64,
     sho_omega: f64,
     kx: f64,
@@ -253,8 +262,8 @@ fn get_eigenstate_wavefunction(
         config: EigenstateConfig {
             sho_omega,
             mass,
-            delta_x,
-            delta_y,
+            delta_x1,
+            delta_x2,
         },
         kx,
         ky,
@@ -272,7 +281,7 @@ fn get_eigenstate_wavefunction(
 /// A Python module implemented in Rust.
 #[pymodule]
 fn hamiltonian_generator(_py: Python, m: &PyModule) -> PyResult<()> {
-    m.add_function(wrap_pyfunction!(get_hamiltonian, m)?)?;
+    m.add_function(wrap_pyfunction!(calculate_off_diagonal_energies, m)?)?;
     m.add_function(wrap_pyfunction!(get_sho_wavefunction, m)?)?;
     m.add_function(wrap_pyfunction!(get_hermite_val, m)?)?;
     m.add_function(wrap_pyfunction!(get_eigenstate_wavefunction, m)?)?;
@@ -288,8 +297,8 @@ mod test {
         let sho_config = EigenstateConfig {
             mass: 1.0,
             sho_omega: 1.0,
-            delta_x: 1.0,
-            delta_y: 1.0,
+            delta_x1: (1.0, 0.0),
+            delta_x2: (0.0, 1.0),
         };
         let hamiltonian = SurfaceHamiltonian {
             dz: 1.0,

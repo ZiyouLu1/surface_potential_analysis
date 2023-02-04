@@ -1,6 +1,6 @@
-from typing import List, Optional, Tuple
+from typing import List, Tuple
 
-def get_hamiltonian(
+def calculate_off_diagonal_energies(
     ft_potential: List[List[List[float]]],
     resolution: Tuple[float, float, float],
     dz: float,
@@ -20,8 +20,8 @@ def get_hermite_val(x: float, n: int) -> float:
 
 def get_eigenstate_wavefunction(
     resolution: Tuple[float, float, float],
-    delta_x: float,
-    delta_y: float,
+    delta_x1: Tuple[float, float],
+    delta_x2: Tuple[float, float],
     mass: float,
     sho_omega: float,
     kx: float,

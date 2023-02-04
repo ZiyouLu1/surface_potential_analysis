@@ -150,7 +150,7 @@ class SurfaceHamiltonianUtil(EigenstateConfigUtil):
     def _calculate_off_diagonal_energies_fast(self) -> NDArray:
 
         return np.array(
-            hamiltonian_generator.get_hamiltonian(
+            hamiltonian_generator.calculate_off_diagonal_energies(
                 self.get_ft_potential().tolist(),
                 self.resolution,
                 self.dz,
