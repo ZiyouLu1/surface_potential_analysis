@@ -1,46 +1,42 @@
-from typing import List, Literal, Sequence, Tuple
+from typing import List, Literal, Tuple
 
 import matplotlib.animation
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.axes import Axes
+from matplotlib.collections import QuadMesh
 from matplotlib.figure import Figure
 from matplotlib.image import AxesImage
 from matplotlib.lines import Line2D
-from numpy.typing import NDArray
+
+from surface_potential_analysis.brillouin_zone import grid_space
 
 from .energy_eigenstate import Eigenstate, EigenstateConfig, EigenstateConfigUtil
 
 
-def get_eigenstate_frame(
-    data: NDArray, ax: Axes, clim: Tuple[float, float], extent: Sequence[float]
-) -> AxesImage:
-    img = ax.imshow(data)
-    img.set_extent(extent)
-    img.set_norm("symlog")  # type: ignore
-    img.set_clim(*clim)
-    return img
-
-
-def plot_eigenstate_3D(
+def plot_eigenstate_in_xy(
     config: EigenstateConfig,
     eigenstate: Eigenstate,
-    ax: Axes | None = None,
+    z_point=0.0,
     *,
+    shape: Tuple[int, int] = (29, 29),
+    ax: Axes | None = None,
     measure: Literal["real", "imag", "abs"] = "abs"
-) -> tuple[Figure, Axes, matplotlib.animation.ArtistAnimation]:
-    fig, ax1 = (ax.get_figure(), ax) if ax is not None else plt.subplots()
+) -> tuple[Figure, Axes, QuadMesh]:
+    fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
     util = EigenstateConfigUtil(config)
 
-    x_points = np.linspace(0, util.delta_x1[0], 50)
-    y_points = np.linspace(0, util.delta_x2[1], 50)
-    z_points = np.linspace(-util.characteristic_z * 2, util.characteristic_z * 2, 20)
+    xy_coordinates = grid_space(config["delta_x1"], config["delta_x2"], shape)
 
-    xv, yv, zv = np.meshgrid(x_points, y_points, z_points)
+    points = np.array(
+        [
+            xy_coordinates[:, 0],
+            xy_coordinates[:, 1],
+            z_point * np.ones_like(xy_coordinates[:, 0]),
+        ]
+    ).T
 
-    points = np.array([xv.ravel(), yv.ravel(), zv.ravel()]).T
-    wfn = util.calculate_wavefunction_fast(eigenstate, points).reshape(xv.shape)
-
+    wfn = util.calculate_wavefunction_fast(eigenstate, points).reshape(shape)
     match measure:
         case "real":
             data = np.real(wfn)
@@ -49,20 +45,63 @@ def plot_eigenstate_3D(
         case "abs":
             data = np.abs(wfn)
 
-    extent = [x_points[0], x_points[-1], y_points[0], y_points[-1]]
-    clim = (np.min(data), np.max(data))
+    mesh = ax.pcolormesh(
+        xy_coordinates[:, 0].reshape(shape),
+        xy_coordinates[:, 1].reshape(shape),
+        data,
+        shading="nearest",
+    )
+    return (fig, ax, mesh)
 
-    get_eigenstate_frame(data[:, :, 0], ax1, clim, extent)
 
-    ims: List[List[AxesImage]] = []
-    for z_ind in range(z_points.shape[0]):
+def animate_eigenstate_3D_in_xy(
+    config: EigenstateConfig,
+    eigenstate: Eigenstate,
+    *,
+    shape: Tuple[int, int, int] = (29, 29, 20),
+    ax: Axes | None = None,
+    measure: Literal["real", "imag", "abs"] = "abs"
+) -> tuple[Figure, Axes, matplotlib.animation.ArtistAnimation]:
+    fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
 
-        img = get_eigenstate_frame(data[:, :, z_ind], ax1, clim, extent)
-        ims.append([img])
+    util = EigenstateConfigUtil(config)
+    z_points = np.linspace(
+        -util.characteristic_z * 2, util.characteristic_z * 2, shape[2]
+    )
 
-    ani = matplotlib.animation.ArtistAnimation(fig, ims)
+    _, _, mesh0 = plot_eigenstate_in_xy(
+        config,
+        eigenstate,
+        z_points[0],
+        shape=(shape[0], shape[1]),
+        ax=ax,
+        measure=measure,
+    )
 
-    return fig, ax1, ani
+    frames: List[List[QuadMesh]] = []
+    for z_point in z_points:
+
+        _, _, mesh = plot_eigenstate_in_xy(
+            config,
+            eigenstate,
+            z_point,
+            shape=(shape[0], shape[1]),
+            ax=ax,
+            measure=measure,
+        )
+
+        frames.append([mesh])
+
+    max_clim = np.max([i[0].get_clim()[1] for i in frames])
+    for (mesh,) in frames:
+        mesh.set_clim(0, max_clim)
+    mesh0.set_clim(0, max_clim)
+
+    ani = matplotlib.animation.ArtistAnimation(fig, frames)
+    ax.set_xlabel("X direction")
+    ax.set_ylabel("Y direction")
+
+    return fig, ax, ani
 
 
 def plot_eigenstate_z(
@@ -127,36 +166,6 @@ def plot_wavefunction_difference_in_xy(
     X = np.abs(wfn1) - np.abs(wfn2)
 
     im = ax1.imshow(np.abs(X))
-    im.set_extent((x_points[0], x_points[-1], y_points[0], y_points[-1]))
-    return (fig, ax1, im)
-
-
-def plot_eigenstate_in_xy(
-    config: EigenstateConfig,
-    eigenstate: Eigenstate,
-    ax: Axes | None = None,
-    *,
-    z_point=0.0,
-    measure: Literal["real", "imag", "abs"] = "abs"
-) -> tuple[Figure, Axes, AxesImage]:
-    fig, ax1 = (ax.get_figure(), ax) if ax is not None else plt.subplots()
-    util = EigenstateConfigUtil(config)
-
-    x_points = np.linspace(0, util.delta_x1[0], 29, endpoint=False)
-    y_points = np.linspace(0, util.delta_x2[1], 29, endpoint=False)
-
-    xv, yv = np.meshgrid(x_points, y_points)
-    points = np.array([xv.ravel(), yv.ravel(), z_point * np.ones_like(xv.ravel())]).T
-
-    wfn = util.calculate_wavefunction_fast(eigenstate, points).reshape(xv.shape)
-    match measure:
-        case "real":
-            data = np.real(wfn)
-        case "imag":
-            data = np.imag(wfn)
-        case "abs":
-            data = np.abs(wfn)
-    im = ax1.imshow(data)
     im.set_extent((x_points[0], x_points[-1], y_points[0], y_points[-1]))
     return (fig, ax1, im)
 

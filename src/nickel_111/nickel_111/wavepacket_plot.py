@@ -9,7 +9,7 @@ from nickel_111.wavepacket import (
     get_irreducible_config_nickel_111_supercell,
 )
 from surface_potential_analysis.eigenstate_plot import (
-    plot_eigenstate_3D,
+    animate_eigenstate_3D_in_xy,
     plot_eigenstate_in_xy,
     plot_eigenstate_in_xz,
     plot_eigenstate_in_yz,
@@ -43,7 +43,7 @@ def plot_wavepacket_points():
     fig.show()
 
     eigenstate_list = get_eigenstate_list(eigenstates)
-    fig, _, _ = plot_eigenstate_3D(
+    fig, _, _ = animate_eigenstate_3D_in_xy(
         eigenstates["eigenstate_config"], eigenstate_list[-1]
     )
 

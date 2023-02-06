@@ -1,6 +1,6 @@
 import matplotlib.pyplot as plt
 
-from surface_potential_analysis.eigenstate_plot import plot_eigenstate_3D
+from surface_potential_analysis.eigenstate_plot import animate_eigenstate_3D_in_xy
 from surface_potential_analysis.energy_eigenstate import (
     get_eigenstate_list,
     load_energy_eigenstates_legacy,
@@ -64,7 +64,9 @@ def plot_eigenstate():
     eigenstates = load_energy_eigenstates_legacy(path)
 
     eigenstate = get_eigenstate_list(eigenstates)[0]
-    fig, _, _anim1 = plot_eigenstate_3D(eigenstates["eigenstate_config"], eigenstate)
+    fig, _, _anim1 = animate_eigenstate_3D_in_xy(
+        eigenstates["eigenstate_config"], eigenstate
+    )
 
     fig.show()
 
@@ -72,7 +74,9 @@ def plot_eigenstate():
     eigenstates = load_energy_eigenstates_legacy(path)
 
     eigenstate = get_eigenstate_list(eigenstates)[0]
-    fig, _, _anim2 = plot_eigenstate_3D(eigenstates["eigenstate_config"], eigenstate)
+    fig, _, _anim2 = animate_eigenstate_3D_in_xy(
+        eigenstates["eigenstate_config"], eigenstate
+    )
 
     fig.show()
     input()

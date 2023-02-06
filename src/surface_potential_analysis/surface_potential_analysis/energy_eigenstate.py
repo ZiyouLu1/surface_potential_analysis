@@ -28,6 +28,14 @@ class EigenstateConfig(TypedDict):
     """maximum extent in the x direction"""
 
 
+class EigenstateConfigRaw(TypedDict):
+    resolution: List[int]
+    sho_omega: float
+    mass: float
+    delta_x1: List[float]
+    delta_x2: List[float]
+
+
 class Eigenstate(TypedDict):
     kx: float
     ky: float
@@ -43,7 +51,7 @@ class EnergyEigenstates(TypedDict):
 
 
 class EnergyEigenstatesRaw(TypedDict):
-    eigenstate_config: EigenstateConfig
+    eigenstate_config: EigenstateConfigRaw
     kx_points: List[float]
     ky_points: List[float]
     eigenvalues: List[float]
@@ -54,7 +62,13 @@ class EnergyEigenstatesRaw(TypedDict):
 def save_energy_eigenstates(data: EnergyEigenstates, path: Path) -> None:
     with path.open("w") as f:
         out: EnergyEigenstatesRaw = {
-            "eigenstate_config": data["eigenstate_config"],
+            "eigenstate_config": {
+                "delta_x1": list(data["eigenstate_config"]["delta_x1"]),
+                "delta_x2": list(data["eigenstate_config"]["delta_x2"]),
+                "mass": data["eigenstate_config"]["mass"],
+                "resolution": list(data["eigenstate_config"]["resolution"]),
+                "sho_omega": data["eigenstate_config"]["sho_omega"],
+            },
             "eigenvalues": data["eigenvalues"],
             "eigenvectors_re": np.real(data["eigenvectors"]).tolist(),
             "eigenvectors_im": np.imag(data["eigenvectors"]).tolist(),
@@ -62,6 +76,20 @@ def save_energy_eigenstates(data: EnergyEigenstates, path: Path) -> None:
             "ky_points": data["ky_points"],
         }
         json.dump(out, f)
+
+
+def eigenstates_config_from_raw(raw: EigenstateConfigRaw) -> EigenstateConfig:
+    return {
+        "resolution": (
+            raw["resolution"][0],
+            raw["resolution"][1],
+            raw["resolution"][2],
+        ),
+        "delta_x1": (raw["delta_x1"][0], raw["delta_x1"][1]),
+        "delta_x2": (raw["delta_x2"][0], raw["delta_x2"][1]),
+        "mass": raw["mass"],
+        "sho_omega": raw["sho_omega"],
+    }
 
 
 def load_energy_eigenstates(path: Path) -> EnergyEigenstates:
@@ -74,7 +102,7 @@ def load_energy_eigenstates(path: Path) -> EnergyEigenstates:
         )
 
         return {
-            "eigenstate_config": out["eigenstate_config"],
+            "eigenstate_config": eigenstates_config_from_raw(out["eigenstate_config"]),
             "eigenvalues": out["eigenvalues"],
             "eigenvectors": eigenvectors.tolist(),
             "kx_points": out["kx_points"],
@@ -84,7 +112,7 @@ def load_energy_eigenstates(path: Path) -> EnergyEigenstates:
 
 def load_energy_eigenstates_legacy(path: Path) -> EnergyEigenstates:
     class EigenstateConfigLegacy(TypedDict):
-        resolution: Tuple[int, int, int]
+        resolution: List[int]
         sho_omega: float
         mass: float
         delta_x: float
@@ -100,7 +128,11 @@ def load_energy_eigenstates_legacy(path: Path) -> EnergyEigenstates:
 
     def config_from_legacy(config: EigenstateConfigLegacy) -> EigenstateConfig:
         return {
-            "resolution": config["resolution"],
+            "resolution": (
+                config["resolution"][0],
+                config["resolution"][1],
+                config["resolution"][2],
+            ),
             "delta_x1": (config["delta_x"], 0),
             "delta_x2": (0, config["delta_y"]),
             "mass": config["mass"],
@@ -324,11 +356,13 @@ def generate_sho_config_minimum(
     fit_max_energy = fit_max_energy_fraction * far_edge_energy
     above_threshold = (z_indexes > min_z) & (z_points > fit_max_energy)
     # Stops at the first above threshold
-    max_index: int = int(np.argmax(above_threshold) - 1)
+    max_index: int = int(np.argmax(above_threshold) - 1) % z_points.shape[0]
     above_threshold = (z_indexes < min_z) & (z_points > fit_max_energy)
 
     # Search backwards, stops at the first above threshold
-    min_index: int = z_points.shape[0] - np.argmax(above_threshold[::-1])
+    min_index: int = (
+        z_points.shape[0] - np.argmax(above_threshold[::-1])
+    ) % z_points.shape[0]
 
     print("min", min_index, "middle", min_z, "max", max_index)
     z_offset = -interpolation["dz"] * min_z
