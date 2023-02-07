@@ -47,9 +47,27 @@ class EnergyGrid(TypedDict):
     points: List[List[List[float]]]
 
 
+class EnergyGridRaw(TypedDict):
+    """
+    A grid of energy points uniformly spaced in the x1,x2 direction
+    And possibly unevenly spaced in the z direction
+    """
+
+    delta_x1: List[float]
+    delta_x2: List[float]
+    z_points: List[float]
+    points: List[List[List[float]]]
+
+
 def load_energy_grid(path: Path) -> EnergyGrid:
     with path.open("r") as f:
-        return json.load(f)
+        out: EnergyGridRaw = json.load(f)
+        return {
+            "delta_x1": (out["delta_x1"][0], out["delta_x1"][1]),
+            "delta_x2": (out["delta_x2"][0], out["delta_x2"][1]),
+            "points": out["points"],
+            "z_points": out["z_points"],
+        }
 
 
 def save_energy_grid(data: EnergyGrid, path: Path) -> None:
@@ -67,7 +85,9 @@ def get_energy_grid_xy_points(grid: EnergyGrid) -> NDArray:
     )
 
 
-def get_energy_grid_coordinates(grid: EnergyGrid) -> NDArray:
+def get_energy_grid_coordinates(
+    grid: EnergyGrid, *, offset: Tuple[float, float, float] = (0.0, 0.0, 0.0)
+) -> NDArray:
     points = np.array(grid["points"])
     xy_points = get_energy_grid_xy_points(grid).reshape(
         points.shape[0], points.shape[1], 2
@@ -87,7 +107,7 @@ def get_energy_grid_coordinates(grid: EnergyGrid) -> NDArray:
     tiled_z = np.tile(z_points, (xy_points.shape[0], xy_points.shape[1], 1))
 
     return (
-        np.array([tiled_x, tiled_y, tiled_z])
+        np.array([tiled_x + offset[0], tiled_y + offset[1], tiled_z + offset[2]])
         .swapaxes(0, 1)
         .swapaxes(1, 2)
         .swapaxes(2, 3)

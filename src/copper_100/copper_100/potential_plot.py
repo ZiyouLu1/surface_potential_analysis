@@ -7,7 +7,7 @@ from surface_potential_analysis.energy_data import (
     normalize_energy,
 )
 from surface_potential_analysis.energy_data_plot import (
-    plot_xz_plane_energy,
+    plot_xz_plane_energy_copper_100,
     plot_z_direction_energy_comparison_100,
     plot_z_direction_energy_data_100,
 )
@@ -33,7 +33,7 @@ def plot_copper_raw_data():
     fig.show()
     save_figure(fig, "copper_raw_data_z_direction.png")
 
-    plot_xz_plane_energy(data)
+    plot_xz_plane_energy_copper_100(data)
 
 
 def plot_copper_nc_data():
@@ -89,7 +89,7 @@ def plot_copper_relaxed_interpolated_data():
     fig.show()
     save_figure(fig, "relaxed_interpolated_data_comparison.png")
 
-    fig = plot_xz_plane_energy(data)
+    fig = plot_xz_plane_energy_copper_100(data)
     fig.show()
     save_figure(fig, "relaxed_interpolated_data_xy.png")
 
@@ -101,7 +101,7 @@ def plot_copper_relaxed_interpolated_data():
     fig.show()
     save_figure(fig, "relaxed_interpolated_data_comparison.png")
 
-    fig = plot_xz_plane_energy(spline_data)
+    fig = plot_xz_plane_energy_copper_100(spline_data)
     fig.show()
     save_figure(fig, "relaxed_interpolated_data_xy.png")
 
@@ -117,42 +117,91 @@ def plot_copper_interpolated_data():
     fig.show()
     save_figure(fig, "copper_interpolated_data_comparison.png")
 
-    fig = plot_xz_plane_energy(data)
+    fig = plot_xz_plane_energy_copper_100(data)
     fig.show()
     input()
     save_figure(fig, "copper_interpolated_data_xy.png")
 
 
 def compare_bridge_hollow_energy():
+
+    print("--------------------------------------")
+    print("Non-relaxed")
     data = load_interpolated_copper_data()
     points = np.array(data["points"])
     print(points.shape)
 
-    print(np.min(points[points.shape[0] // 2, 0, :]))
-    print(np.min(points[points.shape[0] // 2, points.shape[1] // 2, :]))
-    print(np.min(points[0, 0, :]))
-    print(np.max(points[:, :, -1]))
+    print("Bridge ", np.min(points[points.shape[0] // 2, 0, :]))
+    print("Hollow ", np.min(points[points.shape[0] // 2, points.shape[1] // 2, :]))
+    print("Top ", np.min(points[0, 0, :]))
+    print("Free ", np.max(points[:, :, -1]))
     print(
+        "Max free E variation",
         np.max(
             np.abs(points[:, :, -1] - np.max(points[:, :, -1]))
             / np.max(points[:, :, -1])
         )
+        * 100,
+        "%",
     )
 
     data = normalize_energy(load_raw_copper_data())
     points = np.array(data["points"])
     print(points.shape)
 
-    print(np.min(points[points.shape[0] // 2, 0, :]))
-    print(np.min(points[points.shape[0] // 2, points.shape[1] // 2, :]))
-    print(np.min(points[0, 0, :]))
-    print(np.max(points[:, :, -1]))
+    print("Bridge ", np.min(points[points.shape[0] // 2, 0, :]))
+    print("Hollow ", np.min(points[points.shape[0] // 2, points.shape[1] // 2, :]))
+    print("Top ", np.min(points[0, 0, :]))
+    print("Free ", np.max(points[:, :, -1]))
     print(
+        "Max free E variation",
         np.max(
             np.abs(points[:, :, -1] - np.max(points[:, :, -1]))
             / np.max(points[:, :, -1])
         )
+        * 100,
+        "%",
     )
+    print("--------------------------------------")
+
+    print("--------------------------------------")
+    print("Relaxed")
+    data = load_interpolated_relaxed_data()
+    points = np.array(data["points"])
+    print(points.shape)
+
+    print("Bridge ", np.min(points[points.shape[0] // 2, 0, :]))
+    print("Hollow ", np.min(points[points.shape[0] // 2, points.shape[1] // 2, :]))
+    print("Top ", np.min(points[0, 0, :]))
+    print("Free ", np.max(points[:, :, -1]))
+    print(
+        "Max free E variation",
+        np.max(
+            np.abs(points[:, :, -1] - np.max(points[:, :, -1]))
+            / np.max(points[:, :, -1])
+        )
+        * 100,
+        "%",
+    )
+
+    data = normalize_energy(load_relaxed_copper_data())
+    points = np.array(data["points"])
+    print(points.shape)
+
+    print("Bridge ", np.min(points[points.shape[0] // 2, 0, :]))
+    print("Hollow ", np.min(points[points.shape[0] // 2, points.shape[1] // 2, :]))
+    print("Top ", np.min(points[0, 0, :]))
+    print("Free ", np.max(points[:, :, -1]))
+    print(
+        "Max free E variation",
+        np.max(
+            np.abs(points[:, :, -1] - np.max(points[:, :, -1]))
+            / np.max(points[:, :, -1])
+        )
+        * 100,
+        "%",
+    )
+    print("--------------------------------------")
 
 
 def calculate_hollow_free_energy_jump():

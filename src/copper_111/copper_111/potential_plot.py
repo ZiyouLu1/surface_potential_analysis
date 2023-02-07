@@ -2,8 +2,8 @@ import numpy as np
 
 from surface_potential_analysis.energy_data import EnergyGrid, normalize_energy
 from surface_potential_analysis.energy_data_plot import (
+    animate_energy_grid_3D_in_x1z,
     animate_energy_grid_3D_in_xy,
-    animate_energy_grid_3D_in_xz,
     compare_energy_grid_to_all_raw_points,
     plot_all_energy_points_z,
     plot_energy_grid_points,
@@ -114,7 +114,7 @@ def plot_john_interpolated_points():
     )
     fig.show()
 
-    fig, ax, _anim2 = animate_energy_grid_3D_in_xz(data)
+    fig, ax, _anim2 = animate_energy_grid_3D_in_x1z(data)
     ax.set_title(
         "Plot of the interpolated Copper surface potential\n" "through the y plane"
     )

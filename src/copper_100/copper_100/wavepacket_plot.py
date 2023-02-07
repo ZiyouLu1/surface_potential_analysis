@@ -19,15 +19,15 @@ from surface_potential_analysis.energy_eigenstate import (
 )
 from surface_potential_analysis.energy_eigenstates_plot import plot_eigenstate_positions
 from surface_potential_analysis.wavepacket_grid import (
-    load_wavepacket_grid_legacy_as_legacy,
+    load_wavepacket_grid_legacy,
     symmetrize_wavepacket,
 )
 from surface_potential_analysis.wavepacket_grid_plot import (
-    plot_wavepacket_grid_x,
+    animate_wavepacket_grid_3D_in_x1z,
+    animate_wavepacket_grid_3D_in_xy,
+    plot_wavepacket_grid_in_x1z,
+    plot_wavepacket_grid_x1,
     plot_wavepacket_grid_xy,
-    plot_wavepacket_grid_xz,
-    plot_wavepacket_grid_y_2D,
-    plot_wavepacket_grid_z_2D,
     plot_wavepacket_in_xy,
 )
 
@@ -62,9 +62,8 @@ def plot_wavepacket_2D():
 
 def plot_localized_wavepacket_grid():
     path = get_data_path("copper_eigenstates_wavepacket.json")
-    wavepacket = symmetrize_wavepacket(load_wavepacket_grid_legacy_as_legacy(path))
+    wavepacket = symmetrize_wavepacket(load_wavepacket_grid_legacy(path))
 
-    print(wavepacket["z_points"])
     fig, _, img = plot_wavepacket_grid_xy(wavepacket, z_ind=10, measure="real")
     img.set_norm("symlog")  # type: ignore
     fig.show()
@@ -86,48 +85,50 @@ def plot_wavefunction_3D():
     path = get_data_path("copper_eigenstates_wavepacket_flat_band.json")
     path = get_data_path("copper_eigenstates_wavepacket.json")
     path = get_data_path("copper_eigenstates_wavepacket_offset.json")
-    wavepacket = load_wavepacket_grid_legacy_as_legacy(path)
+    wavepacket = load_wavepacket_grid_legacy(path)
     wavepacket = symmetrize_wavepacket(wavepacket)
 
-    fig, _, _ = plot_wavepacket_grid_z_2D(wavepacket)
+    fig, _, _ = animate_wavepacket_grid_3D_in_xy(wavepacket)
     fig.show()
     input()
-    fig, _, _ = plot_wavepacket_grid_y_2D(wavepacket)
+    fig, _, _ = animate_wavepacket_grid_3D_in_x1z(wavepacket)
     fig.show()
     input()
 
 
 def compare_wavefunction_4_8_points():
     path = get_data_path("copper_eigenstates_wavepacket_offset.json")
-    wavepacket_offset = load_wavepacket_grid_legacy_as_legacy(path)
+    wavepacket_offset = load_wavepacket_grid_legacy(path)
 
     path = get_data_path("copper_eigenstates_wavepacket.json")
-    wavepacket_8 = load_wavepacket_grid_legacy_as_legacy(path)
+    wavepacket_8 = load_wavepacket_grid_legacy(path)
 
     path = get_data_path("copper_eigenstates_wavepacket_5.json")
-    wavepacket_4_larger_k = load_wavepacket_grid_legacy_as_legacy(path)
+    wavepacket_4_larger_k = load_wavepacket_grid_legacy(path)
 
     path = get_data_path("copper_eigenstates_wavepacket_with_edge.json")
-    wavepacket_edge = load_wavepacket_grid_legacy_as_legacy(path)
+    wavepacket_edge = load_wavepacket_grid_legacy(path)
 
     path = get_data_path("copper_eigenstates_wavepacket_4_point.json")
-    wavepacket_4 = load_wavepacket_grid_legacy_as_legacy(path)
+    wavepacket_4 = load_wavepacket_grid_legacy(path)
 
     path = get_data_path("copper_eigenstates_wavepacket_flat_band.json")
-    wavepacket_1 = load_wavepacket_grid_legacy_as_legacy(path)
+    wavepacket_1 = load_wavepacket_grid_legacy(path)
 
     fig, ax = plt.subplots()
-    # _, _, l1 = plot_wavepacket_grid_x(wavepacket_edge, y_ind=24, z_ind=10, ax=ax)
+    # _, _, l1 = plot_wavepacket_grid_x1(wavepacket_edge, x2_ind=24, z_ind=10, ax=ax)
     # l1.set_label("8 point grid edge")
-    _, _, l2 = plot_wavepacket_grid_x(wavepacket_4, y_ind=48, z_ind=10, ax=ax)
+    _, _, l2 = plot_wavepacket_grid_x1(wavepacket_4, x2_ind=48, z_ind=10, ax=ax)
     l2.set_label("4 point grid")
-    _, _, l3 = plot_wavepacket_grid_x(wavepacket_offset, y_ind=48, z_ind=10, ax=ax)
+    _, _, l3 = plot_wavepacket_grid_x1(wavepacket_offset, x2_ind=48, z_ind=10, ax=ax)
     l3.set_label("4 point grid offset")
-    _, _, l4 = plot_wavepacket_grid_x(wavepacket_8, y_ind=48, z_ind=10, ax=ax)
+    _, _, l4 = plot_wavepacket_grid_x1(wavepacket_8, x2_ind=48, z_ind=10, ax=ax)
     l4.set_label("8 point grid")
-    _, _, l5 = plot_wavepacket_grid_x(wavepacket_1, y_ind=48, z_ind=10, ax=ax)
+    _, _, l5 = plot_wavepacket_grid_x1(wavepacket_1, x2_ind=48, z_ind=10, ax=ax)
     l5.set_label("1 point grid")
-    _, _, l6 = plot_wavepacket_grid_x(wavepacket_4_larger_k, y_ind=48, z_ind=10, ax=ax)
+    _, _, l6 = plot_wavepacket_grid_x1(
+        wavepacket_4_larger_k, x2_ind=48, z_ind=10, ax=ax
+    )
     l6.set_label("4 point grid, larger k")
 
     ax.legend()
@@ -137,28 +138,28 @@ def compare_wavefunction_4_8_points():
     save_figure(fig, "wavefunction_4_8_points_abs_comparison.png")
 
     fig, ax = plt.subplots()
-    _, _, l1 = plot_wavepacket_grid_x(
-        wavepacket_edge, y_ind=24, z_ind=10, ax=ax, measure="real"
+    _, _, l1 = plot_wavepacket_grid_x1(
+        wavepacket_edge, x2_ind=24, z_ind=10, ax=ax, measure="real"
     )
     l1.set_label("8 point grid edge")
-    _, _, l2 = plot_wavepacket_grid_x(
-        wavepacket_4, y_ind=48, z_ind=10, ax=ax, measure="real"
+    _, _, l2 = plot_wavepacket_grid_x1(
+        wavepacket_4, x2_ind=48, z_ind=10, ax=ax, measure="real"
     )
     l2.set_label("4 point grid")
-    _, _, l3 = plot_wavepacket_grid_x(
-        wavepacket_offset, y_ind=48, z_ind=10, ax=ax, measure="real"
+    _, _, l3 = plot_wavepacket_grid_x1(
+        wavepacket_offset, x2_ind=48, z_ind=10, ax=ax, measure="real"
     )
     l3.set_label("4 point grid offset")
-    _, _, l4 = plot_wavepacket_grid_x(
-        wavepacket_8, y_ind=48, z_ind=10, ax=ax, measure="real"
+    _, _, l4 = plot_wavepacket_grid_x1(
+        wavepacket_8, x2_ind=48, z_ind=10, ax=ax, measure="real"
     )
     l4.set_label("8 point grid")
-    _, _, l5 = plot_wavepacket_grid_x(
-        wavepacket_1, y_ind=48, z_ind=10, ax=ax, measure="real"
+    _, _, l5 = plot_wavepacket_grid_x1(
+        wavepacket_1, x2_ind=48, z_ind=10, ax=ax, measure="real"
     )
     l5.set_label("1 point grid")
-    _, _, l6 = plot_wavepacket_grid_x(
-        wavepacket_4_larger_k, y_ind=48, z_ind=10, ax=ax, measure="real"
+    _, _, l6 = plot_wavepacket_grid_x1(
+        wavepacket_4_larger_k, x2_ind=48, z_ind=10, ax=ax, measure="real"
     )
     l6.set_label("4 point grid, larger k")
 
@@ -169,16 +170,16 @@ def compare_wavefunction_4_8_points():
     save_figure(fig, "wavefunction_4_8_points_real_comparison.png")
 
     fig, ax = plt.subplots()
-    _, _, l1 = plot_wavepacket_grid_x(
-        wavepacket_4, y_ind=48, z_ind=10, ax=ax, measure="imag"
+    _, _, l1 = plot_wavepacket_grid_x1(
+        wavepacket_4, x2_ind=48, z_ind=10, ax=ax, measure="imag"
     )
     l1.set_label("4 point grid")
-    _, _, l2 = plot_wavepacket_grid_x(
-        wavepacket_8, y_ind=48, z_ind=10, ax=ax, measure="imag"
+    _, _, l2 = plot_wavepacket_grid_x1(
+        wavepacket_8, x2_ind=48, z_ind=10, ax=ax, measure="imag"
     )
     l2.set_label("8 point grid")
-    _, _, l3 = plot_wavepacket_grid_x(
-        wavepacket_1, y_ind=48, z_ind=10, ax=ax, measure="imag"
+    _, _, l3 = plot_wavepacket_grid_x1(
+        wavepacket_1, x2_ind=48, z_ind=10, ax=ax, measure="imag"
     )
     l3.set_label("1 point grid")
 
@@ -189,16 +190,16 @@ def compare_wavefunction_4_8_points():
     save_figure(fig, "wavefunction_4_8_points_imag_comparison.png")
 
     fig, ax = plt.subplots()
-    _, _, l1 = plot_wavepacket_grid_x(
-        wavepacket_4, y_ind=48, z_ind=12, ax=ax, measure="abs"
+    _, _, l1 = plot_wavepacket_grid_x1(
+        wavepacket_4, x2_ind=48, z_ind=12, ax=ax, measure="abs"
     )
     l1.set_label("4 point grid")
-    _, _, l2 = plot_wavepacket_grid_x(
-        wavepacket_8, y_ind=48, z_ind=12, ax=ax, measure="abs"
+    _, _, l2 = plot_wavepacket_grid_x1(
+        wavepacket_8, x2_ind=48, z_ind=12, ax=ax, measure="abs"
     )
     l2.set_label("8 point grid")
-    _, _, l3 = plot_wavepacket_grid_x(
-        wavepacket_1, y_ind=48, z_ind=12, ax=ax, measure="abs"
+    _, _, l3 = plot_wavepacket_grid_x1(
+        wavepacket_1, x2_ind=48, z_ind=12, ax=ax, measure="abs"
     )
     l3.set_label("1 point grid")
     ax.legend()
@@ -211,11 +212,12 @@ def compare_wavefunction_4_8_points():
 
 def plot_wavefunction_xz_bridge():
     path = get_data_path("copper_eigenstates_wavepacket_approx2.json")
-    wavepacket_8 = load_wavepacket_grid_legacy_as_legacy(path)
+    wavepacket_8 = load_wavepacket_grid_legacy(path)
 
-    print(wavepacket_8["y_points"][32])
     fig, ax = plt.subplots()
-    _, _, im = plot_wavepacket_grid_xz(wavepacket_8, y_ind=32, ax=ax, measure="real")
+    _, _, im = plot_wavepacket_grid_in_x1z(
+        wavepacket_8, x2_ind=32, ax=ax, measure="real"
+    )
     im.set_norm("symlog")  # type: ignore
 
     fig.show()
@@ -230,24 +232,24 @@ def compare_wavefunction_2D():
     eigenstate_list = get_eigenstate_list(eigenstates)
 
     fig, axs = plt.subplots(2, 3)
-    (_, ax, _) = plot_eigenstate_in_xy(config, eigenstate_list[0], axs[0][0])
+    (_, ax, _) = plot_eigenstate_in_xy(config, eigenstate_list[0], ax=axs[0][0])
     ax.set_title("(-dkx/2, -dky/2) at z=0")
-    (_, ax, _) = plot_eigenstate_in_xy(config, eigenstate_list[144], axs[0][1])
+    (_, ax, _) = plot_eigenstate_in_xy(config, eigenstate_list[144], ax=axs[0][1])
     ax.set_title("(0,0) at z=0")
-    (_, ax, _) = plot_eigenstate_in_xy(config, eigenstate_list[8], axs[0][2])
+    (_, ax, _) = plot_eigenstate_in_xy(config, eigenstate_list[8], ax=axs[0][2])
     ax.set_title("(-dkx/2, 0) at z=0")
 
-    y_point = config["delta_x1"][0]
+    z_point = config["delta_x1"][0]
     (_, ax, _) = plot_eigenstate_in_xy(
-        config, eigenstate_list[0], axs[1][0], y_point=y_point
+        config, eigenstate_list[0], ax=axs[1][0], z_point=z_point
     )
     ax.set_title("(-dkx/2, -dky/2) at z=delta_x")
     (_, ax, _) = plot_eigenstate_in_xy(
-        config, eigenstate_list[144], axs[1][1], y_point=y_point
+        config, eigenstate_list[144], ax=axs[1][1], z_point=z_point
     )
     ax.set_title("(0,0) at z=delta_x")
     (_, ax, _) = plot_eigenstate_in_xy(
-        config, eigenstate_list[8], axs[1][2], y_point=y_point
+        config, eigenstate_list[8], ax=axs[1][2], z_point=z_point
     )
     ax.set_title("(-dkx/2, 0) at z=delta_x")
 

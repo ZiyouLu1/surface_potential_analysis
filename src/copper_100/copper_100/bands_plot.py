@@ -5,7 +5,7 @@ from surface_potential_analysis.surface_hamiltonian_plot import (
     plot_first_4_eigenvectors,
 )
 
-from .hamiltonian import generate_hamiltonian_relaxed
+from .hamiltonian import generate_hamiltonian, generate_hamiltonian_relaxed
 from .surface_data import save_figure
 
 
@@ -31,13 +31,57 @@ def plot_copper_bands_occupation():
     save_figure(fig, "copper_bands_occupation.png")
 
 
-def list_first_copper_band_energies():
-    hamiltonian = generate_hamiltonian_relaxed(resolution=(8, 8, 13))
+def list_first_copper_band_with_widths():
 
-    eigenvalues, _ = hamiltonian.calculate_eigenvalues(0, 0)
-    sorted_eigenvalues = np.sort(eigenvalues)
-    print(sorted_eigenvalues[:5])
-    print((sorted_eigenvalues - sorted_eigenvalues[0])[:5])
+    print("----------------------------------------")
+    print("Not relaxed data")
+
+    hamiltonian = generate_hamiltonian(resolution=(12, 12, 15))
+
+    eigenvalues_origin, _ = hamiltonian.calculate_eigenvalues(0, 0)
+    sorted_eigenvalues_origin = np.sort(eigenvalues_origin)
+
+    print("k=(0,0)")
+    print(sorted_eigenvalues_origin[:5])
+    print((sorted_eigenvalues_origin - sorted_eigenvalues_origin[0])[:5])
+
+    max_kx = np.abs(hamiltonian.dkx1[0]) + np.abs(hamiltonian.dkx2[0])
+    max_ky = np.abs(hamiltonian.dkx1[1]) + np.abs(hamiltonian.dkx2[1])
+    eigenvalues_max, _ = hamiltonian.calculate_eigenvalues(max_kx, max_ky)
+    sorted_eigenvalues_max = np.sort(eigenvalues_max)
+
+    print("k=k_max")
+    print(sorted_eigenvalues_max[:5])
+    print((sorted_eigenvalues_max - sorted_eigenvalues_max[0])[:5])
+
+    print("band width")
+    print((sorted_eigenvalues_origin - sorted_eigenvalues_max)[:5])
+
+    print("----------------------------------------")
+    print("Relaxed data")
+
+    hamiltonian = generate_hamiltonian_relaxed(resolution=(10, 10, 14))
+
+    eigenvalues_origin, _ = hamiltonian.calculate_eigenvalues(0, 0)
+    sorted_eigenvalues_origin = np.sort(eigenvalues_origin)
+
+    print("Not relaxed k=(0,0)")
+    print(sorted_eigenvalues_origin[:5])
+    print((sorted_eigenvalues_origin - sorted_eigenvalues_origin[0])[:5])
+
+    max_kx = np.abs(hamiltonian.dkx1[0]) + np.abs(hamiltonian.dkx2[0])
+    max_ky = np.abs(hamiltonian.dkx1[1]) + np.abs(hamiltonian.dkx2[1])
+    eigenvalues_max, _ = hamiltonian.calculate_eigenvalues(max_kx, max_ky)
+    sorted_eigenvalues_max = np.sort(eigenvalues_max)
+
+    print("k=k_max")
+    print(sorted_eigenvalues_max[:5])
+    print((sorted_eigenvalues_max - sorted_eigenvalues_max[0])[:5])
+
+    print("band width")
+    print((sorted_eigenvalues_origin - sorted_eigenvalues_max)[:5])
+
+    print("----------------------------------------")
 
 
 def plot_first_4_eigenstates():

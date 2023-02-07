@@ -8,7 +8,7 @@ from numpy.typing import NDArray
 
 from surface_potential_analysis.wavepacket_grid import (
     calculate_volume_element,
-    load_wavepacket_grid_legacy_as_legacy,
+    load_wavepacket_grid_legacy,
     mask_negative_wavepacket,
     symmetrize_wavepacket,
 )
@@ -19,7 +19,7 @@ from .surface_data import get_data_path, save_figure
 
 def plot_overlap_factor():
     path = get_data_path("copper_eigenstates_wavepacket.json")
-    wavepacket = symmetrize_wavepacket(load_wavepacket_grid_legacy_as_legacy(path))
+    wavepacket = symmetrize_wavepacket(load_wavepacket_grid_legacy(path))
 
     dv = calculate_volume_element(wavepacket)
 
@@ -37,7 +37,7 @@ def plot_overlap_factor():
     path = get_data_path("copper_eigenstates_wavepacket_interpolated.json")
     # interpolated = interpolate_wavepacket(wavepacket, (193, 193, 101))
     # save_wavepacket_grid(interpolated, path)
-    interpolated = load_wavepacket_grid_legacy_as_legacy(path)
+    interpolated = load_wavepacket_grid_legacy(path)
 
     dv = calculate_volume_element(interpolated)
     points = np.array(interpolated["points"])
@@ -57,7 +57,7 @@ def plot_masked_overlap_factor():
     # path = get_data_path("copper_eigenstates_wavepacket_4_point_interpolated.json")
     # interpolated = load_wavepacket_grid(path)
     path = get_data_path("copper_eigenstates_wavepacket.json")
-    wavepacket = symmetrize_wavepacket(load_wavepacket_grid_legacy_as_legacy(path))
+    wavepacket = symmetrize_wavepacket(load_wavepacket_grid_legacy(path))
 
     masked = mask_negative_wavepacket(wavepacket)
     dv = calculate_volume_element(masked)
@@ -92,17 +92,20 @@ def plot_masked_overlap_factor():
     fig.show()
     save_figure(fig, "Z=0 and max overlap height wavefunction comparison")
 
+    x_points = np.linspace(0, masked["delta_x1"], np.array(masked["points"]).shape[0])
+    z_points = np.linspace(0, masked["delta_z"], np.array(masked["points"]).shape[2])
+
     fig, ax1 = plt.subplots()
-    ax1.plot(masked["x_points"][0:65], overlap_fraction[:, max_index[1], max_index[2]])
+    ax1.plot(x_points[0:65], overlap_fraction[:, max_index[1], max_index[2]])
     ax1.set_ylabel("Overlap Fraction")
     ax1.set_title(
-        f"Interpolated overlap in x, at maximum z (z = {masked['z_points'][max_index[2]]})\n"
+        f"Interpolated overlap in x, at maximum z (z = {z_points[max_index[2]]})\n"
         f"and y symmetry point"
     )
 
     ax2 = ax1.twinx()
-    ax2.plot(masked["x_points"][0:65], points[0:65, max_index[1], max_index[2]])
-    ax2.plot(masked["x_points"][0:65], points[32:97, max_index[1], max_index[2]])
+    ax2.plot(x_points[0:65], points[0:65, max_index[1], max_index[2]])
+    ax2.plot(x_points[0:65], points[32:97, max_index[1], max_index[2]])
     ax2.set_ylabel("Wavefunction")
     ax2.set_yscale("symlog")
     fig.show()
@@ -110,16 +113,16 @@ def plot_masked_overlap_factor():
 
     for z in range(11, 15):
         fig, ax1 = plt.subplots()
-        ax1.plot(masked["x_points"][0:65], overlap_fraction[:, max_index[1], z])
+        ax1.plot(x_points[0:65], overlap_fraction[:, max_index[1], z])
         ax1.set_ylabel("Overlap Fraction")
         ax1.set_title(
-            f"Interpolated overlap in x, at maximum z (z = {masked['z_points'][z]})\n"
+            f"Interpolated overlap in x, at maximum z (z = {z_points[z]})\n"
             f"and y symmetry point"
         )
 
         ax2 = ax1.twinx()
-        ax2.plot(masked["x_points"][0:65], points[0:65, max_index[1], z])
-        ax2.plot(masked["x_points"][0:65], points[32:97, max_index[1], z])
+        ax2.plot(x_points[0:65], points[0:65, max_index[1], z])
+        ax2.plot(x_points[0:65], points[32:97, max_index[1], z])
         ax2.set_ylabel("Wavefunction")
         ax2.set_yscale("symlog")
         fig.show()
@@ -183,7 +186,7 @@ def plot_overlap_fraction_2D(overlap_fraction: NDArray):
 
 def plot_8_point_overlap_fraction():
     path = get_data_path("copper_eigenstates_wavepacket.json")
-    wavepacket = symmetrize_wavepacket(load_wavepacket_grid_legacy_as_legacy(path))
+    wavepacket = symmetrize_wavepacket(load_wavepacket_grid_legacy(path))
 
     points = np.array(wavepacket["points"])
     points1 = points[0:65]
@@ -201,7 +204,7 @@ def plot_overlap_fraction_corrected():
     """
 
     path = get_data_path("copper_eigenstates_wavepacket.json")
-    wavepacket = symmetrize_wavepacket(load_wavepacket_grid_legacy_as_legacy(path))
+    wavepacket = symmetrize_wavepacket(load_wavepacket_grid_legacy(path))
 
     points = np.array(wavepacket["points"])
     points1 = points[0:65]

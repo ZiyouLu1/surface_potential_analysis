@@ -431,6 +431,40 @@ def filter_eigenstates_grid(
     }
 
 
+def filter_eigenstates_band(
+    eigenstates: EnergyEigenstates, n: int = 0
+) -> EnergyEigenstates:
+    kx_points = np.array(eigenstates["kx_points"])
+    ky_points = np.array(eigenstates["ky_points"])
+    eigenvalues = np.array(eigenstates["eigenvalues"])
+    eigenvectors = np.array(eigenstates["eigenvectors"])
+    kx_ky_points = np.unique(
+        [(kx, ky) for (kx, ky) in zip(kx_points, ky_points)],
+        axis=0,
+    )
+    grouped_eigenvalues = [
+        eigenvalues[np.logical_and(kx == kx_points, ky == ky_points)]
+        for (kx, ky) in kx_ky_points
+    ]
+    grouped_eigenvectors = [
+        eigenvectors[np.logical_and(kx == kx_points, ky == ky_points)]
+        for (kx, ky) in kx_ky_points
+    ]
+    band_index = [np.argpartition(v, n)[n] for v in grouped_eigenvalues]
+
+    return {
+        "eigenstate_config": eigenstates["eigenstate_config"],
+        "eigenvalues": [
+            float(vals[i]) for (i, vals) in zip(band_index, grouped_eigenvalues)
+        ],
+        "eigenvectors": [
+            vals[i].tolist() for (i, vals) in zip(band_index, grouped_eigenvectors)
+        ],
+        "kx_points": kx_ky_points[:, 0].tolist(),
+        "ky_points": kx_ky_points[:, 1].tolist(),
+    }
+
+
 def filter_eigenstates_n_point(eigenstates: EnergyEigenstates, n: int):
     """Given Energy Eigenstates produce a reduced grid spacing"""
     # For an 8 point grid we have eigenstate_len of 16

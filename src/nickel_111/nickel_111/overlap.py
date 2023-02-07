@@ -2,7 +2,7 @@ import numpy as np
 
 from surface_potential_analysis.wavepacket_grid import (
     calculate_volume_element,
-    load_wavepacket_grid_legacy_as_legacy,
+    load_wavepacket_grid_legacy,
 )
 
 from .surface_data import get_data_path
@@ -10,10 +10,10 @@ from .surface_data import get_data_path
 
 def calculate_overlap_factor():
     path = get_data_path("eigenstates_wavepacket_0.json")
-    wavepacket0 = load_wavepacket_grid_legacy_as_legacy(path)
+    wavepacket0 = load_wavepacket_grid_legacy(path)
 
     path = get_data_path("eigenstates_wavepacket_1.json")
-    wavepacket1 = load_wavepacket_grid_legacy_as_legacy(path)
+    wavepacket1 = load_wavepacket_grid_legacy(path)
 
     dv = calculate_volume_element(wavepacket0)
 

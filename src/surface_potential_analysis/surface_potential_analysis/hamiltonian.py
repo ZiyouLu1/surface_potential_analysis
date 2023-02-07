@@ -250,21 +250,33 @@ def generate_energy_eigenstates_grid_copper_100(
 
 
 def calculate_energy_eigenstates(
-    hamiltonian: SurfaceHamiltonianUtil, kx_points: NDArray, ky_points: NDArray
+    hamiltonian: SurfaceHamiltonianUtil,
+    kx_points: NDArray,
+    ky_points: NDArray,
+    *,
+    include_bands: List[int] | None = None,
 ) -> EnergyEigenstates:
-    eigenvalues = []
-    eigenvectors = []
+
+    include_bands = [0] if include_bands is None else include_bands
+    out: EnergyEigenstates = {
+        "eigenstate_config": hamiltonian._config,
+        "kx_points": [],
+        "ky_points": [],
+        "eigenvalues": [],
+        "eigenvectors": [],
+    }
+
     for (kx, ky) in zip(kx_points, ky_points):
         e_vals, e_states = hamiltonian.calculate_eigenvalues(kx, ky)
-        a_min = np.argmin(e_vals)
+        a_min = np.argpartition(e_vals, include_bands)
 
-        eigenvalues.append(e_vals[a_min])
-        eigenvectors.append(e_states[a_min]["eigenvector"])
+        for idx in include_bands:
+            eigenvalue = e_vals[a_min[idx]]
+            eigenstate = e_states[a_min[idx]]
 
-    return {
-        "eigenstate_config": hamiltonian._config,
-        "kx_points": kx_points.tolist(),
-        "ky_points": ky_points.tolist(),
-        "eigenvalues": eigenvalues,
-        "eigenvectors": eigenvectors,
-    }
+            out["kx_points"].append(eigenstate["kx"])
+            out["ky_points"].append(eigenstate["ky"])
+            out["eigenvalues"].append(eigenvalue)
+            out["eigenvectors"].append(eigenstate["eigenvector"])
+
+    return out

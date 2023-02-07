@@ -1,8 +1,6 @@
 from pathlib import Path
 from typing import List, Tuple
 
-import numpy as np
-
 from surface_potential_analysis.energy_eigenstate import (
     EigenstateConfig,
     EigenstateConfigUtil,
@@ -16,7 +14,7 @@ from surface_potential_analysis.hamiltonian import (
 )
 from surface_potential_analysis.wavepacket_grid import (
     calculate_wavepacket_grid,
-    save_wavepacket_grid_legacy,
+    save_wavepacket_grid,
 )
 
 from .hamiltonian import generate_hamiltonian
@@ -85,15 +83,16 @@ def generate_wavepacket_grid():
         # (util.delta_x / 2, 2.5 * util.delta_y / 3, 0),
     ]
 
-    x_points = np.linspace(-util.delta_x1[0] / 2, util.delta_x1[0] / 2, 13)  # 25
-    y_points = np.linspace(0, util.delta_x2[1], 19)  # 37
-    z_points = np.linspace(
-        -util.characteristic_z * 2, util.characteristic_z * 2, 11
-    )  # 21
-
     for (i, origin) in enumerate(origins):
         normalized = normalize_eigenstate_phase(eigenstates, origin)
 
-        wavepacket = calculate_wavepacket_grid(normalized, x_points, y_points, z_points)
+        wavepacket = calculate_wavepacket_grid(
+            normalized,
+            util.delta_x1,
+            util.delta_x2,
+            4 * util.characteristic_z,
+            shape=(13, 19, 11),
+            offset=(-util.delta_x1[0] / 2, 0.0, -util.characteristic_z * 2),
+        )
         path = get_data_path(f"eigenstates_wavepacket_{i}_small.json")
-        save_wavepacket_grid_legacy(wavepacket, path)
+        save_wavepacket_grid(wavepacket, path)

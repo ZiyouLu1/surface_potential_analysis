@@ -1,9 +1,10 @@
-from typing import List, Literal
+from typing import List, Literal, Tuple
 
 import matplotlib.animation
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.axes import Axes
+from matplotlib.collections import QuadMesh
 from matplotlib.figure import Figure
 from matplotlib.image import AxesImage
 
@@ -12,19 +13,132 @@ from .energy_eigenstate import (
     EnergyEigenstates,
     get_eigenstate_list,
 )
-from .wavepacket_grid import WavepacketGridLegacy, sort_wavepacket
+from .wavepacket_grid import WavepacketGrid, get_wavepacket_grid_xy_points
 
 
 def plot_wavepacket_grid_xy(
-    grid: WavepacketGridLegacy,
+    grid: WavepacketGrid,
+    z_ind=0,
+    *,
+    ax: Axes | None = None,
+    measure: Literal["real", "imag", "abs"] = "abs",
+) -> Tuple[Figure, Axes, QuadMesh]:
+    fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
+
+    if measure == "real":
+        data = np.real(grid["points"])
+    elif measure == "imag":
+        data = np.imag(grid["points"])
+    else:
+        data = np.abs(grid["points"])
+
+    coordinates = get_wavepacket_grid_xy_points(grid).reshape(
+        data.shape[0], data.shape[1], 2
+    )
+    mesh = ax.pcolormesh(
+        coordinates[:, :, 0], coordinates[:, :, 1], data[:, :, z_ind], shading="nearest"
+    )
+    return fig, ax, mesh
+
+
+def animate_wavepacket_grid_3D_in_xy(
+    grid: WavepacketGrid,
+    *,
+    ax: Axes | None = None,
+    measure: Literal["real", "imag", "abs"] = "abs",
+    norm: Literal["symlog", "linear"] = "symlog",
+) -> Tuple[Figure, Axes, matplotlib.animation.ArtistAnimation]:
+    fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
+
+    _, _, mesh0 = plot_wavepacket_grid_xy(grid, 0, ax=ax, measure=measure)
+
+    frames: List[List[QuadMesh]] = []
+    for z_ind in range(np.array(grid["points"]).shape[2]):
+
+        _, _, mesh = plot_wavepacket_grid_xy(grid, z_ind, ax=ax, measure=measure)
+        frames.append([mesh])
+
+    max_clim = np.max([i[0].get_clim()[1] for i in frames])
+    for (mesh,) in frames:
+        mesh.set_clim(0, max_clim)
+        mesh.set_norm(norm)  # type: ignore
+    mesh0.set_clim(0, max_clim)
+    mesh0.set_norm(norm)  # type: ignore
+    ani = matplotlib.animation.ArtistAnimation(fig, frames)
+
+    ax.set_xlabel("X direction")
+    ax.set_ylabel("Y direction")
+
+    fig.colorbar(mesh0, ax=ax, format="%4.1e")
+
+    return (fig, ax, ani)
+
+
+def plot_wavepacket_grid_in_x1z(
+    grid: WavepacketGrid,
+    x2_ind: int,
+    *,
+    measure: Literal["real", "imag", "abs"] = "abs",
+    ax: Axes | None = None,
+) -> Tuple[Figure, Axes, QuadMesh]:
+    fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
+
+    if measure == "real":
+        data = np.real(grid["points"])
+    elif measure == "imag":
+        data = np.imag(grid["points"])
+    else:
+        data = np.abs(grid["points"])
+
+    x1_points = np.linspace(0, np.linalg.norm(grid["delta_x1"]), data.shape[0])
+    z_points = np.linspace(0, grid["delta_z"], data.shape[2])
+    x1v, zv = np.meshgrid(x1_points, z_points, indexing="ij")
+    mesh = ax.pcolormesh(x1v, zv, data[:, x2_ind, :], shading="nearest")
+    return (fig, ax, mesh)
+
+
+def animate_wavepacket_grid_3D_in_x1z(
+    grid: WavepacketGrid,
+    *,
+    ax: Axes | None = None,
+    measure: Literal["real", "imag", "abs"] = "abs",
+    norm: Literal["symlog", "linear"] = "symlog",
+) -> Tuple[Figure, Axes, matplotlib.animation.ArtistAnimation]:
+    fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
+
+    _, _, mesh0 = plot_wavepacket_grid_in_x1z(grid, 0, ax=ax, measure=measure)
+
+    frames: List[List[QuadMesh]] = []
+    for x2_ind in range(np.array(grid["points"]).shape[1]):
+
+        _, _, mesh = plot_wavepacket_grid_in_x1z(grid, x2_ind, ax=ax, measure=measure)
+        frames.append([mesh])
+
+    max_clim = np.max([i[0].get_clim()[1] for i in frames])
+    for (mesh,) in frames:
+        mesh.set_clim(0, max_clim)
+        mesh.set_norm(norm)  # type: ignore
+    mesh0.set_clim(0, max_clim)
+    mesh0.set_norm(norm)  # type: ignore
+    ani = matplotlib.animation.ArtistAnimation(fig, frames)
+
+    ax.set_xlabel("X direction")
+    ax.set_ylabel("Y direction")
+
+    fig.colorbar(mesh0, ax=ax, format="%4.1e")
+
+    return (fig, ax, ani)
+
+
+def plot_wavepacket_grid_x1(
+    grid: WavepacketGrid,
+    x2_ind=0,
     z_ind=0,
     ax: Axes | None = None,
     measure: Literal["real", "imag", "abs"] = "abs",
 ):
-    fig, a = (ax.get_figure(), ax) if ax is not None else plt.subplots()
-
-    sorted_grid = sort_wavepacket(grid)
-    points = np.array(sorted_grid["points"])[:, :, z_ind]
+    fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
+    points = np.array(grid["points"])[:, x2_ind, z_ind]
 
     if measure == "real":
         data = np.real(points)
@@ -33,165 +147,9 @@ def plot_wavepacket_grid_xy(
     else:
         data = np.abs(points)
 
-    img = a.imshow(data, origin="lower")
-    img.set_extent(
-        [
-            sorted_grid["x_points"][0],
-            sorted_grid["x_points"][-1],
-            sorted_grid["y_points"][0],
-            sorted_grid["y_points"][-1],
-        ]
-    )
-    return fig, a, img
-
-
-def plot_wavepacket_grid_z_2D(
-    grid: WavepacketGridLegacy,
-    ax: Axes | None = None,
-    *,
-    measure: Literal["real", "imag", "abs"] = "abs",
-    norm: Literal["symlog", "linear"] = "symlog"
-):
-    fig, axs = (ax.get_figure(), ax) if ax is not None else plt.subplots()
-
-    points = np.array(grid["points"])
-    if measure == "real":
-        data = np.real(points)
-    elif measure == "imag":
-        data = np.imag(points)
-    else:
-        data = np.abs(points)
-
-    img = axs.imshow(data[:, :, 0])
-    img.set_extent(
-        [
-            grid["x_points"][0],
-            grid["x_points"][-1],
-            grid["y_points"][0],
-            grid["y_points"][-1],
-        ]
-    )
-    img.set_norm(norm)  # type: ignore
-    img.set_clim(np.min(data), np.max(data))
-    ims: List[List[AxesImage]] = []
-    for z_ind in range(points.shape[2]):
-
-        img = axs.imshow(data[:, :, z_ind], animated=True)
-        img.set_extent(
-            [
-                grid["x_points"][0],
-                grid["x_points"][-1],
-                grid["y_points"][0],
-                grid["y_points"][-1],
-            ]
-        )
-        img.set_norm(norm)  # type: ignore
-        img.set_clim(np.min(data), np.max(data))
-        ims.append([img])
-
-    ani = matplotlib.animation.ArtistAnimation(fig, ims)
-    return (fig, ax, ani)
-
-
-def plot_wavepacket_grid_y_2D(
-    grid: WavepacketGridLegacy,
-    ax: Axes | None = None,
-    *,
-    measure: Literal["real", "imag", "abs"] = "abs",
-    norm: Literal[
-        "linear",
-        "log",
-        "symlog",
-    ] = "symlog"
-):
-    fig, axs = (ax.get_figure(), ax) if ax is not None else plt.subplots()
-
-    points = np.array(grid["points"])
-    if measure == "real":
-        data = np.real(points)
-    elif measure == "imag":
-        data = np.imag(points)
-    else:
-        data = np.abs(points)
-
-    ims: List[List[AxesImage]] = []
-
-    img = axs.imshow(data[:, 0, ::-1].T)
-    img.set_norm("symlog")  # type: ignore
-    img.set_clim(np.min(data), np.max(data))
-    img.set_extent(
-        [
-            grid["x_points"][0],
-            grid["x_points"][-1],
-            grid["z_points"][0],
-            grid["z_points"][-1],
-        ]
-    )
-    for y_ind in range(points.shape[1]):
-        img = axs.imshow(data[:, y_ind, ::-1].T, animated=True)
-        img.set_extent(
-            [
-                grid["x_points"][0],
-                grid["x_points"][-1],
-                grid["z_points"][0],
-                grid["z_points"][-1],
-            ]
-        )
-        img.set_norm("symlog")  # type: ignore
-        img.set_clim(np.min(data), np.max(data))
-        ims.append([img])
-
-    ani = matplotlib.animation.ArtistAnimation(fig, ims, interval=80, repeat_delay=0)
-    return (fig, ax, ani)
-
-
-def plot_wavepacket_grid_xz(
-    grid: WavepacketGridLegacy,
-    y_ind=0,
-    ax: Axes | None = None,
-    measure: Literal["real", "imag", "abs"] = "abs",
-):
-    fig, a = (ax.get_figure(), ax) if ax is not None else plt.subplots()
-    points = np.array(grid["points"])[:, y_ind, :]
-
-    if measure == "real":
-        data = np.real(points)
-    elif measure == "imag":
-        data = np.imag(points)
-    else:
-        data = np.abs(points)
-
-    img = a.imshow(data)
-    img.set_extent(
-        [
-            grid["x_points"][0],
-            grid["x_points"][-1],
-            grid["z_points"][0],
-            grid["z_points"][-1],
-        ]
-    )
-    return fig, a, img
-
-
-def plot_wavepacket_grid_x(
-    grid: WavepacketGridLegacy,
-    y_ind=0,
-    z_ind=0,
-    ax: Axes | None = None,
-    measure: Literal["real", "imag", "abs"] = "abs",
-):
-    fig, a = (ax.get_figure(), ax) if ax is not None else plt.subplots()
-    points = np.array(grid["points"])[:, y_ind, z_ind]
-
-    if measure == "real":
-        data = np.real(points)
-    elif measure == "imag":
-        data = np.imag(points)
-    else:
-        data = np.abs(points)
-
-    (line,) = a.plot(grid["x_points"], data)
-    return fig, a, line
+    x1_points = np.linspace(0, np.linalg.norm(grid["delta_x1"]), data.shape[0])
+    (line,) = ax.plot(x1_points, data)
+    return fig, ax, line
 
 
 def plot_wavepacket_in_xy(

@@ -24,12 +24,12 @@ from surface_potential_analysis.energy_eigenstate import (
 from surface_potential_analysis.energy_eigenstates_plot import plot_eigenstate_positions
 from surface_potential_analysis.wavepacket_grid import (
     calculate_wavepacket_grid,
-    load_wavepacket_grid_legacy_as_legacy,
-    save_wavepacket_grid_legacy,
+    load_wavepacket_grid_legacy,
+    save_wavepacket_grid,
 )
 from surface_potential_analysis.wavepacket_grid_plot import (
-    plot_wavepacket_grid_y_2D,
-    plot_wavepacket_grid_z_2D,
+    animate_wavepacket_grid_3D_in_x1z,
+    animate_wavepacket_grid_3D_in_xy,
 )
 
 from .surface_data import get_data_path, save_figure
@@ -168,12 +168,14 @@ def plot_energy_of_first_bands():
 def calculate_wavepacket_grid_nickel_111(eigenstates: EnergyEigenstates):
     util = EigenstateConfigUtil(eigenstates["eigenstate_config"])
 
-    x_points = np.linspace(0, util.delta_x1[0], 37)  # 97
-    y_points = np.linspace(0, util.delta_x2[1], 25)
-    z_lim = util.characteristic_z * 4
-    z_points = np.linspace(-z_lim, z_lim, 11)
-
-    return calculate_wavepacket_grid(eigenstates, x_points, y_points, z_points)
+    return calculate_wavepacket_grid(
+        eigenstates,
+        util.delta_x1,
+        util.delta_x2,
+        util.characteristic_z * 4,
+        shape=(37, 25, 11),
+        offset=(0.0, 0.0, -util.characteristic_z * 2),
+    )
 
 
 def get_value_at_point(
@@ -219,31 +221,39 @@ def test_single_k_wavepacket():
     path = get_data_path("single_band_wavepacket_1.json")
     normalized1 = normalize_eigenstate_phase(lowest_band, origins[0])
     grid1 = calculate_wavepacket_grid_nickel_111(normalized1)
-    save_wavepacket_grid_legacy(grid1, path)
-    grid1 = load_wavepacket_grid_legacy_as_legacy(path)
+    save_wavepacket_grid(grid1, path)
+    grid1 = load_wavepacket_grid_legacy(path)
 
     path = get_data_path("single_band_wavepacket_2.json")
     # normalized2 = normalize_eigenstate_phase(lowest_band, origins[1])
     # grid2 = calculate_wavepacket_grid_nickel_111(normalized2)
-    # save_wavepacket_grid_legacy(grid2, path)
-    grid2 = load_wavepacket_grid_legacy_as_legacy(path)
+    # save_wavepacket_grid(grid2, path)
+    grid2 = load_wavepacket_grid_legacy(path)
 
     path = get_data_path("single_band_wavepacket_3.json")
     # normalized3 = normalize_eigenstate_phase(lowest_band, origins[2])
     # grid3 = calculate_wavepacket_grid_nickel_111(normalized3)
-    # save_wavepacket_grid_legacy(grid3, path)
-    grid3 = load_wavepacket_grid_legacy_as_legacy(path)
+    # save_wavepacket_grid(grid3, path)
+    grid3 = load_wavepacket_grid_legacy(path)
 
-    fig, ax, _anim1 = plot_wavepacket_grid_z_2D(grid1, norm="linear", measure="real")
+    fig, ax, _anim1 = animate_wavepacket_grid_3D_in_xy(
+        grid1, norm="linear", measure="real"
+    )
     fig.show()
 
-    fig, ax, _anim2 = plot_wavepacket_grid_y_2D(grid1, norm="linear", measure="real")
+    fig, ax, _anim2 = animate_wavepacket_grid_3D_in_x1z(
+        grid1, norm="linear", measure="real"
+    )
     fig.show()
 
-    fig, ax, _anim3 = plot_wavepacket_grid_z_2D(grid2, norm="linear", measure="real")
+    fig, ax, _anim3 = animate_wavepacket_grid_3D_in_xy(
+        grid2, norm="linear", measure="real"
+    )
     fig.show()
 
-    fig, ax, _anim4 = plot_wavepacket_grid_z_2D(grid3, norm="linear", measure="real")
+    fig, ax, _anim4 = animate_wavepacket_grid_3D_in_xy(
+        grid3, norm="linear", measure="real"
+    )
     fig.show()
 
     print(get_value_at_point(normalized1, origins[0]))
@@ -256,13 +266,17 @@ def test_single_k_wavepacket():
 
 def plot_wavepacket_small():
     path = get_data_path("eigenstates_wavepacket_0_small.json")
-    grid = load_wavepacket_grid_legacy_as_legacy(path)
-    fig, ax, _anim0 = plot_wavepacket_grid_z_2D(grid, norm="symlog", measure="real")
+    grid = load_wavepacket_grid_legacy(path)
+    fig, ax, _anim0 = animate_wavepacket_grid_3D_in_xy(
+        grid, norm="symlog", measure="real"
+    )
     fig.show()
 
     path = get_data_path("eigenstates_wavepacket_1_small.json")
-    grid = load_wavepacket_grid_legacy_as_legacy(path)
-    fig, ax, _anim1 = plot_wavepacket_grid_z_2D(grid, norm="symlog", measure="real")
+    grid = load_wavepacket_grid_legacy(path)
+    fig, ax, _anim1 = animate_wavepacket_grid_3D_in_xy(
+        grid, norm="symlog", measure="real"
+    )
     fig.show()
 
     path = get_data_path("eigenstates_grid_2.json")

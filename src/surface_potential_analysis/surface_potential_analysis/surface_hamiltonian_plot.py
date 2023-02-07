@@ -65,7 +65,7 @@ def plot_first_4_eigenvectors(hamiltonian: SurfaceHamiltonianUtil) -> Figure:
         eigenvalue_index = np.argpartition(e_vals, n)[n]
         eigenstate = e_vec[eigenvalue_index]
         plot_eigenstate(hamiltonian._config, eigenstate, ax=ax)
-        ax.set_title(f"Plot of the n={n} wavefunction")
+        ax.set_title(f"Plot of the n={n+1} wavefunction")
 
     fig.tight_layout()
 
