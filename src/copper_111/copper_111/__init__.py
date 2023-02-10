@@ -3,8 +3,8 @@ from . import (
     eigenstates_plot,
     hamiltonian,
     hamiltonian_plot,
-    potential,
-    potential_plot,
+    s1_potential,
+    s1_potential_plot,
     surface_data,
 )
 
@@ -13,7 +13,7 @@ __all__ = [
     "eigenstates_plot",
     "hamiltonian",
     "hamiltonian_plot",
-    "potential",
-    "potential_plot",
+    "s1_potential",
+    "s1_potential_plot",
     "surface_data",
 ]

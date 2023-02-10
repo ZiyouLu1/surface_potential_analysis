@@ -2,8 +2,8 @@ from typing import List
 
 import numpy as np
 
+from surface_potential_analysis.eigenstate import EigenstateConfigUtil
 from surface_potential_analysis.energy_eigenstate import (
-    EigenstateConfigUtil,
     EnergyEigenstates,
     filter_eigenstates_grid,
     filter_eigenstates_n_point,
@@ -22,13 +22,13 @@ from surface_potential_analysis.wavepacket_grid import (
     save_wavepacket_grid,
 )
 
-from .hamiltonian import generate_hamiltonian
+from .s2_hamiltonian import generate_hamiltonian
 from .surface_data import get_data_path
 
 
 def normalize_eigenstate_phase_copper(data: EnergyEigenstates):
     util = EigenstateConfigUtil(data["eigenstate_config"])
-    origin_point = (util.delta_x1[0] / 2, util.delta_x2[1] / 2, 0)
+    origin_point = (util.delta_x0[0] / 2, util.delta_x1[1] / 2, 0)
     return normalize_eigenstate_phase(data, origin_point)
 
 
@@ -40,8 +40,11 @@ def generate_eigenstates_grid():
 
 
 def generate_eigenstates_grid_relaxed():
-    h = generate_hamiltonian(resolution=(10, 10, 14))
-    path = get_data_path("eigenstates_grid_relaxed.json")
+    # h = generate_hamiltonian(resolution=(10, 10, 14))
+    # path = get_data_path("eigenstates_grid_relaxed.json")
+
+    h = generate_hamiltonian(resolution=(12, 12, 15))
+    path = get_data_path("eigenstates_grid_relaxed_hd.json")
 
     generate_energy_eigenstates_grid_copper_100(path, h, size=(4, 4))
 
@@ -113,17 +116,6 @@ def generate_wavepacket_grid_old():
     save_wavepacket_grid(wavepacket, path)
 
 
-# Does not give good results
-def generate_wavepacket_grid_old_approx():
-    path = get_data_path("copper_eigenstates_grid_normalized2.json")
-    eigenstates = load_energy_eigenstates_legacy(path)
-    filtered = remove_max_k_point(eigenstates)
-
-    wavepacket = calculate_wavepacket_grid_copper(filtered, cutoff=200)
-    path = get_data_path("copper_eigenstates_wavepacket_approx2.json")
-    save_wavepacket_grid(wavepacket, path)
-
-
 def generate_wavepacket_grid_old_4_points():
     path = get_data_path("copper_eigenstates_grid_normalized2.json")
     eigenstates = load_energy_eigenstates_legacy(path)
@@ -131,16 +123,6 @@ def generate_wavepacket_grid_old_4_points():
     filtered = filter_eigenstates_n_point(remove_max_k_point(eigenstates), n=4)
     wavepacket = calculate_wavepacket_grid_copper(filtered)
     path = get_data_path("copper_eigenstates_wavepacket_4_point_2.json")
-    save_wavepacket_grid(wavepacket, path)
-
-
-def generate_wavepacket_grid_old_4_points_approx():
-    path = get_data_path("copper_eigenstates_grid_normalized2.json")
-    eigenstates = load_energy_eigenstates_legacy(path)
-
-    filtered = filter_eigenstates_n_point(remove_max_k_point(eigenstates), n=4)
-    wavepacket = calculate_wavepacket_grid_copper(filtered, cutoff=200)
-    path = get_data_path("copper_eigenstates_wavepacket_4_point_approx.json")
     save_wavepacket_grid(wavepacket, path)
 
 
@@ -163,15 +145,15 @@ def generate_wavepacket_grid_flat_band():
     coords = get_wavepacket_grid_coordinates(wavepacket)
 
     points = np.array(wavepacket["points"]).ravel()
+    delta_x0 = eigenstates["eigenstate_config"]["delta_x0"]
     delta_x1 = eigenstates["eigenstate_config"]["delta_x1"]
-    delta_x2 = eigenstates["eigenstate_config"]["delta_x2"]
 
-    wavepacket_points = np.zeros_like(coords[:, 0])
+    wavepacket_points = np.zeros_like(coords[:, 0], dtype=complex)
     for (kx, ky) in zip(kx_points, ky_points):
         wavepacket_points += (
             points
-            * np.exp(1j * ((coords[:, 0] - (coords[:, 0] % delta_x1[0])) * kx))
-            * np.exp(1j * ((coords[:, 1] - (coords[:, 1] % delta_x2[1])) * ky))
+            * np.exp(1j * ((coords[:, 0] - (coords[:, 0] % delta_x0[0])) * kx))
+            * np.exp(1j * ((coords[:, 1] - (coords[:, 1] % delta_x1[1])) * ky))
         )
 
     wavepacket_points /= len(kx_points)
@@ -180,6 +162,25 @@ def generate_wavepacket_grid_flat_band():
     )
 
     path = get_data_path("copper_eigenstates_wavepacket_flat_band.json")
+    save_wavepacket_grid(wavepacket, path)
+
+
+def generate_wavepacket_grid_relaxed():
+    path = get_data_path("eigenstates_grid_relaxed_hd.json")
+    eigenstates = load_energy_eigenstates(path)
+
+    normalized = normalize_eigenstate_phase_copper(eigenstates)
+
+    util = EigenstateConfigUtil(eigenstates["eigenstate_config"])
+    wavepacket = calculate_wavepacket_grid(
+        normalized,
+        delta_x0=util.delta_x0,
+        delta_x1=util.delta_x1,
+        delta_z=8 * util.characteristic_z,
+        shape=(49, 49, 41),
+        offset=(util.delta_x0[0] / 2, util.delta_x1[1] / 2, -4 * util.characteristic_z),
+    )
+    path = get_data_path("relaxed_eigenstates_hd_wavepacket.json")
     save_wavepacket_grid(wavepacket, path)
 
 
@@ -192,11 +193,31 @@ def generate_wavepacket_grid_relaxed_low_resolution():
     util = EigenstateConfigUtil(eigenstates["eigenstate_config"])
     wavepacket = calculate_wavepacket_grid(
         normalized,
+        delta_x0=util.delta_x0,
         delta_x1=util.delta_x1,
-        delta_x2=util.delta_x2,
-        delta_z=4 * util.characteristic_z,
+        delta_z=12 * util.characteristic_z,
         shape=(24, 24, 21),
-        offset=(util.delta_x1[0] / 2, util.delta_x2[1] / 2, -2 * util.characteristic_z),
+        offset=(util.delta_x0[0] / 2, util.delta_x1[1] / 2, -6 * util.characteristic_z),
     )
-    path = get_data_path("relaxed_eigenstates_wavepacket.json")
+    print(wavepacket)
+    path = get_data_path("relaxed_eigenstates_wavepacket_low_res.json")
+    save_wavepacket_grid(wavepacket, path)
+
+
+def generate_wavepacket_grid_relaxed_flat():
+    path = get_data_path("eigenstates_grid_relaxed_hd.json")
+    eigenstates = load_energy_eigenstates(path)
+
+    normalized = normalize_eigenstate_phase_copper(eigenstates)
+
+    util = EigenstateConfigUtil(eigenstates["eigenstate_config"])
+    wavepacket = calculate_wavepacket_grid(
+        normalized,
+        delta_x0=util.delta_x0,
+        delta_x1=util.delta_x1,
+        delta_z=2 * util.characteristic_z,
+        shape=(201, 201, 3),
+        offset=(util.delta_x0[0] / 2, util.delta_x1[1] / 2, -1 * util.characteristic_z),
+    )
+    path = get_data_path("relaxed_eigenstates_hd_wavepacket_flat.json")
     save_wavepacket_grid(wavepacket, path)

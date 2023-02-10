@@ -347,16 +347,16 @@ def map_irreducible_points_into_unit_cell(
     )
     diagonal_length = np.sqrt(np.square(y_height / 2) + np.square(x_width))
 
-    delta_x1 = (2 * x_width, 0)
-    delta_x2 = (0.5 * delta_x1[0], np.sqrt(3) * delta_x1[0] / 2)
+    delta_x0 = (2 * x_width, 0)
+    delta_x1 = (0.5 * delta_x0[0], np.sqrt(3) * delta_x0[0] / 2)
 
-    if not np.allclose(delta_x2[1], y_height / 2 + diagonal_length):
+    if not np.allclose(delta_x1[1], y_height / 2 + diagonal_length):
         raise AssertionError(
-            f"{delta_x2[1]} not close to {y_height / 2 + diagonal_length}"
+            f"{delta_x1[1]} not close to {y_height / 2 + diagonal_length}"
         )
     return {
+        "delta_x0": delta_x0,
         "delta_x1": delta_x1,
-        "delta_x2": delta_x2,
         "points": final_grid,
         "z_points": z_points.tolist(),
     }

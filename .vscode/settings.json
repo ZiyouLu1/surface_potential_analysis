@@ -1,5 +1,6 @@
 {
-  "python.analysis.typeCheckingMode": "basic",
+  "python.analysis.typeCheckingMode": "off",
+  "python.analysis.diagnosticMode": "workspace",
   "python.linting.mypyEnabled": true,
   "python.linting.flake8Enabled": true,
   "python.formatting.provider": "black",
@@ -11,10 +12,14 @@
   },
   "editor.formatOnSave": true,
   "cSpell.words": [
+    "allclose",
     "arange",
     "argmax",
     "argmin",
+    "argsort",
+    "atol",
     "clim",
+    "colorbar",
     "dtype",
     "eigenstate",
     "eigenstates",
@@ -36,6 +41,8 @@
     "scipy",
     "sharey",
     "suptitle",
+    "symlog",
+    "twinx",
     "vmax",
     "vmin",
     "wavefunction",
@@ -47,7 +54,8 @@
     "xlabel",
     "ydata",
     "ylabel",
-    "ylim"
+    "ylim",
+    "yscale"
   ],
   "python.linting.flake8Args": ["--ignore=E501,W503,E203,E301,E302"],
   "python.testing.unittestArgs": ["-v", "-s", "./tests", "-p", "*test.py"],

@@ -43,7 +43,7 @@ def plot_nth_eigenstate(
     hamiltonian: SurfaceHamiltonianUtil, n=0, ax: Axes | None = None
 ):
     e_vals, e_vec = hamiltonian.calculate_eigenvalues(
-        hamiltonian.dkx1[0] / 2, hamiltonian.dkx2[1] / 2
+        hamiltonian.dkx0[0] / 2, hamiltonian.dkx1[1] / 2
     )
 
     eigenvalue_index = np.argpartition(e_vals, n)[n]
@@ -58,7 +58,7 @@ def plot_first_4_eigenvectors(hamiltonian: SurfaceHamiltonianUtil) -> Figure:
     axes = [axs[0][0], axs[1][0], axs[0][1], axs[1][1]]
 
     e_vals, e_vec = hamiltonian.calculate_eigenvalues(
-        hamiltonian.dkx1[0] / 2, hamiltonian.dkx2[1] / 2
+        hamiltonian.dkx0[0] / 2, hamiltonian.dkx1[1] / 2
     )
 
     for (n, ax) in enumerate(axes):

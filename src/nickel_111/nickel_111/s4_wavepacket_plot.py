@@ -3,11 +3,12 @@ from typing import Tuple
 import numpy as np
 from matplotlib import pyplot as plt
 
-from nickel_111.hamiltonian import generate_hamiltonian
-from nickel_111.wavepacket import (
+from nickel_111.s2_hamiltonian import generate_hamiltonian
+from nickel_111.s4_wavepacket import (
     get_brillouin_points_nickel_111,
     get_irreducible_config_nickel_111_supercell,
 )
+from surface_potential_analysis.eigenstate import EigenstateConfigUtil
 from surface_potential_analysis.eigenstate_plot import (
     animate_eigenstate_3D_in_xy,
     plot_eigenstate_in_xy,
@@ -15,7 +16,6 @@ from surface_potential_analysis.eigenstate_plot import (
     plot_eigenstate_in_yz,
 )
 from surface_potential_analysis.energy_eigenstate import (
-    EigenstateConfigUtil,
     EnergyEigenstates,
     get_eigenstate_list,
     load_energy_eigenstates_legacy,
@@ -170,8 +170,8 @@ def calculate_wavepacket_grid_nickel_111(eigenstates: EnergyEigenstates):
 
     return calculate_wavepacket_grid(
         eigenstates,
+        util.delta_x0,
         util.delta_x1,
-        util.delta_x2,
         util.characteristic_z * 4,
         shape=(37, 25, 11),
         offset=(0.0, 0.0, -util.characteristic_z * 2),
@@ -202,10 +202,10 @@ def test_single_k_wavepacket():
     # Note we don't need to worry about 'repeats'
     # Ie at (1.0 * util.delta_x / 3, util.delta_y, 0),
     origins = [
-        (0, 1.0 * util.delta_x2[1] / 3, 0),
-        (0, 2.0 * util.delta_x2[1] / 3, 0),
-        (util.delta_x1[0] / 2, 0.5 * util.delta_x2[1] / 3, 0),
-        (util.delta_x1[0] / 2, 2.5 * util.delta_x2[1] / 3, 0),
+        (0, 1.0 * util.delta_x1[1] / 3, 0),
+        (0, 2.0 * util.delta_x1[1] / 3, 0),
+        (util.delta_x0[0] / 2, 0.5 * util.delta_x1[1] / 3, 0),
+        (util.delta_x0[0] / 2, 2.5 * util.delta_x1[1] / 3, 0),
     ]
 
     lowest_band = select_single_k_eigenstates(

@@ -6,7 +6,12 @@ import numpy as np
 import scipy.interpolate
 from numpy.typing import NDArray
 
-from surface_potential_analysis.brillouin_zone import get_point_fractions, grid_space
+from .brillouin_zone import get_point_fractions
+from .surface_config import (
+    SurfaceConfig,
+    get_surface_coordinates,
+    get_surface_xy_points,
+)
 
 
 class EnergyPoints(TypedDict):
@@ -35,14 +40,12 @@ def get_energy_points_xy_locations(data: EnergyPoints) -> List[Tuple[float, floa
     ]
 
 
-class EnergyGrid(TypedDict):
+class EnergyGrid(SurfaceConfig):
     """
     A grid of energy points uniformly spaced in the x1,x2 direction
     And possibly unevenly spaced in the z direction
     """
 
-    delta_x1: Tuple[float, float]
-    delta_x2: Tuple[float, float]
     z_points: List[float]
     points: List[List[List[float]]]
 
@@ -63,8 +66,8 @@ def load_energy_grid(path: Path) -> EnergyGrid:
     with path.open("r") as f:
         out: EnergyGridRaw = json.load(f)
         return {
-            "delta_x1": (out["delta_x1"][0], out["delta_x1"][1]),
-            "delta_x2": (out["delta_x2"][0], out["delta_x2"][1]),
+            "delta_x0": (out["delta_x1"][0], out["delta_x1"][1]),
+            "delta_x1": (out["delta_x2"][0], out["delta_x2"][1]),
             "points": out["points"],
             "z_points": out["z_points"],
         }
@@ -77,40 +80,16 @@ def save_energy_grid(data: EnergyGrid, path: Path) -> None:
 
 def get_energy_grid_xy_points(grid: EnergyGrid) -> NDArray:
     points = np.array(grid["points"])
-    return grid_space(
-        grid["delta_x1"],
-        grid["delta_x2"],
-        shape=(points.shape[0], points.shape[1]),
-        endpoint=False,
-    )
+    return get_surface_xy_points(grid, (points.shape[0], points.shape[1]))
 
 
 def get_energy_grid_coordinates(
-    grid: EnergyGrid, *, offset: Tuple[float, float, float] = (0.0, 0.0, 0.0)
+    grid: EnergyGrid, *, offset: Tuple[float, float] = (0.0, 0.0)
 ) -> NDArray:
     points = np.array(grid["points"])
-    xy_points = get_energy_grid_xy_points(grid).reshape(
-        points.shape[0], points.shape[1], 2
-    )
-    z_points = np.array(grid["z_points"])
 
-    tiled_x = (
-        np.tile(xy_points[:, :, 0], (z_points.shape[0], 1, 1))
-        .swapaxes(0, 1)
-        .swapaxes(1, 2)
-    )
-    tiled_y = (
-        np.tile(xy_points[:, :, 1], (z_points.shape[0], 1, 1))
-        .swapaxes(0, 1)
-        .swapaxes(1, 2)
-    )
-    tiled_z = np.tile(z_points, (xy_points.shape[0], xy_points.shape[1], 1))
-
-    return (
-        np.array([tiled_x + offset[0], tiled_y + offset[1], tiled_z + offset[2]])
-        .swapaxes(0, 1)
-        .swapaxes(1, 2)
-        .swapaxes(2, 3)
+    return get_surface_coordinates(
+        grid, (points.shape[0], points.shape[1]), grid["z_points"], offset=offset
     )
 
 
@@ -129,8 +108,8 @@ def load_energy_grid_legacy(path: Path) -> EnergyGrid:
         x_delta = get_xy_points_delta(data["x_points"])
         y_delta = get_xy_points_delta(data["y_points"])
         return {
-            "delta_x1": (x_delta, 0),
-            "delta_x2": (0, y_delta),
+            "delta_x0": (x_delta, 0),
+            "delta_x1": (0, y_delta),
             "z_points": data["z_points"],
             "points": data["points"],
         }
@@ -165,8 +144,8 @@ def normalize_energy(data: EnergyGrid) -> EnergyGrid:
     normalized_points = points - points.min()
     return {
         "points": normalized_points.tolist(),
+        "delta_x0": data["delta_x0"],
         "delta_x1": data["delta_x1"],
-        "delta_x2": data["delta_x2"],
         "z_points": data["z_points"],
     }
 
@@ -203,8 +182,8 @@ def fill_subsurface_from_corner(data: EnergyGrid) -> EnergyGrid:
 
     return {
         "points": points.tolist(),
+        "delta_x0": data["delta_x0"],
         "delta_x1": data["delta_x1"],
-        "delta_x2": data["delta_x2"],
         "z_points": data["z_points"],
     }
 
@@ -220,8 +199,8 @@ def fill_subsurface_from_hollow_sample(data: EnergyGrid) -> EnergyGrid:
 
     return {
         "points": points.tolist(),
+        "delta_x0": data["delta_x0"],
         "delta_x1": data["delta_x1"],
-        "delta_x2": data["delta_x2"],
         "z_points": data["z_points"],
     }
 
@@ -240,8 +219,8 @@ def fill_surface_from_z_maximum(data: EnergyGrid) -> EnergyGrid:
 
     return {
         "points": points.tolist(),
+        "delta_x0": data["delta_x0"],
         "delta_x1": data["delta_x1"],
-        "delta_x2": data["delta_x2"],
         "z_points": data["z_points"],
     }
 
@@ -255,8 +234,8 @@ def truncate_energy(
     )
     return {
         "points": truncated_points.tolist(),
+        "delta_x0": data["delta_x0"],
         "delta_x1": data["delta_x1"],
-        "delta_x2": data["delta_x2"],
         "z_points": data["z_points"],
     }
 
@@ -274,8 +253,8 @@ def repeat_original_data(
 
     return {
         "points": xy_extended_data.tolist(),
-        "delta_x1": (data["delta_x1"][0] * x1_tile, data["delta_x1"][1] * x1_tile),
-        "delta_x2": (data["delta_x2"][0] * x1_tile, data["delta_x2"][1] * x2_tile),
+        "delta_x0": (data["delta_x0"][0] * x1_tile, data["delta_x0"][1] * x1_tile),
+        "delta_x1": (data["delta_x1"][0] * x1_tile, data["delta_x1"][1] * x2_tile),
         "z_points": data["z_points"],
     }
 
@@ -313,8 +292,8 @@ def extend_z_data(data: EnergyGrid, extend_by: int = 2) -> EnergyGrid:
 
     return {
         "points": z_extended_points.tolist(),
+        "delta_x0": data["delta_x0"],
         "delta_x1": data["delta_x1"],
-        "delta_x2": data["delta_x2"],
         "z_points": z_points.tolist(),
     }
 
@@ -341,14 +320,14 @@ def generate_interpolator(
     fixed_data = extend_z_data(repeat_original_data(data))
     points = np.array(add_back_symmetry_points(fixed_data["points"]))
 
-    if (data["delta_x1"][1] != 0) or (data["delta_x2"][0] != 0):
+    if (data["delta_x0"][1] != 0) or (data["delta_x1"][0] != 0):
         raise AssertionError("Not orthogonal grid")
 
     x_points = np.linspace(
-        -data["delta_x1"][0], 2 * data["delta_x1"][0], points.shape[0]
+        -data["delta_x0"][0], 2 * data["delta_x0"][0], points.shape[0]
     )
     y_points = np.linspace(
-        -data["delta_x2"][1], 2 * data["delta_x2"][1], points.shape[1]
+        -data["delta_x1"][1], 2 * data["delta_x1"][1], points.shape[1]
     )
     return scipy.interpolate.RegularGridInterpolator(
         [x_points, y_points, fixed_data["z_points"]],
@@ -369,8 +348,8 @@ def interpolate_energy_grid_3D_spline(
 
     z_points = list(np.linspace(data["z_points"][0], data["z_points"][-1], shape[2]))
     new_grid: EnergyGrid = {
+        "delta_x0": data["delta_x0"],
         "delta_x1": data["delta_x1"],
-        "delta_x2": data["delta_x2"],
         "z_points": z_points,
         "points": np.empty(shape).tolist(),
     }
@@ -380,8 +359,8 @@ def interpolate_energy_grid_3D_spline(
 
     return {
         "points": points.reshape(*shape).tolist(),
+        "delta_x0": data["delta_x0"],
         "delta_x1": data["delta_x1"],
-        "delta_x2": data["delta_x2"],
         "z_points": z_points,
     }
 
@@ -407,8 +386,8 @@ def interpolate_energy_grid_z_spline(data: EnergyGrid, nz: int = 100) -> EnergyG
 
     return {
         "points": points.tolist(),
+        "delta_x0": data["delta_x0"],
         "delta_x1": data["delta_x1"],
-        "delta_x2": data["delta_x2"],
         "z_points": z_points,
     }
 
@@ -476,8 +455,8 @@ def interpolate_energy_grid_xy_fourier(
             old_points[:, :, iz].tolist(), shape
         )
     return {
+        "delta_x0": data["delta_x0"],
         "delta_x1": data["delta_x1"],
-        "delta_x2": data["delta_x2"],
         "points": points.tolist(),
         "z_points": data["z_points"],
     }

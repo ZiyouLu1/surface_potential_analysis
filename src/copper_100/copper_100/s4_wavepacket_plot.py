@@ -4,50 +4,59 @@ import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.axes import Axes
 
+from surface_potential_analysis.eigenstate import (
+    Eigenstate,
+    EigenstateConfig,
+    EigenstateConfigUtil,
+)
 from surface_potential_analysis.eigenstate_plot import (
-    animate_eigenstate_3D_in_xy,
     plot_eigenstate_in_xy,
     plot_wavefunction_difference_in_xy,
 )
 from surface_potential_analysis.energy_eigenstate import (
-    Eigenstate,
-    EigenstateConfig,
-    EigenstateConfigUtil,
     filter_eigenstates_n_point,
     get_eigenstate_list,
+    load_energy_eigenstates,
     load_energy_eigenstates_legacy,
 )
 from surface_potential_analysis.energy_eigenstates_plot import plot_eigenstate_positions
+from surface_potential_analysis.surface_config import get_reciprocal_surface
+from surface_potential_analysis.surface_config_plot import plot_points_on_surface_xy
 from surface_potential_analysis.wavepacket_grid import (
+    WavepacketGrid,
+    load_wavepacket_grid,
     load_wavepacket_grid_legacy,
-    symmetrize_wavepacket,
+    reflect_wavepacket_in_axis,
+    symmetrize_wavepacket_about_far_edge,
 )
 from surface_potential_analysis.wavepacket_grid_plot import (
+    animate_ft_wavepacket_grid_3D_in_xy,
     animate_wavepacket_grid_3D_in_x1z,
     animate_wavepacket_grid_3D_in_xy,
+    plot_ft_wavepacket_grid_xy,
     plot_wavepacket_grid_in_x1z,
     plot_wavepacket_grid_x1,
     plot_wavepacket_grid_xy,
     plot_wavepacket_in_xy,
 )
 
+from .s4_wavepacket import normalize_eigenstate_phase_copper
 from .surface_data import get_data_path, save_figure
-from .wavepacket import normalize_eigenstate_phase_copper
 
 
 def plot_wavepacket_points():
-    path = get_data_path("copper_eigenstates_grid_5.json")
-    eigenstates = load_energy_eigenstates_legacy(path)
+    path = get_data_path("eigenstates_grid_relaxed_hd.json")
+    eigenstates = load_energy_eigenstates(path)
     fig, _, _ = plot_eigenstate_positions(eigenstates)
 
     fig.show()
 
-    eigenstate_list = get_eigenstate_list(eigenstates)
-    fig, _, _ = animate_eigenstate_3D_in_xy(
-        eigenstates["eigenstate_config"], eigenstate_list[-1]
-    )
+    # eigenstate_list = get_eigenstate_list(eigenstates)
+    # fig, _, _ = animate_eigenstate_3D_in_xy(
+    #     eigenstates["eigenstate_config"], eigenstate_list[-1]
+    # )
 
-    fig.show()
+    # fig.show()
     input()
 
 
@@ -62,7 +71,7 @@ def plot_wavepacket_2D():
 
 def plot_localized_wavepacket_grid():
     path = get_data_path("copper_eigenstates_wavepacket.json")
-    wavepacket = symmetrize_wavepacket(load_wavepacket_grid_legacy(path))
+    wavepacket = symmetrize_wavepacket_about_far_edge(load_wavepacket_grid_legacy(path))
 
     fig, _, img = plot_wavepacket_grid_xy(wavepacket, z_ind=10, measure="real")
     img.set_norm("symlog")  # type: ignore
@@ -86,12 +95,116 @@ def plot_wavefunction_3D():
     path = get_data_path("copper_eigenstates_wavepacket.json")
     path = get_data_path("copper_eigenstates_wavepacket_offset.json")
     wavepacket = load_wavepacket_grid_legacy(path)
-    wavepacket = symmetrize_wavepacket(wavepacket)
+    wavepacket = symmetrize_wavepacket_about_far_edge(wavepacket)
 
     fig, _, _ = animate_wavepacket_grid_3D_in_xy(wavepacket)
     fig.show()
     input()
     fig, _, _ = animate_wavepacket_grid_3D_in_x1z(wavepacket)
+    fig.show()
+    input()
+
+
+def plot_relaxed_wavefunction_3D():
+    path = get_data_path("relaxed_eigenstates_wavepacket_low_res.json")
+    path = get_data_path("relaxed_eigenstates_wavepacket.json")
+    path = get_data_path("relaxed_eigenstates_hd_wavepacket.json")
+    path = get_data_path("relaxed_eigenstates_hd_wavepacket_flat.json")
+    wavepacket = load_wavepacket_grid(path)
+    wavepacket = reflect_wavepacket_in_axis(wavepacket, axis=1)
+
+    fig, _, _ = animate_wavepacket_grid_3D_in_xy(wavepacket, measure="real")
+    fig.show()
+    input()
+
+    fig, _, _ = animate_wavepacket_grid_3D_in_x1z(wavepacket)
+    fig.show()
+    input()
+
+
+def plot_wavepacket_difference_3D() -> None:
+    path = get_data_path("relaxed_eigenstates_wavepacket.json")
+    wavepacket_low_res = load_wavepacket_grid(path)
+    path = get_data_path("relaxed_eigenstates_hd_wavepacket.json")
+    wavepacket_hd = load_wavepacket_grid(path)
+
+    new_points = np.subtract(wavepacket_hd["points"], wavepacket_low_res["points"])
+    wavepacket: WavepacketGrid = {**wavepacket_hd, "points": new_points.tolist()}
+
+    print(np.max(np.abs(wavepacket_hd["points"])))
+
+    print(np.max(np.abs(wavepacket_low_res["points"])))
+
+    fig, _, _anim0 = animate_wavepacket_grid_3D_in_xy(wavepacket, measure="real")
+    fig.show()
+
+    fig, _, _anim1 = animate_ft_wavepacket_grid_3D_in_xy(wavepacket, measure="real")
+    fig.show()
+
+    new_points = np.mean(
+        [wavepacket_hd["points"], wavepacket_low_res["points"]], axis=0
+    )
+    wavepacket_averaged: WavepacketGrid = {
+        **wavepacket_hd,
+        "points": new_points.tolist(),
+    }
+
+    fig, _, _anim2 = animate_wavepacket_grid_3D_in_xy(
+        wavepacket_averaged, measure="real"
+    )
+    fig.show()
+
+    fig, _, _anim3 = animate_ft_wavepacket_grid_3D_in_xy(
+        wavepacket_averaged, measure="real"
+    )
+    fig.show()
+
+    fig, _, _anim4 = animate_ft_wavepacket_grid_3D_in_xy(wavepacket_hd, measure="real")
+    fig.show()
+
+    input()
+
+
+def plot_ft_hd_wavepacket_at_origin() -> None:
+    path = get_data_path("relaxed_eigenstates_hd_wavepacket_flat.json")
+    wavepacket = load_wavepacket_grid(path)
+    print(np.array(wavepacket["points"]).shape)
+    fig, _, _ = plot_wavepacket_grid_xy(wavepacket, z_ind=1, measure="real")
+    fig.show()
+    # wavepacket = reflect_wavepacket_in_axis(wavepacket, axis=1)
+    fig, _, _ = plot_ft_wavepacket_grid_xy(wavepacket, z_ind=1, measure="real")
+
+    ft_points = np.fft.ifft2(wavepacket["points"], axes=(0, 1))
+    # ft_points[:+12, :+12, :] = 0
+    # ft_points[-12:, :+12, :] = 0
+    # ft_points[-12:, -12:, :] = 0
+    # ft_points[:+12, -12:, :] = 0
+
+    new_points = np.fft.fft2(ft_points, axes=(0, 1))
+    new_wavepacket: WavepacketGrid = {**wavepacket, "points": new_points.tolist()}
+    fig, _, _ = plot_wavepacket_grid_xy(new_wavepacket, z_ind=1, measure="real")
+    fig.show()
+
+    ft_points = np.fft.ifft2(wavepacket["points"], axes=(0, 1))
+    new_ft_points = np.zeros_like(ft_points)
+    new_ft_points[:+12, :, :] = ft_points[:+12, :, :]
+    new_ft_points[-12:, :, :] = ft_points[-12:, :, :]
+    new_ft_points[:, -12:, :] = ft_points[:, -12:, :]
+    new_ft_points[:, :+12, :] = ft_points[:, :+12, :]
+
+    new_points = np.fft.fft2(new_ft_points, axes=(0, 1))
+    fixed_wavepacket: WavepacketGrid = {**wavepacket, "points": new_points.tolist()}
+    fig, _, _ = plot_wavepacket_grid_xy(fixed_wavepacket, z_ind=1, measure="real")
+    fig.show()
+    # almost_zero = np.isclose(np.abs(ft_points), 0)
+    # print(np.count_nonzero(almost_zero))
+    # ft_points[almost_zero] = 1000000
+    ft_surface = get_reciprocal_surface(wavepacket)
+    fig, ax, mesh = plot_points_on_surface_xy(
+        ft_surface, ft_points.tolist(), z_ind=1, measure="abs"
+    )
+    fig.colorbar(mesh, ax=ax)
+
     fig.show()
     input()
 
@@ -299,7 +412,7 @@ def test_wavefunction_similarity() -> None:
     wavefunction_2 = util.calculate_wavefunction_slow(eigenstate2, points)
 
     fig, ax = plt.subplots()
-    print(x_points)
+
     ax.plot(x_points, np.abs(wavefunction_1))
     ax.plot(x_points, np.abs(wavefunction_2))
 
@@ -380,7 +493,7 @@ def plot_eigenstate_difference_in_z(
 
     util = EigenstateConfigUtil(config)
     z_points = np.linspace(-util.characteristic_z * 2, util.characteristic_z * 2, 100)
-    points = [[util.delta_x1[0] / 2, util.delta_x2[1] / 2, pz] for pz in z_points]
+    points = [[util.delta_x0[0] / 2, util.delta_x1[1] / 2, pz] for pz in z_points]
 
     wfn0 = util.calculate_wavefunction_fast(eig1, points)
     wfn3 = util.calculate_wavefunction_fast(eig2, points)
@@ -412,8 +525,8 @@ def analyze_wavepacket_grid_1_points():
     util = EigenstateConfigUtil(filtered_normalized["eigenstate_config"])
 
     zero_point = [0, 0, 0]
-    origin_point = [util.delta_x1[0] / 2, util.delta_x2[1] / 2, 0]
-    next_origin_point = [-util.delta_x1[0] / 2, util.delta_x2[1] / 2, 0]
+    origin_point = [util.delta_x0[0] / 2, util.delta_x1[1] / 2, 0]
+    next_origin_point = [-util.delta_x0[0] / 2, util.delta_x1[1] / 2, 0]
     points = [origin_point, next_origin_point, zero_point]
     for eigenstate in get_eigenstate_list(filtered):
         print(util.calculate_wavefunction_fast(eigenstate, points))

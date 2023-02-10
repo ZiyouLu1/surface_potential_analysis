@@ -1,11 +1,12 @@
 import numpy as np
+import scipy.constants
 
 from surface_potential_analysis.surface_hamiltonian_plot import (
     plot_bands_occupation,
     plot_first_4_eigenvectors,
 )
 
-from .hamiltonian import generate_hamiltonian, generate_hamiltonian_relaxed
+from .s2_hamiltonian import generate_hamiltonian, generate_hamiltonian_relaxed
 from .surface_data import save_figure
 
 
@@ -45,8 +46,8 @@ def list_first_copper_band_with_widths():
     print(sorted_eigenvalues_origin[:5])
     print((sorted_eigenvalues_origin - sorted_eigenvalues_origin[0])[:5])
 
-    max_kx = np.abs(hamiltonian.dkx1[0]) + np.abs(hamiltonian.dkx2[0])
-    max_ky = np.abs(hamiltonian.dkx1[1]) + np.abs(hamiltonian.dkx2[1])
+    max_kx = np.abs(hamiltonian.dkx0[0]) + np.abs(hamiltonian.dkx1[0])
+    max_ky = np.abs(hamiltonian.dkx0[1]) + np.abs(hamiltonian.dkx1[1])
     eigenvalues_max, _ = hamiltonian.calculate_eigenvalues(max_kx, max_ky)
     sorted_eigenvalues_max = np.sort(eigenvalues_max)
 
@@ -69,8 +70,8 @@ def list_first_copper_band_with_widths():
     print(sorted_eigenvalues_origin[:5])
     print((sorted_eigenvalues_origin - sorted_eigenvalues_origin[0])[:5])
 
-    max_kx = np.abs(hamiltonian.dkx1[0]) + np.abs(hamiltonian.dkx2[0])
-    max_ky = np.abs(hamiltonian.dkx1[1]) + np.abs(hamiltonian.dkx2[1])
+    max_kx = np.abs(hamiltonian.dkx0[0]) + np.abs(hamiltonian.dkx1[0])
+    max_ky = np.abs(hamiltonian.dkx0[1]) + np.abs(hamiltonian.dkx1[1])
     eigenvalues_max, _ = hamiltonian.calculate_eigenvalues(max_kx, max_ky)
     sorted_eigenvalues_max = np.sort(eigenvalues_max)
 
@@ -80,6 +81,78 @@ def list_first_copper_band_with_widths():
 
     print("band width")
     print((sorted_eigenvalues_origin - sorted_eigenvalues_max)[:5])
+
+    print("----------------------------------------")
+
+
+def find_band_with_1mev_bandwidth():
+    """
+    Activated tunnelling has an energy of 197meV
+
+    John: The key thing is not the physical barrier,
+    but the energy wrt the ground state of the first band with a decent (eg 1meV) bandwidth
+    """
+
+    print("----------------------------------------")
+    print("Relaxed data")
+
+    hamiltonian = generate_hamiltonian_relaxed(resolution=(10, 10, 14))
+
+    eigenvalues_origin, _ = hamiltonian.calculate_eigenvalues(0, 0)
+    eigenvalues_origin = np.sort(eigenvalues_origin)
+
+    max_kx = np.abs(hamiltonian.dkx0[0]) + np.abs(hamiltonian.dkx1[0])
+    max_ky = np.abs(hamiltonian.dkx0[1]) + np.abs(hamiltonian.dkx1[1])
+    eigenvalues_max, _ = hamiltonian.calculate_eigenvalues(max_kx, max_ky)
+    eigenvalues_max = np.sort(eigenvalues_max)
+
+    bandwidths = np.abs(eigenvalues_origin - eigenvalues_max)
+    print(bandwidths, 1 * 10**-3 * scipy.constants.elementary_charge)
+    first_relevant = np.argmax(
+        bandwidths > 1 * 10**-3 * scipy.constants.elementary_charge
+    )
+
+    print("band index", first_relevant)
+    print("band width", bandwidths[first_relevant])
+    print("k=0", eigenvalues_origin[first_relevant] - eigenvalues_origin[0])
+    print(bandwidths[: first_relevant + 1])
+
+    print("----------------------------------------")
+
+
+def find_band_with_relevant_energy():
+    """
+    Activated tunnelling has an energy of 197meV - which band would this correspond to?
+    """
+
+    print("----------------------------------------")
+    print("Relaxed data")
+
+    hamiltonian = generate_hamiltonian_relaxed(resolution=(10, 10, 14))
+
+    eigenvalues_origin, _ = hamiltonian.calculate_eigenvalues(0, 0)
+    eigenvalues_origin = np.sort(eigenvalues_origin)
+
+    max_kx = np.abs(hamiltonian.dkx0[0]) + np.abs(hamiltonian.dkx1[0])
+    max_ky = np.abs(hamiltonian.dkx0[1]) + np.abs(hamiltonian.dkx1[1])
+    eigenvalues_max, _ = hamiltonian.calculate_eigenvalues(max_kx, max_ky)
+    eigenvalues_max = np.sort(eigenvalues_max)
+
+    bandwidths = np.abs(eigenvalues_origin - eigenvalues_max)
+    first_relevant = np.argmax(
+        bandwidths > 180 * 10**-3 * scipy.constants.elementary_charge
+    )
+    last_relevant = np.argmax(
+        bandwidths > 200 * 10**-3 * scipy.constants.elementary_charge
+    )
+
+    print("band index", first_relevant, last_relevant)
+    print("band width", bandwidths[first_relevant : last_relevant + 1])
+    print(
+        "k=0",
+        eigenvalues_origin[first_relevant : last_relevant + 1] - eigenvalues_origin[0],
+    )
+    print(bandwidths[first_relevant : last_relevant + 1])
 
     print("----------------------------------------")
 

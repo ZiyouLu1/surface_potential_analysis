@@ -8,12 +8,18 @@ from matplotlib.collections import QuadMesh
 from matplotlib.figure import Figure
 from matplotlib.image import AxesImage
 
+from surface_potential_analysis.surface_config import SurfaceConfigUtil
+from surface_potential_analysis.surface_config_plot import (
+    plot_ft_points_on_surface_xy,
+    plot_points_on_surface_xy,
+)
+
 from .energy_eigenstate import (
     EigenstateConfigUtil,
     EnergyEigenstates,
     get_eigenstate_list,
 )
-from .wavepacket_grid import WavepacketGrid, get_wavepacket_grid_xy_points
+from .wavepacket_grid import WavepacketGrid
 
 
 def plot_wavepacket_grid_xy(
@@ -22,22 +28,38 @@ def plot_wavepacket_grid_xy(
     *,
     ax: Axes | None = None,
     measure: Literal["real", "imag", "abs"] = "abs",
+    norm: Literal["symlog", "linear"] = "symlog",
 ) -> Tuple[Figure, Axes, QuadMesh]:
-    fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
 
-    if measure == "real":
-        data = np.real(grid["points"])
-    elif measure == "imag":
-        data = np.imag(grid["points"])
-    else:
-        data = np.abs(grid["points"])
+    fig, ax, mesh = plot_points_on_surface_xy(
+        grid, grid["points"], z_ind, ax=ax, measure=measure
+    )
+    ax.set_xlabel("x direction")
+    ax.set_ylabel("y direction")
+    mesh.set_norm(norm)  # type: ignore
+    ax.set_aspect("equal", adjustable="box")
+    fig.colorbar(mesh, ax=ax, format="%4.1e")
 
-    coordinates = get_wavepacket_grid_xy_points(grid).reshape(
-        data.shape[0], data.shape[1], 2
+    return fig, ax, mesh
+
+
+def plot_ft_wavepacket_grid_xy(
+    grid: WavepacketGrid,
+    z_ind=0,
+    *,
+    ax: Axes | None = None,
+    measure: Literal["real", "imag", "abs"] = "abs",
+    norm: Literal["symlog", "linear"] = "linear",
+) -> Tuple[Figure, Axes, QuadMesh]:
+
+    fig, ax, mesh = plot_ft_points_on_surface_xy(
+        grid, grid["points"], z_ind, ax=ax, measure=measure
     )
-    mesh = ax.pcolormesh(
-        coordinates[:, :, 0], coordinates[:, :, 1], data[:, :, z_ind], shading="nearest"
-    )
+    ax.set_xlabel("kx direction")
+    ax.set_ylabel("ky direction")
+    mesh.set_norm(norm)  # type: ignore
+    fig.colorbar(mesh, ax=ax, format="%4.1e")
+
     return fig, ax, mesh
 
 
@@ -50,28 +72,60 @@ def animate_wavepacket_grid_3D_in_xy(
 ) -> Tuple[Figure, Axes, matplotlib.animation.ArtistAnimation]:
     fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
 
-    _, _, mesh0 = plot_wavepacket_grid_xy(grid, 0, ax=ax, measure=measure)
+    _, _, mesh0 = plot_points_on_surface_xy(
+        grid, grid["points"], 0, ax=ax, measure=measure
+    )
 
     frames: List[List[QuadMesh]] = []
     for z_ind in range(np.array(grid["points"]).shape[2]):
 
-        _, _, mesh = plot_wavepacket_grid_xy(grid, z_ind, ax=ax, measure=measure)
+        _, _, mesh = plot_points_on_surface_xy(
+            grid, grid["points"], z_ind, ax=ax, measure=measure
+        )
         frames.append([mesh])
 
     max_clim = np.max([i[0].get_clim()[1] for i in frames])
     for (mesh,) in frames:
-        mesh.set_clim(0, max_clim)
         mesh.set_norm(norm)  # type: ignore
-    mesh0.set_clim(0, max_clim)
+        mesh.set_clim(0, max_clim * 1e-3)
     mesh0.set_norm(norm)  # type: ignore
+    mesh0.set_clim(0, max_clim)
+
     ani = matplotlib.animation.ArtistAnimation(fig, frames)
 
     ax.set_xlabel("X direction")
     ax.set_ylabel("Y direction")
+    ax.set_aspect("equal", adjustable="box")
 
     fig.colorbar(mesh0, ax=ax, format="%4.1e")
 
     return (fig, ax, ani)
+
+
+def animate_ft_wavepacket_grid_3D_in_xy(
+    grid: WavepacketGrid,
+    *,
+    ax: Axes | None = None,
+    measure: Literal["real", "imag", "abs"] = "abs",
+    norm: Literal["symlog", "linear"] = "symlog",
+) -> Tuple[Figure, Axes, matplotlib.animation.ArtistAnimation]:
+
+    util = SurfaceConfigUtil(grid)
+    ft_points = ft_points = np.fft.ifft2(grid["points"], axes=(0, 1))
+    ft_grid: WavepacketGrid = {
+        "delta_x0": util.dkx0,
+        "delta_x1": util.dkx1,
+        "delta_z": grid["delta_z"],
+        "points": ft_points.tolist(),
+    }
+    (fig, ax, ani) = animate_wavepacket_grid_3D_in_xy(
+        ft_grid, ax=ax, measure=measure, norm=norm
+    )
+
+    ax.set_xlabel("kx Direction")
+    ax.set_ylabel("ky Direction")
+
+    return fig, ax, ani
 
 
 def plot_wavepacket_grid_in_x1z(
@@ -116,14 +170,15 @@ def animate_wavepacket_grid_3D_in_x1z(
 
     max_clim = np.max([i[0].get_clim()[1] for i in frames])
     for (mesh,) in frames:
-        mesh.set_clim(0, max_clim)
         mesh.set_norm(norm)  # type: ignore
-    mesh0.set_clim(0, max_clim)
+        mesh.set_clim(0, max_clim)
     mesh0.set_norm(norm)  # type: ignore
+    mesh0.set_clim(0, max_clim)
+
     ani = matplotlib.animation.ArtistAnimation(fig, frames)
 
     ax.set_xlabel("X direction")
-    ax.set_ylabel("Y direction")
+    ax.set_ylabel("Z direction")
 
     fig.colorbar(mesh0, ax=ax, format="%4.1e")
 
@@ -159,8 +214,8 @@ def plot_wavepacket_in_xy(
     fig, ax1 = (ax.get_figure(), ax) if ax is not None else plt.subplots()
     util = EigenstateConfigUtil(eigenstates["eigenstate_config"])
 
-    x_points = np.linspace(-util.delta_x1[0], util.delta_x1[0], 60)
-    y_points = np.linspace(0, util.delta_x2[1], 30)
+    x_points = np.linspace(-util.delta_x0[0], util.delta_x0[0], 60)
+    y_points = np.linspace(0, util.delta_x1[1], 30)
 
     xv, yv = np.meshgrid(x_points, y_points)
     points = np.array([xv.ravel(), yv.ravel(), np.zeros_like(xv.ravel())]).T

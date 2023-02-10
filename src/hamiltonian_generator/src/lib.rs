@@ -249,8 +249,8 @@ fn calculate_off_diagonal_energies(
 #[allow(clippy::too_many_arguments)]
 fn get_eigenstate_wavefunction(
     resolution: [usize; 3],
+    delta_x0: (f64, f64),
     delta_x1: (f64, f64),
-    delta_x2: (f64, f64),
     mass: f64,
     sho_omega: f64,
     kx: f64,

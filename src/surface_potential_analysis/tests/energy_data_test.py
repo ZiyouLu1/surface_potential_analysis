@@ -18,8 +18,8 @@ class TestEnergyData(unittest.TestCase):
 
         data: EnergyGrid = {
             "points": [[[0, 0], [0, 0]], [[0, 0], [0, 0]]],
-            "delta_x1": (0, 2 * np.pi * hbar),
-            "delta_x2": (2 * np.pi * hbar, 0),
+            "delta_x0": (0, 2 * np.pi * hbar),
+            "delta_x1": (2 * np.pi * hbar, 0),
             "z_points": [0, 1],
         }
 
@@ -32,25 +32,25 @@ class TestEnergyData(unittest.TestCase):
 
         data: EnergyGrid = {
             "points": np.zeros(shape=(n_xy - 1, n_xy - 1, 2)).tolist(),
-            "delta_x1": (0, delta_xy),
-            "delta_x2": (delta_xy, 0),
+            "delta_x0": (0, delta_xy),
+            "delta_x1": (delta_xy, 0),
             "z_points": [0, 1],
         }
 
         extended = repeat_original_data(data)
 
-        self.assertEqual(0, extended["delta_x1"][0])
-        self.assertEqual(3 * delta_xy, extended["delta_x1"][1])
-        self.assertEqual(3 * delta_xy, extended["delta_x2"][0])
-        self.assertEqual(0, extended["delta_x2"][1])
+        self.assertEqual(0, extended["delta_x0"][0])
+        self.assertEqual(3 * delta_xy, extended["delta_x0"][1])
+        self.assertEqual(3 * delta_xy, extended["delta_x1"][0])
+        self.assertEqual(0, extended["delta_x1"][1])
 
     def test_extend_z_data(self) -> None:
         points = [[[1.0, 2.0, 3.0]]]
 
         data: EnergyGrid = {
             "points": points,
-            "delta_x1": (1, 0),
-            "delta_x2": (0, 1),
+            "delta_x0": (1, 0),
+            "delta_x1": (0, 1),
             "z_points": [0, 1, 4],
         }
 
@@ -63,8 +63,8 @@ class TestEnergyData(unittest.TestCase):
     def test_get_energy_grid_coordinates(self) -> None:
         data: EnergyGrid = {
             "points": np.zeros((2, 2, 4)).tolist(),
-            "delta_x1": (1, 0),
-            "delta_x2": (0, 1),
+            "delta_x0": (1, 0),
+            "delta_x1": (0, 1),
             "z_points": [0, 1, 2, 3],
         }
 

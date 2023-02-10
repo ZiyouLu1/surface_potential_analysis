@@ -10,7 +10,7 @@ from surface_potential_analysis.wavepacket_grid import (
     calculate_volume_element,
     load_wavepacket_grid_legacy,
     mask_negative_wavepacket,
-    symmetrize_wavepacket,
+    symmetrize_wavepacket_about_far_edge,
 )
 from surface_potential_analysis.wavepacket_grid_plot import plot_wavepacket_grid_xy
 
@@ -19,7 +19,7 @@ from .surface_data import get_data_path, save_figure
 
 def plot_overlap_factor():
     path = get_data_path("copper_eigenstates_wavepacket.json")
-    wavepacket = symmetrize_wavepacket(load_wavepacket_grid_legacy(path))
+    wavepacket = symmetrize_wavepacket_about_far_edge(load_wavepacket_grid_legacy(path))
 
     dv = calculate_volume_element(wavepacket)
 
@@ -57,7 +57,7 @@ def plot_masked_overlap_factor():
     # path = get_data_path("copper_eigenstates_wavepacket_4_point_interpolated.json")
     # interpolated = load_wavepacket_grid(path)
     path = get_data_path("copper_eigenstates_wavepacket.json")
-    wavepacket = symmetrize_wavepacket(load_wavepacket_grid_legacy(path))
+    wavepacket = symmetrize_wavepacket_about_far_edge(load_wavepacket_grid_legacy(path))
 
     masked = mask_negative_wavepacket(wavepacket)
     dv = calculate_volume_element(masked)
@@ -186,7 +186,7 @@ def plot_overlap_fraction_2D(overlap_fraction: NDArray):
 
 def plot_8_point_overlap_fraction():
     path = get_data_path("copper_eigenstates_wavepacket.json")
-    wavepacket = symmetrize_wavepacket(load_wavepacket_grid_legacy(path))
+    wavepacket = symmetrize_wavepacket_about_far_edge(load_wavepacket_grid_legacy(path))
 
     points = np.array(wavepacket["points"])
     points1 = points[0:65]
@@ -204,7 +204,7 @@ def plot_overlap_fraction_corrected():
     """
 
     path = get_data_path("copper_eigenstates_wavepacket.json")
-    wavepacket = symmetrize_wavepacket(load_wavepacket_grid_legacy(path))
+    wavepacket = symmetrize_wavepacket_about_far_edge(load_wavepacket_grid_legacy(path))
 
     points = np.array(wavepacket["points"])
     points1 = points[0:65]

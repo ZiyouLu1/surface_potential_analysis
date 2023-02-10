@@ -54,6 +54,9 @@ class SurfaceHamiltonianUtil(EigenstateConfigUtil):
         self._potential = potential
         self._potential_offset = potential_offset
 
+        if self.Nkx != self.Nx:
+            raise AssertionError("Potential has the incorrect shape")
+
         if (2 * self.Nkx) > self.Nx:
             print("Warning: max(ndkx) > Nx, some over sampling will occur")
         if (2 * self.Nky) > self.Ny:
@@ -78,11 +81,11 @@ class SurfaceHamiltonianUtil(EigenstateConfigUtil):
     @property
     def lattuice_coordinates(self) -> NDArray:
         """
-        Lattice coordinates as calculated from delta_x1, delta_x2 with the origin at the center
+        Lattice coordinates as calculated from delta_x0, delta_x1 with the origin at the center
         Note we dont include the repeated symmetry point in the potential
         """
         return grid_space(
-            self.delta_x1, self.delta_x2, shape=(self.Nx, self.Ny), endpoint=False
+            self.delta_x0, self.delta_x1, shape=(self.Nx, self.Ny), endpoint=False
         )
 
     @property
@@ -114,9 +117,9 @@ class SurfaceHamiltonianUtil(EigenstateConfigUtil):
     def _calculate_diagonal_energy(self, kx: float, ky: float) -> NDArray[Any]:
         kx1_coords, kx2_coords, nz_coords = self.eigenstate_indexes.T
 
-        kx_points = self.dkx1[0] * kx1_coords + self.dkx2[0] * kx2_coords + kx
+        kx_points = self.dkx0[0] * kx1_coords + self.dkx1[0] * kx2_coords + kx
         x_energy = (hbar * kx_points) ** 2 / (2 * self.mass)
-        ky_points = self.dkx1[1] * kx1_coords + self.dkx2[1] * kx2_coords + ky
+        ky_points = self.dkx0[1] * kx1_coords + self.dkx1[1] * kx2_coords + ky
         y_energy = (hbar * ky_points) ** 2 / (2 * self.mass)
         z_energy = (hbar * self.sho_omega) * (nz_coords + 0.5)
         return x_energy + y_energy + z_energy
@@ -167,7 +170,7 @@ class SurfaceHamiltonianUtil(EigenstateConfigUtil):
         hermite1 = self._calculate_sho_wavefunction_points(nz1)
         hermite2 = self._calculate_sho_wavefunction_points(nz2)
 
-        fourier_transform = np.sum(hermite1 * hermite2 * ft_pot_points)
+        fourier_transform = float(np.sum(hermite1 * hermite2 * ft_pot_points))
 
         return self.dz * fourier_transform
 
@@ -206,9 +209,9 @@ class SurfaceHamiltonianUtil(EigenstateConfigUtil):
 
 
 def generate_energy_eigenstates_grid(
-    path: Path,
     hamiltonian: SurfaceHamiltonianUtil,
     k_points: NDArray,
+    path: Path,
     *,
     include_bands: List[int] | None = None,
 ) -> None:
@@ -245,7 +248,7 @@ def generate_energy_eigenstates_grid_copper_100(
     )
 
     return generate_energy_eigenstates_grid(
-        path, hamiltonian, k_points, include_bands=include_bands
+        hamiltonian, k_points, path, include_bands=include_bands
     )
 
 

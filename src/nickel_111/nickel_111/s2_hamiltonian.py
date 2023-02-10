@@ -7,7 +7,7 @@ from surface_potential_analysis.energy_eigenstate import (
 )
 from surface_potential_analysis.hamiltonian import SurfaceHamiltonianUtil
 
-from .potential import load_john_interpolation
+from .s1_potential import load_john_interpolation
 
 
 def generate_hamiltonian(resolution: Tuple[int, int, int] = (1, 1, 1)):
@@ -16,8 +16,8 @@ def generate_hamiltonian(resolution: Tuple[int, int, int] = (1, 1, 1)):
     config: EigenstateConfig = {
         "mass": 1.6735575e-27,
         "sho_omega": 198226131917441.6,
+        "delta_x0": data["delta_x0"],
         "delta_x1": data["delta_x1"],
-        "delta_x2": data["delta_x2"],
         "resolution": resolution,
     }
 

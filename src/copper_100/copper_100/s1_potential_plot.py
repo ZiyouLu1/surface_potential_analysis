@@ -12,7 +12,7 @@ from surface_potential_analysis.energy_data_plot import (
     plot_z_direction_energy_data_100,
 )
 
-from .potential import (
+from .s1_potential import (
     load_9h_copper_data,
     load_interpolated_copper_data,
     load_interpolated_relaxed_data,

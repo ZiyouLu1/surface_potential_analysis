@@ -7,7 +7,7 @@ from surface_potential_analysis.energy_eigenstate import (
 )
 from surface_potential_analysis.hamiltonian import SurfaceHamiltonianUtil
 
-from .potential import (
+from .s1_potential import (
     load_interpolated_copper_data,
     load_spline_interpolated_relaxed_data,
 )
@@ -19,8 +19,8 @@ def generate_hamiltonian(resolution: Tuple[int, int, int] = (1, 1, 1)):
     config: EigenstateConfig = {
         "mass": 1.6735575e-27,
         "sho_omega": 117905964225836.06,
+        "delta_x0": data["delta_x0"],
         "delta_x1": data["delta_x1"],
-        "delta_x2": data["delta_x2"],
         "resolution": resolution,
     }
 
@@ -34,8 +34,8 @@ def generate_hamiltonian_relaxed(resolution: Tuple[int, int, int] = (1, 1, 1)):
     config: EigenstateConfig = {
         "mass": 1.6735575e-27,
         "sho_omega": 111119431700988.45,
+        "delta_x0": data["delta_x0"],
         "delta_x1": data["delta_x1"],
-        "delta_x2": data["delta_x2"],
         "resolution": resolution,
     }
 

@@ -20,8 +20,8 @@ def get_hermite_val(x: float, n: int) -> float:
 
 def get_eigenstate_wavefunction(
     resolution: Tuple[float, float, float],
+    delta_x0: Tuple[float, float],
     delta_x1: Tuple[float, float],
-    delta_x2: Tuple[float, float],
     mass: float,
     sho_omega: float,
     kx: float,

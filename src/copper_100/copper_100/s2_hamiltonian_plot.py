@@ -5,11 +5,11 @@ from surface_potential_analysis.sho_wavefunction_plot import (
 )
 from surface_potential_analysis.surface_hamiltonian_plot import plot_nth_eigenstate
 
-from .hamiltonian import generate_hamiltonian
-from .potential import (
+from .s1_potential import (
     load_interpolated_copper_data,
     load_spline_interpolated_relaxed_data,
 )
+from .s2_hamiltonian import generate_hamiltonian
 
 
 def plot_interpolation_with_sho_config() -> None:
@@ -20,8 +20,8 @@ def plot_interpolation_with_sho_config() -> None:
     config: EigenstateConfig = {
         "mass": 1.6735575e-27,
         "sho_omega": 117905964225836.06,  # 1e14,
+        "delta_x0": data["delta_x0"],
         "delta_x1": data["delta_x1"],
-        "delta_x2": data["delta_x2"],
         "resolution": (1, 1, 1),
     }
     z_offset = -1.840551985155284e-10
@@ -36,8 +36,8 @@ def plot_relaxed_interpolation_with_sho_config() -> None:
     config: EigenstateConfig = {
         "mass": 1.6735575e-27,
         "sho_omega": 111119431700988.45,  # 1e14,
+        "delta_x0": data["delta_x0"],
         "delta_x1": data["delta_x1"],
-        "delta_x2": data["delta_x2"],
         "resolution": (1, 1, 1),
     }
     z_offset = -1.8866087481825024e-10

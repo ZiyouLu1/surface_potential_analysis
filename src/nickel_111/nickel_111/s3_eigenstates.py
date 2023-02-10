@@ -3,14 +3,14 @@ import numpy as np
 from surface_potential_analysis.energy_eigenstate import save_energy_eigenstates
 from surface_potential_analysis.hamiltonian import calculate_energy_eigenstates
 
-from .hamiltonian import generate_hamiltonian
+from .s2_hamiltonian import generate_hamiltonian
 from .surface_data import get_data_path
 
 
 def generate_eigenstates_data():
     h = generate_hamiltonian(resolution=(12, 12, 13))
 
-    kx_points = np.linspace(-h.dkx1[0] / 2, 0, 5)
+    kx_points = np.linspace(-h.dkx0[0] / 2, 0, 5)
     ky_points = np.zeros_like(kx_points)
 
     # eigenstates = calculate_energy_eigenstates(h, kx_points, ky_points)

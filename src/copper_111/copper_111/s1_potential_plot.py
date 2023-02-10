@@ -13,7 +13,7 @@ from surface_potential_analysis.energy_data_plot import (
     plot_z_direction_energy_data_111,
 )
 
-from .potential import (
+from .s1_potential import (
     load_cleaned_data_grid,
     load_interpolated_grid,
     load_john_interpolation,
@@ -66,12 +66,13 @@ def plot_raw_energy_grid_points():
     ft_points = np.abs(np.fft.ifft2(grid["points"], axes=(0, 1)))
     ft_points[0, 0] = 0
     ft_grid: EnergyGrid = {
+        "delta_x0": grid["delta_x0"],
         "delta_x1": grid["delta_x1"],
-        "delta_x2": grid["delta_x2"],
         "points": ft_points.tolist(),
         "z_points": grid["z_points"],
     }
     fig, ax, _ani1 = animate_energy_grid_3D_in_xy(ft_grid)
+    # TODO: delta is wrong, plot generic points and then factor out into ft.
     ax.set_title("Plot of the ft of the raw potential")
     fig.show()
     input()
@@ -94,8 +95,8 @@ def plot_interpolated_energy_grid_points():
     ft_points = np.abs(np.fft.ifft2(grid["points"], axes=(0, 1)))
     ft_points[0, 0] = 0
     ft_grid: EnergyGrid = {
+        "delta_x0": grid["delta_x0"],
         "delta_x1": grid["delta_x1"],
-        "delta_x2": grid["delta_x2"],
         "points": ft_points.tolist(),
         "z_points": grid["z_points"],
     }

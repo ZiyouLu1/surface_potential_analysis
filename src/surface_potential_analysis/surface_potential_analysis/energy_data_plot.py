@@ -176,8 +176,8 @@ def plot_xz_plane_energy_copper_100(data: EnergyGrid) -> Figure:
     fig, axs = plt.subplots(nrows=2, ncols=3)
 
     points = np.array(add_back_symmetry_points(data["points"]))
-    x_points = np.linspace(0, data["delta_x1"][0], points.shape[0])
-    y_points = np.linspace(0, data["delta_x2"][1], points.shape[0])
+    x_points = np.linspace(0, data["delta_x0"][0], points.shape[0])
+    y_points = np.linspace(0, data["delta_x1"][1], points.shape[0])
     z_points = np.array(data["z_points"])
     middle_x_index = math.floor(points.shape[0] / 2)
     middle_y_index = math.floor(points.shape[1] / 2)
@@ -267,6 +267,7 @@ def plot_energy_points_location(energy_points: EnergyPoints, ax: Axes | None = N
     (line,) = ax.plot(x_points, y_points)
     line.set_marker("x")
     line.set_linestyle("")
+    ax.set_aspect("equal", adjustable="box")
 
     return fig, ax, line
 
@@ -286,6 +287,7 @@ def plot_energy_grid_in_xy(
         points[:, :, z_ind],
         shading="nearest",
     )
+    ax.set_aspect("equal", adjustable="box")
     return (fig, ax, mesh)
 
 
@@ -312,6 +314,7 @@ def animate_energy_grid_3D_in_xy(
 
     ax.set_xlabel("X direction")
     ax.set_ylabel("Y direction")
+    ax.set_aspect("equal", adjustable="box")
 
     fig.colorbar(mesh, ax=ax, format="%4.1e")
 
@@ -333,6 +336,7 @@ def plot_energy_grid_in_x1z(
         points[:, x2_ind, :],
         shading="nearest",
     )
+    ax.set_aspect("equal", adjustable="box")
     return (fig, ax, mesh)
 
 
@@ -359,6 +363,7 @@ def animate_energy_grid_3D_in_x1z(
 
     ax.set_xlabel("X1 direction")
     ax.set_ylabel("Z direction")
+    ax.set_aspect("equal", adjustable="box")
 
     fig.colorbar(mesh, ax=ax, format="%4.1e")
 
@@ -424,5 +429,6 @@ def plot_energy_point_locations_on_grid(
 
     ax.set_xlabel("X line")
     ax.set_ylabel("Y line")
+    ax.set_aspect("equal", adjustable="box")
 
     return fig, ax, ani

@@ -11,7 +11,7 @@ from matplotlib.lines import Line2D
 
 from surface_potential_analysis.brillouin_zone import grid_space
 
-from .energy_eigenstate import Eigenstate, EigenstateConfig, EigenstateConfigUtil
+from .eigenstate import Eigenstate, EigenstateConfig, EigenstateConfigUtil
 
 
 def plot_eigenstate_in_xy(
@@ -26,7 +26,7 @@ def plot_eigenstate_in_xy(
     fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
     util = EigenstateConfigUtil(config)
 
-    xy_coordinates = grid_space(config["delta_x1"], config["delta_x2"], shape)
+    xy_coordinates = grid_space(config["delta_x0"], config["delta_x1"], shape)
 
     points = np.array(
         [
@@ -119,7 +119,7 @@ def plot_eigenstate_z(
 
     z_points = np.linspace(-util.characteristic_z * 2, util.characteristic_z * 2, 1000)
     points = np.array(
-        [(util.delta_x1[0] / 2, util.delta_x2[1] / 2, z) for z in z_points]
+        [(util.delta_x0[0] / 2, util.delta_x1[1] / 2, z) for z in z_points]
     )
 
     wfn = np.abs(util.calculate_wavefunction_fast(eigenstate, points))
@@ -138,11 +138,11 @@ def plot_eigenstate_through_bridge(
 
     util = EigenstateConfigUtil(config)
 
-    x_points = np.linspace(0, util.delta_x1[0], 1000)
-    points = np.array([(x, util.delta_x2[1] / 2, 0) for x in x_points])
+    x_points = np.linspace(0, util.delta_x0[0], 1000)
+    points = np.array([(x, util.delta_x1[1] / 2, 0) for x in x_points])
     wfn = util.calculate_wavefunction_fast(eigenstate, points)
     (line,) = ax1.plot(
-        x_points - util.delta_x1[0] / 2,
+        x_points - util.delta_x0[0] / 2,
         np.abs(wfn) if view == "abs" else np.angle(wfn),
     )
 
@@ -159,8 +159,8 @@ def plot_wavefunction_difference_in_xy(
     fig, ax1 = (ax.get_figure(), ax) if ax is not None else plt.subplots()
     util = EigenstateConfigUtil(config)
 
-    x_points = np.linspace(0, util.delta_x1[0], 30)
-    y_points = np.linspace(0, util.delta_x2[1], 30)
+    x_points = np.linspace(0, util.delta_x0[0], 30)
+    y_points = np.linspace(0, util.delta_x1[1], 30)
 
     xv, yv = np.meshgrid(x_points, y_points)
     points = np.array([xv.ravel(), yv.ravel(), y_point * np.ones_like(xv.ravel())]).T
@@ -185,7 +185,7 @@ def plot_eigenstate_in_xz(
     fig, ax1 = (ax.get_figure(), ax) if ax is not None else plt.subplots()
     util = EigenstateConfigUtil(config)
 
-    x_points = np.linspace(0, util.delta_x1[0], 29, endpoint=False)
+    x_points = np.linspace(0, util.delta_x0[0], 29, endpoint=False)
     z_lim = 2 * util.characteristic_z
     z_points = np.linspace(-z_lim, z_lim, 29, endpoint=True)
 
@@ -216,7 +216,7 @@ def plot_eigenstate_in_yz(
     fig, ax1 = (ax.get_figure(), ax) if ax is not None else plt.subplots()
     util = EigenstateConfigUtil(config)
 
-    y_points = np.linspace(0, util.delta_x2[1], 29, endpoint=False)
+    y_points = np.linspace(0, util.delta_x1[1], 29, endpoint=False)
     z_lim = 2 * util.characteristic_z
     z_points = np.linspace(-z_lim, z_lim, 29, endpoint=True)
 
@@ -250,10 +250,10 @@ def plot_eigenstate(
     _, _, line = plot_eigenstate_through_bridge(config, eigenstate, ax)
     line.set_label("X-Y through bridge")
 
-    x_points = np.linspace(0, util.delta_x1[0], 1000)
+    x_points = np.linspace(0, util.delta_x0[0], 1000)
     points = np.array([(x, x, 0) for x in x_points])
     a.plot(
-        np.sqrt(2) * (x_points - util.delta_x1[0] / 2),
+        np.sqrt(2) * (x_points - util.delta_x0[0] / 2),
         np.abs(util.calculate_wavefunction_fast(eigenstate, points)),
         label="X-Y through Top",
     )

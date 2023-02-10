@@ -21,10 +21,11 @@ def plot_eigenstate_positions(
     line.set_marker("x")
 
     util = EigenstateConfigUtil(eigenstates["eigenstate_config"])
-    dkx = np.abs(util.dkx1[0]) + np.abs(util.dkx2[0])
+    dkx = np.abs(util.dkx0[0]) + np.abs(util.dkx1[0])
     ax.set_xlim(-(dkx) / 2, (dkx) / 2)
-    dky = np.abs(util.dkx1[1]) + np.abs(util.dkx2[1])
+    dky = np.abs(util.dkx0[1]) + np.abs(util.dkx1[1])
     ax.set_ylim(-(dky) / 2, (dky) / 2)
+    ax.set_aspect("equal", adjustable="box")
 
     return fig, ax, line
 

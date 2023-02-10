@@ -1,31 +1,14 @@
 import json
-from functools import cached_property
 from pathlib import Path
 from typing import List, Tuple, TypedDict
 
 import numpy as np
 import scipy
-from numpy.typing import ArrayLike, NDArray
-from scipy.constants import hbar
+from numpy.typing import ArrayLike
 
-import hamiltonian_generator
-from surface_potential_analysis.brillouin_zone import get_points_in_brillouin_zone
-
+from .brillouin_zone import get_points_in_brillouin_zone
+from .eigenstate import Eigenstate, EigenstateConfig, EigenstateConfigUtil
 from .energy_data import EnergyInterpolation
-from .sho_wavefunction import calculate_sho_wavefunction
-
-
-class EigenstateConfig(TypedDict):
-    resolution: Tuple[int, int, int]
-    """Resolution in x,y,z to produce the eigenstates in"""
-    sho_omega: float
-    """Angular frequency (in rad s-1) of the sho we will fit using"""
-    mass: float
-    """Mass in Kg"""
-    delta_x1: Tuple[float, float]
-    """maximum extent in the x direction"""
-    delta_x2: Tuple[float, float]
-    """maximum extent in the x direction"""
 
 
 class EigenstateConfigRaw(TypedDict):
@@ -34,12 +17,6 @@ class EigenstateConfigRaw(TypedDict):
     mass: float
     delta_x1: List[float]
     delta_x2: List[float]
-
-
-class Eigenstate(TypedDict):
-    kx: float
-    ky: float
-    eigenvector: List[complex]
 
 
 class EnergyEigenstates(TypedDict):
@@ -63,8 +40,8 @@ def save_energy_eigenstates(data: EnergyEigenstates, path: Path) -> None:
     with path.open("w") as f:
         out: EnergyEigenstatesRaw = {
             "eigenstate_config": {
-                "delta_x1": list(data["eigenstate_config"]["delta_x1"]),
-                "delta_x2": list(data["eigenstate_config"]["delta_x2"]),
+                "delta_x1": list(data["eigenstate_config"]["delta_x0"]),
+                "delta_x2": list(data["eigenstate_config"]["delta_x1"]),
                 "mass": data["eigenstate_config"]["mass"],
                 "resolution": list(data["eigenstate_config"]["resolution"]),
                 "sho_omega": data["eigenstate_config"]["sho_omega"],
@@ -85,8 +62,8 @@ def eigenstates_config_from_raw(raw: EigenstateConfigRaw) -> EigenstateConfig:
             raw["resolution"][1],
             raw["resolution"][2],
         ),
-        "delta_x1": (raw["delta_x1"][0], raw["delta_x1"][1]),
-        "delta_x2": (raw["delta_x2"][0], raw["delta_x2"][1]),
+        "delta_x0": (raw["delta_x1"][0], raw["delta_x1"][1]),
+        "delta_x1": (raw["delta_x2"][0], raw["delta_x2"][1]),
         "mass": raw["mass"],
         "sho_omega": raw["sho_omega"],
     }
@@ -133,8 +110,8 @@ def load_energy_eigenstates_legacy(path: Path) -> EnergyEigenstates:
                 config["resolution"][1],
                 config["resolution"][2],
             ),
-            "delta_x1": (config["delta_x"], 0),
-            "delta_x2": (0, config["delta_y"]),
+            "delta_x0": (config["delta_x"], 0),
+            "delta_x1": (0, config["delta_y"]),
             "mass": config["mass"],
             "sho_omega": config["sho_omega"],
         }
@@ -179,157 +156,6 @@ def get_eigenstate_list(eigenstates: EnergyEigenstates) -> List[Eigenstate]:
         }
         for (i, eigenvector) in enumerate(eigenstates["eigenvectors"])
     ]
-
-
-def calculate_wavefunction_fast(
-    config: EigenstateConfig, eigenstate: Eigenstate, points: ArrayLike
-) -> NDArray:
-    return np.array(
-        hamiltonian_generator.get_eigenstate_wavefunction(
-            config["resolution"],
-            config["delta_x1"],
-            config["delta_x2"],
-            config["mass"],
-            config["sho_omega"],
-            eigenstate["kx"],
-            eigenstate["ky"],
-            eigenstate["eigenvector"],
-            np.array(points).tolist(),
-        ),
-        dtype=complex,
-    )
-
-
-class EigenstateConfigUtil:
-
-    _config: EigenstateConfig
-
-    def __init__(self, config: EigenstateConfig) -> None:
-        self._config = config
-
-    @property
-    def resolution(self):
-        return self._config["resolution"]
-
-    @property
-    def mass(self):
-        return self._config["mass"]
-
-    @property
-    def sho_omega(self):
-        return self._config["sho_omega"]
-
-    @cached_property
-    def _dk_prefactor(self):
-        # See https://physics.stackexchange.com/questions/340860/reciprocal-lattice-in-2d
-        x1_part = self.delta_x1[0] * self.delta_x2[1]
-        x2_part = self.delta_x1[1] * self.delta_x2[0]
-        return (2 * np.pi) / (x1_part - x2_part)
-
-    @property
-    def delta_x1(self) -> Tuple[float, float]:
-        return self._config["delta_x1"]
-
-    @cached_property
-    def dkx1(self) -> Tuple[float, float]:
-        return (
-            self._dk_prefactor * self.delta_x2[1],
-            -self._dk_prefactor * self.delta_x2[0],
-        )
-
-    @property
-    def Nkx(self) -> int:
-        return 2 * self.resolution[0] + 1
-
-    @property
-    def nkx_points(self):
-        return np.arange(-self.resolution[0], self.resolution[0] + 1, dtype=int)
-
-    @property
-    def delta_x2(self) -> Tuple[float, float]:
-        return self._config["delta_x2"]
-
-    @cached_property
-    def dkx2(self) -> Tuple[float, float]:
-        return (
-            -self._dk_prefactor * self.delta_x1[1],
-            self._dk_prefactor * self.delta_x1[0],
-        )
-
-    @property
-    def Nky(self) -> int:
-        return 2 * self.resolution[1] + 1
-
-    @property
-    def nky_points(self):
-        return np.arange(-self.resolution[1], self.resolution[1] + 1, dtype=int)
-
-    @property
-    def Nkz(self) -> int:
-        return self.resolution[2]
-
-    @property
-    def nz_points(self):
-        return np.arange(self.Nkz, dtype=int)
-
-    @property
-    def characteristic_z(self) -> float:
-        """Get the characteristic Z length, given by sqrt(hbar / m * omega)"""
-        return np.sqrt(hbar / (self.mass * self.sho_omega))
-
-    @cached_property
-    def eigenstate_indexes(self) -> NDArray:
-        xt, yt, zt = np.meshgrid(
-            self.nkx_points,
-            self.nky_points,
-            self.nz_points,
-            indexing="ij",
-        )
-        return np.array([xt.ravel(), yt.ravel(), zt.ravel()]).T
-
-    def get_index(self, nkx: int, nky: int, nz: int) -> int:
-        ikx = (nkx + self.resolution[0]) * self.Nky * self.Nkz
-        iky = (nky + self.resolution[1]) * self.Nkz
-        return ikx + iky + nz
-
-    def calculate_wavefunction_slow(
-        self,
-        eigenstate: Eigenstate,
-        points: ArrayLike,
-        cutoff: int | None = None,
-    ) -> NDArray:
-        points = np.array(points)
-        out = np.zeros(shape=(points.shape[0]), dtype=complex)
-
-        eigenvector_array = np.array(eigenstate["eigenvector"])
-        coordinates = self.eigenstate_indexes
-        args = (
-            np.arange(self.eigenstate_indexes.shape[0])
-            if cutoff is None
-            else np.argsort(np.abs(eigenvector_array))[::-1][:cutoff]
-        )
-        kx = eigenstate["kx"]
-        ky = eigenstate["ky"]
-        for arg in args:
-            (nkx1, nkx2, nz) = coordinates[arg]
-            e = eigenvector_array[arg]
-            x_phase = (nkx1 * self.dkx1[0] + nkx2 * self.dkx2[0] + kx) * points[:, 0]
-            y_phase = (nkx1 * self.dkx1[1] + nkx2 * self.dkx2[1] + ky) * points[:, 1]
-            out += (
-                e
-                * calculate_sho_wavefunction(
-                    points[:, 2], self.sho_omega, self.mass, nz
-                )
-                * np.exp(1j * (x_phase + y_phase))
-            )
-        return out
-
-    def calculate_wavefunction_fast(
-        self,
-        eigenstate: Eigenstate,
-        points: ArrayLike,
-    ) -> NDArray:
-        return calculate_wavefunction_fast(self._config, eigenstate, points)
 
 
 def get_minimum_coordinate(arr: ArrayLike) -> Tuple[int, ...]:
@@ -488,5 +314,5 @@ def get_brillouin_points_irreducible_config(
     """
     util = EigenstateConfigUtil(config)
     return get_points_in_brillouin_zone(
-        util.dkx1, util.dkx2, size=size, include_zero=include_zero
+        util.dkx0, util.dkx1, size=size, include_zero=include_zero
     )

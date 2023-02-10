@@ -6,7 +6,7 @@ from surface_potential_analysis.sho_wavefunction_plot import (
     plot_energy_with_sho_potential_at_minimum,
 )
 
-from .potential import load_john_interpolation
+from .s1_potential import load_john_interpolation
 from .surface_data import save_figure
 
 
@@ -16,12 +16,14 @@ def plot_interpolation_with_sho_config() -> None:
     config: EigenstateConfig = {
         "mass": 1.6735575e-27,
         "sho_omega": 198226131917441.6,  # 1.5e14,
+        "delta_x0": data["delta_x0"],
         "delta_x1": data["delta_x1"],
-        "delta_x2": data["delta_x2"],
         "resolution": (1, 1, 1),
     }
 
-    fig, ax = plot_energy_with_sho_potential_at_minimum(interpolation, config)
+    fig, ax = plot_energy_with_sho_potential_at_minimum(
+        interpolation, config, z_offset=interpolation["dz"]
+    )
     ax.set_title("Plot of SHO config against Z")
     ax.legend()
 
