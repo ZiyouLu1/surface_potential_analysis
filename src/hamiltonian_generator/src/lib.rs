@@ -1,5 +1,5 @@
 #![warn(clippy::all, clippy::pedantic, clippy::nursery, clippy::cargo)]
-
+#![feature(int_roundings)]
 use std::{collections::HashMap, f64::consts::PI};
 
 use num_complex::{Complex, Complex64};
@@ -50,9 +50,22 @@ const REDUCED_PLANCK_CONSTANT: f64 = PLANCK_CONSTANT / (2.0 * PI);
 struct EigenstateResolution(i64, i64, usize);
 
 impl EigenstateResolution {
+    fn x0_coordinates(&self) -> impl Iterator<Item = i64> {
+        let max_x0 = self.0.div_ceil(2);
+        let min_x0 = self.0.div_floor(2);
+        (0..max_x0).chain(-min_x0..0)
+    }
+    fn x1_coordinates(&self) -> impl Iterator<Item = i64> {
+        let max_x1 = self.1.div_ceil(2);
+        let min_x1 = self.1.div_floor(2);
+        (0..max_x1).chain(-min_x1..0)
+    }
     fn coordinates(&self) -> Vec<(i64, i64, usize)> {
-        (-self.0..=self.0)
-            .flat_map(|x| (-self.1..=self.1).flat_map(move |y| (0..self.2).map(move |z| (x, y, z))))
+        self.x0_coordinates()
+            .flat_map(|x| {
+                self.x1_coordinates()
+                    .flat_map(move |y| (0..self.2).map(move |z| (x, y, z)))
+            })
             .collect()
     }
 }
@@ -60,8 +73,8 @@ impl EigenstateResolution {
 struct EigenstateConfig {
     sho_omega: f64,
     mass: f64,
+    delta_x0: (f64, f64),
     delta_x1: (f64, f64),
-    delta_x2: (f64, f64),
 }
 
 struct Eigenstate {
@@ -88,19 +101,19 @@ impl Eigenstate {
             })
             .collect();
 
+        let dkx0 = self.config.dkx0();
         let dkx1 = self.config.dkx1();
-        let dkx2 = self.config.dkx2();
 
         let mut out: Vec<Complex64> = vec![Complex::default(); points.len()];
-        for (eig, (nkx1, nkx2, nz)) in self.vector.iter().zip(coordinates) {
+        for (eig, (nkx0, nkx1, nz)) in self.vector.iter().zip(coordinates) {
             for (i, wfn) in cache[nz].iter().enumerate() {
                 out[i] += wfn
                     * eig
                     * Complex {
-                        re: 0.0, //TODO
-                        im: ((nkx1 as f64) * dkx1.0 + (nkx2 as f64) * dkx2.0 + self.kx)
+                        re: 0.0,
+                        im: ((nkx0 as f64) * dkx0.0 + (nkx1 as f64) * dkx1.0 + self.kx)
                             * points[i][0]
-                            + ((nkx1 as f64) * dkx1.1 + (nkx2 as f64) * dkx2.1 + self.ky)
+                            + ((nkx0 as f64) * dkx0.1 + (nkx1 as f64) * dkx1.1 + self.ky)
                                 * points[i][1],
                     }
                     .exp();
@@ -113,18 +126,18 @@ impl Eigenstate {
 
 impl EigenstateConfig {
     fn dk_prefactor(&self) -> f64 {
-        let x1_part = self.delta_x1.0 * self.delta_x2.1;
-        let x2_part = self.delta_x1.1 * self.delta_x2.0;
-        (2.0 * PI) / (x1_part - x2_part)
+        let x0_part = self.delta_x0.0 * self.delta_x1.1;
+        let x1_part = self.delta_x0.1 * self.delta_x1.0;
+        (2.0 * PI) / (x0_part - x1_part)
     }
-    fn dkx1(&self) -> (f64, f64) {
+    fn dkx0(&self) -> (f64, f64) {
         let prefactor = self.dk_prefactor();
-        (prefactor * self.delta_x2.1, -prefactor * self.delta_x2.0)
+        (prefactor * self.delta_x1.1, -prefactor * self.delta_x1.0)
     }
 
-    fn dkx2(&self) -> (f64, f64) {
+    fn dkx1(&self) -> (f64, f64) {
         let prefactor = self.dk_prefactor();
-        (-prefactor * self.delta_x1.1, prefactor * self.delta_x1.0)
+        (-prefactor * self.delta_x0.1, prefactor * self.delta_x0.0)
     }
 }
 
@@ -137,11 +150,11 @@ struct SurfaceHamiltonian {
 }
 
 impl SurfaceHamiltonian {
-    fn get_nx1(&self) -> usize {
+    fn get_nx0(&self) -> usize {
         self.ft_potential.len()
     }
 
-    fn get_nx2(&self) -> usize {
+    fn get_nx1(&self) -> usize {
         self.ft_potential[0].len()
     }
 
@@ -174,17 +187,17 @@ impl SurfaceHamiltonian {
 
         coordinates
             .iter()
-            .map(|(nkx1_1, nkx2_1, nz1)| -> Vec<f64> {
+            .map(|(nkx0_1, nkx1_1, nz1)| -> Vec<f64> {
                 coordinates
                     .iter()
-                    .map(|(nkx1_2, nkx2_2, nz2)| -> f64 {
+                    .map(|(nkx0_2, nkx1_2, nz2)| -> f64 {
+                        let n_dkx0 = (nkx0_2 - nkx0_1).rem_euclid(self.get_nx0() as i64) as usize;
                         let n_dkx1 = (nkx1_2 - nkx1_1).rem_euclid(self.get_nx1() as i64) as usize;
-                        let n_dkx2 = (nkx2_2 - nkx2_1).rem_euclid(self.get_nx2() as i64) as usize;
-                        if let Some(a) = g_points.get(&(n_dkx1, n_dkx2, *nz1, *nz2)) {
+                        if let Some(a) = g_points.get(&(n_dkx0, n_dkx1, *nz1, *nz2)) {
                             return *a;
                         }
 
-                        let ft_pot_points = &self.ft_potential[n_dkx1][n_dkx2];
+                        let ft_pot_points = &self.ft_potential[n_dkx0][n_dkx1];
 
                         let sho1: &Vec<f64> = &cache[*nz1];
                         let sho2: &Vec<f64> = &cache[*nz2];
@@ -196,7 +209,7 @@ impl SurfaceHamiltonian {
                             .map(|((i, j), k)| i * j * k)
                             .sum::<f64>()
                             * self.dz;
-                        g_points.insert((n_dkx1, n_dkx2, *nz1, *nz2), out);
+                        g_points.insert((n_dkx0, n_dkx1, *nz1, *nz2), out);
                         out
                     })
                     .collect()
@@ -228,8 +241,8 @@ fn calculate_off_diagonal_energies(
     let sho_config = EigenstateConfig {
         mass,
         sho_omega,
-        delta_x1: (1.0, 0.0),
-        delta_x2: (0.0, 1.0),
+        delta_x0: (1.0, 0.0),
+        delta_x1: (0.0, 1.0),
     };
     let hamiltonian = SurfaceHamiltonian {
         dz,
@@ -262,8 +275,8 @@ fn get_eigenstate_wavefunction(
         config: EigenstateConfig {
             sho_omega,
             mass,
+            delta_x0,
             delta_x1,
-            delta_x2,
         },
         kx,
         ky,
@@ -297,8 +310,8 @@ mod test {
         let sho_config = EigenstateConfig {
             mass: 1.0,
             sho_omega: 1.0,
-            delta_x1: (1.0, 0.0),
-            delta_x2: (0.0, 1.0),
+            delta_x0: (1.0, 0.0),
+            delta_x1: (0.0, 1.0),
         };
         let hamiltonian = SurfaceHamiltonian {
             dz: 1.0,
@@ -312,5 +325,19 @@ mod test {
         };
 
         hamiltonian.calculate_off_diagonal_energies();
+    }
+
+    #[test]
+    fn test_get_resolution_coordinates() {
+        let resolution = EigenstateResolution(5, 4, 2);
+        assert!(resolution
+            .x0_coordinates()
+            .zip(vec![0, 1, 2, -2, -1])
+            .all(|(l, r)| l == r));
+
+        assert!(resolution
+            .x1_coordinates()
+            .zip(vec![0, 1, -2, -1])
+            .all(|(l, r)| l == r));
     }
 }

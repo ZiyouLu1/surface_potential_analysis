@@ -3,7 +3,7 @@ from typing import Tuple
 import numpy as np
 from matplotlib import pyplot as plt
 
-from nickel_111.s2_hamiltonian import generate_hamiltonian
+from nickel_111.s2_hamiltonian import generate_hamiltonian_john
 from nickel_111.s4_wavepacket import (
     get_brillouin_points_nickel_111,
     get_irreducible_config_nickel_111_supercell,
@@ -317,7 +317,7 @@ def plot_wavepacket_points_john():
         ]
     )
     # = 2 x 2pi / delta_y
-    G1 = 2.9419 * 10**-10
+    G1 = 2.9419 * 10**10
     nqdim = 4
 
     qx_points = G1 * ((np.sqrt(3) / 2) * a[:, 0] + 0 * a[:, 1]) / nqdim
@@ -328,19 +328,25 @@ def plot_wavepacket_points_john():
     line.set_linestyle("")
     line.set_marker("x")
     ax.set_title("Plot of points as chosen by John")
+    ax.set_aspect("equal", adjustable="box")
+    ax.set_ylabel("ky")
+    ax.set_xlabel("kx")
     fig.show()
     input()
     save_figure(fig, "john_wavepacket_points.png")
 
 
 def plot_wavepacket_points_me():
-    hamiltonian = generate_hamiltonian()
+    hamiltonian = generate_hamiltonian_john()
     points = get_brillouin_points_nickel_111(hamiltonian._config, size=(2, 2))
     fig, ax = plt.subplots()
     (line,) = ax.plot(points[:, 0], points[:, 1])
     line.set_linestyle("")
     line.set_marker("x")
     ax.set_title("Plot of points as chosen by Me")
+    ax.set_aspect("equal", adjustable="box")
+    ax.set_ylabel("ky")
+    ax.set_xlabel("kx")
     fig.show()
     input()
     save_figure(fig, "my_wavepacket_points.png")

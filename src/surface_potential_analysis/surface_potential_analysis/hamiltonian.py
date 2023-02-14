@@ -54,13 +54,17 @@ class SurfaceHamiltonianUtil(EigenstateConfigUtil):
         self._potential = potential
         self._potential_offset = potential_offset
 
-        if self.Nkx != self.Nx:
-            raise AssertionError("Potential has the incorrect shape")
+        if 2 * self.Nkx > self.Nx:
+            print(self.Nkx, self.Nx)
+            raise AssertionError(
+                "Potential does not have enough resolution in x direction"
+            )
 
-        if (2 * self.Nkx) > self.Nx:
-            print("Warning: max(ndkx) > Nx, some over sampling will occur")
-        if (2 * self.Nky) > self.Ny:
-            print("Warning: max(ndky) > Ny, some over sampling will occur")
+        if 2 * self.Nky > self.Ny:
+            print(self.Nky, self.Ny)
+            raise AssertionError(
+                "Potential does not have enough resolution in y direction"
+            )
 
     @property
     def points(self):

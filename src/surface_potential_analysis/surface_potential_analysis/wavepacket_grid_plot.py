@@ -115,7 +115,7 @@ def animate_ft_wavepacket_grid_3D_in_xy(
     ft_grid: WavepacketGrid = {
         "delta_x0": util.dkx0,
         "delta_x1": util.dkx1,
-        "delta_z": grid["delta_z"],
+        "z_points": grid["z_points"],
         "points": ft_points.tolist(),
     }
     (fig, ax, ani) = animate_wavepacket_grid_3D_in_xy(

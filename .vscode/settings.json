@@ -57,6 +57,13 @@
     "ylim",
     "yscale"
   ],
+  "python.linting.mypyArgs": [
+    "--follow-imports=normal",
+    "--ignore-missing-imports",
+    "--show-column-numbers",
+    "--no-pretty",
+    "--check-untyped-defs"
+  ],
   "python.linting.flake8Args": ["--ignore=E501,W503,E203,E301,E302"],
   "python.testing.unittestArgs": ["-v", "-s", "./tests", "-p", "*test.py"],
   "python.testing.pytestEnabled": false,

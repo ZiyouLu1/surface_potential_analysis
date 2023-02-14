@@ -1,6 +1,7 @@
 from typing import Tuple
 
 import numpy as np
+from numpy.typing import NDArray
 
 
 def get_point_fractions(shape: Tuple[int, int] = (8, 8), endpoint=True):
@@ -30,6 +31,25 @@ def grid_space(
     y_points = vec1[1] * fractions[:, 0] + vec2[1] * fractions[:, 1]
 
     return np.array([x_points, y_points]).T
+
+
+def get_coordinate_fractions(
+    vec1: Tuple[float, float],
+    vec2: Tuple[float, float],
+    coordinates: NDArray,
+):
+    out = []
+    print(vec1, vec2)
+    for coord in coordinates:
+        a = np.array(
+            [
+                [vec1[0], vec2[0]],
+                [vec1[1], vec2[1]],
+            ]
+        )
+        fraction = np.linalg.solve(a, [coord[0], coord[1]])
+        out.append([fraction[0], fraction[1]])
+    return np.array(out)
 
 
 def get_points_in_brillouin_zone(

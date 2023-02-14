@@ -16,7 +16,7 @@ from surface_potential_analysis.wavepacket_grid import (
     save_wavepacket_grid,
 )
 
-from .s2_hamiltonian import generate_hamiltonian
+from .s2_hamiltonian import generate_hamiltonian_john
 from .surface_data import get_data_path
 
 
@@ -61,7 +61,7 @@ def generate_energy_eigenstates_grid_nickel_111(
 
 
 def generate_eigenstates_grid():
-    h = generate_hamiltonian(resolution=(12, 18, 12))
+    h = generate_hamiltonian_john(resolution=(12, 18, 12))
     path = get_data_path("eigenstates_grid_2.json")
 
     generate_energy_eigenstates_grid_nickel_111(

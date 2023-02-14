@@ -56,8 +56,8 @@ class EnergyGridRaw(TypedDict):
     And possibly unevenly spaced in the z direction
     """
 
+    delta_x0: List[float]
     delta_x1: List[float]
-    delta_x2: List[float]
     z_points: List[float]
     points: List[List[List[float]]]
 
@@ -66,8 +66,8 @@ def load_energy_grid(path: Path) -> EnergyGrid:
     with path.open("r") as f:
         out: EnergyGridRaw = json.load(f)
         return {
-            "delta_x0": (out["delta_x1"][0], out["delta_x1"][1]),
-            "delta_x1": (out["delta_x2"][0], out["delta_x2"][1]),
+            "delta_x0": (out["delta_x0"][0], out["delta_x0"][1]),
+            "delta_x1": (out["delta_x1"][0], out["delta_x1"][1]),
             "points": out["points"],
             "z_points": out["z_points"],
         }

@@ -2,11 +2,14 @@ import matplotlib.pyplot as plt
 import numpy as np
 import scipy.constants
 
+from surface_potential_analysis.brillouin_zone import grid_space
 from surface_potential_analysis.energy_data import (
     load_energy_grid_legacy,
     normalize_energy,
 )
 from surface_potential_analysis.energy_data_plot import (
+    animate_energy_grid_3D_in_xy,
+    plot_energy_grid_locations,
     plot_xz_plane_energy_copper_100,
     plot_z_direction_energy_comparison_100,
     plot_z_direction_energy_data_100,
@@ -93,6 +96,10 @@ def plot_copper_relaxed_interpolated_data():
     fig.show()
     save_figure(fig, "relaxed_interpolated_data_xy.png")
 
+    fig, ax, _ani0 = animate_energy_grid_3D_in_xy(data)
+    plot_energy_grid_locations(raw_data, ax=ax)
+    fig.show()
+
     spline_data = load_spline_interpolated_relaxed_data()
     raw_data = normalize_energy(load_relaxed_copper_data())
 
@@ -104,6 +111,10 @@ def plot_copper_relaxed_interpolated_data():
     fig = plot_xz_plane_energy_copper_100(spline_data)
     fig.show()
     save_figure(fig, "relaxed_interpolated_data_xy.png")
+
+    fig, ax, _ani1 = animate_energy_grid_3D_in_xy(data)
+    plot_energy_grid_locations(raw_data, ax=ax)
+    fig.show()
 
     input()
 

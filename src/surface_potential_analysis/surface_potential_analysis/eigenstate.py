@@ -7,7 +7,11 @@ from scipy.constants import hbar
 
 import hamiltonian_generator
 from surface_potential_analysis.sho_wavefunction import calculate_sho_wavefunction
-from surface_potential_analysis.surface_config import SurfaceConfig, SurfaceConfigUtil
+from surface_potential_analysis.surface_config import (
+    SurfaceConfig,
+    SurfaceConfigUtil,
+    get_surface_xy_points,
+)
 
 
 class EigenstateConfig(SurfaceConfig):
@@ -45,7 +49,6 @@ def calculate_wavefunction_fast(
 
 
 class EigenstateConfigUtil(SurfaceConfigUtil):
-
     _config: EigenstateConfig
 
     def __init__(self, config: EigenstateConfig) -> None:
@@ -65,19 +68,22 @@ class EigenstateConfigUtil(SurfaceConfigUtil):
 
     @property
     def Nkx(self) -> int:
+        return self.resolution[0]
         return 2 * self.resolution[0] + 1
 
     @property
     def nkx_points(self):
-        # return np.fft.fftfreq(self.resolution[0])
+        return np.array(np.rint(np.fft.fftfreq(self.Nkx, 1 / self.Nkx)), dtype=int)
         return np.arange(-self.resolution[0], self.resolution[0] + 1, dtype=int)
 
     @property
     def Nky(self) -> int:
+        return self.resolution[1]
         return 2 * self.resolution[1] + 1
 
     @property
     def nky_points(self):
+        return np.array(np.rint(np.fft.fftfreq(self.Nky) * self.Nky), dtype=int)
         return np.arange(-self.resolution[1], self.resolution[1] + 1, dtype=int)
 
     @property
@@ -96,14 +102,15 @@ class EigenstateConfigUtil(SurfaceConfigUtil):
     @cached_property
     def eigenstate_indexes(self) -> NDArray:
         xt, yt, zt = np.meshgrid(
-            self.nkx_points,
-            self.nky_points,
-            self.nz_points,
-            indexing="ij",
+            self.nkx_points, self.nky_points, self.nz_points, indexing="ij"
         )
         return np.array([xt.ravel(), yt.ravel(), zt.ravel()]).T
 
     def get_index(self, nkx: int, nky: int, nz: int) -> int:
+        ikx = (nkx % self.Nkx) * self.Nky * self.Nkz
+        iky = (nky % self.Nky) * self.Nkz
+        return ikx + iky + nz
+
         ikx = (nkx + self.resolution[0]) * self.Nky * self.Nkz
         iky = (nky + self.resolution[1]) * self.Nkz
         return ikx + iky + nz
@@ -127,10 +134,10 @@ class EigenstateConfigUtil(SurfaceConfigUtil):
         kx = eigenstate["kx"]
         ky = eigenstate["ky"]
         for arg in args:
-            (nkx1, nkx2, nz) = coordinates[arg]
+            (nkx0, nkx1, nz) = coordinates[arg]
             e = eigenvector_array[arg]
-            x_phase = (nkx1 * self.dkx0[0] + nkx2 * self.dkx1[0] + kx) * points[:, 0]
-            y_phase = (nkx1 * self.dkx0[1] + nkx2 * self.dkx1[1] + ky) * points[:, 1]
+            x_phase = (nkx0 * self.dkx0[0] + nkx1 * self.dkx1[0] + kx) * points[:, 0]
+            y_phase = (nkx0 * self.dkx0[1] + nkx1 * self.dkx1[1] + ky) * points[:, 1]
             out += (
                 e
                 * calculate_sho_wavefunction(
@@ -139,6 +146,31 @@ class EigenstateConfigUtil(SurfaceConfigUtil):
                 * np.exp(1j * (x_phase + y_phase))
             )
         return out
+
+    def calculate_wavefunction_slow_grid_fourier(
+        self,
+        eigenstate: Eigenstate,
+        z_points: List[float],
+        cutoff: int | None = None,
+    ) -> NDArray:
+
+        sho_wavefunctions = [
+            calculate_sho_wavefunction(z_points, self.sho_omega, self.mass, nz)
+            for nz in range(self.Nkz)
+        ]
+        xy_shape = (self.Nkx, self.Nky)
+        xy_points = get_surface_xy_points(self._config, xy_shape).reshape(*xy_shape, 2)
+
+        kx = eigenstate["kx"]
+        ky = eigenstate["ky"]
+        phase_points = np.exp(1j * (xy_points[:, :, 0] * kx + xy_points[:, :, 1] * ky))
+
+        eigenvector_array = np.array(eigenstate["eigenvector"]).reshape(
+            self.Nkx, self.Nky, self.Nkz
+        )
+        ft_points = np.fft.fftn(eigenvector_array, axis=(0, 1))
+
+        out = np.zeros(shape=(points.shape[0]), dtype=complex)
 
     def calculate_wavefunction_fast(
         self,

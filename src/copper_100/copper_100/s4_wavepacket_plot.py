@@ -122,6 +122,16 @@ def plot_relaxed_wavefunction_3D():
     input()
 
 
+def plot_new_wavepacket_relaxed():
+    path = get_data_path("relaxed_eigenstates_wavepacket_new.json")
+    wavepacket = load_wavepacket_grid(path)
+    print(np.array(wavepacket["points"]).shape)
+
+    fig, _, _ = animate_wavepacket_grid_3D_in_xy(wavepacket, measure="real")
+    fig.show()
+    input()
+
+
 def plot_wavepacket_difference_3D() -> None:
     path = get_data_path("relaxed_eigenstates_wavepacket.json")
     wavepacket_low_res = load_wavepacket_grid(path)

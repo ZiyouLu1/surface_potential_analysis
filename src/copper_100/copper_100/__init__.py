@@ -1,9 +1,9 @@
 from . import (
-    bands_plot,
     s1_potential,
     s1_potential_plot,
     s2_hamiltonian,
     s2_hamiltonian_plot,
+    s3_bands_analysis,
     s3_eigenstates,
     s3_eigenstates_plot,
     s4_wavepacket,
@@ -14,11 +14,11 @@ from . import (
 )
 
 __all__ = [
-    "bands_plot",
     "s1_potential",
     "s1_potential_plot",
     "s2_hamiltonian",
     "s2_hamiltonian_plot",
+    "s3_bands_analysis",
     "s3_eigenstates",
     "s3_eigenstates_plot",
     "s4_wavepacket",

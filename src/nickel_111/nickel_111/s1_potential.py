@@ -1,13 +1,14 @@
 from typing import List, Tuple
 
 import numpy as np
-from numpy.typing import NDArray
 
+from surface_potential_analysis.brillouin_zone import get_coordinate_fractions
 from surface_potential_analysis.energy_data import (
     EnergyGrid,
     EnergyPoints,
     get_energy_grid_xy_points,
     get_ft_phases,
+    interpolate_energy_grid_fourier,
     interpolate_energy_grid_z_spline,
     load_energy_grid,
     load_energy_grid_legacy,
@@ -33,7 +34,9 @@ def load_raw_data_reciprocal_grid():
 def load_cleaned_energy_grid():
     data = load_raw_data_reciprocal_grid()
     normalized = normalize_energy(data)
-    return truncate_energy(normalized, cutoff=4e-19, n=6, offset=1e-20)
+    # cutoff=4E-19, n=6, offset = 1e-20
+    # cutoff=3.2e-18, n=1, offset=1e-20
+    return truncate_energy(normalized, cutoff=0.4e-18, n=1, offset=1e-20)
 
 
 def load_john_interpolation() -> EnergyGrid:
@@ -93,33 +96,15 @@ def generate_raw_unit_cell_data() -> None:
         [tf, hf, th, tf, hf, th],
     ]
 
-    length = np.max(x_points) - np.min(x_points)
+    length = np.max(y_points) - np.min(y_points)
     grid: EnergyGrid = {
-        "delta_x0": (3 * length * (np.sqrt(3) / 2), 3 * length * (-1 / 2)),
+        "delta_x0": (3 * length * (np.sqrt(3) / 2), 3 * length * (1 / 2)),
         "delta_x1": (0, 3 * length),
         "points": reciprocal_points,
         "z_points": z_c.tolist(),
     }
     path = get_data_path("raw_data_reciprocal_spacing.json")
     save_energy_grid(grid, path)
-
-
-def get_fractions_in_reciprocal_space(
-    coordinates: NDArray,
-    delta_x0_reciprocal: Tuple[float, float],
-    delta_x1_reciprocal: Tuple[float, float],
-):
-    out = []
-    for coord in coordinates:
-        a = np.array(
-            [
-                [delta_x0_reciprocal[0], delta_x1_reciprocal[0]],
-                [delta_x0_reciprocal[1], delta_x1_reciprocal[1]],
-            ]
-        )
-        fraction = np.linalg.solve(a, [coord[0], coord[1]])
-        out.append([fraction[0], fraction[1]])
-    return np.array(out)
 
 
 def interpolate_points_fourier_nickel(
@@ -146,8 +131,8 @@ def interpolate_points_fourier_nickel(
             "z_points": [0],
         }
     )
-    fractions = get_fractions_in_reciprocal_space(
-        coordinates, delta_x0_reciprocal, delta_x1_reciprocal
+    fractions = get_coordinate_fractions(
+        delta_x0_reciprocal, delta_x1_reciprocal, coordinates
     )
 
     # List of (List of list of [x1_phase, x2_phase] for the interpolated grid)
@@ -216,4 +201,12 @@ def generate_interpolated_data():
 
     data = interpolate_energy_grid_fourier_nickel(grid, (48, 48, 100))
     path = get_data_path("interpolated_data.json")
+    save_energy_grid(data, path)
+
+
+def generate_interpolated_data_reciprocal():
+    grid = load_cleaned_energy_grid()
+
+    data = interpolate_energy_grid_fourier(grid, (48, 48, 100))
+    path = get_data_path("interpolated_data_reciprocal.json")
     save_energy_grid(data, path)

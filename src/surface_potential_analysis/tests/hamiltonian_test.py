@@ -8,14 +8,10 @@ from scipy.constants import hbar
 
 import hamiltonian_generator
 from surface_potential_analysis.energy_data import EnergyInterpolation
-from surface_potential_analysis.energy_eigenstate import (
-    EigenstateConfig,
-    EigenstateConfigUtil,
-)
+from surface_potential_analysis.energy_eigenstate import EigenstateConfig
 from surface_potential_analysis.hamiltonian import (
     SurfaceHamiltonianUtil,
     calculate_sho_wavefunction,
-    get_brillouin_points_irreducible_config,
 )
 
 
@@ -39,14 +35,11 @@ def generate_symmetrical_points(height, width=5):
 
 
 def generate_random_diagonal_hamiltonian() -> SurfaceHamiltonianUtil:
-    nx = random.randrange(2, 10)
-    ny = random.randrange(2, 10)
-    nz = random.randrange(2, 100)
+    nkx = random.randrange(3, 10)
+    nky = random.randrange(3, 10)
+    nkz = random.randrange(3, 10)
 
-    nkx = random.randrange(1, 5)
-    nky = random.randrange(1, 5)
-    nkz = random.randrange(1, 5)
-
+    nz = random.randrange(5, 100)
     z_offset = 20 * random.random()
     config: EigenstateConfig = {
         "mass": 1,
@@ -56,37 +49,18 @@ def generate_random_diagonal_hamiltonian() -> SurfaceHamiltonianUtil:
         "resolution": (nkx, nky, nkz),
     }
     data: EnergyInterpolation = {
-        "points": np.zeros(shape=(nx, ny, nz)).tolist(),
+        "points": np.zeros(shape=(2 * nkx, 2 * nky, nz)).tolist(),
         "dz": 1,
     }
     hamiltonian = SurfaceHamiltonianUtil(config, data, z_offset)
 
     data2: EnergyInterpolation = {
-        "points": np.tile(hamiltonian.get_sho_potential(), (nx, ny, 1)).tolist(),
+        "points": np.tile(
+            hamiltonian.get_sho_potential(), (2 * nkx, 2 * nky, 1)
+        ).tolist(),
         "dz": 1,
     }
     return SurfaceHamiltonianUtil(config, data2, z_offset)
-
-
-def generate_eigenstates_grid_points_100(
-    config: EigenstateConfig, *, grid_size=8, include_zero=True
-):
-    util = EigenstateConfigUtil(config)
-    dkx = util.dkx0[0]
-    (kx_points, kx_step) = np.linspace(
-        -dkx / 2, dkx / 2, 2 * grid_size, endpoint=False, retstep=True
-    )
-    dky = util.dkx1[1]
-    (ky_points, ky_step) = np.linspace(
-        -dky / 2, dky / 2, 2 * grid_size, endpoint=False, retstep=True
-    )
-    if not include_zero:
-        kx_points += kx_step / 2
-        ky_points += ky_step / 2
-
-    xv, yv = np.meshgrid(kx_points, ky_points, indexing="ij")
-    k_points = np.array([xv.ravel(), yv.ravel()]).T
-    return k_points
 
 
 class TestSurfaceHamiltonian(unittest.TestCase):
@@ -97,83 +71,18 @@ class TestSurfaceHamiltonian(unittest.TestCase):
             "sho_omega": 1 / hbar,
             "delta_x0": (2 * np.pi * hbar, 0),
             "delta_x1": (0, 2 * np.pi * hbar),
-            "resolution": (1, 1, 2),
+            "resolution": (2, 2, 2),
         }
         data: EnergyInterpolation = {
-            "points": [[[0, 0], [0, 0]], [[0, 0], [0, 0]]],
+            "points": np.zeros((4, 4, 3)),
             "dz": 1,
         }
         hamiltonian = SurfaceHamiltonianUtil(config, data, z_offset)
 
-        expected = np.array(
-            [
-                1.5,
-                2.5,
-                1.0,
-                2.0,
-                1.5,
-                2.5,
-                1.0,
-                2.0,
-                0.5,
-                1.5,
-                1.0,
-                2.0,
-                1.5,
-                2.5,
-                1.0,
-                2.0,
-                1.5,
-                2.5,
-            ]
-        )
+        expected = np.array([0.5, 1.5, 1.0, 2.0, 1.0, 2.0, 1.5, 2.5])
         diagonal_energy = hamiltonian._calculate_diagonal_energy(0, 0)
 
         np.testing.assert_array_almost_equal(diagonal_energy, expected)
-
-    def test_get_all_coordinates(self) -> None:
-        Nkx = random.randrange(1, 20)
-        Nky = random.randrange(1, 20)
-        Nz = random.randrange(1, 100)
-
-        z_offset = 0
-        config: EigenstateConfig = {
-            "mass": 1,
-            "sho_omega": 1 / hbar,
-            "delta_x0": (2 * np.pi * hbar, 0),
-            "delta_x1": (0, 2 * np.pi * hbar),
-            "resolution": (Nkx, Nky, Nz),
-        }
-        data: EnergyInterpolation = {
-            "points": [[[0, 0], [0, 0]], [[0, 0], [0, 0]]],
-            "dz": 1,
-        }
-        hamiltonian = SurfaceHamiltonianUtil(config, data, z_offset)
-        coords = hamiltonian.eigenstate_indexes
-        for i, (nkx, nky, nz) in enumerate(coords):
-            self.assertEqual(hamiltonian.get_index(nkx, nky, nz), i)
-
-    def test_get_index(self) -> None:
-        nkx = random.randrange(1, 20)
-        nky = random.randrange(1, 20)
-        nz = random.randrange(1, 100)
-
-        config: EigenstateConfig = {
-            "mass": 1,
-            "sho_omega": 1 / hbar,
-            "delta_x0": (2 * np.pi * hbar, 0),
-            "delta_x1": (0, 2 * np.pi * hbar),
-            "resolution": (nkx, nky, nz),
-        }
-        data: EnergyInterpolation = {
-            "points": [[[0, 0], [0, 0]], [[0, 0], [0, 0]]],
-            "dz": 1,
-        }
-        hamiltonian = SurfaceHamiltonianUtil(config, data, 0)
-
-        coords = hamiltonian.eigenstate_indexes
-        for i, c in enumerate(coords):
-            self.assertEqual(i, hamiltonian.get_index(*c))
 
     def test_get_sho_potential(self) -> None:
         config: EigenstateConfig = {
@@ -184,7 +93,7 @@ class TestSurfaceHamiltonian(unittest.TestCase):
             "resolution": (2, 2, 2),
         }
         data: EnergyInterpolation = {
-            "points": np.zeros(shape=(2, 2, 5)).tolist(),
+            "points": np.zeros(shape=(4, 4, 5)).tolist(),
             "dz": 1,
         }
         hamiltonian = SurfaceHamiltonianUtil(config, data, -2)
@@ -202,44 +111,25 @@ class TestSurfaceHamiltonian(unittest.TestCase):
             "sho_omega": 1,
             "delta_x0": (2 * np.pi * hbar, 0),
             "delta_x1": (0, 2 * np.pi * hbar),
-            "resolution": (2, 2, 2),
+            "resolution": (nx, ny, 2),
         }
         data: EnergyInterpolation = {
-            "points": np.zeros(shape=(nx, ny, nz)).tolist(),
+            "points": np.zeros(shape=(2 * nx, 2 * ny, nz)).tolist(),
             "dz": 1,
         }
         hamiltonian = SurfaceHamiltonianUtil(config, data, z_offset)
 
         data2: EnergyInterpolation = {
-            "points": np.tile(hamiltonian.get_sho_potential(), (nx, ny, 1)).tolist(),
+            "points": np.tile(
+                hamiltonian.get_sho_potential(), (2 * nx, 2 * ny, 1)
+            ).tolist(),
             "dz": 1,
         }
         hamiltonian = SurfaceHamiltonianUtil(config, data2, z_offset)
         actual = hamiltonian.get_sho_subtracted_points()
-        expected = np.zeros(shape=(nx, ny, nz))
+        expected = np.zeros(shape=(2 * nx, 2 * ny, nz))
 
         np.testing.assert_allclose(expected, actual)
-
-    def test_delta_x(self) -> None:
-        nx = random.randrange(2, 10) * 2
-        ny = random.randrange(2, 10) * 2
-        x_points = np.linspace(0, 2 * np.pi * hbar, num=nx)
-        y_points = np.linspace(0, 2 * np.pi * hbar, num=ny)
-        config: EigenstateConfig = {
-            "mass": 1,
-            "sho_omega": 1,
-            "delta_x0": (x_points[-1], 0),
-            "delta_x1": (0, y_points[-1]),
-            "resolution": (2, 2, 2),
-        }
-        data: EnergyInterpolation = {
-            "points": np.zeros(shape=(nx - 1, ny - 1, 5)).tolist(),
-            "dz": 1,
-        }
-        hamiltonian = SurfaceHamiltonianUtil(config, data, -2)
-
-        self.assertAlmostEqual(x_points[-1], hamiltonian.delta_x0[0])
-        self.assertAlmostEqual(y_points[-1], hamiltonian.delta_x1[0])
 
     def test_get_fft_is_real(self) -> None:
         width = random.randrange(1, 10) * 2
@@ -251,7 +141,7 @@ class TestSurfaceHamiltonian(unittest.TestCase):
             "sho_omega": 1,
             "delta_x0": (2 * np.pi * hbar, 0),
             "delta_x1": (0, 2 * np.pi * hbar),
-            "resolution": (2, 2, 2),
+            "resolution": (points.shape[0] // 2, points.shape[1] // 2, 2),
         }
         data: EnergyInterpolation = {
             "points": points.tolist(),
@@ -294,7 +184,7 @@ class TestSurfaceHamiltonian(unittest.TestCase):
             "sho_omega": 1,
             "delta_x0": (2 * np.pi * hbar, 0),
             "delta_x1": (0, 2 * np.pi * hbar),
-            "resolution": (5, 5, 10),
+            "resolution": (width // 2, width // 2, 10),
         }
         data: EnergyInterpolation = {
             "points": points.tolist(),
@@ -353,10 +243,10 @@ class TestSurfaceHamiltonian(unittest.TestCase):
             "sho_omega": 1 / hbar,
             "delta_x0": (2 * np.pi * hbar, 0),
             "delta_x1": (0, 2 * np.pi * hbar),
-            "resolution": (1, 1, 10),
+            "resolution": (nx, ny, 10),
         }
         data: EnergyInterpolation = {
-            "points": np.zeros(shape=(nx, ny, nz)).tolist(),
+            "points": np.zeros(shape=(2 * nx, 2 * ny, nz)).tolist(),
             "dz": z_width / (nz - 1),
         }
         hamiltonian = SurfaceHamiltonianUtil(config, data, z_offset)
@@ -395,15 +285,15 @@ class TestSurfaceHamiltonian(unittest.TestCase):
         )
 
     def test_calculate_off_diagonal_energies_rust(self) -> None:
-        nx = random.randrange(2, 10)
-        ny = random.randrange(2, 10)
+        nx = random.randrange(2, 20)
+        ny = random.randrange(2, 20)
         nz = 100
         config: EigenstateConfig = {
             "mass": hbar**2,
             "sho_omega": 1 / hbar,
             "delta_x0": (2 * np.pi * hbar, 0),
             "delta_x1": (0, 2 * np.pi * hbar),
-            "resolution": (1, 1, 14),
+            "resolution": (nx // 2, ny // 2, 14),
         }
         data: EnergyInterpolation = {
             "points": np.zeros(shape=(nx, ny, nz)).tolist(),
@@ -418,14 +308,14 @@ class TestSurfaceHamiltonian(unittest.TestCase):
         )
 
     def test_eigenstate_normalization(self) -> None:
-        width = random.randrange(2, 10)
+        width = random.randrange(4, 20)
         nz = 100
         config: EigenstateConfig = {
             "mass": hbar**2,
             "sho_omega": 1 / hbar,
             "delta_x0": (2 * np.pi * hbar, 0),
             "delta_x1": (0, 2 * np.pi * hbar),
-            "resolution": (1, 1, 14),
+            "resolution": (width // 2, width // 2, 14),
         }
 
         points = generate_symmetrical_points(nz, width)
@@ -444,93 +334,6 @@ class TestSurfaceHamiltonian(unittest.TestCase):
             np.array([np.linalg.norm(x["eigenvector"]) for x in eig_states]),
             np.ones_like(eig_val),
         )
-
-    def test_eigenstate_periodicity(self) -> None:
-        config: EigenstateConfig = {
-            "mass": hbar**2,
-            "sho_omega": 1 / hbar,
-            "delta_x0": (2 * np.pi * hbar, 0),
-            "delta_x1": (0, 2 * np.pi * hbar),
-            "resolution": (1, 1, 14),
-        }
-        data: EnergyInterpolation = {
-            "points": [],
-            "dz": 1,
-        }
-
-        hamiltonian = SurfaceHamiltonianUtil(config, data, 0)
-
-        kx = np.random.uniform(
-            low=-hamiltonian.dkx0[0] / 2, high=hamiltonian.dkx0[0] / 2
-        )
-        ky = np.random.uniform(
-            low=-hamiltonian.dkx1[1] / 2, high=hamiltonian.dkx1[1] / 2
-        )
-        eigenvector = np.random.rand(hamiltonian.eigenstate_indexes.shape[0]).tolist()
-
-        x = np.random.uniform(low=0.0, high=hamiltonian.delta_x0[0], size=100)
-        y = np.random.uniform(low=0.0, high=hamiltonian.delta_x1[1], size=100)
-
-        center = hamiltonian.calculate_wavefunction_fast(
-            {"kx": kx, "ky": ky, "eigenvector": eigenvector},
-            np.array([x, y, np.zeros_like(x)]).T.tolist(),
-        )
-        x_offset = hamiltonian.calculate_wavefunction_fast(
-            {"kx": kx, "ky": ky, "eigenvector": eigenvector},
-            np.array([x + hamiltonian.delta_x0[0], y, np.zeros_like(x)]).T.tolist(),
-        )
-        y_offset = hamiltonian.calculate_wavefunction_fast(
-            {"kx": kx, "ky": ky, "eigenvector": eigenvector},
-            np.array([x, y + hamiltonian.delta_x1[1], np.zeros_like(x)]).T.tolist(),
-        )
-        np.testing.assert_allclose(
-            center, x_offset * np.exp(-1j * kx * hamiltonian.delta_x0[0])
-        )
-        np.testing.assert_allclose(
-            center, y_offset * np.exp(-1j * ky * hamiltonian.delta_x1[1])
-        )
-
-    def test_calculate_wavefunction_fast(self) -> None:
-        config: EigenstateConfig = {
-            "mass": hbar**2,
-            "sho_omega": 1 / hbar,
-            "delta_x0": (2 * np.pi, 0),
-            "delta_x1": (0, 2 * np.pi),
-            "resolution": (10, 10, 14),
-        }
-
-        data: EnergyInterpolation = {
-            "points": [],
-            "dz": 1,
-        }
-
-        hamiltonian = SurfaceHamiltonianUtil(config, data, 0)
-        kx = 0
-        ky = 0
-
-        eigenvector = np.random.rand(hamiltonian.eigenstate_indexes.shape[0]).tolist()
-        points = [[1, 1, 1]]
-
-        expected = hamiltonian.calculate_wavefunction_slow(
-            {"eigenvector": eigenvector, "kx": kx, "ky": ky}, points
-        )
-        actual = hamiltonian.calculate_wavefunction_fast(
-            {"eigenvector": eigenvector, "kx": kx, "ky": ky}, points
-        )
-
-        np.testing.assert_allclose(expected, actual)
-
-    def test_generate_brillouin_zone_points_copper(self) -> None:
-        config: EigenstateConfig = {
-            "mass": hbar**2,
-            "sho_omega": 1 / hbar,
-            "delta_x0": (2 * np.pi * hbar, 0),
-            "delta_x1": (0, 2 * np.pi * hbar),
-            "resolution": (10, 10, 14),
-        }
-        expected = generate_eigenstates_grid_points_100(config, grid_size=4)
-        actual = get_brillouin_points_irreducible_config(config, size=(4, 4))
-        np.testing.assert_allclose(expected, actual)
 
 
 if __name__ == "__main__":

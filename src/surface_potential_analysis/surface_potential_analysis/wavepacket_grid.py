@@ -19,14 +19,14 @@ from .surface_config import (
 
 
 class WavepacketGrid(SurfaceConfig):
-    delta_z: float
+    z_points: List[float]
     points: List[List[List[complex]]]
 
 
 class WavepacketGridRaw(TypedDict):
+    delta_x0: List[float]
     delta_x1: List[float]
-    delta_x2: List[float]
-    delta_z: float
+    z_points: List[float]
     real_points: List[List[List[complex]]]
     imag_points: List[List[List[complex]]]
 
@@ -36,9 +36,9 @@ def save_wavepacket_grid(data: WavepacketGrid, path: Path) -> None:
         out: WavepacketGridRaw = {
             "real_points": np.real(data["points"]).tolist(),
             "imag_points": np.imag(data["points"]).tolist(),
-            "delta_x1": list(data["delta_x0"]),
-            "delta_x2": list(data["delta_x1"]),
-            "delta_z": data["delta_z"],
+            "delta_x0": list(data["delta_x0"]),
+            "delta_x1": list(data["delta_x1"]),
+            "z_points": data["z_points"],
         }
         json.dump(out, f)
 
@@ -49,9 +49,9 @@ def load_wavepacket_grid(path: Path) -> WavepacketGrid:
         points = np.array(out["real_points"]) + 1j * np.array(out["imag_points"])
         return {
             "points": points.tolist(),
-            "delta_x0": (out["delta_x1"][0], out["delta_x1"][1]),
-            "delta_x1": (out["delta_x2"][0], out["delta_x2"][1]),
-            "delta_z": out["delta_z"],
+            "delta_x0": (out["delta_x0"][0], out["delta_x0"][1]),
+            "delta_x1": (out["delta_x1"][0], out["delta_x1"][1]),
+            "z_points": out["z_points"],
         }
 
 
@@ -73,7 +73,7 @@ def load_wavepacket_grid_legacy(path: Path) -> WavepacketGrid:
             "points": out2["points"],
             "delta_x0": (out2["x_points"][-1] - out2["x_points"][0], 0),
             "delta_x1": (0, out2["y_points"][-1] - out2["y_points"][0]),
-            "delta_z": out2["z_points"][-1] - out2["z_points"][0],
+            "z_points": out2["z_points"],
         }
 
 
@@ -108,7 +108,7 @@ def reflect_wavepacket_in_axis(
             if axis == 1
             else wavepacket["delta_x1"]
         ),
-        "delta_z": wavepacket["delta_z"],
+        "z_points": wavepacket["z_points"],
     }
 
 
@@ -131,7 +131,7 @@ def symmetrize_wavepacket_about_far_edge(wavepacket: WavepacketGrid) -> Wavepack
         "points": reflected_points.tolist(),
         "delta_x0": (wavepacket["delta_x0"][0] * 2, wavepacket["delta_x0"][1] * 2),
         "delta_x1": (wavepacket["delta_x1"][0] * 2, wavepacket["delta_x1"][1] * 2),
-        "delta_z": wavepacket["delta_z"],
+        "z_points": wavepacket["z_points"],
     }
 
 
@@ -145,7 +145,7 @@ def interpolate_wavepacket(
     points = np.array(data["points"])
     x_points = np.linspace(0, data["delta_x0"][0], points.shape[0], endpoint=False)
     y_points = np.linspace(0, data["delta_x1"][1], points.shape[1], endpoint=False)
-    z_points = np.linspace(0, data["delta_z"], points.shape[1])
+    z_points = np.array(data["z_points"])
 
     interpolator = scipy.interpolate.RegularGridInterpolator(
         [x_points, y_points, z_points],
@@ -154,7 +154,7 @@ def interpolate_wavepacket(
 
     x_points = np.linspace(0, data["delta_x0"][0], shape[0], endpoint=False)
     y_points = np.linspace(0, data["delta_x1"][1], shape[1], endpoint=False)
-    z_points = np.linspace(0, data["delta_z"], shape[2])
+    z_points = np.linspace(data["z_points"][0], data["z_points"][-1], shape[2])
     xt, yt, zt = np.meshgrid(x_points, y_points, z_points, indexing="ij")
 
     test_points = np.array([xt.ravel(), yt.ravel(), zt.ravel()]).T
@@ -170,13 +170,13 @@ def interpolate_wavepacket(
         "points": points.reshape(*shape).tolist(),
         "delta_x0": data["delta_x0"],
         "delta_x1": data["delta_x1"],
-        "delta_z": data["delta_z"],
+        "z_points": data["z_points"],
     }
 
 
 def calculate_volume_element(wavepacket: WavepacketGrid) -> float:
     xy_area = np.linalg.norm(np.cross(wavepacket["delta_x0"], wavepacket["delta_x1"]))
-    volume = xy_area * wavepacket["delta_z"]
+    volume = xy_area * (wavepacket["z_points"][-1] - wavepacket["z_points"][0])
     n_points = np.product(np.array(wavepacket["points"]).shape)
     return float(volume / n_points)
 
@@ -188,7 +188,7 @@ def mask_negative_wavepacket(wavepacket: WavepacketGrid) -> WavepacketGrid:
         "points": points.tolist(),
         "delta_x0": wavepacket["delta_x0"],
         "delta_x1": wavepacket["delta_x1"],
-        "delta_z": wavepacket["delta_z"],
+        "z_points": wavepacket["z_points"],
     }
 
 
@@ -220,27 +220,37 @@ def calculate_wavepacket_grid_copper(
         eigenstates,
         delta_x0=(2 * util.delta_x0[0], 2 * util.delta_x0[1]),
         delta_x1=(2 * util.delta_x1[0], 2 * util.delta_x1[1]),
-        delta_z=4 * util.characteristic_z,
-        shape=shape,
+        z_points=np.linspace(
+            -2 * util.characteristic_z, 2 * util.characteristic_z, shape[2]
+        ).tolist(),
+        shape=shape[0:2],
         offset=(-util.delta_x0[0], -util.delta_x1[1], -2 * util.characteristic_z),
     )
 
 
 def calculate_wavepacket_grid_new(
-    eigenstates: EnergyEigenstates, delta_z: float, nz: int, z_offset: float
+    eigenstates: EnergyEigenstates, z_points: List[float]
 ):
     """
-    Since we generate the energy eigenstates from a limited
+    Since we generate the energy eigenstates from a limited number of k states in
+    the x0, x1 direction we do not have the information necessary to properly interpolate
+
     """
     util = EigenstateConfigUtil(eigenstates["eigenstate_config"])
-    shape = (util.resolution[0], util.resolution[1], nz)
+    shape = (2 * util.resolution[0], 2 * util.resolution[1], len(z_points))
+    print(shape)
     grid: WavepacketGrid = {
-        "delta_x0": eigenstates["eigenstate_config"]["delta_x0"],
-        "delta_x1": eigenstates["eigenstate_config"]["delta_x1"],
-        "delta_z": delta_z,
-        "points": np.zeros(shape).tolist(),
+        "delta_x0": (
+            2 * eigenstates["eigenstate_config"]["delta_x0"][0],
+            2 * eigenstates["eigenstate_config"]["delta_x0"][1],
+        ),
+        "delta_x1": (
+            2 * eigenstates["eigenstate_config"]["delta_x1"][0],
+            2 * eigenstates["eigenstate_config"]["delta_x1"][1],
+        ),
+        "z_points": z_points,
+        "points": np.empty(shape).tolist(),
     }
-    z_points = (np.linspace(0, delta_z, nz) + z_offset).tolist()
     coordinates = get_surface_coordinates(grid, (shape[0], shape[1]), z_points)
     coordinates_flat = coordinates.reshape(-1, 3)
 
@@ -258,8 +268,8 @@ def calculate_wavepacket_grid(
     eigenstates: EnergyEigenstates,
     delta_x0: Tuple[float, float],
     delta_x1: Tuple[float, float],
-    delta_z: float,
-    shape: Tuple[int, int, int] = (49, 49, 21),
+    z_points: List[float],
+    shape: Tuple[int, int] = (49, 49),
     *,
     offset: Tuple[float, float, float] = (0.0, 0.0, 0.0),
 ) -> WavepacketGrid:
@@ -268,7 +278,7 @@ def calculate_wavepacket_grid(
     grid: WavepacketGrid = {
         "delta_x0": delta_x0,
         "delta_x1": delta_x1,
-        "delta_z": delta_z,
+        "z_points": z_points,
         "points": np.zeros(shape).tolist(),
     }
     coordinates = get_wavepacket_grid_coordinates(grid, offset=offset)

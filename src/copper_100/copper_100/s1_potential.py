@@ -60,7 +60,7 @@ def load_clean_copper_data():
     return data
 
 
-def generate_interpolated_copper_data():
+def generate_interpolated_copper_data_fourier():
     data = load_relaxed_copper_data()
     normalized = normalize_energy(data)
     interpolated = interpolate_energy_grid_fourier(normalized, shape=(60, 60, 120))

@@ -18,6 +18,7 @@ from surface_potential_analysis.hamiltonian import (
 from surface_potential_analysis.wavepacket_grid import (
     calculate_wavepacket_grid,
     calculate_wavepacket_grid_copper,
+    calculate_wavepacket_grid_new,
     get_wavepacket_grid_coordinates,
     save_wavepacket_grid,
 )
@@ -40,11 +41,11 @@ def generate_eigenstates_grid():
 
 
 def generate_eigenstates_grid_relaxed():
-    # h = generate_hamiltonian(resolution=(10, 10, 14))
-    # path = get_data_path("eigenstates_grid_relaxed.json")
+    h = generate_hamiltonian(resolution=(21, 21, 14))
+    path = get_data_path("eigenstates_grid_relaxed.json")
 
-    h = generate_hamiltonian(resolution=(12, 12, 15))
-    path = get_data_path("eigenstates_grid_relaxed_hd.json")
+    # h = generate_hamiltonian(resolution=(12, 12, 15))
+    # path = get_data_path("eigenstates_grid_relaxed_hd.json")
 
     generate_energy_eigenstates_grid_copper_100(path, h, size=(4, 4))
 
@@ -220,4 +221,19 @@ def generate_wavepacket_grid_relaxed_flat():
         offset=(util.delta_x0[0] / 2, util.delta_x1[1] / 2, -1 * util.characteristic_z),
     )
     path = get_data_path("relaxed_eigenstates_hd_wavepacket_flat.json")
+    save_wavepacket_grid(wavepacket, path)
+
+
+def generate_wavepacket_grid_new_relaxed():
+    path = get_data_path("eigenstates_grid_relaxed.json")
+    eigenstates = load_energy_eigenstates(path)
+
+    normalized = normalize_eigenstate_phase_copper(eigenstates)
+
+    util = EigenstateConfigUtil(eigenstates["eigenstate_config"])
+    wavepacket = calculate_wavepacket_grid_new(
+        normalized,
+        z_points=np.linspace(-util.characteristic_z, util.characteristic_z, 5).tolist(),
+    )
+    path = get_data_path("relaxed_eigenstates_wavepacket_new.json")
     save_wavepacket_grid(wavepacket, path)

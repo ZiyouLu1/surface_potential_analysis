@@ -15,8 +15,8 @@ class EigenstateConfigRaw(TypedDict):
     resolution: List[int]
     sho_omega: float
     mass: float
+    delta_x0: List[float]
     delta_x1: List[float]
-    delta_x2: List[float]
 
 
 class EnergyEigenstates(TypedDict):
@@ -40,8 +40,8 @@ def save_energy_eigenstates(data: EnergyEigenstates, path: Path) -> None:
     with path.open("w") as f:
         out: EnergyEigenstatesRaw = {
             "eigenstate_config": {
-                "delta_x1": list(data["eigenstate_config"]["delta_x0"]),
-                "delta_x2": list(data["eigenstate_config"]["delta_x1"]),
+                "delta_x0": list(data["eigenstate_config"]["delta_x0"]),
+                "delta_x1": list(data["eigenstate_config"]["delta_x1"]),
                 "mass": data["eigenstate_config"]["mass"],
                 "resolution": list(data["eigenstate_config"]["resolution"]),
                 "sho_omega": data["eigenstate_config"]["sho_omega"],
@@ -62,8 +62,8 @@ def eigenstates_config_from_raw(raw: EigenstateConfigRaw) -> EigenstateConfig:
             raw["resolution"][1],
             raw["resolution"][2],
         ),
-        "delta_x0": (raw["delta_x1"][0], raw["delta_x1"][1]),
-        "delta_x1": (raw["delta_x2"][0], raw["delta_x2"][1]),
+        "delta_x0": (raw["delta_x0"][0], raw["delta_x0"][1]),
+        "delta_x1": (raw["delta_x1"][0], raw["delta_x1"][1]),
         "mass": raw["mass"],
         "sho_omega": raw["sho_omega"],
     }

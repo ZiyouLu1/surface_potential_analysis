@@ -28,6 +28,8 @@ def plot_energy_grid_points(
     line.set_marker("x")
     line.set_linestyle("")
 
+    ax.set_aspect("equal", adjustable="box")
+
     return fig, ax, line
 
 
@@ -299,15 +301,16 @@ def animate_energy_grid_3D_in_xy(
     points = np.array(grid["points"])
     clim = (np.min(points), np.max(points))
     _, _, mesh = plot_energy_grid_in_xy(grid, 0, ax=ax)
-    mesh.set_clim(clim[0], clim[1])
     mesh.set_norm("symlog")  # type: ignore
+    mesh.set_clim(clim[0], clim[1])
 
     frames: List[List[QuadMesh]] = []
     for z_ind in range(points.shape[2]):
 
         _, _, mesh = plot_energy_grid_in_xy(grid, z_ind, ax=ax)
-        mesh.set_clim(clim[0], clim[1])
         mesh.set_norm("symlog")  # type: ignore
+        mesh.set_clim(clim[0], clim[1])
+
         frames.append([mesh])
 
     ani = matplotlib.animation.ArtistAnimation(fig, frames)
@@ -398,8 +401,20 @@ def compare_energy_grid_to_all_raw_points(
     return fig, ax
 
 
+def plot_energy_grid_locations(
+    grid: EnergyGrid, *, ax: Axes | None = None
+) -> Tuple[Figure, Axes, Line2D]:
+    fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
+
+    points = get_energy_grid_xy_points(grid)
+    (line,) = ax.plot(points[:, 0], points[:, 1])
+    line.set_linestyle("")
+    line.set_marker("x")
+    return fig, ax, line
+
+
 def plot_energy_point_locations_on_grid(
-    raw_points: EnergyPoints, grid: EnergyGrid, ax: Axes | None = None
+    raw_points: EnergyPoints, grid: EnergyGrid, *, ax: Axes | None = None
 ) -> Tuple[Figure, Axes, matplotlib.animation.ArtistAnimation]:
     fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
 

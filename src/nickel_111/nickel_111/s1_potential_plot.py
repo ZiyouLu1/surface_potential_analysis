@@ -7,12 +7,17 @@ from matplotlib.axes import Axes
 from matplotlib.figure import Figure
 from matplotlib.lines import Line2D
 
-from surface_potential_analysis.energy_data import EnergyGrid, normalize_energy
+from surface_potential_analysis.energy_data import (
+    EnergyGrid,
+    load_energy_grid,
+    normalize_energy,
+)
 from surface_potential_analysis.energy_data_plot import (
     animate_energy_grid_3D_in_x1z,
     animate_energy_grid_3D_in_xy,
     compare_energy_grid_to_all_raw_points,
     plot_all_energy_points_z,
+    plot_energy_grid_locations,
     plot_energy_grid_points,
     plot_energy_in_z_direction,
     plot_energy_point_locations_on_grid,
@@ -28,7 +33,7 @@ from .s1_potential import (
     load_raw_data,
     load_raw_data_reciprocal_grid,
 )
-from .surface_data import save_figure
+from .surface_data import get_data_path, save_figure
 
 
 def plot_raw_data_points():
@@ -116,12 +121,48 @@ def plot_raw_energy_grid_points():
 def plot_interpolated_energy_grid_points():
     grid = load_interpolated_grid()
 
-    print(grid["delta_x0"], grid["delta_x1"])
+    fig, ax, _ = plot_energy_grid_points(grid)
+    fig.show()
+
+    fig, ax, _ani = animate_energy_grid_3D_in_xy(grid)
+    path = get_data_path("raw_data_reciprocal_spacing.json")
+    raw_grid = load_energy_grid(path)
+    plot_energy_grid_locations(raw_grid, ax=ax)
+    fig.show()
+
+    fig, ax, _ = plot_z_direction_energy_data_111(grid)
+    ax.set_ylim(0, 0.2e-18)
+    fig.show()
+
+    ft_points = np.abs(np.fft.ifft2(grid["points"], axes=(0, 1)))
+    ft_points[0, 0] = 0
+    ft_grid: EnergyGrid = {
+        "delta_x0": grid["delta_x0"],
+        "delta_x1": grid["delta_x1"],
+        "points": ft_points.tolist(),
+        "z_points": grid["z_points"],
+    }
+    fig, ax, _ani1 = animate_energy_grid_3D_in_xy(ft_grid)
+    # TODO: delta is wrong, plot generic points and then factor out into ft.
+    ax.set_title("Plot of the ft of the interpolated potential")
+    fig.show()
+    input()
+
+
+def plot_interpolated_energy_grid_reciprocal():
+    path = get_data_path("interpolated_data_reciprocal.json")
+    grid = load_energy_grid(path)
+    points = np.array(grid["points"])
+    points[points < 0] = np.max(points)
+    grid["points"] = points.tolist()
 
     fig, ax, _ = plot_energy_grid_points(grid)
     fig.show()
 
     fig, ax, _ani = animate_energy_grid_3D_in_xy(grid)
+    path = get_data_path("raw_data_reciprocal_spacing.json")
+    raw_grid = load_energy_grid(path)
+    plot_energy_grid_locations(raw_grid, ax=ax)
     fig.show()
 
     fig, ax, _ = plot_z_direction_energy_data_111(grid)

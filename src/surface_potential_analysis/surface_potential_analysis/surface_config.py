@@ -16,10 +16,7 @@ class SurfaceConfig(TypedDict):
 
 def get_surface_xy_points(surface: SurfaceConfig, shape: Tuple[int, int]) -> NDArray:
     return grid_space(
-        surface["delta_x0"],
-        surface["delta_x1"],
-        shape=(shape[0], shape[1]),
-        endpoint=False,
+        surface["delta_x0"], surface["delta_x1"], shape=shape, endpoint=False
     )
 
 
