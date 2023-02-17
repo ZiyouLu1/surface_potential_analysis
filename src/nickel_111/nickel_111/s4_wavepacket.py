@@ -1,6 +1,8 @@
 from pathlib import Path
 from typing import List, Tuple
 
+import numpy as np
+
 from surface_potential_analysis.eigenstate import EigenstateConfig, EigenstateConfigUtil
 from surface_potential_analysis.energy_eigenstate import (
     get_brillouin_points_irreducible_config,
@@ -9,6 +11,7 @@ from surface_potential_analysis.energy_eigenstate import (
 )
 from surface_potential_analysis.hamiltonian import (
     SurfaceHamiltonianUtil,
+    generate_energy_eigenstates_from_k_points,
     generate_energy_eigenstates_grid,
 )
 from surface_potential_analysis.wavepacket_grid import (
@@ -16,7 +19,7 @@ from surface_potential_analysis.wavepacket_grid import (
     save_wavepacket_grid,
 )
 
-from .s2_hamiltonian import generate_hamiltonian_john
+from .s2_hamiltonian import generate_hamiltonian, generate_hamiltonian_john
 from .surface_data import get_data_path
 
 
@@ -55,12 +58,12 @@ def generate_energy_eigenstates_grid_nickel_111(
         hamiltonian._config, size=size, include_zero=include_zero
     )
 
-    return generate_energy_eigenstates_grid(
+    return generate_energy_eigenstates_from_k_points(
         hamiltonian, k_points, path, include_bands=include_bands
     )
 
 
-def generate_eigenstates_grid():
+def generate_eigenstates_grid_john():
     h = generate_hamiltonian_john(resolution=(12, 18, 12))
     path = get_data_path("eigenstates_grid_2.json")
 
@@ -69,7 +72,7 @@ def generate_eigenstates_grid():
     )
 
 
-def generate_wavepacket_grid():
+def generate_wavepacket_grid_john():
     path = get_data_path("eigenstates_grid_2.json")
     eigenstates = load_energy_eigenstates_legacy(path)
 
@@ -89,9 +92,20 @@ def generate_wavepacket_grid():
             normalized,
             util.delta_x0,
             util.delta_x1,
-            4 * util.characteristic_z,
-            shape=(13, 19, 11),
-            offset=(-util.delta_x0[0] / 2, 0.0, -util.characteristic_z * 2),
+            np.linspace(
+                -util.characteristic_z * 2, util.characteristic_z * 2, 11
+            ).tolist(),
+            shape=(13, 19),
+            offset=(-util.delta_x0[0] / 2, 0.0),
         )
         path = get_data_path(f"eigenstates_wavepacket_{i}_small.json")
         save_wavepacket_grid(wavepacket, path)
+
+
+def generate_eigenstates_grid():
+    h = generate_hamiltonian(resolution=(29, 29, 10))
+    path = get_data_path("eigenstates_grid.json")
+
+    generate_energy_eigenstates_grid(
+        path, h, size=(4, 4), include_bands=list(range(20))
+    )

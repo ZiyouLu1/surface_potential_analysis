@@ -125,7 +125,6 @@ def plot_relaxed_wavefunction_3D():
 def plot_new_wavepacket_relaxed():
     path = get_data_path("relaxed_eigenstates_wavepacket_new.json")
     wavepacket = load_wavepacket_grid(path)
-    print(np.array(wavepacket["points"]).shape)
 
     fig, _, _ = animate_wavepacket_grid_3D_in_xy(wavepacket, measure="real")
     fig.show()
@@ -178,7 +177,6 @@ def plot_wavepacket_difference_3D() -> None:
 def plot_ft_hd_wavepacket_at_origin() -> None:
     path = get_data_path("relaxed_eigenstates_hd_wavepacket_flat.json")
     wavepacket = load_wavepacket_grid(path)
-    print(np.array(wavepacket["points"]).shape)
     fig, _, _ = plot_wavepacket_grid_xy(wavepacket, z_ind=1, measure="real")
     fig.show()
     # wavepacket = reflect_wavepacket_in_axis(wavepacket, axis=1)
@@ -203,7 +201,12 @@ def plot_ft_hd_wavepacket_at_origin() -> None:
     new_ft_points[:, :+12, :] = ft_points[:, :+12, :]
 
     new_points = np.fft.fft2(new_ft_points, axes=(0, 1))
-    fixed_wavepacket: WavepacketGrid = {**wavepacket, "points": new_points.tolist()}
+    fixed_wavepacket: WavepacketGrid = {
+        "delta_x0": wavepacket["delta_x0"],
+        "delta_x1": wavepacket["delta_x1"],
+        "z_points": wavepacket["z_points"],
+        "points": new_points.tolist(),
+    }
     fig, _, _ = plot_wavepacket_grid_xy(fixed_wavepacket, z_ind=1, measure="real")
     fig.show()
     # almost_zero = np.isclose(np.abs(ft_points), 0)

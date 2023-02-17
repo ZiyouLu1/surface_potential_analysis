@@ -165,8 +165,8 @@ class EigenstateConfigUtil(SurfaceConfigUtil):
         ky = eigenstate["ky"]
         phase_points = np.exp(1j * (xy_points[:, :, 0] * kx + xy_points[:, :, 1] * ky))
 
-        eigenvector_array = np.array(eigenstate["eigenvector"]).reshape(
-            self.Nkx, self.Nky, self.Nkz
+        eigenvector_array = np.reshape(
+            eigenstate["eigenvector"], (self.Nkx, self.Nky, self.Nkz)
         )
         ft_points = np.fft.fftn(eigenvector_array, axis=(0, 1))
 

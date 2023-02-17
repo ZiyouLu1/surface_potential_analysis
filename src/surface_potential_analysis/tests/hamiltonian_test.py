@@ -74,7 +74,7 @@ class TestSurfaceHamiltonian(unittest.TestCase):
             "resolution": (2, 2, 2),
         }
         data: EnergyInterpolation = {
-            "points": np.zeros((4, 4, 3)),
+            "points": np.zeros((4, 4, 3)).tolist(),
             "dz": 1,
         }
         hamiltonian = SurfaceHamiltonianUtil(config, data, z_offset)

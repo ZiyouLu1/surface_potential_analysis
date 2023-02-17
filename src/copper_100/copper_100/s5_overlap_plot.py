@@ -92,8 +92,8 @@ def plot_masked_overlap_factor():
     fig.show()
     save_figure(fig, "Z=0 and max overlap height wavefunction comparison")
 
-    x_points = np.linspace(0, masked["delta_x1"], np.array(masked["points"]).shape[0])
-    z_points = np.linspace(0, masked["delta_z"], np.array(masked["points"]).shape[2])
+    x_points = np.linspace(0, masked["delta_x0"], np.shape(masked["points"])[0])
+    z_points = np.array(masked["z_points"])
 
     fig, ax1 = plt.subplots()
     ax1.plot(x_points[0:65], overlap_fraction[:, max_index[1], max_index[2]])

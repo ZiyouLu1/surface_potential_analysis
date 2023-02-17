@@ -1,5 +1,5 @@
 import math
-from typing import List, Tuple
+from typing import Dict, List, Tuple
 
 import matplotlib.animation
 import matplotlib.pyplot as plt
@@ -47,17 +47,52 @@ def plot_energy_in_z_direction(
 def get_111_locations(grid: EnergyGrid):
     points = np.array(grid["points"], dtype=float)
     return {
-        "Top Site": (math.floor(points.shape[0] / 3), math.floor(points.shape[1] / 3)),
-        "Bridge Site": (
-            math.floor(5 * points.shape[0] / 6),
-            math.floor(5 * points.shape[1] / 6),
-        ),
-        "FCC Site": (0, 0),
-        "HCP Site": (
+        "Top Site": (
             math.floor(2 * points.shape[0] / 3),
             math.floor(2 * points.shape[1] / 3),
         ),
+        "Bridge Site": (
+            math.floor(points.shape[0] / 6),
+            math.floor(points.shape[1] / 6),
+        ),
+        "FCC Site": (0, 0),
+        "HCP Site": (
+            math.floor(points.shape[0] / 3),
+            math.floor(points.shape[1] / 3),
+        ),
     }
+
+
+def get_100_locations(grid: EnergyGrid):
+
+    points = np.array(grid["points"], dtype=float)
+    return {
+        "Top Site": (0, 0),
+        "Bridge Site": (math.floor(points.shape[0] / 2), 0),
+        "Hollow Site": (
+            math.floor(points.shape[0] / 2),
+            math.floor(points.shape[1] / 2),
+        ),
+    }
+
+
+def plot_z_direction_energy_data(
+    grid: EnergyGrid, locations: Dict[str, Tuple[int, int]], *, ax: Axes | None = None
+) -> Tuple[Figure, Axes, List[Line2D]]:
+    fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
+
+    lines: List[Line2D] = []
+    for (label, xy_ind) in locations.items():
+        _, _, line = plot_energy_in_z_direction(grid, xy_ind, ax=ax)
+        line.set_label(label)
+        lines.append(line)
+
+    ax.set_ylabel("Energy / J")
+    ax.set_xlabel("relative z position /m")
+
+    ax.legend()
+
+    return fig, ax, lines
 
 
 def plot_z_direction_energy_data_111(
@@ -66,18 +101,7 @@ def plot_z_direction_energy_data_111(
     fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
 
     locations = get_111_locations(grid)
-    lines: List[Line2D] = []
-    for (label, xy_ind) in locations.items():
-        _, _, line = plot_energy_in_z_direction(grid, xy_ind, ax=ax)
-        line.set_label(label)
-        lines.append(line)
-
-    ax.set_title("Plot of energy at the Top and Hollow sites")
-    ax.set_ylabel("Energy / J")
-    ax.set_xlabel("relative z position /m")
-
-    ax.legend()
-
+    fig, ax, lines = plot_z_direction_energy_data(grid, locations, ax=ax)
     return fig, ax, (lines[0], lines[1], lines[2], lines[3])
 
 
@@ -106,25 +130,8 @@ def plot_z_direction_energy_data_100(
 ) -> Tuple[Figure, Axes, Tuple[Line2D, Line2D, Line2D]]:
     fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
 
-    points = np.array(grid["points"], dtype=float)
-    middle_x_index = math.floor(points.shape[0] / 2)
-
-    locations = {
-        "Top Site": (0, 0),
-        "Bridge Site": (middle_x_index, 0),
-        "Hollow Site": (middle_x_index, math.floor(points.shape[1] / 2)),
-    }
-    lines: List[Line2D] = []
-    for (label, xy_ind) in locations.items():
-        _, _, line = plot_energy_in_z_direction(grid, xy_ind, ax=ax)
-        line.set_label(label)
-        lines.append(line)
-
-    ax.set_title("Plot of energy at the Top and Hollow sites")
-    ax.set_ylabel("Energy / J")
-    ax.set_xlabel("relative z position /m")
-
-    ax.legend()
+    locations = get_100_locations(grid)
+    fi, ax, lines = plot_z_direction_energy_data(grid, locations, ax=ax)
 
     return fig, ax, (lines[0], lines[1], lines[2])
 
@@ -294,22 +301,22 @@ def plot_energy_grid_in_xy(
 
 
 def animate_energy_grid_3D_in_xy(
-    grid: EnergyGrid, *, ax: Axes | None = None
+    grid: EnergyGrid, *, ax: Axes | None = None, clim_max: float | None = None
 ) -> Tuple[Figure, Axes, matplotlib.animation.ArtistAnimation]:
     fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
-
     points = np.array(grid["points"])
-    clim = (np.min(points), np.max(points))
+    clim_max = clim_max if clim_max is not None else np.max(points)
+
     _, _, mesh = plot_energy_grid_in_xy(grid, 0, ax=ax)
     mesh.set_norm("symlog")  # type: ignore
-    mesh.set_clim(clim[0], clim[1])
+    mesh.set_clim(0, clim_max)
 
     frames: List[List[QuadMesh]] = []
     for z_ind in range(points.shape[2]):
 
         _, _, mesh = plot_energy_grid_in_xy(grid, z_ind, ax=ax)
         mesh.set_norm("symlog")  # type: ignore
-        mesh.set_clim(clim[0], clim[1])
+        mesh.set_clim(0, clim_max)
 
         frames.append([mesh])
 
@@ -344,21 +351,21 @@ def plot_energy_grid_in_x1z(
 
 
 def animate_energy_grid_3D_in_x1z(
-    grid: EnergyGrid, *, ax: Axes | None = None
+    grid: EnergyGrid, *, ax: Axes | None = None, clim_max: float | None = None
 ) -> Tuple[Figure, Axes, matplotlib.animation.ArtistAnimation]:
     fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
-
     points = np.array(grid["points"])
-    clim = (np.min(points), np.max(points))
+    clim_max = clim_max if clim_max is not None else np.max(points)
+
     _, _, mesh = plot_energy_grid_in_x1z(grid, 0, ax=ax)
-    mesh.set_clim(clim[0], clim[1])
+    mesh.set_clim(0, clim_max)
     mesh.set_norm("symlog")  # type: ignore
 
     frames: List[List[QuadMesh]] = []
     for x2_ind in range(points.shape[1]):
 
         _, _, mesh = plot_energy_grid_in_x1z(grid, x2_ind, ax=ax)
-        mesh.set_clim(clim[0], clim[1])
+        mesh.set_clim(0, clim_max)
         mesh.set_norm("symlog")  # type: ignore
         frames.append([mesh])
 
@@ -382,7 +389,7 @@ def compare_energy_grid_to_all_raw_points(
     xy_points = get_energy_grid_xy_points(grid)
     x_points = xy_points[:, 0]
     y_points = xy_points[:, 1]
-    grid_points = np.array(grid["points"])
+    grid_points = np.reshape(grid["points"], (-1, np.shape(grid["points"])[2]))
 
     cols = ["C0", "C1", "C2", "C3", "C4", "C5", "C6", "C7", "C8", "C9"]
     for (i, (x, y)) in enumerate(points):
@@ -391,10 +398,9 @@ def compare_energy_grid_to_all_raw_points(
         line.set_linestyle("")
         line.set_marker("x")
 
-        ix = (np.abs(x_points - x)).argmin()
-        iy = (np.abs(y_points - y)).argmin()
+        ixy = (np.square(x_points - x) + np.square(y_points - y)).argmin()
 
-        (line,) = ax.plot(grid["z_points"], grid_points[ix, iy, :])
+        (line,) = ax.plot(grid["z_points"], grid_points[ixy, :])
         line.set_label(f"{x:.2}, {y:.2}")
         line.set_color(cols[i])
 
@@ -447,3 +453,33 @@ def plot_energy_point_locations_on_grid(
     ax.set_aspect("equal", adjustable="box")
 
     return fig, ax, ani
+
+
+def plot_potential_minimum_along_path(
+    grid: EnergyGrid, path: List[Tuple[int, int]], *, ax: Axes | None = None
+) -> Tuple[Figure, Axes, Line2D]:
+    """
+    Plot the minimum of the potential along the given path.
+
+    Note this path is not guaranteed to be continuous in the z direction
+
+    Parameters
+    ----------
+    grid : EnergyGrid
+    path : List[Tuple[int, int]]
+    ax   : Axes | None, optional
+
+
+    Returns
+    -------
+    Tuple[Figure, Axes, Line2D]
+    """
+    fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
+
+    path_arr = np.array(path)
+    points = np.min(grid["points"], axis=-1)[path_arr[:, 0], path_arr[:, 1]]
+    (line,) = ax.plot(points)
+    ax.set_xlabel("Distance (AU)")
+    ax.set_ylabel("Energy / J")
+
+    return fig, ax, line

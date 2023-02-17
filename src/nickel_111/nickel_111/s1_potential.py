@@ -16,6 +16,7 @@ from surface_potential_analysis.energy_data import (
     normalize_energy,
     save_energy_grid,
     truncate_energy,
+    undo_truncate_energy,
 )
 
 from .surface_data import get_data_path
@@ -31,14 +32,6 @@ def load_raw_data_reciprocal_grid():
     return load_energy_grid(path)
 
 
-def load_cleaned_energy_grid():
-    data = load_raw_data_reciprocal_grid()
-    normalized = normalize_energy(data)
-    # cutoff=4E-19, n=6, offset = 1e-20
-    # cutoff=3.2e-18, n=1, offset=1e-20
-    return truncate_energy(normalized, cutoff=0.4e-18, n=1, offset=1e-20)
-
-
 def load_john_interpolation() -> EnergyGrid:
     path = get_data_path("john_interpolated_data.json")
     return load_energy_grid_legacy(path)
@@ -46,6 +39,11 @@ def load_john_interpolation() -> EnergyGrid:
 
 def load_interpolated_grid() -> EnergyGrid:
     path = get_data_path("interpolated_data.json")
+    return load_energy_grid(path)
+
+
+def load_interpolated_john_grid() -> EnergyGrid:
+    path = get_data_path("interpolated_data_john_grid.json")
     return load_energy_grid(path)
 
 
@@ -151,7 +149,10 @@ def interpolate_points_fourier_nickel(
 
 
 def interpolate_energy_grid_xy_fourier_nickel(
-    data: EnergyGrid, shape: Tuple[int, int] = (40, 40)
+    data: EnergyGrid,
+    delta_x0_real: Tuple[float, float],
+    delta_x1_real: Tuple[float, float],
+    shape: Tuple[int, int] = (40, 40),
 ) -> EnergyGrid:
     """
     Makes use of a fourier transform to increase the number of points
@@ -159,12 +160,6 @@ def interpolate_energy_grid_xy_fourier_nickel(
     """
     old_points = np.array(data["points"])
     points = np.empty((shape[0], shape[1], old_points.shape[2]))
-
-    raw_data = load_raw_data()
-    x_width = np.max(raw_data["x_points"]) - np.min(raw_data["x_points"])
-
-    delta_x0_real = (2 * x_width, 0)
-    delta_x1_real = (0.5 * delta_x0_real[0], np.sqrt(3) * delta_x0_real[0] / 2)
 
     for iz in range(old_points.shape[2]):
         points[:, :, iz] = interpolate_points_fourier_nickel(
@@ -184,29 +179,74 @@ def interpolate_energy_grid_xy_fourier_nickel(
 
 
 def interpolate_energy_grid_fourier_nickel(
-    data: EnergyGrid, shape: Tuple[int, int, int] = (40, 40, 40)
+    data: EnergyGrid,
+    delta_x0_real: Tuple[float, float],
+    delta_x1_real: Tuple[float, float],
+    shape: Tuple[int, int, int] = (40, 40, 40),
 ) -> EnergyGrid:
     """
     Interpolate an energy grid using the fourier method, but in the xy direction we
     ignore the initial lattice constants
     """
     xy_interpolation = interpolate_energy_grid_xy_fourier_nickel(
-        data, (shape[0], shape[1])
+        data, delta_x0_real, delta_x1_real, (shape[0], shape[1])
     )
     return interpolate_energy_grid_z_spline(xy_interpolation, shape[2])
 
 
-def generate_interpolated_data():
-    grid = load_cleaned_energy_grid()
+def load_cleaned_energy_grid():
+    data = load_raw_data_reciprocal_grid()
+    normalized = normalize_energy(data)
+    # cutoff=4E-19, n=6, offset = 1e-20
+    # cutoff=3.2e-18, n=1, offset=1e-20
+    return truncate_energy(normalized, cutoff=0.4e-18, n=1, offset=1e-20)
 
-    data = interpolate_energy_grid_fourier_nickel(grid, (48, 48, 100))
+
+def generate_interpolated_data():
+    raw = load_raw_data_reciprocal_grid()
+    normalized = normalize_energy(raw)
+    truncated = truncate_energy(normalized, cutoff=0.4e-18, n=1, offset=1e-20)
+
+    raw_data = load_raw_data()
+    x_width = np.max(raw_data["x_points"]) - np.min(raw_data["x_points"])
+
+    delta_x0_real = (2 * x_width, 0)
+    delta_x1_real = (0.5 * delta_x0_real[0], np.sqrt(3) * delta_x0_real[0] / 2)
+
+    data = interpolate_energy_grid_fourier_nickel(
+        truncated, delta_x0_real, delta_x1_real, (60, 60, 100)
+    )
+    fixed_data = undo_truncate_energy(data, cutoff=0.4e-18, n=1, offset=1e-20)
     path = get_data_path("interpolated_data.json")
-    save_energy_grid(data, path)
+    save_energy_grid(fixed_data, path)
+
+
+def generate_interpolated_data_john_grid():
+    raw = load_raw_data_reciprocal_grid()
+    normalized = normalize_energy(raw)
+    truncated = truncate_energy(normalized, cutoff=0.4e-18, n=1, offset=1e-20)
+
+    raw_data = load_raw_data()
+    x_width = np.max(raw_data["x_points"]) - np.min(raw_data["x_points"])
+    y_width = np.max(raw_data["y_points"]) - np.min(raw_data["y_points"])
+
+    delta_x0_real = (2 * x_width, 0)
+    delta_x1_real = (0, 3 * y_width)
+
+    data = interpolate_energy_grid_fourier_nickel(
+        truncated, delta_x0_real, delta_x1_real, (60, 60, 100)
+    )
+    fixed_data = undo_truncate_energy(data, cutoff=0.4e-18, n=1, offset=1e-20)
+    path = get_data_path("interpolated_data_john_grid.json")
+    save_energy_grid(fixed_data, path)
 
 
 def generate_interpolated_data_reciprocal():
-    grid = load_cleaned_energy_grid()
+    raw = load_raw_data_reciprocal_grid()
+    normalized = normalize_energy(raw)
+    truncated = truncate_energy(normalized, cutoff=0.4e-18, n=1, offset=1e-20)
 
-    data = interpolate_energy_grid_fourier(grid, (48, 48, 100))
+    data = interpolate_energy_grid_fourier(truncated, (48, 48, 100))
+    fixed_data = undo_truncate_energy(data, cutoff=0.4e-18, n=1, offset=1e-20)
     path = get_data_path("interpolated_data_reciprocal.json")
-    save_energy_grid(data, path)
+    save_energy_grid(fixed_data, path)

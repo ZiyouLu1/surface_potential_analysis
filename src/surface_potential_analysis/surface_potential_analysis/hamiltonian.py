@@ -54,13 +54,13 @@ class SurfaceHamiltonianUtil(EigenstateConfigUtil):
         self._potential = potential
         self._potential_offset = potential_offset
 
-        if 2 * self.Nkx > self.Nx:
+        if 2 * (self.Nkx - 1) > self.Nx:
             print(self.Nkx, self.Nx)
             raise AssertionError(
                 "Potential does not have enough resolution in x direction"
             )
 
-        if 2 * self.Nky > self.Ny:
+        if 2 * (self.Nky - 1) > self.Ny:
             print(self.Nky, self.Ny)
             raise AssertionError(
                 "Potential does not have enough resolution in y direction"
@@ -111,21 +111,19 @@ class SurfaceHamiltonianUtil(EigenstateConfigUtil):
         other_energies = self._calculate_off_diagonal_energies_fast()
 
         energies = diagonal_energies + other_energies
-        if os.environ.get("DEBUG_CHECKS", False) and not np.allclose(
-            energies, energies.conjugate().T
-        ):
+        if not np.allclose(energies, energies.conjugate().T):
             raise AssertionError("Hamiltonian is not hermitian")
         return energies
 
     @timed
     def _calculate_diagonal_energy(self, kx: float, ky: float) -> NDArray[Any]:
-        kx1_coords, kx2_coords, nz_coords = self.eigenstate_indexes.T
+        kx0_coords, kx1_coords, nkz_coords = self.eigenstate_indexes.T
 
-        kx_points = self.dkx0[0] * kx1_coords + self.dkx1[0] * kx2_coords + kx
+        kx_points = self.dkx0[0] * kx0_coords + self.dkx1[0] * kx1_coords + kx
         x_energy = (hbar * kx_points) ** 2 / (2 * self.mass)
-        ky_points = self.dkx0[1] * kx1_coords + self.dkx1[1] * kx2_coords + ky
+        ky_points = self.dkx0[1] * kx0_coords + self.dkx1[1] * kx1_coords + ky
         y_energy = (hbar * ky_points) ** 2 / (2 * self.mass)
-        z_energy = (hbar * self.sho_omega) * (nz_coords + 0.5)
+        z_energy = (hbar * self.sho_omega) * (nkz_coords + 0.5)
         return x_energy + y_energy + z_energy
 
     @cache
@@ -212,7 +210,7 @@ class SurfaceHamiltonianUtil(EigenstateConfigUtil):
         return (w.tolist(), [{"eigenvector": vec, "kx": kx, "ky": ky} for vec in v.T])
 
 
-def generate_energy_eigenstates_grid(
+def generate_energy_eigenstates_from_k_points(
     hamiltonian: SurfaceHamiltonianUtil,
     k_points: NDArray,
     path: Path,
@@ -239,7 +237,7 @@ def generate_energy_eigenstates_grid(
             append_energy_eigenstates(path, eigenstate, eigenvalue)
 
 
-def generate_energy_eigenstates_grid_copper_100(
+def generate_energy_eigenstates_grid(
     path: Path,
     hamiltonian: SurfaceHamiltonianUtil,
     *,
@@ -251,7 +249,7 @@ def generate_energy_eigenstates_grid_copper_100(
         hamiltonian._config, size=size, include_zero=include_zero
     )
 
-    return generate_energy_eigenstates_grid(
+    return generate_energy_eigenstates_from_k_points(
         hamiltonian, k_points, path, include_bands=include_bands
     )
 

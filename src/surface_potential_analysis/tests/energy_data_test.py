@@ -24,7 +24,7 @@ class TestEnergyData(unittest.TestCase):
         }
 
         extended = repeat_original_data(data)
-        self.assertTrue(np.array_equal(np.array(extended["points"]).shape, (6, 6, 2)))
+        self.assertTrue(np.array_equal(np.shape(extended["points"]), (6, 6, 2)))
 
     def test_repeat_original_data_spacing(self) -> None:
         delta_xy = 2 * np.pi * hbar
@@ -107,12 +107,12 @@ class TestEnergyData(unittest.TestCase):
         points = np.random.random(size=shape).tolist()
 
         expected = points
-        actual = interpolate_points_fourier(points, shape)
+        actual = interpolate_points_fourier(points, shape=(shape[0], shape[1]))
         np.testing.assert_array_almost_equal(expected, actual)
 
     def test_fourier_transform_of_interpolation(self) -> None:
 
-        int_shape = tuple(2 * np.random.randint(2, 10, size=2))
+        int_shape = (np.random.randint(2, 10), np.random.randint(2, 10))
         points = np.random.random(size=(2, 2)).tolist()
 
         expected = np.zeros(int_shape, dtype=complex)

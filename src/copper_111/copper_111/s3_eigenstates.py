@@ -3,7 +3,7 @@ import numpy as np
 from surface_potential_analysis.energy_eigenstate import save_energy_eigenstates
 from surface_potential_analysis.hamiltonian import calculate_energy_eigenstates
 
-from .hamiltonian import generate_hamiltonian
+from .s2_hamiltonian import generate_hamiltonian
 from .surface_data import get_data_path
 
 

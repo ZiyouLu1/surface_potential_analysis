@@ -2,7 +2,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 import scipy.constants
 
-from surface_potential_analysis.brillouin_zone import grid_space
 from surface_potential_analysis.energy_data import (
     load_energy_grid_legacy,
     normalize_energy,
@@ -14,6 +13,7 @@ from surface_potential_analysis.energy_data_plot import (
     plot_z_direction_energy_comparison_100,
     plot_z_direction_energy_data_100,
 )
+from surface_potential_analysis.sho_wavefunction_plot import plot_sho_wavefunctions
 
 from .s1_potential import (
     load_9h_copper_data,
@@ -132,6 +132,32 @@ def plot_copper_interpolated_data():
     fig.show()
     input()
     save_figure(fig, "copper_interpolated_data_xy.png")
+
+
+def plot_interpolation_with_sho_wavefunctions():
+    """
+    Is is possible that the SHO wavefunctions lie outside the interpolated potential
+    or have energies for which they can see the truncation process.
+
+    Plotting them alongside the interpolation in the hZ direction will allow us to
+    diagnose these issues
+    """
+
+    grid = load_interpolated_copper_data()
+    fig, ax = plt.subplots()
+    plot_z_direction_energy_data_100(grid, ax=ax)
+    plot_sho_wavefunctions(
+        grid["z_points"],
+        sho_omega=117905964225836.06,
+        mass=1.6735575e-27,
+        first_n=16,
+        ax=ax,
+    )
+    ax.set_ylim(0, 0.5e-18)
+    fig.show()
+
+    save_figure(fig, "sho_wavefunctions_alongside_potential.png")
+    input()
 
 
 def compare_bridge_hollow_energy():

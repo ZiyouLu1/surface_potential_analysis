@@ -47,7 +47,7 @@ def mask_interpolation_artifacts_copper_100(grid: WavepacketGrid) -> WavepacketG
         "points": np.where(x_indices < keep_points_lim, grid["points"], 0).tolist(),
         "delta_x0": grid["delta_x0"],
         "delta_x1": grid["delta_x1"],
-        "delta_z": grid["delta_z"],
+        "z_points": grid["z_points"],
     }
 
 

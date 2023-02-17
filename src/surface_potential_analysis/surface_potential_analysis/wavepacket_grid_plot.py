@@ -77,7 +77,7 @@ def animate_wavepacket_grid_3D_in_xy(
     )
 
     frames: List[List[QuadMesh]] = []
-    for z_ind in range(np.array(grid["points"]).shape[2]):
+    for z_ind in range(np.shape(grid["points"])[2]):
 
         _, _, mesh = plot_points_on_surface_xy(
             grid, grid["points"], z_ind, ax=ax, measure=measure
@@ -145,7 +145,7 @@ def plot_wavepacket_grid_in_x1z(
         data = np.abs(grid["points"])
 
     x1_points = np.linspace(0, np.linalg.norm(grid["delta_x1"]), data.shape[0])
-    z_points = np.linspace(0, grid["delta_z"], data.shape[2])
+    z_points = np.array(grid["z_points"])
     x1v, zv = np.meshgrid(x1_points, z_points, indexing="ij")
     mesh = ax.pcolormesh(x1v, zv, data[:, x2_ind, :], shading="nearest")
     return (fig, ax, mesh)
@@ -163,7 +163,7 @@ def animate_wavepacket_grid_3D_in_x1z(
     _, _, mesh0 = plot_wavepacket_grid_in_x1z(grid, 0, ax=ax, measure=measure)
 
     frames: List[List[QuadMesh]] = []
-    for x2_ind in range(np.array(grid["points"]).shape[1]):
+    for x2_ind in range(np.shape(grid["points"])[1]):
 
         _, _, mesh = plot_wavepacket_grid_in_x1z(grid, x2_ind, ax=ax, measure=measure)
         frames.append([mesh])

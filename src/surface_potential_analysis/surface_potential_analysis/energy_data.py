@@ -228,12 +228,38 @@ def fill_surface_from_z_maximum(data: EnergyGrid) -> EnergyGrid:
 def truncate_energy(
     data: EnergyGrid, *, cutoff=2e-17, n: int = 1, offset: float = 2e-18
 ) -> EnergyGrid:
+    """
+    Reduce the maximum energy by taking the transformation
+
+    :math:`cutoff * np.log(1 + ((E + offset) / cutoff) ** n) ** (1 / n) - offset`
+
+    For :math:`E << Cutoff` the energy is left unchanged. This can be useful to
+    prevent the energy interpolation process from producing rabid oscillations
+    """
     points = np.array(data["points"], dtype=float)
     truncated_points = (
         cutoff * np.log(1 + ((points + offset) / cutoff) ** n) ** (1 / n) - offset
     )
     return {
         "points": truncated_points.tolist(),
+        "delta_x0": data["delta_x0"],
+        "delta_x1": data["delta_x1"],
+        "z_points": data["z_points"],
+    }
+
+
+def undo_truncate_energy(
+    data: EnergyGrid, *, cutoff=2e-17, n: int = 1, offset: float = 2e-18
+) -> EnergyGrid:
+    """
+    The reverse of truncate_energy
+    """
+    truncated_points = np.array(data["points"], dtype=float)
+    points = (
+        cutoff * (np.exp((truncated_points + offset) / cutoff) - 1) ** (1 / n) - offset
+    )
+    return {
+        "points": points.tolist(),
         "delta_x0": data["delta_x0"],
         "delta_x1": data["delta_x1"],
         "z_points": data["z_points"],

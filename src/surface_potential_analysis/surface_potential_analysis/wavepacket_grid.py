@@ -177,7 +177,7 @@ def interpolate_wavepacket(
 def calculate_volume_element(wavepacket: WavepacketGrid) -> float:
     xy_area = np.linalg.norm(np.cross(wavepacket["delta_x0"], wavepacket["delta_x1"]))
     volume = xy_area * (wavepacket["z_points"][-1] - wavepacket["z_points"][0])
-    n_points = np.product(np.array(wavepacket["points"]).shape)
+    n_points = np.product(np.shape(wavepacket["points"]))
     return float(volume / n_points)
 
 
@@ -198,15 +198,12 @@ def get_wavepacket_grid_xy_points(grid: WavepacketGrid) -> NDArray:
 
 
 def get_wavepacket_grid_coordinates(
-    grid: WavepacketGrid, *, offset: Tuple[float, float, float] = (0.0, 0.0, 0.0)
+    grid: WavepacketGrid, *, offset: Tuple[float, float] = (0.0, 0.0)
 ) -> NDArray:
     points = np.real(grid["points"])
-    z_points = np.linspace(
-        offset[2], grid["delta_z"] + offset[2], points.shape[2]
-    ).tolist()
+    z_points = np.array(grid["z_points"]).tolist()
     shape = (points.shape[0], points.shape[1])
-    xy_offset = (offset[0], offset[1])
-    return get_surface_coordinates(grid, shape, z_points, offset=xy_offset)
+    return get_surface_coordinates(grid, shape, z_points, offset=offset)
 
 
 def calculate_wavepacket_grid_copper(
@@ -224,7 +221,7 @@ def calculate_wavepacket_grid_copper(
             -2 * util.characteristic_z, 2 * util.characteristic_z, shape[2]
         ).tolist(),
         shape=shape[0:2],
-        offset=(-util.delta_x0[0], -util.delta_x1[1], -2 * util.characteristic_z),
+        offset=(-util.delta_x0[0], -util.delta_x1[1]),
     )
 
 
@@ -271,7 +268,7 @@ def calculate_wavepacket_grid(
     z_points: List[float],
     shape: Tuple[int, int] = (49, 49),
     *,
-    offset: Tuple[float, float, float] = (0.0, 0.0, 0.0),
+    offset: Tuple[float, float] = (0.0, 0.0),
 ) -> WavepacketGrid:
 
     util = EigenstateConfigUtil(eigenstates["eigenstate_config"])

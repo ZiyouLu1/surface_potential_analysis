@@ -1,5 +1,5 @@
 import math
-from typing import List, Tuple
+from typing import Tuple
 
 import numpy as np
 from matplotlib import pyplot as plt
@@ -19,16 +19,19 @@ from surface_potential_analysis.energy_data_plot import (
     plot_all_energy_points_z,
     plot_energy_grid_locations,
     plot_energy_grid_points,
-    plot_energy_in_z_direction,
     plot_energy_point_locations_on_grid,
     plot_energy_points_location,
+    plot_potential_minimum_along_path,
     plot_z_direction_energy_comparison_111,
+    plot_z_direction_energy_data,
     plot_z_direction_energy_data_111,
 )
+from surface_potential_analysis.sho_wavefunction_plot import plot_sho_wavefunctions
 
 from .s1_potential import (
     load_cleaned_energy_grid,
     load_interpolated_grid,
+    load_interpolated_john_grid,
     load_john_interpolation,
     load_raw_data,
     load_raw_data_reciprocal_grid,
@@ -70,17 +73,7 @@ def plot_z_direction_energy_data_nickel_reciprocal_points(
     fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
 
     locations = get_111_locations_nickel_reciprocal(grid)
-    lines: List[Line2D] = []
-    for (label, xy_ind) in locations.items():
-        _, _, line = plot_energy_in_z_direction(grid, xy_ind, ax=ax)
-        line.set_label(label)
-        lines.append(line)
-
-    ax.set_title("Plot of energy at the Top and Hollow sites")
-    ax.set_ylabel("Energy / J")
-    ax.set_xlabel("relative z position /m")
-
-    ax.legend()
+    fig, ax, lines = plot_z_direction_energy_data(grid, locations, ax=ax)
 
     return fig, ax, (lines[0], lines[1], lines[2], lines[3])
 
@@ -124,14 +117,19 @@ def plot_interpolated_energy_grid_points():
     fig, ax, _ = plot_energy_grid_points(grid)
     fig.show()
 
-    fig, ax, _ani = animate_energy_grid_3D_in_xy(grid)
+    fig, ax, _ani = animate_energy_grid_3D_in_xy(grid, clim_max=1e-18)
     path = get_data_path("raw_data_reciprocal_spacing.json")
     raw_grid = load_energy_grid(path)
     plot_energy_grid_locations(raw_grid, ax=ax)
     fig.show()
 
     fig, ax, _ = plot_z_direction_energy_data_111(grid)
-    ax.set_ylim(0, 0.2e-18)
+    ax.set_ylim(0, 5e-18)
+    raw_grid = normalize_energy(load_raw_data_reciprocal_grid())
+    _, _, lines = plot_z_direction_energy_data_nickel_reciprocal_points(raw_grid, ax=ax)
+    for ln in lines:
+        ln.set_marker("x")
+        ln.set_linestyle("")
     fig.show()
 
     ft_points = np.abs(np.fft.ifft2(grid["points"], axes=(0, 1)))
@@ -184,6 +182,26 @@ def plot_interpolated_energy_grid_reciprocal():
     input()
 
 
+def get_john_point_locations(grid: EnergyGrid):
+
+    points = np.array(grid["points"], dtype=float)
+    return {
+        "Top Site": (0, 0),
+        "Bridge Site": (0, math.floor(points.shape[1] / 2)),
+        "FCC Site": (0, math.floor(points.shape[1] / 3)),
+        "HCP Site": (0, math.floor(2 * points.shape[1] / 3)),
+    }
+
+
+def plot_z_direction_energy_data_john(
+    grid: EnergyGrid, *, ax: Axes | None = None
+) -> Tuple[Figure, Axes, Tuple[Line2D, Line2D, Line2D, Line2D]]:
+    fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
+
+    locations = get_john_point_locations(grid)
+    return plot_z_direction_energy_data(grid, locations, ax=ax)
+
+
 def plot_john_interpolated_points():
     data = load_john_interpolation()
 
@@ -199,24 +217,104 @@ def plot_john_interpolated_points():
     )
 
     fig.show()
+
+    fig, ax, _ = plot_z_direction_energy_data_john(data)
+    ax.set_ylim(0, 0.3e-18)
+    fig.show()
+    save_figure(fig, "john_interpolation_z.png")
     input()
 
 
 def compare_john_interpolation():
     raw_points = load_raw_data()
-    interpolation = load_john_interpolation()
-    print(raw_points["y_points"])
-    print(raw_points["x_points"])
+    john_interpolation = load_john_interpolation()
 
-    fig, ax, _anim2 = plot_energy_point_locations_on_grid(raw_points, interpolation)
+    fig, ax, _anim2 = plot_energy_point_locations_on_grid(
+        raw_points, john_interpolation
+    )
     fig.show()
 
-    fig, ax = compare_energy_grid_to_all_raw_points(raw_points, interpolation)
+    fig, ax = compare_energy_grid_to_all_raw_points(raw_points, john_interpolation)
     ax.set_ylim(0, 3 * 10**-19)
     ax.set_title("Comparison between raw and interpolated potential for Nickel")
     fig.show()
-    input()
     save_figure(fig, "raw_interpolation_comparison.png")
+
+    fig, ax, _ = plot_z_direction_energy_data_john(john_interpolation)
+    my_interpolation = load_interpolated_grid()
+    plot_z_direction_energy_data_111(my_interpolation, ax=ax)
+    plot_sho_wavefunctions(
+        my_interpolation["z_points"],
+        sho_omega=195636899474736.66,
+        mass=1.6735575e-27,
+        first_n=16,
+        ax=ax,
+    )
+    ax.set_ylim(0, 0.5e-18)
+    fig.show()
+    save_figure(fig, "original_and_new_interpolation_comparison.png")
+    input()
+
+
+def plot_potential_minimum_along_diagonal():
+
+    fig, ax = plt.subplots()
+
+    interpolation = load_interpolated_grid()
+    path = [(x, x) for x in range(np.shape(interpolation["points"])[0])]
+    _, _, line = plot_potential_minimum_along_path(interpolation, path, ax=ax)
+    line.set_label("My Interpolation")
+
+    john_interpolation = load_john_interpolation()
+    path = [(0, y) for y in range(np.shape(john_interpolation["points"])[1])]
+    _, _, line = plot_potential_minimum_along_path(john_interpolation, path, ax=ax)
+    line.set_label("John Interpolation")
+
+    ax.set_title(
+        "comparison of energy along the classical trajectory\n"
+        "in the FCC-HCP-TOP direction"
+    )
+    ax.legend()
+    fig.show()
+    save_figure(fig, "classical_trajectory_comparison.png")
+    input()
+
+
+def test_potential_fourier_transform():
+    """
+    Since we are sampling in units of the bz we expect the potential to be the same at the origin
+    as this just represents the 'average potential'.
+
+    We also expect the off center to be equal,
+    but the irrational unit vectors prevent us from testing this
+    """
+    interpolation = load_interpolated_grid()
+    fft_me = np.fft.ifft2(interpolation["points"], axes=(0, 1))
+    ftt_origin_me = fft_me[0, 0, np.argmin(np.abs(interpolation["z_points"]))]
+
+    print(ftt_origin_me, np.min(np.abs(interpolation["z_points"])))
+
+    x0_norm = np.linalg.norm(interpolation["delta_x0"])
+    x1_norm = np.linalg.norm(interpolation["delta_x1"])
+    denom = (
+        interpolation["delta_x0"][0] * interpolation["delta_x1"][1]
+        - interpolation["delta_x0"][1] * interpolation["delta_x1"][0]
+    )
+    fix_factor = x0_norm * x1_norm / (denom)
+    print(ftt_origin_me / fix_factor)
+
+    john_grid_interpolation = load_interpolated_john_grid()
+    fft_john = np.fft.ifft2(john_grid_interpolation["points"], axes=(0, 1))
+    ftt_origin_john = fft_john[
+        0, 0, np.argmin(np.abs(john_grid_interpolation["z_points"]))
+    ]
+
+    print(ftt_origin_john, np.min(np.abs(john_grid_interpolation["z_points"])))
+
+    # Good enough
+    # Max absolute difference: 3.31267687e-21
+    # Max relative difference: 0.00026576
+    np.testing.assert_allclose(fft_john[0, 0, :], fft_me[0, 0, :])
 
 
 def test_symmetry_point_interpolation():

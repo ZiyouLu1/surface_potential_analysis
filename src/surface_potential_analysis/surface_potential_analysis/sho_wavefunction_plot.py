@@ -1,10 +1,14 @@
 import math
-from typing import Tuple
+from typing import List, Tuple
 
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.axes import Axes
 from matplotlib.figure import Figure
+from matplotlib.lines import Line2D
+from scipy.constants import hbar
+
+from surface_potential_analysis.sho_wavefunction import calculate_sho_wavefunction
 
 from .energy_data import EnergyInterpolation
 from .energy_eigenstate import EigenstateConfig
@@ -86,3 +90,25 @@ def plot_energy_with_sho_potential_at_minimum(
     max_potential = 1e-18
     ax.set_ylim(0, max_potential)
     return fig, ax
+
+
+def plot_sho_wavefunctions(
+    z_points: List[float],
+    sho_omega: float,
+    mass: float,
+    first_n: int = 3,
+    *,
+    ax: Axes | None = None,
+) -> Tuple[Figure, Axes, List[Line2D]]:
+    fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
+
+    lines: List[Line2D] = []
+    for n in range(first_n):
+        wfn = calculate_sho_wavefunction(z_points, sho_omega, mass, n)
+        wfn *= (0.25 * hbar * sho_omega) / np.max(wfn)
+        wfn += (hbar * sho_omega) * (n + 0.5)
+        (ln,) = ax.plot(z_points, wfn)
+        ln.set_label(f"Sho N={n}")
+        lines.append(ln)
+
+    return fig, ax, lines

@@ -39,7 +39,6 @@ def get_coordinate_fractions(
     coordinates: NDArray,
 ):
     out = []
-    print(vec1, vec2)
     for coord in coordinates:
         a = np.array(
             [

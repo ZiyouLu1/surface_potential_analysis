@@ -172,9 +172,9 @@ def calculate_wavepacket_grid_nickel_111(eigenstates: EnergyEigenstates):
         eigenstates,
         util.delta_x0,
         util.delta_x1,
-        util.characteristic_z * 4,
-        shape=(37, 25, 11),
-        offset=(0.0, 0.0, -util.characteristic_z * 2),
+        np.linspace(-util.characteristic_z * 2, util.characteristic_z * 2, 11).tolist(),
+        shape=(37, 25),
+        offset=(0.0, 0.0),
     )
 
 
