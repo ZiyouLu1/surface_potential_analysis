@@ -34,7 +34,7 @@ def load_copper_eigenvalues(path: Path) -> CopperEigenvalues:
 
 def generate_copper_eigenvalues():
 
-    hamiltonian = generate_hamiltonian(resolution=(27, 27, 16))
+    hamiltonian = generate_hamiltonian(resolution=(25, 25, 16))
 
     eigenvalues_origin, _ = hamiltonian.calculate_eigenvalues(0, 0)
     sorted_eigenvalues_origin = np.sort(eigenvalues_origin)
@@ -55,7 +55,7 @@ def generate_copper_eigenvalues():
     path = get_data_path("copper_eigenvalues_not_relaxed.json")
     save_copper_eigenvalues(values_not_relaxed, path)
 
-    hamiltonian = generate_hamiltonian_relaxed(resolution=(25, 25, 15))
+    hamiltonian = generate_hamiltonian_relaxed(resolution=(21, 21, 15))
 
     eigenvalues_origin, _ = hamiltonian.calculate_eigenvalues(0, 0)
     sorted_eigenvalues_origin = np.sort(eigenvalues_origin)

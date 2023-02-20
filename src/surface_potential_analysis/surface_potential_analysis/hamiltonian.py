@@ -1,5 +1,4 @@
 import datetime
-import os
 from functools import cache, wraps
 from pathlib import Path
 from typing import Any, Callable, List, Tuple, TypeVar
@@ -139,11 +138,7 @@ class SurfaceHamiltonianUtil(EigenstateConfigUtil):
         subtracted_potential = self.get_sho_subtracted_points()
         fft_potential = np.fft.ifft2(subtracted_potential, axes=(0, 1))
 
-        if os.environ.get("DEBUG_CHECKS", False) and not np.all(
-            np.isreal(np.real_if_close(fft_potential))
-        ):
-            raise AssertionError("FFT was not real!")
-        return np.real_if_close(fft_potential)
+        return fft_potential
 
     @cache
     def _calculate_sho_wavefunction_points(self, n: int) -> NDArray:

@@ -36,7 +36,7 @@ from .surface_data import get_data_path, save_figure
 
 
 def plot_wavepacket_points():
-    path = get_data_path("eigenstates_grid_2.json")
+    path = get_data_path("eigenstates_grid.json")
     eigenstates = load_energy_eigenstates_legacy(path)
     fig, _, _ = plot_eigenstate_positions(eigenstates)
 

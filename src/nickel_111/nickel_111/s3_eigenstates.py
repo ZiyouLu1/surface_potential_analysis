@@ -27,26 +27,12 @@ def generate_eigenstates_data():
     path = get_data_path("eigenstates_23_23_12.json")
     save_energy_eigenstates(eigenstates, path)
 
-    h = generate_hamiltonian(resolution=(23, 23, 14))
-    eigenstates = calculate_energy_eigenstates(
-        h, kx_points, ky_points, include_bands=list(range(10))
-    )
-    path = get_data_path("eigenstates_23_23_14.json")
-    save_energy_eigenstates(eigenstates, path)
-
-    h = generate_hamiltonian(resolution=(23, 23, 16))
-    eigenstates = calculate_energy_eigenstates(
-        h, kx_points, ky_points, include_bands=list(range(10))
-    )
-    path = get_data_path("eigenstates_23_23_16.json")
-    save_energy_eigenstates(eigenstates, path)
-
-    h = generate_hamiltonian(resolution=(25, 25, 16))
-    eigenstates = calculate_energy_eigenstates(
-        h, kx_points, ky_points, include_bands=list(range(10))
-    )
-    path = get_data_path("eigenstates_25_25_16.json")
-    save_energy_eigenstates(eigenstates, path)
+    # h = generate_hamiltonian(resolution=(25, 25, 16))
+    # eigenstates = calculate_energy_eigenstates(
+    #     h, kx_points, ky_points, include_bands=list(range(10))
+    # )
+    # path = get_data_path("eigenstates_25_25_16.json")
+    # save_energy_eigenstates(eigenstates, path)
 
 
 def generate_eigenstates_data_john():

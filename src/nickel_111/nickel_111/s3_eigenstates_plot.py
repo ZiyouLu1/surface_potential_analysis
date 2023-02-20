@@ -1,4 +1,5 @@
 import matplotlib.pyplot as plt
+import numpy as np
 
 from surface_potential_analysis.eigenstate_plot import animate_eigenstate_3D_in_xy
 from surface_potential_analysis.energy_eigenstate import (
@@ -33,30 +34,10 @@ def analyze_band_convergence():
     _, _, ln = plot_lowest_band_in_kx(eigenstates, ax=ax)
     ln.set_label("(23,23,12)")
 
-    path = get_data_path("eigenstates_23_23_14.json")
-    eigenstates = load_energy_eigenstates(path)
-    _, _, ln = plot_lowest_band_in_kx(eigenstates, ax=ax)
-    ln.set_label("(23,23,14)")
-
-    path = get_data_path("eigenstates_23_23_16.json")
-    eigenstates = load_energy_eigenstates(path)
-    _, _, ln = plot_lowest_band_in_kx(eigenstates, ax=ax)
-    ln.set_label("(23,23,16)")
-
     path = get_data_path("eigenstates_25_25_16.json")
     eigenstates = load_energy_eigenstates(path)
     _, _, ln = plot_lowest_band_in_kx(eigenstates, ax=ax)
     ln.set_label("(25,25,16)")
-
-    # path = get_data_path("eigenstates_27_27_12.json")
-    # eigenstates = load_energy_eigenstates(path)
-    # _, _, ln = plot_lowest_band_in_kx(eigenstates, ax=ax)
-    # ln.set_label("(27,27,12)")
-
-    # path = get_data_path("eigenstates_29_29_10.json")
-    # eigenstates = load_energy_eigenstates(path)
-    # _, _, ln = plot_lowest_band_in_kx(eigenstates, ax=ax)
-    # ln.set_label("(29,29,10)")
 
     ax.legend()
     ax.set_title(
@@ -82,10 +63,10 @@ def analyze_band_convergence():
 
     fig, ax = plt.subplots()
 
-    path = get_data_path("eigenstates_25_25_14.json")
+    path = get_data_path("eigenstates_23_23_12.json")
     eigenstates = load_energy_eigenstates(path)
     _, _, ln = plot_nth_band_in_kx(eigenstates, n=1, ax=ax)
-    ln.set_label("(25,25,14)")
+    ln.set_label("(23,23,12)")
 
     path = get_data_path("eigenstates_25_25_16.json")
     eigenstates = load_energy_eigenstates(path)
@@ -183,7 +164,7 @@ def analyze_band_convergence_john():
     save_figure(fig, "lowest_band_convergence_john.png")
 
 
-def plot_eigenstate():
+def plot_eigenstate_for_each_band():
     """
     Check to see if the eigenstates look as they are supposed to
 
@@ -222,27 +203,12 @@ def plot_eigenstate():
     )
     fig.show()
 
-    eigenstate = get_eigenstate_list(filter_eigenstates_band(eigenstates, n=5))[0]
+    eigenstate = get_eigenstate_list(filter_eigenstates_band(eigenstates, n=9))[0]
     fig, _, _anim6 = animate_eigenstate_3D_in_xy(
         eigenstates["eigenstate_config"], eigenstate
     )
     fig.show()
     input()
-
-
-def plot_00_wavepacket_hcp():
-    origin_eigenstates: EnergyEigenstates = {}
-    normalized = normalize_eigenstate_phase(eigenstates, origin)
-
-    wavepacket = calculate_wavepacket_grid(
-        normalized,
-        util.delta_x0,
-        util.delta_x1,
-        np.linspace(-util.characteristic_z * 2, util.characteristic_z * 2, 11).tolist(),
-        shape=(13, 19),
-        offset=(-util.delta_x0[0] / 2, 0.0),
-    )
-    animate_wavepacket_grid_3D_in_xy({})
 
 
 def plot_eigenstate_john():

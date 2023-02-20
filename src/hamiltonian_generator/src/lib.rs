@@ -35,7 +35,7 @@ fn calculate_sho_wavefunction(z_points: &Vec<f64>, sho_omega: f64, mass: f64, n:
     let sqrt_prefactor = prefactor.sqrt();
 
     z_points
-        .into_iter()
+        .iter()
         .map(|p| -> f64 {
             let normalized_p = p * norm;
             let hermite_val = hermite_val(normalized_p, n);
@@ -111,9 +111,9 @@ impl Eigenstate {
                     * eig
                     * Complex {
                         re: 0.0,
-                        im: ((nkx0 as f64) * dkx0.0 + (nkx1 as f64) * dkx1.0 + self.kx)
+                        im: (((nkx0 as f64) * dkx0.0) + ((nkx1 as f64) * dkx1.0) + self.kx)
                             * points[i][0]
-                            + ((nkx0 as f64) * dkx0.1 + (nkx1 as f64) * dkx1.1 + self.ky)
+                            + (((nkx0 as f64) * dkx0.1) + ((nkx1 as f64) * dkx1.1) + self.ky)
                                 * points[i][1],
                     }
                     .exp();
@@ -144,7 +144,7 @@ impl EigenstateConfig {
 struct SurfaceHamiltonian {
     sho_config: EigenstateConfig,
     resolution: EigenstateResolution,
-    ft_potential: Vec<Vec<Vec<f64>>>,
+    ft_potential: Vec<Vec<Vec<Complex64>>>,
     dz: f64,
     z_offset: f64,
 }
@@ -177,22 +177,28 @@ impl SurfaceHamiltonian {
         )
     }
 
-    fn calculate_off_diagonal_energies(&self) -> Vec<Vec<f64>> {
+    fn calculate_off_diagonal_energies(&self) -> Vec<Vec<Complex64>> {
         let coordinates = self.resolution.coordinates();
         let cache: Vec<Vec<f64>> = (0..self.resolution.2)
             .map(|nz| -> Vec<f64> { self.calculate_sho_wavefunction(nz.try_into().unwrap()) })
             .collect();
 
-        let mut g_points: HashMap<(usize, usize, usize, usize), f64> = HashMap::new();
+        let mut g_points: HashMap<(usize, usize, usize, usize), Complex64> = HashMap::new();
 
         coordinates
             .iter()
-            .map(|(nkx0_1, nkx1_1, nz1)| -> Vec<f64> {
+            .map(|(nkx0_1, nkx1_1, nz1)| -> Vec<Complex64> {
                 coordinates
                     .iter()
-                    .map(|(nkx0_2, nkx1_2, nz2)| -> f64 {
-                        let n_dkx0 = (nkx0_2 - nkx0_1).rem_euclid(self.get_nx0() as i64) as usize;
-                        let n_dkx1 = (nkx1_2 - nkx1_1).rem_euclid(self.get_nx1() as i64) as usize;
+                    .map(|(nkx0_2, nkx1_2, nz2)| -> Complex64 {
+                        let n_dkx0 = usize::try_from(
+                            (nkx0_2 - nkx0_1).rem_euclid(i64::try_from(self.get_nx0()).unwrap()),
+                        )
+                        .unwrap();
+                        let n_dkx1 = usize::try_from(
+                            (nkx1_2 - nkx1_1).rem_euclid(i64::try_from(self.get_nx1()).unwrap()),
+                        )
+                        .unwrap();
                         if let Some(a) = g_points.get(&(n_dkx0, n_dkx1, *nz1, *nz2)) {
                             return *a;
                         }
@@ -207,7 +213,7 @@ impl SurfaceHamiltonian {
                             .zip(sho1)
                             .zip(sho2)
                             .map(|((i, j), k)| i * j * k)
-                            .sum::<f64>()
+                            .sum::<Complex64>()
                             * self.dz;
                         g_points.insert((n_dkx0, n_dkx1, *nz1, *nz2), out);
                         out
@@ -231,13 +237,13 @@ fn get_sho_wavefunction(z_points: Vec<f64>, sho_omega: f64, mass: f64, n: u32) -
 
 #[pyfunction]
 fn calculate_off_diagonal_energies(
-    ft_potential: Vec<Vec<Vec<f64>>>,
+    ft_potential: Vec<Vec<Vec<Complex64>>>,
     resolution: [usize; 3],
     dz: f64,
     mass: f64,
     sho_omega: f64,
     z_offset: f64,
-) -> Vec<Vec<f64>> {
+) -> Vec<Vec<Complex64>> {
     let sho_config = EigenstateConfig {
         mass,
         sho_omega,
@@ -316,8 +322,8 @@ mod test {
         let hamiltonian = SurfaceHamiltonian {
             dz: 1.0,
             ft_potential: vec![
-                vec![vec![0.0, 0.0], vec![0.0, 0.0]],
-                vec![vec![0.0, 0.0], vec![0.0, 0.0]],
+                vec![vec![0.0.into(), 0.0.into()], vec![0.0.into(), 0.0.into()]],
+                vec![vec![0.0.into(), 0.0.into()], vec![0.0.into(), 0.0.into()]],
             ],
             resolution: EigenstateResolution(2, 2, 2),
             sho_config,

@@ -1,13 +1,13 @@
 from typing import List, Tuple
 
 def calculate_off_diagonal_energies(
-    ft_potential: List[List[List[float]]],
+    ft_potential: List[List[List[complex]]],
     resolution: Tuple[float, float, float],
     dz: float,
     mass: float,
     sho_omega: float,
     z_offset: float,
-) -> List[List[float]]:
+) -> List[List[complex]]:
     """Adds two numbers and returns the answer as a string"""
 
 def get_sho_wavefunction(
