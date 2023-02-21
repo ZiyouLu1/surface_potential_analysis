@@ -18,8 +18,7 @@ from .surface_data import get_data_path, save_figure
 
 class CopperEigenvalues(TypedDict):
     center: List[float]
-    kx_max: List[float]
-    kxy_max: List[float]
+    k_max: List[float]
 
 
 def save_copper_eigenvalues(data: CopperEigenvalues, path: Path) -> None:
@@ -34,26 +33,22 @@ def load_copper_eigenvalues(path: Path) -> CopperEigenvalues:
 
 def generate_copper_eigenvalues():
 
-    hamiltonian = generate_hamiltonian(resolution=(25, 25, 16))
+    # hamiltonian = generate_hamiltonian(resolution=(25, 25, 16))
 
-    eigenvalues_origin, _ = hamiltonian.calculate_eigenvalues(0, 0)
-    sorted_eigenvalues_origin = np.sort(eigenvalues_origin)
+    # eigenvalues_origin, _ = hamiltonian.calculate_eigenvalues(0, 0)
+    # sorted_eigenvalues_origin = np.sort(eigenvalues_origin)
 
-    max_kx = (np.abs(hamiltonian.dkx0[0]) + np.abs(hamiltonian.dkx1[0])) / 2
-    max_ky = (np.abs(hamiltonian.dkx0[1]) + np.abs(hamiltonian.dkx1[1])) / 2
-    eigenvalues_kx_max, _ = hamiltonian.calculate_eigenvalues(max_kx, 0)
-    sorted_eigenvalues_kx_max = np.sort(eigenvalues_kx_max)
+    # max_kx = (np.abs(hamiltonian.dkx0[0]) + np.abs(hamiltonian.dkx1[0])) / 2
+    # max_ky = (np.abs(hamiltonian.dkx0[1]) + np.abs(hamiltonian.dkx1[1])) / 2
+    # eigenvalues_k_max, _ = hamiltonian.calculate_eigenvalues(max_kx, max_ky)
+    # sorted_eigenvalues_k_max = np.sort(eigenvalues_k_max)
 
-    eigenvalues_kxy_max, _ = hamiltonian.calculate_eigenvalues(max_kx, max_ky)
-    sorted_eigenvalues_kxy_max = np.sort(eigenvalues_kxy_max)
-
-    values_not_relaxed: CopperEigenvalues = {
-        "center": sorted_eigenvalues_origin.tolist(),
-        "kx_max": sorted_eigenvalues_kx_max.tolist(),
-        "kxy_max": sorted_eigenvalues_kxy_max.tolist(),
-    }
-    path = get_data_path("copper_eigenvalues_not_relaxed.json")
-    save_copper_eigenvalues(values_not_relaxed, path)
+    # values_not_relaxed: CopperEigenvalues = {
+    #     "center": sorted_eigenvalues_origin.tolist(),
+    #     "k_max": sorted_eigenvalues_k_max.tolist(),
+    # }
+    # path = get_data_path("copper_eigenvalues_not_relaxed.json")
+    # save_copper_eigenvalues(values_not_relaxed, path)
 
     hamiltonian = generate_hamiltonian_relaxed(resolution=(21, 21, 15))
 
@@ -62,16 +57,12 @@ def generate_copper_eigenvalues():
 
     max_kx = (np.abs(hamiltonian.dkx0[0]) + np.abs(hamiltonian.dkx1[0])) / 2
     max_ky = (np.abs(hamiltonian.dkx0[1]) + np.abs(hamiltonian.dkx1[1])) / 2
-    eigenvalues_kx_max, _ = hamiltonian.calculate_eigenvalues(max_kx, 0)
-    sorted_eigenvalues_kx_max = np.sort(eigenvalues_kx_max)
-
-    eigenvalues_kxy_max, _ = hamiltonian.calculate_eigenvalues(max_kx, max_ky)
-    sorted_eigenvalues_kxy_max = np.sort(eigenvalues_kxy_max)
+    eigenvalues_k_max, _ = hamiltonian.calculate_eigenvalues(max_kx, max_ky)
+    sorted_eigenvalues_k_max = np.sort(eigenvalues_k_max)
 
     values_relaxed: CopperEigenvalues = {
         "center": sorted_eigenvalues_origin.tolist(),
-        "kx_max": sorted_eigenvalues_kx_max.tolist(),
-        "kxy_max": sorted_eigenvalues_kxy_max.tolist(),
+        "k_max": sorted_eigenvalues_k_max.tolist(),
     }
     path = get_data_path("copper_eigenvalues_relaxed.json")
     save_copper_eigenvalues(values_relaxed, path)
@@ -109,12 +100,10 @@ def list_first_copper_band_with_widths():
 
     print("k=(0,0)")
     print(np.subtract(eigenvalues["center"], eigenvalues["center"][0])[:5])
-    print("k=(max, 0)")
-    print(np.subtract(eigenvalues["kx_max"], eigenvalues["center"][0])[:5])
     print("k=(max, max)")
-    print(np.subtract(eigenvalues["kxy_max"], eigenvalues["center"][0])[:5])
+    print(np.subtract(eigenvalues["k_max"], eigenvalues["center"][0])[:5])
     print("bandwidths")
-    print(np.subtract(eigenvalues["kxy_max"], eigenvalues["center"])[:5])
+    print(np.subtract(eigenvalues["k_max"], eigenvalues["center"])[:5])
 
     print("----------------------------------------")
     print("Relaxed data")
@@ -124,12 +113,10 @@ def list_first_copper_band_with_widths():
 
     print("k=(0,0)")
     print(np.subtract(eigenvalues["center"], eigenvalues["center"][0])[:5])
-    print("k=(max, 0)")
-    print(np.subtract(eigenvalues["kx_max"], eigenvalues["center"][0])[:5])
     print("k=(max, max)")
-    print(np.subtract(eigenvalues["kxy_max"], eigenvalues["center"][0])[:5])
+    print(np.subtract(eigenvalues["k_max"], eigenvalues["center"][0])[:5])
     print("bandwidths")
-    print(np.subtract(eigenvalues["kxy_max"], eigenvalues["center"])[:5])
+    print(np.subtract(eigenvalues["k_max"], eigenvalues["center"])[:5])
 
     print("----------------------------------------")
 
@@ -147,7 +134,7 @@ def find_band_with_1mev_bandwidth():
 
     path = get_data_path("copper_eigenvalues_not_relaxed.json")
     eigenvalues = load_copper_eigenvalues(path)
-    bandwidths = np.subtract(eigenvalues["kxy_max"], eigenvalues["center"])
+    bandwidths = np.subtract(eigenvalues["k_max"], eigenvalues["center"])
     first_relevant = int(
         np.argmax(bandwidths > 1 * 10**-3 * scipy.constants.elementary_charge)
     )
@@ -200,7 +187,7 @@ def find_band_with_relevant_energy():
 
 
 def calculate_bandwidths(eigenvalues: CopperEigenvalues) -> List[float]:
-    return np.abs(np.subtract(eigenvalues["kx_max"], eigenvalues["center"]))
+    return np.abs(np.subtract(eigenvalues["k_max"], eigenvalues["center"]))
 
 
 def calculate_tst_rate_contributions(

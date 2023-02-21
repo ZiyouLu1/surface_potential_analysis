@@ -35,6 +35,20 @@ def generate_eigenstates_data():
     # save_energy_eigenstates(eigenstates, path)
 
 
+def test_eigenstates_partial():
+    h = generate_hamiltonian(resolution=(23, 23, 12))
+    n = 10
+    out_20 = h.calculate_eigenvalues(0, 0, n=n)
+    out_all = h.calculate_eigenvalues(0, 0)
+
+    np.testing.assert_array_almost_equal(np.sort(out_20[0]), np.sort(out_all[0])[:n])
+
+    np.testing.assert_array_almost_equal(
+        np.array([x["eigenvector"] for x in out_20[1]])[np.argsort(out_20[0])],
+        np.array([x["eigenvector"] for x in out_all[1]])[np.argsort(out_all[0])][:n],
+    )
+
+
 def generate_eigenstates_data_john():
     h = generate_hamiltonian_john(resolution=(12, 12, 13))
 

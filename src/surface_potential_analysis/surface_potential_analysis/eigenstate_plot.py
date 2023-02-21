@@ -95,10 +95,10 @@ def animate_eigenstate_3D_in_xy(
 
     max_clim = np.max([i[0].get_clim()[1] for i in frames])
     for (mesh,) in frames:
-        mesh.set_clim(0, max_clim)
         mesh.set_norm(norm)  # type: ignore
-    mesh0.set_clim(0, max_clim)
+        mesh.set_clim(0, max_clim)
     mesh0.set_norm(norm)  # type: ignore
+    mesh0.set_clim(0, max_clim)
 
     ani = matplotlib.animation.ArtistAnimation(fig, frames)
     ax.set_xlabel("X direction")

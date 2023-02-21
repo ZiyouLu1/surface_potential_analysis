@@ -12,6 +12,7 @@ from surface_potential_analysis.energy_data import (
     normalize_energy,
     save_energy_grid,
     truncate_energy,
+    undo_truncate_energy,
 )
 
 from .surface_data import get_data_path
@@ -25,12 +26,6 @@ def load_raw_data() -> EnergyPoints:
 def load_raw_data_grid() -> EnergyGrid:
     path = get_data_path("raw_data_reflected.json")
     return load_energy_grid(path)
-
-
-def load_cleaned_data_grid() -> EnergyGrid:
-    data = load_raw_data_grid()
-    normalized = normalize_energy(data)
-    return truncate_energy(normalized, cutoff=3e-19, n=6, offset=1e-20)
 
 
 def load_john_interpolation() -> EnergyGrid:
@@ -338,6 +333,8 @@ def map_irreducible_points_into_unit_cell(
             z_points_in_xy[(ix, iy)] = curr
 
     final_grid = [[z_points_in_xy[xy_coord] for xy_coord in m] for m in mapping_in_xy]
+    # So it matches up with what we have for Ni, make the HCP site in the lower half
+    final_grid = np.array(final_grid)[::-1, ::-1].tolist()
 
     x_width = np.max(irreducible_points["x_points"]) - np.min(
         irreducible_points["x_points"]
@@ -370,8 +367,12 @@ def generate_reflected_data():
 
 
 def generate_interpolated_data():
-    grid = load_cleaned_data_grid()
+    grid = load_raw_data_grid()
+    normalized = normalize_energy(grid)
 
-    data = interpolate_energy_grid_fourier(grid, (48, 48, 100))
+    truncated = truncate_energy(normalized, cutoff=3e-19, n=1, offset=1e-20)
+    data = interpolate_energy_grid_fourier(truncated, (48, 48, 100))
+    fixed = undo_truncate_energy(data, cutoff=3e-19, n=1, offset=1e-20)
+
     path = get_data_path("interpolated_data.json")
-    save_energy_grid(data, path)
+    save_energy_grid(fixed, path)

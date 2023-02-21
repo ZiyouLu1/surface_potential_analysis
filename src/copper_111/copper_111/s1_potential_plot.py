@@ -1,6 +1,10 @@
 import numpy as np
 
-from surface_potential_analysis.energy_data import EnergyGrid, normalize_energy
+from surface_potential_analysis.energy_data import (
+    EnergyGrid,
+    normalize_energy,
+    truncate_energy,
+)
 from surface_potential_analysis.energy_data_plot import (
     animate_energy_grid_3D_in_x1z,
     animate_energy_grid_3D_in_xy,
@@ -14,7 +18,6 @@ from surface_potential_analysis.energy_data_plot import (
 )
 
 from .s1_potential import (
-    load_cleaned_data_grid,
     load_interpolated_grid,
     load_john_interpolation,
     load_raw_data,
@@ -30,7 +33,7 @@ def plot_raw_data_points():
     amin = np.argmin(data["points"])
     x_min = data["x_points"][amin]
     y_min = data["y_points"][amin]
-    ax.text(x_min, y_min, "hcp (lowest E)")
+    ax.text(x_min, y_min, "FCC (lowest E)")
 
     fig.show()
     save_figure(fig, "nickel_raw_points.png")
@@ -58,8 +61,8 @@ def plot_raw_energy_grid_points():
     fig, _, _ani = animate_energy_grid_3D_in_xy(grid)
     fig.show()
 
-    cleaned = load_cleaned_data_grid()
-    fig, ax = plot_z_direction_energy_comparison_111(cleaned, grid)
+    truncated = truncate_energy(grid, cutoff=2e-19, n=1, offset=1e-20)
+    fig, ax = plot_z_direction_energy_comparison_111(truncated, grid)
     ax.set_ylim(0, 0.2e-18)
     fig.show()
 
@@ -84,12 +87,12 @@ def plot_interpolated_energy_grid_points():
     fig, ax, _ = plot_energy_grid_points(grid)
     fig.show()
 
-    raw = load_cleaned_data_grid()
+    raw = normalize_energy(load_raw_data_grid())
     fig, ax = plot_z_direction_energy_comparison_111(grid, raw)
     ax.set_ylim(0, 0.2e-18)
     fig.show()
 
-    fig, ax, _ani = animate_energy_grid_3D_in_xy(grid)
+    fig, ax, _ani = animate_energy_grid_3D_in_xy(grid, clim_max=0.2e-18)
     fig.show()
 
     ft_points = np.abs(np.fft.ifft2(grid["points"], axes=(0, 1)))

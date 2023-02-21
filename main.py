@@ -1,4 +1,5 @@
-import nickel_111
+import copper_111
 
 if __name__ == "__main__":
-    nickel_111.s4_wavepacket_plot.plot_wavepacket_points()
+    copper_111.s3_eigenstates.generate_eigenstates_data()
+    copper_111.s3_eigenstates_plot.analyze_eigenvalue_convergence()

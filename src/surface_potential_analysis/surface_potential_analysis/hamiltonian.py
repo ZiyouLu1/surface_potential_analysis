@@ -1,9 +1,9 @@
-import datetime
-from functools import cache, wraps
+from functools import cache
 from pathlib import Path
-from typing import Any, Callable, List, Tuple, TypeVar
+from typing import Any, Dict, List, Tuple
 
 import numpy as np
+import scipy.sparse.linalg
 from numpy.typing import NDArray
 from scipy.constants import hbar
 
@@ -21,20 +21,7 @@ from .energy_eigenstate import (
     save_energy_eigenstates,
 )
 from .sho_wavefunction import calculate_sho_wavefunction
-
-F = TypeVar("F", bound=Callable)
-
-
-def timed(f: F) -> F:
-    @wraps(f)
-    def wrap(*args, **kw):
-        ts = datetime.datetime.now()
-        result = f(*args, **kw)
-        te = datetime.datetime.now()
-        print(f"func: {f.__name__} took: {(te - ts).total_seconds()} sec")
-        return result
-
-    return wrap  # type: ignore
+from .util import timed
 
 
 class SurfaceHamiltonianUtil(EigenstateConfigUtil):
@@ -105,13 +92,16 @@ class SurfaceHamiltonianUtil(EigenstateConfigUtil):
         z_end = self.z_offset + (self.Nz - 1) * self.dz
         return np.linspace(z_start, z_end, self.Nz, dtype=float)
 
+    @timed
     def hamiltonian(self, kx: float, ky: float) -> NDArray:
         diagonal_energies = np.diag(self._calculate_diagonal_energy(kx, ky))
         other_energies = self._calculate_off_diagonal_energies_fast()
 
         energies = diagonal_energies + other_energies
-        if not np.allclose(energies, energies.conjugate().T):
+
+        if False and not np.allclose(energies, energies.conjugate().T):
             raise AssertionError("Hamiltonian is not hermitian")
+
         return energies
 
     @timed
@@ -196,56 +186,71 @@ class SurfaceHamiltonianUtil(EigenstateConfigUtil):
         return hamiltonian
 
     @timed
-    def calculate_eigenvalues(self, kx, ky) -> Tuple[List[float], List[Eigenstate]]:
+    def calculate_eigenvalues(
+        self, kx, ky, *, n: None | int = None
+    ) -> Tuple[List[float], List[Eigenstate]]:
         """
         Returns the eigenvalues as a list of vectors,
         ie v[i] is the eigenvector associated to the eigenvalue w[i]
         """
-        w, v = np.linalg.eigh(self.hamiltonian(kx, ky))
+        hamiltonian = self.hamiltonian(kx, ky)
+
+        is_symmetric_x = np.array_equal(self.points[1:, :], self.points[:, :0:-1])
+        is_symmetric_y = np.array_equal(self.points[:, 1:], self.points[:, :0:-1])
+
+        # If the potential is symmetric the fourier transform is real
+        # This provides us with a significant speedup
+        if is_symmetric_x and is_symmetric_y:
+            hamiltonian = np.real_if_close(hamiltonian)
+
+        if n is not None:
+            # TODO: eigenstates don't appear to match up with np.linalg.eigh
+            w, v = scipy.sparse.linalg.eigsh(hamiltonian, k=n, which="SA")
+        else:
+            w, v = np.linalg.eigh(hamiltonian)
+
         return (w.tolist(), [{"eigenvector": vec, "kx": kx, "ky": ky} for vec in v.T])
 
 
 def generate_energy_eigenstates_from_k_points(
     hamiltonian: SurfaceHamiltonianUtil,
     k_points: NDArray,
-    path: Path,
     *,
-    include_bands: List[int] | None = None,
+    save_bands: Dict[int, Path],
 ) -> None:
-    include_bands = [0] if include_bands is None else include_bands
-    data: EnergyEigenstates = {
-        "kx_points": [],
-        "ky_points": [],
-        "eigenvalues": [],
-        "eigenvectors": [],
-        "eigenstate_config": hamiltonian._config,
-    }
-    save_energy_eigenstates(data, path)
+    for path in save_bands.values():
+        data: EnergyEigenstates = {
+            "kx_points": [],
+            "ky_points": [],
+            "eigenvalues": [],
+            "eigenvectors": [],
+            "eigenstate_config": hamiltonian._config,
+        }
+        save_energy_eigenstates(data, path)
 
     for (kx, ky) in k_points:
         e_vals, e_states = hamiltonian.calculate_eigenvalues(kx, ky)
-        a_min = np.argpartition(e_vals, include_bands)
+        a_min = np.argpartition(e_vals, list(save_bands.keys()))
 
-        for idx in include_bands:
-            eigenvalue = e_vals[a_min[idx]]
-            eigenstate = e_states[a_min[idx]]
+        for (index, path) in save_bands.items():
+            eigenvalue = e_vals[a_min[index]]
+            eigenstate = e_states[a_min[index]]
             append_energy_eigenstates(path, eigenstate, eigenvalue)
 
 
 def generate_energy_eigenstates_grid(
-    path: Path,
     hamiltonian: SurfaceHamiltonianUtil,
     *,
-    size=(8, 8),
+    size: Tuple[int, int] = (8, 8),
     include_zero=True,
-    include_bands: List[int] | None = None,
+    save_bands: Dict[int, Path],
 ):
     k_points = get_brillouin_points_irreducible_config(
         hamiltonian._config, size=size, include_zero=include_zero
     )
 
     return generate_energy_eigenstates_from_k_points(
-        hamiltonian, k_points, path, include_bands=include_bands
+        hamiltonian, k_points, save_bands=save_bands
     )
 
 

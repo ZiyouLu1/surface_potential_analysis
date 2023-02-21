@@ -2,6 +2,7 @@ from matplotlib import pyplot as plt
 
 from surface_potential_analysis.eigenstate_plot import animate_eigenstate_3D_in_xy
 from surface_potential_analysis.energy_eigenstate import (
+    filter_eigenstates_band,
     get_eigenstate_list,
     load_energy_eigenstates,
 )
@@ -14,25 +15,15 @@ def analyze_eigenvalue_convergence():
 
     fig, ax = plt.subplots()
 
-    path = get_data_path("eigenstates_14_14_14.json")
+    path = get_data_path("eigenstates_23_23_10.json")
     eigenstates = load_energy_eigenstates(path)
     _, _, ln = plot_lowest_band_in_kx(eigenstates, ax=ax)
-    ln.set_label("(14,14,14)")
+    ln.set_label("(23,23,10)")
 
-    path = get_data_path("eigenstates_13_13_14.json")
+    path = get_data_path("eigenstates_23_23_12.json")
     eigenstates = load_energy_eigenstates(path)
     _, _, ln = plot_lowest_band_in_kx(eigenstates, ax=ax)
-    ln.set_label("(13,13,14)")
-
-    path = get_data_path("eigenstates_15_15_13.json")
-    eigenstates = load_energy_eigenstates(path)
-    _, _, ln = plot_lowest_band_in_kx(eigenstates, ax=ax)
-    ln.set_label("(15,15,13)")
-
-    path = get_data_path("eigenstates_15_15_14.json")
-    eigenstates = load_energy_eigenstates(path)
-    _, _, ln = plot_lowest_band_in_kx(eigenstates, ax=ax)
-    ln.set_label("(15,15,14)")
+    ln.set_label("(23,23,12)")
 
     ax.set_title(
         "Plot of energy against k for the lowest band of Copper for $K_y=0$\n"
@@ -48,13 +39,21 @@ def analyze_eigenvalue_convergence():
     input()
 
 
-def plot_lowest_eigenstate_3D_xy():
-    path = get_data_path("eigenstates_15_15_14.json")
+def plot_eigenstate_for_each_band():
+    """
+    Check to see if the eigenstates look as they are supposed to
+    """
+    path = get_data_path("eigenstates_23_23_12.json")
     eigenstates = load_energy_eigenstates(path)
 
-    eigenstate = get_eigenstate_list(eigenstates)[-1]
+    eigenstate = get_eigenstate_list(filter_eigenstates_band(eigenstates, n=0))[0]
+    fig, _, _anim1 = animate_eigenstate_3D_in_xy(
+        eigenstates["eigenstate_config"], eigenstate
+    )
+    fig.show()
 
-    fig, _, _anim = animate_eigenstate_3D_in_xy(
+    eigenstate = get_eigenstate_list(filter_eigenstates_band(eigenstates, n=1))[0]
+    fig, _, _anim2 = animate_eigenstate_3D_in_xy(
         eigenstates["eigenstate_config"], eigenstate
     )
     fig.show()

@@ -1,9 +1,7 @@
 import matplotlib.pyplot as plt
-import numpy as np
 
 from surface_potential_analysis.eigenstate_plot import animate_eigenstate_3D_in_xy
 from surface_potential_analysis.energy_eigenstate import (
-    EnergyEigenstates,
     filter_eigenstates_band,
     get_eigenstate_list,
     load_energy_eigenstates,
@@ -12,10 +10,6 @@ from surface_potential_analysis.energy_eigenstate import (
 from surface_potential_analysis.energy_eigenstates_plot import (
     plot_lowest_band_in_kx,
     plot_nth_band_in_kx,
-)
-from surface_potential_analysis.wavepacket_grid import calculate_wavepacket_grid
-from surface_potential_analysis.wavepacket_grid_plot import (
-    animate_wavepacket_grid_3D_in_xy,
 )
 
 from .surface_data import get_data_path, save_figure
@@ -80,40 +74,6 @@ def analyze_band_convergence():
     input()
 
 
-def analyze_band_convergence_kx1():
-    fig, ax = plt.subplots()
-
-    path = get_data_path("eigenstates_25_25_10_kx1.json")
-    eigenstates = load_energy_eigenstates(path)
-    _, _, ln = plot_lowest_band_in_kx(eigenstates, ax=ax)
-    ln.set_label("(25,25,10)")
-
-    # path = get_data_path("eigenstates_25_25_12_kx1.json")
-    # eigenstates = load_energy_eigenstates(path)
-    # _, _, ln = plot_lowest_band_in_kx(eigenstates, ax=ax)
-    # ln.set_label("(25,25,12)")
-
-    # path = get_data_path("eigenstates_27_27_12.json")
-    # eigenstates = load_energy_eigenstates(path)
-    # _, _, ln = plot_lowest_band_in_kx(eigenstates, ax=ax)
-    # ln.set_label("(27,27,12)")
-
-    # path = get_data_path("eigenstates_29_29_10.json")
-    # eigenstates = load_energy_eigenstates(path)
-    # _, _, ln = plot_lowest_band_in_kx(eigenstates, ax=ax)
-    # ln.set_label("(29,29,10)")
-
-    ax.legend()
-    ax.set_title(
-        "Plot of lowest band energies\n"
-        "showing convergence for an eigenstate grid of (15,15,12)"
-    )
-
-    fig.show()
-    input()
-    save_figure(fig, "lowest_band_convergence.png")
-
-
 def analyze_band_convergence_john():
     fig, ax = plt.subplots()
 
@@ -167,8 +127,6 @@ def analyze_band_convergence_john():
 def plot_eigenstate_for_each_band():
     """
     Check to see if the eigenstates look as they are supposed to
-
-    Spoiler: they dont :(
     """
     path = get_data_path("eigenstates_25_25_16.json")
     eigenstates = load_energy_eigenstates(path)

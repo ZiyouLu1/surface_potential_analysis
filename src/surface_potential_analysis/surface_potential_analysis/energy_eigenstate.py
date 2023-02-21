@@ -9,6 +9,7 @@ from numpy.typing import ArrayLike
 from .brillouin_zone import get_points_in_brillouin_zone
 from .eigenstate import Eigenstate, EigenstateConfig, EigenstateConfigUtil
 from .energy_data import EnergyInterpolation
+from .util import timed
 
 
 class EigenstateConfigRaw(TypedDict):
@@ -132,6 +133,7 @@ def load_energy_eigenstates_legacy(path: Path) -> EnergyEigenstates:
         }
 
 
+@timed
 def append_energy_eigenstates(
     path: Path, eigenstate: Eigenstate, eigenvalue: float
 ) -> None:

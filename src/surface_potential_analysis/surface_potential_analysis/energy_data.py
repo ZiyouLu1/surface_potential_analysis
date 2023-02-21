@@ -4,9 +4,8 @@ from typing import List, Set, Tuple, TypedDict
 
 import numpy as np
 import scipy.interpolate
-from numpy.typing import NDArray
+from numpy.typing import ArrayLike, NDArray
 
-from .brillouin_zone import get_point_fractions
 from .surface_config import (
     SurfaceConfig,
     get_surface_coordinates,
@@ -165,14 +164,13 @@ def fill_subsurface_from_corner(data: EnergyGrid) -> EnergyGrid:
             continue
 
         points[current_point] = 1000
-        for (dx, dy, dz) in [
+        for dx, dy, dz in [
             (1, 0, 0),
             (0, 1, 0),
             (0, 0, 1),
             (-1, 0, 0),
             (0, -1, 0),
         ]:
-
             next_point = (
                 (current_point[0] + dx) % points.shape[0],
                 (current_point[1] + dy) % points.shape[1],
@@ -404,7 +402,7 @@ def interpolate_energy_grid_z_spline(data: EnergyGrid, nz: int = 100) -> EnergyG
         range(old_points.shape[0]), range(old_points.shape[1]), indexing="ij"
     )
     old_xy_points = np.array([xt.ravel(), yt.ravel()]).T
-    for (x, y) in old_xy_points:
+    for x, y in old_xy_points:
         old_energies = data["points"][x][y]
         tck = scipy.interpolate.splrep(data["z_points"], old_energies, s=0)
         new_energy = scipy.interpolate.splev(z_points, tck, der=0)
@@ -418,7 +416,7 @@ def interpolate_energy_grid_z_spline(data: EnergyGrid, nz: int = 100) -> EnergyG
     }
 
 
-def get_ft_phases(shape: Tuple[int, int]):
+def get_ft_indexes(shape: Tuple[int, int]):
     """
     Get a list of list of [x1_phase, x2_phase] for the fourier transform
     """
@@ -435,36 +433,114 @@ def get_ft_phases(shape: Tuple[int, int]):
     ft_indices[:, :, 1] = y_indices
 
     # List of list of [x1_phase, x2_phase]
-    ft_phases = 2 * np.pi * ft_indices
+    return ft_indices
+
+
+def get_ft_phases(shape: Tuple[int, int]):
+    """
+    Get a list of list of [x1_phase, x2_phase] for the fourier transform
+    """
+
+    # List of list of [x1_phase, x2_phase]
+    ft_phases = 2 * np.pi * get_ft_indexes(shape)
     return ft_phases
 
 
-def interpolate_points_fourier(
-    points: List[List[float]], shape: Tuple[int, int]
-) -> List[List[float]]:
+# The old method, which would produce a wavefunction
+# which was slightly asymmetric if supplied wth
+# a symmetric wavefunction
+# def interpolate_points_fourier(
+#     points: List[List[float]], shape: Tuple[int, int]
+# ) -> List[List[float]]:
+#     """
+#     Given a uniform grid of points in the unit cell interpolate
+#     a grid of points with the given shape using the fourier transform
+#     """
+#     ft_potential = np.fft.ifft2(points)
+#     ft_indices = get_ft_indexes((ft_potential.shape[0], ft_potential.shape[1]))
+
+#     # List of [x1_frac, x2_frac] for the interpolated grid
+#     fractions = get_point_fractions(shape, endpoint=False)
+#     # print(fractions)
+#     # print(ft_indices)
+#     # List of (List of list of [x1_phase, x2_phase] for the interpolated grid)
+#     interpolated_phases = np.multiply(
+#         fractions[:, np.newaxis, np.newaxis, :],
+#         ft_indices[np.newaxis, :, :, :],
+#     )
+#     # Sum over phase from x and y, raise to exp(-i * phi)
+#     summed_phases = np.exp(-2j * np.pi * np.sum(interpolated_phases, axis=-1))
+#     # print(summed_phases)
+#     # Multiply the exponential by the prefactor form the fourier transform
+#     # Add the contribution from each ikx1, ikx2
+#     interpolated_points = np.sum(
+#         np.multiply(ft_potential[np.newaxis, :, :], summed_phases), axis=(1, 2)
+#     )
+#     return np.real_if_close(interpolated_points).reshape(shape).tolist()
+
+
+def interpolate_real_points_along_axis_fourier(points: ArrayLike, n: int, axis=-1):
+    """
+    Given a uniformly spaced (real) grid of points interpolate along the given
+    axis to a new length n.
+
+    This makes use of the fact that the potential is real, and therefore if the
+    input is even along the interpolation axis we get an additional ft point for 'free'
+    using the hermitian property of the fourier transform
+    """
+    # We use the forward norm here, as otherwise we would also need to
+    # scale the ft_potential by a factor of n / shape[axis]
+    # when we pad or truncate it
+    ft_potential = np.fft.rfft(points, axis=axis, norm="forward")
+    # Invert the rfft, padding (or truncating) for the new length n
+    interpolated_potential = np.fft.irfft(ft_potential, n, axis=axis, norm="forward")
+
+    return interpolated_potential
+
+
+def interpolate_points_fourier_complex(
+    points: List[List[complex]], shape: Tuple[int, int]
+) -> List[List[complex]]:
     """
     Given a uniform grid of points in the unit cell interpolate
     a grid of points with the given shape using the fourier transform
+
+    We don't make use of the fact that the potential is real in this case,
+    and as such the output may not be real
     """
-    ft_potential = np.fft.ifft2(points)
-    ft_phases = get_ft_phases((ft_potential.shape[0], ft_potential.shape[1]))
-
-    # List of [x1_frac, x2_frac] for the interpolated grid
-    fractions = get_point_fractions(shape, endpoint=False)
-
-    # List of (List of list of [x1_phase, x2_phase] for the interpolated grid)
-    interpolated_phases = np.multiply(
-        fractions[:, np.newaxis, np.newaxis, :],
-        ft_phases[np.newaxis, :, :, :],
+    ft_potential = np.fft.fft2(points)
+    original_shape = ft_potential.shape
+    sample_shape = (
+        np.min([original_shape[0], shape[0]]),
+        np.min([original_shape[1], shape[1]]),
     )
-    # Sum over phase from x and y, raise to exp(-i * phi)
-    summed_phases = np.exp(-1j * np.sum(interpolated_phases, axis=-1))
-    # Multiply the exponential by the prefactor form the fourier transform
-    # Add the contribution from each ikx1, ikx2
-    interpolated_points = np.sum(
-        np.multiply(ft_potential[np.newaxis, :, :], summed_phases), axis=(1, 2)
-    )
-    return np.real_if_close(interpolated_points).reshape(shape).tolist()
+    new_ft_potential = np.zeros(shape, dtype=complex)
+
+    # See https://numpy.org/doc/stable/reference/generated/numpy.fft.fftfreq.html for the choice of frequencies
+    # We want to map points to the location with the same frequency in the final ft grid
+    # We want points with ftt freq from -(n)//2 to -1 in uhp
+    kx_floor = sample_shape[0] // 2
+    ky_floor = sample_shape[1] // 2
+    # We want points with ftt freq from 0 to (n+1)//2 - 1 in lhp
+    kx_ceil = (sample_shape[0] + 1) // 2
+    ky_ceil = (sample_shape[1] + 1) // 2
+
+    new_ft_potential[:kx_ceil, :ky_ceil] = ft_potential[:kx_ceil, :ky_ceil]
+    if kx_floor != 0:
+        new_ft_potential[-kx_floor:, :ky_ceil] = ft_potential[-kx_floor:, :ky_ceil]
+    if ky_floor != 0:
+        new_ft_potential[:kx_ceil, -ky_floor:] = ft_potential[:kx_ceil, -ky_floor:]
+    if ky_floor != 0 and ky_floor != 0:
+        new_ft_potential[-kx_floor:, -ky_floor:] = ft_potential[-kx_floor:, -ky_floor:]
+
+    new_points = np.fft.ifft2(new_ft_potential)
+
+    # A 2% difference in the output, since we dont make use of the fact the potential is real
+    # therefore if the input has an even number of points the output is no longer
+    # hermitian!
+    # np.testing.assert_array_equal(np.abs(new_points), np.real_if_close(new_points))
+
+    return new_points.tolist()
 
 
 def interpolate_energy_grid_xy_fourier(
@@ -475,15 +551,12 @@ def interpolate_energy_grid_xy_fourier(
     in the xy plane of the energy grid
     """
     old_points = np.array(data["points"])
-    points = np.empty((shape[0], shape[1], old_points.shape[2]))
-    for iz in range(old_points.shape[2]):
-        points[:, :, iz] = interpolate_points_fourier(
-            old_points[:, :, iz].tolist(), shape
-        )
+    x_interp = interpolate_real_points_along_axis_fourier(old_points, shape[0], axis=0)
+    y_interp = interpolate_real_points_along_axis_fourier(x_interp, shape[1], axis=1)
     return {
         "delta_x0": data["delta_x0"],
         "delta_x1": data["delta_x1"],
-        "points": points.tolist(),
+        "points": y_interp.tolist(),
         "z_points": data["z_points"],
     }
 
@@ -497,5 +570,6 @@ def interpolate_energy_grid_fourier(
     Makes use of a fourier transform to increase the number of points
     in the xy plane of the energy grid, and a cubic spline to interpolate in the z direction
     """
+
     xy_interpolation = interpolate_energy_grid_xy_fourier(data, (shape[0], shape[1]))
     return interpolate_energy_grid_z_spline(xy_interpolation, shape[2])

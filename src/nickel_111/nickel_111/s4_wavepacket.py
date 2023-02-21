@@ -104,8 +104,6 @@ def generate_wavepacket_grid_john():
 
 def generate_eigenstates_grid():
     h = generate_hamiltonian(resolution=(23, 23, 12))
-    path = get_data_path("eigenstates_grid.json")
+    save_bands = {k: get_data_path(f"eigenstates_grid_{k}.json") for k in range(20)}
 
-    generate_energy_eigenstates_grid(
-        path, h, size=(4, 4), include_bands=list(range(20))
-    )
+    generate_energy_eigenstates_grid(h, size=(4, 4), save_bands=save_bands)

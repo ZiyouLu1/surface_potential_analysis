@@ -17,7 +17,9 @@ from surface_potential_analysis.eigenstate_plot import (
 )
 from surface_potential_analysis.energy_eigenstate import (
     EnergyEigenstates,
+    filter_eigenstates_band,
     get_eigenstate_list,
+    load_energy_eigenstates,
     load_energy_eigenstates_legacy,
     normalize_eigenstate_phase,
 )
@@ -37,16 +39,15 @@ from .surface_data import get_data_path, save_figure
 
 def plot_wavepacket_points():
     path = get_data_path("eigenstates_grid.json")
-    eigenstates = load_energy_eigenstates_legacy(path)
+    eigenstates = load_energy_eigenstates(path)
+    
     fig, _, _ = plot_eigenstate_positions(eigenstates)
-
     fig.show()
 
-    eigenstate_list = get_eigenstate_list(eigenstates)
+    eigenstate_list = get_eigenstate_list(filter_eigenstates_band(eigenstates))
     fig, _, _ = animate_eigenstate_3D_in_xy(
         eigenstates["eigenstate_config"], eigenstate_list[-1]
     )
-
     fig.show()
     input()
 
