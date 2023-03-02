@@ -225,7 +225,7 @@ def normalize_eigenstate_phase(
     eigenvectors = data["eigenvectors"]
 
     phases = get_bloch_phases(data, origin_point=origin_point)
-    phase_factor = np.real_if_close(np.exp(-1j * np.array(phases)))
+    phase_factor = np.exp(-1j * np.array(phases))
     fixed_phase_eigenvectors = np.multiply(eigenvectors, phase_factor[:, np.newaxis])
 
     return {

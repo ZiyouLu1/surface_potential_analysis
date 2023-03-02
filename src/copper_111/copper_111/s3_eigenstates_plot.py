@@ -15,15 +15,35 @@ def analyze_eigenvalue_convergence():
 
     fig, ax = plt.subplots()
 
+    path = get_data_path("eigenstates_21_21_10.json")
+    eigenstates = load_energy_eigenstates(path)
+    _, _, ln = plot_lowest_band_in_kx(eigenstates, ax=ax)
+    ln.set_label("(21,21,10)")
+
     path = get_data_path("eigenstates_23_23_10.json")
     eigenstates = load_energy_eigenstates(path)
     _, _, ln = plot_lowest_band_in_kx(eigenstates, ax=ax)
     ln.set_label("(23,23,10)")
 
-    path = get_data_path("eigenstates_23_23_12.json")
+    path = get_data_path("eigenstates_25_25_10.json")
     eigenstates = load_energy_eigenstates(path)
     _, _, ln = plot_lowest_band_in_kx(eigenstates, ax=ax)
-    ln.set_label("(23,23,12)")
+    ln.set_label("(25,25,10)")
+
+    path = get_data_path("eigenstates_27_27_10.json")
+    eigenstates = load_energy_eigenstates(path)
+    _, _, ln = plot_lowest_band_in_kx(eigenstates, ax=ax)
+    ln.set_label("(27,27,10)")
+
+    # path = get_data_path("eigenstates_27_27_10.json")
+    # eigenstates = load_energy_eigenstates(path)
+    # _, _, ln = plot_lowest_band_in_kx(eigenstates, ax=ax)
+    # ln.set_label("(27,27,12)")
+
+    # path = get_data_path("eigenstates_29_29_12.json")
+    # eigenstates = load_energy_eigenstates(path)
+    # _, _, ln = plot_lowest_band_in_kx(eigenstates, ax=ax)
+    # ln.set_label("(29,29,12)")
 
     ax.set_title(
         "Plot of energy against k for the lowest band of Copper for $K_y=0$\n"
@@ -43,7 +63,7 @@ def plot_eigenstate_for_each_band():
     """
     Check to see if the eigenstates look as they are supposed to
     """
-    path = get_data_path("eigenstates_23_23_12.json")
+    path = get_data_path("eigenstates_29_29_12.json")
     eigenstates = load_energy_eigenstates(path)
 
     eigenstate = get_eigenstate_list(filter_eigenstates_band(eigenstates, n=0))[0]

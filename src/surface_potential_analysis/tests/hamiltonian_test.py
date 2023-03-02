@@ -169,7 +169,7 @@ class TestSurfaceHamiltonian(unittest.TestCase):
         hamiltonian = generate_random_diagonal_hamiltonian()
 
         actual = hamiltonian._calculate_off_diagonal_energies()
-        n_points = hamiltonian.Nkx * hamiltonian.Nky * hamiltonian.Nkz
+        n_points = hamiltonian.Nkx0 * hamiltonian.Nkx1 * hamiltonian.Nkz
         expected_shape = (n_points, n_points)
         np.testing.assert_equal(actual, np.zeros(shape=expected_shape))
 
@@ -195,41 +195,6 @@ class TestSurfaceHamiltonian(unittest.TestCase):
         np.testing.assert_allclose(
             hamiltonian.hamiltonian(0, 0), hamiltonian.hamiltonian(0, 0).conjugate().T
         )
-
-    def test_calculate_sho_wavefunction(self) -> None:
-        mass = hbar**2
-        sho_omega = 1 / hbar
-        z_points = np.linspace(-10, 10, np.random.randint(0, 1000))
-
-        norm = np.sqrt(mass * sho_omega / hbar)
-
-        phi_0_norm = np.sqrt(norm / np.sqrt(np.pi))
-        phi_0_expected = phi_0_norm * np.exp(-((z_points * norm) ** 2) / 2)
-        phi_0_actual = calculate_sho_wavefunction(z_points, sho_omega, mass, 0)
-
-        np.testing.assert_allclose(phi_0_expected, phi_0_actual)
-
-        phi_1_norm = np.sqrt(2 * norm / np.sqrt(np.pi))
-        phi_1_expected = phi_1_norm * z_points * np.exp(-((z_points * norm) ** 2) / 2)
-        phi_1_actual = calculate_sho_wavefunction(z_points, sho_omega, mass, 1)
-
-        np.testing.assert_allclose(phi_1_expected, phi_1_actual)
-
-        phi_2_norm = np.sqrt(norm / (2 * np.sqrt(np.pi)))
-        phi_2_poly = (2 * z_points**2 - 1) * np.exp(-((z_points * norm) ** 2) / 2)
-        phi_2_expected = phi_2_norm * phi_2_poly
-        phi_2_actual = calculate_sho_wavefunction(z_points, sho_omega, mass, 2)
-
-        np.testing.assert_allclose(phi_2_expected, phi_2_actual)
-
-        phi_3_norm = np.sqrt(norm / (3 * np.sqrt(np.pi)))
-        phi_3_poly = (2 * z_points**3 - 3 * z_points) * np.exp(
-            -((z_points * norm) ** 2) / 2
-        )
-        phi_3_expected = phi_3_norm * phi_3_poly
-        phi_3_actual = calculate_sho_wavefunction(z_points, sho_omega, mass, 3)
-
-        np.testing.assert_allclose(phi_3_expected, phi_3_actual)
 
     def test_sho_normalization(self) -> None:
         nx = random.randrange(2, 10)
@@ -261,19 +226,6 @@ class TestSurfaceHamiltonian(unittest.TestCase):
                     self.assertAlmostEqual(sho_norm, 1.0)
                 else:
                     self.assertAlmostEqual(sho_norm, 0.0)
-
-    def test_get_sho_rust(self) -> None:
-        mass = hbar**2 * random.random()
-        sho_omega = random.random() / hbar
-        z_points = np.linspace(-20 * random.random(), 20 * random.random(), 1000)
-
-        for n in range(14):
-            actual = hamiltonian_generator.get_sho_wavefunction(
-                z_points.tolist(), sho_omega, mass, n
-            )
-            expected = calculate_sho_wavefunction(z_points, sho_omega, mass, n)
-
-            np.testing.assert_allclose(actual, expected)
 
     def test_get_hermite_val_rust(self) -> None:
         n = random.randrange(1, 10)

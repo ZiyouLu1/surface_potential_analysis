@@ -3,6 +3,7 @@ import numpy as np
 import scipy.constants
 
 from surface_potential_analysis.energy_data import (
+    load_energy_grid,
     load_energy_grid_legacy,
     normalize_energy,
 )
@@ -120,7 +121,11 @@ def plot_copper_relaxed_interpolated_data():
 
 
 def plot_copper_interpolated_data():
-    data = load_interpolated_copper_data()
+    path = get_data_path("copper_interpolated_energies.json")
+    data = load_energy_grid(path)
+    # path = get_data_path("copper_interpolated_energies_old.json")
+    # data = load_energy_grid_legacy(path)
+
     raw_data = normalize_energy(load_raw_copper_data())
 
     fig, ax = plot_z_direction_energy_comparison_100(data, raw_data)

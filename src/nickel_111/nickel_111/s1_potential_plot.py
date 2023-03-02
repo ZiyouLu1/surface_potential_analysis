@@ -17,6 +17,7 @@ from surface_potential_analysis.energy_data_plot import (
     animate_energy_grid_3D_in_xy,
     compare_energy_grid_to_all_raw_points,
     plot_all_energy_points_z,
+    plot_energy_grid_in_xy,
     plot_energy_grid_locations,
     plot_energy_grid_points,
     plot_energy_point_locations_on_grid,
@@ -243,8 +244,26 @@ def compare_john_interpolation():
     fig, ax, _ = plot_z_direction_energy_data_john(john_interpolation)
     my_interpolation = load_interpolated_grid()
     plot_z_direction_energy_data_111(my_interpolation, ax=ax)
+    ax.set_ylim(0, 0.5e-18)
+    fig.show()
+    save_figure(fig, "original_and_new_interpolation_comparison.png")
+    input()
+
+
+def plot_interpolation_with_sho_wavefunctions():
+    """
+    Is is possible that the SHO wavefunctions lie outside the interpolated potential
+    or have energies for which they can see the truncation process.
+
+    Plotting them alongside the interpolation in the hZ direction will allow us to
+    diagnose these issues
+    """
+
+    grid = load_interpolated_grid()
+    fig, ax = plt.subplots()
+    plot_z_direction_energy_data_111(grid, ax=ax)
     plot_sho_wavefunctions(
-        my_interpolation["z_points"],
+        grid["z_points"],
         sho_omega=195636899474736.66,
         mass=1.6735575e-27,
         first_n=16,
@@ -252,7 +271,8 @@ def compare_john_interpolation():
     )
     ax.set_ylim(0, 0.5e-18)
     fig.show()
-    save_figure(fig, "original_and_new_interpolation_comparison.png")
+
+    save_figure(fig, "sho_wavefunctions_alongside_potential.png")
     input()
 
 
@@ -277,6 +297,77 @@ def plot_potential_minimum_along_diagonal():
     ax.legend()
     fig.show()
     save_figure(fig, "classical_trajectory_comparison.png")
+
+    input()
+
+
+def plot_potential_minimum_along_edge():
+    interpolation = load_interpolated_grid()
+    fig, ax = plt.subplots()
+
+    # Note we are 'missing' two points here!
+    path = [
+        (np.shape(interpolation["points"])[0] - (x), x)
+        for x in range(np.shape(interpolation["points"])[0])
+    ][1:]
+    _, _, line = plot_potential_minimum_along_path(interpolation, path, ax=ax)
+    line.set_label("diagonal")
+
+    path = [(x, 0) for x in range(np.shape(interpolation["points"])[0])]
+    _, _, line = plot_potential_minimum_along_path(interpolation, path, ax=ax)
+    line.set_label("x1=0")
+
+    path = [(0, y) for y in range(np.shape(interpolation["points"])[1])]
+    _, _, line = plot_potential_minimum_along_path(interpolation, path, ax=ax)
+    line.set_label("x0=0")
+
+    ax.legend()
+    fig.show()
+    ax.set_title(
+        "plot of the potential along the edge and off diagonal. All three should be identical"
+    )
+    input()
+
+
+def plot_potential_minimum_along_edge_reciprocal():
+    """
+    Is it an issue with how we lay out the raw reciprocal data,
+    or is it a problem with the interpolation procedure?
+
+    """
+    grid = load_raw_data_reciprocal_grid()
+
+    fig, _, _ani = plot_energy_grid_in_xy(grid, z_ind=0)
+    fig.show()
+
+    fig, ax = plt.subplots()
+
+    path = [(x, x) for x in range(np.shape(grid["points"])[0])]
+    _, _, line = plot_potential_minimum_along_path(grid, path, ax=ax)
+    line.set_label("x0=0")
+
+    path = [
+        ((np.shape(grid["points"])[1] - x) // 2, x)
+        for x in range(np.shape(grid["points"])[0])
+        if x % 2 == 0
+    ]
+    _, _, line = plot_potential_minimum_along_path(grid, path, ax=ax)
+    line.set_label("x1=0")
+
+    path = [
+        (y // 2, (np.shape(grid["points"])[1] - y))
+        for y in range(np.shape(grid["points"])[1] + 1)
+        if y % 2 == 0
+    ][1:]
+    _, _, line = plot_potential_minimum_along_path(grid, path, ax=ax)
+    line.set_label("diagonal")
+
+    ax.legend()
+    fig.show()
+    ax.set_title(
+        "plot of the potential along the edge and off diagonal.\n"
+        "All three directions are identical"
+    )
     input()
 
 

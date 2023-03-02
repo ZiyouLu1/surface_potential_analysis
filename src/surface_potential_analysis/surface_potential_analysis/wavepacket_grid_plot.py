@@ -11,6 +11,7 @@ from matplotlib.image import AxesImage
 from surface_potential_analysis.surface_config import SurfaceConfigUtil
 from surface_potential_analysis.surface_config_plot import (
     plot_ft_points_on_surface_xy,
+    plot_points_on_surface_x0z,
     plot_points_on_surface_xy,
 )
 
@@ -85,11 +86,12 @@ def animate_wavepacket_grid_3D_in_xy(
         frames.append([mesh])
 
     max_clim = np.max([i[0].get_clim()[1] for i in frames])
+    min_clim = 0 if measure == "abs" else np.min([i[0].get_clim()[0] for i in frames])
     for (mesh,) in frames:
         mesh.set_norm(norm)  # type: ignore
-        mesh.set_clim(0, max_clim * 1e-3)
+        mesh.set_clim(min_clim, max_clim)
     mesh0.set_norm(norm)  # type: ignore
-    mesh0.set_clim(0, max_clim)
+    mesh0.set_clim(min_clim, max_clim)
 
     ani = matplotlib.animation.ArtistAnimation(fig, frames)
 
@@ -128,27 +130,17 @@ def animate_ft_wavepacket_grid_3D_in_xy(
     return fig, ax, ani
 
 
-def plot_wavepacket_grid_in_x1z(
+def plot_wavepacket_grid_in_x0z(
     grid: WavepacketGrid,
-    x2_ind: int,
+    x1_ind: int,
     *,
     measure: Literal["real", "imag", "abs"] = "abs",
     ax: Axes | None = None,
 ) -> Tuple[Figure, Axes, QuadMesh]:
-    fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
 
-    if measure == "real":
-        data = np.real(grid["points"])
-    elif measure == "imag":
-        data = np.imag(grid["points"])
-    else:
-        data = np.abs(grid["points"])
-
-    x1_points = np.linspace(0, np.linalg.norm(grid["delta_x1"]), data.shape[0])
-    z_points = np.array(grid["z_points"])
-    x1v, zv = np.meshgrid(x1_points, z_points, indexing="ij")
-    mesh = ax.pcolormesh(x1v, zv, data[:, x2_ind, :], shading="nearest")
-    return (fig, ax, mesh)
+    return plot_points_on_surface_x0z(
+        grid, grid["points"], grid["z_points"], x1_ind=x1_ind, ax=ax, measure=measure
+    )
 
 
 def animate_wavepacket_grid_3D_in_x1z(
@@ -160,20 +152,21 @@ def animate_wavepacket_grid_3D_in_x1z(
 ) -> Tuple[Figure, Axes, matplotlib.animation.ArtistAnimation]:
     fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
 
-    _, _, mesh0 = plot_wavepacket_grid_in_x1z(grid, 0, ax=ax, measure=measure)
+    _, _, mesh0 = plot_wavepacket_grid_in_x0z(grid, 0, ax=ax, measure=measure)
 
     frames: List[List[QuadMesh]] = []
-    for x2_ind in range(np.shape(grid["points"])[1]):
+    for x1_ind in range(np.shape(grid["points"])[1]):
 
-        _, _, mesh = plot_wavepacket_grid_in_x1z(grid, x2_ind, ax=ax, measure=measure)
+        _, _, mesh = plot_wavepacket_grid_in_x0z(grid, x1_ind, ax=ax, measure=measure)
         frames.append([mesh])
 
     max_clim = np.max([i[0].get_clim()[1] for i in frames])
+    min_clim = 0 if measure == "abs" else np.min([i[0].get_clim()[0] for i in frames])
     for (mesh,) in frames:
         mesh.set_norm(norm)  # type: ignore
-        mesh.set_clim(0, max_clim)
+        mesh.set_clim(min_clim, max_clim)
     mesh0.set_norm(norm)  # type: ignore
-    mesh0.set_clim(0, max_clim)
+    mesh0.set_clim(min_clim, max_clim)
 
     ani = matplotlib.animation.ArtistAnimation(fig, frames)
 

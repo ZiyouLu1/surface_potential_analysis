@@ -7,6 +7,7 @@ from surface_potential_analysis.energy_data import (
     normalize_energy,
     save_energy_grid,
     truncate_energy,
+    undo_truncate_energy,
 )
 
 from .surface_data import get_data_path
@@ -34,7 +35,7 @@ def load_spline_interpolated_relaxed_data():
 
 def load_interpolated_copper_data():
     path = get_data_path("copper_interpolated_energies.json")
-    return load_energy_grid_legacy(path)
+    return load_energy_grid(path)
 
 
 def load_nc_raw_copper_data():
@@ -61,6 +62,20 @@ def load_clean_copper_data():
 
 
 def generate_interpolated_copper_data_fourier():
+    data = load_raw_copper_data()
+    normalized = normalize_energy(data)
+
+    # The Top site has such an insanely large energy
+    # We must bring it down first
+    truncated = truncate_energy(normalized, cutoff=1e-17, n=5, offset=1e-20)
+    truncated = truncate_energy(truncated, cutoff=0.5e-18, n=1, offset=0)
+    interpolated = interpolate_energy_grid_fourier(truncated, shape=(60, 60, 120))
+    fixed = undo_truncate_energy(interpolated, cutoff=0.5e-18, n=1, offset=0)
+    path = get_data_path("copper_interpolated_energies.json")
+    save_energy_grid(fixed, path)
+
+
+def generate_interpolated_relaxed_copper_data_fourier():
     data = load_relaxed_copper_data()
     normalized = normalize_energy(data)
     interpolated = interpolate_energy_grid_fourier(normalized, shape=(60, 60, 120))

@@ -67,24 +67,20 @@ class EigenstateConfigUtil(SurfaceConfigUtil):
         return self._config["sho_omega"]
 
     @property
-    def Nkx(self) -> int:
+    def Nkx0(self) -> int:
         return self.resolution[0]
-        return 2 * self.resolution[0] + 1
 
     @property
-    def nkx_points(self):
-        return np.array(np.rint(np.fft.fftfreq(self.Nkx, 1 / self.Nkx)), dtype=int)
-        return np.arange(-self.resolution[0], self.resolution[0] + 1, dtype=int)
+    def nkx0_points(self):
+        return np.array(np.rint(np.fft.fftfreq(self.Nkx0, 1 / self.Nkx0)), dtype=int)
 
     @property
-    def Nky(self) -> int:
+    def Nkx1(self) -> int:
         return self.resolution[1]
-        return 2 * self.resolution[1] + 1
 
     @property
-    def nky_points(self):
-        return np.array(np.rint(np.fft.fftfreq(self.Nky) * self.Nky), dtype=int)
-        return np.arange(-self.resolution[1], self.resolution[1] + 1, dtype=int)
+    def nkx1_points(self):
+        return np.array(np.rint(np.fft.fftfreq(self.Nkx1, 1 / self.Nkx1)), dtype=int)
 
     @property
     def Nkz(self) -> int:
@@ -101,19 +97,15 @@ class EigenstateConfigUtil(SurfaceConfigUtil):
 
     @cached_property
     def eigenstate_indexes(self) -> NDArray:
-        xt, yt, zt = np.meshgrid(
-            self.nkx_points, self.nky_points, self.nz_points, indexing="ij"
+        x0t, x1t, zt = np.meshgrid(
+            self.nkx0_points, self.nkx1_points, self.nz_points, indexing="ij"
         )
-        return np.array([xt.ravel(), yt.ravel(), zt.ravel()]).T
+        return np.array([x0t.ravel(), x1t.ravel(), zt.ravel()]).T
 
-    def get_index(self, nkx: int, nky: int, nz: int) -> int:
-        ikx = (nkx % self.Nkx) * self.Nky * self.Nkz
-        iky = (nky % self.Nky) * self.Nkz
-        return ikx + iky + nz
-
-        ikx = (nkx + self.resolution[0]) * self.Nky * self.Nkz
-        iky = (nky + self.resolution[1]) * self.Nkz
-        return ikx + iky + nz
+    def get_index(self, nkx0: int, nkx1: int, nz: int) -> int:
+        ikx0 = (nkx0 % self.Nkx0) * self.Nkx1 * self.Nkz
+        ikx1 = (nkx1 % self.Nkx1) * self.Nkz
+        return ikx0 + ikx1 + nz
 
     def calculate_wavefunction_slow(
         self,
@@ -147,30 +139,123 @@ class EigenstateConfigUtil(SurfaceConfigUtil):
             )
         return out
 
+    def calculate_bloch_wavefunction_fourier(
+        self, eigenvector: List[complex], z_points: List[float]
+    ) -> NDArray:
+        """
+        Calculates the bloch wavefunction at the fundamental points in the unit cell
+        (ie the points we have information on based off of the information given in the eigenvector)
+
+        Note we use the convention that (ignoring the ikx1 direction)
+
+        :math:`\\psi(x) = sum_{ikx0} A_{ikx0} \\exp{2 \\pi (ikx0) * dkx0 * x}`
+
+        Parameters
+        ----------
+        eigenvector : List[complex]
+        z_points    : List[float]
+
+
+        Returns
+        -------
+        NDArray
+            An array containing the bloch wavefunction amplitudes as a list[list[list[complex]]]
+            of amplitudes for each ix, iy, iz
+
+        """
+        sho_wavefunctions = np.array(
+            [
+                calculate_sho_wavefunction(z_points, self.sho_omega, self.mass, nz)
+                for nz in range(self.Nkz)
+            ]
+        )
+
+        # List, list, list of amplitudes for each ikx, iky, ikz
+        eigenvector_array = np.reshape(eigenvector, (self.Nkx0, self.Nkx1, self.Nkz))
+
+        # List, list, list of amplitudes for each ix, iy, ikz
+        # Use the "forward" norm to prevent the extra factor of 1/nx, 1/ny here
+        ft_points = np.fft.ifft2(eigenvector_array, axes=(0, 1), norm="forward")
+
+        # List, list, list, list of amplitudes for each ix, iy, ikz, iz
+        points_each_iz = np.multiply(
+            ft_points[:, :, :, np.newaxis],
+            sho_wavefunctions[np.newaxis, np.newaxis, :, :],
+        )
+        # Sum over sho wavefunctions for each ikz
+        bloch_points = np.sum(points_each_iz, axis=2)
+
+        return bloch_points
+
+    def _get_fourier_coordinates_in_grid(
+        self, x0_lim: Tuple[int, int] = (0, 1), x1_lim: Tuple[int, int] = (0, 1)
+    ) -> NDArray:
+        nx0 = x0_lim[1] - x0_lim[0]
+        nx1 = x1_lim[1] - x1_lim[0]
+        # Create a fake surface config containing the whole region in a single unit cell
+        xy_shape = (self.Nkx0 * nx0, self.Nkx1 * nx1)
+        config: SurfaceConfig = {
+            "delta_x0": (
+                nx0 * self.delta_x0[0],
+                nx0 * self.delta_x0[1],
+            ),
+            "delta_x1": (
+                nx1 * self.delta_x1[0],
+                nx1 * self.delta_x1[1],
+            ),
+        }
+        xy_points = get_surface_xy_points(config, xy_shape)
+        xy_points[:, :, 0] += (
+            x0_lim[0] * self.delta_x0[0] + x1_lim[0] * self.delta_x1[0]
+        )
+        xy_points[:, :, 1] += (
+            x0_lim[0] * self.delta_x0[1] + x1_lim[0] * self.delta_x1[1]
+        )
+        return xy_points
+
     def calculate_wavefunction_slow_grid_fourier(
         self,
         eigenstate: Eigenstate,
         z_points: List[float],
-        cutoff: int | None = None,
+        x0_lim: Tuple[int, int] = (0, 1),
+        x1_lim: Tuple[int, int] = (0, 1),
     ) -> NDArray:
+        """
+        Parameters
+        ----------
+        eigenstate : Eigenstate
+        z_points   : List[float]
+        x0_lim     : Tuple[int, int], optional
+            Region to sample the wavefunction in the x0 direction, exclusive on the second argument.
+        x0_lim     : Tuple[int, int], optional
+            Region to sample the wavefunction in the x1 direction, exclusive on the second argument.
 
-        sho_wavefunctions = [
-            calculate_sho_wavefunction(z_points, self.sho_omega, self.mass, nz)
-            for nz in range(self.Nkz)
-        ]
-        xy_shape = (self.Nkx, self.Nky)
-        xy_points = get_surface_xy_points(self._config, xy_shape).reshape(*xy_shape, 2)
+
+        Returns
+        -------
+        NDArray
+            An array containing the wavefunction amplitudes as a list[list[list[complex]]]
+            of amplitudes for each ix, iy, iz
+
+        """
+
+        xy_points = self._get_fourier_coordinates_in_grid(x0_lim, x1_lim)
 
         kx = eigenstate["kx"]
         ky = eigenstate["ky"]
         phase_points = np.exp(1j * (xy_points[:, :, 0] * kx + xy_points[:, :, 1] * ky))
 
-        eigenvector_array = np.reshape(
-            eigenstate["eigenvector"], (self.Nkx, self.Nky, self.Nkz)
+        # Bloch wavevector ignoring overall phase
+        bloch_points = self.calculate_bloch_wavefunction_fourier(
+            eigenstate["eigenvector"], z_points
         )
-        ft_points = np.fft.fftn(eigenvector_array, axis=(0, 1))
+        # The bloch wavefunctions (by definition) repeat in each unit cell
+        nx0 = x0_lim[1] - x0_lim[0]
+        nx1 = x1_lim[1] - x1_lim[0]
+        repeated_bloch_points = np.tile(bloch_points, (nx0, nx1, 1))
 
-        out = np.zeros(shape=(points.shape[0]), dtype=complex)
+        # Multiply each x, y point by the corresponding phase
+        return repeated_bloch_points * phase_points[:, :, np.newaxis]
 
     def calculate_wavefunction_fast(
         self,

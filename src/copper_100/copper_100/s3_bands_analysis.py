@@ -33,22 +33,22 @@ def load_copper_eigenvalues(path: Path) -> CopperEigenvalues:
 
 def generate_copper_eigenvalues():
 
-    # hamiltonian = generate_hamiltonian(resolution=(25, 25, 16))
+    hamiltonian = generate_hamiltonian(resolution=(25, 25, 16))
 
-    # eigenvalues_origin, _ = hamiltonian.calculate_eigenvalues(0, 0)
-    # sorted_eigenvalues_origin = np.sort(eigenvalues_origin)
+    eigenvalues_origin, _ = hamiltonian.calculate_eigenvalues(0, 0)
+    sorted_eigenvalues_origin = np.sort(eigenvalues_origin)
 
-    # max_kx = (np.abs(hamiltonian.dkx0[0]) + np.abs(hamiltonian.dkx1[0])) / 2
-    # max_ky = (np.abs(hamiltonian.dkx0[1]) + np.abs(hamiltonian.dkx1[1])) / 2
-    # eigenvalues_k_max, _ = hamiltonian.calculate_eigenvalues(max_kx, max_ky)
-    # sorted_eigenvalues_k_max = np.sort(eigenvalues_k_max)
+    max_kx = (np.abs(hamiltonian.dkx0[0]) + np.abs(hamiltonian.dkx1[0])) / 2
+    max_ky = (np.abs(hamiltonian.dkx0[1]) + np.abs(hamiltonian.dkx1[1])) / 2
+    eigenvalues_k_max, _ = hamiltonian.calculate_eigenvalues(max_kx, max_ky)
+    sorted_eigenvalues_k_max = np.sort(eigenvalues_k_max)
 
-    # values_not_relaxed: CopperEigenvalues = {
-    #     "center": sorted_eigenvalues_origin.tolist(),
-    #     "k_max": sorted_eigenvalues_k_max.tolist(),
-    # }
-    # path = get_data_path("copper_eigenvalues_not_relaxed.json")
-    # save_copper_eigenvalues(values_not_relaxed, path)
+    values_not_relaxed: CopperEigenvalues = {
+        "center": sorted_eigenvalues_origin.tolist(),
+        "k_max": sorted_eigenvalues_k_max.tolist(),
+    }
+    path = get_data_path("copper_eigenvalues_not_relaxed.json")
+    save_copper_eigenvalues(values_not_relaxed, path)
 
     hamiltonian = generate_hamiltonian_relaxed(resolution=(21, 21, 15))
 

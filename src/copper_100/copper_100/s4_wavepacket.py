@@ -16,7 +16,7 @@ from surface_potential_analysis.hamiltonian import generate_energy_eigenstates_g
 from surface_potential_analysis.wavepacket_grid import (
     calculate_wavepacket_grid,
     calculate_wavepacket_grid_copper,
-    calculate_wavepacket_grid_new,
+    calculate_wavepacket_grid_fourier,
     get_wavepacket_grid_coordinates,
     save_wavepacket_grid,
 )
@@ -227,7 +227,7 @@ def generate_wavepacket_grid_new_relaxed():
     normalized = normalize_eigenstate_phase_copper(eigenstates)
 
     util = EigenstateConfigUtil(eigenstates["eigenstate_config"])
-    wavepacket = calculate_wavepacket_grid_new(
+    wavepacket = calculate_wavepacket_grid_fourier(
         normalized,
         z_points=np.linspace(-util.characteristic_z, util.characteristic_z, 5).tolist(),
     )

@@ -40,14 +40,14 @@ class SurfaceHamiltonianUtil(EigenstateConfigUtil):
         self._potential = potential
         self._potential_offset = potential_offset
 
-        if 2 * (self.Nkx - 1) > self.Nx:
-            print(self.Nkx, self.Nx)
+        if 2 * (self.Nkx0 - 1) > self.Nx:
+            print(self.Nkx0, self.Nx)
             raise AssertionError(
                 "Potential does not have enough resolution in x direction"
             )
 
-        if 2 * (self.Nky - 1) > self.Ny:
-            print(self.Nky, self.Ny)
+        if 2 * (self.Nkx1 - 1) > self.Ny:
+            print(self.Nkx1, self.Ny)
             raise AssertionError(
                 "Potential does not have enough resolution in y direction"
             )
@@ -218,6 +218,7 @@ def generate_energy_eigenstates_from_k_points(
     *,
     save_bands: Dict[int, Path],
 ) -> None:
+    input("Warning: this might overwrite previous data. Press enter to continue...")
     for path in save_bands.values():
         data: EnergyEigenstates = {
             "kx_points": [],

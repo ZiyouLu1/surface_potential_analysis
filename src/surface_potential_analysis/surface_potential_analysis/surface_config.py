@@ -14,10 +14,18 @@ class SurfaceConfig(TypedDict):
     """lattice vector in the x1 direction"""
 
 
-def get_surface_xy_points(surface: SurfaceConfig, shape: Tuple[int, int]) -> NDArray:
-    return grid_space(
+def get_surface_xy_points(
+    surface: SurfaceConfig,
+    shape: Tuple[int, int],
+    *,
+    offset: Tuple[float, float] = (0.0, 0.0)
+) -> NDArray:
+    xy_points = grid_space(
         surface["delta_x0"], surface["delta_x1"], shape=shape, endpoint=False
     )
+    xy_points[:, 0] -= offset[0]
+    xy_points[:, 1] -= offset[1]
+    return xy_points.reshape(*shape, 2)
 
 
 def get_reciprocal_surface(surface: SurfaceConfig) -> SurfaceConfig:
@@ -32,7 +40,7 @@ def get_surface_coordinates(
     *,
     offset: Tuple[float, float] = (0.0, 0.0)
 ) -> NDArray:
-    xy_points = get_surface_xy_points(surface, shape).reshape(*shape, 2)
+    xy_points = get_surface_xy_points(surface, shape, offset=offset)
     nz = len(z_points)
 
     tiled_x = np.tile(xy_points[:, :, 0], (nz, 1, 1)).swapaxes(0, 1).swapaxes(1, 2)

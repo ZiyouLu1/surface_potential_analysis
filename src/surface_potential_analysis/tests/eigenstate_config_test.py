@@ -5,11 +5,15 @@ import unittest
 import numpy as np
 from scipy.constants import hbar
 
+import hamiltonian_generator
+from surface_potential_analysis.eigenstate import Eigenstate
 from surface_potential_analysis.energy_eigenstate import (
     EigenstateConfig,
     EigenstateConfigUtil,
     get_brillouin_points_irreducible_config,
 )
+from surface_potential_analysis.sho_wavefunction import calculate_sho_wavefunction
+from surface_potential_analysis.surface_config import get_surface_coordinates
 
 
 def generate_eigenstates_grid_points_100(
@@ -78,29 +82,29 @@ class TestEigenstateConfig(unittest.TestCase):
         }
         util = EigenstateConfigUtil(config)
 
-        nkx_points = util.nkx_points
+        nkx_points = util.nkx0_points
         expected = np.concatenate(
             (np.arange(0, math.ceil(Nkx / 2)), np.arange(-math.floor(Nkx / 2), 0))
         )
         np.testing.assert_array_equal(nkx_points, expected)
 
-        nky_points = util.nky_points
+        nky_points = util.nkx1_points
         expected = np.concatenate(
             (np.arange(0, math.ceil(Nky / 2)), np.arange(-math.floor(Nky / 2), 0))
         )
         np.testing.assert_array_equal(nky_points, expected)
 
     def test_get_all_coordinates(self) -> None:
-        Nkx = random.randrange(1, 20)
-        Nky = random.randrange(1, 20)
-        Nz = random.randrange(1, 100)
+        Nkx = random.randrange(1, 40)
+        Nky = random.randrange(1, 40)
+        Nkz = random.randrange(1, 25)
 
         config: EigenstateConfig = {
             "mass": 1,
             "sho_omega": 1 / hbar,
             "delta_x0": (2 * np.pi * hbar, 0),
             "delta_x1": (0, 2 * np.pi * hbar),
-            "resolution": (Nkx, Nky, Nz),
+            "resolution": (Nkx, Nky, Nkz),
         }
         util = EigenstateConfigUtil(config)
         coords = util.eigenstate_indexes
@@ -108,16 +112,16 @@ class TestEigenstateConfig(unittest.TestCase):
             self.assertEqual(util.get_index(nkx, nky, nz), i)
 
     def test_get_index(self) -> None:
-        nkx = random.randrange(1, 20)
-        nky = random.randrange(1, 20)
-        nz = random.randrange(1, 100)
+        Nkx = random.randrange(1, 40)
+        Nky = random.randrange(1, 40)
+        Nkz = random.randrange(1, 25)
 
         config: EigenstateConfig = {
             "mass": 1,
             "sho_omega": 1 / hbar,
             "delta_x0": (2 * np.pi * hbar, 0),
             "delta_x1": (0, 2 * np.pi * hbar),
-            "resolution": (nkx, nky, nz),
+            "resolution": (Nkx, Nky, Nkz),
         }
         util = EigenstateConfigUtil(config)
 
@@ -152,10 +156,11 @@ class TestEigenstateConfig(unittest.TestCase):
         }
 
         util = EigenstateConfigUtil(config)
-        kx = 0
-        ky = 0
+        kx = np.random.rand() * (np.abs(util.dkx0[0]) + np.abs(util.dkx1[0])) / 2
+        ky = np.random.rand() * (np.abs(util.dkx0[1]) + np.abs(util.dkx1[1])) / 2
 
-        eigenvector = np.random.rand(util.eigenstate_indexes.shape[0]).tolist()
+        sample = np.random.normal(size=util.eigenstate_indexes.shape[0])
+        eigenvector = (sample / np.linalg.norm(sample)).tolist()
         points = [[1, 1, 1]]
 
         expected = util.calculate_wavefunction_slow(
@@ -164,6 +169,35 @@ class TestEigenstateConfig(unittest.TestCase):
         actual = util.calculate_wavefunction_fast(
             {"eigenvector": eigenvector, "kx": kx, "ky": ky}, points
         )
+
+        np.testing.assert_allclose(expected, actual)
+
+    def test_calculate_wavefunction_fourier(self) -> None:
+        config: EigenstateConfig = {
+            "mass": hbar**2,
+            "sho_omega": 1 / hbar,
+            "delta_x0": (2 * np.pi, 0),
+            "delta_x1": (0, 2 * np.pi),
+            "resolution": (10, 10, 14),
+        }
+        util = EigenstateConfigUtil(config)
+        kx = np.random.rand() * (np.abs(util.dkx0[0]) + np.abs(util.dkx1[0])) / 2
+        ky = np.random.rand() * (np.abs(util.dkx0[1]) + np.abs(util.dkx1[1])) / 2
+
+        sample = np.random.normal(size=util.eigenstate_indexes.shape[0])
+        eigenvector = (sample / np.linalg.norm(sample)).tolist()
+
+        z_points = [0]
+        points = get_surface_coordinates(
+            config, (config["resolution"][0], config["resolution"][1]), z_points
+        ).reshape(-1, 3)
+
+        actual = util.calculate_wavefunction_slow_grid_fourier(
+            {"eigenvector": eigenvector, "kx": kx, "ky": ky}, z_points
+        )
+        expected = util.calculate_wavefunction_slow(
+            {"eigenvector": eigenvector, "kx": kx, "ky": ky}, points
+        ).reshape(actual.shape)
 
         np.testing.assert_allclose(expected, actual)
 
@@ -215,3 +249,115 @@ class TestEigenstateConfig(unittest.TestCase):
         np.testing.assert_allclose(
             center, y_offset * np.exp(-1j * ky * util.delta_x1[1])
         )
+
+    def test_calculate_sho_wavefunction(self) -> None:
+        mass = hbar**2
+        sho_omega = 1 / hbar
+        z_points = np.linspace(-10, 10, np.random.randint(0, 1000))
+
+        norm = np.sqrt(mass * sho_omega / hbar)
+
+        phi_0_norm = np.sqrt(norm / np.sqrt(np.pi))
+        phi_0_expected = phi_0_norm * np.exp(-((z_points * norm) ** 2) / 2)
+        phi_0_actual = calculate_sho_wavefunction(z_points, sho_omega, mass, 0)
+
+        np.testing.assert_allclose(phi_0_expected, phi_0_actual)
+
+        phi_1_norm = np.sqrt(2 * norm / np.sqrt(np.pi))
+        phi_1_expected = phi_1_norm * z_points * np.exp(-((z_points * norm) ** 2) / 2)
+        phi_1_actual = calculate_sho_wavefunction(z_points, sho_omega, mass, 1)
+
+        np.testing.assert_allclose(phi_1_expected, phi_1_actual)
+
+        phi_2_norm = np.sqrt(norm / (2 * np.sqrt(np.pi)))
+        phi_2_poly = (2 * z_points**2 - 1) * np.exp(-((z_points * norm) ** 2) / 2)
+        phi_2_expected = phi_2_norm * phi_2_poly
+        phi_2_actual = calculate_sho_wavefunction(z_points, sho_omega, mass, 2)
+
+        np.testing.assert_allclose(phi_2_expected, phi_2_actual)
+
+        phi_3_norm = np.sqrt(norm / (3 * np.sqrt(np.pi)))
+        phi_3_poly = (2 * z_points**3 - 3 * z_points) * np.exp(
+            -((z_points * norm) ** 2) / 2
+        )
+        phi_3_expected = phi_3_norm * phi_3_poly
+        phi_3_actual = calculate_sho_wavefunction(z_points, sho_omega, mass, 3)
+
+        np.testing.assert_allclose(phi_3_expected, phi_3_actual)
+
+    def test_get_sho_rust(self) -> None:
+        mass = hbar**2 * random.random()
+        sho_omega = random.random() / hbar
+        z_points = np.linspace(-20 * random.random(), 20 * random.random(), 1000)
+
+        for n in range(14):
+            actual = hamiltonian_generator.get_sho_wavefunction(
+                z_points.tolist(), sho_omega, mass, n
+            )
+            expected = calculate_sho_wavefunction(z_points, sho_omega, mass, n)
+
+            np.testing.assert_allclose(actual, expected)
+
+    def test_wavefunction_normalization_z(self) -> None:
+        Nkx = np.random.randint(1, 10)
+        Nky = np.random.randint(1, 10)
+        config: EigenstateConfig = {
+            "mass": hbar**2,
+            "sho_omega": 1 / hbar,
+            "delta_x0": (2 * np.pi * hbar, 0),
+            "delta_x1": (0, 2 * np.pi * hbar),
+            "resolution": (Nkx, Nky, 14),
+        }
+
+        util = EigenstateConfigUtil(config)
+        for iz in range(util.Nkz):
+            eigenvector = np.zeros(shape=util.eigenstate_indexes.shape[0])
+            eigenvector[util.get_index(0, 0, iz)] = 1
+            eigenstate: Eigenstate = {
+                "eigenvector": eigenvector.tolist(),
+                "kx": 0,
+                "ky": 0,
+            }
+            delta_z = 16 * util.characteristic_z
+            n = 2000
+            z_points = np.linspace(-delta_z / 2, delta_z / 2, n)
+            points = [[0, 0, z] for z in z_points]
+            wavefunction = util.calculate_wavefunction_fast(eigenstate, points)
+            # note dz = delta_z / n
+            norm = np.sum(np.square(np.abs(wavefunction))) * delta_z / n
+
+            self.assertAlmostEqual(1, norm, places=2, msg=f"failed for iz={iz}")
+
+    def test_wavefunction_normalization_xyz(self) -> None:
+        Nkx = np.random.randint(1, 10)
+        Nky = np.random.randint(1, 10)
+        config: EigenstateConfig = {
+            "mass": hbar**2,
+            "sho_omega": 1 / hbar,
+            "delta_x0": (2 * np.pi * hbar, 0),
+            "delta_x1": (0, 2 * np.pi * hbar),
+            "resolution": (Nkx, Nky, 14),
+        }
+
+        util = EigenstateConfigUtil(config)
+        for iz in range(util.Nkz):
+            eigenvector = np.zeros(shape=util.eigenstate_indexes.shape[0])
+            eigenvector[util.get_index(0, 0, iz)] = 1
+            eigenstate: Eigenstate = {
+                "eigenvector": eigenvector.tolist(),
+                "kx": 0,
+                "ky": 0,
+            }
+            delta_z = 16 * util.characteristic_z
+            nz = 10000
+            z_points = np.linspace(-delta_z / 2, delta_z / 2, nz)
+            wavefunction = util.calculate_wavefunction_slow_grid_fourier(
+                eigenstate, z_points
+            )
+            nx = wavefunction.shape[0]
+            ny = wavefunction.shape[1]
+            n = nx * ny * nz
+            # note dz = delta_z / n
+            norm = np.sum(np.square(np.abs(wavefunction))) * delta_z / n
+
+            self.assertAlmostEqual(1, norm, places=3, msg=f"failed for iz={iz}")

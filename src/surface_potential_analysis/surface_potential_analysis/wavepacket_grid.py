@@ -11,11 +11,7 @@ from .energy_eigenstate import (
     EnergyEigenstates,
     get_eigenstate_list,
 )
-from .surface_config import (
-    SurfaceConfig,
-    get_surface_coordinates,
-    get_surface_xy_points,
-)
+from .surface_config import SurfaceConfig, get_surface_coordinates
 
 
 class WavepacketGrid(SurfaceConfig):
@@ -192,11 +188,6 @@ def mask_negative_wavepacket(wavepacket: WavepacketGrid) -> WavepacketGrid:
     }
 
 
-def get_wavepacket_grid_xy_points(grid: WavepacketGrid) -> NDArray:
-    points = np.real(grid["points"])
-    return get_surface_xy_points(grid, (points.shape[0], points.shape[1]))
-
-
 def get_wavepacket_grid_coordinates(
     grid: WavepacketGrid, *, offset: Tuple[float, float] = (0.0, 0.0)
 ) -> NDArray:
@@ -225,37 +216,43 @@ def calculate_wavepacket_grid_copper(
     )
 
 
-def calculate_wavepacket_grid_new(
-    eigenstates: EnergyEigenstates, z_points: List[float]
+def calculate_wavepacket_grid_fourier(
+    eigenstates: EnergyEigenstates,
+    z_points: List[float],
+    x0_lim: Tuple[int, int] = (0, 1),
+    x1_lim: Tuple[int, int] = (0, 1),
 ):
     """
     Since we generate the energy eigenstates from a limited number of k states in
     the x0, x1 direction we do not have the information necessary to properly interpolate
-
+    to spacing on a finer mesh than the fourier transform
     """
     util = EigenstateConfigUtil(eigenstates["eigenstate_config"])
-    shape = (2 * util.resolution[0], 2 * util.resolution[1], len(z_points))
-    print(shape)
+    nx0 = x0_lim[1] - x0_lim[0]
+    nx1 = x1_lim[1] - x1_lim[0]
+    shape = (util.resolution[0] * nx0, util.resolution[1] * nx1, len(z_points))
+
     grid: WavepacketGrid = {
         "delta_x0": (
-            2 * eigenstates["eigenstate_config"]["delta_x0"][0],
-            2 * eigenstates["eigenstate_config"]["delta_x0"][1],
+            eigenstates["eigenstate_config"]["delta_x0"][0] * nx0,
+            eigenstates["eigenstate_config"]["delta_x0"][1] * nx0,
         ),
         "delta_x1": (
-            2 * eigenstates["eigenstate_config"]["delta_x1"][0],
-            2 * eigenstates["eigenstate_config"]["delta_x1"][1],
+            eigenstates["eigenstate_config"]["delta_x1"][0] * nx1,
+            eigenstates["eigenstate_config"]["delta_x1"][1] * nx1,
         ),
         "z_points": z_points,
         "points": np.empty(shape).tolist(),
     }
-    coordinates = get_surface_coordinates(grid, (shape[0], shape[1]), z_points)
-    coordinates_flat = coordinates.reshape(-1, 3)
 
     points = np.zeros(shape, dtype=complex)
     for eigenstate in get_eigenstate_list(eigenstates):
         print(eigenstate["kx"], eigenstate["ky"])
-        wfn = util.calculate_wavefunction_fast(eigenstate, coordinates_flat)
-        points += wfn.reshape(shape) / len(eigenstates["eigenvectors"])
+
+        wfn = util.calculate_wavefunction_slow_grid_fourier(
+            eigenstate, z_points, x0_lim, x1_lim
+        )
+        points += wfn / np.sqrt(len(eigenstates["eigenvectors"]))
 
     grid["points"] = points.tolist()
     return grid
@@ -290,7 +287,9 @@ def calculate_wavepacket_grid(
     for eigenstate in get_eigenstate_list(eigenstates):
         print(eigenstate["kx"], eigenstate["ky"])
         wfn = util.calculate_wavefunction_fast(eigenstate, coordinates_flat)
-        points += wfn.reshape(shape) / len(eigenstates["eigenvectors"])
+        points += wfn.reshape(shape) / np.sqrt(len(eigenstates["eigenvectors"]))
+        # wfn = util.calculate_wavefunction_slow_grid_fourier(eigenstate, z_points)
+        # points += wfn / len(eigenstates["eigenvectors"])
 
     grid["points"] = points.tolist()
     return grid

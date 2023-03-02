@@ -26,6 +26,7 @@ from surface_potential_analysis.energy_eigenstate import (
 from surface_potential_analysis.energy_eigenstates_plot import plot_eigenstate_positions
 from surface_potential_analysis.wavepacket_grid import (
     calculate_wavepacket_grid,
+    calculate_wavepacket_grid_fourier,
     load_wavepacket_grid_legacy,
     save_wavepacket_grid,
 )
@@ -38,9 +39,9 @@ from .surface_data import get_data_path, save_figure
 
 
 def plot_wavepacket_points():
-    path = get_data_path("eigenstates_grid.json")
+    path = get_data_path("eigenstates_grid_0.json")
     eigenstates = load_energy_eigenstates(path)
-    
+
     fig, _, _ = plot_eigenstate_positions(eigenstates)
     fig.show()
 
@@ -351,3 +352,94 @@ def plot_wavepacket_points_me():
     fig.show()
     input()
     save_figure(fig, "my_wavepacket_points.png")
+
+
+def plot_wavepacket_grid_all_equal():
+    """
+    Does the imaginary oscillation in the imaginary part of the wavefunction happen
+    if we choose a constant bloch wavefunction for all k
+    """
+    path = get_data_path(f"eigenstates_grid_{0}.json")
+    eigenstates = load_energy_eigenstates(path)
+    util = EigenstateConfigUtil(eigenstates["eigenstate_config"])
+    eigenvector = np.zeros(np.prod(util.resolution))
+    eigenvector[util.get_index(0, 0, 0)] = 1
+    eigenstates["eigenvectors"] = [
+        eigenvector.tolist() for _ in eigenstates["eigenvectors"]
+    ]
+
+    z_points = [0]
+    grid = calculate_wavepacket_grid_fourier(
+        eigenstates, z_points, x0_lim=(0, 10), x1_lim=(0, 10)
+    )
+
+    fig, _, _anim0 = animate_wavepacket_grid_3D_in_xy(grid, norm="symlog")
+    fig.show()
+
+    fig, _, _anim0 = animate_wavepacket_grid_3D_in_xy(
+        grid, norm="symlog", measure="real"
+    )
+    fig.show()
+
+    fig, _, _anim0 = animate_wavepacket_grid_3D_in_xy(
+        grid, norm="symlog", measure="imag"
+    )
+    fig.show()
+    input()
+
+
+def plot_wavepacket_grid():
+
+    path = get_data_path(f"eigenstates_grid_{0}.json")
+    eigenstates = load_energy_eigenstates(path)
+    eigenstates = normalize_eigenstate_phase(eigenstates, (0, 0, 0))
+
+    z_points = [0]
+    grid = calculate_wavepacket_grid_fourier(
+        eigenstates, z_points, x0_lim=(0, 10), x1_lim=(0, 10)
+    )
+
+    fig, _, _anim0 = animate_wavepacket_grid_3D_in_xy(grid, norm="symlog")
+    fig.show()
+
+    fig, _, _anim0 = animate_wavepacket_grid_3D_in_xy(
+        grid, norm="symlog", measure="real"
+    )
+    fig.show()
+
+    fig, _, _anim0 = animate_wavepacket_grid_3D_in_xy(
+        grid, norm="symlog", measure="imag"
+    )
+    fig.show()
+    input()
+
+    util = EigenstateConfigUtil(eigenstates["eigenstate_config"])
+    path = get_data_path(f"eigenstates_grid_{1}.json")
+    eigenstates = load_energy_eigenstates(path)
+    eigenstates = normalize_eigenstate_phase(
+        eigenstates,
+        (
+            (util.delta_x0[0] + util.delta_x1[0]) / 3,
+            (util.delta_x0[1] + util.delta_x1[1]) / 3,
+            0,
+        ),
+    )
+
+    z_points = [0]
+    grid = calculate_wavepacket_grid_fourier(
+        eigenstates, z_points, x0_lim=(0, 10), x1_lim=(0, 10)
+    )
+
+    fig, _, _anim0 = animate_wavepacket_grid_3D_in_xy(grid, norm="symlog")
+    fig.show()
+
+    fig, _, _anim0 = animate_wavepacket_grid_3D_in_xy(
+        grid, norm="symlog", measure="real"
+    )
+    fig.show()
+
+    fig, _, _anim0 = animate_wavepacket_grid_3D_in_xy(
+        grid, norm="symlog", measure="imag"
+    )
+    fig.show()
+    input()

@@ -5,6 +5,7 @@ from . import (
     s2_hamiltonian_plot,
     s3_eigenstates,
     s3_eigenstates_plot,
+    s4_wavepacket,
     surface_data,
 )
 
@@ -15,5 +16,6 @@ __all__ = [
     "s2_hamiltonian_plot",
     "s3_eigenstates",
     "s3_eigenstates_plot",
+    "s4_wavepacket",
     "surface_data",
 ]

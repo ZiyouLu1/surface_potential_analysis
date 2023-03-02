@@ -6,6 +6,7 @@ import numpy as np
 from surface_potential_analysis.eigenstate import EigenstateConfig, EigenstateConfigUtil
 from surface_potential_analysis.energy_eigenstate import (
     get_brillouin_points_irreducible_config,
+    load_energy_eigenstates,
     load_energy_eigenstates_legacy,
     normalize_eigenstate_phase,
 )
@@ -16,6 +17,7 @@ from surface_potential_analysis.hamiltonian import (
 )
 from surface_potential_analysis.wavepacket_grid import (
     calculate_wavepacket_grid,
+    calculate_wavepacket_grid_fourier,
     save_wavepacket_grid,
 )
 
@@ -107,3 +109,19 @@ def generate_eigenstates_grid():
     save_bands = {k: get_data_path(f"eigenstates_grid_{k}.json") for k in range(20)}
 
     generate_energy_eigenstates_grid(h, size=(4, 4), save_bands=save_bands)
+
+
+def generate_wavepacket_grid() -> None:
+    for k in range(1):
+        path = get_data_path(f"eigenstates_grid_{k}.json")
+        eigenstates = load_energy_eigenstates(path)
+        eigenstates = normalize_eigenstate_phase(eigenstates, (0, 0, 0))
+
+        util = EigenstateConfigUtil(eigenstates["eigenstate_config"])
+        z_points = np.linspace(
+            -8 * util.characteristic_z, 8 * util.characteristic_z, 10000
+        ).tolist()
+
+        grid = calculate_wavepacket_grid_fourier(eigenstates, z_points)
+        path = get_data_path(f"wavepacket_grid_{k}_traditional.json")
+        save_wavepacket_grid(grid, path)

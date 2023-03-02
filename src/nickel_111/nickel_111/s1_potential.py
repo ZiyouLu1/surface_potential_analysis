@@ -6,7 +6,6 @@ from surface_potential_analysis.brillouin_zone import get_coordinate_fractions
 from surface_potential_analysis.energy_data import (
     EnergyGrid,
     EnergyPoints,
-    get_energy_grid_xy_points,
     get_ft_phases,
     interpolate_energy_grid_fourier,
     interpolate_energy_grid_z_spline,
@@ -18,6 +17,7 @@ from surface_potential_analysis.energy_data import (
     truncate_energy,
     undo_truncate_energy,
 )
+from surface_potential_analysis.surface_config import get_surface_xy_points
 
 from .surface_data import get_data_path
 
@@ -117,18 +117,17 @@ def interpolate_points_fourier_nickel(
     Given a uniform grid of points in the reciprocal spacing interpolate
     a grid of points with the given shape into the real spacing using the fourier transform
     """
-    ft_potential = np.fft.ifft2(points)
+    ft_potential = np.fft.fft2(points, axes=(0, 1), norm="forward")
     ft_phases = get_ft_phases((ft_potential.shape[0], ft_potential.shape[1]))
 
     # List of [x1_frac, x2_frac] for the interpolated grid
-    coordinates = get_energy_grid_xy_points(
+    coordinates = get_surface_xy_points(
         {
             "delta_x0": delta_x0_real,
             "delta_x1": delta_x1_real,
-            "points": np.zeros(shape=(*shape, 1)).tolist(),
-            "z_points": [0],
-        }
-    )
+        },
+        shape=shape,
+    ).reshape(-1, 2)
     fractions = get_coordinate_fractions(
         delta_x0_reciprocal, delta_x1_reciprocal, coordinates
     )
@@ -139,13 +138,16 @@ def interpolate_points_fourier_nickel(
         ft_phases[np.newaxis, :, :, :],
     )
     # Sum over phase from x and y, raise to exp(-i * phi)
-    summed_phases = np.exp(-1j * np.sum(interpolated_phases, axis=-1))
+    summed_phases = np.exp(1j * np.sum(interpolated_phases, axis=-1))
     # Multiply the exponential by the prefactor form the fourier transform
     # Add the contribution from each ikx1, ikx2
     interpolated_points = np.sum(
         np.multiply(ft_potential[np.newaxis, :, :], summed_phases), axis=(1, 2)
     )
-    return np.real_if_close(interpolated_points).reshape(shape).tolist()
+    np.testing.assert_array_almost_equal(
+        interpolated_points, np.abs(interpolated_points)
+    )
+    return np.abs(interpolated_points).reshape(shape).tolist()
 
 
 def interpolate_energy_grid_xy_fourier_nickel(
@@ -203,8 +205,8 @@ def load_cleaned_energy_grid():
 
 
 def generate_interpolated_data():
-    raw = load_raw_data_reciprocal_grid()
-    normalized = normalize_energy(raw)
+    raw_grid = load_raw_data_reciprocal_grid()
+    normalized = normalize_energy(raw_grid)
     truncated = truncate_energy(normalized, cutoff=0.4e-18, n=1, offset=1e-20)
 
     raw_data = load_raw_data()
