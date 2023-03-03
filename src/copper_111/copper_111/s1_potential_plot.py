@@ -249,12 +249,12 @@ def plot_potential_minimum_along_diagonal():
 def plot_potential_minimum_along_edge():
     interpolation = load_interpolated_grid()
     fig, ax = plt.subplots()
-
     path = [
-        (np.shape(interpolation["points"])[0] - (1 + x), x)
+        (np.shape(interpolation["points"])[0] - (x), x)
         for x in range(np.shape(interpolation["points"])[0])
     ]
-    print(path)
+    # Add a fake point here so they line up. path[0] is not included in the unit cell
+    path[0] = path[2]
     _, _, line = plot_potential_minimum_along_path(interpolation, path, ax=ax)
     line.set_label("diagonal")
 
@@ -269,6 +269,7 @@ def plot_potential_minimum_along_edge():
     ax.legend()
     fig.show()
     ax.set_title(
-        "plot of the potential along the edge and off diagonal. All three should be identical"
+        "plot of the potential along the edge and off diagonal."
+        "\nAll three should be identical"
     )
     input()

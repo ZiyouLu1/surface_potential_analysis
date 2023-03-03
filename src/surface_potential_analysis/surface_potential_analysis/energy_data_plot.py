@@ -8,6 +8,9 @@ from matplotlib.axes import Axes
 from matplotlib.collections import QuadMesh
 from matplotlib.figure import Figure
 from matplotlib.lines import Line2D
+from numpy.typing import ArrayLike, NDArray
+
+from surface_potential_analysis.surface_config import get_surface_xy_points
 
 from .energy_data import (
     EnergyGrid,
@@ -455,6 +458,29 @@ def plot_energy_point_locations_on_grid(
     return fig, ax, ani
 
 
+def calculate_cumulative_distances_along_path(path: ArrayLike, coordinates: NDArray):
+    """
+    Get a list of cumulative distances along a path (List[coordinate]) given a grid of coordinates
+
+    Parameters
+    ----------
+    path : NDArray
+        Path for which to calculate the distance along (as a list of coordinates)
+    coordinates : NDArray
+        Coordinate grid, with the same simension as the coordinates given in the path
+    """
+    coordinate_shape = np.shape(coordinates)[0:-1]
+    path_index = np.ravel_multi_index(
+        np.moveaxis(path, -1, 0), coordinate_shape  # type:ignore
+    )
+    path_coordinates = coordinates.reshape(-1, coordinates.shape[-1])[path_index]
+
+    distances = np.linalg.norm(path_coordinates[:-1] - path_coordinates[1:], axis=-1)
+    cum_distances = np.cumsum(distances)
+    # Add back initial distance
+    return np.insert(cum_distances, 0, 0)
+
+
 def plot_potential_minimum_along_path(
     grid: EnergyGrid, path: List[Tuple[int, int]], *, ax: Axes | None = None
 ) -> Tuple[Figure, Axes, Line2D]:
@@ -478,8 +504,14 @@ def plot_potential_minimum_along_path(
 
     path_arr = np.array(path)
     points = np.min(grid["points"], axis=-1)[path_arr[:, 0], path_arr[:, 1]]
-    (line,) = ax.plot(points)
-    ax.set_xlabel("Distance (AU)")
+
+    coordinates = get_surface_xy_points(
+        grid, (np.shape(grid["points"])[0], np.shape(grid["points"])[1])
+    )
+    distances = calculate_cumulative_distances_along_path(path, coordinates)
+
+    (line,) = ax.plot(distances, points)
+    ax.set_xlabel("Distance / M")
     ax.set_ylabel("Energy / J")
 
     return fig, ax, line

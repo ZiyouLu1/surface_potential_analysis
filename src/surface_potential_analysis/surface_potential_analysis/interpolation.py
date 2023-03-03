@@ -1,10 +1,12 @@
 from typing import List, Tuple
 
 import numpy as np
-from numpy.typing import ArrayLike
+from numpy.typing import ArrayLike, NDArray
 
 
-def interpolate_real_points_along_axis_fourier(points: ArrayLike, n: int, axis=-1):
+def interpolate_real_points_along_axis_fourier(
+    points: ArrayLike, n: int, axis=-1
+) -> NDArray:
     """
     Given a uniformly spaced (real) grid of points interpolate along the given
     axis to a new length n.
@@ -12,6 +14,20 @@ def interpolate_real_points_along_axis_fourier(points: ArrayLike, n: int, axis=-
     This makes use of the fact that the potential is real, and therefore if the
     input is even along the interpolation axis we get an additional ft point for 'free'
     using the hermitian property of the fourier transform
+
+    Parameters
+    ----------
+    points : ArrayLike
+        The initial set of points to interpolate
+    n : int
+        The number of points in the interpolated grid
+    axis : int, optional
+        The axis over which to interpolate, by default -1
+
+    Returns
+    -------
+    NDArray
+        The points interpolated along the given axis
     """
     # We use the forward norm here, as otherwise we would also need to
     # scale the ft_potential by a factor of n / shape[axis]

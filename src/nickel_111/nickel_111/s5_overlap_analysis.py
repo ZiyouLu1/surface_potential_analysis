@@ -9,6 +9,9 @@ from matplotlib.figure import Figure
 from matplotlib.lines import Line2D
 from numpy.typing import NDArray
 
+from surface_potential_analysis.energy_data_plot import (
+    calculate_cumulative_distances_along_path,
+)
 from surface_potential_analysis.surface_config import (
     SurfaceConfig,
     get_surface_xy_points,
@@ -83,8 +86,9 @@ def plot_overlap_transform_x0z(
     return fig, ax, mesh
 
 
-def plot_overlap_transform_along_diagonal(
+def plot_overlap_transform_along_path(
     overlap: OverlapTransform,
+    path: NDArray,
     kz_ind: int = 0,
     *,
     measure: Literal["real", "imag", "abs", "angle"] = "abs",
@@ -92,7 +96,10 @@ def plot_overlap_transform_along_diagonal(
 ) -> Tuple[Figure, Axes, Line2D]:
     fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
 
-    points = np.diag(overlap["points"][:, :, kz_ind])
+    overlap_shape = np.shape(overlap["points"])
+    points = np.fft.fftshift(overlap["points"], axes=(0, 1))[
+        path[:, 0], path[:, 1], kz_ind
+    ]
     if measure == "real":
         data = np.real(points)
     elif measure == "imag":
@@ -102,16 +109,53 @@ def plot_overlap_transform_along_diagonal(
     else:
         data = np.unwrap(np.angle(points))
 
-    kx1_points = np.fft.fftfreq(data.shape[0], np.linalg.norm(overlap["dkx1"]))
-    (line,) = ax.plot(np.fft.fftshift(kx1_points), np.fft.fftshift(data))
-    ax.set_xlabel("kx1 direction")
+    kxy_points = get_surface_xy_points(
+        {
+            "delta_x0": (
+                overlap["dkx0"][0] * overlap_shape[0],
+                overlap["dkx0"][1] * overlap_shape[0],
+            ),
+            "delta_x1": (
+                overlap["dkx1"][0] * overlap_shape[1],
+                overlap["dkx1"][1] * overlap_shape[1],
+            ),
+        },
+        shape=(overlap_shape[0], overlap_shape[1]),
+    )
 
+    distances = calculate_cumulative_distances_along_path(path, kxy_points)
+    (line,) = ax.plot(distances, data)
     return fig, ax, line
+
+
+def plot_overlap_transform_along_diagonal(
+    overlap: OverlapTransform,
+    kz_ind: int = 0,
+    *,
+    measure: Literal["real", "imag", "abs", "angle"] = "abs",
+    ax: Axes | None = None,
+) -> Tuple[Figure, Axes, Line2D]:
+
+    path = np.array([[i, i] for i in range(overlap["points"].shape[0])])
+    return plot_overlap_transform_along_path(
+        overlap, path, kz_ind, measure=measure, ax=ax
+    )
 
 
 def plot_overlap():
     path = get_data_path("overlap_transform_hcp_fcc.npz")
     overlap = load_overlap_transform(path)
+
+    ft = np.fft.fft2(overlap["points"], axes=(0, 1), norm="forward")
+    print(ft.shape)
+    # new_ft = np.zeros(
+    #     shape=(2 * ft.shape[0], 2 * ft.shape[1], ft.shape[2]), dtype="complex"
+    # )
+    # new_ft[46:138,46:138,:]
+    # ft[100:, :, :] = 0
+    # ft[:, 100:, :] = 0
+    # overlap["points"] = np.fft.ifft2(ft, axes=(0, 1), norm="forward")
+    overlap["points"] = np.fft.ifft2(ft[46:138,46:138,:], axes=(0, 1), norm="forward")
 
     fig, ax, _ = plot_overlap_transform_xy(overlap)
     ax.set_title(
@@ -236,3 +280,39 @@ def fit_overlap_transform():
     print("pcov", pcov)
 
     input()
+
+
+def calculate_max_overlap_transform(overlap: OverlapTransform):
+    points = overlap["points"]
+    xy_points = get_surface_xy_points(
+        {
+            "delta_x0": (
+                overlap["dkx0"][0] * points.shape[0],
+                overlap["dkx0"][1] * points.shape[0],
+            ),
+            "delta_x1": (
+                overlap["dkx1"][0] * points.shape[1],
+                overlap["dkx1"][1] * points.shape[1],
+            ),
+        },
+        shape=(points.shape[0], points.shape[1]),
+    )
+    (ikx0, ikx1, ikz) = np.unravel_index(np.argmax(np.abs(points)), shape=points.shape)
+    xy_points -= xy_points[points.shape[0] // 2, points.shape[1] // 2]
+
+    xy_point = xy_points[ikx0, ikx1]
+    return points[ikx0, ikx1, ikz], xy_point
+
+
+def print_max_overlaps():
+    path = get_data_path("overlap_transform_hcp_fcc.npz")
+    overlap = load_overlap_transform(path)
+    print(calculate_max_overlap_transform(overlap))
+
+    path = get_data_path("overlap_transform_fcc_fcc.npz")
+    overlap = load_overlap_transform(path)
+    print(calculate_max_overlap_transform(overlap))
+
+    path = get_data_path("overlap_transform_hcp_hcp.npz")
+    overlap = load_overlap_transform(path)
+    print(calculate_max_overlap_transform(overlap))

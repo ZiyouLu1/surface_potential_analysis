@@ -11,12 +11,12 @@
     "source.fixAll": true
   },
   "editor.formatOnSave": true,
+  "cSpell.allowCompoundWords": true,
+  "cSpell.flagWords": ["hte", "teh"],
   "cSpell.words": [
-    "allclose",
     "arange",
     "argmax",
     "argmin",
-    "argsort",
     "atol",
     "clim",
     "colorbar",
@@ -71,6 +71,9 @@
   "[json]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
+  "autoDocstring.docstringFormat": "numpy",
+  "autoDocstring.generateDocstringOnEnter": true,
+  "autoDocstring.startOnNewLine": true,
   "rust-analyzer.linkedProjects": ["./src/hamiltonian_generator/Cargo.toml"],
   "rust-analyzer.checkOnSave.command": "clippy",
   "python.analysis.extraPaths": [
