@@ -1,5 +1,4 @@
 import math
-from typing import List, Tuple
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -18,7 +17,7 @@ def plot_energy_with_sho_potential(
     interpolation: EnergyInterpolation,
     eigenstate_config: EigenstateConfig,
     z_offset: float,
-    xy_ind: Tuple[int, int],
+    xy_ind: tuple[int, int],
     *,
     ax: Axes | None = None,
 ) -> tuple[Figure, Axes]:
@@ -56,7 +55,7 @@ def plot_energy_with_sho_potential_at_hollow(
     z_offset: float,
     *,
     ax: Axes | None = None,
-) -> Tuple[Figure, Axes]:
+) -> tuple[Figure, Axes]:
     points = np.array(interpolation["points"])
     middle_x_index = math.floor(points.shape[0] / 2)
     middle_y_index = math.floor(points.shape[1] / 2)
@@ -77,7 +76,7 @@ def plot_energy_with_sho_potential_at_minimum(
     z_offset: float,
     *,
     ax: Axes | None = None,
-) -> Tuple[Figure, Axes]:
+) -> tuple[Figure, Axes]:
     points = np.array(interpolation["points"], dtype=float)
     arg_min = np.unravel_index(np.argmin(points), points.shape)
     xy_ind = (int(arg_min[0]), int(arg_min[1]))
@@ -93,16 +92,16 @@ def plot_energy_with_sho_potential_at_minimum(
 
 
 def plot_sho_wavefunctions(
-    z_points: List[float],
+    z_points: list[float],
     sho_omega: float,
     mass: float,
     first_n: int = 3,
     *,
     ax: Axes | None = None,
-) -> Tuple[Figure, Axes, List[Line2D]]:
+) -> tuple[Figure, Axes, list[Line2D]]:
     fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
 
-    lines: List[Line2D] = []
+    lines: list[Line2D] = []
     for n in range(first_n):
         wfn = calculate_sho_wavefunction(z_points, sho_omega, mass, n)
         wfn *= (0.25 * hbar * sho_omega) / np.max(wfn)

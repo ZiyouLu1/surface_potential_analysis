@@ -1,4 +1,4 @@
-from typing import List, Literal, Tuple
+from typing import Literal
 
 import matplotlib.animation
 import matplotlib.pyplot as plt
@@ -19,7 +19,7 @@ def plot_eigenstate_in_xy(
     eigenstate: Eigenstate,
     z_point=0.0,
     *,
-    shape: Tuple[int, int] = (29, 29),
+    shape: tuple[int, int] = (29, 29),
     ax: Axes | None = None,
     measure: Literal["real", "imag", "abs"] = "abs",
 ) -> tuple[Figure, Axes, QuadMesh]:
@@ -58,7 +58,7 @@ def animate_eigenstate_3D_in_xy(
     config: EigenstateConfig,
     eigenstate: Eigenstate,
     *,
-    shape: Tuple[int, int, int] = (29, 29, 20),
+    shape: tuple[int, int, int] = (29, 29, 20),
     ax: Axes | None = None,
     measure: Literal["real", "imag", "abs"] = "abs",
     norm: Literal["symlog", "linear"] = "linear",
@@ -79,7 +79,7 @@ def animate_eigenstate_3D_in_xy(
         measure=measure,
     )
 
-    frames: List[List[QuadMesh]] = []
+    frames: list[list[QuadMesh]] = []
     for z_point in z_points:
 
         _, _, mesh = plot_eigenstate_in_xy(
@@ -132,7 +132,7 @@ def plot_eigenstate_through_bridge(
     config: EigenstateConfig,
     eigenstate: Eigenstate,
     ax: Axes | None = None,
-    view: Literal["abs"] | Literal["angle"] = "abs",
+    measure: Literal["real", "imag", "abs", "angle"] = "abs",
 ) -> tuple[Figure, Axes, Line2D]:
     fig, ax1 = (ax.get_figure(), ax) if ax is not None else plt.subplots()
 
@@ -141,10 +141,17 @@ def plot_eigenstate_through_bridge(
     x_points = np.linspace(0, util.delta_x0[0], 1000)
     points = np.array([(x, util.delta_x1[1] / 2, 0) for x in x_points])
     wfn = util.calculate_wavefunction_fast(eigenstate, points)
-    (line,) = ax1.plot(
-        x_points - util.delta_x0[0] / 2,
-        np.abs(wfn) if view == "abs" else np.angle(wfn),
-    )
+
+    if measure == "real":
+        data = np.real(wfn)
+    elif measure == "imag":
+        data = np.imag(wfn)
+    elif measure == "angle":
+        data = np.unwrap(np.angle(wfn))
+    else:
+        data = np.abs(wfn)
+
+    (line,) = ax1.plot(x_points - util.delta_x0[0] / 2, data)
 
     return fig, ax1, line
 

@@ -1,5 +1,4 @@
 import math
-from typing import Tuple
 
 import numpy as np
 from matplotlib import pyplot as plt
@@ -70,7 +69,7 @@ def get_111_locations_nickel_reciprocal(grid: EnergyGrid):
 
 def plot_z_direction_energy_data_nickel_reciprocal_points(
     grid: EnergyGrid, *, ax: Axes | None = None
-) -> Tuple[Figure, Axes, Tuple[Line2D, Line2D, Line2D, Line2D]]:
+) -> tuple[Figure, Axes, tuple[Line2D, Line2D, Line2D, Line2D]]:
     fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
 
     locations = get_111_locations_nickel_reciprocal(grid)
@@ -196,7 +195,7 @@ def get_john_point_locations(grid: EnergyGrid):
 
 def plot_z_direction_energy_data_john(
     grid: EnergyGrid, *, ax: Axes | None = None
-) -> Tuple[Figure, Axes, Tuple[Line2D, Line2D, Line2D, Line2D]]:
+) -> tuple[Figure, Axes, tuple[Line2D, Line2D, Line2D, Line2D]]:
     fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
 
     locations = get_john_point_locations(grid)

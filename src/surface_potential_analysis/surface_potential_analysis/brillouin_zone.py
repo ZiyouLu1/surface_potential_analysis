@@ -1,10 +1,8 @@
-from typing import Tuple
-
 import numpy as np
 from numpy.typing import NDArray
 
 
-def get_point_fractions(shape: Tuple[int, int] = (8, 8), endpoint=True):
+def get_point_fractions(shape: tuple[int, int] = (8, 8), endpoint=True):
     """Get the coordinates as fractions of the momentum vectors"""
     x0_points = np.linspace(0, 1, shape[0], endpoint=endpoint)
     x1_points = np.linspace(0, 1, shape[1], endpoint=endpoint)
@@ -14,9 +12,9 @@ def get_point_fractions(shape: Tuple[int, int] = (8, 8), endpoint=True):
 
 
 def grid_space(
-    vec0: Tuple[float, float],
-    vec1: Tuple[float, float],
-    shape: Tuple[int, int],
+    vec0: tuple[float, float],
+    vec1: tuple[float, float],
+    shape: tuple[int, int],
     *,
     endpoint=True,
 ):
@@ -34,8 +32,8 @@ def grid_space(
 
 
 def get_coordinate_fractions(
-    vec0: Tuple[float, float],
-    vec1: Tuple[float, float],
+    vec0: tuple[float, float],
+    vec1: tuple[float, float],
     coordinates: NDArray,
 ):
     out = []
@@ -52,10 +50,10 @@ def get_coordinate_fractions(
 
 
 def get_points_in_brillouin_zone(
-    dk0: Tuple[float, float],
-    dk1: Tuple[float, float],
+    dk0: tuple[float, float],
+    dk1: tuple[float, float],
     *,
-    size: Tuple[int, int] = (4, 4),
+    size: tuple[int, int] = (4, 4),
     include_zero=True,
 ):
     points = grid_space(dk0, dk1, shape=(2 * size[0], 2 * size[1]), endpoint=False)

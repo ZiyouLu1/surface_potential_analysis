@@ -50,7 +50,6 @@ def generate_eigenstates_data_relaxed():
 
 def generate_eigenstates_data():
     h1 = generate_hamiltonian(resolution=(14, 14, 10))
-
     kx_points = np.linspace(-h1.dkx0[0] / 2, 0, 5)
     ky_points = np.zeros_like(kx_points, dtype=float)
 
@@ -73,4 +72,32 @@ def generate_eigenstates_data():
         h, kx_points, ky_points, include_bands=list(range(20))
     )
     path = get_data_path("eigenstates_23_23_15.json")
+    save_energy_eigenstates(eigenstates, path)
+
+    h = generate_hamiltonian(resolution=(23, 23, 16))
+    eigenstates = calculate_energy_eigenstates(
+        h, kx_points, ky_points, include_bands=list(range(20))
+    )
+    path = get_data_path("eigenstates_23_23_16.json")
+    save_energy_eigenstates(eigenstates, path)
+
+    h = generate_hamiltonian(resolution=(25, 25, 16))
+    eigenstates = calculate_energy_eigenstates(
+        h, kx_points, ky_points, include_bands=list(range(20))
+    )
+    path = get_data_path("eigenstates_25_25_16.json")
+    save_energy_eigenstates(eigenstates, path)
+
+    h = generate_hamiltonian(resolution=(23, 23, 17))
+    eigenstates = calculate_energy_eigenstates(
+        h, kx_points, ky_points, include_bands=list(range(20))
+    )
+    path = get_data_path("eigenstates_23_23_17.json")
+    save_energy_eigenstates(eigenstates, path)
+
+    h = generate_hamiltonian(resolution=(23, 23, 18))
+    eigenstates = calculate_energy_eigenstates(
+        h, kx_points, ky_points, include_bands=list(range(20))
+    )
+    path = get_data_path("eigenstates_23_23_18.json")
     save_energy_eigenstates(eigenstates, path)

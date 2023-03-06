@@ -1,6 +1,6 @@
 import json
 from pathlib import Path
-from typing import List, Set, Tuple, TypedDict
+from typing import TypedDict
 
 import numpy as np
 import scipy.interpolate
@@ -15,10 +15,10 @@ from .surface_config import (
 
 
 class EnergyPoints(TypedDict):
-    x_points: List[float]
-    y_points: List[float]
-    z_points: List[float]
-    points: List[float]
+    x_points: list[float]
+    y_points: list[float]
+    z_points: list[float]
+    points: list[float]
 
 
 def load_energy_points(path: Path) -> EnergyPoints:
@@ -31,7 +31,7 @@ def save_energy_points(data: EnergyPoints, path: Path) -> None:
         json.dump(data, f)
 
 
-def get_energy_points_xy_locations(data: EnergyPoints) -> List[Tuple[float, float]]:
+def get_energy_points_xy_locations(data: EnergyPoints) -> list[tuple[float, float]]:
     x_points = np.array(data["x_points"])
     return [
         (x, y)
@@ -46,8 +46,8 @@ class EnergyGrid(SurfaceConfig):
     And possibly unevenly spaced in the z direction
     """
 
-    z_points: List[float]
-    points: List[List[List[float]]]
+    z_points: list[float]
+    points: list[list[list[float]]]
 
 
 class EnergyGridRaw(TypedDict):
@@ -56,10 +56,10 @@ class EnergyGridRaw(TypedDict):
     And possibly unevenly spaced in the z direction
     """
 
-    delta_x0: List[float]
-    delta_x1: List[float]
-    z_points: List[float]
-    points: List[List[List[float]]]
+    delta_x0: list[float]
+    delta_x1: list[float]
+    z_points: list[float]
+    points: list[list[list[float]]]
 
 
 def load_energy_grid(path: Path) -> EnergyGrid:
@@ -84,7 +84,7 @@ def get_energy_grid_xy_points(grid: EnergyGrid) -> NDArray:
 
 
 def get_energy_grid_coordinates(
-    grid: EnergyGrid, *, offset: Tuple[float, float] = (0.0, 0.0)
+    grid: EnergyGrid, *, offset: tuple[float, float] = (0.0, 0.0)
 ) -> NDArray:
     points = np.array(grid["points"])
 
@@ -95,12 +95,12 @@ def get_energy_grid_coordinates(
 
 def load_energy_grid_legacy(path: Path) -> EnergyGrid:
     class EnergyGridLegacy(TypedDict):
-        x_points: List[float]
-        y_points: List[float]
-        z_points: List[float]
-        points: List[List[List[float]]]
+        x_points: list[float]
+        y_points: list[float]
+        z_points: list[float]
+        points: list[list[list[float]]]
 
-    def get_xy_points_delta(points: List[float]):
+    def get_xy_points_delta(points: list[float]):
         # Note additional factor to account for 'missing' point
         return (len(points)) * (points[-1] - points[0]) / (len(points) - 1)
 
@@ -121,7 +121,7 @@ def load_energy_grid_legacy(path: Path) -> EnergyGrid:
 class EnergyInterpolation(TypedDict):
     dz: float
     # Note - points should exclude the 'nth' point
-    points: List[List[List[float]]]
+    points: list[list[list[float]]]
 
 
 def as_interpolation(data: EnergyGrid) -> EnergyInterpolation:
@@ -155,7 +155,7 @@ def normalize_energy(data: EnergyGrid) -> EnergyGrid:
 # to be able to 'fill' the whole region we want
 def fill_subsurface_from_corner(data: EnergyGrid) -> EnergyGrid:
     points = np.array(data["points"], dtype=float)
-    points_to_fill: Set[Tuple[int, int, int]] = set([(0, 0, 0)])
+    points_to_fill: set[tuple[int, int, int]] = set([(0, 0, 0)])
     fill_level = 1.6
 
     while len(points_to_fill) > 0:
@@ -324,8 +324,8 @@ def extend_z_data(data: EnergyGrid, extend_by: int = 2) -> EnergyGrid:
 
 
 def add_back_symmetry_points(
-    data: List[List[List[float]]],
-) -> List[List[List[float]]]:
+    data: list[list[list[float]]],
+) -> list[list[list[float]]]:
     points = np.array(data)
     nx = points.shape[0] + 1
     ny = points.shape[1] + 1
@@ -361,7 +361,7 @@ def generate_interpolator(
 
 
 def interpolate_energy_grid_3D_spline(
-    data: EnergyGrid, shape: Tuple[int, int, int] = (40, 40, 100)
+    data: EnergyGrid, shape: tuple[int, int, int] = (40, 40, 100)
 ) -> EnergyGrid:
     """
     Use the 3D cubic spline method to interpolate points.
@@ -417,7 +417,7 @@ def interpolate_energy_grid_z_spline(data: EnergyGrid, nz: int = 100) -> EnergyG
     }
 
 
-def get_ft_indexes(shape: Tuple[int, int]):
+def get_ft_indexes(shape: tuple[int, int]):
     """
     Get a list of list of [x1_phase, x2_phase] for the fourier transform
     """
@@ -437,7 +437,7 @@ def get_ft_indexes(shape: Tuple[int, int]):
     return ft_indices
 
 
-def get_ft_phases(shape: Tuple[int, int]):
+def get_ft_phases(shape: tuple[int, int]):
     """
     Get a list of list of [x1_phase, x2_phase] for the fourier transform
     """
@@ -448,7 +448,7 @@ def get_ft_phases(shape: Tuple[int, int]):
 
 
 def interpolate_energy_grid_xy_fourier(
-    data: EnergyGrid, shape: Tuple[int, int] = (40, 40)
+    data: EnergyGrid, shape: tuple[int, int] = (40, 40)
 ) -> EnergyGrid:
     """
     Makes use of a fourier transform to increase the number of points
@@ -466,7 +466,7 @@ def interpolate_energy_grid_xy_fourier(
 
 
 def interpolate_energy_grid_fourier(
-    data: EnergyGrid, shape: Tuple[int, int, int] = (40, 40, 40)
+    data: EnergyGrid, shape: tuple[int, int, int] = (40, 40, 40)
 ) -> EnergyGrid:
     """
     Interpolate an energy grid using the fourier method

@@ -1,5 +1,3 @@
-from typing import Dict, List, Tuple
-
 import numpy as np
 
 from surface_potential_analysis.energy_data import (
@@ -39,7 +37,7 @@ def load_interpolated_grid() -> EnergyGrid:
 
 
 # def reflect_coordinate(
-#     coord: Tuple[float, float], perpendicular_line: Tuple[float, float]
+#     coord: tuple[float, float], perpendicular_line: tuple[float, float]
 # ):
 #     coord_a = np.array(coord)
 #     perpendicular_line_a = np.divide(
@@ -52,9 +50,9 @@ def load_interpolated_grid() -> EnergyGrid:
 
 
 # def fold_coordinate_into_lhp(
-#     delta_x1: Tuple[float, float],
-#     delta_x2: Tuple[float, float],
-#     coord: Tuple[float, float],
+#     delta_x1: tuple[float, float],
+#     delta_x2: tuple[float, float],
+#     coord: tuple[float, float],
 # ):
 #     v_symmetry_perp = (-delta_x2[0], delta_x1[1])
 #     is_lhp = np.dot(coord, np.divide(delta_x1, np.linalg.norm(delta_x1))) > np.dot(
@@ -68,9 +66,9 @@ def load_interpolated_grid() -> EnergyGrid:
 
 
 # def get_coordinate_in_irreducible_region(
-#     delta_x1: Tuple[float, float],
-#     delta_x2: Tuple[float, float],
-#     coord: Tuple[float, float],
+#     delta_x1: tuple[float, float],
+#     delta_x2: tuple[float, float],
+#     coord: tuple[float, float],
 # ):
 #     return fold_coordinate_into_lhp(delta_x1, delta_x2, coord)
 
@@ -173,7 +171,7 @@ def map_irreducible_points_into_unit_cell(
 
     mapping_in_xy = [[mapping_to_xy[(k[0], k[1])] for k in m] for m in mapping]
 
-    z_points_in_xy: Dict[Tuple[int, int], List[float]] = {}
+    z_points_in_xy: dict[tuple[int, int], list[float]] = {}
 
     for z in z_points:
         for (x, y) in xy_points:

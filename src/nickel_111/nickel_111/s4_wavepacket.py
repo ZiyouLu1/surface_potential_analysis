@@ -1,5 +1,4 @@
 from pathlib import Path
-from typing import List, Tuple
 
 import numpy as np
 
@@ -38,7 +37,7 @@ def get_irreducible_config_nickel_111_supercell(
 
 
 def get_brillouin_points_nickel_111(
-    config: EigenstateConfig, *, size: Tuple[int, int] = (8, 8), include_zero=True
+    config: EigenstateConfig, *, size: tuple[int, int] = (8, 8), include_zero=True
 ):
     # Generate an equivalent config for the irreducible lattuice
     # Also note that delta_x2[1] = delta_x1[0] * sqrt(3)
@@ -52,9 +51,9 @@ def generate_energy_eigenstates_grid_nickel_111(
     path: Path,
     hamiltonian: SurfaceHamiltonianUtil,
     *,
-    size: Tuple[int, int] = (8, 8),
+    size: tuple[int, int] = (8, 8),
     include_zero=True,
-    include_bands: List[int] | None = None,
+    include_bands: list[int] | None = None,
 ):
     k_points = get_brillouin_points_nickel_111(
         hamiltonian._config, size=size, include_zero=include_zero

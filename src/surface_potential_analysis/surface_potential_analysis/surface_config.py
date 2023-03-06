@@ -1,5 +1,5 @@
 from functools import cached_property
-from typing import List, Tuple, TypedDict
+from typing import TypedDict
 
 import numpy as np
 from numpy.typing import NDArray
@@ -8,17 +8,17 @@ from surface_potential_analysis.brillouin_zone import grid_space
 
 
 class SurfaceConfig(TypedDict):
-    delta_x0: Tuple[float, float]
+    delta_x0: tuple[float, float]
     """lattice vector in the x0 direction"""
-    delta_x1: Tuple[float, float]
+    delta_x1: tuple[float, float]
     """lattice vector in the x1 direction"""
 
 
 def get_surface_xy_points(
     surface: SurfaceConfig,
-    shape: Tuple[int, int],
+    shape: tuple[int, int],
     *,
-    offset: Tuple[float, float] = (0.0, 0.0)
+    offset: tuple[float, float] = (0.0, 0.0)
 ) -> NDArray:
     xy_points = grid_space(
         surface["delta_x0"], surface["delta_x1"], shape=shape, endpoint=False
@@ -35,10 +35,10 @@ def get_reciprocal_surface(surface: SurfaceConfig) -> SurfaceConfig:
 
 def get_surface_coordinates(
     surface: SurfaceConfig,
-    shape: Tuple[int, int],
-    z_points: List[float],
+    shape: tuple[int, int],
+    z_points: list[float],
     *,
-    offset: Tuple[float, float] = (0.0, 0.0)
+    offset: tuple[float, float] = (0.0, 0.0)
 ) -> NDArray:
     xy_points = get_surface_xy_points(surface, shape, offset=offset)
     nz = len(z_points)
@@ -70,22 +70,22 @@ class SurfaceConfigUtil:
         return (2 * np.pi) / (x1_part - x2_part)
 
     @property
-    def delta_x0(self) -> Tuple[float, float]:
+    def delta_x0(self) -> tuple[float, float]:
         return self._config["delta_x0"]
 
     @cached_property
-    def dkx0(self) -> Tuple[float, float]:
+    def dkx0(self) -> tuple[float, float]:
         return (
             self._dk_prefactor * self.delta_x1[1],
             -self._dk_prefactor * self.delta_x1[0],
         )
 
     @property
-    def delta_x1(self) -> Tuple[float, float]:
+    def delta_x1(self) -> tuple[float, float]:
         return self._config["delta_x1"]
 
     @cached_property
-    def dkx1(self) -> Tuple[float, float]:
+    def dkx1(self) -> tuple[float, float]:
         return (
             -self._dk_prefactor * self.delta_x0[1],
             self._dk_prefactor * self.delta_x0[0],

@@ -1,4 +1,4 @@
-import nickel_111
+import copper_100
 
 if __name__ == "__main__":
-    nickel_111.s5_overlap.calculate_overlap_factor_interpolated()
+    copper_100.s4_wavepacket.generate_eigenstates_grid()

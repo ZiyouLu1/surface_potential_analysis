@@ -1,6 +1,6 @@
 import json
 from pathlib import Path
-from typing import List, Tuple, TypedDict
+from typing import TypedDict
 
 import numpy as np
 import scipy
@@ -13,28 +13,28 @@ from .util import timed
 
 
 class EigenstateConfigRaw(TypedDict):
-    resolution: List[int]
+    resolution: list[int]
     sho_omega: float
     mass: float
-    delta_x0: List[float]
-    delta_x1: List[float]
+    delta_x0: list[float]
+    delta_x1: list[float]
 
 
 class EnergyEigenstates(TypedDict):
     eigenstate_config: EigenstateConfig
-    kx_points: List[float]
-    ky_points: List[float]
-    eigenvalues: List[float]
-    eigenvectors: List[List[complex]]
+    kx_points: list[float]
+    ky_points: list[float]
+    eigenvalues: list[float]
+    eigenvectors: list[list[complex]]
 
 
 class EnergyEigenstatesRaw(TypedDict):
     eigenstate_config: EigenstateConfigRaw
-    kx_points: List[float]
-    ky_points: List[float]
-    eigenvalues: List[float]
-    eigenvectors_re: List[List[float]]
-    eigenvectors_im: List[List[float]]
+    kx_points: list[float]
+    ky_points: list[float]
+    eigenvalues: list[float]
+    eigenvectors_re: list[list[float]]
+    eigenvectors_im: list[list[float]]
 
 
 def save_energy_eigenstates(data: EnergyEigenstates, path: Path) -> None:
@@ -90,7 +90,7 @@ def load_energy_eigenstates(path: Path) -> EnergyEigenstates:
 
 def load_energy_eigenstates_legacy(path: Path) -> EnergyEigenstates:
     class EigenstateConfigLegacy(TypedDict):
-        resolution: List[int]
+        resolution: list[int]
         sho_omega: float
         mass: float
         delta_x: float
@@ -98,11 +98,11 @@ def load_energy_eigenstates_legacy(path: Path) -> EnergyEigenstates:
 
     class EnergyEigenstatesRawLegacy(TypedDict):
         eigenstate_config: EigenstateConfigLegacy
-        kx_points: List[float]
-        ky_points: List[float]
-        eigenvalues: List[float]
-        eigenvectors_re: List[List[float]]
-        eigenvectors_im: List[List[float]]
+        kx_points: list[float]
+        ky_points: list[float]
+        eigenvalues: list[float]
+        eigenvectors_re: list[list[float]]
+        eigenvectors_im: list[list[float]]
 
     def config_from_legacy(config: EigenstateConfigLegacy) -> EigenstateConfig:
         return {
@@ -149,7 +149,7 @@ def append_energy_eigenstates(
         json.dump(data, f)
 
 
-def get_eigenstate_list(eigenstates: EnergyEigenstates) -> List[Eigenstate]:
+def get_eigenstate_list(eigenstates: EnergyEigenstates) -> list[Eigenstate]:
     return [
         {
             "eigenvector": eigenvector,
@@ -160,7 +160,7 @@ def get_eigenstate_list(eigenstates: EnergyEigenstates) -> List[Eigenstate]:
     ]
 
 
-def get_minimum_coordinate(arr: ArrayLike) -> Tuple[int, ...]:
+def get_minimum_coordinate(arr: ArrayLike) -> tuple[int, ...]:
     points = np.array(arr)
     return np.unravel_index(np.argmin(points), points.shape)  # type: ignore
 
@@ -171,7 +171,7 @@ def generate_sho_config_minimum(
     *,
     initial_guess: float = 1e14,
     fit_max_energy_fraction=0.5
-) -> Tuple[float, float]:
+) -> tuple[float, float]:
     points = np.array(interpolation["points"])
     min_coord = get_minimum_coordinate(points)
     min_z = min_coord[2]
@@ -208,10 +208,10 @@ def generate_sho_config_minimum(
     return opt_params[0], z_offset
 
 
-def get_bloch_phases(data: EnergyEigenstates, origin_point: Tuple[float, float, float]):
+def get_bloch_phases(data: EnergyEigenstates, origin_point: tuple[float, float, float]):
     util = EigenstateConfigUtil(data["eigenstate_config"])
 
-    phases: List[float] = []
+    phases: list[float] = []
     for eigenstate in get_eigenstate_list(data):
         point_at_origin = util.calculate_wavefunction_fast(eigenstate, [origin_point])
         phases.append(float(np.angle(point_at_origin[0])))
@@ -219,7 +219,7 @@ def get_bloch_phases(data: EnergyEigenstates, origin_point: Tuple[float, float, 
 
 
 def normalize_eigenstate_phase(
-    data: EnergyEigenstates, origin_point: Tuple[float, float, float]
+    data: EnergyEigenstates, origin_point: tuple[float, float, float] = (0, 0, 0)
 ) -> EnergyEigenstates:
 
     eigenvectors = data["eigenvectors"]
@@ -238,7 +238,7 @@ def normalize_eigenstate_phase(
 
 
 def filter_eigenstates_grid(
-    eigenstates: EnergyEigenstates, kx_points: List[float], ky_points: List[float]
+    eigenstates: EnergyEigenstates, kx_points: list[float], ky_points: list[float]
 ) -> EnergyEigenstates:
     filtered_kx = np.zeros_like(eigenstates["kx_points"], dtype=bool)
     for kx in kx_points:
@@ -308,7 +308,7 @@ def filter_eigenstates_n_point(eigenstates: EnergyEigenstates, n: int):
 
 
 def get_brillouin_points_irreducible_config(
-    config: EigenstateConfig, *, size: Tuple[int, int] = (4, 4), include_zero=True
+    config: EigenstateConfig, *, size: tuple[int, int] = (4, 4), include_zero=True
 ):
     """
     If the eigenstate config is that of the irreducible unit cell

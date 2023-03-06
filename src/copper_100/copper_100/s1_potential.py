@@ -69,7 +69,7 @@ def generate_interpolated_copper_data_fourier():
     # We must bring it down first
     truncated = truncate_energy(normalized, cutoff=1e-17, n=5, offset=1e-20)
     truncated = truncate_energy(truncated, cutoff=0.5e-18, n=1, offset=0)
-    interpolated = interpolate_energy_grid_fourier(truncated, shape=(60, 60, 120))
+    interpolated = interpolate_energy_grid_fourier(truncated, shape=(62, 62, 120))
     fixed = undo_truncate_energy(interpolated, cutoff=0.5e-18, n=1, offset=0)
     path = get_data_path("copper_interpolated_energies.json")
     save_energy_grid(fixed, path)

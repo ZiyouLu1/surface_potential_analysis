@@ -1,5 +1,3 @@
-from typing import Tuple
-
 from surface_potential_analysis.energy_data import as_interpolation
 from surface_potential_analysis.energy_eigenstate import (
     EigenstateConfig,
@@ -10,7 +8,7 @@ from surface_potential_analysis.hamiltonian import SurfaceHamiltonianUtil
 from .s1_potential import load_interpolated_grid
 
 
-def generate_hamiltonian(resolution: Tuple[int, int, int] = (1, 1, 1)):
+def generate_hamiltonian(resolution: tuple[int, int, int] = (1, 1, 1)):
     data = load_interpolated_grid()
     interpolation = as_interpolation(data)
     config: EigenstateConfig = {

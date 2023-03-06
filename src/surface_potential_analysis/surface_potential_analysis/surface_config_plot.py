@@ -1,4 +1,4 @@
-from typing import List, Literal
+from typing import Literal
 
 import numpy as np
 from matplotlib import pyplot as plt
@@ -9,7 +9,7 @@ from .surface_config import SurfaceConfig, get_reciprocal_surface, get_surface_x
 
 def plot_points_on_surface_xy(
     surface: SurfaceConfig,
-    points: List[List[List[complex]]],
+    points: list[list[list[complex]]],
     z_ind=0,
     *,
     ax: Axes | None = None,
@@ -34,7 +34,7 @@ def plot_points_on_surface_xy(
 
 def plot_ft_points_on_surface_xy(
     surface: SurfaceConfig,
-    points: List[List[List[complex]]],
+    points: list[list[list[complex]]],
     z_ind=0,
     *,
     ax: Axes | None = None,
@@ -49,8 +49,8 @@ def plot_ft_points_on_surface_xy(
 
 def plot_points_on_surface_x0z(
     surface: SurfaceConfig,
-    points: List[List[List[complex]]],
-    z_points: List[float],
+    points: list[list[list[complex]]],
+    z_points: list[float],
     x1_ind: int,
     *,
     ax: Axes | None = None,

@@ -5,7 +5,7 @@ from .surface_data import get_data_path
 
 
 def generate_eigenstates_grid():
-    h = generate_hamiltonian(resolution=(23, 23, 12))
+    h = generate_hamiltonian(resolution=(23, 23, 16))
     save_bands = {k: get_data_path(f"eigenstates_grid_{k}.json") for k in range(20)}
 
     generate_energy_eigenstates_grid(h, size=(4, 4), save_bands=save_bands)

@@ -1,5 +1,4 @@
 import unittest
-from typing import Tuple
 
 import numpy as np
 
@@ -33,8 +32,8 @@ class TestBrillouinZone(unittest.TestCase):
 
     def test_get_coordinate_fractions(self) -> None:
         fractions = get_point_fractions(shape=(8, 8), endpoint=False)
-        delta_x0: Tuple[float, float] = (np.random.rand(), np.random.rand())
-        delta_x1: Tuple[float, float] = (np.random.rand(), np.random.rand())
+        delta_x0: tuple[float, float] = (np.random.rand(), np.random.rand())
+        delta_x1: tuple[float, float] = (np.random.rand(), np.random.rand())
         coordinates = grid_space(delta_x0, delta_x1, shape=(8, 8), endpoint=False)
 
         calculated_fractions = get_coordinate_fractions(delta_x0, delta_x1, coordinates)

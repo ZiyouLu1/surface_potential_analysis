@@ -1,5 +1,3 @@
-from typing import List
-
 import matplotlib.animation
 import matplotlib.pyplot as plt
 import numpy as np
@@ -167,7 +165,7 @@ def plot_overlap_fraction_2D(overlap_fraction: NDArray):
     save_figure(fig, "overlap fraction in xy plane")
 
     fig, axs = plt.subplots()
-    ims: List[List[AxesImage]] = []
+    ims: list[list[AxesImage]] = []
     for z in range(overlap_fraction.shape[2]):
         im = axs.imshow(overlap_fraction[:, :, z], animated=True)
         im.set_norm("symlog")  # type: ignore

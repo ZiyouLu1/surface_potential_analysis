@@ -1,6 +1,6 @@
 import json
 from pathlib import Path
-from typing import List, TypedDict
+from typing import TypedDict
 
 import numpy as np
 import scipy.constants
@@ -17,8 +17,8 @@ from .surface_data import get_data_path, save_figure
 
 
 class CopperEigenvalues(TypedDict):
-    center: List[float]
-    k_max: List[float]
+    center: list[float]
+    k_max: list[float]
 
 
 def save_copper_eigenvalues(data: CopperEigenvalues, path: Path) -> None:
@@ -186,7 +186,7 @@ def find_band_with_relevant_energy():
     print("----------------------------------------")
 
 
-def calculate_bandwidths(eigenvalues: CopperEigenvalues) -> List[float]:
+def calculate_bandwidths(eigenvalues: CopperEigenvalues) -> list[float]:
     return np.abs(np.subtract(eigenvalues["k_max"], eigenvalues["center"]))
 
 

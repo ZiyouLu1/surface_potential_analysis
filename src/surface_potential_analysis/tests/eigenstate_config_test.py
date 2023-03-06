@@ -187,7 +187,7 @@ class TestEigenstateConfig(unittest.TestCase):
         sample = np.random.normal(size=util.eigenstate_indexes.shape[0])
         eigenvector = (sample / np.linalg.norm(sample)).tolist()
 
-        z_points = [0]
+        z_points = [0.0]
         points = get_surface_coordinates(
             config, (config["resolution"][0], config["resolution"][1]), z_points
         ).reshape(-1, 3)

@@ -1,5 +1,4 @@
 import matplotlib.pyplot as plt
-import numpy as np
 
 from surface_potential_analysis.eigenstate_plot import (
     animate_eigenstate_3D_in_xy,
@@ -10,7 +9,7 @@ from surface_potential_analysis.energy_eigenstate import (
     filter_eigenstates_band,
     get_eigenstate_list,
     load_energy_eigenstates,
-    load_energy_eigenstates_legacy,
+    normalize_eigenstate_phase,
 )
 from surface_potential_analysis.energy_eigenstates_plot import (
     plot_lowest_band_in_kx,
@@ -20,34 +19,44 @@ from surface_potential_analysis.energy_eigenstates_plot import (
 from .surface_data import get_data_path, save_figure
 
 
-def analyze_eigenvalue_convergence_old():
+def analyze_eigenvalue_convergence():
 
     fig, ax = plt.subplots()
 
-    path = get_data_path("copper_eigenstates_12_12_10.json")
-    eigenstates = load_energy_eigenstates_legacy(path)
+    path = get_data_path("eigenstates_25_25_14.json")
+    eigenstates = load_energy_eigenstates(path)
     _, _, ln = plot_lowest_band_in_kx(eigenstates, ax=ax)
-    ln.set_label("(12,12,10)")
+    ln.set_label("(25,25,14)")
 
-    path = get_data_path("copper_eigenstates_12_12_12.json")
-    eigenstates = load_energy_eigenstates_legacy(path)
+    path = get_data_path("eigenstates_23_23_14.json")
+    eigenstates = load_energy_eigenstates(path)
     _, _, ln = plot_lowest_band_in_kx(eigenstates, ax=ax)
-    ln.set_label("(12,12,12)")
+    ln.set_label("(23,23,14)")
 
-    path = get_data_path("copper_eigenstates_12_12_14.json")
-    eigenstates = load_energy_eigenstates_legacy(path)
+    path = get_data_path("eigenstates_23_23_15.json")
+    eigenstates = load_energy_eigenstates(path)
     _, _, ln = plot_lowest_band_in_kx(eigenstates, ax=ax)
-    ln.set_label("(12,12,14)")
+    ln.set_label("(23,23,15)")
 
-    path = get_data_path("copper_eigenstates_12_12_15.json")
-    eigenstates = load_energy_eigenstates_legacy(path)
+    path = get_data_path("eigenstates_23_23_16.json")
+    eigenstates = load_energy_eigenstates(path)
     _, _, ln = plot_lowest_band_in_kx(eigenstates, ax=ax)
-    ln.set_label("(12,12,15)")
+    ln.set_label("(23,23,16)")
 
-    path = get_data_path("copper_eigenstates_10_10_15.json")
-    eigenstates = load_energy_eigenstates_legacy(path)
+    path = get_data_path("eigenstates_25_25_16.json")
+    eigenstates = load_energy_eigenstates(path)
     _, _, ln = plot_lowest_band_in_kx(eigenstates, ax=ax)
-    ln.set_label("(10,10,15)")
+    ln.set_label("(25,25,16)")
+
+    path = get_data_path("eigenstates_23_23_17.json")
+    eigenstates = load_energy_eigenstates(path)
+    _, _, ln = plot_lowest_band_in_kx(eigenstates, ax=ax)
+    ln.set_label("(23,23,17)")
+
+    path = get_data_path("eigenstates_23_23_18.json")
+    eigenstates = load_energy_eigenstates(path)
+    _, _, ln = plot_lowest_band_in_kx(eigenstates, ax=ax)
+    ln.set_label("(23,23,18)")
 
     ax.set_title(
         "Plot of energy against k for the lowest band of Copper for $K_y=0$\n"
@@ -60,6 +69,7 @@ def analyze_eigenvalue_convergence_old():
     fig.tight_layout()
     fig.show()
     save_figure(fig, "copper_lowest_band_convergence.png")
+    input()
 
 
 def analyze_eigenvalue_convergence_relaxed():
@@ -141,26 +151,19 @@ def analyze_eigenvector_convergence_not_relaxed_z():
 
     fig, ax = plt.subplots()
 
-    path = get_data_path("copper_eigenstates_10_10_15.json")
-    eigenstates = load_energy_eigenstates_legacy(path)
+    path = get_data_path("eigenstates_25_25_14.json")
+    eigenstates = load_energy_eigenstates(path)
     _, _, ln = plot_eigenstate_z(
         eigenstates["eigenstate_config"], get_eigenstate_list(eigenstates)[0], ax=ax
     )
-    ln.set_label("(10,10,15) kx=G/2")
+    ln.set_label("(25,25,14) kx=G/2")
 
-    path = get_data_path("copper_eigenstates_12_12_14.json")
-    eigenstates = load_energy_eigenstates_legacy(path)
+    path = get_data_path("eigenstates_23_23_15.json")
+    eigenstates = load_energy_eigenstates(path)
     _, _, l2 = plot_eigenstate_z(
         eigenstates["eigenstate_config"], get_eigenstate_list(eigenstates)[0], ax=ax
     )
-    l2.set_label("(12,12,14) kx=G/2")
-
-    path = get_data_path("copper_eigenstates_12_12_15.json")
-    eigenstates = load_energy_eigenstates_legacy(path)
-    _, _, ln = plot_eigenstate_z(
-        eigenstates["eigenstate_config"], get_eigenstate_list(eigenstates)[0], ax=ax
-    )
-    ln.set_label("(12,12,15) kx=G/2")
+    l2.set_label("(23,23,15) kx=G/2")
 
     ax.set_title(
         "Plot of energy against k for the lowest band of Copper for $K_y=0$\n"
@@ -169,20 +172,22 @@ def analyze_eigenvector_convergence_not_relaxed_z():
     ax.legend()
     fig.show()
     save_figure(fig, "copper_wfn_convergence.png")
+    input()
 
 
 def analyze_eigenvector_convergence_not_relaxed_through_bridge():
 
-    path = get_data_path("copper_eigenstates_12_12_15.json")
-    eigenstates = load_energy_eigenstates_legacy(path)
+    path = get_data_path("eigenstates_25_25_14.json")
+    eigenstates = load_energy_eigenstates(path)
 
     fig, ax = plt.subplots()
     ax2 = ax.twinx()
 
-    path = get_data_path("copper_eigenstates_12_12_15.json")
-    eigenstates = load_energy_eigenstates_legacy(path)
+    path = get_data_path("eigenstates_23_23_15.json")
+    eigenstates = load_energy_eigenstates(path)
+    normalized = normalize_eigenstate_phase(eigenstates)
     _, _, ln = plot_eigenstate_through_bridge(
-        eigenstates["eigenstate_config"], get_eigenstate_list(eigenstates)[5], ax=ax
+        eigenstates["eigenstate_config"], get_eigenstate_list(normalized)[5], ax=ax
     )
     _, _, _ = plot_eigenstate_through_bridge(
         eigenstates["eigenstate_config"],
@@ -190,12 +195,13 @@ def analyze_eigenvector_convergence_not_relaxed_through_bridge():
         ax=ax2,
         view="angle",
     )
-    ln.set_label("(12,12,15)")
+    ln.set_label("(23,23,15)")
 
-    path = get_data_path("copper_eigenstates_12_12_14.json")
-    eigenstates = load_energy_eigenstates_legacy(path)
+    path = get_data_path("eigenstates_25_25_14.json")
+    eigenstates = load_energy_eigenstates(path)
+    normalized = normalize_eigenstate_phase(eigenstates)
     _, _, ln = plot_eigenstate_through_bridge(
-        eigenstates["eigenstate_config"], get_eigenstate_list(eigenstates)[5], ax=ax
+        eigenstates["eigenstate_config"], get_eigenstate_list(normalized)[5], ax=ax
     )
     _, _, _ = plot_eigenstate_through_bridge(
         eigenstates["eigenstate_config"],
@@ -203,22 +209,8 @@ def analyze_eigenvector_convergence_not_relaxed_through_bridge():
         ax=ax2,
         view="angle",
     )
-    ln.set_label("(12,12,14)")
+    ln.set_label("(25,25,15)")
 
-    path = get_data_path("copper_eigenstates_10_10_15.json")
-    eigenstates = load_energy_eigenstates_legacy(path)
-    _, _, ln = plot_eigenstate_through_bridge(
-        eigenstates["eigenstate_config"], get_eigenstate_list(eigenstates)[5], ax=ax
-    )
-    _, _, _ = plot_eigenstate_through_bridge(
-        eigenstates["eigenstate_config"],
-        get_eigenstate_list(eigenstates)[5],
-        ax=ax2,
-        view="angle",
-    )
-    ln.set_label("(10,10,15)")
-
-    ax2.set_ylim(-np.pi, np.pi)
     ax.set_title(
         "Plot of energy against k for the lowest band of Copper for $K_y=0$\n"
         "showing convergence to about 2x$10^{-30}$J "
@@ -226,3 +218,4 @@ def analyze_eigenvector_convergence_not_relaxed_through_bridge():
     ax.legend()
     fig.show()
     save_figure(fig, "copper_wfn_convergence_through_bridge.png")
+    input()

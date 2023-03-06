@@ -1,5 +1,4 @@
 import unittest
-from typing import List, Tuple
 
 import numpy as np
 from numpy.typing import NDArray
@@ -10,7 +9,7 @@ from surface_potential_analysis.interpolation import (
 )
 
 
-def interpolate_points_fourier(points: List[List[float]], shape: Tuple[int, int]):
+def interpolate_points_fourier(points: list[list[float]], shape: tuple[int, int]):
     x_interp = interpolate_real_points_along_axis_fourier(points, shape[0], axis=0)
     y_interp = interpolate_real_points_along_axis_fourier(x_interp, shape[1], axis=1)
     return y_interp

@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Tuple, TypedDict
+from typing import TypedDict
 
 import numpy as np
 from numpy.typing import NDArray
@@ -123,8 +123,8 @@ def generate_next_hcp_wavepacket() -> WavepacketGrid:
 
 
 class OverlapTransform(TypedDict):
-    dkx0: Tuple[float, float]
-    dkx1: Tuple[float, float]
+    dkx0: tuple[float, float]
+    dkx1: tuple[float, float]
     dkz: float
     points: NDArray
 
@@ -222,7 +222,7 @@ def calculate_overlap_factor():
 
 
 def interpolate_real_wavepacket_grid_points_fourier(
-    grid: WavepacketGrid, shape: Tuple[int, int]
+    grid: WavepacketGrid, shape: tuple[int, int]
 ) -> NDArray:
     return interpolate_real_points_along_axis_fourier(
         interpolate_real_points_along_axis_fourier(grid["points"], shape[0], axis=0),

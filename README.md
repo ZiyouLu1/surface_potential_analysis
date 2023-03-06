@@ -9,6 +9,8 @@ To install the packages run
 ```shell
 pip install -e ./src/copper_100
 pip install -e ./src/copper_111
+pip install -e ./src/platinum_111
+pip install -e ./src/ruthenium_100
 pip install -e ./src/nickel_111
 ```
 

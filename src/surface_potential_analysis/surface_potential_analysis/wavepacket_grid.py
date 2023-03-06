@@ -1,6 +1,6 @@
 import json
 from pathlib import Path
-from typing import List, Literal, Tuple, TypedDict
+from typing import Literal, TypedDict
 
 import numpy as np
 import scipy
@@ -15,16 +15,16 @@ from .surface_config import SurfaceConfig, get_surface_coordinates
 
 
 class WavepacketGrid(SurfaceConfig):
-    z_points: List[float]
-    points: List[List[List[complex]]]
+    z_points: list[float]
+    points: list[list[list[complex]]]
 
 
 class WavepacketGridRaw(TypedDict):
-    delta_x0: List[float]
-    delta_x1: List[float]
-    z_points: List[float]
-    real_points: List[List[List[complex]]]
-    imag_points: List[List[List[complex]]]
+    delta_x0: list[float]
+    delta_x1: list[float]
+    z_points: list[float]
+    real_points: list[list[list[complex]]]
+    imag_points: list[list[list[complex]]]
 
 
 def save_wavepacket_grid(data: WavepacketGrid, path: Path) -> None:
@@ -53,10 +53,10 @@ def load_wavepacket_grid(path: Path) -> WavepacketGrid:
 
 def load_wavepacket_grid_legacy(path: Path) -> WavepacketGrid:
     class WavepacketGridLegacy(TypedDict):
-        x_points: List[float]
-        y_points: List[float]
-        z_points: List[float]
-        points: List[List[List[complex]]]
+        x_points: list[float]
+        y_points: list[float]
+        z_points: list[float]
+        points: list[list[list[complex]]]
 
     with path.open("r") as f:
         out = json.load(f)
@@ -132,7 +132,7 @@ def symmetrize_wavepacket_about_far_edge(wavepacket: WavepacketGrid) -> Wavepack
 
 
 def interpolate_wavepacket(
-    data: WavepacketGrid, shape: Tuple[int, int, int] = (40, 40, 100)
+    data: WavepacketGrid, shape: tuple[int, int, int] = (40, 40, 100)
 ) -> WavepacketGrid:
 
     if (data["delta_x0"][1] != 0) or (data["delta_x1"][0] != 0):
@@ -189,7 +189,7 @@ def mask_negative_wavepacket(wavepacket: WavepacketGrid) -> WavepacketGrid:
 
 
 def get_wavepacket_grid_coordinates(
-    grid: WavepacketGrid, *, offset: Tuple[float, float] = (0.0, 0.0)
+    grid: WavepacketGrid, *, offset: tuple[float, float] = (0.0, 0.0)
 ) -> NDArray:
     points = np.real(grid["points"])
     z_points = np.array(grid["z_points"]).tolist()
@@ -200,7 +200,7 @@ def get_wavepacket_grid_coordinates(
 def calculate_wavepacket_grid_copper(
     eigenstates: EnergyEigenstates,
     *,
-    shape: Tuple[int, int, int] = (49, 49, 21),
+    shape: tuple[int, int, int] = (49, 49, 21),
 ):
 
     util = EigenstateConfigUtil(eigenstates["eigenstate_config"])
@@ -218,9 +218,9 @@ def calculate_wavepacket_grid_copper(
 
 def calculate_wavepacket_grid_fourier(
     eigenstates: EnergyEigenstates,
-    z_points: List[float],
-    x0_lim: Tuple[int, int] = (0, 1),
-    x1_lim: Tuple[int, int] = (0, 1),
+    z_points: list[float],
+    x0_lim: tuple[int, int] = (0, 1),
+    x1_lim: tuple[int, int] = (0, 1),
 ):
     """
     Since we generate the energy eigenstates from a limited number of k states in
@@ -260,12 +260,12 @@ def calculate_wavepacket_grid_fourier(
 
 def calculate_wavepacket_grid(
     eigenstates: EnergyEigenstates,
-    delta_x0: Tuple[float, float],
-    delta_x1: Tuple[float, float],
-    z_points: List[float],
-    shape: Tuple[int, int] = (49, 49),
+    delta_x0: tuple[float, float],
+    delta_x1: tuple[float, float],
+    z_points: list[float],
+    shape: tuple[int, int] = (49, 49),
     *,
-    offset: Tuple[float, float] = (0.0, 0.0),
+    offset: tuple[float, float] = (0.0, 0.0),
 ) -> WavepacketGrid:
 
     util = EigenstateConfigUtil(eigenstates["eigenstate_config"])

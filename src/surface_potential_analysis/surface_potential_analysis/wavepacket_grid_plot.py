@@ -1,4 +1,4 @@
-from typing import List, Literal, Tuple
+from typing import Literal
 
 import matplotlib.animation
 import matplotlib.pyplot as plt
@@ -30,7 +30,7 @@ def plot_wavepacket_grid_xy(
     ax: Axes | None = None,
     measure: Literal["real", "imag", "abs"] = "abs",
     norm: Literal["symlog", "linear"] = "symlog",
-) -> Tuple[Figure, Axes, QuadMesh]:
+) -> tuple[Figure, Axes, QuadMesh]:
 
     fig, ax, mesh = plot_points_on_surface_xy(
         grid, grid["points"], z_ind, ax=ax, measure=measure
@@ -51,7 +51,7 @@ def plot_ft_wavepacket_grid_xy(
     ax: Axes | None = None,
     measure: Literal["real", "imag", "abs"] = "abs",
     norm: Literal["symlog", "linear"] = "linear",
-) -> Tuple[Figure, Axes, QuadMesh]:
+) -> tuple[Figure, Axes, QuadMesh]:
 
     fig, ax, mesh = plot_ft_points_on_surface_xy(
         grid, grid["points"], z_ind, ax=ax, measure=measure
@@ -70,14 +70,14 @@ def animate_wavepacket_grid_3D_in_xy(
     ax: Axes | None = None,
     measure: Literal["real", "imag", "abs"] = "abs",
     norm: Literal["symlog", "linear"] = "symlog",
-) -> Tuple[Figure, Axes, matplotlib.animation.ArtistAnimation]:
+) -> tuple[Figure, Axes, matplotlib.animation.ArtistAnimation]:
     fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
 
     _, _, mesh0 = plot_points_on_surface_xy(
         grid, grid["points"], 0, ax=ax, measure=measure
     )
 
-    frames: List[List[QuadMesh]] = []
+    frames: list[list[QuadMesh]] = []
     for z_ind in range(np.shape(grid["points"])[2]):
 
         _, _, mesh = plot_points_on_surface_xy(
@@ -110,7 +110,7 @@ def animate_ft_wavepacket_grid_3D_in_xy(
     ax: Axes | None = None,
     measure: Literal["real", "imag", "abs"] = "abs",
     norm: Literal["symlog", "linear"] = "symlog",
-) -> Tuple[Figure, Axes, matplotlib.animation.ArtistAnimation]:
+) -> tuple[Figure, Axes, matplotlib.animation.ArtistAnimation]:
 
     util = SurfaceConfigUtil(grid)
     ft_points = ft_points = np.fft.ifft2(grid["points"], axes=(0, 1))
@@ -136,7 +136,7 @@ def plot_wavepacket_grid_in_x0z(
     *,
     measure: Literal["real", "imag", "abs"] = "abs",
     ax: Axes | None = None,
-) -> Tuple[Figure, Axes, QuadMesh]:
+) -> tuple[Figure, Axes, QuadMesh]:
 
     return plot_points_on_surface_x0z(
         grid, grid["points"], grid["z_points"], x1_ind=x1_ind, ax=ax, measure=measure
@@ -149,12 +149,12 @@ def animate_wavepacket_grid_3D_in_x1z(
     ax: Axes | None = None,
     measure: Literal["real", "imag", "abs"] = "abs",
     norm: Literal["symlog", "linear"] = "symlog",
-) -> Tuple[Figure, Axes, matplotlib.animation.ArtistAnimation]:
+) -> tuple[Figure, Axes, matplotlib.animation.ArtistAnimation]:
     fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
 
     _, _, mesh0 = plot_wavepacket_grid_in_x0z(grid, 0, ax=ax, measure=measure)
 
-    frames: List[List[QuadMesh]] = []
+    frames: list[list[QuadMesh]] = []
     for x1_ind in range(np.shape(grid["points"])[1]):
 
         _, _, mesh = plot_wavepacket_grid_in_x0z(grid, x1_ind, ax=ax, measure=measure)

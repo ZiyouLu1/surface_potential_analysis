@@ -1,5 +1,5 @@
 from functools import cached_property
-from typing import List, Tuple, TypedDict
+from typing import TypedDict
 
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
@@ -15,7 +15,7 @@ from surface_potential_analysis.surface_config import (
 
 
 class EigenstateConfig(SurfaceConfig):
-    resolution: Tuple[int, int, int]
+    resolution: tuple[int, int, int]
     """Resolution in x,y,z to produce the eigenstates in"""
     sho_omega: float
     """Angular frequency (in rad s-1) of the sho we will fit using"""
@@ -26,7 +26,7 @@ class EigenstateConfig(SurfaceConfig):
 class Eigenstate(TypedDict):
     kx: float
     ky: float
-    eigenvector: List[complex]
+    eigenvector: list[complex]
 
 
 def calculate_wavefunction_fast(
@@ -140,7 +140,7 @@ class EigenstateConfigUtil(SurfaceConfigUtil):
         return out
 
     def calculate_bloch_wavefunction_fourier(
-        self, eigenvector: List[complex], z_points: List[float]
+        self, eigenvector: list[complex], z_points: list[float]
     ) -> NDArray:
         """
         Calculates the bloch wavefunction at the fundamental points in the unit cell
@@ -152,8 +152,8 @@ class EigenstateConfigUtil(SurfaceConfigUtil):
 
         Parameters
         ----------
-        eigenvector : List[complex]
-        z_points    : List[float]
+        eigenvector : list[complex]
+        z_points    : list[float]
 
 
         Returns
@@ -188,7 +188,7 @@ class EigenstateConfigUtil(SurfaceConfigUtil):
         return bloch_points
 
     def _get_fourier_coordinates_in_grid(
-        self, x0_lim: Tuple[int, int] = (0, 1), x1_lim: Tuple[int, int] = (0, 1)
+        self, x0_lim: tuple[int, int] = (0, 1), x1_lim: tuple[int, int] = (0, 1)
     ) -> NDArray:
         nx0 = x0_lim[1] - x0_lim[0]
         nx1 = x1_lim[1] - x1_lim[0]
@@ -216,18 +216,18 @@ class EigenstateConfigUtil(SurfaceConfigUtil):
     def calculate_wavefunction_slow_grid_fourier(
         self,
         eigenstate: Eigenstate,
-        z_points: List[float],
-        x0_lim: Tuple[int, int] = (0, 1),
-        x1_lim: Tuple[int, int] = (0, 1),
+        z_points: list[float],
+        x0_lim: tuple[int, int] = (0, 1),
+        x1_lim: tuple[int, int] = (0, 1),
     ) -> NDArray:
         """
         Parameters
         ----------
         eigenstate : Eigenstate
-        z_points   : List[float]
-        x0_lim     : Tuple[int, int], optional
+        z_points   : list[float]
+        x0_lim     : tuple[int, int], optional
             Region to sample the wavefunction in the x0 direction, exclusive on the second argument.
-        x0_lim     : Tuple[int, int], optional
+        x0_lim     : tuple[int, int], optional
             Region to sample the wavefunction in the x1 direction, exclusive on the second argument.
 
 

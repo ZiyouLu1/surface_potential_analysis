@@ -1,5 +1,3 @@
-from typing import List
-
 import numpy as np
 
 from surface_potential_analysis.eigenstate import EigenstateConfigUtil
@@ -31,13 +29,6 @@ def normalize_eigenstate_phase_copper(data: EnergyEigenstates):
     return normalize_eigenstate_phase(data, origin_point)
 
 
-def generate_eigenstates_grid():
-    h = generate_hamiltonian(resolution=(14, 14, 15))
-    path = get_data_path("copper_eigenstates_grid_5.json")
-
-    generate_energy_eigenstates_grid(path, h, size=(4, 4))
-
-
 def generate_eigenstates_grid_relaxed():
     h = generate_hamiltonian(resolution=(21, 21, 14))
     path = get_data_path("eigenstates_grid_relaxed.json")
@@ -65,7 +56,7 @@ def generate_normalized_eigenstates_grid():
 
 
 def remove_k_from_eigenstates_grid(
-    eigenstates: EnergyEigenstates, kx_points: List[float], ky_points: List[float]
+    eigenstates: EnergyEigenstates, kx_points: list[float], ky_points: list[float]
 ) -> EnergyEigenstates:
     removed = np.zeros_like(eigenstates["kx_points"], dtype=bool)
     for kx in kx_points:
@@ -233,3 +224,10 @@ def generate_wavepacket_grid_new_relaxed():
     )
     path = get_data_path("relaxed_eigenstates_wavepacket_new.json")
     save_wavepacket_grid(wavepacket, path)
+
+
+def generate_eigenstates_grid():
+    h = generate_hamiltonian(resolution=(23, 23, 18))
+    save_bands = {k: get_data_path(f"eigenstates_grid_{k}.json") for k in range(20)}
+
+    generate_energy_eigenstates_grid(h, size=(4, 4), save_bands=save_bands)

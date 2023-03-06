@@ -1,9 +1,8 @@
 from functools import cache
 from pathlib import Path
-from typing import Any, Dict, List, Tuple
+from typing import Any
 
 import numpy as np
-import scipy.sparse.linalg
 from numpy.typing import NDArray
 from scipy.constants import hbar
 
@@ -187,27 +186,22 @@ class SurfaceHamiltonianUtil(EigenstateConfigUtil):
 
     @timed
     def calculate_eigenvalues(
-        self, kx, ky, *, n: None | int = None
-    ) -> Tuple[List[float], List[Eigenstate]]:
+        self, kx: float, ky: float
+    ) -> tuple[list[float], list[Eigenstate]]:
         """
         Returns the eigenvalues as a list of vectors,
         ie v[i] is the eigenvector associated to the eigenvalue w[i]
         """
         hamiltonian = self.hamiltonian(kx, ky)
 
-        is_symmetric_x = np.array_equal(self.points[1:, :], self.points[:, :0:-1])
+        is_symmetric_x = np.array_equal(self.points[1:, :], self.points[:0:-1, :])
         is_symmetric_y = np.array_equal(self.points[:, 1:], self.points[:, :0:-1])
-
         # If the potential is symmetric the fourier transform is real
         # This provides us with a significant speedup
         if is_symmetric_x and is_symmetric_y:
             hamiltonian = np.real_if_close(hamiltonian)
 
-        if n is not None:
-            # TODO: eigenstates don't appear to match up with np.linalg.eigh
-            w, v = scipy.sparse.linalg.eigsh(hamiltonian, k=n, which="SA")
-        else:
-            w, v = np.linalg.eigh(hamiltonian)
+        w, v = np.linalg.eigh(hamiltonian)
 
         return (w.tolist(), [{"eigenvector": vec, "kx": kx, "ky": ky} for vec in v.T])
 
@@ -216,7 +210,7 @@ def generate_energy_eigenstates_from_k_points(
     hamiltonian: SurfaceHamiltonianUtil,
     k_points: NDArray,
     *,
-    save_bands: Dict[int, Path],
+    save_bands: dict[int, Path],
 ) -> None:
     input("Warning: this might overwrite previous data. Press enter to continue...")
     for path in save_bands.values():
@@ -242,9 +236,9 @@ def generate_energy_eigenstates_from_k_points(
 def generate_energy_eigenstates_grid(
     hamiltonian: SurfaceHamiltonianUtil,
     *,
-    size: Tuple[int, int] = (8, 8),
+    size: tuple[int, int] = (8, 8),
     include_zero=True,
-    save_bands: Dict[int, Path],
+    save_bands: dict[int, Path],
 ):
     k_points = get_brillouin_points_irreducible_config(
         hamiltonian._config, size=size, include_zero=include_zero
@@ -260,7 +254,7 @@ def calculate_energy_eigenstates(
     kx_points: NDArray,
     ky_points: NDArray,
     *,
-    include_bands: List[int] | None = None,
+    include_bands: list[int] | None = None,
 ) -> EnergyEigenstates:
 
     include_bands = [0] if include_bands is None else include_bands

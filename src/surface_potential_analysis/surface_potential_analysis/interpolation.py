@@ -1,11 +1,29 @@
-from typing import List, Tuple
+from types import EllipsisType
 
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
 
 
+def _slice_along_axis(
+    slice_at_axis: slice | int, axis: int = -1
+) -> tuple[EllipsisType | slice | int, ...] | tuple[slice | int, ...]:
+    """
+    Returns a slice such that the 1d slice provided by slice_inds, slices along the dimension provided.
+    """
+    from_end = False
+    if axis < 0:  # choosing axis at the end
+        from_end = True
+        axis = -1 - axis
+    # Pad the slice with slice(None)
+    slice_padding = axis * (slice(None),)
+    if from_end:
+        return (Ellipsis, slice_at_axis) + slice_padding
+    else:
+        return slice_padding + (slice_at_axis,)
+
+
 def interpolate_real_points_along_axis_fourier(
-    points: ArrayLike, n: int, axis=-1
+    points: ArrayLike, n: int, axis: int = -1
 ) -> NDArray:
     """
     Given a uniformly spaced (real) grid of points interpolate along the given
@@ -36,12 +54,20 @@ def interpolate_real_points_along_axis_fourier(
     # Invert the rfft, padding (or truncating) for the new length n
     interpolated_potential = np.fft.irfft(ft_potential, n, axis=axis, norm="forward")
 
+    if np.all(np.isreal(ft_potential)):
+        # Force the symmetric potential to stay symmetric
+        # Due to issues with numerical precision it diverges by around 1E-34
+        length = np.shape(interpolated_potential)[axis]
+        lower_half = _slice_along_axis(slice(1, (length + 1) // 2), axis=axis)
+        upper_half = _slice_along_axis(slice(None, length // 2, -1), axis=axis)
+        interpolated_potential[upper_half] = interpolated_potential[lower_half]
+
     return interpolated_potential
 
 
 def interpolate_points_fourier_complex(
-    points: List[List[complex]], shape: Tuple[int, int]
-) -> List[List[complex]]:
+    points: list[list[complex]], shape: tuple[int, int]
+) -> list[list[complex]]:
     """
     Given a uniform grid of points in the unit cell interpolate
     a grid of points with the given shape using the fourier transform
@@ -88,8 +114,8 @@ def interpolate_points_fourier_complex(
 # which was slightly asymmetric if supplied wth
 # a symmetric wavefunction
 # def interpolate_points_fourier(
-#     points: List[List[float]], shape: Tuple[int, int]
-# ) -> List[List[float]]:
+#     points: list[list[float]], shape: tuple[int, int]
+# ) -> list[list[float]]:
 #     """
 #     Given a uniform grid of points in the unit cell interpolate
 #     a grid of points with the given shape using the fourier transform

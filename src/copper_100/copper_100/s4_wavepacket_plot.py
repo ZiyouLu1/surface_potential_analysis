@@ -34,7 +34,7 @@ from surface_potential_analysis.wavepacket_grid_plot import (
     animate_wavepacket_grid_3D_in_x1z,
     animate_wavepacket_grid_3D_in_xy,
     plot_ft_wavepacket_grid_xy,
-    plot_wavepacket_grid_in_x1z,
+    plot_wavepacket_grid_in_x0z,
     plot_wavepacket_grid_x1,
     plot_wavepacket_grid_xy,
     plot_wavepacket_in_xy,
@@ -341,7 +341,7 @@ def plot_wavefunction_xz_bridge():
     wavepacket_8 = load_wavepacket_grid_legacy(path)
 
     fig, ax = plt.subplots()
-    _, _, im = plot_wavepacket_grid_in_x1z(
+    _, _, im = plot_wavepacket_grid_in_x0z(
         wavepacket_8, x2_ind=32, ax=ax, measure="real"
     )
     im.set_norm("symlog")  # type: ignore

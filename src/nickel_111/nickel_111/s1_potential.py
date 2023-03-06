@@ -1,5 +1,3 @@
-from typing import List, Tuple
-
 import numpy as np
 
 from surface_potential_analysis.brillouin_zone import get_coordinate_fractions
@@ -106,13 +104,13 @@ def generate_raw_unit_cell_data() -> None:
 
 
 def interpolate_points_fourier_nickel(
-    points: List[List[float]],
-    delta_x0_reciprocal: Tuple[float, float],
-    delta_x1_reciprocal: Tuple[float, float],
-    delta_x0_real: Tuple[float, float],
-    delta_x1_real: Tuple[float, float],
-    shape: Tuple[int, int],
-) -> List[List[float]]:
+    points: list[list[float]],
+    delta_x0_reciprocal: tuple[float, float],
+    delta_x1_reciprocal: tuple[float, float],
+    delta_x0_real: tuple[float, float],
+    delta_x1_real: tuple[float, float],
+    shape: tuple[int, int],
+) -> list[list[float]]:
     """
     Given a uniform grid of points in the reciprocal spacing interpolate
     a grid of points with the given shape into the real spacing using the fourier transform
@@ -152,9 +150,9 @@ def interpolate_points_fourier_nickel(
 
 def interpolate_energy_grid_xy_fourier_nickel(
     data: EnergyGrid,
-    delta_x0_real: Tuple[float, float],
-    delta_x1_real: Tuple[float, float],
-    shape: Tuple[int, int] = (40, 40),
+    delta_x0_real: tuple[float, float],
+    delta_x1_real: tuple[float, float],
+    shape: tuple[int, int] = (40, 40),
 ) -> EnergyGrid:
     """
     Makes use of a fourier transform to increase the number of points
@@ -182,9 +180,9 @@ def interpolate_energy_grid_xy_fourier_nickel(
 
 def interpolate_energy_grid_fourier_nickel(
     data: EnergyGrid,
-    delta_x0_real: Tuple[float, float],
-    delta_x1_real: Tuple[float, float],
-    shape: Tuple[int, int, int] = (40, 40, 40),
+    delta_x0_real: tuple[float, float],
+    delta_x1_real: tuple[float, float],
+    shape: tuple[int, int, int] = (40, 40, 40),
 ) -> EnergyGrid:
     """
     Interpolate an energy grid using the fourier method, but in the xy direction we

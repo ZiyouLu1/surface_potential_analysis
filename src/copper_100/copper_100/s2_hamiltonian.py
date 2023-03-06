@@ -1,5 +1,3 @@
-from typing import Tuple
-
 from surface_potential_analysis.energy_data import as_interpolation
 from surface_potential_analysis.energy_eigenstate import (
     EigenstateConfig,
@@ -13,7 +11,7 @@ from .s1_potential import (
 )
 
 
-def generate_hamiltonian(resolution: Tuple[int, int, int] = (1, 1, 1)):
+def generate_hamiltonian(resolution: tuple[int, int, int] = (1, 1, 1)):
     data = load_interpolated_copper_data()
     interpolation = as_interpolation(data)
     config: EigenstateConfig = {
@@ -28,7 +26,7 @@ def generate_hamiltonian(resolution: Tuple[int, int, int] = (1, 1, 1)):
     return SurfaceHamiltonianUtil(config, interpolation, z_offset)
 
 
-def generate_hamiltonian_relaxed(resolution: Tuple[int, int, int] = (1, 1, 1)):
+def generate_hamiltonian_relaxed(resolution: tuple[int, int, int] = (1, 1, 1)):
     data = load_spline_interpolated_relaxed_data()
     interpolation = as_interpolation(data)
     config: EigenstateConfig = {

@@ -1,5 +1,3 @@
-from typing import Tuple
-
 import numpy as np
 from matplotlib import pyplot as plt
 
@@ -181,7 +179,7 @@ def calculate_wavepacket_grid_nickel_111(eigenstates: EnergyEigenstates):
 
 
 def get_value_at_point(
-    eigenstates: EnergyEigenstates, point: Tuple[float, float, float]
+    eigenstates: EnergyEigenstates, point: tuple[float, float, float]
 ):
     util = EigenstateConfigUtil(eigenstates["eigenstate_config"])
     return sum(
@@ -368,7 +366,7 @@ def plot_wavepacket_grid_all_equal():
         eigenvector.tolist() for _ in eigenstates["eigenvectors"]
     ]
 
-    z_points = [0]
+    z_points = [0.0]
     grid = calculate_wavepacket_grid_fourier(
         eigenstates, z_points, x0_lim=(0, 10), x1_lim=(0, 10)
     )
@@ -425,7 +423,7 @@ def plot_wavepacket_grid():
         ),
     )
 
-    z_points = [0]
+    z_points = [0.0]
     grid = calculate_wavepacket_grid_fourier(
         eigenstates, z_points, x0_lim=(0, 10), x1_lim=(0, 10)
     )
