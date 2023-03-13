@@ -13,16 +13,19 @@ def plot_points_on_surface_xy(
     z_ind=0,
     *,
     ax: Axes | None = None,
-    measure: Literal["real", "imag", "abs"] = "abs",
+    measure: Literal["real", "imag", "abs", "angle"] = "abs",
 ):
     fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
 
-    if measure == "real":
-        data = np.real(points)
-    elif measure == "imag":
-        data = np.imag(points)
-    else:
-        data = np.abs(points)
+    match measure:
+        case "real":
+            data = np.real(points)
+        case "imag":
+            data = np.imag(points)
+        case "abs":
+            data = np.abs(points)
+        case "angle":
+            data = np.unwrap(np.angle(points))
 
     coordinates = get_surface_xy_points(surface, (data.shape[0], data.shape[1]))
     mesh = ax.pcolormesh(
@@ -54,16 +57,19 @@ def plot_points_on_surface_x0z(
     x1_ind: int,
     *,
     ax: Axes | None = None,
-    measure: Literal["real", "imag", "abs"] = "abs",
+    measure: Literal["real", "imag", "abs", "angle"] = "abs",
 ):
     fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
 
-    if measure == "real":
-        data = np.real(points)
-    elif measure == "imag":
-        data = np.imag(points)
-    else:
-        data = np.abs(points)
+    match measure:
+        case "real":
+            data = np.real(points)
+        case "imag":
+            data = np.imag(points)
+        case "abs":
+            data = np.abs(points)
+        case "angle":
+            data = np.unwrap(np.angle(points))
 
     x0_points = np.linspace(0, np.linalg.norm(surface["delta_x0"]), data.shape[0])
     x0v, zv = np.meshgrid(x0_points, z_points, indexing="ij")

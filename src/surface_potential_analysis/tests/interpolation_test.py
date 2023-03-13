@@ -1,26 +1,29 @@
 import unittest
 
 import numpy as np
-from numpy.typing import NDArray
+from numpy.typing import ArrayLike, NDArray
 
 from surface_potential_analysis.interpolation import (
-    interpolate_points_fourier_complex,
+    interpolate_points_fftn,
+    interpolate_points_rfftn,
     interpolate_real_points_along_axis_fourier,
+    pad_ft_points,
 )
 
 
-def interpolate_points_fourier(points: list[list[float]], shape: tuple[int, int]):
+def interpolate_real_points_fourier(points: ArrayLike, shape: tuple[int, int]):
     x_interp = interpolate_real_points_along_axis_fourier(points, shape[0], axis=0)
     y_interp = interpolate_real_points_along_axis_fourier(x_interp, shape[1], axis=1)
     return y_interp
 
 
+def interpolate_complex_points_fourier(
+    points: list[list[float]], shape: tuple[int, int]
+):
+    return interpolate_points_fftn(points, shape, axes=(0, 1))
+
+
 class InterpolationTest(unittest.TestCase):
-    def test_interpolate_periodic_on_diagonal_grid(self) -> None:
-        """Test that interpolating a periodic potential on a diagonal grid is the same as that on a square grid"""
-
-        points_grid_unit_cell = np.random.random((2, 2, 3))
-
     def test_interpolation_cosine(self) -> None:
         def test_fn(x: NDArray):
             return x**2 * (x - 1) ** 2
@@ -38,17 +41,18 @@ class InterpolationTest(unittest.TestCase):
         print(interpolate_real_points_along_axis_fourier(points_4, 5))
 
     def test_interpolate_points_fourier_double(self) -> None:
-
-        original_shape = tuple(np.random.randint(1, 2, size=2))
+        # Note the interpolation that assumes the potential is real will not
+        # return the same points if the original data has an even number of points
+        original_shape = tuple(2 * np.random.randint(1, 5, size=2) - 1)
         points = np.random.random(size=original_shape).tolist()
         interpolated_shape = (original_shape[0] * 2, original_shape[1] * 2)
         expected = points
 
-        actual = np.array(interpolate_points_fourier(points, interpolated_shape))
+        actual = np.array(interpolate_real_points_fourier(points, interpolated_shape))
         np.testing.assert_array_almost_equal(expected, actual[::2, ::2])
 
         actual = np.array(
-            interpolate_points_fourier_complex(points, interpolated_shape)
+            interpolate_complex_points_fourier(points, interpolated_shape)
         )
         np.testing.assert_array_almost_equal(expected, actual[::2, ::2])
 
@@ -60,10 +64,10 @@ class InterpolationTest(unittest.TestCase):
         shape_out = tuple(np.random.randint(1, 10, size=2))
 
         expected = value * np.ones(shape_out)
-        actual = interpolate_points_fourier(points, (shape_out[0], shape_out[1]))
+        actual = interpolate_real_points_fourier(points, (shape_out[0], shape_out[1]))
         np.testing.assert_array_almost_equal(expected, actual)
 
-        actual = interpolate_points_fourier_complex(
+        actual = interpolate_complex_points_fourier(
             points, (shape_out[0], shape_out[1])
         )
         np.testing.assert_array_almost_equal(expected, actual)
@@ -74,10 +78,10 @@ class InterpolationTest(unittest.TestCase):
         points = np.random.random(size=shape).tolist()
 
         expected = points
-        actual = interpolate_points_fourier(points, shape=(shape[0], shape[1]))
+        actual = interpolate_real_points_fourier(points, shape=(shape[0], shape[1]))
         np.testing.assert_array_almost_equal(expected, actual)
 
-        actual = interpolate_points_fourier_complex(points, (shape[0], shape[1]))
+        actual = interpolate_complex_points_fourier(points, (shape[0], shape[1]))
         np.testing.assert_array_almost_equal(expected, actual)
 
     def test_fourier_transform_of_interpolation(self) -> None:
@@ -95,7 +99,63 @@ class InterpolationTest(unittest.TestCase):
         expected[-1:, 0:2] = original_ft[-1:, 0:2]
         expected[-1:, -1:] = original_ft[-1:, -1:]
 
-        interpolation = interpolate_points_fourier(points, int_shape)
+        interpolation = interpolate_real_points_fourier(points, int_shape)
         actual = np.fft.ifft2(interpolation, axes=(0, 1))
 
         np.testing.assert_array_almost_equal(expected, actual)
+
+    def test_interpolate_real_is_real(self) -> None:
+
+        in_shape = (np.random.randint(2, 10), np.random.randint(2, 10))
+        points = np.random.random(size=in_shape)
+        out_shape = (np.random.randint(2, 10), in_shape[1])
+        interpolated = interpolate_points_rfftn(points, out_shape, axes=(0, 1))
+        np.testing.assert_array_equal(interpolated, np.real(interpolated))
+
+    def test_interpolate_symmetric_is_symmetric(self) -> None:
+
+        in_shape = (np.random.randint(2, 10), np.random.randint(2, 10))
+
+        points = np.random.random(size=in_shape)
+        points[1:, :] += points[:0:-1, :]
+        points[:, 1:] += points[:, :0:-1]
+        np.testing.assert_array_equal(points[1:, :], points[:0:-1, :])
+        np.testing.assert_array_equal(points[:, 1:], points[:, :0:-1])
+
+        out_shape = (np.random.randint(2, 10), np.random.randint(2, 10))
+        interpolated = interpolate_real_points_fourier(points, out_shape)
+        np.testing.assert_array_equal(interpolated[1:, :], interpolated[:0:-1, :])
+
+    def test_pad_ft_points(self) -> None:
+        array = np.array([1])
+        actual = pad_ft_points(array, s=(2,), axes=(0,))
+        expected = np.array([1, 0])
+        np.testing.assert_array_equal(actual, expected)
+
+        array = np.array([1, 2])
+        actual = pad_ft_points(array, s=(3,), axes=(0,))
+        expected = np.array([1, 0, 2])
+        np.testing.assert_array_equal(actual, expected)
+
+        array = np.array([1, 2, 3])
+        actual = pad_ft_points(array, s=(4,), axes=(0,))
+        expected = np.array([1, 2, 0, 3])
+        np.testing.assert_array_equal(actual, expected)
+
+        array = np.array(
+            [
+                [[1, 1], [2, 1], [3, 1]],
+                [[1, 2], [2, 2], [3, 2]],
+                [[1, 3], [2, 3], [3, 3]],
+            ]
+        )
+        actual = pad_ft_points(array, s=(4, 4), axes=(0, 1))
+        expected = np.array(
+            [
+                [[1, 1], [2, 1], [0, 0], [3, 1]],
+                [[1, 2], [2, 2], [0, 0], [3, 2]],
+                [[0, 0], [0, 0], [0, 0], [0, 0]],
+                [[1, 3], [2, 3], [0, 0], [3, 3]],
+            ]
+        )
+        np.testing.assert_array_equal(actual, expected, verbose=True)

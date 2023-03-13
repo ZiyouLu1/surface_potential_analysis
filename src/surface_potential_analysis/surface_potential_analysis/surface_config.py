@@ -23,8 +23,8 @@ def get_surface_xy_points(
     xy_points = grid_space(
         surface["delta_x0"], surface["delta_x1"], shape=shape, endpoint=False
     )
-    xy_points[:, 0] -= offset[0]
-    xy_points[:, 1] -= offset[1]
+    xy_points[:, 0] += offset[0]
+    xy_points[:, 1] += offset[1]
     return xy_points.reshape(*shape, 2)
 
 

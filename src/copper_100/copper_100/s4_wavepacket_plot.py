@@ -24,20 +24,20 @@ from surface_potential_analysis.surface_config import get_reciprocal_surface
 from surface_potential_analysis.surface_config_plot import plot_points_on_surface_xy
 from surface_potential_analysis.wavepacket_grid import (
     WavepacketGrid,
+    calculate_wavepacket_grid_fourier,
+    calculate_wavepacket_grid_fourier_fourier,
     load_wavepacket_grid,
     load_wavepacket_grid_legacy,
     reflect_wavepacket_in_axis,
-    symmetrize_wavepacket_about_far_edge,
 )
 from surface_potential_analysis.wavepacket_grid_plot import (
     animate_ft_wavepacket_grid_3D_in_xy,
-    animate_wavepacket_grid_3D_in_x1z,
+    animate_wavepacket_grid_3D_in_x0z,
     animate_wavepacket_grid_3D_in_xy,
     plot_ft_wavepacket_grid_xy,
-    plot_wavepacket_grid_in_x0z,
+    plot_wavepacket_grid_x0z,
     plot_wavepacket_grid_x1,
     plot_wavepacket_grid_xy,
-    plot_wavepacket_in_xy,
 )
 
 from .s4_wavepacket import normalize_eigenstate_phase_copper
@@ -45,7 +45,7 @@ from .surface_data import get_data_path, save_figure
 
 
 def plot_wavepacket_points():
-    path = get_data_path("eigenstates_grid_relaxed_hd.json")
+    path = get_data_path("eigenstates_grid_0.json")
     eigenstates = load_energy_eigenstates(path)
     fig, _, _ = plot_eigenstate_positions(eigenstates)
 
@@ -60,47 +60,42 @@ def plot_wavepacket_points():
     input()
 
 
-def plot_wavepacket_2D():
-    path = get_data_path("copper_eigenstates_grid_normalized.json")
-    normalized = load_energy_eigenstates_legacy(path)
+def plot_wavepacket_at_z_origin():
+    path = get_data_path("eigenstates_grid_0.json")
+    eigenstates = load_energy_eigenstates(path)
+    normalized = normalize_eigenstate_phase_copper(eigenstates)
+    grid = calculate_wavepacket_grid_fourier(normalized, [0.0], (-4, 4), (-4, 4))
 
-    fig, _, _ = plot_wavepacket_in_xy(normalized)
+    fig, ax, _ = plot_wavepacket_grid_xy(grid, measure="abs")
     fig.show()
-    save_figure(fig, "wavepacket3_eigenstates_2D.png")
+    ax.set_title("Plot of abs(wavefunction) for z=0")
+    save_figure(fig, "wavepacket_grid_z_origin.png")
 
-
-def plot_localized_wavepacket_grid():
-    path = get_data_path("copper_eigenstates_wavepacket.json")
-    wavepacket = symmetrize_wavepacket_about_far_edge(load_wavepacket_grid_legacy(path))
-
-    fig, _, img = plot_wavepacket_grid_xy(wavepacket, z_ind=10, measure="real")
-    img.set_norm("symlog")  # type: ignore
+    fig, ax, _ = plot_wavepacket_grid_xy(grid, measure="real")
     fig.show()
-    save_figure(fig, "copper_eigenstates_wavepacket_xy_approx.png")
+    ax.set_title("Plot of real(wavefunction) for z=0")
+    save_figure(fig, "wavepacket_grid_z_origin_real.png")
 
-    fig, _, img = plot_wavepacket_grid_xy(wavepacket, z_ind=9, measure="imag")
-    img.set_norm("symlog")  # type: ignore
+    fig, ax, _ = plot_wavepacket_grid_xy(grid, measure="imag")
     fig.show()
-    save_figure(fig, "copper_eigenstates_wavepacket_xy_approx_imag.png")
-
-    fig, _, img = plot_wavepacket_grid_xy(wavepacket, z_ind=9, measure="abs")
-    img.set_norm("symlog")  # type: ignore
-    fig.show()
-    save_figure(fig, "copper_eigenstates_wavepacket_xy_approx_log.png")
+    ax.set_title("Plot of imag(wavefunction) for z=0")
+    save_figure(fig, "wavepacket_grid_z_origin_imag.png")
     input()
 
 
-def plot_wavefunction_3D():
-    path = get_data_path("copper_eigenstates_wavepacket_flat_band.json")
-    path = get_data_path("copper_eigenstates_wavepacket.json")
-    path = get_data_path("copper_eigenstates_wavepacket_offset.json")
-    wavepacket = load_wavepacket_grid_legacy(path)
-    wavepacket = symmetrize_wavepacket_about_far_edge(wavepacket)
+def plot_wavepacket_3D():
+    path = get_data_path("eigenstates_grid_0.json")
+    path = get_data_path("eigenstates_grid_1.json")
+    eigenstates = load_energy_eigenstates(path)
+    normalized = normalize_eigenstate_phase_copper(eigenstates)
+    util = EigenstateConfigUtil(eigenstates["eigenstate_config"])
+    z_points = np.linspace(-2 * util.characteristic_z, 2 * util.characteristic_z)
+    grid = calculate_wavepacket_grid_fourier(normalized, z_points, (-4, 4), (-4, 4))
 
-    fig, _, _ = animate_wavepacket_grid_3D_in_xy(wavepacket)
+    fig, _, _ = animate_wavepacket_grid_3D_in_xy(grid)
     fig.show()
     input()
-    fig, _, _ = animate_wavepacket_grid_3D_in_x1z(wavepacket)
+    fig, _, _ = animate_wavepacket_grid_3D_in_x0z(grid)
     fig.show()
     input()
 
@@ -117,7 +112,7 @@ def plot_relaxed_wavefunction_3D():
     fig.show()
     input()
 
-    fig, _, _ = animate_wavepacket_grid_3D_in_x1z(wavepacket)
+    fig, _, _ = animate_wavepacket_grid_3D_in_x0z(wavepacket)
     fig.show()
     input()
 
@@ -341,9 +336,7 @@ def plot_wavefunction_xz_bridge():
     wavepacket_8 = load_wavepacket_grid_legacy(path)
 
     fig, ax = plt.subplots()
-    _, _, im = plot_wavepacket_grid_in_x0z(
-        wavepacket_8, x2_ind=32, ax=ax, measure="real"
-    )
+    _, _, im = plot_wavepacket_grid_x0z(wavepacket_8, x2_ind=32, ax=ax, measure="real")
     im.set_norm("symlog")  # type: ignore
 
     fig.show()
@@ -528,8 +521,8 @@ def plot_eigenstate_difference_in_z(
 
 
 def analyze_wavepacket_grid_1_points():
-    path = get_data_path("copper_eigenstates_grid_4.json")
-    eigenstates = load_energy_eigenstates_legacy(path)
+    path = get_data_path("eigenstates_grid_1.json")
+    eigenstates = load_energy_eigenstates(path)
     filtered = filter_eigenstates_n_point(eigenstates, n=1)
 
     normalized = normalize_eigenstate_phase_copper(eigenstates)
@@ -579,3 +572,76 @@ def analyze_wavepacket_grid_1_points():
     fig.show()
 
     input()
+
+
+def compare_double_fourier_wavepacket():
+    """
+    Test calculate_wavepacket_grid_fourier_fourier. It appears that
+    we see a reduction in the overall noise seen.
+    """
+    path = get_data_path("eigenstates_grid_offset_0.json")
+    eigenstates = load_energy_eigenstates(path)
+    normalized = normalize_eigenstate_phase_copper(eigenstates)
+
+    grid1 = calculate_wavepacket_grid_fourier(
+        normalized, [0.0], x0_lim=(-4, 4), x1_lim=(-4, 4)
+    )
+    fig, ax, _ = plot_wavepacket_grid_xy(grid1, measure="abs")
+    fig.show()
+    fig, ax, _ = plot_wavepacket_grid_xy(grid1, measure="real")
+    fig.show()
+    fig, ax, _ = plot_wavepacket_grid_xy(grid1, measure="imag")
+    fig.show()
+
+    grid2 = calculate_wavepacket_grid_fourier_fourier(
+        normalized, [0.0], x0_lim=(-4, 4), x1_lim=(-4, 4)
+    )
+    fig, ax, _ = plot_wavepacket_grid_xy(grid2, measure="abs")
+    fig.show()
+    fig, ax, _ = plot_wavepacket_grid_xy(grid2, measure="real")
+    fig.show()
+    fig, ax, _ = plot_wavepacket_grid_xy(grid2, measure="imag")
+    fig.show()
+    input()
+
+
+def test_eigenstate_k_precision():
+    """
+    Does the loss of prescision from util._get_fourier_coordinates_in_grid
+    cause additional noise in the wavepacket
+
+    It turns out no - this only accounts to around 10-16 error,
+    and has no noticeable effect on the noise
+    """
+    path = get_data_path("eigenstates_grid_offset_0.json")
+    eigenstates = load_energy_eigenstates(path)
+    util = EigenstateConfigUtil(eigenstates["eigenstate_config"])
+
+    Ns = int(np.sqrt(len(eigenstates["eigenvectors"])))
+    for (i, (kx, ky)) in enumerate(
+        zip(eigenstates["kx_points"], eigenstates["ky_points"])
+    ):
+        xy_points = util._get_fourier_coordinates_in_grid((0, 1), (0, 1))
+        phases = xy_points[:, :, 0] * kx + xy_points[:, :, 1] * ky
+        phase_points = np.exp(1j * phases)
+
+        nkx_0 = i // Ns
+        nkx_1 = i % Ns
+        x0v, x1v = np.meshgrid(
+            np.arange(util.Nkx0), np.arange(util.Nkx1), indexing="ij"
+        )
+
+        actual_phases = (
+            2
+            * np.pi
+            * ((nkx_0 * x0v / (util.Nkx0 * Ns)) + (nkx_1 * x1v / (util.Nkx1 * Ns)))
+        )
+        actual_phase_points = np.exp(1j * actual_phases)
+
+        np.testing.assert_array_almost_equal(phase_points, actual_phase_points)
+        # np.testing.assert_array_equal(phase_points, actual_phase_points)
+        # np.testing.assert_array_equal(for_each[0], for_each[1])
+        # For the combined phases for each k we find
+        # Mismatched elements: 12577 / 33856 (37.1%)
+        # Max absolute difference: 1.77635684e-15
+        # Max relative difference: 4.40845244e-16

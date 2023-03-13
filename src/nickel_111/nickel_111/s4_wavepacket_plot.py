@@ -10,8 +10,8 @@ from surface_potential_analysis.eigenstate import EigenstateConfigUtil
 from surface_potential_analysis.eigenstate_plot import (
     animate_eigenstate_3D_in_xy,
     plot_eigenstate_in_xy,
-    plot_eigenstate_in_xz,
     plot_eigenstate_in_yz,
+    plot_eigenstate_x0z,
 )
 from surface_potential_analysis.energy_eigenstate import (
     EnergyEigenstates,
@@ -29,7 +29,7 @@ from surface_potential_analysis.wavepacket_grid import (
     save_wavepacket_grid,
 )
 from surface_potential_analysis.wavepacket_grid_plot import (
-    animate_wavepacket_grid_3D_in_x1z,
+    animate_wavepacket_grid_3D_in_x0z,
     animate_wavepacket_grid_3D_in_xy,
 )
 
@@ -106,16 +106,16 @@ def plot_wavepacket_points_in_xz_from_list():
     eigenstate_list = get_eigenstate_list(eigenstates)
     config = eigenstates["eigenstate_config"]
 
-    fig, _, _anim1 = plot_eigenstate_in_xz(config, eigenstate_list[0], measure="real")
+    fig, _, _anim1 = plot_eigenstate_x0z(config, eigenstate_list[0], measure="real")
     fig.show()
 
-    fig, _, _anim2 = plot_eigenstate_in_xz(config, eigenstate_list[1], measure="real")
+    fig, _, _anim2 = plot_eigenstate_x0z(config, eigenstate_list[1], measure="real")
     fig.show()
 
-    fig, _, _anim3 = plot_eigenstate_in_xz(config, eigenstate_list[2], measure="real")
+    fig, _, _anim3 = plot_eigenstate_x0z(config, eigenstate_list[2], measure="real")
     fig.show()
 
-    fig, _, _anim4 = plot_eigenstate_in_xz(config, eigenstate_list[3], measure="real")
+    fig, _, _anim4 = plot_eigenstate_x0z(config, eigenstate_list[3], measure="real")
     fig.show()
     input()
 
@@ -241,7 +241,7 @@ def test_single_k_wavepacket():
     )
     fig.show()
 
-    fig, ax, _anim2 = animate_wavepacket_grid_3D_in_x1z(
+    fig, ax, _anim2 = animate_wavepacket_grid_3D_in_x0z(
         grid1, norm="linear", measure="real"
     )
     fig.show()
@@ -392,7 +392,7 @@ def plot_wavepacket_grid():
     eigenstates = load_energy_eigenstates(path)
     eigenstates = normalize_eigenstate_phase(eigenstates, (0, 0, 0))
 
-    z_points = [0]
+    z_points = [0.0]
     grid = calculate_wavepacket_grid_fourier(
         eigenstates, z_points, x0_lim=(0, 10), x1_lim=(0, 10)
     )

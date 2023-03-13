@@ -1,180 +1,65 @@
 import numpy as np
 import scipy.optimize
 from matplotlib import pyplot as plt
-from matplotlib.axes import Axes
-from matplotlib.collections import QuadMesh
-from matplotlib.figure import Figure
-from matplotlib.lines import Line2D
 from numpy.typing import NDArray
 
-from surface_potential_analysis.energy_data_plot import (
-    calculate_cumulative_distances_along_path,
+from surface_potential_analysis.overlap_transform import (
+    OverlapTransform,
+    load_overlap_transform,
 )
-from surface_potential_analysis.surface_config import (
-    SurfaceConfig,
-    get_surface_xy_points,
+from surface_potential_analysis.overlap_transform_plot import (
+    plot_overlap_transform_along_diagonal,
+    plot_overlap_transform_x0z,
+    plot_overlap_transform_xy,
+    plot_overlap_xy,
 )
-from surface_potential_analysis.surface_config_plot import (
-    plot_ft_points_on_surface_xy,
-    plot_points_on_surface_x0z,
-    plot_points_on_surface_xy,
-)
+from surface_potential_analysis.surface_config import get_surface_xy_points
 
-from .s5_overlap import OverlapTransform, load_overlap_transform
 from .surface_data import get_data_path, save_figure
 
 
-def plot_overlap_transform_xy(
-    overlap: OverlapTransform,
-    ikz=0,
-    *,
-    ax: Axes | None = None,
-    measure: Literal["real", "imag", "abs"] = "abs",
-    norm: Literal["symlog", "linear"] = "symlog",
-) -> tuple[Figure, Axes, QuadMesh]:
-    reciprocal_surface: SurfaceConfig = {
-        "delta_x0": overlap["dkx0"] * overlap["points"].shape[0],
-        "delta_x1": overlap["dkx1"] * overlap["points"].shape[1],
+def get_max_point(overlap: OverlapTransform) -> tuple[int, int, int]:
+    points = np.asarray(overlap["points"])
+    (ikx0, ikx1, inz) = np.unravel_index(np.argmax(np.abs(points)), shape=points.shape)
+    return (int(ikx0), int(ikx1), int(inz))
+
+
+def make_transform_real_at(
+    overlap: OverlapTransform, point: tuple[int, int, int] | None = None
+) -> OverlapTransform:
+    """
+    Shift the phase of the overlap transform such tha tis it real at point
+    This is equivalent to shifting the origin of the real space grid we use when
+    calculating the overlap.
+
+    Parameters
+    ----------
+    overlap : OverlapTransform
+    point : tuple[int, int, int] | None, optional
+        Point to make real, by default the maximum of the transform
+
+    Returns
+    -------
+    OverlapTransform
+        A new overlap transform, which is real at the given point
+    """
+    point = get_max_point(overlap) if point is None else point
+
+    new_points = overlap["points"] * np.exp(-1j * np.angle(overlap["points"][point]))
+    return {
+        "dkx0": overlap["dkx0"],
+        "dkx1": overlap["dkx1"],
+        "dkz": overlap["dkz"],
+        "points": new_points,
     }
-
-    fig, ax, mesh = plot_points_on_surface_xy(
-        reciprocal_surface,
-        np.fft.fftshift(overlap["points"], axes=(0, 1)),
-        z_ind=ikz,
-        ax=ax,
-        measure=measure,
-    )
-    ax.set_xlabel("kx direction")
-    ax.set_ylabel("ky direction")
-    mesh.set_norm(norm)  # type: ignore
-    ax.set_aspect("equal", adjustable="box")
-    fig.colorbar(mesh, ax=ax, format="%4.1e")
-
-    return fig, ax, mesh
-
-
-def plot_overlap_xy(
-    overlap: OverlapTransform,
-    ikz=0,
-    *,
-    ax: Axes | None = None,
-    measure: Literal["real", "imag", "abs"] = "abs",
-    norm: Literal["symlog", "linear"] = "symlog",
-) -> tuple[Figure, Axes, QuadMesh]:
-    reciprocal_surface: SurfaceConfig = {
-        "delta_x0": overlap["dkx0"] * overlap["points"].shape[0],
-        "delta_x1": overlap["dkx1"] * overlap["points"].shape[1],
-    }
-
-    fig, ax, mesh = plot_ft_points_on_surface_xy(
-        reciprocal_surface,
-        overlap["points"],
-        z_ind=ikz,
-        ax=ax,
-        measure=measure,
-    )
-    ax.set_xlabel("x direction")
-    ax.set_ylabel("y direction")
-    mesh.set_norm(norm)  # type: ignore
-    ax.set_aspect("equal", adjustable="box")
-    fig.colorbar(mesh, ax=ax, format="%4.1e")
-
-    return fig, ax, mesh
-
-
-def plot_overlap_transform_x0z(
-    overlap: OverlapTransform,
-    x1_ind: int = 0,
-    *,
-    measure: Literal["real", "imag", "abs"] = "abs",
-    ax: Axes | None = None,
-    norm: Literal["symlog", "linear"] = "symlog",
-) -> tuple[Figure, Axes, QuadMesh]:
-    reciprocal_surface: SurfaceConfig = {
-        "delta_x0": overlap["dkx0"] * overlap["points"].shape[0],
-        "delta_x1": overlap["dkx1"] * overlap["points"].shape[1],
-    }
-    z_points = overlap["dkz"] * np.arange(overlap["points"].shape[2])
-
-    fig, ax, mesh = plot_points_on_surface_x0z(
-        reciprocal_surface,
-        np.fft.fftshift(overlap["points"], axes=(0,)).tolist(),
-        z_points.tolist(),
-        x1_ind=x1_ind,
-        ax=ax,
-        measure=measure,
-    )
-
-    ax.set_xlabel("kx0 direction")
-    ax.set_ylabel("kz direction")
-    mesh.set_norm(norm)  # type: ignore
-    # ax.set_aspect("equal", adjustable="box")
-    fig.colorbar(mesh, ax=ax, format="%4.1e")
-
-    return fig, ax, mesh
-
-
-def plot_overlap_transform_along_path(
-    overlap: OverlapTransform,
-    path: NDArray,
-    kz_ind: int = 0,
-    *,
-    measure: Literal["real", "imag", "abs", "angle"] = "abs",
-    ax: Axes | None = None,
-) -> tuple[Figure, Axes, Line2D]:
-    fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
-
-    overlap_shape = np.shape(overlap["points"])
-    points = np.fft.fftshift(overlap["points"], axes=(0, 1))[
-        path[:, 0], path[:, 1], kz_ind
-    ]
-    if measure == "real":
-        data = np.real(points)
-    elif measure == "imag":
-        data = np.imag(points)
-    elif measure == "abs":
-        data = np.abs(points)
-    else:
-        data = np.unwrap(np.angle(points))
-
-    kxy_points = get_surface_xy_points(
-        {
-            "delta_x0": (
-                overlap["dkx0"][0] * overlap_shape[0],
-                overlap["dkx0"][1] * overlap_shape[0],
-            ),
-            "delta_x1": (
-                overlap["dkx1"][0] * overlap_shape[1],
-                overlap["dkx1"][1] * overlap_shape[1],
-            ),
-        },
-        shape=(overlap_shape[0], overlap_shape[1]),
-    )
-
-    distances = calculate_cumulative_distances_along_path(path, kxy_points)
-    (line,) = ax.plot(distances, data)
-    return fig, ax, line
-
-
-def plot_overlap_transform_along_diagonal(
-    overlap: OverlapTransform,
-    kz_ind: int = 0,
-    *,
-    measure: Literal["real", "imag", "abs", "angle"] = "abs",
-    ax: Axes | None = None,
-) -> tuple[Figure, Axes, Line2D]:
-
-    path = np.array([[i, i] for i in range(overlap["points"].shape[0])])
-    return plot_overlap_transform_along_path(
-        overlap, path, kz_ind, measure=measure, ax=ax
-    )
 
 
 def plot_overlap():
-    path = get_data_path("overlap_transform_hcp_fcc.npz")
+    path = get_data_path("overlap_transform_shifted_hcp_fcc.npz")
     # path = get_data_path("overlap_transform_interpolated_hcp_fcc.npz")
+    # path = get_data_path("overlap_transform_extended_hcp_fcc.npz")
     overlap = load_overlap_transform(path)
-
+    # overlap = make_transform_real_at(overlap, point=(1, 1, 0))
     fig, ax, _ = plot_overlap_transform_xy(overlap)
     ax.set_title(
         "Plot of the overlap transform for ikz=0\n"
@@ -184,6 +69,24 @@ def plot_overlap():
     save_figure(fig, "2d_overlap_transform_kx_ky.png")
     fig.show()
 
+    fig, ax, _ = plot_overlap_transform_xy(overlap, measure="real")
+    ax.set_title(
+        "Plot of the overlap transform for ikz=0\n"
+        "showing oscillation in the direction corresponding to\n"
+        "a vector spanning the fcc and hcp sites"
+    )
+    save_figure(fig, "2d_overlap_transform_real_kx_ky.png")
+    fig.show()
+
+    fig, ax, _ = plot_overlap_transform_xy(overlap, measure="imag")
+    ax.set_title(
+        "Plot of the overlap transform for ikz=0\n"
+        "showing oscillation in the direction corresponding to\n"
+        "a vector spanning the fcc and hcp sites"
+    )
+    save_figure(fig, "2d_overlap_transform_imag_kx_ky.png")
+    fig.show()
+
     fig, ax, _ = plot_overlap_xy(overlap)
     ax.set_title(
         "Plot of the overlap summed over z\n"
@@ -191,6 +94,15 @@ def plot_overlap():
         "in a small region in the center of the figure"
     )
     save_figure(fig, "2d_overlap_kx_ky.png")
+    fig.show()
+
+    fig, ax, _ = plot_overlap_xy(overlap, measure="real")
+    ax.set_title(
+        "Plot of the overlap summed over z\n"
+        "showing the FCC and HCP asymmetry\n"
+        "in a small region in the center of the figure"
+    )
+    save_figure(fig, "2d_overlap_real_kx_ky.png")
     fig.show()
 
     fig, ax, _ = plot_overlap_transform_x0z(overlap)
@@ -209,9 +121,89 @@ def plot_overlap():
     _, _, ln = plot_overlap_transform_along_diagonal(overlap, measure="imag", ax=ax)
     ln.set_label("imag")
 
-    # ax2 = ax.twinx()
-    # _, _, ln = plot_overlap_transform_along_diagonal(overlap, measure="angle", ax=ax2)
-    # ln.set_label("angle")
+    delta_k = np.linalg.norm(
+        np.add(
+            np.multiply(overlap["dkx0"], overlap["points"].shape[0]),
+            np.multiply(overlap["dkx1"], overlap["points"].shape[1]),
+        )
+    )
+    k_points = np.linspace(0, delta_k, 5000)
+    # fit_points = (
+    #     0.75
+    #     * np.max(np.abs(overlap["points"]))
+    #     * np.exp(-((k_points - (delta_k / 2)) ** 2) / (delta_k / 8) ** 2)
+    # )
+    # ax.plot(k_points, fit_points)
+    # fit_points = (
+    #     1.1
+    #     * np.max(np.abs(overlap["points"]))
+    #     * np.exp(-((k_points - (delta_k / 2)) ** 2) / (delta_k / 7) ** 2)
+    # )
+
+    # ax.plot(k_points, fit_points)
+
+    # fit_points = (
+    #     0.4
+    #     * np.max(np.abs(overlap["points"]))
+    #     * np.exp(-((k_points - (delta_k / 2)) ** 2) / (delta_k / 7) ** 2)
+    # )
+
+    # ax.plot(k_points, fit_points)
+
+    # fit_points = (
+    #     (0.75 - 0.35 * np.cos(4 * np.pi * (k_points - (delta_k / 2)) / (delta_k / 8)))
+    #     * np.max(np.abs(overlap["points"]))
+    #     * np.exp(-((k_points - (delta_k / 2)) ** 2) / (delta_k / 7) ** 2)
+    # )
+    # ax.plot(k_points, fit_points)
+
+    # fit_points = (
+    #     (0.72 - 0.35 * np.cos(4 * np.pi * (k_points - (delta_k / 2)) / (delta_k / 8)))
+    #     * np.min(np.real(overlap["points"]))
+    #     * np.exp(-((k_points - (delta_k / 2)) ** 2) / (delta_k / 7) ** 2)
+    # )
+    # ax.plot(k_points, fit_points)
+
+    # fit_points = (
+    #     (
+    #         -np.sign(k_points - (delta_k / 2)) * 0.27
+    #         - 0.4 * np.sin(4 * np.pi * (k_points - (delta_k / 2)) / (delta_k / 8))
+    #     )
+    #     * np.min(np.real(overlap["points"]))
+    #     * np.exp(-((k_points - (delta_k / 2)) ** 2) / (delta_k / 7) ** 2)
+    # )
+    # ax.plot(k_points, fit_points)
+
+    # fit_points = (
+    #     -2
+    #     * ((k_points - (delta_k / 2)) / (delta_k / 8))
+    #     * (0.72 - 0.35 * np.cos(4 * np.pi * (k_points - (delta_k / 2)) / (delta_k / 8)))
+    #     * np.min(np.real(overlap["points"]))
+    #     * np.exp(-((k_points - (delta_k / 2)) ** 2) / (delta_k / 7) ** 2)
+    # )
+
+    ax2 = ax.twinx()
+    _, _, ln = plot_overlap_transform_along_diagonal(overlap, measure="angle", ax=ax2)
+    ln.set_label("angle")
+    fit_points = (
+        -2
+        * ((k_points - (delta_k / 2)) / (delta_k / 8))
+        * (0.72 - 0.35 * np.cos(4 * np.pi * (k_points - (delta_k / 2)) / (delta_k / 8)))
+        * np.min(np.real(overlap["points"]))
+        * np.exp(-((k_points - (delta_k / 2)) ** 2) / (delta_k / 7) ** 2)
+    )
+
+    def fit_curve(
+        kxy: tuple[NDArray, NDArray], dkx: float, dky: float, A0: float, alpha: float
+    ):
+        (kx, ky) = kxy
+        return (
+            (np.sin(kx / dkx + ky / dky) ** 2)
+            * A0
+            * np.exp(-(kx**2 + ky**2) / alpha**2)
+        )
+
+    ax2.plot(k_points, fit_points)
 
     ax.legend()
     ax.set_title(
@@ -237,8 +229,8 @@ def fit_overlap_transform():
     print((points[178, 177, 0]))
     print((points[178, 178, 0]))
 
-    print(np.unravel_index(np.argmax(points), shape=points.shape))
-    (ikx0, ikx1, _) = np.unravel_index(np.argmax(points), shape=points.shape)
+    print(get_max_point(overlap))
+    (ikx0, ikx1, _) = get_max_point(overlap)
     ikx0 = 184 - ikx0
     ikx1 = 184 - ikx1
     kmax = (

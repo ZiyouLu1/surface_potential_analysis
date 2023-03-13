@@ -150,9 +150,9 @@ class SurfaceHamiltonianUtil(EigenstateConfigUtil):
         )
 
     @cache
-    def _calculate_off_diagonal_entry(self, nz1, nz2, ndkx, ndky) -> float:
+    def _calculate_off_diagonal_entry(self, nz1, nz2, ndkx0, ndkx1) -> float:
         """Calculates the off diagonal energy using the 'folded' points ndkx, ndky"""
-        ft_pot_points = self.get_ft_potential()[ndkx, ndky]
+        ft_pot_points = self.get_ft_potential()[ndkx0, ndkx1]
         hermite1 = self._calculate_sho_wavefunction_points(nz1)
         hermite2 = self._calculate_sho_wavefunction_points(nz2)
 
@@ -165,8 +165,8 @@ class SurfaceHamiltonianUtil(EigenstateConfigUtil):
         n_coordinates = len(self.eigenstate_indexes)
         hamiltonian = np.zeros(shape=(n_coordinates, n_coordinates))
 
-        for (index1, [nkx1, nky1, nz1]) in enumerate(self.eigenstate_indexes):
-            for (index2, [nkx2, nky2, nz2]) in enumerate(self.eigenstate_indexes):
+        for (index1, [nkx0_0, nkx1_0, nz1]) in enumerate(self.eigenstate_indexes):
+            for (index2, [nkx0_1, nkx1_1, nz2]) in enumerate(self.eigenstate_indexes):
                 # Number of jumps in units of dkx for this matrix element
 
                 # As k-> k+ Nx * dkx the ft potential is left unchanged
@@ -175,11 +175,11 @@ class SurfaceHamiltonianUtil(EigenstateConfigUtil):
 
                 # In reality we want to make sure ndkx < Nx (ie we should
                 # make sure we generate enough points in the interpolation)
-                ndkx = (nkx2 - nkx1) % self.Nx
-                ndky = (nky2 - nky1) % self.Ny
+                ndkx0 = (nkx0_1 - nkx0_0) % self.Nx
+                ndkx1 = (nkx1_1 - nkx1_0) % self.Ny
 
                 hamiltonian[index1, index2] = self._calculate_off_diagonal_entry(
-                    nz1, nz2, ndkx, ndky
+                    nz1, nz2, ndkx0, ndkx1
                 )
 
         return hamiltonian

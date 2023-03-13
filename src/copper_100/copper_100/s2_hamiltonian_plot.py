@@ -3,13 +3,11 @@ from surface_potential_analysis.energy_eigenstate import EigenstateConfig
 from surface_potential_analysis.sho_wavefunction_plot import (
     plot_energy_with_sho_potential_at_hollow,
 )
-from surface_potential_analysis.surface_hamiltonian_plot import plot_nth_eigenstate
 
 from .s1_potential import (
     load_interpolated_copper_data,
     load_spline_interpolated_relaxed_data,
 )
-from .s2_hamiltonian import generate_hamiltonian
 
 
 def plot_interpolation_with_sho_config() -> None:
@@ -42,13 +40,5 @@ def plot_relaxed_interpolation_with_sho_config() -> None:
     }
     z_offset = -1.8866087481825024e-10
     fig, _ = plot_energy_with_sho_potential_at_hollow(interpolation, config, z_offset)
-    fig.show()
-    input()
-
-
-def plot_copper_ground_eigenvector():
-    h = generate_hamiltonian(resolution=(12, 12, 10))
-    fig, _ = plot_nth_eigenstate(h)
-
     fig.show()
     input()

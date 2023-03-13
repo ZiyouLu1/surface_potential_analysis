@@ -80,7 +80,6 @@ def plot_energy_with_sho_potential_at_minimum(
     points = np.array(interpolation["points"], dtype=float)
     arg_min = np.unravel_index(np.argmin(points), points.shape)
     xy_ind = (int(arg_min[0]), int(arg_min[1]))
-    print(arg_min)
 
     fig, ax = plot_energy_with_sho_potential(
         interpolation, eigenstate_config, z_offset, xy_ind, ax=ax

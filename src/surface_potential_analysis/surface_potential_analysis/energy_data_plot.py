@@ -459,7 +459,7 @@ def plot_energy_point_locations_on_grid(
 
 def calculate_cumulative_distances_along_path(path: ArrayLike, coordinates: NDArray):
     """
-    Get a list of cumulative distances along a path (list[coordinate]) given a grid of coordinates
+    Get a list of cumulative distances along a path ([x_coord, y_coord, z_coord]) given a grid of coordinates
 
     Parameters
     ----------
@@ -469,9 +469,7 @@ def calculate_cumulative_distances_along_path(path: ArrayLike, coordinates: NDAr
         Coordinate grid, with the same simension as the coordinates given in the path
     """
     coordinate_shape = np.shape(coordinates)[0:-1]
-    path_index = np.ravel_multi_index(
-        np.moveaxis(path, -1, 0), coordinate_shape  # type:ignore
-    )
+    path_index = np.ravel_multi_index(path, coordinate_shape)
     path_coordinates = coordinates.reshape(-1, coordinates.shape[-1])[path_index]
 
     distances = np.linalg.norm(path_coordinates[:-1] - path_coordinates[1:], axis=-1)
@@ -507,7 +505,9 @@ def plot_potential_minimum_along_path(
     coordinates = get_surface_xy_points(
         grid, (np.shape(grid["points"])[0], np.shape(grid["points"])[1])
     )
-    distances = calculate_cumulative_distances_along_path(path, coordinates)
+    distances = calculate_cumulative_distances_along_path(
+        np.moveaxis(path_arr, -1, 0), coordinates
+    )
 
     (line,) = ax.plot(distances, points)
     ax.set_xlabel("Distance / M")

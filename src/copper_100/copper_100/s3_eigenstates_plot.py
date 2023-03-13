@@ -1,9 +1,21 @@
-import matplotlib.pyplot as plt
+from typing import Literal
 
+import matplotlib.pyplot as plt
+import numpy as np
+from matplotlib.axes import Axes
+from matplotlib.figure import Figure
+from matplotlib.lines import Line2D
+
+from surface_potential_analysis.eigenstate import (
+    Eigenstate,
+    EigenstateConfig,
+    EigenstateConfigUtil,
+)
 from surface_potential_analysis.eigenstate_plot import (
     animate_eigenstate_3D_in_xy,
-    plot_eigenstate_through_bridge,
-    plot_eigenstate_z,
+    plot_bloch_wavefunction_difference_in_x0z,
+    plot_eigenstate_along_path,
+    plot_eigenstate_x0z,
 )
 from surface_potential_analysis.energy_eigenstate import (
     filter_eigenstates_band,
@@ -147,35 +159,63 @@ def plot_lowest_eigenstate_3D_xy():
     input()
 
 
-def analyze_eigenvector_convergence_not_relaxed_z():
+def plot_eigenstate_z_hollow_site(
+    config: EigenstateConfig,
+    eigenstate: Eigenstate,
+    *,
+    ax: Axes | None = None,
+) -> tuple[Figure, Axes, Line2D]:
+
+    util = EigenstateConfigUtil(config)
+    z_points = np.linspace(-util.characteristic_z * 2, util.characteristic_z * 2, 1000)
+    points = np.array(
+        [(util.delta_x0[0] / 2, util.delta_x1[1] / 2, z) for z in z_points]
+    )
+
+    return plot_eigenstate_along_path(config, eigenstate, points, ax=ax)
+
+
+def analyze_eigenvector_convergence_z():
 
     fig, ax = plt.subplots()
 
-    path = get_data_path("eigenstates_25_25_14.json")
+    path = get_data_path("eigenstates_25_25_16.json")
     eigenstates = load_energy_eigenstates(path)
-    _, _, ln = plot_eigenstate_z(
+    _, _, ln = plot_eigenstate_z_hollow_site(
         eigenstates["eigenstate_config"], get_eigenstate_list(eigenstates)[0], ax=ax
     )
-    ln.set_label("(25,25,14) kx=G/2")
+    ln.set_label("(25,25,16) kx=G/2")
 
-    path = get_data_path("eigenstates_23_23_15.json")
+    path = get_data_path("eigenstates_23_23_16.json")
     eigenstates = load_energy_eigenstates(path)
-    _, _, l2 = plot_eigenstate_z(
+    _, _, l2 = plot_eigenstate_z_hollow_site(
         eigenstates["eigenstate_config"], get_eigenstate_list(eigenstates)[0], ax=ax
     )
-    l2.set_label("(23,23,15) kx=G/2")
+    l2.set_label("(23,23,16) kx=G/2")
 
-    ax.set_title(
-        "Plot of energy against k for the lowest band of Copper for $K_y=0$\n"
-        "showing convergence to about 2x$10^{-30}$J "
-    )
     ax.legend()
     fig.show()
     save_figure(fig, "copper_wfn_convergence.png")
     input()
 
 
-def analyze_eigenvector_convergence_not_relaxed_through_bridge():
+def plot_eigenstate_through_bridge(
+    config: EigenstateConfig,
+    eigenstate: Eigenstate,
+    ax: Axes | None = None,
+    measure: Literal["real", "imag", "abs", "angle"] = "abs",
+) -> tuple[Figure, Axes, Line2D]:
+
+    util = EigenstateConfigUtil(config)
+
+    x_points = np.linspace(0, util.delta_x0[0], 1000)
+    points = np.array([(x, util.delta_x1[1] / 2, 0) for x in x_points])
+    return plot_eigenstate_along_path(
+        config, eigenstate, points, ax=ax, measure=measure
+    )
+
+
+def analyze_eigenvector_convergence_through_bridge():
 
     path = get_data_path("eigenstates_25_25_14.json")
     eigenstates = load_energy_eigenstates(path)
@@ -193,7 +233,7 @@ def analyze_eigenvector_convergence_not_relaxed_through_bridge():
         eigenstates["eigenstate_config"],
         get_eigenstate_list(eigenstates)[5],
         ax=ax2,
-        view="angle",
+        measure="angle",
     )
     ln.set_label("(23,23,15)")
 
@@ -207,7 +247,7 @@ def analyze_eigenvector_convergence_not_relaxed_through_bridge():
         eigenstates["eigenstate_config"],
         get_eigenstate_list(eigenstates)[5],
         ax=ax2,
-        view="angle",
+        measure="angle",
     )
     ln.set_label("(25,25,15)")
 
@@ -218,4 +258,55 @@ def analyze_eigenvector_convergence_not_relaxed_through_bridge():
     ax.legend()
     fig.show()
     save_figure(fig, "copper_wfn_convergence_through_bridge.png")
+    input()
+
+
+def plot_bloch_wavefunction_difference_at_boundary():
+
+    path = get_data_path("eigenstates_23_23_16.json")
+    eigenstates0 = load_energy_eigenstates(path)
+    eigenstate0 = get_eigenstate_list(eigenstates0)[0]
+
+    fig, ax, _ = plot_eigenstate_x0z(eigenstates0["eigenstate_config"], eigenstate0)
+    fig.show()
+
+    path = get_data_path("eigenstates_25_25_16.json")
+    eigenstates1 = load_energy_eigenstates(path)
+    eigenstate1 = get_eigenstate_list(eigenstates1)[0]
+
+    fig, ax, _ = plot_eigenstate_x0z(eigenstates1["eigenstate_config"], eigenstate1)
+    fig.show()
+
+    fig, ax, _ = plot_bloch_wavefunction_difference_in_x0z(
+        eigenstates0["eigenstate_config"],
+        eigenstate0,
+        eigenstates1["eigenstate_config"],
+        eigenstate1,
+        measure="abs",
+        norm="linear",
+    )
+    ax.set_title("Divergence in the Abs value of the wavefunction")
+    fig.show()
+
+    fig, ax, _ = plot_bloch_wavefunction_difference_in_x0z(
+        eigenstates0["eigenstate_config"],
+        eigenstate0,
+        eigenstates1["eigenstate_config"],
+        eigenstate1,
+        measure="real",
+        norm="linear",
+    )
+    ax.set_title("Divergence in the real part of the wavefunction")
+    fig.show()
+
+    fig, ax, _ = plot_bloch_wavefunction_difference_in_x0z(
+        eigenstates0["eigenstate_config"],
+        eigenstate0,
+        eigenstates1["eigenstate_config"],
+        eigenstate1,
+        measure="imag",
+        norm="linear",
+    )
+    ax.set_title("Divergence in the imaginary part of the wavefunction")
+    fig.show()
     input()

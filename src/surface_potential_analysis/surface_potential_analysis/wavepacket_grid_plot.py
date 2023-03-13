@@ -6,7 +6,6 @@ import numpy as np
 from matplotlib.axes import Axes
 from matplotlib.collections import QuadMesh
 from matplotlib.figure import Figure
-from matplotlib.image import AxesImage
 
 from surface_potential_analysis.surface_config import SurfaceConfigUtil
 from surface_potential_analysis.surface_config_plot import (
@@ -15,11 +14,6 @@ from surface_potential_analysis.surface_config_plot import (
     plot_points_on_surface_xy,
 )
 
-from .energy_eigenstate import (
-    EigenstateConfigUtil,
-    EnergyEigenstates,
-    get_eigenstate_list,
-)
 from .wavepacket_grid import WavepacketGrid
 
 
@@ -130,20 +124,28 @@ def animate_ft_wavepacket_grid_3D_in_xy(
     return fig, ax, ani
 
 
-def plot_wavepacket_grid_in_x0z(
+def plot_wavepacket_grid_x0z(
     grid: WavepacketGrid,
     x1_ind: int,
     *,
     measure: Literal["real", "imag", "abs"] = "abs",
+    norm: Literal["symlog", "linear"] = "symlog",
     ax: Axes | None = None,
 ) -> tuple[Figure, Axes, QuadMesh]:
 
-    return plot_points_on_surface_x0z(
+    fig, ax, mesh = plot_points_on_surface_x0z(
         grid, grid["points"], grid["z_points"], x1_ind=x1_ind, ax=ax, measure=measure
     )
 
+    ax.set_xlabel("x direction")
+    ax.set_ylabel("z direction")
+    mesh.set_norm(norm)  # type: ignore
+    ax.set_aspect("equal", adjustable="box")
+    fig.colorbar(mesh, ax=ax, format="%4.1e")
+    return fig, ax, mesh
 
-def animate_wavepacket_grid_3D_in_x1z(
+
+def animate_wavepacket_grid_3D_in_x0z(
     grid: WavepacketGrid,
     *,
     ax: Axes | None = None,
@@ -152,12 +154,12 @@ def animate_wavepacket_grid_3D_in_x1z(
 ) -> tuple[Figure, Axes, matplotlib.animation.ArtistAnimation]:
     fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
 
-    _, _, mesh0 = plot_wavepacket_grid_in_x0z(grid, 0, ax=ax, measure=measure)
+    _, _, mesh0 = plot_wavepacket_grid_x0z(grid, 0, ax=ax, measure=measure)
 
     frames: list[list[QuadMesh]] = []
     for x1_ind in range(np.shape(grid["points"])[1]):
 
-        _, _, mesh = plot_wavepacket_grid_in_x0z(grid, x1_ind, ax=ax, measure=measure)
+        _, _, mesh = plot_wavepacket_grid_x0z(grid, x1_ind, ax=ax, measure=measure)
         frames.append([mesh])
 
     max_clim = np.max([i[0].get_clim()[1] for i in frames])
@@ -198,26 +200,3 @@ def plot_wavepacket_grid_x1(
     x1_points = np.linspace(0, np.linalg.norm(grid["delta_x1"]), data.shape[0])
     (line,) = ax.plot(x1_points, data)
     return fig, ax, line
-
-
-def plot_wavepacket_in_xy(
-    eigenstates: EnergyEigenstates,
-    ax: Axes | None = None,
-) -> tuple[Figure, Axes, AxesImage]:
-    fig, ax1 = (ax.get_figure(), ax) if ax is not None else plt.subplots()
-    util = EigenstateConfigUtil(eigenstates["eigenstate_config"])
-
-    x_points = np.linspace(-util.delta_x0[0], util.delta_x0[0], 60)
-    y_points = np.linspace(0, util.delta_x1[1], 30)
-
-    xv, yv = np.meshgrid(x_points, y_points)
-    points = np.array([xv.ravel(), yv.ravel(), np.zeros_like(xv.ravel())]).T
-
-    X = np.zeros_like(xv, dtype=complex)
-    for eigenstate in get_eigenstate_list(eigenstates):
-        print("i")
-        wfn = util.calculate_wavefunction_fast(eigenstate, points)
-        X += (wfn).reshape(xv.shape)
-    im = ax1.imshow(np.abs(X / len(eigenstates["eigenvectors"])))
-    im.set_extent((x_points[0], x_points[-1], y_points[0], y_points[-1]))
-    return (fig, ax1, im)

@@ -5,7 +5,7 @@ from matplotlib.axes import Axes
 from matplotlib.figure import Figure
 from matplotlib.lines import Line2D
 
-from .eigenstate_plot import plot_eigenstate
+from .eigenstate_plot import plot_eigenstate_along_path
 from .hamiltonian import SurfaceHamiltonianUtil
 
 
@@ -39,20 +39,6 @@ def plot_density_of_states(
     return fig, a, line
 
 
-def plot_nth_eigenstate(
-    hamiltonian: SurfaceHamiltonianUtil, n=0, ax: Axes | None = None
-):
-    e_vals, e_vec = hamiltonian.calculate_eigenvalues(
-        hamiltonian.dkx0[0] / 2, hamiltonian.dkx1[1] / 2
-    )
-
-    eigenvalue_index = np.argpartition(e_vals, n)[n]
-    eigenstate = e_vec[eigenvalue_index]
-    fig, a = plot_eigenstate(hamiltonian._config, eigenstate, ax)
-    a.set_title(f"Plot of the n={n} wavefunction")
-    return fig, a
-
-
 def plot_first_4_eigenvectors(hamiltonian: SurfaceHamiltonianUtil) -> Figure:
     fig, axs = plt.subplots(2, 2)
     axes = [axs[0][0], axs[1][0], axs[0][1], axs[1][1]]
@@ -64,7 +50,9 @@ def plot_first_4_eigenvectors(hamiltonian: SurfaceHamiltonianUtil) -> Figure:
     for (n, ax) in enumerate(axes):
         eigenvalue_index = np.argpartition(e_vals, n)[n]
         eigenstate = e_vec[eigenvalue_index]
-        plot_eigenstate(hamiltonian._config, eigenstate, ax=ax)
+        # TODO:
+        points = np.array([])
+        plot_eigenstate_along_path(hamiltonian._config, eigenstate, points, ax=ax)
         ax.set_title(f"Plot of the n={n+1} wavefunction")
 
     fig.tight_layout()

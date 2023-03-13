@@ -14,6 +14,17 @@ from surface_potential_analysis.surface_config import (
 )
 
 
+def make_vectors_orthogonal(vectors: list[NDArray]) -> list[NDArray]:
+    out: list[NDArray] = []
+    for v in vectors:
+        v_out = v
+        for v1 in out:
+            v_out -= (np.dot(v_out, v1) * v1) / (np.linalg.norm(v1) ** 2)
+
+        out.append(v_out)
+    return out
+
+
 class EigenstateConfig(SurfaceConfig):
     resolution: tuple[int, int, int]
     """Resolution in x,y,z to produce the eigenstates in"""
@@ -164,10 +175,12 @@ class EigenstateConfigUtil(SurfaceConfigUtil):
 
         """
         sho_wavefunctions = np.array(
-            [
-                calculate_sho_wavefunction(z_points, self.sho_omega, self.mass, nz)
-                for nz in range(self.Nkz)
-            ]
+            make_vectors_orthogonal(
+                [
+                    calculate_sho_wavefunction(z_points, self.sho_omega, self.mass, nz)
+                    for nz in range(self.Nkz)
+                ]
+            )
         )
 
         # List, list, list of amplitudes for each ikx, iky, ikz
@@ -204,14 +217,67 @@ class EigenstateConfigUtil(SurfaceConfigUtil):
                 nx1 * self.delta_x1[1],
             ),
         }
-        xy_points = get_surface_xy_points(config, xy_shape)
-        xy_points[:, :, 0] += (
-            x0_lim[0] * self.delta_x0[0] + x1_lim[0] * self.delta_x1[0]
+        return get_surface_xy_points(
+            config,
+            xy_shape,
+            offset=(
+                x0_lim[0] * self.delta_x0[0] + x1_lim[0] * self.delta_x1[0],
+                x0_lim[0] * self.delta_x0[1] + x1_lim[0] * self.delta_x1[1],
+            ),
         )
-        xy_points[:, :, 1] += (
-            x0_lim[0] * self.delta_x0[1] + x1_lim[0] * self.delta_x1[1]
+
+    def calculate_wavefunction_slow_grid_fourier_exact_phase(
+        self,
+        eigenvector: list[complex],
+        ns: tuple[int, int],
+        Ns: tuple[int, int],
+        z_points: list[float],
+        x0_lim: tuple[int, int] = (0, 1),
+        x1_lim: tuple[int, int] = (0, 1),
+    ) -> NDArray:
+        """
+        Parameters
+        ----------
+        eigenvector: list[float]
+        ns         : tuple[int, int]
+            Index of the current sample
+        Ns         : tuple[int, int]
+            Total resolution of sample
+        z_points   : list[float]
+        x0_lim     : tuple[int, int], optional
+            Region to sample the wavefunction in the x0 direction, exclusive on the second argument.
+        x0_lim     : tuple[int, int], optional
+            Region to sample the wavefunction in the x1 direction, exclusive on the second argument.
+
+
+        Returns
+        -------
+        NDArray
+            An array containing the wavefunction amplitudes as a list[list[list[complex]]]
+            of amplitudes for each ix, iy, iz
+
+        """
+
+        x0v, x1v = np.meshgrid(
+            np.arange(self.Nkx0 * x0_lim[0], self.Nkx0 * x0_lim[1]),
+            np.arange(self.Nkx1 * x1_lim[0], self.Nkx1 * x1_lim[1]),
+            indexing="ij",
         )
-        return xy_points
+
+        phases = (ns[0] * x0v / (self.Nkx0 * Ns[0])) + (
+            ns[1] * x1v / (self.Nkx1 * Ns[1])
+        )
+        phase_points = np.exp(2j * np.pi * (phases))
+
+        # Bloch wavevector ignoring overall phase
+        bloch_points = self.calculate_bloch_wavefunction_fourier(eigenvector, z_points)
+        # The bloch wavefunctions (by definition) repeat in each unit cell
+        nx0 = x0_lim[1] - x0_lim[0]
+        nx1 = x1_lim[1] - x1_lim[0]
+        repeated_bloch_points = np.tile(bloch_points, (nx0, nx1, 1))
+
+        # Multiply each x, y point by the corresponding phase
+        return repeated_bloch_points * phase_points[:, :, np.newaxis]
 
     def calculate_wavefunction_slow_grid_fourier(
         self,

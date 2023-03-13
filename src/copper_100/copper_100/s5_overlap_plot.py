@@ -5,14 +5,37 @@ from matplotlib.image import AxesImage
 from numpy.typing import NDArray
 
 from surface_potential_analysis.wavepacket_grid import (
+    WavepacketGrid,
     calculate_volume_element,
     load_wavepacket_grid_legacy,
     mask_negative_wavepacket,
-    symmetrize_wavepacket_about_far_edge,
 )
 from surface_potential_analysis.wavepacket_grid_plot import plot_wavepacket_grid_xy
 
 from .surface_data import get_data_path, save_figure
+
+
+def symmetrize_wavepacket_about_far_edge(wavepacket: WavepacketGrid) -> WavepacketGrid:
+
+    points = np.array(wavepacket["points"])
+
+    reflected_shape = (
+        points.shape[0] * 2 - 1,
+        points.shape[1] * 2 - 1,
+        points.shape[2],
+    )
+    reflected_points = np.zeros(reflected_shape, dtype=complex)
+    reflected_points[: points.shape[0], : points.shape[1]] = points[:, :]
+    reflected_points[points.shape[0] - 1 :, : points.shape[1]] = points[::-1, :]
+    reflected_points[: points.shape[0], points.shape[1] - 1 :] = points[:, ::-1]
+    reflected_points[points.shape[0] - 1 :, points.shape[1] - 1 :] = points[::-1, ::-1]
+
+    return {
+        "points": reflected_points.tolist(),
+        "delta_x0": (wavepacket["delta_x0"][0] * 2, wavepacket["delta_x0"][1] * 2),
+        "delta_x1": (wavepacket["delta_x1"][0] * 2, wavepacket["delta_x1"][1] * 2),
+        "z_points": wavepacket["z_points"],
+    }
 
 
 def plot_overlap_factor():

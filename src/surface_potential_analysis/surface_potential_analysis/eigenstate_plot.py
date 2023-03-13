@@ -8,8 +8,15 @@ from matplotlib.collections import QuadMesh
 from matplotlib.figure import Figure
 from matplotlib.image import AxesImage
 from matplotlib.lines import Line2D
+from numpy.typing import NDArray
 
 from surface_potential_analysis.brillouin_zone import grid_space
+from surface_potential_analysis.energy_data_plot import (
+    calculate_cumulative_distances_along_path,
+)
+from surface_potential_analysis.interpolation import interpolate_points_fftn
+from surface_potential_analysis.wavepacket_grid import WavepacketGrid
+from surface_potential_analysis.wavepacket_grid_plot import plot_wavepacket_grid_x0z
 
 from .eigenstate import Eigenstate, EigenstateConfig, EigenstateConfigUtil
 
@@ -108,52 +115,31 @@ def animate_eigenstate_3D_in_xy(
     return fig, ax, ani
 
 
-def plot_eigenstate_z(
+def plot_eigenstate_along_path(
     config: EigenstateConfig,
     eigenstate: Eigenstate,
+    points: NDArray,
+    *,
     ax: Axes | None = None,
+    measure: Literal["real", "imag", "abs"] = "abs",
 ) -> tuple[Figure, Axes, Line2D]:
-    fig, a = (ax.get_figure(), ax) if ax is not None else plt.subplots()
+    fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
 
     util = EigenstateConfigUtil(config)
-
-    z_points = np.linspace(-util.characteristic_z * 2, util.characteristic_z * 2, 1000)
-    points = np.array(
-        [(util.delta_x0[0] / 2, util.delta_x1[1] / 2, z) for z in z_points]
-    )
-
     wfn = np.abs(util.calculate_wavefunction_fast(eigenstate, points))
-    (line,) = a.plot(z_points, wfn)
 
-    return fig, a, line
-
-
-def plot_eigenstate_through_bridge(
-    config: EigenstateConfig,
-    eigenstate: Eigenstate,
-    ax: Axes | None = None,
-    measure: Literal["real", "imag", "abs", "angle"] = "abs",
-) -> tuple[Figure, Axes, Line2D]:
-    fig, ax1 = (ax.get_figure(), ax) if ax is not None else plt.subplots()
-
-    util = EigenstateConfigUtil(config)
-
-    x_points = np.linspace(0, util.delta_x0[0], 1000)
-    points = np.array([(x, util.delta_x1[1] / 2, 0) for x in x_points])
-    wfn = util.calculate_wavefunction_fast(eigenstate, points)
-
-    if measure == "real":
-        data = np.real(wfn)
-    elif measure == "imag":
-        data = np.imag(wfn)
-    elif measure == "angle":
-        data = np.unwrap(np.angle(wfn))
-    else:
-        data = np.abs(wfn)
-
-    (line,) = ax1.plot(x_points - util.delta_x0[0] / 2, data)
-
-    return fig, ax1, line
+    match measure:
+        case "real":
+            data = np.real(wfn)
+        case "imag":
+            data = np.imag(wfn)
+        case "abs":
+            data = np.abs(wfn)
+    distances = calculate_cumulative_distances_along_path(
+        np.arange(points.shape[0]).reshape(1, -1), points
+    )
+    (line,) = ax.plot(distances, data)
+    return fig, ax, line
 
 
 def plot_wavefunction_difference_in_xy(
@@ -181,35 +167,106 @@ def plot_wavefunction_difference_in_xy(
     return (fig, ax1, im)
 
 
-def plot_eigenstate_in_xz(
+def plot_bloch_wavefunction_difference_in_x0z(
+    config0: EigenstateConfig,
+    eigenstate0: Eigenstate,
+    config1: EigenstateConfig,
+    eigenstate1: Eigenstate,
+    x1_ind: int = 0,
+    z_points: list[float] | None = None,
+    *,
+    measure: Literal["real", "imag", "abs"] = "abs",
+    norm: Literal["symlog", "linear"] = "linear",
+    ax: Axes | None = None,
+) -> tuple[Figure, Axes, QuadMesh]:
+    """
+    Plot the difference between the bloch wavefunction for the two eigenstates
+    at x1=x1_ind, where the
+
+    Parameters
+    ----------
+    config0 : EigenstateConfig
+    eigenstate0 : Eigenstate
+    config1: EigenstateConfig
+    eigenstate1 : Eigenstate
+    x1_ind : int, optional
+        Index of the x1 plane to plot, by default 0.
+        Index is taken on the interpolated grid of size NX1_0 * NX1_1
+    z_points : list[float] | None, optional
+        z_points, by default np.linspace(-1 * util.characteristic_z, 4 * util.characteristic_z, 50)
+    measure : Literal[&quot;real&quot;, &quot;imag&quot;, &quot;abs&quot;], optional
+        The measure to display on the quad mesh, by default "abs"
+    ax : Axes | None, optional
+        axis to plot on, by default None
+
+    Returns
+    -------
+    tuple[Figure, Axes, QuadMesh]
+        The figure, axis and QuadMesh for the final image
+    """
+    util0 = EigenstateConfigUtil(config0)
+
+    z_points_actual: list[float] = (
+        np.linspace(
+            -1 * util0.characteristic_z, 4 * util0.characteristic_z, 50
+        ).tolist()
+        if z_points is None
+        else z_points
+    )
+
+    wfn0 = util0.calculate_bloch_wavefunction_fourier(
+        eigenstate0["eigenvector"], z_points_actual
+    )
+    util1 = EigenstateConfigUtil(config1)
+    wfn1 = util1.calculate_bloch_wavefunction_fourier(
+        eigenstate1["eigenvector"], z_points_actual
+    )
+
+    wfn0_interpolated = interpolate_points_fftn(
+        wfn0, s=np.multiply(wfn1.shape[0:2], wfn0.shape[0:2]).tolist(), axes=(0, 1)
+    )
+    wfn1_interpolated = interpolate_points_fftn(
+        wfn1, s=np.multiply(wfn1.shape[0:2], wfn0.shape[0:2]).tolist(), axes=(0, 1)
+    )
+
+    grid: WavepacketGrid = {
+        "delta_x0": util0.delta_x0,
+        "delta_x1": util0.delta_x1,
+        "points": wfn0_interpolated - wfn1_interpolated,
+        "z_points": z_points_actual,
+    }
+    return plot_wavepacket_grid_x0z(grid, x1_ind, measure=measure, norm=norm, ax=ax)
+
+
+def plot_eigenstate_x0z(
     config: EigenstateConfig,
     eigenstate: Eigenstate,
-    ax: Axes | None = None,
+    x1_ind: int = 0,
+    z_points: list[float] | None = None,
     *,
-    y_point=0.0,
+    ax: Axes | None = None,
     measure: Literal["real", "imag", "abs"] = "abs",
+    norm: Literal["symlog", "linear"] = "linear",
 ) -> tuple[Figure, Axes, AxesImage]:
-    fig, ax1 = (ax.get_figure(), ax) if ax is not None else plt.subplots()
     util = EigenstateConfigUtil(config)
 
-    x_points = np.linspace(0, util.delta_x0[0], 29, endpoint=False)
-    z_lim = 2 * util.characteristic_z
-    z_points = np.linspace(-z_lim, z_lim, 29, endpoint=True)
+    z_points_actual: list[float] = (
+        np.linspace(-1 * util.characteristic_z, 4 * util.characteristic_z, 50).tolist()
+        if z_points is None
+        else z_points
+    )
 
-    xv, zv = np.meshgrid(x_points, z_points)
-    points = np.array([xv.ravel(), y_point * np.ones_like(xv.ravel()), zv.ravel()]).T
+    wfn = util.calculate_bloch_wavefunction_fourier(
+        eigenstate["eigenvector"], z_points_actual
+    )
 
-    wfn = util.calculate_wavefunction_fast(eigenstate, points).reshape(xv.shape)
-    match measure:
-        case "real":
-            data = np.real(wfn)
-        case "imag":
-            data = np.imag(wfn)
-        case "abs":
-            data = np.abs(wfn)
-    im = ax1.imshow(data[:, ::-1])
-    im.set_extent((x_points[0], x_points[-1], z_points[0], z_points[-1]))
-    return (fig, ax1, im)
+    grid: WavepacketGrid = {
+        "delta_x0": util.delta_x0,
+        "delta_x1": util.delta_x1,
+        "points": wfn.tolist(),
+        "z_points": z_points_actual,
+    }
+    return plot_wavepacket_grid_x0z(grid, x1_ind, measure=measure, norm=norm, ax=ax)
 
 
 def plot_eigenstate_in_yz(
@@ -241,29 +298,3 @@ def plot_eigenstate_in_yz(
     im = ax1.imshow(data[:, ::-1])
     im.set_extent((y_points[0], y_points[-1], z_points[0], z_points[-1]))
     return (fig, ax1, im)
-
-
-def plot_eigenstate(
-    config: EigenstateConfig, eigenstate: Eigenstate, ax: Axes | None = None
-) -> tuple[Figure, Axes]:
-
-    fig, a = (ax.get_figure(), ax) if ax is not None else plt.subplots()
-
-    util = EigenstateConfigUtil(config)
-
-    _, _, line = plot_eigenstate_z(config, eigenstate, ax)
-    line.set_label("Z direction")
-
-    _, _, line = plot_eigenstate_through_bridge(config, eigenstate, ax)
-    line.set_label("X-Y through bridge")
-
-    x_points = np.linspace(0, util.delta_x0[0], 1000)
-    points = np.array([(x, x, 0) for x in x_points])
-    a.plot(
-        np.sqrt(2) * (x_points - util.delta_x0[0] / 2),
-        np.abs(util.calculate_wavefunction_fast(eigenstate, points)),
-        label="X-Y through Top",
-    )
-    a.legend()
-
-    return (fig, a)

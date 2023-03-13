@@ -47,7 +47,7 @@ def plot_raw_data_points():
     save_figure(fig, "raw_points.png")
 
     fig, ax = plot_all_energy_points_z(data)
-    # ax.set_ylim(0, 3 * 10**-19)
+    ax.set_ylim(-4.66e-17, -4.59e-17)
 
     ax.legend()
     fig.show()

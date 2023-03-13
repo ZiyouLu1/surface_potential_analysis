@@ -4,7 +4,10 @@ from typing import Literal, TypedDict
 
 import numpy as np
 import scipy
+import scipy.fft
 from numpy.typing import NDArray
+
+from surface_potential_analysis.interpolation import interpolate_points_fftn
 
 from .energy_eigenstate import (
     EigenstateConfigUtil,
@@ -104,29 +107,6 @@ def reflect_wavepacket_in_axis(
             if axis == 1
             else wavepacket["delta_x1"]
         ),
-        "z_points": wavepacket["z_points"],
-    }
-
-
-def symmetrize_wavepacket_about_far_edge(wavepacket: WavepacketGrid) -> WavepacketGrid:
-
-    points = np.array(wavepacket["points"])
-
-    reflected_shape = (
-        points.shape[0] * 2 - 1,
-        points.shape[1] * 2 - 1,
-        points.shape[2],
-    )
-    reflected_points = np.zeros(reflected_shape, dtype=complex)
-    reflected_points[: points.shape[0], : points.shape[1]] = points[:, :]
-    reflected_points[points.shape[0] - 1 :, : points.shape[1]] = points[::-1, :]
-    reflected_points[: points.shape[0], points.shape[1] - 1 :] = points[:, ::-1]
-    reflected_points[points.shape[0] - 1 :, points.shape[1] - 1 :] = points[::-1, ::-1]
-
-    return {
-        "points": reflected_points.tolist(),
-        "delta_x0": (wavepacket["delta_x0"][0] * 2, wavepacket["delta_x0"][1] * 2),
-        "delta_x1": (wavepacket["delta_x1"][0] * 2, wavepacket["delta_x1"][1] * 2),
         "z_points": wavepacket["z_points"],
     }
 
@@ -246,16 +226,110 @@ def calculate_wavepacket_grid_fourier(
     }
 
     points = np.zeros(shape, dtype=complex)
-    for eigenstate in get_eigenstate_list(eigenstates):
+    # Ns = int(np.sqrt(len(eigenstates["eigenvectors"])))
+    for (i, eigenstate) in enumerate(get_eigenstate_list(eigenstates)):
         print(eigenstate["kx"], eigenstate["ky"])
-
         wfn = util.calculate_wavefunction_slow_grid_fourier(
             eigenstate, z_points, x0_lim, x1_lim
         )
+        # wfn = util.calculate_wavefunction_slow_grid_fourier_exact_phase(
+        #     eigenstate["eigenvector"],
+        #     (i // Ns, i % Ns),
+        #     (Ns, Ns),
+        #     z_points,
+        #     x0_lim,
+        #     x1_lim,
+        # )
         points += wfn / np.sqrt(len(eigenstates["eigenvectors"]))
 
     grid["points"] = points.tolist()
     return grid
+
+
+def calculate_wavepacket_grid_fourier_fourier(
+    eigenstates: EnergyEigenstates,
+    z_points: list[float],
+    x0_lim: tuple[int, int] = (0, 1),
+    x1_lim: tuple[int, int] = (0, 1),
+) -> WavepacketGrid:
+    """
+    Calculate the wavepacket in the first unit cell without explicitly referencing the
+    individual frequencies
+
+    Since we generate the energy eigenstates from a limited number of k states in
+    the x0, x1 direction we do not have the information necessary to properly interpolate
+    to spacing on a finer mesh than the fourier transform
+
+
+    Parameters
+    ----------
+    eigenstates : EnergyEigenstates
+        _description_
+    z_points : list[float]
+        _description_
+
+    Returns
+    -------
+    WavepacketGrid
+        _description_
+    """
+    util = EigenstateConfigUtil(eigenstates["eigenstate_config"])
+    nx0 = x0_lim[1] - x0_lim[0]
+    nx1 = x1_lim[1] - x1_lim[0]
+    shape = (util.resolution[0] * nx0, util.resolution[1] * nx1, len(z_points))
+
+    # Assume the grid is square
+    n_sample = int(np.sqrt(np.shape(eigenstates["eigenvectors"])[0]))
+    eigenvectors = np.reshape(eigenstates["eigenvectors"], (n_sample, n_sample, -1))
+
+    def calculate_bloch_wfn(eigenvector):
+        return util.calculate_bloch_wavefunction_fourier(eigenvector, z_points)
+
+    bloch_wfns = np.apply_along_axis(calculate_bloch_wfn, -1, eigenvectors)
+
+    # Calculate the inverse fourier transform of the wavefunctions
+    # A[m] = 1/Ns Sum k=0..(Nx0-1) U_k exp(2j pi k m / Ns)
+    # for m = 0,1..(Ns-1), where U_k is the value of the bloch wavefunction
+    # for the kth component in the wavepacket grid
+    wavepacket = scipy.fft.ifft2(bloch_wfns, axes=(0, 1))
+    # Interpolate the fourier transform to get the relevant points on the
+    # overall wavefunction. We want to calculate the phased sum of the bloch
+    # wavefunctions
+    # phi[xi] = 1/Ns Sum k=0..(Nx0-1) U_k exp(2j pi k (x0i) / delta_x0 Ns)
+    # where 2pi k / delta_x0 is the frequency of the kth bloch wavefunction
+    # Since we need the points at the fractional frequencies
+    # m = x0i/delta_x0 = 0..(Nx0-1)/Nx0
+    # we need the Nx0 points between the 0th and 1st element in the fourier
+    # transform, which before the interpolation just contains the frequencies m = 0,1..(Ns-1)
+    interpolated = interpolate_points_fftn(
+        wavepacket,
+        (
+            wavepacket.shape[0] * wavepacket.shape[2],
+            wavepacket.shape[1] * wavepacket.shape[3],
+        ),
+        axes=(0, 1),
+    )
+    # Sum over the diagonals, taking the relevant frequency component
+    # for each point xi
+    summed = np.zeros(shape, dtype=complex)
+    for ix0 in range(x0_lim[0] * util.Nkx0, x0_lim[1] * util.Nkx0):
+        for ix1 in range(x1_lim[0] * util.Nkx1, x1_lim[1] * util.Nkx1):
+            summed[ix0, ix1] = interpolated[ix0, ix1, ix0 % util.Nkx0, ix1 % util.Nkx1]
+    # since the negative ix0 wrap around we need to shift the large x components back
+    points = np.fft.fftshift(summed, axes=(0, 1)).tolist()
+
+    return {
+        "delta_x0": (
+            eigenstates["eigenstate_config"]["delta_x0"][0] * nx0,
+            eigenstates["eigenstate_config"]["delta_x0"][1] * nx0,
+        ),
+        "delta_x1": (
+            eigenstates["eigenstate_config"]["delta_x1"][0] * nx1,
+            eigenstates["eigenstate_config"]["delta_x1"][1] * nx1,
+        ),
+        "z_points": z_points,
+        "points": points,
+    }
 
 
 def calculate_wavepacket_grid(
@@ -293,3 +367,29 @@ def calculate_wavepacket_grid(
 
     grid["points"] = points.tolist()
     return grid
+
+
+def calculate_inner_product(grid0: WavepacketGrid, grid1: WavepacketGrid) -> complex:
+    """
+    Calculates the inner product of two wavepacket grids
+    equal to the (0,0) point on the overlap transform
+
+    Parameters
+    ----------
+    grid0 : WavepacketGrid
+    grid1 : WavepacketGrid
+
+    Returns
+    -------
+    complex
+        The inner product of the two wavepacket grids
+    """
+    delta_z = grid0["z_points"][-1] - grid0["z_points"][0]
+    N = np.prod(np.shape(grid0["points"]))
+
+    return np.sum(np.multiply(np.conj(grid0["points"]), grid1["points"])) * delta_z / N
+
+
+def calculate_normalisation(grid: WavepacketGrid) -> float:
+    # Should always be real!
+    return np.real(calculate_inner_product(grid, grid))

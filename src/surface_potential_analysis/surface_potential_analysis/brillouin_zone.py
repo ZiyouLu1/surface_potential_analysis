@@ -61,11 +61,11 @@ def get_points_in_brillouin_zone(
     # if not include_zero also offset by half the step size
     # note since endpoint is false 1 / 2 * size[0] is the fraction
     # per step in the x direction
-    offset_fraction_x = 0.5 if include_zero else (0.5 - 1 / (4 * size[0]))
-    offset_kx = offset_fraction_x * (dk0[0] + dk1[0])
-    offset_fraction_y = 0.5 if include_zero else (0.5 - 1 / (4 * size[1]))
-    offset_ky = offset_fraction_y * (dk0[1] + dk1[1])
+    offset_fraction_0 = 0.5 if include_zero else (0.5 - 1 / (4 * size[0]))
+    offset_k0 = offset_fraction_0 * (dk0[0] + dk1[0])
+    offset_fraction_1 = 0.5 if include_zero else (0.5 - 1 / (4 * size[1]))
+    offset_k1 = offset_fraction_1 * (dk0[1] + dk1[1])
 
-    kx_points = points[:, 0] - offset_kx
-    ky_points = points[:, 1] - offset_ky
-    return np.array([kx_points, ky_points]).T
+    k0_points = points[:, 0] - offset_k0
+    k1_points = points[:, 1] - offset_k1
+    return np.array([k0_points, k1_points]).T

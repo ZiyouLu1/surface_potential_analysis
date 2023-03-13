@@ -9,6 +9,7 @@ from . import (
     s4_wavepacket,
     s4_wavepacket_plot,
     s5_overlap,
+    s5_overlap_analysis,
     s5_overlap_plot,
     surface_data,
 )
@@ -24,6 +25,7 @@ __all__ = [
     "s4_wavepacket",
     "s4_wavepacket_plot",
     "s5_overlap",
+    "s5_overlap_analysis",
     "s5_overlap_plot",
     "surface_data",
 ]
