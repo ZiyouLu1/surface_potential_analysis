@@ -1,0 +1,30 @@
+[tool.poetry]
+name = "main"
+version = "0.0.1"
+description = ""
+authors = ["Matthew Ord <mo433@cam.ac.uk>"]
+readme = "README.md"
+packages = [{ include = "main" }]
+
+[tool.poetry.scripts]
+main = 'main.main:main'
+
+[tool.poetry.dependencies]
+python = ">=3.11,<3.12"
+nickel_111 = { path = "../nickel_111/", develop = true }
+copper_100 = { path = "../copper_100/", develop = true }
+copper_111 = { path = "../copper_111/", develop = true }
+surface_potential_analysis = { path = "../surface_potential_analysis/", develop = true }
+
+[tool.poetry.group.dev.dependencies]
+black = "^23.1.0"
+mypy = "^1.1.1"
+flake8 = "^6.0.0"
+
+[tool.mypy]
+strict = true
+follow_imports = "error"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

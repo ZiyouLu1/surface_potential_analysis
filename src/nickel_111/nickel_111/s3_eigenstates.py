@@ -1,7 +1,9 @@
 import numpy as np
 
 from surface_potential_analysis.energy_eigenstate import save_energy_eigenstates
-from surface_potential_analysis.hamiltonian import calculate_energy_eigenstates
+from surface_potential_analysis.hamiltonian_eigenstates import (
+    calculate_energy_eigenstates,
+)
 
 from .s2_hamiltonian import generate_hamiltonian, generate_hamiltonian_john
 from .surface_data import get_data_path
@@ -9,6 +11,8 @@ from .surface_data import get_data_path
 
 def generate_eigenstates_data():
     h = generate_hamiltonian(resolution=(12, 12, 13))
+
+    potential = load_interpol()
 
     kx_points = np.linspace(0, (np.abs(h.dkx0[0]) + np.abs(h.dkx1[0])) / 2, 5)
     ky_points = np.linspace(0, (np.abs(h.dkx0[1]) + np.abs(h.dkx1[1])) / 2, 5)

@@ -5,7 +5,6 @@ from surface_potential_analysis.energy_data import (
     EnergyPoints,
     interpolate_energy_grid_fourier,
     load_energy_grid,
-    load_energy_grid_legacy,
     load_energy_points,
     normalize_energy,
     save_energy_grid,
@@ -28,7 +27,7 @@ def load_raw_data_grid() -> EnergyGrid:
 
 def load_john_interpolation() -> EnergyGrid:
     path = get_data_path("john_interpolated_data.json")
-    return load_energy_grid_legacy(path)
+    return load_energy_grid(path)
 
 
 def load_interpolated_grid() -> EnergyGrid:

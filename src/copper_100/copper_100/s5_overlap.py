@@ -1,6 +1,6 @@
 import numpy as np
 
-from surface_potential_analysis.eigenstate import EigenstateConfigUtil
+from surface_potential_analysis.eigenstate.eigenstate import EigenstateConfigUtil
 from surface_potential_analysis.energy_eigenstate import (
     load_energy_eigenstates,
     normalize_eigenstate_phase,
@@ -131,7 +131,7 @@ def generate_next_neighboring_wavepacket_double_fourier() -> WavepacketGrid:
     grid["z_points"] = z_points.tolist()
 
     points = np.empty(shape=(*np.shape(grid["points"]), len(grid_chunks)))
-    for (i, g) in enumerate(grid_chunks):
+    for i, g in enumerate(grid_chunks):
         points[:, :, i] = g["points"][0]
     grid["points"] = points.tolist()
     # print(np.shape(grid["points"]))

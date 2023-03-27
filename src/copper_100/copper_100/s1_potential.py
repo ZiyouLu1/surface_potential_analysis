@@ -4,7 +4,6 @@ from surface_potential_analysis.energy_data import (
     interpolate_energy_grid_3D_spline,
     interpolate_energy_grid_fourier,
     load_energy_grid,
-    load_energy_grid_legacy,
     normalize_energy,
     save_energy_grid,
     truncate_energy,
@@ -16,12 +15,12 @@ from .surface_data import get_data_path
 
 def load_raw_copper_data():
     path = get_data_path("copper_raw_energies.json")
-    return load_energy_grid_legacy(path)
+    return load_energy_grid(path)
 
 
 def load_relaxed_copper_data():
     path = get_data_path("raw_energies_relaxed_sp.json")
-    return load_energy_grid_legacy(path)
+    return load_energy_grid(path)
 
 
 def load_interpolated_relaxed_data():
@@ -41,17 +40,17 @@ def load_interpolated_copper_data():
 
 def load_nc_raw_copper_data():
     path = get_data_path("copper_nc_raw_energies.json")
-    return load_energy_grid_legacy(path)
+    return load_energy_grid(path)
 
 
 def load_9h_copper_data():
     path = get_data_path("copper_9h_raw_energies.json")
-    return load_energy_grid_legacy(path)
+    return load_energy_grid(path)
 
 
 def load_simple_copper_data():
     path = get_data_path("copper_simple_raw_energies2.json")
-    return load_energy_grid_legacy(path)
+    return load_energy_grid(path)
 
 
 def load_clean_copper_data():

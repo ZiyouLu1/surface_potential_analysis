@@ -1,13 +1,13 @@
 import numpy as np
 
 from copper_100.s1_potential import calculate_interpolated_data
-from surface_potential_analysis.eigenstate import EigenstateConfig
+from surface_potential_analysis.eigenstate.eigenstate import EigenstateConfig
 from surface_potential_analysis.energy_data import (
     as_interpolation,
     interpolate_energy_grid_xy_fourier,
 )
 from surface_potential_analysis.energy_eigenstate import (
-    EnergyEigenstates,
+    EnergyEigenstatesLegacy,
     save_energy_eigenstates,
 )
 from surface_potential_analysis.hamiltonian import (
@@ -115,50 +115,49 @@ def generate_eigenstates_data():
     save_energy_eigenstates(eigenstates, path)
 
 
-def generte_oversampled_eigenstates_data():
+def generate_oversampled_eigenstates_data():
     """
     Check that oversampling the potential has no effect on the resulting eigenstates
     """
 
     data = calculate_interpolated_data((46, 46, 100))
+    data = interpolate_energy_grid_xy_fourier(data, (92, 92, 100))
     config: EigenstateConfig = {
         "mass": 1.6735575e-27,
         "sho_omega": 179704637926161.6,
         "delta_x0": data["delta_x0"],
         "delta_x1": data["delta_x1"],
-        "resolution": (23, 23, 18),
+        "resolution": (23, 23, 5),
     }
     z_offset = -9.848484848484871e-11
     util = SurfaceHamiltonianUtil(config, as_interpolation(data), z_offset)
     e_values, e_states = util.calculate_eigenvalues(0, 0)
-    eigenstates: EnergyEigenstates = {
+    eigenstates: EnergyEigenstatesLegacy = {
         "eigenstate_config": util._config,
-        "eigenvalues": e_values,
-        "eigenvectors": [e["eigenvector"] for e in e_states],
-        "kx_points": [e["kx"] for e in e_states],
-        "ky_points": [e["ky"] for e in e_states],
+        "eigenvalues": e_values[:20],
+        "eigenvectors": [e["eigenvector"] for (i, e) in enumerate(e_states) if i < 20],
+        "kx_points": [e["kx"] for (i, e) in enumerate(e_states) if i < 20],
+        "ky_points": [e["ky"] for (i, e) in enumerate(e_states) if i < 20],
     }
     path = get_data_path("oversampled_eigenstates.json")
     save_energy_eigenstates(eigenstates, path)
 
-    data = calculate_interpolated_data((23, 23, 100))
-    data = interpolate_energy_grid_xy_fourier(data, (46, 46, 100))
     config: EigenstateConfig = {
         "mass": 1.6735575e-27,
         "sho_omega": 179704637926161.6,
         "delta_x0": data["delta_x0"],
         "delta_x1": data["delta_x1"],
-        "resolution": (0, 0, 0),
+        "resolution": (46, 46, 5),
     }
     z_offset = -9.848484848484871e-11
     util = SurfaceHamiltonianUtil(config, as_interpolation(data), z_offset)
     e_values, e_states = util.calculate_eigenvalues(0, 0)
-    eigenstates: EnergyEigenstates = {
+    eigenstates: EnergyEigenstatesLegacy = {
         "eigenstate_config": util._config,
-        "eigenvalues": e_values,
-        "eigenvectors": [e["eigenvector"] for e in e_states],
-        "kx_points": [e["kx"] for e in e_states],
-        "ky_points": [e["ky"] for e in e_states],
+        "eigenvalues": e_values[:20],
+        "eigenvectors": [e["eigenvector"] for (i, e) in enumerate(e_states) if i < 20],
+        "kx_points": [e["kx"] for (i, e) in enumerate(e_states) if i < 20],
+        "ky_points": [e["ky"] for (i, e) in enumerate(e_states) if i < 20],
     }
     path = get_data_path("not_oversampled_eigenstates.json")
     save_energy_eigenstates(eigenstates, path)

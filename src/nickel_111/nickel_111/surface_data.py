@@ -16,7 +16,7 @@ def get_out_path(filename: str) -> Path:
 
 def save_figure(fig: Figure, filename: str) -> None:
     path = get_out_path(filename)
-    fig.savefig(path)  # type: ignore
+    fig.savefig(path)
 
 
 def get_data_path(filename: str) -> Path:

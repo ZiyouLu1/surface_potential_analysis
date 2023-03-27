@@ -1,6 +1,8 @@
 from matplotlib import pyplot as plt
 
-from surface_potential_analysis.eigenstate_plot import animate_eigenstate_3D_in_xy
+from surface_potential_analysis.eigenstate.eigenstate_plot import (
+    animate_eigenstate_3D_in_xy,
+)
 from surface_potential_analysis.energy_eigenstate import (
     filter_eigenstates_band,
     get_eigenstate_list,

@@ -2,6 +2,7 @@
   "recommendations": [
     "donjayamanne.python-extension-pack",
     "esbenp.prettier-vscode",
-    "streetsidesoftware.code-spell-checker"
+    "streetsidesoftware.code-spell-checker",
+    "tamasfe.even-better-toml"
   ]
 }

@@ -6,12 +6,12 @@ from matplotlib.axes import Axes
 from matplotlib.figure import Figure
 from matplotlib.lines import Line2D
 
-from surface_potential_analysis.eigenstate import (
+from surface_potential_analysis.eigenstate.eigenstate import (
     Eigenstate,
     EigenstateConfig,
     EigenstateConfigUtil,
 )
-from surface_potential_analysis.eigenstate_plot import (
+from surface_potential_analysis.eigenstate.eigenstate_plot import (
     animate_eigenstate_3D_in_xy,
     plot_bloch_wavefunction_difference_in_x0z,
     plot_eigenstate_along_path,
@@ -32,7 +32,6 @@ from .surface_data import get_data_path, save_figure
 
 
 def analyze_eigenvalue_convergence():
-
     fig, ax = plt.subplots()
 
     path = get_data_path("eigenstates_25_25_14.json")
@@ -85,7 +84,6 @@ def analyze_eigenvalue_convergence():
 
 
 def analyze_eigenvalue_convergence_relaxed():
-
     fig, ax = plt.subplots()
 
     path = get_data_path("eigenstates_relaxed_17_17_15.json")
@@ -165,7 +163,6 @@ def plot_eigenstate_z_hollow_site(
     *,
     ax: Axes | None = None,
 ) -> tuple[Figure, Axes, Line2D]:
-
     util = EigenstateConfigUtil(config)
     z_points = np.linspace(-util.characteristic_z * 2, util.characteristic_z * 2, 1000)
     points = np.array(
@@ -176,7 +173,6 @@ def plot_eigenstate_z_hollow_site(
 
 
 def analyze_eigenvector_convergence_z():
-
     fig, ax = plt.subplots()
 
     path = get_data_path("eigenstates_25_25_16.json")
@@ -205,7 +201,6 @@ def plot_eigenstate_through_bridge(
     ax: Axes | None = None,
     measure: Literal["real", "imag", "abs", "angle"] = "abs",
 ) -> tuple[Figure, Axes, Line2D]:
-
     util = EigenstateConfigUtil(config)
 
     x_points = np.linspace(0, util.delta_x0[0], 1000)
@@ -216,7 +211,6 @@ def plot_eigenstate_through_bridge(
 
 
 def analyze_eigenvector_convergence_through_bridge():
-
     path = get_data_path("eigenstates_25_25_14.json")
     eigenstates = load_energy_eigenstates(path)
 
@@ -262,7 +256,6 @@ def analyze_eigenvector_convergence_through_bridge():
 
 
 def plot_bloch_wavefunction_difference_at_boundary():
-
     path = get_data_path("eigenstates_23_23_16.json")
     eigenstates0 = load_energy_eigenstates(path)
     eigenstate0 = get_eigenstate_list(eigenstates0)[0]
@@ -326,6 +319,16 @@ def analyze_oversampling_effect():
     print("oversampled groundstate", np.min(oversampled["eigenvalues"]))
     print("not oversampled groundstate", np.min(not_oversampled["eigenvalues"]))
 
-    oversampled_gs = oversampled[np.argmin(oversampled["eigenvalues"])]
-    not_oversampled_gs = not_oversampled[np.argmin(not_oversampled["eigenvalues"])]
-    print("product", np.dot(oversampled_gs, not_oversampled_gs))
+    oversampled_gs = oversampled["eigenvectors"][np.argmin(oversampled["eigenvalues"])]
+    not_oversampled_gs = not_oversampled["eigenvectors"][
+        np.argmin(not_oversampled["eigenvalues"])
+    ]
+
+    util_over = EigenstateConfigUtil(oversampled["eigenstate_config"])
+    util_not_over = EigenstateConfigUtil(not_oversampled["eigenstate_config"])
+    product = 0
+    for ix0, ix1, ix2 in util_over.eigenstate_indexes:
+        product += oversampled_gs[util_over.get_index(ix0, ix1, ix2)] * np.conj(
+            not_oversampled_gs[util_not_over.get_index(ix0, ix1, ix2)]
+        )
+    print("product", product)

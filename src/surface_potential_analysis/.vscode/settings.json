@@ -16,9 +16,28 @@
         "hbar",
         "linalg",
         "linspace",
+        "ndarray",
         "scipy",
         "wavefunction",
         "Wavepacket"
     ],
+    "cSpell.allowCompoundWords": true,
+    "cSpell.flagWords": [
+        "hte",
+        "teh"
+    ],
     "python.formatting.provider": "black",
+    "isort.args": [
+        "--profile",
+        "black"
+    ],
+    "isort.check": true,
+    "editor.codeActionsOnSave": {
+        "source.organizeImports": true,
+        "source.fixAll": true
+    },
+    "editor.formatOnSave": true,
+    "autoDocstring.docstringFormat": "numpy",
+    "autoDocstring.generateDocstringOnEnter": true,
+    "autoDocstring.startOnNewLine": true,
 }

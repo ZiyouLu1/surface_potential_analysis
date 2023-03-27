@@ -15,8 +15,20 @@ hamiltonian_generator = { path = "../hamiltonian_generator/", develop = true }
 
 [tool.poetry.group.dev.dependencies]
 black = "^23.1.0"
-mypy = "^0.991"
+mypy = "^1.1.1"
 flake8 = "^6.0.0"
+
+[tool.mypy]
+strict = true
+follow_imports = "error"
+
+[[tool.mypy.overrides]]
+module = "matplotlib.*"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "scipy.*"
+ignore_missing_imports = true
 
 [build-system]
 requires = ["poetry-core"]

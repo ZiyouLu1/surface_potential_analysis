@@ -6,14 +6,16 @@ import numpy as np
 from scipy.constants import hbar
 
 import hamiltonian_generator
-from surface_potential_analysis.eigenstate import Eigenstate
-from surface_potential_analysis.energy_eigenstate import (
+from surface_potential_analysis._legacy.eigenstate import Eigenstate
+from surface_potential_analysis._legacy.energy_eigenstate import (
     EigenstateConfig,
     EigenstateConfigUtil,
     get_brillouin_points_irreducible_config,
 )
-from surface_potential_analysis.sho_wavefunction import calculate_sho_wavefunction
-from surface_potential_analysis.surface_config import get_surface_coordinates
+from surface_potential_analysis._legacy.sho_wavefunction import (
+    calculate_sho_wavefunction,
+)
+from surface_potential_analysis._legacy.surface_config import get_surface_coordinates
 
 
 def generate_eigenstates_grid_points_100(

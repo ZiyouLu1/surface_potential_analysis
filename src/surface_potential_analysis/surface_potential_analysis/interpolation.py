@@ -1,33 +1,19 @@
 import itertools
-from types import EllipsisType
-from typing import Sequence
+from typing import Any, Sequence, TypeVar
 
 import numpy as np
 import scipy.fft
-from numpy.typing import ArrayLike, NDArray
+import scipy.interpolate
 
+from surface_potential_analysis.util import slice_along_axis
 
-def _slice_along_axis(
-    slice_at_axis: slice | int, axis: int = -1
-) -> tuple[EllipsisType | slice | int, ...] | tuple[slice | int, ...]:
-    """
-    Returns a slice such that the 1d slice provided by slice_inds, slices along the dimension provided.
-    """
-    from_end = False
-    if axis < 0:  # choosing axis at the end
-        from_end = True
-        axis = -1 - axis
-    # Pad the slice with slice(None)
-    slice_padding = axis * (slice(None),)
-    if from_end:
-        return (Ellipsis, slice_at_axis) + slice_padding
-    else:
-        return slice_padding + (slice_at_axis,)
+S = TypeVar("S", bound=Any)
+DT = TypeVar("DT", bound=np.dtype[Any])
 
 
 def interpolate_real_points_along_axis_fourier(
-    points: ArrayLike, n: int, axis: int = -1
-) -> NDArray:
+    points: np.ndarray[S, np.dtype[np.float_]], n: int, axis: int = -1
+) -> np.ndarray[S, np.dtype[np.float_]]:
     """
     Given a uniformly spaced (real) grid of points interpolate along the given
     axis to a new length n.
@@ -60,14 +46,16 @@ def interpolate_real_points_along_axis_fourier(
     if np.all(np.isreal(ft_potential)):
         # Force the symmetric potential to stay symmetric
         # Due to issues with numerical precision it diverges by around 1E-34
-        lower_half = _slice_along_axis(slice(1, (n + 1) // 2), axis=axis)
-        upper_half = _slice_along_axis(slice(None, n // 2, -1), axis=axis)
+        lower_half = slice_along_axis(slice(1, (n + 1) // 2), axis=axis)
+        upper_half = slice_along_axis(slice(None, n // 2, -1), axis=axis)
         interpolated_potential[upper_half] = interpolated_potential[lower_half]
 
-    return interpolated_potential
+    return interpolated_potential  # type:ignore
 
 
-def pad_ft_points(array: NDArray, s: Sequence[int], axes: NDArray) -> NDArray:
+def pad_ft_points(
+    array: np.ndarray[S, DT], s: Sequence[int], axes: Sequence[int]
+) -> np.ndarray[S, DT]:
     """
     Pad the points in the fourier transform with zeros, keeping the frequencies of
     each point the same in the initial and final grid
@@ -87,26 +75,27 @@ def pad_ft_points(array: NDArray, s: Sequence[int], axes: NDArray) -> NDArray:
         The padded array
     """
     shape_arr = np.asarray(array.shape)
+    axes_arr = np.asarray(axes)
 
     padded_shape = shape_arr.copy()
-    padded_shape[axes] = s
-    padded = np.zeros(shape=padded_shape, dtype=complex)
+    padded_shape[axes_arr] = s
+    padded: np.ndarray[S, DT] = np.zeros(shape=padded_shape, dtype=array.dtype)
 
     slice_start = np.array([slice(None) for _ in array.shape], dtype=slice)
-    slice_start[axes] = np.array(
+    slice_start[axes_arr] = np.array(
         [
             slice(1 + min((n - 1) // 2, (s - 1) // 2))
-            for (n, s) in zip(shape_arr[axes], s)
+            for (n, s) in zip(shape_arr[axes_arr], s)
         ],
         dtype=slice,
     )
     slice_end = np.array([slice(None) for _ in array.shape], dtype=slice)
-    slice_end[axes] = np.array(
+    slice_end[axes_arr] = np.array(
         [
             slice(start, None) if (start := max((-n + 1) // 2, (-s + 1) // 2)) < 0
             # else no negative frequencies
             else slice(0, 0)
-            for (n, s) in zip(shape_arr[axes], s)
+            for (n, s) in zip(shape_arr[axes_arr], s)
         ],
         dtype=slice,
     )
@@ -119,8 +108,10 @@ def pad_ft_points(array: NDArray, s: Sequence[int], axes: NDArray) -> NDArray:
 
 
 def interpolate_points_fftn(
-    points: ArrayLike, s: Sequence[int], axes: Sequence[int] | None = None
-) -> NDArray:
+    points: np.ndarray[Any, Any],
+    s: Sequence[int],
+    axes: Sequence[int] | None = None,
+) -> np.ndarray[Any, np.dtype[np.complex_]]:
     """
     Given a uniform grid of points in the unit cell interpolate
     a grid of points with the given shape using the fourier transform
@@ -149,18 +140,24 @@ def interpolate_points_fftn(
     ft_points = scipy.fft.fftn(points, axes=axes_arr, norm="forward")
     # pad (or truncate) for the new lengths s
     padded = pad_ft_points(ft_points, s, axes_arr)
-    return scipy.fft.ifftn(padded, s, axes=axes_arr, norm="forward", overwrite_x=True)
+    return scipy.fft.ifftn(  # type:ignore
+        padded, s, axes=axes_arr, norm="forward", overwrite_x=True
+    )
 
 
 def interpolate_points_rfftn(
-    points: ArrayLike, s: Sequence[int], axes: Sequence[int] | None = None
-):
+    points: np.ndarray[Any, np.dtype[np.float_]],
+    s: Sequence[int],
+    axes: Sequence[int] | None = None,
+) -> np.ndarray[Any, np.dtype[np.float_]]:
     axes_arr = np.arange(-1, -1 - len(s), -1) if axes is None else np.array(axes)
     ft_points = scipy.fft.rfftn(points, axes=axes_arr, norm="forward")
     # pad (or truncate) for the new lengths s
     # we don't need to pad the last axis here, as it is handled correctly by irfftn
     padded = pad_ft_points(ft_points, s[:-1], axes_arr[:-1])
-    return scipy.fft.irfftn(padded, s, axes=axes_arr, norm="forward", overwrite_x=True)
+    return scipy.fft.irfftn(  # type:ignore
+        padded, s, axes=axes_arr, norm="forward", overwrite_x=True
+    )
 
 
 # The old method, of padding which only worked for a 2D array
@@ -234,3 +231,32 @@ def interpolate_points_rfftn(
 #         np.multiply(ft_potential[np.newaxis, :, :], summed_phases), axis=(1, 2)
 #     )
 #     return np.real_if_close(interpolated_points).reshape(shape).tolist()
+
+
+def interpolate_points_along_axis_spline(
+    data: np.ndarray[tuple[Any], np.dtype[np.float_]],
+    old_coords: np.ndarray[tuple[int], np.dtype[np.float_]],
+    n: int,
+    axis: int = -1,
+) -> np.ndarray[tuple[Any], np.dtype[np.float_]]:
+    """
+    Uses spline interpolation to increase the Z resolution,
+    spacing z linearly
+    """
+
+    new_coords = list(np.linspace(old_coords[0], old_coords[-1], n))
+
+    new_shape = data.shape
+    new_shape[axis] = n
+    points = np.empty(new_shape)
+
+    swapped_points = points.swapaxes(axis, -1)
+
+    flat_data = data.swapaxes(axis, -1).reshape(-1, data.shape[axis])
+    for i in range(flat_data.shape[0]):
+        old_energies = flat_data[i]
+        tck = scipy.interpolate.splrep(old_coords, old_energies, s=0)
+        new_energy = scipy.interpolate.splev(new_coords, tck, der=0)
+        swapped_points[i] = new_energy
+
+    return points  # type: ignore

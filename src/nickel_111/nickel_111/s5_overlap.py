@@ -1,7 +1,7 @@
 import numpy as np
 from numpy.typing import NDArray
 
-from surface_potential_analysis.eigenstate import EigenstateConfigUtil
+from surface_potential_analysis.eigenstate.eigenstate import EigenstateConfigUtil
 from surface_potential_analysis.energy_eigenstate import (
     load_energy_eigenstates,
     normalize_eigenstate_phase,

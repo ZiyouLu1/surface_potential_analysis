@@ -1,7 +1,9 @@
 import numpy as np
 
-from surface_potential_analysis.energy_data import get_energy_points_xy_locations
-from surface_potential_analysis.energy_data_plot import (
+from surface_potential_analysis._legacy.energy_data import (
+    get_energy_points_xy_locations,
+)
+from surface_potential_analysis._legacy.energy_data_plot import (
     plot_all_energy_points_z,
     plot_energy_points_location,
 )
@@ -16,7 +18,7 @@ def plot_raw_data_points():
 
     locations = get_energy_points_xy_locations(data)
     e_min = []
-    for (x, y) in locations:
+    for x, y in locations:
         idx = np.argwhere(
             np.logical_and(
                 np.array(data["x_points"]) == x,

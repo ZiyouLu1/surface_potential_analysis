@@ -1,15 +1,17 @@
-from typing import Literal
+import json
+from pathlib import Path
+from typing import Literal, TypedDict
 
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.axes import Axes
 
-from surface_potential_analysis.eigenstate import (
+from surface_potential_analysis.eigenstate.eigenstate import (
     Eigenstate,
     EigenstateConfig,
     EigenstateConfigUtil,
 )
-from surface_potential_analysis.eigenstate_plot import (
+from surface_potential_analysis.eigenstate.eigenstate_plot import (
     plot_eigenstate_in_xy,
     plot_wavefunction_difference_in_xy,
 )
@@ -17,7 +19,6 @@ from surface_potential_analysis.energy_eigenstate import (
     filter_eigenstates_n_point,
     get_eigenstate_list,
     load_energy_eigenstates,
-    load_energy_eigenstates_legacy,
 )
 from surface_potential_analysis.energy_eigenstates_plot import plot_eigenstate_positions
 from surface_potential_analysis.surface_config import get_reciprocal_surface
@@ -27,7 +28,6 @@ from surface_potential_analysis.wavepacket_grid import (
     calculate_wavepacket_grid_fourier,
     calculate_wavepacket_grid_fourier_fourier,
     load_wavepacket_grid,
-    load_wavepacket_grid_legacy,
     reflect_wavepacket_in_axis,
 )
 from surface_potential_analysis.wavepacket_grid_plot import (
@@ -35,7 +35,6 @@ from surface_potential_analysis.wavepacket_grid_plot import (
     animate_wavepacket_grid_3D_in_x0z,
     animate_wavepacket_grid_3D_in_xy,
     plot_ft_wavepacket_grid_xy,
-    plot_wavepacket_grid_x0z,
     plot_wavepacket_grid_x1,
     plot_wavepacket_grid_xy,
 )
@@ -217,6 +216,28 @@ def plot_ft_hd_wavepacket_at_origin() -> None:
     input()
 
 
+def load_wavepacket_grid_legacy(path: Path) -> WavepacketGrid:
+    class WavepacketGridLegacy(TypedDict):
+        x_points: list[float]
+        y_points: list[float]
+        z_points: list[float]
+        points: list[list[list[complex]]]
+
+    with path.open("r") as f:
+        out = json.load(f)
+        points = np.array(out["real_points"]) + 1j * np.array(out["imag_points"])
+        out["points"] = points.tolist()
+
+        out2: WavepacketGridLegacy = out
+
+        return {
+            "points": out2["points"],
+            "delta_x0": (out2["x_points"][-1] - out2["x_points"][0], 0),
+            "delta_x1": (0, out2["y_points"][-1] - out2["y_points"][0]),
+            "z_points": out2["z_points"],
+        }
+
+
 def compare_wavefunction_4_8_points():
     path = get_data_path("copper_eigenstates_wavepacket_offset.json")
     wavepacket_offset = load_wavepacket_grid_legacy(path)
@@ -331,21 +352,10 @@ def compare_wavefunction_4_8_points():
     input()
 
 
-def plot_wavefunction_xz_bridge():
-    path = get_data_path("copper_eigenstates_wavepacket_approx2.json")
-    wavepacket_8 = load_wavepacket_grid_legacy(path)
-
-    fig, ax = plt.subplots()
-    _, _, im = plot_wavepacket_grid_x0z(wavepacket_8, x2_ind=32, ax=ax, measure="real")
-    im.set_norm("symlog")  # type: ignore
-
-    fig.show()
-    input()
-
-
 def compare_wavefunction_2D():
-    path = get_data_path("copper_eigenstates_grid_normalized.json")
-    eigenstates = load_energy_eigenstates_legacy(path)
+    path = get_data_path("eigenstates_grid_0.json")
+    eigenstates = load_energy_eigenstates(path)
+    normalized = normalize_eigenstate_phase_copper(eigenstates)
 
     config = eigenstates["eigenstate_config"]
     eigenstate_list = get_eigenstate_list(eigenstates)
@@ -395,8 +405,9 @@ def compare_wavefunction_2D():
 
 
 def test_wavefunction_similarity() -> None:
-    path = get_data_path("copper_eigenstates_grid_normalized.json")
-    eigenstates = load_energy_eigenstates_legacy(path)
+    path = get_data_path("eigenstates_grid_0.json")
+    eigenstates = load_energy_eigenstates(path)
+    normalized = normalize_eigenstate_phase_copper(eigenstates)
 
     config = eigenstates["eigenstate_config"]
     util = EigenstateConfigUtil(config)
@@ -434,8 +445,9 @@ def test_wavefunction_similarity() -> None:
 
 # How different are the bloch wavefunctions
 def calculate_eigenstate_cross_product() -> None:
-    path = get_data_path("copper_eigenstates_grid_normalized.json")
-    eigenstates = load_energy_eigenstates_legacy(path)
+    path = get_data_path("eigenstates_grid_0.json")
+    eigenstates = load_energy_eigenstates(path)
+    normalized = normalize_eigenstate_phase_copper(eigenstates)
 
     eigenvector1 = eigenstates["eigenvectors"][0]
     eigenvector2 = eigenstates["eigenvectors"][144]
@@ -447,8 +459,9 @@ def calculate_eigenstate_cross_product() -> None:
 
 
 def investigate_approximate_eigenstates():
-    path = get_data_path("copper_eigenstates_grid_normalized.json")
-    eigenstates = load_energy_eigenstates_legacy(path)
+    path = get_data_path("eigenstates_grid_0.json")
+    eigenstates = load_energy_eigenstates(path)
+    normalized = normalize_eigenstate_phase_copper(eigenstates)
 
     eigenvector = eigenstates["eigenvectors"][144]
     print(eigenvector.__len__())
@@ -466,8 +479,8 @@ def investigate_approximate_eigenstates():
 
 
 def test_block_wavefunction_fixed_phase_similarity():
-    path = get_data_path("copper_eigenstates_grid.json")
-    eigenstates = load_energy_eigenstates_legacy(path)
+    path = get_data_path("eigenstates_grid_0.json")
+    eigenstates = load_energy_eigenstates(path)
 
     n_eigenvectors = len(eigenstates["eigenvectors"])
     resolution = eigenstates["eigenstate_config"]["resolution"]
@@ -551,8 +564,8 @@ def analyze_wavepacket_grid_1_points():
     fig.tight_layout()
     fig.show()
 
-    path = get_data_path("copper_eigenstates_grid_5.json")
-    eigenstates = load_energy_eigenstates_legacy(path)
+    path = get_data_path("eigenstates_grid_0.json")
+    eigenstates = load_energy_eigenstates(path)
     normalized = normalize_eigenstate_phase_copper(eigenstates)
     filtered_normalized = filter_eigenstates_n_point(normalized, n=1)
 
@@ -618,7 +631,7 @@ def test_eigenstate_k_precision():
     util = EigenstateConfigUtil(eigenstates["eigenstate_config"])
 
     Ns = int(np.sqrt(len(eigenstates["eigenvectors"])))
-    for (i, (kx, ky)) in enumerate(
+    for i, (kx, ky) in enumerate(
         zip(eigenstates["kx_points"], eigenstates["ky_points"])
     ):
         xy_points = util._get_fourier_coordinates_in_grid((0, 1), (0, 1))

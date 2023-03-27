@@ -2,11 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import scipy.constants
 
-from surface_potential_analysis.energy_data import (
-    load_energy_grid,
-    load_energy_grid_legacy,
-    normalize_energy,
-)
+from surface_potential_analysis.energy_data import load_energy_grid, normalize_energy
 from surface_potential_analysis.energy_data_plot import (
     animate_energy_grid_3D_in_xy,
     plot_energy_grid_locations,
@@ -123,8 +119,6 @@ def plot_copper_relaxed_interpolated_data():
 def plot_copper_interpolated_data():
     path = get_data_path("copper_interpolated_energies.json")
     data = load_energy_grid(path)
-    # path = get_data_path("copper_interpolated_energies_old.json")
-    # data = load_energy_grid_legacy(path)
 
     raw_data = normalize_energy(load_raw_copper_data())
 
@@ -248,7 +242,7 @@ def compare_bridge_hollow_energy():
 
 def calculate_hollow_free_energy_jump():
     path = get_data_path("copper_relaxed_raw_energies.json")
-    data = load_energy_grid_legacy(path)
+    data = load_energy_grid(path)
 
     points = np.array(data["points"], dtype=float)
     middle_x_index = points.shape[0] // 2

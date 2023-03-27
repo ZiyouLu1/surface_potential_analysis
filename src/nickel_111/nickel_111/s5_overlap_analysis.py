@@ -28,7 +28,7 @@ def make_transform_real_at(
     overlap: OverlapTransform, point: tuple[int, int, int] | None = None
 ) -> OverlapTransform:
     """
-    Shift the phase of the overlap transform such tha tis it real at point
+    Shift the phase of the overlap transform such that is it real at point
     This is equivalent to shifting the origin of the real space grid we use when
     calculating the overlap.
 
