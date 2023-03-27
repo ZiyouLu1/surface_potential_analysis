@@ -103,7 +103,7 @@ def pad_ft_points(array: NDArray, s: Sequence[int], axes: NDArray) -> NDArray:
     slice_end = np.array([slice(None) for _ in array.shape], dtype=slice)
     slice_end[axes] = np.array(
         [
-            slice(start, None) if (start := max((-n + 1) // 2, (-s + 1) // 2) < 0)
+            slice(start, None) if (start := max((-n + 1) // 2, (-s + 1) // 2)) < 0
             # else no negative frequencies
             else slice(0, 0)
             for (n, s) in zip(shape_arr[axes], s)

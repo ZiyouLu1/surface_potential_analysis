@@ -310,3 +310,22 @@ def plot_bloch_wavefunction_difference_at_boundary():
     ax.set_title("Divergence in the imaginary part of the wavefunction")
     fig.show()
     input()
+
+
+def analyze_oversampling_effect():
+    """
+    Does the effect of sampling a larger grid of points in k space change the
+    eigenvector of the groundstate significantly?
+    """
+    path = get_data_path("oversampled_eigenstates.json")
+    oversampled = load_energy_eigenstates(path)
+
+    path = get_data_path("not_oversampled_eigenstates.json")
+    not_oversampled = load_energy_eigenstates(path)
+
+    print("oversampled groundstate", np.min(oversampled["eigenvalues"]))
+    print("not oversampled groundstate", np.min(not_oversampled["eigenvalues"]))
+
+    oversampled_gs = oversampled[np.argmin(oversampled["eigenvalues"])]
+    not_oversampled_gs = not_oversampled[np.argmin(not_oversampled["eigenvalues"])]
+    print("product", np.dot(oversampled_gs, not_oversampled_gs))

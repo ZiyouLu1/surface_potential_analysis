@@ -125,9 +125,7 @@ class SurfaceHamiltonianUtil(EigenstateConfigUtil):
     @cache
     def get_ft_potential(self) -> NDArray:
         subtracted_potential = self.get_sho_subtracted_points()
-        fft_potential = np.fft.ifft2(subtracted_potential, axes=(0, 1))
-
-        return fft_potential
+        return np.fft.ifft2(subtracted_potential, axes=(0, 1))
 
     @cache
     def _calculate_sho_wavefunction_points(self, n: int) -> NDArray:

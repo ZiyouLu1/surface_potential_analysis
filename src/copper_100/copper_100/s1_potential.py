@@ -1,4 +1,5 @@
 from surface_potential_analysis.energy_data import (
+    EnergyGrid,
     fill_surface_from_z_maximum,
     interpolate_energy_grid_3D_spline,
     interpolate_energy_grid_fourier,
@@ -61,7 +62,7 @@ def load_clean_copper_data():
     return data
 
 
-def generate_interpolated_copper_data_fourier():
+def calculate_interpolated_data(shape: tuple[float, float, float]) -> EnergyGrid:
     data = load_raw_copper_data()
     normalized = normalize_energy(data)
 
@@ -69,10 +70,15 @@ def generate_interpolated_copper_data_fourier():
     # We must bring it down first
     truncated = truncate_energy(normalized, cutoff=1e-17, n=5, offset=1e-20)
     truncated = truncate_energy(truncated, cutoff=0.5e-18, n=1, offset=0)
-    interpolated = interpolate_energy_grid_fourier(truncated, shape=(62, 62, 120))
-    fixed = undo_truncate_energy(interpolated, cutoff=0.5e-18, n=1, offset=0)
+    interpolated = interpolate_energy_grid_fourier(truncated, shape)
+    return undo_truncate_energy(interpolated, cutoff=0.5e-18, n=1, offset=0)
+
+
+def generate_interpolated_copper_data_fourier():
+    data = calculate_interpolated_data(shape=(62, 62, 120))
+
     path = get_data_path("copper_interpolated_energies.json")
-    save_energy_grid(fixed, path)
+    save_energy_grid(data, path)
 
 
 def generate_interpolated_relaxed_copper_data_fourier():

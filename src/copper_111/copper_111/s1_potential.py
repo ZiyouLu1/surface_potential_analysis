@@ -229,14 +229,18 @@ def generate_reflected_data():
     save_energy_grid(data, path)
 
 
-def generate_interpolated_data():
+def calculate_interpolated_data(shape: tuple[int, int, int]) -> EnergyGrid:
     grid = load_raw_data_grid()
     normalized = normalize_energy(grid)
 
     truncated = truncate_energy(normalized, cutoff=1e-17, n=5, offset=1e-20)
     truncated = truncate_energy(truncated, cutoff=3e-19, n=1, offset=1e-20)
-    data = interpolate_energy_grid_fourier(truncated, (70, 70, 100))
-    fixed = undo_truncate_energy(data, cutoff=3e-19, n=1, offset=1e-20)
+    data = interpolate_energy_grid_fourier(truncated, shape)
+    return undo_truncate_energy(data, cutoff=3e-19, n=1, offset=1e-20)
+
+
+def generate_interpolated_data():
+    data = calculate_interpolated_data((70, 70, 100))
 
     path = get_data_path("interpolated_data.json")
-    save_energy_grid(fixed, path)
+    save_energy_grid(data, path)
