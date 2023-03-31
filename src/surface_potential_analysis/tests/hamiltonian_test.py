@@ -11,7 +11,10 @@ from surface_potential_analysis.hamiltonian import (
     stack_hamiltonian,
     truncate_hamiltonian_basis,
 )
-from surface_potential_analysis.hamiltonian_builder import hamiltonian_from_potential
+from surface_potential_analysis.hamiltonian_builder.momentum_basis import (
+    hamiltonian_from_potential,
+)
+from surface_potential_analysis.potential.potential import Potential
 
 
 class HamiltonianTest(unittest.TestCase):
@@ -20,9 +23,21 @@ class HamiltonianTest(unittest.TestCase):
         hamiltonian: MomentumBasisStackedHamiltonian[int, int, int] = {
             "array": np.random.rand(*shape, *shape),
             "basis": (
-                {"n": shape.item(0), "_type": "momentum", "dk": np.array([1.0, 0, 0])},
-                {"n": shape.item(1), "_type": "momentum", "dk": np.array([0, 1.0, 0])},
-                {"n": shape.item(2), "_type": "momentum", "dk": np.array([0, 0, 1.0])},
+                {
+                    "n": shape.item(0),
+                    "_type": "momentum",
+                    "delta_x": np.array([1.0, 0, 0]),
+                },
+                {
+                    "n": shape.item(1),
+                    "_type": "momentum",
+                    "delta_x": np.array([0, 1.0, 0]),
+                },
+                {
+                    "n": shape.item(2),
+                    "_type": "momentum",
+                    "delta_x": np.array([0, 0, 1.0]),
+                },
             ),
         }
         actual = flatten_hamiltonian(hamiltonian)
@@ -42,9 +57,21 @@ class HamiltonianTest(unittest.TestCase):
         hamiltonian: MomentumBasisStackedHamiltonian[int, int, int] = {
             "array": np.random.rand(*shape, *shape),
             "basis": (
-                {"n": shape.item(0), "_type": "momentum", "dk": np.array([1.0, 0, 0])},
-                {"n": shape.item(1), "_type": "momentum", "dk": np.array([0, 0, 0])},
-                {"n": shape.item(2), "_type": "momentum", "dk": np.array([0, 1.0, 0])},
+                {
+                    "n": shape.item(0),
+                    "_type": "momentum",
+                    "delta_x": np.array([1.0, 0, 0]),
+                },
+                {
+                    "n": shape.item(1),
+                    "_type": "momentum",
+                    "delta_x": np.array([0, 0, 0]),
+                },
+                {
+                    "n": shape.item(2),
+                    "_type": "momentum",
+                    "delta_x": np.array([0, 1.0, 0]),
+                },
             ),
         }
 
@@ -56,9 +83,21 @@ class HamiltonianTest(unittest.TestCase):
         hamiltonian: MomentumBasisStackedHamiltonian[int, int, int] = {
             "array": np.random.rand(*shape, *shape),
             "basis": (
-                {"n": shape.item(0), "_type": "momentum", "dk": np.array([1.0, 0, 0])},
-                {"n": shape.item(1), "_type": "momentum", "dk": np.array([0, 0, 0])},
-                {"n": shape.item(2), "_type": "momentum", "dk": np.array([0, 1.0, 0])},
+                {
+                    "n": shape.item(0),
+                    "_type": "momentum",
+                    "delta_x": np.array([1.0, 0, 0]),
+                },
+                {
+                    "n": shape.item(1),
+                    "_type": "momentum",
+                    "delta_x": np.array([0, 0, 0]),
+                },
+                {
+                    "n": shape.item(2),
+                    "_type": "momentum",
+                    "delta_x": np.array([0, 1.0, 0]),
+                },
             ),
         }
         axis: Literal[0, 1, 2, -1, -2, -3] = np.random.randint(-3, 2)  # type: ignore
@@ -82,7 +121,17 @@ class HamiltonianTest(unittest.TestCase):
 
     def test_hamiltonian_from_potential(self) -> None:
         shape = np.random.randint(1, 10, size=3, dtype=int)
-        potential = np.random.rand(*shape)
+        points = np.random.rand(*shape)
+
+        expected_basis: PositionBasisConfig[Any, Any, Any] = (
+            {"n": shape.item(0), "_type": "position", "delta_x": np.array([1.0, 0, 0])},
+            {"n": shape.item(1), "_type": "position", "delta_x": np.array([0, 1.0, 0])},
+            {"n": shape.item(2), "_type": "position", "delta_x": np.array([0, 0, 1.0])},
+        )
+        potential: Potential[Any, Any, Any] = {
+            "basis": expected_basis,
+            "points": points,
+        }
 
         hamiltonian = hamiltonian_from_potential(potential)
 
@@ -91,17 +140,13 @@ class HamiltonianTest(unittest.TestCase):
                 for ix2 in range(shape[2]):
                     np.testing.assert_equal(
                         hamiltonian["array"][ix0, ix1, ix2, ix0, ix1, ix2],
-                        potential[ix0, ix1, ix2],
+                        potential["points"][ix0, ix1, ix2],
                     )
         np.testing.assert_equal(
-            np.count_nonzero(hamiltonian["array"]), np.count_nonzero(potential)
+            np.count_nonzero(hamiltonian["array"]),
+            np.count_nonzero(potential["points"]),
         )
 
-        expected_basis: PositionBasisConfig[Any, Any, Any] = (
-            {"n": shape.item(0), "_type": "position", "delta_x": np.array([1.0, 0, 0])},
-            {"n": shape.item(1), "_type": "position", "delta_x": np.array([0, 1.0, 0])},
-            {"n": shape.item(2), "_type": "position", "delta_x": np.array([0, 0, 1.0])},
-        )
         for expected, actual in zip(expected_basis, hamiltonian["basis"]):
             self.assertEqual(expected["n"], actual["n"])
             self.assertEqual(expected["_type"], actual["_type"])

@@ -153,7 +153,7 @@ class TestBasisConfig(unittest.TestCase):
         util = PositionBasisConfigUtil(basis)
 
         for i in (0, 1, 2):
-            rotated = util.get_rotated_basis(i)
+            rotated = util.get_rotated_basis(i)  # type:ignore
             np.testing.assert_array_almost_equal(rotated[i]["delta_x"], [0, 0, 1])
             for j in (0, 1, 2):
                 np.testing.assert_almost_equal(
@@ -162,7 +162,7 @@ class TestBasisConfig(unittest.TestCase):
                 )
 
             direction = np.random.rand(3)
-            rotated = util.get_rotated_basis(i, direction)
+            rotated = util.get_rotated_basis(i, direction)  # type:ignore
             np.testing.assert_almost_equal(
                 np.dot(rotated[i]["delta_x"], direction),
                 np.linalg.norm(direction) * np.linalg.norm(rotated[i]["delta_x"]),
@@ -182,7 +182,7 @@ class TestBasisConfig(unittest.TestCase):
         basis = PositionBasisConfigUtil.from_resolution((2, 2, 2), delta_x)
         util = PositionBasisConfigUtil(basis)
 
-        actual = util.nx_points
+        actual = util.fundamental_nx_points
         expected = [
             [0, 0, 0, 0, 1, 1, 1, 1],
             [0, 0, 1, 1, 0, 0, 1, 1],
@@ -197,7 +197,7 @@ class TestBasisConfig(unittest.TestCase):
         )
         basis = PositionBasisConfigUtil.from_resolution(resolution, delta_x)
         util = PositionBasisConfigUtil(basis)
-        actual = util.nx_points
+        actual = util.fundamental_nx_points
 
         for axis in range(3):
             basis_for_axis = actual[axis].reshape(*resolution)
@@ -214,7 +214,7 @@ class TestBasisConfig(unittest.TestCase):
         basis = PositionBasisConfigUtil.from_resolution((2, 2, 2), delta_x)
         util = PositionBasisConfigUtil(basis)
 
-        actual = util.nk_points
+        actual = util.fundamental_nk_points
         expected = [
             [0, 0, 0, 0, -1, -1, -1, -1],
             [0, 0, -1, -1, 0, 0, -1, -1],
@@ -229,7 +229,7 @@ class TestBasisConfig(unittest.TestCase):
         )
         basis = PositionBasisConfigUtil.from_resolution(resolution, delta_x)
         util = PositionBasisConfigUtil(basis)
-        actual = util.nk_points
+        actual = util.fundamental_nk_points
 
         for axis in range(3):
             basis_for_axis = actual[axis].reshape(*resolution)
@@ -248,7 +248,7 @@ class TestBasisConfig(unittest.TestCase):
         basis = PositionBasisConfigUtil.from_resolution((3, 3, 3), delta_x)
         util = PositionBasisConfigUtil(basis)
 
-        actual = util.x_points
+        actual = util.fundamental_x_points
         # fmt: off
         expected_x = np.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0]) / 3
         expected_y = np.array([0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 2.0, 2.0, 2.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 2.0, 2.0, 2.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 2.0, 2.0, 2.0]) / 3
@@ -266,7 +266,7 @@ class TestBasisConfig(unittest.TestCase):
         )
         basis = PositionBasisConfigUtil.from_resolution((3, 3, 3), delta_x)
         util = PositionBasisConfigUtil(basis)
-        actual = util.x_points
+        actual = util.fundamental_x_points
 
         # fmt: off
         expected_x = np.array([0.0, 0.0, 0.0, 3.0, 3.0, 3.0, 6.0, 6.0, 6.0, 0.0, 0.0, 0.0, 3.0, 3.0, 3.0, 6.0, 6.0, 6.0, 0.0, 0.0, 0.0, 3.0, 3.0, 3.0, 6.0, 6.0, 6.0]) / 3
@@ -287,7 +287,7 @@ class TestBasisConfig(unittest.TestCase):
         basis = MomentumBasisConfigUtil.from_resolution((3, 3, 3), dx)
         util = MomentumBasisConfigUtil(basis)
 
-        actual = util.k_points
+        actual = util.fundamental_k_points
         # fmt: off
         expected_x = np.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0])
         expected_y = np.array([0.0, 0.0, 0.0, 1.0, 1.0, 1.0, -1.0, -1.0, -1.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, -1.0, -1.0, -1.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, -1.0, -1.0, -1.0])
@@ -305,7 +305,7 @@ class TestBasisConfig(unittest.TestCase):
         )
         basis = MomentumBasisConfigUtil.from_resolution((3, 3, 3), delta_x)
         util = MomentumBasisConfigUtil(basis)
-        actual = util.k_points
+        actual = util.fundamental_k_points
 
         # fmt: off
         expected_x = np.array([0.0, 0.0, 0.0, 3.0, 3.0, 3.0, -3.0, -3.0, -3.0, 0.0, 0.0, 0.0, 3.0, 3.0, 3.0, -3.0, -3.0, -3.0, 0.0, 0.0, 0.0, 3.0, 3.0, 3.0, -3.0, -3.0, -3.0])

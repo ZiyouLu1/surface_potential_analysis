@@ -2,18 +2,14 @@ from typing import Any, Generic, Literal, TypedDict, TypeVar, overload
 
 import numpy as np
 
-from surface_potential_analysis.basis import (
-    Basis,
-    FundamentalBasis,
-    MomentumBasis,
-    PositionBasis,
-    TruncatedBasis,
-    is_basis_type,
-)
+from surface_potential_analysis.basis import Basis, FundamentalBasis, TruncatedBasis
+from surface_potential_analysis.basis.basis import is_basis_type
 from surface_potential_analysis.basis_config import (
     BasisConfig,
     BasisConfigUtil,
+    MomentumBasisConfig,
     MomentumBasisConfigUtil,
+    PositionBasisConfig,
     PositionBasisConfigUtil,
 )
 from surface_potential_analysis.interpolation import pad_ft_points
@@ -22,6 +18,9 @@ _L0Cov = TypeVar("_L0Cov", bound=int, covariant=True)
 _L1Cov = TypeVar("_L1Cov", bound=int, covariant=True)
 _L2Cov = TypeVar("_L2Cov", bound=int, covariant=True)
 
+
+_BC0Cov = TypeVar("_BC0Cov", bound=BasisConfig[Any, Any, Any], covariant=True)
+_BC0Inv = TypeVar("_BC0Inv", bound=BasisConfig[Any, Any, Any])
 
 _BX0Cov = TypeVar("_BX0Cov", bound=Basis[Any, Any], covariant=True)
 _BX1Cov = TypeVar("_BX1Cov", bound=Basis[Any, Any], covariant=True)
@@ -33,18 +32,16 @@ HamiltonianPoints = np.ndarray[
 ]
 
 
-class Hamiltonian(TypedDict, Generic[_BX0Cov, _BX1Cov, _BX2Cov]):
-    basis: BasisConfig[_BX0Cov, _BX1Cov, _BX2Cov]
+class Hamiltonian(TypedDict, Generic[_BC0Cov]):
+    basis: _BC0Cov
     # We need higher kinded types, and const generics to do this properly
     array: HamiltonianPoints[int, int]
 
 
-MomentumBasisHamiltonian = Hamiltonian[
-    MomentumBasis[_L0Cov], MomentumBasis[_L1Cov], MomentumBasis[_L2Cov]
-]
-PositionBasisHamiltonian = Hamiltonian[
-    PositionBasis[_L0Cov], PositionBasis[_L1Cov], PositionBasis[_L2Cov]
-]
+HamiltonianWithBasis = Hamiltonian[BasisConfig[_BX0Cov, _BX1Cov, _BX2Cov]]
+
+MomentumBasisHamiltonian = Hamiltonian[MomentumBasisConfig[_L0Cov, _L1Cov, _L2Cov]]
+PositionBasisHamiltonian = Hamiltonian[PositionBasisConfig[_L0Cov, _L1Cov, _L2Cov]]
 
 StackedHamiltonianPoints = np.ndarray[
     tuple[_L0Cov, _L1Cov, _L2Cov, _L0Cov, _L1Cov, _L2Cov],
@@ -52,17 +49,18 @@ StackedHamiltonianPoints = np.ndarray[
 ]
 
 
-class StackedHamiltonian(TypedDict, Generic[_BX0Cov, _BX1Cov, _BX2Cov]):
-    basis: BasisConfig[_BX0Cov, _BX1Cov, _BX2Cov]
+class StackedHamiltonian(TypedDict, Generic[_BC0Cov]):
+    basis: _BC0Cov
     # We need higher kinded types to do this properly
     array: StackedHamiltonianPoints[int, int, int]
 
 
+StackedHamiltonianWithBasis = Hamiltonian[BasisConfig[_BX0Cov, _BX1Cov, _BX2Cov]]
 MomentumBasisStackedHamiltonian = StackedHamiltonian[
-    MomentumBasis[_L0Cov], MomentumBasis[_L1Cov], MomentumBasis[_L2Cov]
+    MomentumBasisConfig[_L0Cov, _L1Cov, _L2Cov]
 ]
 PositionBasisStackedHamiltonian = StackedHamiltonian[
-    PositionBasis[_L0Cov], PositionBasis[_L1Cov], PositionBasis[_L2Cov]
+    PositionBasisConfig[_L0Cov, _L1Cov, _L2Cov]
 ]
 
 _BX0Inv = TypeVar("_BX0Inv", bound=Basis[Any, Any])
@@ -79,8 +77,8 @@ _CBX2Inv = TypeVar("_CBX2Inv", bound=FundamentalBasis[Any])
 
 
 def flatten_hamiltonian(
-    hamiltonian: StackedHamiltonian[_BX0Inv, _BX1Inv, _BX2Inv]
-) -> Hamiltonian[_BX0Inv, _BX1Inv, _BX2Inv]:
+    hamiltonian: StackedHamiltonian[_BC0Inv],
+) -> Hamiltonian[_BC0Inv]:
     n_states = np.prod(hamiltonian["array"].shape[:3])
     return {
         "basis": hamiltonian["basis"],
@@ -88,9 +86,7 @@ def flatten_hamiltonian(
     }
 
 
-def stack_hamiltonian(
-    hamiltonian: Hamiltonian[_BX0Inv, _BX1Inv, _BX2Inv]
-) -> StackedHamiltonian[_BX0Inv, _BX1Inv, _BX2Inv]:
+def stack_hamiltonian(hamiltonian: Hamiltonian[_BC0Inv]) -> StackedHamiltonian[_BC0Inv]:
     basis = BasisConfigUtil(hamiltonian["basis"])
     return {
         "basis": hamiltonian["basis"],
@@ -147,39 +143,39 @@ def convert_hamiltonian_to_position_basis(
 
 @overload
 def truncate_hamiltonian_basis(
-    hamiltonian: StackedHamiltonian[_CBX0Inv, _CBX1Inv, _CBX2Inv],
+    hamiltonian: StackedHamiltonianWithBasis[_CBX0Inv, _CBX1Inv, _CBX2Inv],
     len: _L0Inv,
     axis: Literal[0, -3],
-) -> StackedHamiltonian[TruncatedBasis[_L0Inv, _CBX0Inv], _CBX1Inv, _CBX2Inv]:
+) -> StackedHamiltonianWithBasis[TruncatedBasis[_L0Inv, _CBX0Inv], _CBX1Inv, _CBX2Inv]:
     ...
 
 
 @overload
 def truncate_hamiltonian_basis(
-    hamiltonian: StackedHamiltonian[_CBX0Inv, _CBX1Inv, _CBX2Inv],
+    hamiltonian: StackedHamiltonianWithBasis[_CBX0Inv, _CBX1Inv, _CBX2Inv],
     len: _L0Inv,
     axis: Literal[1, -2],
-) -> StackedHamiltonian[_CBX0Inv, TruncatedBasis[_L0Inv, _CBX1Inv], _CBX2Inv]:
+) -> StackedHamiltonianWithBasis[_CBX0Inv, TruncatedBasis[_L0Inv, _CBX1Inv], _CBX2Inv]:
     ...
 
 
 @overload
 def truncate_hamiltonian_basis(
-    hamiltonian: StackedHamiltonian[_CBX0Inv, _CBX1Inv, _CBX2Inv],
+    hamiltonian: StackedHamiltonianWithBasis[_CBX0Inv, _CBX1Inv, _CBX2Inv],
     len: _L0Inv,
     axis: Literal[2, -1],
-) -> StackedHamiltonian[_CBX0Inv, _CBX1Inv, TruncatedBasis[_L0Inv, _CBX2Inv]]:
+) -> StackedHamiltonianWithBasis[_CBX0Inv, _CBX1Inv, TruncatedBasis[_L0Inv, _CBX2Inv]]:
     ...
 
 
 def truncate_hamiltonian_basis(
-    hamiltonian: StackedHamiltonian[_CBX0Inv, _CBX1Inv, _CBX2Inv],
+    hamiltonian: StackedHamiltonianWithBasis[_CBX0Inv, _CBX1Inv, _CBX2Inv],
     len: _L0Inv,
     axis: Literal[0, 1, 2, -1, -2, -3] = -1,
 ) -> (
-    StackedHamiltonian[TruncatedBasis[_L0Inv, _CBX0Inv], _CBX1Inv, _CBX2Inv]
-    | StackedHamiltonian[_CBX0Inv, TruncatedBasis[_L0Inv, _CBX1Inv], _CBX2Inv]
-    | StackedHamiltonian[_CBX0Inv, _CBX1Inv, TruncatedBasis[_L0Inv, _CBX2Inv]]
+    StackedHamiltonianWithBasis[TruncatedBasis[_L0Inv, _CBX0Inv], _CBX1Inv, _CBX2Inv]
+    | StackedHamiltonianWithBasis[_CBX0Inv, TruncatedBasis[_L0Inv, _CBX1Inv], _CBX2Inv]
+    | StackedHamiltonianWithBasis[_CBX0Inv, _CBX1Inv, TruncatedBasis[_L0Inv, _CBX2Inv]]
 ):
     parent_basis: FundamentalBasis[Any] = hamiltonian["basis"][axis % 3]
     if not is_basis_type(parent_basis, "momentum"):
@@ -199,34 +195,44 @@ def truncate_hamiltonian_basis(
 
 @overload
 def expand_hamiltonian_basis(
-    hamiltonian: StackedHamiltonian[TruncatedBasis[int, _CBX0Inv], _BX1Inv, _BX2Inv],
+    hamiltonian: StackedHamiltonianWithBasis[
+        TruncatedBasis[int, _CBX0Inv], _BX1Inv, _BX2Inv
+    ],
     axis: Literal[0, -3],
-) -> StackedHamiltonian[_CBX0Inv, _BX1Inv, _BX2Inv]:
+) -> StackedHamiltonianWithBasis[_CBX0Inv, _BX1Inv, _BX2Inv]:
     ...
 
 
 @overload
 def expand_hamiltonian_basis(
-    hamiltonian: StackedHamiltonian[_BX0Inv, TruncatedBasis[int, _CBX1Inv], _BX2Inv],
+    hamiltonian: StackedHamiltonianWithBasis[
+        _BX0Inv, TruncatedBasis[int, _CBX1Inv], _BX2Inv
+    ],
     axis: Literal[1, -2],
-) -> StackedHamiltonian[_BX0Inv, _CBX1Inv, _BX2Inv]:
+) -> StackedHamiltonianWithBasis[_BX0Inv, _CBX1Inv, _BX2Inv]:
     ...
 
 
 @overload
 def expand_hamiltonian_basis(
-    hamiltonian: StackedHamiltonian[_BX0Inv, _BX1Inv, TruncatedBasis[int, _CBX2Inv]],
+    hamiltonian: StackedHamiltonianWithBasis[
+        _BX0Inv, _BX1Inv, TruncatedBasis[int, _CBX2Inv]
+    ],
     axis: Literal[2, -1],
-) -> StackedHamiltonian[_BX0Inv, _BX1Inv, _CBX2Inv]:
+) -> StackedHamiltonianWithBasis[_BX0Inv, _BX1Inv, _CBX2Inv]:
     ...
 
 
 def expand_hamiltonian_basis(
-    hamiltonian: StackedHamiltonian[TruncatedBasis[int, _CBX0Inv], _BX1Inv, _BX2Inv]
-    | StackedHamiltonian[_BX0Inv, TruncatedBasis[int, _CBX1Inv], _BX2Inv]
-    | StackedHamiltonian[_BX0Inv, _BX1Inv, TruncatedBasis[int, _CBX2Inv]],
+    hamiltonian: StackedHamiltonianWithBasis[
+        TruncatedBasis[int, _CBX0Inv], _BX1Inv, _BX2Inv
+    ]
+    | StackedHamiltonianWithBasis[_BX0Inv, TruncatedBasis[int, _CBX1Inv], _BX2Inv]
+    | StackedHamiltonianWithBasis[_BX0Inv, _BX1Inv, TruncatedBasis[int, _CBX2Inv]],
     axis: Literal[0, 1, 2, -1, -2, -3] = -1,
-) -> StackedHamiltonian[_BX0Inv | _CBX0Inv, _BX1Inv | _CBX1Inv, _BX2Inv | _CBX2Inv]:
+) -> StackedHamiltonianWithBasis[
+    _BX0Inv | _CBX0Inv, _BX1Inv | _CBX1Inv, _BX2Inv | _CBX2Inv
+]:
     raise NotImplementedError()
 
 
@@ -235,47 +241,47 @@ _BX = TypeVar("_BX", bound=Basis[Any, Any], contravariant=True)
 
 @overload
 def hamiltonian_axis_in_basis(
-    hamiltonian: StackedHamiltonian[_BX0Inv, _BX1Inv, _BX2Inv],
+    hamiltonian: StackedHamiltonianWithBasis[_BX0Inv, _BX1Inv, _BX2Inv],
     basis: _BX,
     axis: Literal[0, -3],
-) -> StackedHamiltonian[_BX, _BX1Inv, _BX2Inv]:
+) -> StackedHamiltonianWithBasis[_BX, _BX1Inv, _BX2Inv]:
     ...
 
 
 @overload
 def hamiltonian_axis_in_basis(
-    hamiltonian: StackedHamiltonian[_BX0Inv, _BX1Inv, _BX2Inv],
+    hamiltonian: StackedHamiltonianWithBasis[_BX0Inv, _BX1Inv, _BX2Inv],
     basis: _BX,
     axis: Literal[1, -2],
-) -> StackedHamiltonian[_BX0Inv, _BX, _BX2Inv]:
+) -> StackedHamiltonianWithBasis[_BX0Inv, _BX, _BX2Inv]:
     ...
 
 
 @overload
 def hamiltonian_axis_in_basis(
-    hamiltonian: StackedHamiltonian[_BX0Inv, _BX1Inv, _BX2Inv],
+    hamiltonian: StackedHamiltonianWithBasis[_BX0Inv, _BX1Inv, _BX2Inv],
     basis: _BX,
     axis: Literal[2, -1],
-) -> StackedHamiltonian[_BX0Inv, _BX1Inv, _BX]:
+) -> StackedHamiltonianWithBasis[_BX0Inv, _BX1Inv, _BX]:
     ...
 
 
 def hamiltonian_axis_in_basis(
-    hamiltonian: StackedHamiltonian[_BX0Inv, _BX1Inv, _BX2Inv],
+    hamiltonian: StackedHamiltonianWithBasis[_BX0Inv, _BX1Inv, _BX2Inv],
     basis: _BX,
     axis: Literal[0, 1, 2, -1, -2, -3] = -1,
 ) -> (
-    StackedHamiltonian[_BX, _BX1Inv, _BX2Inv]
-    | StackedHamiltonian[_BX0Inv, _BX, _BX2Inv]
-    | StackedHamiltonian[_BX0Inv, _BX1Inv, _BX]
+    StackedHamiltonianWithBasis[_BX, _BX1Inv, _BX2Inv]
+    | StackedHamiltonianWithBasis[_BX0Inv, _BX, _BX2Inv]
+    | StackedHamiltonianWithBasis[_BX0Inv, _BX1Inv, _BX]
 ):
     raise NotImplementedError()
 
 
 def stacked_hamiltonian_in_basis(
-    hamiltonian: StackedHamiltonian[Any, Any, Any],
-    basis: BasisConfig[_BX0Inv, _BX1Inv, _BX2Inv],
-) -> StackedHamiltonian[_BX0Inv, _BX1Inv, _BX2Inv]:
+    hamiltonian: StackedHamiltonian[BasisConfig[_BX0Inv, _BX1Inv, _BX2Inv]],
+    basis: _BC0Inv,
+) -> StackedHamiltonian[_BC0Inv]:
     """
     Transform a stacked hamiltonian into the given basis
 
@@ -294,9 +300,9 @@ def stacked_hamiltonian_in_basis(
 
 
 def hamiltonian_in_basis(
-    hamiltonian: Hamiltonian[Any, Any, Any],
-    basis: BasisConfig[_BX0Inv, _BX1Inv, _BX2Inv],
-) -> Hamiltonian[_BX0Inv, _BX1Inv, _BX2Inv]:
+    hamiltonian: Hamiltonian[Any],
+    basis: _BC0Inv,
+) -> Hamiltonian[_BC0Inv]:
     """
     Transform a hamiltonian into the given basis
 
@@ -314,17 +320,14 @@ def hamiltonian_in_basis(
     return flatten_hamiltonian(converted)
 
 
-H = TypeVar("H", bound=Hamiltonian[Any, Any, Any])
-
-
 def add_hamiltonian_stacked(
-    a: StackedHamiltonian[_BX0Inv, _BX1Inv, _BX2Inv],
-    b: StackedHamiltonian[_BX0Inv, _BX1Inv, _BX2Inv],
-) -> StackedHamiltonian[_BX0Inv, _BX1Inv, _BX2Inv]:
+    a: StackedHamiltonian[_BC0Inv],
+    b: StackedHamiltonian[_BC0Inv],
+) -> StackedHamiltonian[_BC0Inv]:
     return {"basis": a["basis"], "array": a["array"] + b["array"]}
 
 
 def add_hamiltonian(
-    a: Hamiltonian[_BX0Inv, _BX1Inv, _BX2Inv], b: Hamiltonian[_BX0Inv, _BX1Inv, _BX2Inv]
-) -> Hamiltonian[_BX0Inv, _BX1Inv, _BX2Inv]:
+    a: Hamiltonian[_BC0Inv], b: Hamiltonian[_BC0Inv]
+) -> Hamiltonian[_BC0Inv]:
     return {"basis": a["basis"], "array": a["array"] + b["array"]}

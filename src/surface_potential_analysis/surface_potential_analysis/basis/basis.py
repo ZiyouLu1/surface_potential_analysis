@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from functools import cached_property
 from typing import Any, Generic, Literal, TypedDict, TypeGuard, TypeVar, overload
 
 import numpy as np
@@ -20,7 +21,7 @@ class PositionBasis(TypedDict, Generic[_LCov]):
 class MomentumBasis(TypedDict, Generic[_LCov]):
     _type: Literal["momentum"]
     n: _LCov
-    dk: BasisVector
+    delta_x: BasisVector
 
 
 FundamentalBasis = PositionBasis[_LCov] | MomentumBasis[_LCov]
@@ -114,72 +115,87 @@ class BasisUtil(Generic[B]):
 
     def __len__(self: BasisUtil[Basis[_L1Inv, Any]]) -> _L1Inv:
         if is_basis_type(self._basis, "explicit"):
-            return self._basis["states"].shape[1]  # type:ignore
+            return self._basis["vectors"].shape[0]  # type:ignore
         return self._basis["n"]  # type:ignore
 
-    @property
+    @cached_property
     def fundamental_basis(self) -> FundamentalBasis[Any]:
         return get_fundamental_basis(self._basis)
 
-    @property
-    def vector(self) -> BasisVector:
-        if is_basis_type(self.fundamental_basis, "momentum"):
-            return self.fundamental_basis["dk"]
-        if is_basis_type(self.fundamental_basis, "position"):
-            return self.fundamental_basis["delta_x"]
-        raise AssertionError("Unreachable")
+    @overload
+    def get_fundamental_basis_in(
+        self, _type: Literal["position"]
+    ) -> PositionBasis[Any]:
+        ...
+
+    @overload
+    def get_fundamental_basis_in(
+        self, _type: Literal["momentum"]
+    ) -> MomentumBasis[Any]:
+        ...
+
+    def get_fundamental_basis_in(
+        self, _type: Literal["position", "momentum"]
+    ) -> FundamentalBasis[Any]:
+        return {"_type": _type, "n": self.fundamental_n, "delta_x": self.delta_x}  # type: ignore
 
     @property
-    def Nk(self: BasisUtil[BasisWithLength[_L1Inv, Any]]) -> _L1Inv:
+    def fundamental_n(self: BasisUtil[BasisWithLength[_L1Inv, Any]]) -> _L1Inv:
         return self.fundamental_basis["n"]  # type: ignore
 
     @property
-    def Nx(self: BasisUtil[BasisWithLength[_L1Inv, Any]]) -> _L1Inv:
-        return self.fundamental_basis["n"]  # type: ignore
-
-    @property
-    def nk_points(
-        self: BasisUtil[BasisWithLength[_L1Inv, Any]],
+    def fundamental_nk_points(
+        self: BasisUtil[BasisWithLength[_L1Inv, Any]]
     ) -> np.ndarray[tuple[_L1Inv], np.dtype[np.int_]]:
         # We want points from (-self.Nk + 1) // 2 to (self.Nk - 1) // 2
         return np.fft.ifftshift(  # type:ignore
-            np.arange((-self.Nk + 1) // 2, (self.Nk + 1) // 2)
+            np.arange((-self.fundamental_n + 1) // 2, (self.fundamental_n + 1) // 2)
         )
 
     @property
-    def nx_points(
-        self: BasisUtil[BasisWithLength[_L1Inv, Any]],
+    def fundamental_nx_points(
+        self: BasisUtil[BasisWithLength[_L1Inv, Any]]
     ) -> np.ndarray[tuple[_L1Inv], np.dtype[np.int_]]:
-        return np.arange(0, self.Nx, dtype=int)  # type:ignore
-
-
-class MomentumBasisUtil(BasisUtil[MomentumBasis[_LCov]], Generic[_LCov]):
-    @property
-    def vector(self) -> BasisVector:
-        return self.dk
+        return np.arange(0, self.fundamental_n, dtype=int)  # type:ignore
 
     @property
-    def dk(self) -> BasisVector:
-        return self._basis["dk"]
+    def n(self: BasisUtil[BasisWithLength[_L1Inv, Any]]) -> _L1Inv:
+        return self.__len__()  # type: ignore
 
     @property
-    def k_points(self) -> np.ndarray[tuple[Literal[3], _LCov], np.dtype[np.float_]]:
-        return self.dk * self.nk_points  # type: ignore
+    def nx_points(
+        self: BasisUtil[BasisWithLength[_L1Inv, Any]]
+    ) -> np.ndarray[tuple[_L1Inv], np.dtype[np.int_]]:
+        return np.arange(0, self.n, dtype=int)  # type:ignore
 
-
-class PositionBasisUtil(BasisUtil[PositionBasis[_LCov]], Generic[_LCov]):
     @property
-    def vector(self) -> BasisVector:
-        return self.delta_x
+    def nk_points(
+        self: BasisUtil[BasisWithLength[_L1Inv, Any]]
+    ) -> np.ndarray[tuple[_L1Inv], np.dtype[np.int_]]:
+        return np.fft.ifftshift(  # type:ignore
+            np.arange((-self.n + 1) // 2, (self.n + 1) // 2)
+        )
 
     @property
     def delta_x(self) -> BasisVector:
-        return self._basis["delta_x"]
+        return self.fundamental_basis["delta_x"]
 
     @property
+    def fundamental_dx(self) -> BasisVector:
+        return self.delta_x / self.fundamental_n  # type: ignore
+
+    @property
+    def fundamental_x_points(
+        self,
+    ) -> np.ndarray[tuple[Literal[3], _LCov], np.dtype[np.float_]]:
+        return self.fundamental_dx[:, np.newaxis] * self.fundamental_nx_points[np.newaxis, :]  # type: ignore
+
+
+class PositionBasisUtil(BasisUtil[PositionBasis[Any]]):
+    @property
     def dx(self) -> BasisVector:
-        return self.delta_x / self.Nx  # type: ignore
+        return self.delta_x / self.n  # type: ignore
 
     @property
     def x_points(self) -> np.ndarray[tuple[Literal[3], _LCov], np.dtype[np.float_]]:
-        return self.dx * self.nx_points  # type: ignore
+        return self.dx[:, np.newaxis] * self.nx_points[np.newaxis, :]  # type: ignore

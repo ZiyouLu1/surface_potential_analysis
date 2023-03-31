@@ -11,7 +11,7 @@ from surface_potential_analysis.basis_config import (
     MomentumBasisConfigUtil,
     get_projected_k_points,
 )
-from surface_potential_analysis.eigenstate.eigenstate_plot import get_measured_data
+from surface_potential_analysis.eigenstate.plot import get_measured_data
 from surface_potential_analysis.util import (
     calculate_cumulative_distances_along_path,
     slice_along_axis,
@@ -63,7 +63,7 @@ def plot_overlap_transform_along_path(
     data = get_measured_data(points, measure)
     util = MomentumBasisConfigUtil(overlap["basis"])
     distances = calculate_cumulative_distances_along_path(
-        path, util.k_points.reshape(3, *util.shape)
+        path, util.fundamental_k_points.reshape(3, *util.shape)
     )
     (line,) = ax.plot(distances, data)
     ax.set_yscale(line)

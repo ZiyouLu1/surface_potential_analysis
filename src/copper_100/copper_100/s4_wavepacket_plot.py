@@ -11,7 +11,7 @@ from surface_potential_analysis.eigenstate.eigenstate import (
     EigenstateConfig,
     EigenstateConfigUtil,
 )
-from surface_potential_analysis.eigenstate.eigenstate_plot import (
+from surface_potential_analysis.eigenstate.plot import (
     plot_eigenstate_in_xy,
     plot_wavefunction_difference_in_xy,
 )

@@ -74,3 +74,21 @@ def calculate_cumulative_distances_along_path(
     cum_distances = np.cumsum(distances)
     # Add back initial distance
     return np.insert(cum_distances, 0, 0)  # type:ignore
+
+
+_SInv = TypeVar("_SInv", bound=tuple[Any])
+
+
+def get_measured_data(
+    data: np.ndarray[_SInv, np.dtype[np.complex_]],
+    measure: Literal["real", "imag", "abs", "angle"],
+) -> np.ndarray[_SInv, np.dtype[np.float_]]:
+    match measure:
+        case "real":
+            return np.real(data)  # type: ignore
+        case "imag":
+            return np.imag(data)  # type: ignore
+        case "abs":
+            return np.abs(data)  # type: ignore
+        case "angle":
+            return np.unwrap(np.angle(data))  # type: ignore

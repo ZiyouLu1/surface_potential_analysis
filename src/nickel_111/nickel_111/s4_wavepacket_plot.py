@@ -2,7 +2,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 
 from surface_potential_analysis.eigenstate.eigenstate import EigenstateConfigUtil
-from surface_potential_analysis.eigenstate.eigenstate_plot import (
+from surface_potential_analysis.eigenstate.plot import (
     animate_eigenstate_3D_in_xy,
     plot_eigenstate_in_yz,
     plot_eigenstate_x0z,

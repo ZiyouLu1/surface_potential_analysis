@@ -3,8 +3,11 @@ from typing import Any, Literal, TypeVar
 import numpy as np
 from scipy.constants import hbar
 
-from .basis_config import MomentumBasisConfig, MomentumBasisConfigUtil
-from .hamiltonian import (
+from surface_potential_analysis.basis_config import (
+    MomentumBasisConfig,
+    MomentumBasisConfigUtil,
+)
+from surface_potential_analysis.hamiltonian import (
     MomentumBasisHamiltonian,
     MomentumBasisStackedHamiltonian,
     PositionBasisStackedHamiltonian,
@@ -12,7 +15,7 @@ from .hamiltonian import (
     convert_stacked_hamiltonian_to_momentum_basis,
     flatten_hamiltonian,
 )
-from .potential import Potential
+from surface_potential_analysis.potential import Potential
 
 _L0 = TypeVar("_L0", bound=int)
 _L1 = TypeVar("_L1", bound=int)
@@ -66,7 +69,7 @@ def hamiltonian_from_mass(
     bloch_phase = np.array([0.0, 0.0, 0.0]) if bloch_phase is None else bloch_phase
     util = MomentumBasisConfigUtil(basis)
 
-    kx0_coords, kx1_coords, kx2_coords = util.nk_points
+    kx0_coords, kx1_coords, kx2_coords = util.fundamental_nk_points
     kx0_coords += bloch_phase[0]
     kx1_coords += bloch_phase[1]
     kx2_coords += bloch_phase[2]

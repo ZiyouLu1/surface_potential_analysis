@@ -21,7 +21,7 @@ class WavepacketTest(unittest.TestCase):
         )
         wavepacket: PositionBasisWavepacket[Any, Any, Any, Any, Any] = {
             "basis": PositionBasisConfigUtil.from_resolution(resolution),
-            "eigenvectors": np.zeros((ns0, ns1, np.prod(resolution))),
+            "vectors": np.zeros((ns0, ns1, np.prod(resolution))),
         }
 
         idx = np.random.randint(0, np.product(resolution).item())

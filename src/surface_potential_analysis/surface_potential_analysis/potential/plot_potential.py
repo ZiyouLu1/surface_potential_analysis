@@ -1,3 +1,4 @@
+from collections.abc import Mapping
 from typing import Literal, TypeVar
 
 import numpy as np
@@ -8,10 +9,10 @@ from matplotlib.collections import QuadMesh
 from matplotlib.figure import Figure
 from matplotlib.lines import Line2D
 
-from surface_potential_analysis.basis import PositionBasisUtil
+from surface_potential_analysis.basis.basis import BasisUtil
 from surface_potential_analysis.basis_config import (
-    PositionBasisConfigUtil,
-    get_projected_x_points,
+    BasisConfigUtil,
+    get_fundamental_x_points_projected,
 )
 from surface_potential_analysis.util import (
     calculate_cumulative_distances_along_path,
@@ -35,15 +36,15 @@ def plot_potential_1D(
 ) -> tuple[Figure, Axes, Line2D]:
     fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
 
-    util = PositionBasisUtil(potential["basis"][axis])  # type: ignore
-    coordinates = util.x_points
+    util = BasisUtil(potential["basis"][axis])
+    coordinates = np.linalg.norm(util.fundamental_x_points, axis=0)
     data_slice: list[slice | int] = [slice(None), slice(None), slice(None)]
     data_slice[1 if (axis % 3) == 0 else 0] = idx[0]
     data_slice[1 if (axis % 3) == 2 else 2] = idx[1]
     data = potential["points"][tuple(data_slice)]
 
     (line,) = ax.plot(coordinates, data)
-    ax.set_xlabel(f"{(axis % 3)} axis")
+    ax.set_xlabel(f"x{(axis % 3)} axis")
     ax.set_ylabel("Energy /J")
     ax.set_yscale(scale)
     return fig, ax, line
@@ -51,7 +52,9 @@ def plot_potential_1D(
 
 def plot_potential_1D_comparison(
     potential: Potential[_L0Inv, _L1Inv, _L2Inv],
-    comparison_points: dict[str, tuple[tuple[int, int], int]],
+    comparison_points: Mapping[
+        str, tuple[tuple[int, int], Literal[0, 1, 2, -1, -2, -3]]
+    ],
     *,
     ax: Axes | None = None,
     scale: Literal["symlog", "linear"] = "linear",
@@ -74,7 +77,7 @@ def plot_potential_2D(
 ) -> tuple[Figure, Axes, QuadMesh]:
     fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
 
-    coordinates = get_projected_x_points(potential["basis"], z_axis)[
+    coordinates = get_fundamental_x_points_projected(potential["basis"], z_axis)[
         slice_along_axis(idx, (z_axis % 3) + 1)
     ]
     data = potential["points"][slice_along_axis(idx, z_axis)]
@@ -142,10 +145,11 @@ def animate_potential_3D(
     *,
     ax: Axes | None = None,
     scale: Literal["symlog", "linear"] = "linear",
+    clim: tuple[float | None, float | None] = (None, None),
 ) -> tuple[Figure, Axes, ArtistAnimation]:
     fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
 
-    coordinates = get_projected_x_points(potential["basis"], z_axis)
+    coordinates = get_fundamental_x_points_projected(potential["basis"], z_axis)
     data = potential["points"]
 
     mesh0 = ax.pcolormesh(
@@ -163,21 +167,27 @@ def animate_potential_3D(
         )
         frames.append([mesh])
 
-    max_clim: float = np.max([i[0].get_clim()[1] for i in frames])
-    min_clim: float = np.min([i[0].get_clim()[0] for i in frames])
+    max_clim: float = (
+        np.max([i[0].get_clim()[1] for i in frames]) if clim[1] is None else clim[1]
+    )
+    min_clim: float = (
+        np.min([i[0].get_clim()[0] for i in frames]) if clim[0] is None else clim[0]
+    )
     for (mesh,) in frames:
         mesh.set_norm(scale)
         mesh.set_clim(min_clim, max_clim)
     mesh0.set_norm(scale)
     mesh0.set_clim(min_clim, max_clim)
 
+    ani = ArtistAnimation(fig, frames)
     ax.set_aspect("equal", adjustable="box")
     fig.colorbar(mesh, ax=ax, format="%4.1e")
 
     ax.set_xlabel(f"x{0 if (z_axis % 3) != 0 else 1} axis")
     ax.set_ylabel(f"x{2 if (z_axis % 3) != 2 else 1} axis")
+    ax.set_title(f"Animation of the potential perpendicular to the x{z_axis % 3} axis")
 
-    return fig, ax, mesh
+    return fig, ax, ani
 
 
 def animate_potential_x0x1(
@@ -185,8 +195,9 @@ def animate_potential_x0x1(
     *,
     ax: Axes | None = None,
     scale: Literal["symlog", "linear"] = "linear",
+    clim: tuple[float | None, float | None] = (None, None),
 ) -> tuple[Figure, Axes, ArtistAnimation]:
-    return animate_potential_3D(potential, 2, ax=ax, scale=scale)
+    return animate_potential_3D(potential, 2, ax=ax, scale=scale, clim=clim)
 
 
 def animate_potential_x1x2(
@@ -194,8 +205,9 @@ def animate_potential_x1x2(
     *,
     ax: Axes | None = None,
     scale: Literal["symlog", "linear"] = "linear",
+    clim: tuple[float | None, float | None] = (None, None),
 ) -> tuple[Figure, Axes, ArtistAnimation]:
-    return animate_potential_3D(potential, 0, ax=ax, scale=scale)
+    return animate_potential_3D(potential, 0, ax=ax, scale=scale, clim=clim)
 
 
 def animate_potential_x2x0(
@@ -203,8 +215,9 @@ def animate_potential_x2x0(
     *,
     ax: Axes | None = None,
     scale: Literal["symlog", "linear"] = "linear",
+    clim: tuple[float | None, float | None] = (None, None),
 ) -> tuple[Figure, Axes, ArtistAnimation]:
-    return animate_potential_3D(potential, 1, ax=ax, scale=scale)
+    return animate_potential_3D(potential, 1, ax=ax, scale=scale, clim=clim)
 
 
 def plot_potential_along_path(
@@ -217,9 +230,9 @@ def plot_potential_along_path(
     fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
 
     data = potential["points"][*path]
-    util = PositionBasisConfigUtil(potential["basis"])
+    util = BasisConfigUtil(potential["basis"])
     distances = calculate_cumulative_distances_along_path(
-        path, util.x_points.reshape(3, *util.shape)
+        path, util.fundamental_x_points.reshape(3, *util.shape)
     )
     (line,) = ax.plot(distances, data)
     ax.set_yscale(scale)

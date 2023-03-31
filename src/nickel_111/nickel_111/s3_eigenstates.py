@@ -1,35 +1,52 @@
+from typing import Any, Literal
+
 import numpy as np
 
-from surface_potential_analysis.energy_eigenstate import save_energy_eigenstates
-from surface_potential_analysis.hamiltonian_eigenstates import (
-    calculate_energy_eigenstates,
+from nickel_111.s1_potential import get_interpolated_nickel_potential
+from surface_potential_analysis.basis_config import BasisConfigUtil
+from surface_potential_analysis.eigenstate.eigenstate_collection import (
+    calculate_eigenstate_collection,
+    save_eigenstate_collection,
 )
+from surface_potential_analysis.hamiltonian import Hamiltonian
 
-from .s2_hamiltonian import generate_hamiltonian, generate_hamiltonian_john
+from .s2_hamiltonian import generate_hamiltonian_sho
 from .surface_data import get_data_path
 
 
-def generate_eigenstates_data():
-    h = generate_hamiltonian(resolution=(12, 12, 13))
+def _generate_eigenstate_collection_sho(
+    bloch_phases: np.ndarray[tuple[int, Literal[3]], np.dtype[np.float_]],
+    resolution: tuple[int, int, int],
+) -> None:
+    def hamiltonian_generator(
+        x: np.ndarray[tuple[Literal[3]], np.dtype[np.float_]]
+    ) -> Hamiltonian[Any, Any, Any]:
+        return generate_hamiltonian_sho(
+            shape=(2 * resolution[0], 2 * resolution[1], 100),
+            bloch_phase=x,
+            resolution=resolution,
+        )
 
-    potential = load_interpol()
-
-    kx_points = np.linspace(0, (np.abs(h.dkx0[0]) + np.abs(h.dkx1[0])) / 2, 5)
-    ky_points = np.linspace(0, (np.abs(h.dkx0[1]) + np.abs(h.dkx1[1])) / 2, 5)
-
-    h = generate_hamiltonian(resolution=(23, 23, 10))
-    eigenstates = calculate_energy_eigenstates(
-        h, kx_points, ky_points, include_bands=list(range(10))
+    collection = calculate_eigenstate_collection(
+        hamiltonian_generator, bloch_phases, include_bands=list(range(10))
     )
-    path = get_data_path("eigenstates_23_23_10.json")
-    save_energy_eigenstates(eigenstates, path)
+    filename = f"eigenstates_{resolution[0]}_{resolution[1]}_{resolution[2]}.npy"
+    path = get_data_path(filename)
+    save_eigenstate_collection(path, collection)
 
-    h = generate_hamiltonian(resolution=(23, 23, 12))
-    eigenstates = calculate_energy_eigenstates(
-        h, kx_points, ky_points, include_bands=list(range(10))
-    )
-    path = get_data_path("eigenstates_23_23_12.json")
-    save_energy_eigenstates(eigenstates, path)
+
+def generate_eigenstates_data() -> None:
+    potential = get_interpolated_nickel_potential(shape=(1, 1, 1))
+    util = BasisConfigUtil(potential["basis"])
+
+    kx_points = np.linspace(0, (np.abs(util.dk0[0]) + np.abs(util.dk1[0])) / 2, 5)
+    ky_points = np.linspace(0, (np.abs(util.dk0[1]) + np.abs(util.dk1[1])) / 2, 5)
+    kz_points = np.zeros_like(kx_points)
+    bloch_phases = np.array([kx_points, ky_points, kz_points]).T
+
+    # _generate_eigenstate_collection_sho(bloch_phases, (23, 23, 10))
+
+    _generate_eigenstate_collection_sho(bloch_phases, (23, 23, 12))
 
     # h = generate_hamiltonian(resolution=(25, 25, 16))
     # eigenstates = calculate_energy_eigenstates(
@@ -39,56 +56,15 @@ def generate_eigenstates_data():
     # save_energy_eigenstates(eigenstates, path)
 
 
-def test_eigenstates_partial():
-    h = generate_hamiltonian(resolution=(23, 23, 12))
-    n = 10
-    out_20 = h.calculate_eigenvalues(0, 0, n=n)
-    out_all = h.calculate_eigenvalues(0, 0)
+# def test_eigenstates_partial():
+#     h = generate_hamiltonian(resolution=(23, 23, 12))
+#     n = 10
+#     out_20 = h.calculate_eigenvalues(0, 0, n=n)
+#     out_all = h.calculate_eigenvalues(0, 0)
 
-    np.testing.assert_array_almost_equal(np.sort(out_20[0]), np.sort(out_all[0])[:n])
+#     np.testing.assert_array_almost_equal(np.sort(out_20[0]), np.sort(out_all[0])[:n])
 
-    np.testing.assert_array_almost_equal(
-        np.array([x["eigenvector"] for x in out_20[1]])[np.argsort(out_20[0])],
-        np.array([x["eigenvector"] for x in out_all[1]])[np.argsort(out_all[0])][:n],
-    )
-
-
-def generate_eigenstates_data_john():
-    h = generate_hamiltonian_john(resolution=(12, 12, 13))
-
-    kx_points = np.linspace(-h.dkx0[0] / 2, 0, 5)
-    ky_points = np.zeros_like(kx_points)
-
-    # eigenstates = calculate_energy_eigenstates(h, kx_points, ky_points)
-    # path = get_data_path("eigenstates_12_12_13.json")
-    # save_energy_eigenstates(eigenstates, path)
-
-    # h = generate_hamiltonian(resolution=(12, 12, 14))
-    # eigenstates = calculate_energy_eigenstates(h, kx_points, ky_points)
-    # path = get_data_path("eigenstates_12_12_14.json")
-    # save_energy_eigenstates(eigenstates, path)
-
-    # h = generate_hamiltonian(resolution=(10, 10, 13))
-    # eigenstates = calculate_energy_eigenstates(h, kx_points, ky_points)
-    # path = get_data_path("eigenstates_10_10_13.json")
-    # save_energy_eigenstates(eigenstates, path)
-
-    # h = generate_hamiltonian(resolution=(14, 14, 13))
-    # eigenstates = calculate_energy_eigenstates(h, kx_points, ky_points)
-    # path = get_data_path("eigenstates_14_14_13.json")
-    # save_energy_eigenstates(eigenstates, path)
-
-    # h = generate_hamiltonian(resolution=(12, 12, 12))
-    # eigenstates = calculate_energy_eigenstates(h, kx_points, ky_points)
-    # path = get_data_path("eigenstates_12_12_12.json")
-    # save_energy_eigenstates(eigenstates, path)
-
-    # h = generate_hamiltonian(resolution=(15, 15, 12))
-    # eigenstates = calculate_energy_eigenstates(h, kx_points, ky_points)
-    # path = get_data_path("eigenstates_15_15_12.json")
-    # save_energy_eigenstates(eigenstates, path)
-
-    h = generate_hamiltonian_john(resolution=(12, 18, 12))
-    eigenstates = calculate_energy_eigenstates(h, kx_points, ky_points)
-    path = get_data_path("eigenstates_12_18_12.json")
-    save_energy_eigenstates(eigenstates, path)
+#     np.testing.assert_array_almost_equal(
+#         np.array([x["eigenvector"] for x in out_20[1]])[np.argsort(out_20[0])],
+#         np.array([x["eigenvector"] for x in out_all[1]])[np.argsort(out_all[0])][:n],
+#     )

@@ -1,5 +1,5 @@
 import math
-from typing import Any, TypeVar
+from typing import Any, Literal, TypeVar
 
 import numpy as np
 from matplotlib import pyplot as plt
@@ -41,7 +41,7 @@ from .surface_data import save_figure
 
 def get_nickel_comparison_points_x0x1(
     potential: Potential[Any, Any, Any]
-) -> dict[str, tuple[tuple[int, int], int]]:
+) -> dict[str, tuple[tuple[int, int], Literal[2]]]:
     points = potential["points"]
     return {
         "Top Site": (
@@ -65,7 +65,7 @@ def get_nickel_comparison_points_x0x1(
 
 def get_nickel_reciprocal_comparison_points_x0x1(
     potential: Potential[Any, Any, Any]
-) -> dict[str, tuple[tuple[int, int], int]]:
+) -> dict[str, tuple[tuple[int, int], Literal[2]]]:
     points = potential["points"]
     return {
         "HCP Site": ((math.floor(points.shape[0] / 3), 0), 2),
@@ -77,6 +77,7 @@ def get_nickel_reciprocal_comparison_points_x0x1(
 
 def plot_raw_data_points() -> None:
     data = load_raw_data()
+
     fig, _, _ = plot_point_potential_location_xy(data)
     fig.show()
     save_figure(fig, "nickel_raw_points.png")
@@ -119,7 +120,7 @@ def plot_raw_energy_grid_points() -> None:
     ax.set_ylim(0, 0.2e-18)
     fig.show()
 
-    fig, _, _ani = animate_potential_x0x1(mocked_potential)
+    fig, ax, _ani = animate_potential_x0x1(mocked_potential, clim=(0, 0.2e-18))
     fig.show()
 
     cleaned = load_cleaned_energy_grid()
@@ -132,22 +133,10 @@ def plot_raw_energy_grid_points() -> None:
         ln.set_linestyle("")
     locations = get_nickel_comparison_points_x0x1(mocked_potential)
     locations_uneven = {k: v[0] for (k, v) in locations.items()}
-    plot_uneven_potential_z_comparison(potential, locations_uneven)
+    plot_uneven_potential_z_comparison(potential, locations_uneven, ax=ax)
     ax.set_ylim(0, 0.2e-18)
     fig.show()
 
-    # ft_points = np.abs(np.fft.ifft2(grid["points"], axes=(0, 1)))
-    # ft_points[0, 0] = 0
-    # ft_grid: EnergyGrid = {
-    #     "delta_x0": grid["delta_x0"],
-    #     "delta_x1": grid["delta_x1"],
-    #     "points": ft_points.tolist(),
-    #     "z_points": grid["z_points"],
-    # }
-    # fig, ax, _ani1 = animate_energy_grid_3D_in_xy(ft_grid)
-    # # TODO: delta is wrong, plot generic points and then factor out into ft.
-    # ax.set_title("Plot of the ft of the raw potential")
-    # fig.show()
     input()
 
 
@@ -157,8 +146,7 @@ def plot_interpolated_energy_grid_points() -> None:
     fig, ax, _ = plot_projected_coordinates_2D(potential["basis"], 0, 2)
     fig.show()
 
-    fig, ax, _ani = animate_potential_x0x1(potential)
-    # TODO: clim_max=1e-18
+    fig, ax, _ani = animate_potential_x0x1(potential, clim=(0, 2e-19))
 
     raw_potential = load_raw_data_reciprocal_grid()
     mocked_raw_potential = mock_even_potential(raw_potential)
@@ -167,12 +155,16 @@ def plot_interpolated_energy_grid_points() -> None:
 
     locations = get_nickel_comparison_points_x0x1(potential)
     raw_grid = normalize_potential(load_raw_data_reciprocal_grid())
-    fig, ax = plot_z_direction_energy_data_nickel_reciprocal_points(raw_grid, ax=ax)
+    raw_grid["basis"] = (
+        raw_grid["basis"][0],
+        raw_grid["basis"][1],
+        raw_grid["basis"][2] - raw_grid["basis"][2][0],
+    )
+    fig, ax = plot_z_direction_energy_data_nickel_reciprocal_points(raw_grid)
     for ln in ax.lines:
         ln.set_marker("x")
         ln.set_linestyle("")
-
-    _, _ = plot_potential_1D_comparison(potential, locations)
+    _, _ = plot_potential_1D_comparison(potential, locations, ax=ax)
     ax.set_ylim(0, 5e-18)
 
     fig.show()
@@ -187,8 +179,8 @@ def plot_interpolated_energy_grid_points() -> None:
     # }
     # fig, ax, _ani1 = animate_energy_grid_3D_in_xy(ft_grid)
     # TODO: delta is wrong, plot generic points and then factor out into ft.
-    ax.set_title("Plot of the ft of the interpolated potential")
-    fig.show()
+    # ax.set_title("Plot of the ft of the interpolated potential")
+    # fig.show()
     input()
 
 

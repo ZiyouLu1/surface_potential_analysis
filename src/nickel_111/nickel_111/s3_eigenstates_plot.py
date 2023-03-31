@@ -1,6 +1,11 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
+from surface_potential_analysis.basis.plot import plot_explicit_basis_states
+from surface_potential_analysis.basis_config import BasisConfigUtil
+from surface_potential_analysis.eigenstate.eigenstate import (
+    convert_sho_eigenstate_to_position_basis,
+)
 from surface_potential_analysis.eigenstate.eigenstate_collection import (
     load_eigenstate_collection,
     select_eigenstate,
@@ -9,25 +14,12 @@ from surface_potential_analysis.eigenstate.eigenstate_collection_plot import (
     plot_energies_against_bloch_phase_1D,
     plot_lowest_band_energies_against_bloch_kx,
 )
-from surface_potential_analysis.eigenstate.eigenstate_plot import (
-    animate_eigenstate_x0x1,
-)
+from surface_potential_analysis.eigenstate.plot import animate_eigenstate_x0x1
 
 from .surface_data import get_data_path, save_figure
 
-# from surface_potential_analysis.eigenstate.eigenstate import (
-#     filter_eigenstates_band,
-#     get_eigenstate_list,
-#     load_eigenstate_collection,
-# )
-# from surface_potential_analysis.eigenstate.eigenstate_plot import (
-#     animate_eigenstate_3D_in_xy,
-#     plot_lowest_band_in_kx,
-#     plot_nth_band_in_kx,
-# )
 
-
-def analyze_band_convergence():
+def analyze_band_convergence() -> None:
     fig, ax = plt.subplots()
 
     path = get_data_path("eigenstates_23_23_10.json")
@@ -94,16 +86,30 @@ def analyze_band_convergence():
     input()
 
 
-def plot_eigenstate_for_each_band():
+def plot_eigenstate_for_each_band() -> None:
     """
     Check to see if the eigenstates look as they are supposed to
     """
-    path = get_data_path("eigenstates_25_25_16.json")
+    # path = get_data_path("eigenstates_25_25_16.json")
+    path = get_data_path("eigenstates_23_23_12.npy")
     collection = load_eigenstate_collection(path)
 
     eigenstate = select_eigenstate(collection, 0, 0)
-    fig, _, _anim0 = animate_eigenstate_x0x1(eigenstate)
+    print(np.linalg.norm(eigenstate["vector"]))
+    for x in eigenstate["basis"][2]["vectors"]:
+        print(np.linalg.norm(x))
+        util = BasisConfigUtil(eigenstate["basis"])
+        print(np.linalg.norm(util.delta_x2))
+
+    fig, _ = plot_explicit_basis_states(eigenstate["basis"][2], measure="real")
     fig.show()
+    input()
+
+    eigenstate_position = convert_sho_eigenstate_to_position_basis(eigenstate)
+    print(np.linalg.norm(eigenstate_position["vector"]))
+    fig, _, _anim0 = animate_eigenstate_x0x1(eigenstate_position)
+    fig.show()
+    input()
 
     eigenstate = select_eigenstate(collection, 0, 1)
     fig, _, _anim1 = animate_eigenstate_x0x1(eigenstate)

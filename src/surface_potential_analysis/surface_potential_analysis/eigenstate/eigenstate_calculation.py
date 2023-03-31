@@ -2,34 +2,31 @@ from typing import Any, TypeVar
 
 import numpy as np
 
-from surface_potential_analysis.basis import Basis
+from surface_potential_analysis.basis_config import BasisConfig
 from surface_potential_analysis.hamiltonian import Hamiltonian
+from surface_potential_analysis.util import timed
 
 from .eigenstate import Eigenstate, EigenstateList
 
-_BX0Inv = TypeVar("_BX0Inv", bound=Basis[Any, Any])
-_BX1Inv = TypeVar("_BX1Inv", bound=Basis[Any, Any])
-_BX2Inv = TypeVar("_BX2Inv", bound=Basis[Any, Any])
+_BC0Inv = TypeVar("_BC0Inv", bound=BasisConfig[Any, Any, Any])
 
 
-def calculate_eigenstates(
-    hamiltonian: Hamiltonian[_BX0Inv, _BX1Inv, _BX2Inv]
-) -> EigenstateList[_BX0Inv, _BX1Inv, _BX2Inv]:
+@timed
+def calculate_eigenstates(hamiltonian: Hamiltonian[_BC0Inv]) -> EigenstateList[_BC0Inv]:
     energies, vectors = np.linalg.eigh(hamiltonian["array"])
     return {"basis": hamiltonian["basis"], "vectors": vectors, "energies": energies}
 
 
 def calculate_energy(
-    hamiltonian: Hamiltonian[_BX0Inv, _BX1Inv, _BX2Inv],
-    eigenstate: Eigenstate[_BX0Inv, _BX1Inv, _BX2Inv],
+    hamiltonian: Hamiltonian[_BC0Inv], eigenstate: Eigenstate[_BC0Inv]
 ) -> complex:
     """
     Calculate the energy of the given eigenvector
 
     Parameters
     ----------
-    hamiltonian : Hamiltonian[BX0, BX1, BX2]
-    eigenstate : Eigenstate[BX0, BX1, BX2]
+    hamiltonian : Hamiltonian[_BC0Inv]
+    eigenstate : Eigenstate[_BC0Inv]
 
     Returns
     -------

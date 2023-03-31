@@ -6,13 +6,11 @@ from matplotlib.axes import Axes
 from matplotlib.figure import Figure
 from matplotlib.lines import Line2D
 
-from surface_potential_analysis.basis import Basis
+from surface_potential_analysis.basis_config import BasisConfig
 
 from .eigenstate_collection import EigenstateColllection
 
-_BX0Inv = TypeVar("_BX0Inv", bound=Basis[Any, Any], covariant=True)
-_BX1Inv = TypeVar("_BX1Inv", bound=Basis[Any, Any], covariant=True)
-_BX2Inv = TypeVar("_BX2Inv", bound=Basis[Any, Any], covariant=True)
+_BC0Inv = TypeVar("_BC0Inv", bound=BasisConfig[Any, Any, Any])
 
 
 def get_projected_phases(
@@ -24,7 +22,7 @@ def get_projected_phases(
 
 
 def plot_energies_against_bloch_phase_1D(
-    collection: EigenstateColllection[_BX0Inv, _BX1Inv, _BX2Inv],
+    collection: EigenstateColllection[_BC0Inv],
     direction: np.ndarray[tuple[Literal[3]], np.dtype[np.float_]],
     band: int = 0,
     *,
@@ -40,7 +38,7 @@ def plot_energies_against_bloch_phase_1D(
 
 
 def plot_lowest_band_energies_against_bloch_kx(
-    collection: EigenstateColllection[_BX0Inv, _BX1Inv, _BX2Inv],
+    collection: EigenstateColllection[_BC0Inv],
     *,
     ax: Axes | None = None,
 ) -> tuple[Figure, Axes, Line2D]:

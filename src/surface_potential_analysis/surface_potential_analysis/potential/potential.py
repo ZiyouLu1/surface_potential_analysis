@@ -6,7 +6,7 @@ from typing import Any, Generic, Tuple, TypedDict, TypeVar
 
 import numpy as np
 
-from surface_potential_analysis.basis import PositionBasis, PositionBasisUtil
+from surface_potential_analysis.basis import BasisUtil, PositionBasis
 from surface_potential_analysis.basis_config import PositionBasisConfig
 from surface_potential_analysis.interpolation import (
     interpolate_points_along_axis_spline,
@@ -30,12 +30,11 @@ class Potential(TypedDict, Generic[_L0Cov, _L1Cov, _L2Cov]):
 
 
 def save_potential(path: Path, potential: Potential[Any, Any, Any]) -> None:
-    state = np.array(potential, dtype=Potential)
-    np.save(path, state)
+    np.save(path, potential)
 
 
 def load_potential(path: Path) -> Potential[Any, Any, Any]:
-    return np.load(path)[()]  # type:ignore
+    return np.load(path, allow_pickle=True)[()]  # type:ignore
 
 
 def load_potential_grid_json(path: Path) -> Potential[Any, Any, Any]:
@@ -82,12 +81,11 @@ class UnevenPotential(TypedDict, Generic[_L0Cov, _L1Cov, _L2Cov]):
 def save_uneven_potential(
     path: Path, potential: UnevenPotential[Any, Any, Any]
 ) -> None:
-    state = np.array(potential, dtype=UnevenPotential)
-    np.save(path, state)
+    np.save(path, potential)
 
 
 def load_uneven_potential(path: Path) -> UnevenPotential[Any, Any, Any]:
-    return np.load(path)[()]  # type:ignore
+    return np.load(path, allow_pickle=True)[()]  # type:ignore
 
 
 def load_uneven_potential_json(
@@ -117,7 +115,7 @@ def load_uneven_potential_json(
                 },
                 np.array(out["z_points"]),
             ),
-            "points": np.array(out["points"]),
+            "points": points,
         }
 
 
@@ -168,7 +166,7 @@ def get_projected_x2_points(
 ) -> np.ndarray[tuple[_L0Inv], np.dtype[np.float_]]:
     a = data["basis"][2]
     if isinstance(a, dict):
-        util = PositionBasisUtil(a)
+        util = BasisUtil(a)
         return np.linalg.norm(util.x_points, axis=0)  # type: ignore
     else:
         return a
@@ -221,7 +219,7 @@ def mock_even_potential(
             uneven["basis"][1],
             {
                 "_type": "position",
-                "delta_x": np.array([0, 0, 1]),
+                "delta_x": np.array([0, 0, 1], dtype=float),
                 "n": len(uneven["basis"][2]),  # type: ignore
             },
         ),

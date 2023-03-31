@@ -10,7 +10,7 @@ from matplotlib.lines import Line2D
 from surface_potential_analysis.eigenstate.eigenstate import (
     convert_eigenstate_to_position_basis,
 )
-from surface_potential_analysis.eigenstate.eigenstate_plot import (
+from surface_potential_analysis.eigenstate.plot import (
     animate_eigenstate_3D,
     plot_eigenstate_2D,
     plot_eigenstate_along_path,

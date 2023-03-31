@@ -34,7 +34,7 @@ def load_raw_data() -> PointPotential[Any]:
 
 
 def load_raw_data_reciprocal_grid() -> UnevenPotential[Any, Any, Any]:
-    path = get_data_path("raw_data_reciprocal_spacing.json")
+    path = get_data_path("raw_data_reciprocal_spacing.npy")
     return load_uneven_potential(path)
 
 
@@ -44,7 +44,7 @@ def load_john_interpolation() -> UnevenPotential[Any, Any, Any]:
 
 
 def load_interpolated_grid() -> Potential[Any, Any, Any]:
-    path = get_data_path("interpolated_data.json")
+    path = get_data_path("interpolated_data.npy")
     return load_potential(path)
 
 
@@ -122,11 +122,11 @@ def generate_raw_unit_cell_data() -> None:
                 "delta_x": np.array([0, 3 * length, 0]),
                 "n": reciprocal_points.shape[1],
             },
-            z_c.tolist(),
+            z_c,
         ),
         "points": reciprocal_points,
     }
-    path = get_data_path("raw_data_reciprocal_spacing.json")
+    path = get_data_path("raw_data_reciprocal_spacing.npy")
     save_uneven_potential(path, grid)
 
 
@@ -165,6 +165,7 @@ def interpolate_points_fourier_nickel(
     Given a uniform grid of points in the reciprocal spacing interpolate
     a grid of points with the given shape into the real spacing using the fourier transform
     """
+
     ft_potential = np.fft.fft2(points, axes=(0, 1), norm="forward")
     old_basis_config: PositionBasisConfig[
         int, int, int
@@ -172,7 +173,10 @@ def interpolate_points_fourier_nickel(
         resolution=(*points.shape, 1)  # type:ignore
     )
     old_basis_util = PositionBasisConfigUtil(old_basis_config)
-    ft_phases = 2 * np.pi * old_basis_util.nk_points
+    nk_points_stacked = old_basis_util.fundamental_nk_points.reshape(
+        3, *old_basis_util.shape
+    )[0:2, :, :, 0]
+    ft_phases = 2 * np.pi * np.moveaxis(nk_points_stacked, 0, -1)
     # List of [x1_frac, x2_frac] for the interpolated grid
     basis: PositionBasisConfig[Any, Any, Any] = (
         {
@@ -188,7 +192,7 @@ def interpolate_points_fourier_nickel(
         {"_type": "position", "delta_x": np.array([0, 0, 1]), "n": 1},
     )
     util = PositionBasisConfigUtil(basis)
-    coordinates = util.x_points[0:2].T
+    coordinates = util.fundamental_x_points[0:2].T
 
     fractions = get_coordinate_fractions(
         (delta_x0_reciprocal.item(0), delta_x0_reciprocal.item(1)),
@@ -229,7 +233,7 @@ def interpolate_energy_grid_xy_fourier_nickel(
 
     for iz in range(old_points.shape[2]):
         points[:, :, iz] = interpolate_points_fourier_nickel(
-            old_points[:, :, iz].tolist(),
+            old_points[:, :, iz],
             data["basis"][0]["delta_x"],
             data["basis"][1]["delta_x"],
             delta_x0_real,
@@ -250,7 +254,7 @@ def interpolate_energy_grid_xy_fourier_nickel(
             },
             data["basis"][2],
         ),
-        "points": points.tolist(),
+        "points": points,
     }
 
 
@@ -258,7 +262,7 @@ def interpolate_energy_grid_fourier_nickel(
     data: UnevenPotential[Any, Any, Any],
     delta_x0_real: tuple[float, float],
     delta_x1_real: tuple[float, float],
-    shape: tuple[_L0Inv, _L1Inv, _L2Inv] = (40, 40, 40),
+    shape: tuple[_L0Inv, _L1Inv, _L2Inv],
 ) -> Potential[_L0Inv, _L1Inv, _L2Inv]:
     """
     Interpolate an energy grid using the fourier method, but in the xy direction we
@@ -293,23 +297,29 @@ def load_cleaned_energy_grid() -> UnevenPotential[Any, Any, Any]:
     return truncate_potential(normalized, cutoff=0.4e-18, n=1, offset=1e-20)
 
 
-def generate_interpolated_data() -> None:
-    raw_grid = load_raw_data_reciprocal_grid()
-    normalized = normalize_potential(raw_grid)
+def get_interpolated_nickel_potential(
+    shape: tuple[_L0Inv, _L1Inv, _L2Inv]
+) -> Potential[_L0Inv, _L1Inv, _L2Inv]:
+    raw_potential = load_raw_data_reciprocal_grid()
+    normalized = normalize_potential(raw_potential)
     truncated = truncate_potential(normalized, cutoff=0.4e-18, n=1, offset=1e-20)
 
     raw_data = load_raw_data()
-    x_width = np.max(raw_data["x_points"]) - np.min(raw_data["x_points"])
+    x_width = np.max(raw_data["x_points"]) - np.min(raw_data["x_points"])  # type: ignore
 
     delta_x0_real = (2 * x_width, 0)
     delta_x1_real = (0.5 * delta_x0_real[0], np.sqrt(3) * delta_x0_real[0] / 2)
 
     data = interpolate_energy_grid_fourier_nickel(
-        truncated, delta_x0_real, delta_x1_real, (60, 60, 100)
+        truncated, delta_x0_real, delta_x1_real, shape
     )
-    fixed_data = undo_truncate_potential(data, cutoff=0.4e-18, n=1, offset=1e-20)
-    path = get_data_path("interpolated_data.json")
-    save_potential(path, fixed_data)
+    return undo_truncate_potential(data, cutoff=0.4e-18, n=1, offset=1e-20)
+
+
+def generate_interpolated_data() -> None:
+    potential = get_interpolated_nickel_potential((60, 60, 100))
+    path = get_data_path("interpolated_data.npy")
+    save_potential(path, potential)
 
 
 def generate_interpolated_data_john_grid() -> None:
@@ -318,8 +328,8 @@ def generate_interpolated_data_john_grid() -> None:
     truncated = truncate_potential(normalized, cutoff=0.4e-18, n=1, offset=1e-20)
 
     raw_data = load_raw_data()
-    x_width = np.max(raw_data["x_points"]) - np.min(raw_data["x_points"])
-    y_width = np.max(raw_data["y_points"]) - np.min(raw_data["y_points"])
+    x_width = np.max(raw_data["x_points"]) - np.min(raw_data["x_points"])  # type: ignore
+    y_width = np.max(raw_data["y_points"]) - np.min(raw_data["y_points"])  # type: ignore
 
     delta_x0_real = (2 * x_width, 0)
     delta_x1_real = (0, 3 * y_width)
@@ -339,5 +349,5 @@ def generate_interpolated_data_reciprocal() -> None:
 
     data = interpolate_uneven_potential(truncated, (48, 48, 100))
     fixed_data = undo_truncate_potential(data, cutoff=0.4e-18, n=1, offset=1e-20)
-    path = get_data_path("interpolated_data_reciprocal.json")
+    path = get_data_path("interpolated_data_reciprocal.npy")
     save_potential(path, fixed_data)

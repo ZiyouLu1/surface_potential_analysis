@@ -10,10 +10,11 @@ from matplotlib.lines import Line2D
 
 from surface_potential_analysis.basis_config import (
     PositionBasisConfigUtil,
-    get_projected_x_points,
+    get_fundamental_x_points_projected,
 )
 from surface_potential_analysis.util import (
     calculate_cumulative_distances_along_path,
+    get_measured_data,
     slice_along_axis,
 )
 
@@ -24,34 +25,18 @@ _L1Inv = TypeVar("_L1Inv", bound=int)
 _L2Inv = TypeVar("_L2Inv", bound=int)
 
 
-_SInv = TypeVar("_SInv", bound=tuple[Any])
-
-
-def get_measured_data(
-    data: np.ndarray[_SInv, np.dtype[np.complex_]],
-    measure: Literal["real", "imag", "abs"],
-) -> np.ndarray[_SInv, np.dtype[np.float_]]:
-    match measure:
-        case "real":
-            return np.real(data)  # type: ignore
-        case "imag":
-            return np.imag(data)  # type: ignore
-        case "abs":
-            return np.abs(data)  # type: ignore
-
-
 def plot_eigenstate_2D(
     eigenstate: PositionBasisEigenstate[_L0Inv, _L1Inv, _L2Inv],
     idx: int,
     z_axis: Literal[0, 1, 2, -1, -2, -3],
     *,
     ax: Axes | None = None,
-    measure: Literal["real", "imag", "abs"] = "abs",
+    measure: Literal["real", "imag", "abs", "angle"] = "abs",
     scale: Literal["symlog", "linear"] = "linear",
 ) -> tuple[Figure, Axes, QuadMesh]:
     fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
 
-    coordinates = get_projected_x_points(eigenstate["basis"], z_axis)[
+    coordinates = get_fundamental_x_points_projected(eigenstate["basis"], z_axis)[
         slice_along_axis(idx, (z_axis % 3) + 1)
     ]
     util = PositionBasisConfigUtil(eigenstate["basis"])
@@ -137,7 +122,7 @@ def animate_eigenstate_3D(
 ) -> tuple[Figure, Axes, ArtistAnimation]:
     fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
 
-    coordinates = get_projected_x_points(eigenstate["basis"], z_axis)
+    coordinates = get_fundamental_x_points_projected(eigenstate["basis"], z_axis)
     util = PositionBasisConfigUtil(eigenstate["basis"])
     points = eigenstate["vector"].reshape(*util.shape)
     data = get_measured_data(points, measure)
@@ -167,13 +152,14 @@ def animate_eigenstate_3D(
     mesh0.set_norm(scale)
     mesh0.set_clim(min_clim, max_clim)
 
+    ani = ArtistAnimation(fig, frames)
     ax.set_aspect("equal", adjustable="box")
     fig.colorbar(mesh, ax=ax, format="%4.1e")
 
     ax.set_xlabel(f"x{0 if (z_axis % 3) != 0 else 1} axis")
     ax.set_ylabel(f"x{2 if (z_axis % 3) != 2 else 1} axis")
 
-    return fig, ax, mesh
+    return fig, ax, ani
 
 
 def animate_eigenstate_x0x1(
@@ -220,7 +206,7 @@ def plot_eigenstate_along_path(
     points = eigenstate["vector"].reshape(*util.shape)[*path]
     data = get_measured_data(points, measure)
     distances = calculate_cumulative_distances_along_path(
-        path, util.x_points.reshape(3, *util.shape)
+        path, util.fundamental_x_points.reshape(3, *util.shape)
     )
     (line,) = ax.plot(distances, data)
     ax.set_yscale(scale)

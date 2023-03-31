@@ -4,30 +4,28 @@ import numpy as np
 
 from .basis import Basis
 from .basis_config import BasisConfig, BasisConfigUtil
-from .eigenstate.eigenstate import Eigenstate, EigenstateColllection, EigenstateList
+from .eigenstate import Eigenstate, EigenstateList
+from .eigenstate.eigenstate_collection import EigenstateColllection
 from .hamiltonian import Hamiltonian, hamiltonian_in_basis
-from .hamiltonian_builder import total_surface_hamiltonian
+from .hamiltonian_builder.momentum_basis import total_surface_hamiltonian
 from .potential import Potential
 
-_BX0Inv = TypeVar("_BX0Inv", bound=Basis[Any, Any])
-_BX1Inv = TypeVar("_BX1Inv", bound=Basis[Any, Any])
-_BX2Inv = TypeVar("_BX2Inv", bound=Basis[Any, Any])
+_BC0Inv = TypeVar("_BC0Inv", bound=BasisConfig[Any, Any, Any])
+
 
 _L0Inv = TypeVar("_L0Inv", bound=int)
 _L1Inv = TypeVar("_L1Inv", bound=int)
 _L2Inv = TypeVar("_L2Inv", bound=int)
 
 
-def calculate_eigenstates(
-    hamiltonian: Hamiltonian[_BX0Inv, _BX1Inv, _BX2Inv]
-) -> EigenstateList[_BX0Inv, _BX1Inv, _BX2Inv]:
-    energies, states = np.linalg.eigh(hamiltonian["array"])
-    return {"basis": hamiltonian["basis"], "states": states, "energies": energies}
+def calculate_eigenstates(hamiltonian: Hamiltonian[_BC0Inv]) -> EigenstateList[_BC0Inv]:
+    energies, vectors = np.linalg.eigh(hamiltonian["array"])
+    return {"basis": hamiltonian["basis"], "vectors": vectors, "energies": energies}
 
 
 def calculate_energy(
-    hamiltonian: Hamiltonian[_BX0Inv, _BX1Inv, _BX2Inv],
-    eigenstate: Eigenstate[_BX0Inv, _BX1Inv, _BX2Inv],
+    hamiltonian: Hamiltonian[_BC0Inv],
+    eigenstate: Eigenstate[_BC0Inv],
 ) -> complex:
     """
     Calculate the energy of the given eigenvector
@@ -51,16 +49,16 @@ def calculate_energy_eigenstates(
     potential: Potential[_L0Inv, _L1Inv, _L2Inv],
     mass: float,
     bloch_phases: np.ndarray[tuple[int, Literal[3]], np.dtype[np.float_]],
-    basis: BasisConfig[_BX0Inv, _BX1Inv, _BX2Inv],
+    basis: _BC0Inv,
     *,
     include_bands: list[int] | None = None,
-) -> EigenstateColllection[_BX0Inv, _BX1Inv, _BX2Inv]:
+) -> EigenstateColllection[_BC0Inv]:
     include_bands = [0] if include_bands is None else include_bands
 
     util = BasisConfigUtil(basis)
-    out: EigenstateColllection[_BX0Inv, _BX1Inv, _BX2Inv] = {
+    out: EigenstateColllection[_BC0Inv] = {
         "basis": basis,
-        "states": np.zeros(
+        "vectors": np.zeros(
             (bloch_phases.shape[0], len(include_bands), len(util)), dtype=np.complex_
         ),
         "energies": np.zeros(
@@ -74,7 +72,7 @@ def calculate_energy_eigenstates(
         h_in_basis = hamiltonian_in_basis(h, basis)
         eigenstates = calculate_eigenstates(h_in_basis)
 
-        out["states"][idx] = eigenstates["states"][eigenstates][include_bands]
+        out["vectors"][idx] = eigenstates["vectors"][eigenstates][include_bands]
         out["energies"][idx] = eigenstates["energies"][eigenstates][include_bands]
 
     return out

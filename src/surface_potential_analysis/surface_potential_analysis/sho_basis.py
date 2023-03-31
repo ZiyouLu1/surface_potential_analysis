@@ -1,12 +1,25 @@
 import math
-from typing import TypedDict, TypeVar
+from typing import Literal, TypedDict, TypeVar
 
 import numpy as np
 import scipy
 import scipy.special
 from scipy.constants import hbar
 
-from .basis import ExplicitBasis, FundamentalBasis, PositionBasis, PositionBasisUtil
+from surface_potential_analysis.basis_config import BasisConfigUtil, PositionBasisConfig
+from surface_potential_analysis.hamiltonian_builder.momentum_basis import (
+    total_surface_hamiltonian,
+)
+from surface_potential_analysis.hamiltonian_eigenstates import calculate_eigenstates
+from surface_potential_analysis.potential.potential import Potential
+
+from .basis import (
+    BasisUtil,
+    ExplicitBasis,
+    FundamentalBasis,
+    MomentumBasis,
+    PositionBasis,
+)
 
 _L0Inv = TypeVar("_L0Inv", bound=int)
 _L1Inv = TypeVar("_L1Inv", bound=int)
@@ -32,19 +45,76 @@ def calculate_sho_wavefunction(
 class SHOBasisConfig(TypedDict):
     sho_omega: float
     mass: float
+    x_origin: np.ndarray[tuple[Literal[3]], np.dtype[np.float_]]
 
 
 def sho_basis_from_config(
-    parent: _FBInv, config: SHOBasisConfig, n: _L0Inv
-) -> ExplicitBasis[_L0Inv, _FBInv]:
-    return
+    parent: FundamentalBasis[_L1Inv], config: SHOBasisConfig, n: _L0Inv
+) -> ExplicitBasis[_L0Inv, MomentumBasis[_L1Inv]]:
+    """
+    Calculate the exact sho basis for a given basis, by directly
+    diagonalizing the sho wavefunction in this basis. The resulting wavefunction
+    is guaranteed to be orthonormal in this basis
+
+    Parameters
+    ----------
+    parent : _FBInv
+        _description_
+    config : SHOBasisConfig
+        _description_
+    n : _L0Inv
+        _description_
+
+    Returns
+    -------
+    ExplicitBasis[_L0Inv, _FBInv]
+        _description_
+    """
+
+    util = BasisUtil(parent)
+
+    delta_x1 = (
+        np.array([0, 1, 0])
+        if np.allclose([1, 0, 0], parent["delta_x"])
+        else np.array([1, 0, 0])
+    )
+    delta_x2 = np.cross(parent["delta_x"], delta_x1)
+    delta_x2 /= np.linalg.norm(delta_x2)
+
+    potential_basis: PositionBasisConfig[_L1Inv, Literal[1], Literal[1]] = (
+        util.get_fundamental_basis_in("position"),
+        {"_type": "position", "delta_x": delta_x1, "n": 1},
+        {"_type": "position", "delta_x": delta_x2, "n": 1},
+    )
+    x_points = BasisConfigUtil(potential_basis).fundamental_x_points
+    x_distances = np.linalg.norm(x_points - config["x_origin"][:, np.newaxis], axis=0)
+
+    sho_potential: Potential[_L1Inv, Literal[1], Literal[1]] = {
+        "basis": potential_basis,
+        "points": 0.5 * config["mass"] * config["sho_omega"] ** 2 * x_distances**2,
+    }
+    hamiltonian = total_surface_hamiltonian(
+        sho_potential, config["mass"], np.array([0, 0, 0])
+    )
+    eigenstates = calculate_eigenstates(hamiltonian)
+
+    vectors = eigenstates["vectors"][:n]
+    return {"_type": "explicit", "parent": eigenstates["basis"][0], "vectors": vectors}
 
 
 def infinate_sho_basis_from_config(
     parent: PositionBasis[_L1Inv], config: SHOBasisConfig, n: _L0Inv
 ) -> ExplicitBasis[_L0Inv, PositionBasis[_L1Inv]]:
-    util = PositionBasisUtil(parent)
+    util = BasisUtil(parent)
+    x_points = util.fundamental_x_points
+    x_distances = np.linalg.norm(x_points - config["x_origin"][:, np.newaxis], axis=0)
+
     vectors = np.array(
-        [calculate_sho_wavefunction(util.x_points, n=i, **config) for i in range(n)]
+        [
+            calculate_sho_wavefunction(
+                x_distances, n=i, mass=config["mass"], sho_omega=config["sho_omega"]
+            )
+            for i in range(n)
+        ]
     )
     return {"_type": "explicit", "parent": parent, "vectors": vectors}

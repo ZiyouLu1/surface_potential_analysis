@@ -234,11 +234,11 @@ def interpolate_points_rfftn(
 
 
 def interpolate_points_along_axis_spline(
-    data: np.ndarray[tuple[Any], np.dtype[np.float_]],
+    data: np.ndarray[tuple[int, ...], np.dtype[np.float_]],
     old_coords: np.ndarray[tuple[int], np.dtype[np.float_]],
     n: int,
     axis: int = -1,
-) -> np.ndarray[tuple[Any], np.dtype[np.float_]]:
+) -> np.ndarray[tuple[int, ...], np.dtype[np.float_]]:
     """
     Uses spline interpolation to increase the Z resolution,
     spacing z linearly
@@ -246,13 +246,14 @@ def interpolate_points_along_axis_spline(
 
     new_coords = list(np.linspace(old_coords[0], old_coords[-1], n))
 
-    new_shape = data.shape
+    new_shape = list(data.shape)
     new_shape[axis] = n
     points = np.empty(new_shape)
 
-    swapped_points = points.swapaxes(axis, -1)
+    swapped_points = points.swapaxes(axis, -1).reshape(-1, n)
 
     flat_data = data.swapaxes(axis, -1).reshape(-1, data.shape[axis])
+
     for i in range(flat_data.shape[0]):
         old_energies = flat_data[i]
         tck = scipy.interpolate.splrep(old_coords, old_energies, s=0)

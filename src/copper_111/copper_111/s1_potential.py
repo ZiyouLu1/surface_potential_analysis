@@ -60,7 +60,6 @@ def load_interpolated_grid() -> EnergyGrid:
 #     if is_lhp:
 #         print("is_lhp")
 #         return coord
-#     print("pass")
 #     return reflect_coordinate(coord, v_symmetry_perp)
 
 
@@ -75,7 +74,6 @@ def load_interpolated_grid() -> EnergyGrid:
 def map_irreducible_points_into_unit_cell(
     irreducible_points: EnergyPoints,
 ) -> EnergyGrid:
-
     z_points = np.sort(np.unique(irreducible_points["z_points"]))
     xy_points = np.unique(
         np.array([irreducible_points["x_points"], irreducible_points["y_points"]]).T,
@@ -173,8 +171,7 @@ def map_irreducible_points_into_unit_cell(
     z_points_in_xy: dict[tuple[int, int], list[float]] = {}
 
     for z in z_points:
-        for (x, y) in xy_points:
-
+        for x, y in xy_points:
             ix = np.argwhere(x == np.sort(np.unique(irreducible_points["x_points"])))[
                 0
             ][0]

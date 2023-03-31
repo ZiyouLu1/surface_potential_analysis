@@ -3,12 +3,15 @@ from typing import Any, Generic, Literal, TypedDict, TypeVar
 
 import numpy as np
 
-from surface_potential_analysis.eigenstate.eigenstate import Eigenstate
+from surface_potential_analysis.eigenstate.eigenstate import (
+    Eigenstate,
+    EigenstateWithBasis,
+)
 
 from .basis import Basis, MomentumBasis, PositionBasis
 from .basis_config import BasisConfig, BasisConfigUtil
 from .hamiltonian import hamiltonian_in_basis
-from .hamiltonian_builder import total_surface_hamiltonian
+from .hamiltonian_builder.momentum_basis import total_surface_hamiltonian
 from .hamiltonian_eigenstates import calculate_eigenstates
 from .potential import Potential
 
@@ -102,7 +105,7 @@ def generate_wavepacket(
             h_in_basis = hamiltonian_in_basis(h, basis)
             eigenstates = calculate_eigenstates(h_in_basis)
             for i, band in enumerate(save_bands):
-                out[i]["vectors"][is0, is1] = eigenstates["states"][band]
+                out[i]["vectors"][is0, is1] = eigenstates["vectors"][band]
     return out
 
 
@@ -157,7 +160,7 @@ def get_global_phases(
     #                          = 2 * pi * j/Nj * i / Ni
     # j / Nj
     momentum_fractions = get_wavepacket_fractions(
-        np.array(wavepacket["eigenvectors"].shape[0:2])
+        np.array(wavepacket["vectors"].shape[0:2])
     )
     # i / Ni
     position_fractions = np.array([i / len(util) for i in stacked_idx[0:2]])[
@@ -197,7 +200,7 @@ def normalize_wavepacket(
         The wavepacket, normalized
     """
 
-    eigenvectors = wavepacket["eigenvectors"]
+    eigenvectors = wavepacket["vectors"]
     # TODO use irreducible basis here!!
     util = BasisConfigUtil(wavepacket["basis"])
 
@@ -217,7 +220,7 @@ def normalize_wavepacket(
 
 
 def furl_eigenstate(
-    eigenstate: Eigenstate[MomentumBasis[int], MomentumBasis[int], _BX2Cov],
+    eigenstate: EigenstateWithBasis[MomentumBasis[int], MomentumBasis[int], _BX2Cov],
     shape: tuple[_NS0Cov, _NS1Cov],
 ) -> Wavepacket[_NS0Cov, _NS1Cov, MomentumBasis[int], MomentumBasis[int], _BX2Cov]:
     """
@@ -259,7 +262,7 @@ def unfurl_wavepacket(
     wavepacket: Wavepacket[
         _NS0Inv, _NS1Inv, MomentumBasis[_L0Inv], MomentumBasis[_L1Inv], _BX2Cov
     ]
-) -> Eigenstate[MomentumBasis[int], MomentumBasis[int], _BX2Cov]:
+) -> EigenstateWithBasis[MomentumBasis[int], MomentumBasis[int], _BX2Cov]:
     """
     Convert a wavepacket into an eigenstate of the irreducible unit cell
 
@@ -274,7 +277,7 @@ def unfurl_wavepacket(
         The eigenstate of the larger unit cell. Note this eigenstate has a
         smaller dk (for each axis dk = dk_i / NS)
     """
-    (ns0, ns1, _) = wavepacket["eigenvectors"].shape
+    (ns0, ns1, _) = wavepacket["vectors"].shape
     raise NotImplementedError()
     return {
         "basis": (
