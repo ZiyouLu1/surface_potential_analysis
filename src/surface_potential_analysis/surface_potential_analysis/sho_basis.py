@@ -117,4 +117,5 @@ def infinate_sho_basis_from_config(
             for i in range(n)
         ]
     )
-    return {"_type": "explicit", "parent": parent, "vectors": vectors}
+    normalized = vectors * np.linalg.norm(util.fundamental_dx)
+    return {"_type": "explicit", "parent": parent, "vectors": normalized}

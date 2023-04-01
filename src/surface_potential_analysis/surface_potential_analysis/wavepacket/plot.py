@@ -1,6 +1,7 @@
 from typing import Literal, TypeVar
 
 import numpy as np
+from matplotlib import pyplot as plt
 from matplotlib.animation import ArtistAnimation
 from matplotlib.axes import Axes
 from matplotlib.collections import QuadMesh
@@ -16,8 +17,10 @@ from surface_potential_analysis.eigenstate.plot import (
     plot_eigenstate_along_path,
     plot_eigenstate_difference_2D,
 )
-from surface_potential_analysis.wavepacket import (
+
+from .wavepacket import (
     MomentumBasisWavepacket,
+    get_wavepacket_sample_frequencies,
     unfurl_wavepacket,
 )
 
@@ -27,6 +30,23 @@ _NS1 = TypeVar("_NS1", bound=int)
 _L0Inv = TypeVar("_L0Inv", bound=int)
 _L1Inv = TypeVar("_L1Inv", bound=int)
 _L2Inv = TypeVar("_L2Inv", bound=int)
+
+
+def plot_wavepacket_sample_frequencies(
+    wavepacket: MomentumBasisWavepacket[int, int, int, int, int],
+    *,
+    ax: Axes | None = None,
+) -> tuple[Figure, Axes, Line2D]:
+    fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
+
+    fractions = get_wavepacket_sample_frequencies(
+        wavepacket["basis"], np.array(wavepacket["vectors"].shape)[0:2]
+    )
+    (line,) = ax.plot(*fractions.reshape(2, -1))
+    line.set_marker("x")
+    line.set_linestyle("")
+
+    return fig, ax, line
 
 
 def plot_wavepacket_2D(

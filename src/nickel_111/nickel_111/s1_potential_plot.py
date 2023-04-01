@@ -12,15 +12,15 @@ from surface_potential_analysis.potential import (
     UnevenPotential,
     normalize_potential,
 )
-from surface_potential_analysis.potential.plot_point_potential import (
-    plot_point_potential_all_z,
-    plot_point_potential_location_xy,
-)
-from surface_potential_analysis.potential.plot_potential import (
+from surface_potential_analysis.potential.plot import (
     animate_potential_x0x1,
     plot_potential_1D_comparison,
     plot_potential_minimum_along_path,
     plot_potential_x0x1,
+)
+from surface_potential_analysis.potential.plot_point_potential import (
+    plot_point_potential_all_z,
+    plot_point_potential_location_xy,
 )
 from surface_potential_analysis.potential.plot_uneven_potential import (
     plot_uneven_potential_z_comparison,

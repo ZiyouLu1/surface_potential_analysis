@@ -4,7 +4,6 @@ from typing import Any, Generic, Literal, TypedDict, TypeVar
 
 import numpy as np
 
-from surface_potential_analysis.basis import Basis
 from surface_potential_analysis.basis_config import BasisConfig, BasisConfigUtil
 from surface_potential_analysis.hamiltonian import Hamiltonian
 

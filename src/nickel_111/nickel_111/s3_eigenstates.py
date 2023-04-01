@@ -52,18 +52,13 @@ def generate_eigenstates_data() -> None:
     kz_points = np.zeros_like(kx_points)
     bloch_phases = np.array([kx_points, ky_points, kz_points]).T
 
-    _generate_eigenstate_collection_sho(bloch_phases, (10, 10, 5))
+    # _generate_eigenstate_collection_sho(bloch_phases, (10, 10, 5))
 
-    _generate_eigenstate_collection_sho(bloch_phases, (23, 23, 10))
+    # _generate_eigenstate_collection_sho(bloch_phases, (23, 23, 10))
 
-    _generate_eigenstate_collection_sho(bloch_phases, (23, 23, 12))
+    # _generate_eigenstate_collection_sho(bloch_phases, (23, 23, 12))
 
-    # h = generate_hamiltonian(resolution=(25, 25, 16))
-    # eigenstates = calculate_energy_eigenstates(
-    #     h, kx_points, ky_points, include_bands=list(range(10))
-    # )
-    # path = get_data_path("eigenstates_25_25_16.json")
-    # save_energy_eigenstates(eigenstates, path)
+    _generate_eigenstate_collection_sho(bloch_phases, (25, 25, 16))
 
 
 # def test_eigenstates_partial():

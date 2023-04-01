@@ -2,7 +2,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from surface_potential_analysis.basis.plot import plot_explicit_basis_states
-from surface_potential_analysis.basis_config import BasisConfigUtil
 from surface_potential_analysis.eigenstate.eigenstate import (
     convert_sho_eigenstate_to_position_basis,
 )
@@ -22,17 +21,17 @@ from .surface_data import get_data_path, save_figure
 def analyze_band_convergence() -> None:
     fig, ax = plt.subplots()
 
-    path = get_data_path("eigenstates_23_23_10.json")
+    path = get_data_path("eigenstates_23_23_10.npy")
     eigenstates = load_eigenstate_collection(path)
     _, _, ln = plot_lowest_band_energies_against_bloch_kx(eigenstates, ax=ax)
     ln.set_label("(23,23,10)")
 
-    path = get_data_path("eigenstates_23_23_12.json")
+    path = get_data_path("eigenstates_23_23_12.npy")
     eigenstates = load_eigenstate_collection(path)
     _, _, ln = plot_lowest_band_energies_against_bloch_kx(eigenstates, ax=ax)
     ln.set_label("(23,23,12)")
 
-    path = get_data_path("eigenstates_25_25_16.json")
+    path = get_data_path("eigenstates_25_25_16.npy")
     eigenstates = load_eigenstate_collection(path)
     _, _, ln = plot_lowest_band_energies_against_bloch_kx(eigenstates, ax=ax)
     ln.set_label("(25,25,16)")
@@ -44,11 +43,11 @@ def analyze_band_convergence() -> None:
     )
 
     fig.show()
-    save_figure(fig, "lowest_band_convergence.png")
+    save_figure(fig, "lowest_band_convergence.npy")
 
     fig, ax = plt.subplots()
 
-    path = get_data_path("eigenstates_25_25_16.json")
+    path = get_data_path("eigenstates_25_25_16.npy")
     eigenstates = load_eigenstate_collection(path)
     _, _, ln = plot_energies_against_bloch_phase_1D(
         eigenstates, np.array([1, 0, 0]), band=0, ax=ax
@@ -65,14 +64,14 @@ def analyze_band_convergence() -> None:
 
     fig, ax = plt.subplots()
 
-    path = get_data_path("eigenstates_23_23_12.json")
+    path = get_data_path("eigenstates_23_23_12.npy")
     eigenstates = load_eigenstate_collection(path)
     _, _, ln = plot_energies_against_bloch_phase_1D(
         eigenstates, np.array([1, 0, 0]), band=1, ax=ax
     )
     ln.set_label("(23,23,12)")
 
-    path = get_data_path("eigenstates_25_25_16.json")
+    path = get_data_path("eigenstates_25_25_16.npy")
     eigenstates = load_eigenstate_collection(path)
     _, _, ln = plot_energies_against_bloch_phase_1D(
         eigenstates, np.array([1, 0, 0]), band=1, ax=ax
@@ -90,43 +89,40 @@ def plot_eigenstate_for_each_band() -> None:
     """
     Check to see if the eigenstates look as they are supposed to
     """
-    # path = get_data_path("eigenstates_25_25_16.json")
-    path = get_data_path("eigenstates_10_10_5.npy")
+    path = get_data_path("eigenstates_25_25_16.npy")
+    path = get_data_path("eigenstates_23_23_12.npy")
     collection = load_eigenstate_collection(path)
 
     eigenstate = select_eigenstate(collection, 0, 0)
-    for x in eigenstate["basis"][2]["vectors"]:
-        print(np.linalg.norm(x))
-        util = BasisConfigUtil(eigenstate["basis"])
-        print(np.linalg.norm(util.delta_x2))
-
     fig, _ = plot_explicit_basis_states(eigenstate["basis"][2], measure="real")
     fig.show()
-    input()
 
     eigenstate_position = convert_sho_eigenstate_to_position_basis(eigenstate)
-    print(np.linalg.norm(eigenstate_position["vector"]))
     fig, _, _anim0 = animate_eigenstate_x0x1(eigenstate_position)
     fig.show()
-    input()
 
     eigenstate = select_eigenstate(collection, 0, 1)
-    fig, _, _anim1 = animate_eigenstate_x0x1(eigenstate)
+    eigenstate_position = convert_sho_eigenstate_to_position_basis(eigenstate)
+    fig, _, _anim1 = animate_eigenstate_x0x1(eigenstate_position)
     fig.show()
 
     eigenstate = select_eigenstate(collection, 0, 2)
-    fig, _, _anim2 = animate_eigenstate_x0x1(eigenstate)
+    eigenstate_position = convert_sho_eigenstate_to_position_basis(eigenstate)
+    fig, _, _anim2 = animate_eigenstate_x0x1(eigenstate_position)
     fig.show()
 
     eigenstate = select_eigenstate(collection, 0, 3)
-    fig, _, _anim3 = animate_eigenstate_x0x1(eigenstate)
+    eigenstate_position = convert_sho_eigenstate_to_position_basis(eigenstate)
+    fig, _, _anim3 = animate_eigenstate_x0x1(eigenstate_position)
     fig.show()
 
     eigenstate = select_eigenstate(collection, 0, 4)
-    fig, _, _anim4 = animate_eigenstate_x0x1(eigenstate)
+    eigenstate_position = convert_sho_eigenstate_to_position_basis(eigenstate)
+    fig, _, _anim4 = animate_eigenstate_x0x1(eigenstate_position)
     fig.show()
 
     eigenstate = select_eigenstate(collection, 0, 9)
-    fig, _, _anim9 = animate_eigenstate_x0x1(eigenstate)
+    eigenstate_position = convert_sho_eigenstate_to_position_basis(eigenstate)
+    fig, _, _anim9 = animate_eigenstate_x0x1(eigenstate_position)
     fig.show()
     input()

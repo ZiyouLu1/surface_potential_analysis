@@ -18,6 +18,7 @@ from surface_potential_analysis.potential import Potential
 from surface_potential_analysis.sho_basis import (
     SHOBasisConfig,
     calculate_sho_wavefunction,
+    infinate_sho_basis_from_config,
 )
 
 _L0 = TypeVar("_L0", bound=int)
@@ -114,20 +115,15 @@ class SurfaceHamiltonianUtil(Generic[_L0, _L1, _L2, _L3, _L4, _L5]):
                     "n": self._potential["basis"][1]["n"],
                 },
             },
-            {
-                "_type": "explicit",
-                "vectors": np.array(
-                    [
-                        self._calculate_sho_wavefunction_points(n)
-                        for n in range(self._resolution[2])
-                    ]
-                ),
-                "parent": {
+            infinate_sho_basis_from_config(
+                {
                     "_type": "position",
                     "delta_x": self._potential["basis"][2]["delta_x"],
                     "n": self._potential["basis"][2]["n"],
                 },
-            },
+                self._config,
+                self._resolution[2],
+            ),
         )
 
     def hamiltonian(

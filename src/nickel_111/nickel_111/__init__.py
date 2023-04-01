@@ -4,6 +4,8 @@ from . import (  # s2_hamiltonian_plot,; s3_eigenstates_plot,; s4_wavepacket,; s
     s2_hamiltonian,
     s3_eigenstates,
     s3_eigenstates_plot,
+    s4_wavepacket,
+    s4_wavepacket_plot,
 )
 
 __all__ = [
@@ -13,8 +15,8 @@ __all__ = [
     # "s2_hamiltonian_plot",
     "s3_eigenstates",
     "s3_eigenstates_plot",
-    # "s4_wavepacket",
-    # "s4_wavepacket_plot",
+    "s4_wavepacket",
+    "s4_wavepacket_plot",
     # "s5_overlap",
     # "s5_overlap_analysis",
     # "s5_electron_integral",
