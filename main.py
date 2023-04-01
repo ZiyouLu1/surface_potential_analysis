@@ -1,5 +1,5 @@
 import copper_100
-import nickel_111
+import nickel_111.poster_images
 
 # def calculate_sho_wavefunction(config: EigenstateConfig, z_min, z_max, nz):
 #     z_points = np.linspace(z_min, z_max, nz)
@@ -25,5 +25,5 @@ import nickel_111
 if __name__ == "__main__":
     # nickel_111.s5_overlap.calculate_overlap_factor()
     # copper_100.s5_overlap.calculate_overlap_factor()
-    copper_100.s5_overlap_analysis.plot_overlap()
+    nickel_111.s5_overlap_analysis.plot_overlap()
     # nickel_111.s5_overlap_analysis.plot_overlap()

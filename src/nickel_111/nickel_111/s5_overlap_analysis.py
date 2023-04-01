@@ -55,7 +55,7 @@ def make_transform_real_at(
 
 
 def plot_overlap():
-    path = get_data_path("overlap_transform_shifted_hcp_fcc.npz")
+    path = get_data_path("overlap_transform_orthogonal_hcp_fcc.npz")
     # path = get_data_path("overlap_transform_interpolated_hcp_fcc.npz")
     # path = get_data_path("overlap_transform_extended_hcp_fcc.npz")
     overlap = load_overlap_transform(path)
@@ -324,14 +324,17 @@ def calculate_max_overlap_transform(overlap: OverlapTransform):
 
 
 def print_max_overlaps():
-    path = get_data_path("overlap_transform_hcp_fcc.npz")
+    path = get_data_path("overlap_transform_orthogonal_hcp_fcc.npz")
     overlap = load_overlap_transform(path)
-    print(calculate_max_overlap_transform(overlap))
+    max, idx = calculate_max_overlap_transform(overlap)
+    print(max, np.abs(max), idx)
 
-    path = get_data_path("overlap_transform_fcc_fcc.npz")
+    path = get_data_path("overlap_transform_orthogonal_fcc_fcc.npz")
     overlap = load_overlap_transform(path)
-    print(calculate_max_overlap_transform(overlap))
+    max, idx = calculate_max_overlap_transform(overlap)
+    print(max, np.abs(max), idx)
 
-    path = get_data_path("overlap_transform_hcp_hcp.npz")
+    path = get_data_path("overlap_transform_orthogonal_hcp_hcp.npz")
     overlap = load_overlap_transform(path)
-    print(calculate_max_overlap_transform(overlap))
+    max, idx = calculate_max_overlap_transform(overlap)
+    print(max, np.abs(max), idx)
