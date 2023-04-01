@@ -14,7 +14,7 @@ _BC0Inv = TypeVar("_BC0Inv", bound=BasisConfig[Any, Any, Any])
 @timed
 def calculate_eigenstates(hamiltonian: Hamiltonian[_BC0Inv]) -> EigenstateList[_BC0Inv]:
     energies, vectors = np.linalg.eigh(hamiltonian["array"])
-    return {"basis": hamiltonian["basis"], "vectors": vectors, "energies": energies}
+    return {"basis": hamiltonian["basis"], "vectors": vectors.T, "energies": energies}
 
 
 def calculate_energy(

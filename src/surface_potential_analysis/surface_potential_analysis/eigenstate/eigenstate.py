@@ -123,7 +123,7 @@ def _convert_momentum_basis_x01_to_position(
         s=[basis.fundamental_n0, basis.fundamental_n1],
         axes=(0, 1),
     )
-    transformed = np.fft.ifftn(padded, axes=(0, 1), norm="ortho")
+    transformed = np.fft.ifftn(padded, axes=(0, 1), norm="forward")  # TODO: fix this??
     return {
         "basis": (
             {
