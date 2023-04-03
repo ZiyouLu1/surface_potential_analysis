@@ -21,6 +21,49 @@ from surface_potential_analysis.wavepacket_grid_plot import plot_wavepacket_grid
 from .eigenstate import Eigenstate, EigenstateConfig, EigenstateConfigUtil
 
 
+def plot_eigenstate_xy_hd(
+    config: EigenstateConfig,
+    eigenstate: Eigenstate,
+    z_point=0.0,
+    *,
+    shape: tuple[int, int] = (100, 100),
+    ax: Axes | None = None,
+    measure: Literal["real", "imag", "abs"] = "abs",
+) -> tuple[Figure, Axes, QuadMesh]:
+    fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
+    util = EigenstateConfigUtil(config)
+
+    x0_min = np.min([0, util.delta_x0[0], util.delta_x0[0] + util.delta_x1[0]])
+    x0_max = np.max([0, util.delta_x0[0], util.delta_x0[0] + util.delta_x1[0]])
+    x1_min = np.min([0, util.delta_x0[1], util.delta_x0[1] + util.delta_x1[1]])
+    x1_max = np.max([0, util.delta_x0[1], util.delta_x0[1] + util.delta_x1[1]])
+
+    xv, yv = np.meshgrid(
+        np.linspace(x0_min, x0_max, shape[0]), np.linspace(x1_min, x1_max, shape[1])
+    )
+
+    points = np.array(
+        [
+            xv.ravel(),
+            yv.ravel(),
+            z_point * np.ones_like(xv.ravel()),
+        ]
+    ).T
+
+    wfn = util.calculate_wavefunction_fast(eigenstate, points)
+    match measure:
+        case "real":
+            data = np.real(wfn)
+        case "imag":
+            data = np.imag(wfn)
+        case "abs":
+            data = np.abs(wfn)
+
+    mesh = ax.pcolormesh(xv, yv, data.reshape(shape), shading="nearest")
+    ax.set_aspect("equal", adjustable="box")
+    return (fig, ax, mesh)
+
+
 def plot_eigenstate_in_xy(
     config: EigenstateConfig,
     eigenstate: Eigenstate,
@@ -88,7 +131,6 @@ def animate_eigenstate_3D_in_xy(
 
     frames: list[list[QuadMesh]] = []
     for z_point in z_points:
-
         _, _, mesh = plot_eigenstate_in_xy(
             config,
             eigenstate,

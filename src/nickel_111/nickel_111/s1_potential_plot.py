@@ -183,7 +183,6 @@ def plot_interpolated_energy_grid_reciprocal():
 
 
 def get_john_point_locations(grid: EnergyGrid):
-
     points = np.array(grid["points"], dtype=float)
     return {
         "Top Site": (0, 0),
@@ -276,7 +275,6 @@ def plot_interpolation_with_sho_wavefunctions():
 
 
 def plot_potential_minimum_along_diagonal():
-
     fig, ax = plt.subplots()
 
     interpolation = load_interpolated_grid()
@@ -430,3 +428,12 @@ def test_symmetry_point_interpolation():
     delta_y_john = interpolation["delta_x1"][1]
     # True - we have excluded the symmetry points properly!
     print(np.allclose([delta_y, delta_x], [delta_x_john, delta_y_john]))
+
+
+def calculate_fcc_hcp_energy_difference():
+    a = load_interpolated_grid()
+    points = np.min(np.array(a["points"]), axis=2)
+    print(
+        "HCP Energy: ",
+        points[points.shape[0] // 3, points.shape[1] // 3] - points[0, 0],
+    )
