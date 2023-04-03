@@ -61,7 +61,7 @@ class StackedHamiltonian(TypedDict, Generic[_BC0Cov]):
     array: StackedHamiltonianPoints[int, int, int]
 
 
-StackedHamiltonianWithBasis = Hamiltonian[BasisConfig[_BX0Cov, _BX1Cov, _BX2Cov]]
+StackedHamiltonianWithBasis = StackedHamiltonian[BasisConfig[_BX0Cov, _BX1Cov, _BX2Cov]]
 MomentumBasisStackedHamiltonian = StackedHamiltonian[
     MomentumBasisConfig[_L0Cov, _L1Cov, _L2Cov]
 ]
