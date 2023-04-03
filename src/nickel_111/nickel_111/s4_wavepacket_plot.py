@@ -7,7 +7,7 @@ from surface_potential_analysis.eigenstate.eigenstate import (
 from surface_potential_analysis.eigenstate.plot import animate_eigenstate_x1x2
 from surface_potential_analysis.wavepacket.plot import (
     animate_wavepacket_x0x1,
-    plot_wavepacket_sample_points,
+    plot_wavepacket_sample_frequencies,
 )
 from surface_potential_analysis.wavepacket.wavepacket import (
     get_wavepacket_sample_fractions,
@@ -23,7 +23,7 @@ def plot_wavepacket_points() -> None:
     path = get_data_path("eigenstates_grid_0.json")
     wavepacket = load_wavepacket(path)
 
-    fig, _, _ = plot_wavepacket_sample_points(wavepacket)
+    fig, _, _ = plot_wavepacket_sample_frequencies(wavepacket)
     fig.show()
 
     input()

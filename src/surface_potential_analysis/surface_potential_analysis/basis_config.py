@@ -49,11 +49,13 @@ class BasisConfigUtil(Generic[_BX0Cov, _BX1Cov, _BX2Cov]):
     @cached_property
     def volume(self) -> float:
         out = np.dot(self.delta_x0, np.cross(self.delta_x1, self.delta_x2))
+        assert out != 0
         return out  # type:ignore
 
     @cached_property
     def reciprocal_volume(self) -> float:
         out = np.dot(self.dk0, np.cross(self.dk1, self.dk2))
+        assert out != 0
         return out  # type:ignore
 
     @property
@@ -373,7 +375,7 @@ class PositionBasisConfigUtil(
             },
             {
                 "_type": "momentum",
-                "n": len(self.delta_x2),  # type:ignore
+                "n": len(self.x2_basis),  # type:ignore
                 "delta_x": self.delta_x2,
             },
         )

@@ -8,13 +8,18 @@ import scipy.linalg
 import scipy.special
 from scipy.constants import hbar
 
+import surface_potential_analysis.hamiltonian_builder.momentum_basis as momentum_basis
+import surface_potential_analysis.hamiltonian_builder.sho_basis as sho_basis
 from surface_potential_analysis.basis_config import (
     BasisConfigUtil,
+    PositionBasisConfig,
     PositionBasisConfigUtil,
 )
+from surface_potential_analysis.hamiltonian import convert_x2_to_explicit_basis
 from surface_potential_analysis.hamiltonian_builder.sho_basis import (
     SurfaceHamiltonianUtil,
 )
+from surface_potential_analysis.interpolation import interpolate_points_rfftn
 from surface_potential_analysis.potential.potential import Potential
 from surface_potential_analysis.sho_basis import SHOBasisConfig
 
@@ -77,7 +82,7 @@ def generate_random_diagonal_hamiltonian() -> (
     return SurfaceHamiltonianUtil(potentail2, config, resolution)
 
 
-class TestSHOHamiltonian(unittest.TestCase):
+class HamiltonianBuilderTest(unittest.TestCase):
     def test_diagonal_energies(self) -> None:
         resolution = (2, 2, 2)
         config: SHOBasisConfig = {
@@ -99,7 +104,7 @@ class TestSHOHamiltonian(unittest.TestCase):
         hamiltonian = SurfaceHamiltonianUtil(potentail, config, resolution)
 
         expected = np.array([0.5, 1.5, 1.0, 2.0, 1.0, 2.0, 1.5, 2.5])
-        diagonal_energy = hamiltonian._calculate_diagonal_energy(0, 0)
+        diagonal_energy = hamiltonian._calculate_diagonal_energy(np.array([0, 0, 0]))
 
         np.testing.assert_array_almost_equal(diagonal_energy, expected)
 
@@ -247,8 +252,8 @@ class TestSHOHamiltonian(unittest.TestCase):
         hamiltonian = SurfaceHamiltonianUtil(potentail, config, resolution)
 
         np.testing.assert_allclose(
-            hamiltonian.hamiltonian(0, 0)["array"],
-            hamiltonian.hamiltonian(0, 0)["array"].conjugate().T,
+            hamiltonian.hamiltonian(np.array([0, 0, 0]))["array"],
+            hamiltonian.hamiltonian(np.array([0, 0, 0]))["array"].conjugate().T,
         )
 
     def test_sho_normalization(self) -> None:
@@ -329,6 +334,94 @@ class TestSHOHamiltonian(unittest.TestCase):
             hamiltonian._calculate_off_diagonal_energies(),
         )
 
+    def test_hamiltonian_from_potential(self) -> None:
+        shape = np.random.randint(1, 10, size=3, dtype=int)
+        points = np.random.rand(*shape)
 
-if __name__ == "__main__":
-    unittest.main()
+        expected_basis: PositionBasisConfig[Any, Any, Any] = (
+            {"n": shape.item(0), "_type": "position", "delta_x": np.array([1.0, 0, 0])},
+            {"n": shape.item(1), "_type": "position", "delta_x": np.array([0, 1.0, 0])},
+            {"n": shape.item(2), "_type": "position", "delta_x": np.array([0, 0, 1.0])},
+        )
+        potential: Potential[Any, Any, Any] = {
+            "basis": expected_basis,
+            "points": points,
+        }
+
+        hamiltonian = momentum_basis.hamiltonian_from_potential(potential)
+
+        for ix0 in range(shape[0]):
+            for ix1 in range(shape[1]):
+                for ix2 in range(shape[2]):
+                    np.testing.assert_equal(
+                        hamiltonian["array"][ix0, ix1, ix2, ix0, ix1, ix2],
+                        potential["points"][ix0, ix1, ix2],
+                    )
+        np.testing.assert_equal(
+            np.count_nonzero(hamiltonian["array"]),
+            np.count_nonzero(potential["points"]),
+        )
+
+        for expected, actual in zip(expected_basis, hamiltonian["basis"]):
+            self.assertEqual(expected["n"], actual["n"])
+            self.assertEqual(expected["_type"], actual["_type"])
+            np.testing.assert_array_equal(expected["delta_x"], actual["delta_x"])
+
+    def test_total_surface_hamiltonian(self) -> None:
+        shape = np.random.randint(1, 10, size=3, dtype=int)
+        points = np.random.rand(*shape)
+
+        expected_basis: PositionBasisConfig[Any, Any, Any] = (
+            {"n": shape.item(0), "_type": "position", "delta_x": np.array([1.0, 0, 0])},
+            {"n": shape.item(1), "_type": "position", "delta_x": np.array([0, 1.0, 0])},
+            {"n": shape.item(2), "_type": "position", "delta_x": np.array([0, 0, 1.0])},
+        )
+        potential: Potential[Any, Any, Any] = {
+            "basis": expected_basis,
+            "points": points,
+        }
+
+        config: SHOBasisConfig = {
+            "mass": 1,
+            "sho_omega": 1,
+            "x_origin": np.array([0, 0, 0]),
+        }
+        bloch_phase = np.array([0, 0, 0])
+
+        momentum_builder_result = momentum_basis.total_surface_hamiltonian(
+            potential, config["mass"], bloch_phase
+        )
+
+        interpolated_points = interpolate_points_rfftn(
+            points, s=(2 * points.shape[0], 2 * points.shape[1]), axes=(0, 1)
+        )
+
+        interpolated_potential: Potential[Any, Any, Any] = {
+            "basis": (
+                {
+                    "n": interpolated_points.shape[0],
+                    "_type": "position",
+                    "delta_x": potential["basis"][0]["delta_x"],
+                },
+                {
+                    "n": interpolated_points.shape[1],
+                    "_type": "position",
+                    "delta_x": potential["basis"][1]["delta_x"],
+                },
+                potential["basis"][2],
+            ),
+            "points": interpolated_points,
+        }
+
+        actual = sho_basis.total_surface_hamiltonian(
+            interpolated_potential,
+            config,
+            bloch_phase,
+            (points.shape[0], points.shape[1], 4),
+        )
+
+        expected = convert_x2_to_explicit_basis(
+            momentum_builder_result, actual["basis"][2]
+        )
+
+        np.testing.assert_array_equal(actual["array"], expected["array"])

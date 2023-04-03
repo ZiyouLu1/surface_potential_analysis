@@ -42,29 +42,28 @@ def calculate_eigenstate_collection(
     ],
     bloch_phases: np.ndarray[tuple[int, Literal[3]], np.dtype[np.float_]],
     *,
-    include_bands: list[int] | None = None,
+    subset_by_index: tuple[int, int] | None = None,
 ) -> EigenstateColllection[_BC0Inv]:
-    include_bands = [0] if include_bands is None else include_bands
+    subset_by_index = (0, 0) if subset_by_index is None else subset_by_index
+    n_states = 1 + subset_by_index[1] - subset_by_index[0]
 
     basis = hamiltonian_generator(bloch_phases[0])["basis"]
     util = BasisConfigUtil(basis)
     out: EigenstateColllection[_BC0Inv] = {
         "basis": basis,
         "vectors": np.zeros(
-            (bloch_phases.shape[0], len(include_bands), len(util)), dtype=np.complex_
+            (bloch_phases.shape[0], n_states, len(util)), dtype=np.complex_
         ),
-        "energies": np.zeros(
-            (bloch_phases.shape[0], len(include_bands)), dtype=np.float_
-        ),
+        "energies": np.zeros((bloch_phases.shape[0], n_states), dtype=np.float_),
         "bloch_phases": bloch_phases,
     }
 
     for idx, bloch_phase in enumerate(bloch_phases):
         h = hamiltonian_generator(bloch_phase)
-        eigenstates = calculate_eigenstates(h)
+        eigenstates = calculate_eigenstates(h, subset_by_index=subset_by_index)
 
-        out["vectors"][idx] = eigenstates["vectors"][include_bands]
-        out["energies"][idx] = eigenstates["energies"][include_bands]
+        out["vectors"][idx] = eigenstates["vectors"]
+        out["energies"][idx] = eigenstates["energies"]
 
     return out
 

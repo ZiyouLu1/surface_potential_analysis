@@ -144,8 +144,9 @@ def main() -> None:
     # nickel_111.s1_potential.generate_raw_unit_cell_data()
     # nickel_111.s1_potential.generate_interpolated_data()
 
-    # nickel_111.s3_eigenstates.generate_eigenstates_data()
-    nickel_111.s3_eigenstates_plot.plot_eigenstate_for_each_band()
+    nickel_111.s3_eigenstates.generate_eigenstates_data()
+    nickel_111.s3_eigenstates_plot.analyze_band_convergence()
+    nickel_111.s3_eigenstates_plot.plot_explicit_basis_sets()
 
 
 if __name__ == "__main__":

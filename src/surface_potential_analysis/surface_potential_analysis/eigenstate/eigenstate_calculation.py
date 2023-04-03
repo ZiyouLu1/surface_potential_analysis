@@ -1,6 +1,7 @@
 from typing import Any, TypeVar
 
 import numpy as np
+import scipy.linalg
 
 from surface_potential_analysis.basis_config import BasisConfig
 from surface_potential_analysis.hamiltonian import Hamiltonian
@@ -12,8 +13,12 @@ _BC0Inv = TypeVar("_BC0Inv", bound=BasisConfig[Any, Any, Any])
 
 
 @timed
-def calculate_eigenstates(hamiltonian: Hamiltonian[_BC0Inv]) -> EigenstateList[_BC0Inv]:
-    energies, vectors = np.linalg.eigh(hamiltonian["array"])
+def calculate_eigenstates(
+    hamiltonian: Hamiltonian[_BC0Inv], subset_by_index: tuple[int, int] | None = None
+) -> EigenstateList[_BC0Inv]:
+    energies, vectors = scipy.linalg.eigh(
+        hamiltonian["array"], subset_by_index=subset_by_index
+    )
     return {"basis": hamiltonian["basis"], "vectors": vectors.T, "energies": energies}
 
 

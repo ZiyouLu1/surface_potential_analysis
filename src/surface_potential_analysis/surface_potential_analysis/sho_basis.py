@@ -6,7 +6,7 @@ import scipy
 import scipy.special
 from scipy.constants import hbar
 
-from surface_potential_analysis.basis_config import BasisConfigUtil, PositionBasisConfig
+from surface_potential_analysis.basis_config import PositionBasisConfig
 from surface_potential_analysis.hamiltonian_builder.momentum_basis import (
     total_surface_hamiltonian,
 )
@@ -86,8 +86,11 @@ def sho_basis_from_config(
         {"_type": "position", "delta_x": delta_x1, "n": 1},
         {"_type": "position", "delta_x": delta_x2, "n": 1},
     )
-    x_points = BasisConfigUtil(potential_basis).fundamental_x_points
-    x_distances = np.linalg.norm(x_points - config["x_origin"][:, np.newaxis], axis=0)
+    x_points = util.fundamental_x_points
+
+    x0_norm = parent["delta_x"].copy() / np.linalg.norm(parent["delta_x"])
+    distances_origin = np.dot(x0_norm, config["x_origin"])
+    x_distances = np.dot(x0_norm, x_points) + distances_origin
 
     sho_potential: Potential[_L1Inv, Literal[1], Literal[1]] = {
         "basis": potential_basis,
@@ -107,7 +110,10 @@ def infinate_sho_basis_from_config(
 ) -> ExplicitBasis[_L0Inv, PositionBasis[_L1Inv]]:
     util = BasisUtil(parent)
     x_points = util.fundamental_x_points
-    x_distances = np.linalg.norm(x_points - config["x_origin"][:, np.newaxis], axis=0)
+
+    x0_norm = parent["delta_x"].copy() / np.linalg.norm(parent["delta_x"])
+    distances_origin = np.dot(x0_norm, config["x_origin"])
+    x_distances = np.dot(x0_norm, x_points) + distances_origin
 
     vectors = np.array(
         [
@@ -117,5 +123,6 @@ def infinate_sho_basis_from_config(
             for i in range(n)
         ]
     )
+
     normalized = vectors * np.linalg.norm(util.fundamental_dx)
     return {"_type": "explicit", "parent": parent, "vectors": normalized}

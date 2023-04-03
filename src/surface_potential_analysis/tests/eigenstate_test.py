@@ -190,11 +190,8 @@ class EigenstateTest(unittest.TestCase):
                 eigenstate["vector"].tolist(),
                 util.fundamental_x_points.T.tolist(),
             )
-            print(np.sum(np.abs(actual) ** 2))
 
             expected = convert_sho_eigenstate_to_position_basis(eigenstate)
-
-            print(np.sum(np.abs(eigenstate["basis"][2]["vectors"][i]) ** 2))
 
             np.testing.assert_allclose(expected["vector"], actual)
 
@@ -228,11 +225,7 @@ class EigenstateTest(unittest.TestCase):
             eigenstate["vector"].tolist(),
             util.fundamental_x_points.T.tolist(),
         )
-        print(np.linalg.norm(actual))
 
         expected = convert_sho_eigenstate_to_position_basis(eigenstate)
-
-        print(np.linalg.norm(expected["vector"]))
-        print(np.sum(np.abs(eigenstate["basis"][2]["vectors"]) ** 2, axis=1))
 
         np.testing.assert_allclose(expected["vector"], actual)

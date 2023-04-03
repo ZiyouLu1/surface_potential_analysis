@@ -23,13 +23,13 @@ def _calculate_eigenstate_collection_sho(
         x: np.ndarray[tuple[Literal[3]], np.dtype[np.float_]]
     ) -> Hamiltonian[Any]:
         return generate_hamiltonian_sho(
-            shape=(2 * resolution[0], 2 * resolution[1], 100),
+            shape=(2 * resolution[0], 2 * resolution[1], 500),
             bloch_phase=x,
             resolution=resolution,
         )
 
     return calculate_eigenstate_collection(
-        hamiltonian_generator, bloch_phases, include_bands=list(range(10))
+        hamiltonian_generator, bloch_phases, subset_by_index=(0, 10)
     )
 
 
@@ -52,9 +52,9 @@ def generate_eigenstates_data() -> None:
     kz_points = np.zeros_like(kx_points)
     bloch_phases = np.array([kx_points, ky_points, kz_points]).T
 
-    # _generate_eigenstate_collection_sho(bloch_phases, (10, 10, 5))
+    _generate_eigenstate_collection_sho(bloch_phases, (10, 10, 5))
 
-    # _generate_eigenstate_collection_sho(bloch_phases, (23, 23, 10))
+    _generate_eigenstate_collection_sho(bloch_phases, (23, 23, 10))
 
     # _generate_eigenstate_collection_sho(bloch_phases, (23, 23, 12))
 

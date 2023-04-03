@@ -4,17 +4,13 @@ from typing import Any, Literal
 import numpy as np
 
 from surface_potential_analysis.basis import Basis, MomentumBasis
-from surface_potential_analysis.basis_config import PositionBasisConfig
 from surface_potential_analysis.hamiltonian import (
     MomentumBasisStackedHamiltonian,
+    _convert_explicit_basis_x2,
     flatten_hamiltonian,
     stack_hamiltonian,
     truncate_hamiltonian_basis,
 )
-from surface_potential_analysis.hamiltonian_builder.momentum_basis import (
-    hamiltonian_from_potential,
-)
-from surface_potential_analysis.potential.potential import Potential
 
 
 class HamiltonianTest(unittest.TestCase):
@@ -119,35 +115,14 @@ class HamiltonianTest(unittest.TestCase):
         expected_shape[3 + (axis % 3)] = size
         np.testing.assert_array_equal(expected_shape, truncated["array"].shape)
 
-    def test_hamiltonian_from_potential(self) -> None:
-        shape = np.random.randint(1, 10, size=3, dtype=int)
-        points = np.random.rand(*shape)
+    def test_convert_explicit_basis_x2_diagonal(self) -> None:
+        shape = np.random.randint(1, 10, size=3)
+        nz: int = np.random.randint(1, shape[2])  # type: ignore
 
-        expected_basis: PositionBasisConfig[Any, Any, Any] = (
-            {"n": shape.item(0), "_type": "position", "delta_x": np.array([1.0, 0, 0])},
-            {"n": shape.item(1), "_type": "position", "delta_x": np.array([0, 1.0, 0])},
-            {"n": shape.item(2), "_type": "position", "delta_x": np.array([0, 0, 1.0])},
-        )
-        potential: Potential[Any, Any, Any] = {
-            "basis": expected_basis,
-            "points": points,
-        }
+        points = np.random.rand(*shape, *shape)
+        diagonal = np.eye(nz, shape.item(2))
 
-        hamiltonian = hamiltonian_from_potential(potential)
+        actual = _convert_explicit_basis_x2(points, diagonal)
+        expected = points[:, :, :nz, :, :, :nz]
 
-        for ix0 in range(shape[0]):
-            for ix1 in range(shape[1]):
-                for ix2 in range(shape[2]):
-                    np.testing.assert_equal(
-                        hamiltonian["array"][ix0, ix1, ix2, ix0, ix1, ix2],
-                        potential["points"][ix0, ix1, ix2],
-                    )
-        np.testing.assert_equal(
-            np.count_nonzero(hamiltonian["array"]),
-            np.count_nonzero(potential["points"]),
-        )
-
-        for expected, actual in zip(expected_basis, hamiltonian["basis"]):
-            self.assertEqual(expected["n"], actual["n"])
-            self.assertEqual(expected["_type"], actual["_type"])
-            np.testing.assert_array_equal(expected["delta_x"], actual["delta_x"])
+        np.testing.assert_equal(expected, actual)

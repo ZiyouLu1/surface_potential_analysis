@@ -1,10 +1,10 @@
 from functools import cache, cached_property
 from typing import Generic, Literal, TypeVar
 
+import hamiltonian_generator
 import numpy as np
 from scipy.constants import hbar
 
-import hamiltonian_generator
 from surface_potential_analysis.basis import (
     BasisUtil,
     ExplicitBasis,
@@ -17,7 +17,6 @@ from surface_potential_analysis.hamiltonian import HamiltonianWithBasis
 from surface_potential_analysis.potential import Potential
 from surface_potential_analysis.sho_basis import (
     SHOBasisConfig,
-    calculate_sho_wavefunction,
     infinate_sho_basis_from_config,
 )
 
@@ -75,18 +74,22 @@ class SurfaceHamiltonianUtil(Generic[_L0, _L1, _L2, _L3, _L4, _L5]):
         return self.points.shape[1]  # type:ignore
 
     @property
-    def dz(self) -> float:
-        return BasisUtil(self._potential["basis"][2]).fundamental_dx[2]  # type:ignore
-
-    @property
     def Nz(self) -> int:
         return self.points.shape[2]  # type:ignore
 
     @property
-    def z_points(self) -> np.ndarray[tuple[int], np.dtype[np.float_]]:
-        z_start = self.z_offset
-        z_end = self.z_offset + (self.Nz - 1) * self.dz
-        return np.linspace(z_start, z_end, self.Nz, dtype=float)  # type:ignore
+    def dz(self) -> float:
+        util = BasisUtil(self._potential["basis"][2])
+        return np.linalg.norm(util.fundamental_dx)  # type:ignore
+
+    @property
+    def z_distances(self) -> np.ndarray[tuple[int], np.dtype[np.float_]]:
+        util = BasisUtil(self._potential["basis"][2])
+        x_points = util.fundamental_x_points
+
+        x0_norm = util.delta_x.copy() / np.linalg.norm(util.delta_x)
+        distances_origin = np.dot(x0_norm, self._config["x_origin"])
+        return np.dot(x0_norm, x_points) + distances_origin  # type:ignore
 
     @property
     def basis(
@@ -127,13 +130,13 @@ class SurfaceHamiltonianUtil(Generic[_L0, _L1, _L2, _L3, _L4, _L5]):
         )
 
     def hamiltonian(
-        self, kx: float, ky: float
+        self, bloch_phase: np.ndarray[tuple[Literal[3]], np.dtype[np.float_]]
     ) -> HamiltonianWithBasis[
         TruncatedBasis[_L3, MomentumBasis[_L0]],
         TruncatedBasis[_L4, MomentumBasis[_L1]],
         ExplicitBasis[_L5, PositionBasis[_L2]],
     ]:
-        diagonal_energies = np.diag(self._calculate_diagonal_energy(kx, ky))
+        diagonal_energies = np.diag(self._calculate_diagonal_energy(bloch_phase))
         other_energies = self._calculate_off_diagonal_energies_fast()
 
         energies = diagonal_energies + other_energies
@@ -158,7 +161,7 @@ class SurfaceHamiltonianUtil(Generic[_L0, _L1, _L2, _L3, _L4, _L5]):
         return np.array([x0t.ravel(), x1t.ravel(), zt.ravel()])  # type: ignore
 
     def _calculate_diagonal_energy(
-        self, kx: float, ky: float
+        self, bloch_phase: np.ndarray[tuple[Literal[3]], np.dtype[np.float_]]
     ) -> np.ndarray[tuple[int], np.dtype[np.float_]]:
         kx0_coords, kx1_coords, nkz_coords = self.eigenstate_indexes
 
@@ -169,9 +172,9 @@ class SurfaceHamiltonianUtil(Generic[_L0, _L1, _L2, _L3, _L4, _L5]):
         mass = self._config["mass"]
         sho_omega = self._config["sho_omega"]
 
-        kx_points = dkx0[0] * kx0_coords + dkx1[0] * kx1_coords + kx
+        kx_points = dkx0[0] * kx0_coords + dkx1[0] * kx1_coords + bloch_phase[0]
         x_energy = (hbar * kx_points) ** 2 / (2 * mass)
-        ky_points = dkx0[1] * kx0_coords + dkx1[1] * kx1_coords + ky
+        ky_points = dkx0[1] * kx0_coords + dkx1[1] * kx1_coords + bloch_phase[1]
         y_energy = (hbar * ky_points) ** 2 / (2 * mass)
         z_energy = (hbar * sho_omega) * (nkz_coords + 0.5)
         return x_energy + y_energy + z_energy  # type: ignore
@@ -180,7 +183,7 @@ class SurfaceHamiltonianUtil(Generic[_L0, _L1, _L2, _L3, _L4, _L5]):
     def get_sho_potential(self) -> np.ndarray[tuple[int], np.dtype[np.float_]]:
         mass = self._config["mass"]
         sho_omega = self._config["sho_omega"]
-        return 0.5 * mass * sho_omega**2 * np.square(self.z_points)  # type: ignore
+        return 0.5 * mass * sho_omega**2 * np.square(self.z_distances)  # type: ignore
 
     @cache
     def get_sho_subtracted_points(
@@ -194,15 +197,6 @@ class SurfaceHamiltonianUtil(Generic[_L0, _L1, _L2, _L3, _L4, _L5]):
     ) -> np.ndarray[tuple[int, int, int], np.dtype[np.complex128]]:
         subtracted_potential = self.get_sho_subtracted_points()
         return np.fft.ifft2(subtracted_potential, axes=(0, 1))  # type: ignore
-
-    @cache
-    def _calculate_sho_wavefunction_points(
-        self, n: int
-    ) -> np.ndarray[tuple[int], np.dtype[np.float_]]:
-        """Generates the nth SHO wavefunction using the current config"""
-        mass = self._config["mass"]
-        sho_omega = self._config["sho_omega"]
-        return calculate_sho_wavefunction(self.z_points, sho_omega, mass, n)
 
     @cache
     def _calculate_off_diagonal_energies_fast(
@@ -227,8 +221,8 @@ class SurfaceHamiltonianUtil(Generic[_L0, _L1, _L2, _L3, _L4, _L5]):
     ) -> float:
         """Calculates the off diagonal energy using the 'folded' points ndkx, ndky"""
         ft_pot_points = self.get_ft_potential()[ndkx0, ndkx1]
-        hermite1 = self._calculate_sho_wavefunction_points(nz1)
-        hermite2 = self._calculate_sho_wavefunction_points(nz2)
+        hermite1 = self.basis[2]["vectors"][nz1]
+        hermite2 = self.basis[2]["vectors"][nz2]
 
         fourier_transform = float(np.sum(hermite1 * hermite2 * ft_pot_points))
 
@@ -271,4 +265,4 @@ def total_surface_hamiltonian(
     ExplicitBasis[_L5, PositionBasis[_L2]],
 ]:
     util = SurfaceHamiltonianUtil(potential, config, resolution)
-    return util.hamiltonian(bloch_phase.item(0), bloch_phase.item(1))
+    return util.hamiltonian(bloch_phase)

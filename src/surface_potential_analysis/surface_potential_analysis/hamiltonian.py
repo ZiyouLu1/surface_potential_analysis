@@ -3,7 +3,12 @@ from typing import Any, Generic, Literal, TypedDict, TypeVar, overload
 import numpy as np
 
 from surface_potential_analysis.basis import Basis, FundamentalBasis, TruncatedBasis
-from surface_potential_analysis.basis.basis import is_basis_type
+from surface_potential_analysis.basis.basis import (
+    ExplicitBasis,
+    MomentumBasis,
+    PositionBasis,
+    is_basis_type,
+)
 from surface_potential_analysis.basis_config import (
     BasisConfig,
     BasisConfigUtil,
@@ -13,6 +18,7 @@ from surface_potential_analysis.basis_config import (
     PositionBasisConfigUtil,
 )
 from surface_potential_analysis.interpolation import pad_ft_points
+from surface_potential_analysis.util import slice_along_axis
 
 _L0Cov = TypeVar("_L0Cov", bound=int, covariant=True)
 _L1Cov = TypeVar("_L1Cov", bound=int, covariant=True)
@@ -70,6 +76,8 @@ _BX2Inv = TypeVar("_BX2Inv", bound=Basis[Any, Any])
 _L0Inv = TypeVar("_L0Inv", bound=int)
 _L1Inv = TypeVar("_L1Inv", bound=int)
 _L2Inv = TypeVar("_L2Inv", bound=int)
+
+_LInv = TypeVar("_LInv", bound=int)
 
 _CBX0Inv = TypeVar("_CBX0Inv", bound=FundamentalBasis[Any])
 _CBX1Inv = TypeVar("_CBX1Inv", bound=FundamentalBasis[Any])
@@ -331,3 +339,39 @@ def add_hamiltonian(
     a: Hamiltonian[_BC0Inv], b: Hamiltonian[_BC0Inv]
 ) -> Hamiltonian[_BC0Inv]:
     return {"basis": a["basis"], "array": a["array"] + b["array"]}
+
+
+def _convert_explicit_basis_x2(
+    hamiltonian: StackedHamiltonianPoints[_L0Inv, _L1Inv, _L2Inv],
+    basis: np.ndarray[tuple[_LInv, _L2Inv], np.dtype[np.complex_]],
+) -> StackedHamiltonianPoints[_L0Inv, _L1Inv, _LInv]:
+    end_dot = np.sum(
+        hamiltonian[slice_along_axis(np.newaxis, -2)]
+        * basis.reshape(1, 1, 1, 1, 1, *basis.shape),
+        axis=-1,
+    )
+    start_dot = np.sum(
+        end_dot[slice_along_axis(np.newaxis, 2)]
+        * basis.reshape(1, 1, *basis.shape, 1, 1, 1),
+        axis=3,
+    )
+    return start_dot  # type: ignore
+
+
+def convert_x2_to_explicit_basis(
+    hamiltonian: HamiltonianWithBasis[_BX0Inv, _BX1Inv, MomentumBasis[_L0Inv]],
+    basis: ExplicitBasis[_L1Inv, PositionBasis[_L0Inv]],
+) -> HamiltonianWithBasis[
+    _BX0Inv, _BX1Inv, ExplicitBasis[_L1Inv, PositionBasis[_L0Inv]]
+]:
+    stacked = stack_hamiltonian(hamiltonian)
+    # TODO: Is this the right norm here??
+    x2_position = np.fft.fftn(stacked["array"], axes=(2, 5), norm="ortho")
+    x2_explicit = _convert_explicit_basis_x2(x2_position, basis["vectors"])
+
+    return flatten_hamiltonian(
+        {
+            "basis": (stacked["basis"][0], stacked["basis"][1], basis),
+            "array": x2_explicit,  # type: ignore
+        }
+    )

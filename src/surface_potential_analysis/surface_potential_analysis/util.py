@@ -21,8 +21,8 @@ def timed(f: F) -> F:
 
 
 def slice_along_axis(
-    slice_at_axis: slice | int, axis: int = -1
-) -> tuple[EllipsisType | slice | int, ...] | tuple[slice | int, ...]:
+    slice_at_axis: slice | int | None, axis: int = -1
+) -> tuple[EllipsisType | slice | int | None, ...] | tuple[slice | int | None, ...]:
     """
     Returns a slice such that the 1d slice provided by slice_inds, slices along the dimension provided.
     """

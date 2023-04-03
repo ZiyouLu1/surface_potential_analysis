@@ -43,7 +43,7 @@ def analyze_band_convergence() -> None:
     )
 
     fig.show()
-    save_figure(fig, "lowest_band_convergence.npy")
+    save_figure(fig, "lowest_band_convergence.png")
 
     fig, ax = plt.subplots()
 
@@ -85,18 +85,27 @@ def analyze_band_convergence() -> None:
     input()
 
 
-def plot_eigenstate_for_each_band() -> None:
-    """
-    Check to see if the eigenstates look as they are supposed to
-    """
+def plot_sho_basis_states() -> None:
     path = get_data_path("eigenstates_25_25_16.npy")
-    path = get_data_path("eigenstates_23_23_12.npy")
+    # path = get_data_path("eigenstates_23_23_12.npy")
+    # path = get_data_path("eigenstates_10_10_5.npy")
     collection = load_eigenstate_collection(path)
 
     eigenstate = select_eigenstate(collection, 0, 0)
     fig, _ = plot_explicit_basis_states(eigenstate["basis"][2], measure="real")
     fig.show()
+    input()
 
+
+def plot_eigenstate_for_each_band() -> None:
+    """
+    Check to see if the eigenstates look as they are supposed to
+    """
+    path = get_data_path("eigenstates_25_25_16.npy")
+    # path = get_data_path("eigenstates_23_23_12.npy")
+    collection = load_eigenstate_collection(path)
+
+    eigenstate = select_eigenstate(collection, 0, 0)
     eigenstate_position = convert_sho_eigenstate_to_position_basis(eigenstate)
     fig, _, _anim0 = animate_eigenstate_x0x1(eigenstate_position)
     fig.show()
@@ -115,14 +124,3 @@ def plot_eigenstate_for_each_band() -> None:
     eigenstate_position = convert_sho_eigenstate_to_position_basis(eigenstate)
     fig, _, _anim3 = animate_eigenstate_x0x1(eigenstate_position)
     fig.show()
-
-    eigenstate = select_eigenstate(collection, 0, 4)
-    eigenstate_position = convert_sho_eigenstate_to_position_basis(eigenstate)
-    fig, _, _anim4 = animate_eigenstate_x0x1(eigenstate_position)
-    fig.show()
-
-    eigenstate = select_eigenstate(collection, 0, 9)
-    eigenstate_position = convert_sho_eigenstate_to_position_basis(eigenstate)
-    fig, _, _anim9 = animate_eigenstate_x0x1(eigenstate_position)
-    fig.show()
-    input()

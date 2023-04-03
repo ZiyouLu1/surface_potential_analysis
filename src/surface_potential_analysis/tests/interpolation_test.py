@@ -27,22 +27,6 @@ def interpolate_complex_points_fourier(
 
 
 class InterpolationTest(unittest.TestCase):
-    def test_interpolation_cosine(self) -> None:
-        def test_fn(x: np.ndarray[Any, Any]) -> np.ndarray[Any, Any]:
-            return x**2 * (x - 1) ** 2  # type: ignore
-
-        points_4 = np.linspace(0, 1, num=4, endpoint=False)
-        points_5 = np.linspace(0, 1, num=5, endpoint=False)
-
-        print(points_4, test_fn(points_4))
-        print(np.fft.rfft(test_fn(points_4), norm="backward"))
-        print(np.fft.rfft(test_fn(points_4)).shape)
-        print(points_5, test_fn(points_5))
-        print(np.fft.rfft(test_fn(points_5), norm="backward"))
-        print(np.fft.rfft(test_fn(points_5)).shape)
-
-        print(interpolate_real_points_along_axis_fourier(points_4, 5))
-
     def test_interpolate_points_fourier_double(self) -> None:
         # Note the interpolation that assumes the potential is real will not
         # return the same points if the original data has an even number of points

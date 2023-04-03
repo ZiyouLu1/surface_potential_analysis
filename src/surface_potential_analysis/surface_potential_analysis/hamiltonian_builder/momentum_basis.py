@@ -4,6 +4,7 @@ import numpy as np
 from scipy.constants import hbar
 
 from surface_potential_analysis.basis_config import (
+    BasisConfigUtil,
     MomentumBasisConfig,
     MomentumBasisConfigUtil,
 )
@@ -11,6 +12,7 @@ from surface_potential_analysis.hamiltonian import (
     MomentumBasisHamiltonian,
     MomentumBasisStackedHamiltonian,
     PositionBasisStackedHamiltonian,
+    add_hamiltonian,
     add_hamiltonian_stacked,
     convert_stacked_hamiltonian_to_momentum_basis,
     flatten_hamiltonian,
@@ -65,9 +67,9 @@ def hamiltonian_from_mass(
     basis: MomentumBasisConfig[_L0, _L1, _L2],
     mass: float,
     bloch_phase: np.ndarray[tuple[Literal[3]], np.dtype[np.float_]] | None = None,
-) -> MomentumBasisStackedHamiltonian[_L0, _L1, _L2]:
+) -> MomentumBasisHamiltonian[_L0, _L1, _L2]:
     bloch_phase = np.array([0.0, 0.0, 0.0]) if bloch_phase is None else bloch_phase
-    util = MomentumBasisConfigUtil(basis)
+    util = BasisConfigUtil(basis)
 
     kx0_coords, kx1_coords, kx2_coords = util.fundamental_nk_points
     kx0_coords += bloch_phase[0]
@@ -89,25 +91,15 @@ def hamiltonian_from_mass(
     return {"basis": basis, "array": np.diag(energy)}
 
 
-def total_surface_hamiltonian_stacked(
-    potential: Potential[_L0, _L1, _L2],
-    mass: float,
-    bloch_phase: np.ndarray[tuple[Literal[3]], np.dtype[np.float_]],
-) -> MomentumBasisStackedHamiltonian[_L0, _L1, _L2]:
-    potential_hamiltonian = hamiltonian_from_potential(potential)
-    potential_in_momentum = convert_stacked_hamiltonian_to_momentum_basis(
-        potential_hamiltonian
-    )
-
-    kinetic = hamiltonian_from_mass(potential_in_momentum["basis"], mass, bloch_phase)
-
-    return add_hamiltonian_stacked(potential_in_momentum, kinetic)
-
-
 def total_surface_hamiltonian(
     potential: Potential[_L0, _L1, _L2],
     mass: float,
     bloch_phase: np.ndarray[tuple[Literal[3]], np.dtype[np.float_]],
 ) -> MomentumBasisHamiltonian[_L0, _L1, _L2]:
-    stacked = total_surface_hamiltonian_stacked(potential, mass, bloch_phase)
-    return flatten_hamiltonian(stacked)
+    potential_hamiltonian = hamiltonian_from_potential(potential)
+    potential_in_momentum = flatten_hamiltonian(
+        convert_stacked_hamiltonian_to_momentum_basis(potential_hamiltonian)
+    )
+
+    kinetic = hamiltonian_from_mass(potential_in_momentum["basis"], mass, bloch_phase)
+    return add_hamiltonian(potential_in_momentum, kinetic)

@@ -17,12 +17,11 @@ from surface_potential_analysis.eigenstate.plot import (
     plot_eigenstate_along_path,
     plot_eigenstate_difference_2D,
 )
-
-from .wavepacket import (
-    MomentumBasisWavepacket,
-    get_wavepacket_sample_frequencies,
+from surface_potential_analysis.wavepacket.eigenstate_conversion import (
     unfurl_wavepacket,
 )
+
+from .wavepacket import MomentumBasisWavepacket, get_wavepacket_sample_frequencies
 
 _NS0 = TypeVar("_NS0", bound=int)
 _NS1 = TypeVar("_NS1", bound=int)
