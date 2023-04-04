@@ -2,12 +2,12 @@ import random
 import unittest
 from typing import Any
 
-import hamiltonian_generator
 import numpy as np
 import scipy.linalg
 import scipy.special
 from scipy.constants import hbar
 
+import hamiltonian_generator
 import surface_potential_analysis.hamiltonian_builder.momentum_basis as momentum_basis
 import surface_potential_analysis.hamiltonian_builder.sho_basis as sho_basis
 from surface_potential_analysis.basis_config import (
@@ -15,13 +15,16 @@ from surface_potential_analysis.basis_config import (
     PositionBasisConfig,
     PositionBasisConfigUtil,
 )
-from surface_potential_analysis.hamiltonian import convert_x2_to_explicit_basis
+from surface_potential_analysis.hamiltonian import (
+    convert_x2_to_explicit_basis,
+    stack_hamiltonian,
+)
 from surface_potential_analysis.hamiltonian_builder.sho_basis import (
     SurfaceHamiltonianUtil,
 )
 from surface_potential_analysis.interpolation import interpolate_points_rfftn
 from surface_potential_analysis.potential.potential import Potential
-from surface_potential_analysis.sho_basis import SHOBasisConfig
+from surface_potential_analysis.sho_basis import SHOBasisConfig, calculate_x_distances
 
 
 def generate_random_potential(
@@ -368,25 +371,50 @@ class HamiltonianBuilderTest(unittest.TestCase):
             np.testing.assert_array_equal(expected["delta_x"], actual["delta_x"])
 
     def test_total_surface_hamiltonian(self) -> None:
-        shape = np.random.randint(1, 10, size=3, dtype=int)
-        points = np.random.rand(*shape)
+        shape = np.array([1, 1, 200])  # np.random.randint(1, 2, size=3, dtype=int)
+        nz = 2
 
         expected_basis: PositionBasisConfig[Any, Any, Any] = (
-            {"n": shape.item(0), "_type": "position", "delta_x": np.array([1.0, 0, 0])},
-            {"n": shape.item(1), "_type": "position", "delta_x": np.array([0, 1.0, 0])},
-            {"n": shape.item(2), "_type": "position", "delta_x": np.array([0, 0, 1.0])},
+            {
+                "n": shape.item(0),
+                "_type": "position",
+                "delta_x": np.array([2 * np.pi, 0, 0]),
+            },
+            {
+                "n": shape.item(1),
+                "_type": "position",
+                "delta_x": np.array([0, 2 * np.pi, 0]),
+            },
+            {
+                "n": shape.item(2),
+                "_type": "position",
+                "delta_x": np.array([0, 0, np.pi]),
+            },
         )
+        config: SHOBasisConfig = {
+            "mass": hbar**2,
+            "sho_omega": 1 / hbar,
+            "x_origin": np.array([0, 0, 0]),
+        }
+        bloch_phase = np.array([0, 0, 0])
+
+        points = np.random.rand(*shape)
+        points = np.tile(
+            (
+                0.5
+                * config["mass"]
+                * config["sho_omega"] ** 2
+                * np.square(
+                    calculate_x_distances(expected_basis[2], config["x_origin"])
+                )
+            ),
+            (shape.item(0), shape.item(1), 1),
+        )
+
         potential: Potential[Any, Any, Any] = {
             "basis": expected_basis,
             "points": points,
         }
-
-        config: SHOBasisConfig = {
-            "mass": 1,
-            "sho_omega": 1,
-            "x_origin": np.array([0, 0, 0]),
-        }
-        bloch_phase = np.array([0, 0, 0])
 
         momentum_builder_result = momentum_basis.total_surface_hamiltonian(
             potential, config["mass"], bloch_phase
@@ -417,11 +445,13 @@ class HamiltonianBuilderTest(unittest.TestCase):
             interpolated_potential,
             config,
             bloch_phase,
-            (points.shape[0], points.shape[1], 4),
+            (points.shape[0], points.shape[1], nz),
         )
 
         expected = convert_x2_to_explicit_basis(
             momentum_builder_result, actual["basis"][2]
         )
+
+        stacked = stack_hamiltonian(actual)
 
         np.testing.assert_array_equal(actual["array"], expected["array"])

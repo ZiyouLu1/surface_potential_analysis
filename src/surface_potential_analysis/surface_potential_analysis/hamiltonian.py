@@ -352,7 +352,7 @@ def _convert_explicit_basis_x2(
     )
     start_dot = np.sum(
         end_dot[slice_along_axis(np.newaxis, 2)]
-        * basis.reshape(1, 1, *basis.shape, 1, 1, 1),
+        * basis.conj().reshape(1, 1, *basis.shape, 1, 1, 1),
         axis=3,
     )
     return start_dot  # type: ignore
@@ -365,13 +365,17 @@ def convert_x2_to_explicit_basis(
     _BX0Inv, _BX1Inv, ExplicitBasis[_L1Inv, PositionBasis[_L0Inv]]
 ]:
     stacked = stack_hamiltonian(hamiltonian)
-    # TODO: Is this the right norm here??
-    x2_position = np.fft.fftn(stacked["array"], axes=(2, 5), norm="ortho")
+
+    x2_position = np.fft.fftn(
+        np.fft.ifftn(stacked["array"], axes=(2,), norm="ortho"),
+        axes=(5,),
+        norm="ortho",
+    )
     x2_explicit = _convert_explicit_basis_x2(x2_position, basis["vectors"])
 
     return flatten_hamiltonian(
         {
-            "basis": (stacked["basis"][0], stacked["basis"][1], basis),
+            "basis": (hamiltonian["basis"][0], hamiltonian["basis"][1], basis),
             "array": x2_explicit,  # type: ignore
         }
     )

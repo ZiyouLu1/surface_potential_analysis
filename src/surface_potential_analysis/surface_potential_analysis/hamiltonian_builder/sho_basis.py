@@ -1,10 +1,10 @@
 from functools import cache, cached_property
 from typing import Generic, Literal, TypeVar
 
-import hamiltonian_generator
 import numpy as np
 from scipy.constants import hbar
 
+import hamiltonian_generator
 from surface_potential_analysis.basis import (
     BasisUtil,
     ExplicitBasis,
@@ -17,6 +17,7 @@ from surface_potential_analysis.hamiltonian import HamiltonianWithBasis
 from surface_potential_analysis.potential import Potential
 from surface_potential_analysis.sho_basis import (
     SHOBasisConfig,
+    calculate_x_distances,
     infinate_sho_basis_from_config,
 )
 
@@ -84,12 +85,9 @@ class SurfaceHamiltonianUtil(Generic[_L0, _L1, _L2, _L3, _L4, _L5]):
 
     @property
     def z_distances(self) -> np.ndarray[tuple[int], np.dtype[np.float_]]:
-        util = BasisUtil(self._potential["basis"][2])
-        x_points = util.fundamental_x_points
-
-        x0_norm = util.delta_x.copy() / np.linalg.norm(util.delta_x)
-        distances_origin = np.dot(x0_norm, self._config["x_origin"])
-        return np.dot(x0_norm, x_points) + distances_origin  # type:ignore
+        return calculate_x_distances(
+            self._potential["basis"][2], self._config["x_origin"]
+        )
 
     @property
     def basis(
