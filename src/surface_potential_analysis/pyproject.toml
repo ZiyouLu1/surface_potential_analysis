@@ -4,7 +4,7 @@ version = "0.0.1"
 description = ""
 authors = ["Matthew Ord <mo433@cam.ac.uk>"]
 readme = "README.md"
-packages = [{include = "surface_potential_analysis"}]
+packages = [{ include = "surface_potential_analysis" }]
 
 [tool.poetry.dependencies]
 python = ">=3.11,<3.12"
@@ -16,7 +16,7 @@ hamiltonian_generator = { path = "../hamiltonian_generator/", develop = true }
 [tool.poetry.group.dev.dependencies]
 black = "^23.1.0"
 mypy = "^1.1.1"
-flake8 = "^6.0.0"
+ruff = "*"
 
 [tool.mypy]
 strict = true
@@ -29,6 +29,13 @@ ignore_missing_imports = true
 [[tool.mypy.overrides]]
 module = "scipy.*"
 ignore_missing_imports = true
+
+[tool.ruff]
+select = ["ALL"]
+ignore = ["COM812", "E501", "ANN101", "S101"]
+
+[tool.ruff.pydocstyle]
+convention = "numpy"
 
 [build-system]
 requires = ["poetry-core"]

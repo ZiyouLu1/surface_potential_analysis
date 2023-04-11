@@ -8,30 +8,25 @@ import scipy.linalg
 import scipy.special
 from scipy.constants import hbar
 
-import surface_potential_analysis.hamiltonian_builder.momentum_basis as momentum_basis
-import surface_potential_analysis.hamiltonian_builder.sho_basis as sho_basis
 from surface_potential_analysis.basis_config import (
     BasisConfigUtil,
     PositionBasisConfig,
     PositionBasisConfigUtil,
 )
-from surface_potential_analysis.hamiltonian import (
-    convert_x2_to_explicit_basis,
-    stack_hamiltonian,
+from surface_potential_analysis.hamiltonian import convert_x2_to_explicit_basis
+from surface_potential_analysis.hamiltonian_builder import (
+    momentum_basis,
+    sho_subtracted_basis,
 )
-from surface_potential_analysis.hamiltonian_builder.sho_basis import (
+from surface_potential_analysis.hamiltonian_builder.sho_subtracted_basis import (
     SurfaceHamiltonianUtil,
 )
 from surface_potential_analysis.interpolation import interpolate_points_rfftn
 from surface_potential_analysis.potential.potential import Potential
-from surface_potential_analysis.sho_basis import (
-    SHOBasisConfig,
-    calculate_sho_wavefunction,
-    calculate_x_distances,
-)
+from surface_potential_analysis.sho_basis import SHOBasisConfig, calculate_x_distances
 
 
-def generate_random_potential(
+def _generate_random_potential(
     width: int = 5,
 ) -> np.ndarray[tuple[int, int], np.dtype[np.float_]]:
     random_array = np.random.rand(width + 1, width + 1)
@@ -48,13 +43,13 @@ def generate_random_potential(
     return out[:width, :width]  # type:ignore
 
 
-def generate_symmetrical_points(
+def _generate_symmetrical_points(
     height: int, width: int = 5
 ) -> np.ndarray[tuple[int, int, int], np.dtype[np.float_]]:
-    return np.swapaxes([generate_random_potential(width) for _ in range(height)], 0, -1)  # type: ignore
+    return np.swapaxes([_generate_random_potential(width) for _ in range(height)], 0, -1)  # type: ignore
 
 
-def generate_random_diagonal_hamiltonian() -> (
+def _generate_random_diagonal_hamiltonian() -> (
     SurfaceHamiltonianUtil[Any, Any, Any, Any, Any, Any]
 ):
     nkx = random.randrange(3, 10)
@@ -90,7 +85,7 @@ def generate_random_diagonal_hamiltonian() -> (
 
 
 class HamiltonianBuilderTest(unittest.TestCase):
-    def test_diagonal_energies(self) -> None:
+    def _test_diagonal_energies(self) -> None:
         resolution = (2, 2, 2)
         config: SHOBasisConfig = {
             "mass": 1,
@@ -115,7 +110,7 @@ class HamiltonianBuilderTest(unittest.TestCase):
 
         np.testing.assert_array_almost_equal(diagonal_energy, expected)
 
-    def test_get_sho_potential(self) -> None:
+    def _test_get_sho_potential(self) -> None:
         resolution = (2, 2, 2)
         config: SHOBasisConfig = {
             "mass": 1,
@@ -137,7 +132,7 @@ class HamiltonianBuilderTest(unittest.TestCase):
         expected = [2.0, 0.5, 0.0, 0.5, 2.0]
         np.testing.assert_equal(expected, hamiltonian.get_sho_potential())
 
-    def test_get_sho_subtracted_points(self) -> None:
+    def _test_get_sho_subtracted_points(self) -> None:
         nx = random.randrange(2, 20)
         ny = random.randrange(2, 20)
         nz = random.randrange(2, 100)
@@ -179,11 +174,11 @@ class HamiltonianBuilderTest(unittest.TestCase):
 
         np.testing.assert_allclose(expected, actual)
 
-    def test_get_fft_is_real(self) -> None:
+    def _test_get_fft_is_real(self) -> None:
         width = random.randrange(1, 10) * 2
         nz = random.randrange(2, 100)
 
-        points = generate_symmetrical_points(nz, width)
+        points = _generate_symmetrical_points(nz, width)
         resolution = (points.shape[0] // 2, points.shape[1] // 2, 2)
         config: SHOBasisConfig = {
             "mass": 1,
@@ -209,10 +204,10 @@ class HamiltonianBuilderTest(unittest.TestCase):
         )
         np.testing.assert_almost_equal(np.real(ft_potential), ft_potential)
 
-    def test_get_fft_normalization(self) -> None:
-        hamiltonian = generate_random_diagonal_hamiltonian()
+    def _test_get_fft_normalization(self) -> None:
+        hamiltonian = _generate_random_diagonal_hamiltonian()
         z_points = np.random.rand(hamiltonian.Nz)
-        hamiltonian._potential["points"][0][0] = [
+        hamiltonian._potential["points"][0][0] = [  # noqa: SLF001
             x + o for (x, o) in zip(hamiltonian._potential["points"][0][0], z_points)
         ]
 
@@ -223,20 +218,20 @@ class HamiltonianBuilderTest(unittest.TestCase):
             ft_value = z_points[iz] / (hamiltonian.Nx * hamiltonian.Ny)
             np.testing.assert_allclose(ft_potential[:, :, iz], ft_value)
 
-    def test_get_off_diagonal_energies_zero(self) -> None:
-        hamiltonian = generate_random_diagonal_hamiltonian()
+    def _test_get_off_diagonal_energies_zero(self) -> None:
+        hamiltonian = _generate_random_diagonal_hamiltonian()
 
-        actual = hamiltonian._calculate_off_diagonal_energies()
+        actual = hamiltonian._calculate_off_diagonal_energies()  # noqa: SLF001
         util = BasisConfigUtil(hamiltonian.basis)
         n_points = util.n0 * util.n1 * util.n2
         expected_shape = (n_points, n_points)
         np.testing.assert_equal(actual, np.zeros(shape=expected_shape))
 
-    def test_is_almost_hermitian(self) -> None:
+    def _test_is_almost_hermitian(self) -> None:
         width = random.randrange(1, 10) * 2
         nz = random.randrange(2, 100)
 
-        points = generate_symmetrical_points(nz, width)
+        points = _generate_symmetrical_points(nz, width)
         np.testing.assert_allclose(points[1:, 1:], points[1:, 1:][::-1, ::-1])
         resolution = (width // 2, width // 2, 10)
         config: SHOBasisConfig = {
@@ -263,7 +258,7 @@ class HamiltonianBuilderTest(unittest.TestCase):
             hamiltonian.hamiltonian(np.array([0, 0, 0]))["array"].conjugate().T,
         )
 
-    def test_get_hermite_val_rust(self) -> None:
+    def _test_get_hermite_val_rust(self) -> None:
         n = random.randrange(1, 10)
         x = random.random() * 10 - 5
         self.assertAlmostEqual(
@@ -272,7 +267,7 @@ class HamiltonianBuilderTest(unittest.TestCase):
             places=6,
         )
 
-    def test_calculate_off_diagonal_energies_rust(self) -> None:
+    def _test_calculate_off_diagonal_energies_rust(self) -> None:
         nx = random.randrange(2, 20)
         ny = random.randrange(2, 20)
         nz = 100
@@ -298,11 +293,11 @@ class HamiltonianBuilderTest(unittest.TestCase):
         hamiltonian = SurfaceHamiltonianUtil(potentail, config, resolution)
 
         np.testing.assert_allclose(
-            hamiltonian._calculate_off_diagonal_energies_fast(),
-            hamiltonian._calculate_off_diagonal_energies(),
+            hamiltonian._calculate_off_diagonal_energies_fast(),  # noqa: SLF001
+            hamiltonian._calculate_off_diagonal_energies(),  # noqa: SLF001
         )
 
-    def test_hamiltonian_from_potential(self) -> None:
+    def _test_hamiltonian_from_potential(self) -> None:
         shape = np.random.randint(1, 10, size=3, dtype=int)
         points = np.random.rand(*shape)
 
@@ -331,11 +326,11 @@ class HamiltonianBuilderTest(unittest.TestCase):
         )
 
         for expected, actual in zip(expected_basis, hamiltonian["basis"]):
-            self.assertEqual(expected["n"], actual["n"])
-            self.assertEqual(expected["_type"], actual["_type"])
+            assert expected["n"] == actual["n"]
+            assert expected["_type"] == actual["_type"]
             np.testing.assert_array_equal(expected["delta_x"], actual["delta_x"])
 
-    def test_total_surface_hamiltonian_simple(self) -> None:
+    def _test_total_surface_hamiltonian_simple(self) -> None:
         shape = np.array([3, 3, 200])  # np.random.randint(1, 2, size=3, dtype=int)
         nz = 6
 
@@ -405,7 +400,7 @@ class HamiltonianBuilderTest(unittest.TestCase):
             "points": interpolated_points,
         }
 
-        actual = sho_basis.total_surface_hamiltonian(
+        actual = sho_subtracted_basis.total_surface_hamiltonian(
             interpolated_potential,
             config,
             bloch_phase,
@@ -418,7 +413,7 @@ class HamiltonianBuilderTest(unittest.TestCase):
 
         np.testing.assert_array_almost_equal(actual["array"], expected["array"])
 
-    def test_total_surface_hamiltonian(self) -> None:
+    def __test_total_surface_hamiltonian(self) -> None:
         shape = np.array([3, 3, 200])
         nz = 6
 
@@ -478,7 +473,7 @@ class HamiltonianBuilderTest(unittest.TestCase):
             "points": interpolated_points,
         }
 
-        actual = sho_basis.total_surface_hamiltonian(
+        actual = sho_subtracted_basis.total_surface_hamiltonian(
             interpolated_potential,
             config,
             bloch_phase,

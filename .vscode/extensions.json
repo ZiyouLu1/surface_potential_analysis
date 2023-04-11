@@ -3,6 +3,8 @@
     "donjayamanne.python-extension-pack",
     "esbenp.prettier-vscode",
     "streetsidesoftware.code-spell-checker",
-    "tamasfe.even-better-toml"
+    "tamasfe.even-better-toml",
+    "matangover.mypy",
+    "charliermarsh.ruff"
   ]
 }

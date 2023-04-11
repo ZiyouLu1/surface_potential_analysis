@@ -5,7 +5,7 @@ description = ""
 authors = ["Matthew Ord <mo433@cam.ac.uk>"]
 readme = "README.md"
 packages = [
-    { include = "main", from = "src/main" },
+    { include = "_main", from = "src/main" },
     { include = "copper_100", from = "src/copper_100" },
     { include = "copper_111", from = "src/copper_111" },
     { include = "nickel_111", from = "src/nickel_111" },
@@ -14,7 +14,7 @@ packages = [
 ]
 
 [tool.poetry.scripts]
-main = 'main.main:main'
+main = '_main.main:main'
 
 [tool.poetry.dependencies]
 python = ">=3.11,<3.12"
@@ -39,6 +39,13 @@ ignore_missing_imports = true
 [[tool.mypy.overrides]]
 module = "scipy.*"
 ignore_missing_imports = true
+
+[tool.ruff]
+select = ["ALL"]
+ignore = ["COM812", "E501", "ANN101", "S101"]
+
+[tool.ruff.pydocstyle]
+convention = "numpy"
 
 [build-system]
 requires = ["poetry-core"]

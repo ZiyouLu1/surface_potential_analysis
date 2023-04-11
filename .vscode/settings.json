@@ -2,15 +2,15 @@
   "python.analysis.typeCheckingMode": "off",
   "python.analysis.diagnosticMode": "openFilesOnly",
   "python.linting.mypyEnabled": false,
-  "python.linting.flake8Enabled": true,
+  // "python.linting.flake8Enabled": true,
   "python.formatting.provider": "black",
-  "isort.args": [
-    "--profile",
-    "black"
-  ],
-  "isort.check": true,
+  // "isort.args": [
+  //   "--profile",
+  //   "black"
+  // ],
+  // "isort.check": true,
   "editor.codeActionsOnSave": {
-    "source.organizeImports": true,
+    // "source.organizeImports": true,
     "source.fixAll": true
   },
   "editor.formatOnSave": true,
@@ -64,17 +64,17 @@
     "ylim",
     "yscale"
   ],
-  "python.linting.mypyArgs": [
-    "--follow-imports=error",
-    "--ignore-missing-imports",
-    "--show-column-numbers",
-    "--no-pretty",
-    "--check-untyped-defs",
-    "--strict"
-  ],
-  "python.linting.flake8Args": [
-    "--ignore=E501,W503,E203,E301,E302"
-  ],
+  // "python.linting.mypyArgs": [
+  //   "--follow-imports=error",
+  //   "--ignore-missing-imports",
+  //   "--show-column-numbers",
+  //   "--no-pretty",
+  //   "--check-untyped-defs",
+  //   "--strict"
+  // ],
+  // "python.linting.flake8Args": [
+  //   "--ignore=E501,W503,E203,E301,E302"
+  // ],
   "python.testing.unittestArgs": [
     "-v",
     "-s",

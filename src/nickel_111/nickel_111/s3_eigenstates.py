@@ -52,9 +52,9 @@ def generate_eigenstates_data() -> None:
     kz_points = np.zeros_like(kx_points)
     bloch_phases = np.array([kx_points, ky_points, kz_points]).T
 
-    _generate_eigenstate_collection_sho(bloch_phases, (10, 10, 5))
+    # _generate_eigenstate_collection_sho(bloch_phases, (10, 10, 5))
 
-    _generate_eigenstate_collection_sho(bloch_phases, (23, 23, 10))
+    # _generate_eigenstate_collection_sho(bloch_phases, (23, 23, 10))
 
     # _generate_eigenstate_collection_sho(bloch_phases, (23, 23, 12))
 

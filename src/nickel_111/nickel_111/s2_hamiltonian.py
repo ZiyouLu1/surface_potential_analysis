@@ -9,7 +9,7 @@ from surface_potential_analysis.basis import (
     TruncatedBasis,
 )
 from surface_potential_analysis.hamiltonian import HamiltonianWithBasis
-from surface_potential_analysis.hamiltonian_builder import sho_basis
+from surface_potential_analysis.hamiltonian_builder import sho_subtracted_basis
 from surface_potential_analysis.sho_basis import SHOBasisConfig
 from surface_potential_analysis.util import timed
 
@@ -39,7 +39,7 @@ def generate_hamiltonian_sho(
         "mass": 1.6735575e-27,
         "x_origin": np.array([0, 0, -1.0000000000000004e-10]),
     }
-    return sho_basis.total_surface_hamiltonian(
+    return sho_subtracted_basis.total_surface_hamiltonian(
         potential, config, bloch_phase, resolution
     )
 

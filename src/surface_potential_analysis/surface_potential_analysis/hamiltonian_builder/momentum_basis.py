@@ -1,19 +1,16 @@
+"""Tools for generating a surface hamiltonian in the momentum basis."""
+
+
 from typing import Any, Literal, TypeVar
 
 import numpy as np
 from scipy.constants import hbar
 
-from surface_potential_analysis.basis_config import (
-    BasisConfigUtil,
-    MomentumBasisConfig,
-    MomentumBasisConfigUtil,
-)
+from surface_potential_analysis.basis_config import BasisConfigUtil, MomentumBasisConfig
 from surface_potential_analysis.hamiltonian import (
     MomentumBasisHamiltonian,
-    MomentumBasisStackedHamiltonian,
     PositionBasisStackedHamiltonian,
     add_hamiltonian,
-    add_hamiltonian_stacked,
     convert_stacked_hamiltonian_to_momentum_basis,
     flatten_hamiltonian,
 )
@@ -35,9 +32,7 @@ def _diag_along_axis(
 def hamiltonian_from_potential(
     potential: Potential[_L0, _L1, _L2],
 ) -> PositionBasisStackedHamiltonian[_L0, _L1, _L2]:
-    """
-    Given a potential in position basis [ix0, ix1, ix2],
-    get the hamiltonian in stacked form.
+    """Given a potential in position basis [ix0, ix1, ix2], get the hamiltonian in stacked form.
 
     This is just a matrix with the potential along the diagonals
 
@@ -46,12 +41,11 @@ def hamiltonian_from_potential(
     potential : NDArray
         The potential in position basis [ix0, ix1, ix2]
 
-    Returns
+    Returns:
     -------
     HamiltonianStacked[PositionBasis, PositionBasis, PositionBasis]
         The hamiltonian in stacked form
     """
-
     hamiltonian = _diag_along_axis(
         _diag_along_axis(_diag_along_axis(potential["points"], axis=2), axis=1),
         axis=0,

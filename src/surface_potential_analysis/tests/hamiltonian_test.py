@@ -1,5 +1,5 @@
 import unittest
-from typing import Any, Literal
+from typing import TYPE_CHECKING, Any, Literal
 
 import numpy as np
 
@@ -11,6 +11,9 @@ from surface_potential_analysis.hamiltonian import (
     stack_hamiltonian,
     truncate_hamiltonian_basis,
 )
+
+if TYPE_CHECKING:
+    from surface_potential_analysis.basis import Basis, MomentumBasis
 
 
 class HamiltonianTest(unittest.TestCase):

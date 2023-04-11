@@ -4,10 +4,10 @@ version = "0.0.1"
 description = ""
 authors = ["Matthew Ord <mo433@cam.ac.uk>"]
 readme = "README.md"
-packages = [{ include = "main" }]
+packages = [{ include = "_main" }]
 
 [tool.poetry.scripts]
-main = 'main.main:main'
+main = '_main.main:main'
 
 [tool.poetry.dependencies]
 python = ">=3.11,<3.12"

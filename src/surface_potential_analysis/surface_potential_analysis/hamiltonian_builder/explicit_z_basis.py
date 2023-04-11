@@ -1,10 +1,10 @@
 from functools import cache, cached_property
 from typing import Generic, Literal, TypeVar
 
+import hamiltonian_generator
 import numpy as np
 from scipy.constants import hbar
 
-import hamiltonian_generator
 from surface_potential_analysis.basis import (
     BasisUtil,
     ExplicitBasis,
@@ -15,11 +15,6 @@ from surface_potential_analysis.basis import (
 from surface_potential_analysis.basis_config import BasisConfig, BasisConfigUtil
 from surface_potential_analysis.hamiltonian import HamiltonianWithBasis
 from surface_potential_analysis.potential import Potential
-from surface_potential_analysis.sho_basis import (
-    SHOBasisConfig,
-    calculate_x_distances,
-    infinate_sho_basis_from_config,
-)
 
 _L0 = TypeVar("_L0", bound=int)
 _L1 = TypeVar("_L1", bound=int)
@@ -29,22 +24,26 @@ _L4 = TypeVar("_L4", bound=int)
 _L5 = TypeVar("_L5", bound=int)
 
 
-class SurfaceHamiltonianUtil(Generic[_L0, _L1, _L2, _L3, _L4, _L5]):
+class _SurfaceHamiltonianUtil(Generic[_L0, _L1, _L2, _L3, _L4, _L5]):
     _potential: Potential[_L0, _L1, _L2]
 
-    _config: SHOBasisConfig
-
-    _resolution: tuple[_L3, _L4, _L5]
+    _basis: BasisConfig[
+        TruncatedBasis[_L3, MomentumBasis[_L0]],
+        TruncatedBasis[_L4, MomentumBasis[_L1]],
+        ExplicitBasis[_L5, MomentumBasis[_L2]],
+    ]
 
     def __init__(
         self,
         potential: Potential[_L0, _L1, _L2],
-        config: SHOBasisConfig,
-        resolution: tuple[_L3, _L4, _L5],
+        basis: BasisConfig[
+            TruncatedBasis[_L3, MomentumBasis[_L0]],
+            TruncatedBasis[_L4, MomentumBasis[_L1]],
+            ExplicitBasis[_L5, MomentumBasis[_L2]],
+        ],
     ) -> None:
         self._potential = potential
-        self._config = config
-        self._resolution = resolution
+        self._basis = basis
         # self._potential_offset = potential_offset
         if 2 * (self._resolution[0] - 1) > self._potential["basis"][0]["n"]:
             print(self._resolution[0], self._potential["basis"][0]["n"])
@@ -63,10 +62,6 @@ class SurfaceHamiltonianUtil(Generic[_L0, _L1, _L2, _L3, _L4, _L5]):
         return self._potential["points"]
 
     @property
-    def z_offset(self) -> float:
-        return self._config["x_origin"][2]  # type:ignore
-
-    @property
     def Nx(self) -> int:
         return self.points.shape[0]  # type:ignore
 
@@ -83,56 +78,12 @@ class SurfaceHamiltonianUtil(Generic[_L0, _L1, _L2, _L3, _L4, _L5]):
         util = BasisUtil(self._potential["basis"][2])
         return np.linalg.norm(util.fundamental_dx)  # type:ignore
 
-    @property
-    def z_distances(self) -> np.ndarray[tuple[int], np.dtype[np.float_]]:
-        return calculate_x_distances(
-            self._potential["basis"][2], self._config["x_origin"]
-        )
-
-    @property
-    def basis(
-        self,
-    ) -> BasisConfig[
-        TruncatedBasis[_L3, MomentumBasis[_L0]],
-        TruncatedBasis[_L4, MomentumBasis[_L1]],
-        ExplicitBasis[_L5, PositionBasis[_L2]],
-    ]:
-        return (
-            {
-                "_type": "truncated",
-                "n": self._resolution[0],
-                "parent": {
-                    "_type": "momentum",
-                    "delta_x": self._potential["basis"][0]["delta_x"],
-                    "n": self._potential["basis"][0]["n"],
-                },
-            },
-            {
-                "_type": "truncated",
-                "n": self._resolution[1],
-                "parent": {
-                    "_type": "momentum",
-                    "delta_x": self._potential["basis"][1]["delta_x"],
-                    "n": self._potential["basis"][1]["n"],
-                },
-            },
-            infinate_sho_basis_from_config(
-                {
-                    "_type": "position",
-                    "delta_x": self._potential["basis"][2]["delta_x"],
-                    "n": self._potential["basis"][2]["n"],
-                },
-                self._config,
-                self._resolution[2],
-            ),
-        )
-
     def hamiltonian(
         self, bloch_phase: np.ndarray[tuple[Literal[3]], np.dtype[np.float_]]
     ) -> HamiltonianWithBasis[
         TruncatedBasis[_L3, MomentumBasis[_L0]],
         TruncatedBasis[_L4, MomentumBasis[_L1]],
-        ExplicitBasis[_L5, PositionBasis[_L2]],
+        ExplicitBasis[_L5, MomentumBasis[_L2]],
     ]:
         diagonal_energies = np.diag(self._calculate_diagonal_energy(bloch_phase))
         other_energies = self._calculate_off_diagonal_energies_fast()
@@ -142,18 +93,18 @@ class SurfaceHamiltonianUtil(Generic[_L0, _L1, _L2, _L3, _L4, _L5]):
         if False and not np.allclose(energies, energies.conjugate().T):
             raise AssertionError("Hamiltonian is not hermitian")
 
-        return {"array": energies, "basis": self.basis}
+        return {"array": energies, "basis": self._basis}
 
     @cached_property
     def eigenstate_indexes(
         self,
     ) -> np.ndarray[tuple[Literal[3], int], np.dtype[np.int_]]:
-        util = BasisConfigUtil(self.basis)
+        util = BasisConfigUtil(self._basis)
 
         x0t, x1t, zt = np.meshgrid(
             util.x0_basis.nk_points,  # type: ignore
             util.x1_basis.nk_points,  # type: ignore
-            util.x2_basis.nx_points,  # type: ignore
+            util.x2_basis.nk_points,  # type: ignore
             indexing="ij",
         )
         return np.array([x0t.ravel(), x1t.ravel(), zt.ravel()])  # type: ignore
@@ -254,13 +205,16 @@ class SurfaceHamiltonianUtil(Generic[_L0, _L1, _L2, _L3, _L4, _L5]):
 
 def total_surface_hamiltonian(
     potential: Potential[_L0, _L1, _L2],
-    config: SHOBasisConfig,
     bloch_phase: np.ndarray[tuple[Literal[3]], np.dtype[np.float_]],
-    resolution: tuple[_L3, _L4, _L5],
+    basis: BasisConfig[
+        TruncatedBasis[_L3, MomentumBasis[_L0]],
+        TruncatedBasis[_L4, MomentumBasis[_L1]],
+        ExplicitBasis[_L5, MomentumBasis[_L2]],
+    ],
 ) -> HamiltonianWithBasis[
     TruncatedBasis[_L3, MomentumBasis[_L0]],
     TruncatedBasis[_L4, MomentumBasis[_L1]],
-    ExplicitBasis[_L5, PositionBasis[_L2]],
+    ExplicitBasis[_L5, MomentumBasis[_L2]],
 ]:
-    util = SurfaceHamiltonianUtil(potential, config, resolution)
+    util = _SurfaceHamiltonianUtil(potential, basis)
     return util.hamiltonian(bloch_phase)
