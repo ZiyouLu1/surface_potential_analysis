@@ -97,11 +97,9 @@ def total_surface_hamiltonian(
     bloch_phase: np.ndarray[tuple[Literal[3]], np.dtype[np.float_]],
 ) -> MomentumBasisHamiltonian[_L0, _L1, _L2]:
     potential_hamiltonian = hamiltonian_from_potential(potential)
-    print(potential)
     potential_in_momentum = flatten_hamiltonian(
         convert_stacked_hamiltonian_to_momentum_basis(potential_hamiltonian)
     )
 
     kinetic = hamiltonian_from_mass(potential_in_momentum["basis"], mass, bloch_phase)
-    print(kinetic)
     return add_hamiltonian(potential_in_momentum, kinetic)

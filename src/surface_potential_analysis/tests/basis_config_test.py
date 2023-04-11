@@ -154,7 +154,9 @@ class TestBasisConfig(unittest.TestCase):
 
         for i in (0, 1, 2):
             rotated = util.get_rotated_basis(i)  # type:ignore
-            np.testing.assert_array_almost_equal(rotated[i]["delta_x"], [0, 0, 1])
+            np.testing.assert_array_almost_equal(
+                rotated[i]["delta_x"], [0, 0, np.linalg.norm(delta_x[i])]
+            )
             for j in (0, 1, 2):
                 np.testing.assert_almost_equal(
                     np.linalg.norm(rotated[j]["delta_x"]),
@@ -287,7 +289,7 @@ class TestBasisConfig(unittest.TestCase):
         basis = MomentumBasisConfigUtil.from_resolution((3, 3, 3), dx)
         util = MomentumBasisConfigUtil(basis)
 
-        actual = util.fundamental_k_points
+        actual = util.fundamental_nk_points
         # fmt: off
         expected_x = np.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0])
         expected_y = np.array([0.0, 0.0, 0.0, 1.0, 1.0, 1.0, -1.0, -1.0, -1.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, -1.0, -1.0, -1.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, -1.0, -1.0, -1.0])
@@ -305,14 +307,19 @@ class TestBasisConfig(unittest.TestCase):
         )
         basis = MomentumBasisConfigUtil.from_resolution((3, 3, 3), delta_x)
         util = MomentumBasisConfigUtil(basis)
-        actual = util.fundamental_k_points
-
-        # fmt: off
-        expected_x = np.array([0.0, 0.0, 0.0, 3.0, 3.0, 3.0, -3.0, -3.0, -3.0, 0.0, 0.0, 0.0, 3.0, 3.0, 3.0, -3.0, -3.0, -3.0, 0.0, 0.0, 0.0, 3.0, 3.0, 3.0, -3.0, -3.0, -3.0])
-        expected_y = np.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0])
-        expected_z = np.array([0.0, 5.0, -5.0, 0.0, 5.0, -5.0, 0.0, 5.0, -5.0, 0.0, 5.0, -5.0, 0.0, 5.0, -5.0, 0.0, 5.0, -5.0, 0.0, 5.0, -5.0, 0.0, 5.0, -5.0, 0.0, 5.0, -5.0])
-        # fmt: on
+        actual = util.fundamental_nk_points
 
         np.testing.assert_array_equal(expected_x, actual[0])
         np.testing.assert_array_equal(expected_y, actual[1])
         np.testing.assert_array_equal(expected_z, actual[2])
+
+        actual_k = util.fundamental_k_points
+        expected_kx = 2 * np.pi * expected_y / 3.0
+        expected_ky = 2 * np.pi * expected_x / 1.0
+        expected_kz = 2 * np.pi * expected_z / 5.0
+
+        print(util.dk0 / (2 * np.pi), util.dk1 / (2 * np.pi), util.dk2 / (2 * np.pi))
+
+        np.testing.assert_array_almost_equal(expected_kx, actual_k[0])
+        np.testing.assert_array_almost_equal(expected_ky, actual_k[1])
+        np.testing.assert_array_almost_equal(expected_kz, actual_k[2])

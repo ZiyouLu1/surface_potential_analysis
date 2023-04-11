@@ -116,7 +116,7 @@ class HamiltonianTest(unittest.TestCase):
         np.testing.assert_array_equal(expected_shape, truncated["array"].shape)
 
     def test_convert_explicit_basis_x2_diagonal(self) -> None:
-        shape = np.random.randint(1, 10, size=3)
+        shape = np.random.randint(2, 10, size=3)
         nz: int = np.random.randint(1, shape[2])  # type: ignore
 
         points = np.random.rand(*shape, *shape)

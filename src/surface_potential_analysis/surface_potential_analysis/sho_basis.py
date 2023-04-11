@@ -127,5 +127,5 @@ def infinate_sho_basis_from_config(
         ]
     )
     util = BasisUtil(parent)
-    normalized = vectors * np.linalg.norm(util.fundamental_dx)
+    normalized = vectors * np.sqrt(np.linalg.norm(util.fundamental_dx))
     return {"_type": "explicit", "parent": parent, "vectors": normalized}

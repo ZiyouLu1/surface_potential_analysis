@@ -1,6 +1,7 @@
+from typing import TypeVar
+
 import numpy as np
 from matplotlib import pyplot as plt
-from numpy.typing import ArrayLike, NDArray
 from scipy.constants import (
     Boltzmann,
     electron_mass,
@@ -15,14 +16,20 @@ bohr_radius = physical_constants["Bohr radius"][0]
 fermi_wavevector_nickel = 1.77e10
 fermi_energy_nickel = (hbar * fermi_wavevector_nickel) ** 2 / (2 * electron_mass)
 
+_L0Inv = TypeVar("_L0Inv", bound=int)
 
-def electron_occupation(energies: ArrayLike, T: float):
+
+def electron_occupation(
+    energies: np.ndarray[tuple[_L0Inv], np.dtype[np.float_]], T: float
+) -> np.ndarray[tuple[_L0Inv], np.dtype[np.float_]]:
     kt = Boltzmann * T
     e = np.array(energies)
-    return 1 / (1 + np.exp((e - fermi_energy_nickel) / kt))
+    return 1 / (1 + np.exp((e - fermi_energy_nickel) / kt))  # type: ignore
 
 
-def overlap_potential(dk_points: ArrayLike) -> NDArray:
+def overlap_potential(
+    dk_points: np.ndarray[tuple[_L0Inv], np.dtype[np.float_]]
+) -> np.ndarray[tuple[_L0Inv], np.dtype[np.float_]]:
     """
     _summary_
 
@@ -44,11 +51,10 @@ def overlap_potential(dk_points: ArrayLike) -> NDArray:
 
     prefactor = elementary_charge**2 / (epsilon_0 * q_points**2)
     aa = 1 / (1 + (q_points / alpha) ** 2) ** 2
-    return prefactor * (aa - 1)
+    return prefactor * (aa - 1)  # type: ignore
 
 
-def plot_electron_occupation():
-
+def plot_electron_occupation() -> None:
     energies = np.linspace(fermi_energy_nickel * 0.99, fermi_energy_nickel * 1.01, 1000)
     fig, ax = plt.subplots()
     ax.plot(energies, electron_occupation(energies, 100))

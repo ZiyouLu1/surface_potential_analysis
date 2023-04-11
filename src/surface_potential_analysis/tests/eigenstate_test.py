@@ -3,6 +3,7 @@ from typing import Any
 
 import hamiltonian_generator
 import numpy as np
+from scipy.constants import hbar
 
 from surface_potential_analysis.basis import (
     ExplicitBasis,
@@ -39,6 +40,8 @@ def get_random_sho_eigenstate(
     TruncatedBasis[Any, MomentumBasis[Any]],
     ExplicitBasis[int, Any],
 ]:
+    vector = np.array(np.random.rand(np.prod(resolution)), dtype=complex)
+    vector /= np.linalg.norm(vector)
     return {
         "basis": (
             {
@@ -63,13 +66,13 @@ def get_random_sho_eigenstate(
                 "_type": "explicit",
                 "parent": {
                     "_type": "position",
-                    "delta_x": np.array([0, 0, 1]),
+                    "delta_x": np.array([0, 0, 20]),
                     "n": fundamental_resolution[2],
                 },
                 "vectors": np.zeros((resolution[2], fundamental_resolution[2])),
             },
         ),
-        "vector": np.array(np.random.rand(np.prod(resolution)), dtype=complex),
+        "vector": vector,
     }
 
 
@@ -159,9 +162,9 @@ class EigenstateTest(unittest.TestCase):
         resolution = (5, 6, 9)
         eigenstate = get_random_sho_eigenstate(resolution, (10, 10, 100))
         config: SHOBasisConfig = {
-            "mass": 1,
-            "sho_omega": 1,
-            "x_origin": np.array([0, 0, 0]),
+            "mass": hbar**2,
+            "sho_omega": 1 / hbar,
+            "x_origin": np.array([0, 0, -10]),
         }
 
         eigenstate["basis"] = (
@@ -179,6 +182,8 @@ class EigenstateTest(unittest.TestCase):
             vector[np.ravel_multi_index((0, 0, i), resolution)] = 1
             eigenstate["vector"] = vector
 
+            points = util.fundamental_x_points + config["x_origin"][:, np.newaxis]
+
             actual = hamiltonian_generator.get_eigenstate_wavefunction(
                 resolution,
                 (util.delta_x0.item(0), 0),
@@ -188,20 +193,21 @@ class EigenstateTest(unittest.TestCase):
                 0,
                 0,
                 eigenstate["vector"].tolist(),
-                util.fundamental_x_points.T.tolist(),
+                points.T.tolist(),
             )
 
             expected = convert_sho_eigenstate_to_position_basis(eigenstate)
-
-            np.testing.assert_allclose(expected["vector"], actual)
+            np.testing.assert_allclose(
+                expected["vector"], np.array(actual) / np.linalg.norm(actual)
+            )
 
     def test_convert_sho_eigenstate_rust(self) -> None:
         resolution = (5, 6, 9)
         eigenstate = get_random_sho_eigenstate(resolution, (10, 10, 100))
         config: SHOBasisConfig = {
-            "mass": 1,
-            "sho_omega": 1,
-            "x_origin": np.array([0, 0, 0]),
+            "mass": hbar**2,
+            "sho_omega": 1 / hbar,
+            "x_origin": np.array([0, 0, -10]),
         }
 
         eigenstate["basis"] = (
@@ -214,6 +220,7 @@ class EigenstateTest(unittest.TestCase):
 
         util = BasisConfigUtil(eigenstate["basis"])
 
+        points = util.fundamental_x_points + config["x_origin"][:, np.newaxis]
         actual = hamiltonian_generator.get_eigenstate_wavefunction(
             resolution,
             (util.delta_x0.item(0), 0),
@@ -223,9 +230,10 @@ class EigenstateTest(unittest.TestCase):
             0,
             0,
             eigenstate["vector"].tolist(),
-            util.fundamental_x_points.T.tolist(),
+            points.T.tolist(),
         )
 
         expected = convert_sho_eigenstate_to_position_basis(eigenstate)
-
-        np.testing.assert_allclose(expected["vector"], actual)
+        np.testing.assert_allclose(
+            expected["vector"], np.array(actual) / np.linalg.norm(actual)
+        )
