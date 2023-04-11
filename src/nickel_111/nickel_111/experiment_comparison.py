@@ -1,5 +1,5 @@
 import json
-from typing import TypedDict
+from typing import Literal, TypedDict
 
 import numpy as np
 import scipy.optimize
@@ -23,7 +23,7 @@ def tunnelling_rate_constant():
     a = (hbar / elementary_charge**2) ** 2
     b = hbar * epsilon_0**2 / electron_mass**2
     c = np.sqrt(np.pi) * 32
-    return 3 * a * b * c
+    return a * b * c
 
 
 def tunnelling_rate_nickel_prefactor(variables: TunnellRateVariables):
@@ -41,9 +41,9 @@ def tunnelling_rate_nickel(
     prefactor = tunnelling_rate_nickel_prefactor(variables)
     omega = variables["hcp_energy"]
     beta = 1 / (temperatures * Boltzmann)
-    temperature_dependance = np.exp(beta * omega / 2) / beta
+    temperature_dependance = 2 * np.cosh(beta * omega / 2) / beta
     # 4 * print(temperature_dependance, prefactor, prefactor * temperature_dependance)
-    return 2 * prefactor * temperature_dependance
+    return 3 * prefactor * temperature_dependance
 
 
 class ExperimentData(TypedDict):
@@ -70,12 +70,11 @@ nickel_rate_variables: TunnellRateVariables = {
     "hcp_energy": 2.03e-21,  # 2.708825773687628e-21,
     "overlap": 0.0044,  # 4.1e-3,
 }
-print(nickel_rate_variables)
 
 
-def get_experimental_subtracted_rate() -> ExperimentData:
+def get_experimental_subtracted_rate(factor=1) -> ExperimentData:
     data = load_experiment_data()
-    theoretical_rates = tunnelling_rate_nickel(
+    theoretical_rates = factor * tunnelling_rate_nickel(
         data["temperature"], nickel_rate_variables
     )
     return {
@@ -86,8 +85,8 @@ def get_experimental_subtracted_rate() -> ExperimentData:
     }
 
 
-def get_experimental_baseline_rates():
-    subtracted = get_experimental_subtracted_rate()
+def get_experimental_baseline_rates(factor=1):
+    subtracted = get_experimental_subtracted_rate(factor=factor)
     temperatures = subtracted["temperature"]
     rate = subtracted["rate"]
 
@@ -110,8 +109,20 @@ def plot_tunnelling_rate_theory(
 
     temperatures = np.linspace(100, 300)
     rates = tunnelling_rate_nickel(temperatures, nickel_rate_variables)
-    print(rates)
     rates += get_experimental_baseline_rates()(temperatures)
+
+    (line,) = ax.plot(temperatures, rates)
+    return fig, ax, line
+
+
+def plot_tunnelling_rate_theory_double(
+    ax: Axes | None = None,
+) -> tuple[Figure, Axes, Line2D]:
+    fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
+
+    temperatures = np.linspace(100, 160)
+    rates = 3 * tunnelling_rate_nickel(temperatures, nickel_rate_variables)
+    rates += get_experimental_baseline_rates(factor=3)(temperatures)
 
     (line,) = ax.plot(temperatures, rates)
     return fig, ax, line
@@ -142,3 +153,20 @@ def plot_tunnelling_rate_jianding(
         yerr=[data["rate"] - data["lower_error"], data["upper_error"] - data["rate"]],
     )
     return fig, ax, container
+
+
+def tunnelling_rate_nickel_constants(
+    temperatures: np.ndarray[tuple[int], np.dtype[np.float_]],
+    variables: TunnellRateVariables,
+) -> np.ndarray[tuple[Literal[2], int], np.dtype[np.float_]]:
+    prefactor = tunnelling_rate_nickel_prefactor(variables)
+    omega = variables["hcp_energy"]
+    beta = 1 / (temperatures * Boltzmann)
+    # 4 * print(temperature_dependance, prefactor, prefactor * temperature_dependance)
+    return (prefactor / beta) * np.array(
+        [np.exp(beta * omega / 2), np.exp(-beta * omega / 2)]
+    )
+
+
+def calculate_rate_150K():
+    print(tunnelling_rate_nickel_constants(np.array([150]), nickel_rate_variables))
