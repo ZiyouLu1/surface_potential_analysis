@@ -79,7 +79,7 @@ def generate_sho_basis(
         "mass": 1.6735575e-27,
         "x_origin": np.array([0, 0, -1.0000000000000004e-10]),
     }
-    parent = get_interpolated_nickel_potential((1, 1, 100))["basis"][2]
+    parent = get_interpolated_nickel_potential((1, 1, 1000))["basis"][2]
     return (
         infinate_sho_basis_from_config(parent, config, n),
         explicit_momentum_basis_in_position(sho_basis_from_config(parent, config, n)),

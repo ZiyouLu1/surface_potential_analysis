@@ -15,7 +15,6 @@ def _normalize_sho_basis(
             np.abs(basis["vectors"][:, : basis["vectors"].shape[1] // 2]), axis=1
         ),
     ]
-    print(turning_point, np.angle(turning_point))
 
     normalized = np.exp(-1j * np.angle(turning_point))[:, np.newaxis] * basis["vectors"]
     return {"_type": "explicit", "parent": basis["parent"], "vectors": normalized}
