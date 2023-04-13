@@ -1,18 +1,20 @@
-from typing import Any, Literal
+from typing import TYPE_CHECKING, Any, Literal
 
 import numpy as np
-
-from nickel_111.s1_potential import get_interpolated_nickel_potential
 from surface_potential_analysis.basis_config import BasisConfigUtil
 from surface_potential_analysis.eigenstate.eigenstate_collection import (
     EigenstateColllection,
     calculate_eigenstate_collection,
     save_eigenstate_collection,
 )
-from surface_potential_analysis.hamiltonian import Hamiltonian
+
+from nickel_111.s1_potential import get_interpolated_nickel_potential
 
 from .s2_hamiltonian import generate_hamiltonian_sho
 from .surface_data import get_data_path
+
+if TYPE_CHECKING:
+    from surface_potential_analysis.hamiltonian import Hamiltonian
 
 
 def _calculate_eigenstate_collection_sho(
@@ -44,6 +46,7 @@ def _generate_eigenstate_collection_sho(
 
 
 def generate_eigenstates_data() -> None:
+    """Generate data on the eigenstates and eigenvalues for a range of resolutions."""
     potential = get_interpolated_nickel_potential(shape=(1, 1, 1))
     util = BasisConfigUtil(potential["basis"])
 
@@ -52,24 +55,10 @@ def generate_eigenstates_data() -> None:
     kz_points = np.zeros_like(kx_points)
     bloch_phases = np.array([kx_points, ky_points, kz_points]).T
 
-    # _generate_eigenstate_collection_sho(bloch_phases, (10, 10, 5))
+    # _generate_eigenstate_collection_sho(bloch_phases, (10, 10, 5))  # noqa: ERA001
 
-    # _generate_eigenstate_collection_sho(bloch_phases, (23, 23, 10))
+    # _generate_eigenstate_collection_sho(bloch_phases, (23, 23, 10)) # noqa: ERA001
 
-    # _generate_eigenstate_collection_sho(bloch_phases, (23, 23, 12))
+    # _generate_eigenstate_collection_sho(bloch_phases, (23, 23, 12)) # noqa: ERA001
 
     _generate_eigenstate_collection_sho(bloch_phases, (25, 25, 16))
-
-
-# def test_eigenstates_partial():
-#     h = generate_hamiltonian(resolution=(23, 23, 12))
-#     n = 10
-#     out_20 = h.calculate_eigenvalues(0, 0, n=n)
-#     out_all = h.calculate_eigenvalues(0, 0)
-
-#     np.testing.assert_array_almost_equal(np.sort(out_20[0]), np.sort(out_all[0])[:n])
-
-#     np.testing.assert_array_almost_equal(
-#         np.array([x["eigenvector"] for x in out_20[1]])[np.argsort(out_20[0])],
-#         np.array([x["eigenvector"] for x in out_all[1]])[np.argsort(out_all[0])][:n],
-#     )

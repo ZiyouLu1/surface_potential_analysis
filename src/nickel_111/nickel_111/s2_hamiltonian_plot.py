@@ -1,41 +1,41 @@
 import numpy as np
+from matplotlib import pyplot as plt
+from surface_potential_analysis.basis.basis import ExplicitBasis, PositionBasis
+from surface_potential_analysis.basis.plot import plot_explicit_basis_states_x
 
-from .s1_potential import load_interpolated_grid
-from .surface_data import save_figure
+from .s2_hamiltonian import generate_sho_basis
 
 
-def plot_interpolation_with_sho_config() -> None:
-    data = load_interpolated_grid()
-    interpolation = as_interpolation(data)
-    config: EigenstateConfig = {
-        "mass": 1.6735575e-27,
-        "sho_omega": 195636899474736.66,  # 1.5e14,
-        "delta_x0": data["delta_x0"],
-        "delta_x1": data["delta_x1"],
-        "resolution": (1, 1, 1),
-    }
+def _normalize_sho_basis(
+    basis: ExplicitBasis[int, PositionBasis[int]]
+) -> ExplicitBasis[int, PositionBasis[int]]:
+    turning_point = basis["vectors"][
+        np.arange(basis["vectors"].shape[0]),
+        np.argmax(
+            np.abs(basis["vectors"][:, : basis["vectors"].shape[1] // 2]), axis=1
+        ),
+    ]
+    print(turning_point, np.angle(turning_point))
 
-    fig, ax = plot_energy_with_sho_potential_at_minimum(
-        interpolation, config, z_offset=-1.0000000000000004e-10
-    )
-    ax.set_title("Plot of SHO config against Z")
-    ax.legend()
+    normalized = np.exp(-1j * np.angle(turning_point))[:, np.newaxis] * basis["vectors"]
+    return {"_type": "explicit", "parent": basis["parent"], "vectors": normalized}
 
-    min_index = 25
-    bottom_index = 45
-    max_index = 66
-    points = np.array(interpolation["points"])
-    arg_min = np.unravel_index(np.argmin(points), points.shape)
-    print(arg_min)
-    z_idx = np.array([min_index, bottom_index, max_index])
-    z_points = interpolation["dz"] * (z_idx - bottom_index)
-    values = points[arg_min[0], arg_min[1], z_idx]
-    (line,) = ax.plot(z_points, values)
-    line.set_linestyle("")
-    line.set_marker("x")
+
+def plot_sho_basis() -> None:
+    """Plot the sho basis used for the nickel surface."""
+    (infinate, finite) = generate_sho_basis(16)
+
+    fig, ax = plt.subplots()
+
+    normalized = _normalize_sho_basis(infinate)
+    _, _, lines = plot_explicit_basis_states_x(normalized, ax=ax, measure="real")
+    for line in lines:
+        line.set_color("tab:blue")
+
+    normalized = _normalize_sho_basis(finite)
+    _, _, lines = plot_explicit_basis_states_x(normalized, ax=ax, measure="real")
+    for line in lines:
+        line.set_color("tab:orange")
 
     fig.show()
-
-    save_figure(fig, "sho_config_plot.png")
-
     input()

@@ -32,7 +32,7 @@ ignore_missing_imports = true
 
 [tool.ruff]
 select = ["ALL"]
-ignore = ["COM812", "E501", "ANN101", "S101"]
+ignore = ["COM812", "E501", "ANN101", "S101", "PT009", "D100"]
 
 [tool.ruff.pydocstyle]
 convention = "numpy"

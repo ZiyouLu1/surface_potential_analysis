@@ -1,15 +1,15 @@
 import unittest
+from typing import TYPE_CHECKING
 
 import numpy as np
 
-from surface_potential_analysis.basis_config import (
-    BasisConfig,
-    BasisConfigUtil,
-    MomentumBasisConfig,
+from surface_potential_analysis.basis_config import BasisConfigUtil, MomentumBasisConfig
+from surface_potential_analysis.eigenstate.eigenstate_calculation import (
+    calculate_energy,
 )
-from surface_potential_analysis.eigenstate.eigenstate import Eigenstate
-from surface_potential_analysis.hamiltonian import Hamiltonian, MomentumBasisHamiltonian
-from surface_potential_analysis.hamiltonian_eigenstates import calculate_energy
+
+if TYPE_CHECKING:
+    from surface_potential_analysis.hamiltonian import MomentumBasisHamiltonian
 
 
 class HamiltonianEigenstates(unittest.TestCase):

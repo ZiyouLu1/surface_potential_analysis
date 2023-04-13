@@ -17,7 +17,6 @@ from surface_potential_analysis.basis_config import (
 from surface_potential_analysis.eigenstate.eigenstate import (
     Eigenstate,
     EigenstateWithBasis,
-    StackedEigenstateWithBasis,
     _convert_explicit_basis_x2_to_position,
     _convert_momentum_basis_x01_to_position,
     convert_sho_eigenstate_to_position_basis,
@@ -147,7 +146,7 @@ class EigenstateTest(unittest.TestCase):
         stacked = stack_eigenstate(eigenstate)
 
         for i in range(nz):
-            vector = np.zeros((fundamental_nz))
+            vector = np.zeros(fundamental_nz)
             vector[i] = 1
             stacked["basis"][2]["vectors"][i] = vector
 

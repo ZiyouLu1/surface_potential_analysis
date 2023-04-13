@@ -12,8 +12,10 @@ from surface_potential_analysis.basis_config import (
     PositionBasisConfig,
 )
 from surface_potential_analysis.eigenstate.eigenstate import Eigenstate
+from surface_potential_analysis.eigenstate.eigenstate_calculation import (
+    calculate_eigenstates,
+)
 from surface_potential_analysis.hamiltonian import Hamiltonian
-from surface_potential_analysis.hamiltonian_eigenstates import calculate_eigenstates
 
 _L0Inv = TypeVar("_L0Inv", bound=int)
 _L1Inv = TypeVar("_L1Inv", bound=int)
@@ -35,9 +37,7 @@ _NS1Inv = TypeVar("_NS1Inv", bound=int)
 
 
 class Wavepacket(TypedDict, Generic[_NS0Cov, _NS1Cov, _BC0Cov]):
-    """
-    represents an approximation of a Wannier function
-    """
+    """represents an approximation of a Wannier function."""
 
     basis: _BC0Cov
     vectors: np.ndarray[tuple[_NS0Cov, _NS1Cov, int], np.dtype[np.complex_]]
@@ -147,7 +147,7 @@ def get_global_phases(
     idx: int | tuple[int, int, int] = 0,
 ) -> np.ndarray[tuple[_NS0Inv, _NS1Inv], np.dtype[np.float_]]:
     """
-    Get the global bloch phase at a given index in the irreducible cell
+    Get the global bloch phase at a given index in the irreducible cell.
 
     Parameters
     ----------
@@ -188,7 +188,7 @@ def normalize_wavepacket(
     angle: float = 0,
 ) -> W:
     """
-    Normalize the eigenstates in a wavepacket
+    Normalize the eigenstates in a wavepacket.
 
     Parameters
     ----------
@@ -206,7 +206,6 @@ def normalize_wavepacket(
     Wavepacket: Wavepacket[Any, Any, PositionBasis, PositionBasis, PositionBasis]
         The wavepacket, normalized
     """
-
     eigenvectors = wavepacket["vectors"]
     # TODO use irreducible basis here!!
     util = BasisConfigUtil(wavepacket["basis"])

@@ -26,7 +26,7 @@ def calculate_energy(
     hamiltonian: Hamiltonian[_BC0Inv], eigenstate: Eigenstate[_BC0Inv]
 ) -> complex:
     """
-    Calculate the energy of the given eigenvector
+    Calculate the energy of the given eigenvector.
 
     Parameters
     ----------

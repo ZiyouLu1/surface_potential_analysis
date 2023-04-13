@@ -1,7 +1,6 @@
 import matplotlib.pyplot as plt
 import numpy as np
-
-from surface_potential_analysis.basis.plot import plot_explicit_basis_states
+from surface_potential_analysis.basis.plot import plot_explicit_basis_states_x
 from surface_potential_analysis.eigenstate.eigenstate import (
     convert_sho_eigenstate_to_position_basis,
 )
@@ -19,6 +18,7 @@ from .surface_data import get_data_path, save_figure
 
 
 def analyze_band_convergence() -> None:
+    """Analyze the convergence of the eigenvalues."""
     fig, ax = plt.subplots()
 
     path = get_data_path("eigenstates_23_23_10.npy")
@@ -86,23 +86,19 @@ def analyze_band_convergence() -> None:
 
 
 def plot_sho_basis_states() -> None:
+    """Plot the basis states used to generate the eigenvectors."""
     path = get_data_path("eigenstates_25_25_16.npy")
-    # path = get_data_path("eigenstates_23_23_12.npy")
-    # path = get_data_path("eigenstates_10_10_5.npy")
     collection = load_eigenstate_collection(path)
 
     eigenstate = select_eigenstate(collection, 0, 0)
-    fig, _ = plot_explicit_basis_states(eigenstate["basis"][2], measure="real")
+    fig, _ = plot_explicit_basis_states_x(eigenstate["basis"][2], measure="real")
     fig.show()
     input()
 
 
 def plot_eigenstate_for_each_band() -> None:
-    """
-    Check to see if the eigenstates look as they are supposed to
-    """
+    """Check to see if the eigenstates look as they are supposed to."""
     path = get_data_path("eigenstates_25_25_16.npy")
-    # path = get_data_path("eigenstates_23_23_12.npy")
     collection = load_eigenstate_collection(path)
 
     eigenstate = select_eigenstate(collection, 0, 0)
