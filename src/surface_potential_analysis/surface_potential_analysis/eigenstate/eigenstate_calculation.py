@@ -16,6 +16,7 @@ _BC0Inv = TypeVar("_BC0Inv", bound=BasisConfig[Any, Any, Any])
 def calculate_eigenstates(
     hamiltonian: Hamiltonian[_BC0Inv], subset_by_index: tuple[int, int] | None = None
 ) -> EigenstateList[_BC0Inv]:
+    """Get a list of eigenstates for a given hamiltonain."""
     energies, vectors = scipy.linalg.eigh(
         hamiltonian["array"], subset_by_index=subset_by_index
     )
@@ -38,6 +39,6 @@ def calculate_energy(
     complex
         The energy of the Eigenvector given Hamiltonian
     """
-    return np.linalg.multi_dot(  # type:ignore
+    return np.linalg.multi_dot(  # type:ignore[no-any-return]
         [np.conj(eigenstate["vector"]), hamiltonian["array"], eigenstate["vector"]]
     )

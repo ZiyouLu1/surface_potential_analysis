@@ -44,6 +44,7 @@
     "pcolormesh",
     "prefactor",
     "pyplot",
+    "rfftn",
     "savefig",
     "scipy",
     "sharey",

@@ -1,5 +1,6 @@
 import itertools
-from typing import Any, Sequence, TypeVar
+from collections.abc import Sequence
+from typing import Any, TypeVar
 
 import numpy as np
 import scipy.fft
@@ -7,14 +8,15 @@ import scipy.interpolate
 
 from surface_potential_analysis.util import slice_along_axis
 
-S = TypeVar("S", bound=Any)
-DT = TypeVar("DT", bound=np.dtype[Any])
+_DT = TypeVar("_DT", bound=np.dtype[Any])
 
 
 def interpolate_real_points_along_axis_fourier(
-    points: np.ndarray[S, np.dtype[np.float_]], n: int, axis: int = -1
-) -> np.ndarray[S, np.dtype[np.float_]]:
+    points: np.ndarray[tuple[int, ...], np.dtype[np.float_]], n: int, axis: int = -1
+) -> np.ndarray[tuple[int, ...], np.dtype[np.float_]]:
     """
+    interpolate along the given axis to a new length n.
+
     Given a uniformly spaced (real) grid of points interpolate along the given
     axis to a new length n.
 
@@ -24,7 +26,7 @@ def interpolate_real_points_along_axis_fourier(
 
     Parameters
     ----------
-    points : ArrayLike
+    points :  np.ndarray[tuple[int, ...], np.dtype[np.float_]]
         The initial set of points to interpolate
     n : int
         The number of points in the interpolated grid
@@ -33,7 +35,7 @@ def interpolate_real_points_along_axis_fourier(
 
     Returns
     -------
-    NDArray
+     np.ndarray[tuple[int, ...], np.dtype[np.float_]]
         The points interpolated along the given axis
     """
     # We use the forward norm here, as otherwise we would also need to
@@ -50,15 +52,17 @@ def interpolate_real_points_along_axis_fourier(
         upper_half = slice_along_axis(slice(None, n // 2, -1), axis=axis)
         interpolated_potential[upper_half] = interpolated_potential[lower_half]
 
-    return interpolated_potential  # type:ignore
+    return interpolated_potential  # type:ignore[no-any-return]
 
 
 def pad_ft_points(
-    array: np.ndarray[S, DT], s: Sequence[int], axes: Sequence[int]
-) -> np.ndarray[S, DT]:
+    array: np.ndarray[tuple[int, ...], _DT], s: Sequence[int], axes: Sequence[int]
+) -> np.ndarray[tuple[int, ...], _DT]:
     """
+    Pad the points in the fourier transform with zeros.
+
     Pad the points in the fourier transform with zeros, keeping the frequencies of
-    each point the same in the initial and final grid
+    each point the same in the initial and final grid.
 
     Parameters
     ----------
@@ -79,13 +83,15 @@ def pad_ft_points(
 
     padded_shape = shape_arr.copy()
     padded_shape[axes_arr] = s
-    padded: np.ndarray[S, DT] = np.zeros(shape=padded_shape, dtype=array.dtype)
+    padded: np.ndarray[tuple[int, ...], _DT] = np.zeros(
+        shape=padded_shape, dtype=array.dtype
+    )
 
     slice_start = np.array([slice(None) for _ in array.shape], dtype=slice)
     slice_start[axes_arr] = np.array(
         [
             slice(1 + min((n - 1) // 2, (s - 1) // 2))
-            for (n, s) in zip(shape_arr[axes_arr], s)
+            for (n, s) in zip(shape_arr[axes_arr], s, strict=True)
         ],
         dtype=slice,
     )
@@ -95,7 +101,7 @@ def pad_ft_points(
             slice(start, None) if (start := max((-n + 1) // 2, (-s + 1) // 2)) < 0
             # else no negative frequencies
             else slice(0, 0)
-            for (n, s) in zip(shape_arr[axes_arr], s)
+            for (n, s) in zip(shape_arr[axes_arr], s, strict=True)
         ],
         dtype=slice,
     )
@@ -113,8 +119,7 @@ def interpolate_points_fftn(
     axes: Sequence[int] | None = None,
 ) -> np.ndarray[Any, np.dtype[np.complex_]]:
     """
-    Given a uniform grid of points in the unit cell interpolate
-    a grid of points with the given shape using the fourier transform
+    Interpolate a grid of points with the given shape using the fourier transform.
 
     We don't make use of the fact that the potential is real in this case,
     and as such the output is not guaranteed to be real if the input is real
@@ -140,24 +145,40 @@ def interpolate_points_fftn(
     ft_points = scipy.fft.fftn(points, axes=axes_arr, norm="forward")
     # pad (or truncate) for the new lengths s
     padded = pad_ft_points(ft_points, s, axes_arr)
-    return scipy.fft.ifftn(  # type:ignore
+    return scipy.fft.ifftn(  # type:ignore[no-any-return]
         padded, s, axes=axes_arr, norm="forward", overwrite_x=True
     )
 
 
 def interpolate_points_rfftn(
-    points: np.ndarray[Any, np.dtype[np.float_]],
+    points: np.ndarray[tuple[int, ...], np.dtype[np.float_]],
     s: Sequence[int],
     axes: Sequence[int] | None = None,
-) -> np.ndarray[Any, np.dtype[np.float_]]:
+) -> np.ndarray[tuple[int, ...], np.dtype[np.float_]]:
+    """
+    Interpolate points using a real fourier transform.
+
+    Parameters
+    ----------
+    points : np.ndarray[tuple, np.dtype[np.float_]]
+    s : Sequence[int]
+    axes : Sequence[int] | None, optional
+
+    Returns
+    -------
+    np.ndarray[tuple, np.dtype[np.float_]]
+    """
     axes_arr = np.arange(-1, -1 - len(s), -1) if axes is None else np.array(axes)
     ft_points = scipy.fft.rfftn(points, axes=axes_arr, norm="forward")
     # pad (or truncate) for the new lengths s
     # we don't need to pad the last axis here, as it is handled correctly by irfftn
     padded = pad_ft_points(ft_points, s[:-1], axes_arr[:-1])
-    return scipy.fft.irfftn(  # type:ignore
+    return scipy.fft.irfftn(  # type:ignore[no-any-return]
         padded, s, axes=axes_arr, norm="forward", overwrite_x=True
     )
+
+
+# ruff: noqa: ERA001
 
 
 # The old method, of padding which only worked for a 2D array
@@ -239,11 +260,7 @@ def interpolate_points_along_axis_spline(
     n: int,
     axis: int = -1,
 ) -> np.ndarray[tuple[int, ...], np.dtype[np.float_]]:
-    """
-    Uses spline interpolation to increase the Z resolution,
-    spacing z linearly
-    """
-
+    """Use a spline interpolation to increase the Z resolution, spacing z linearly."""
     new_coords = list(np.linspace(old_coords[0], old_coords[-1], n))
 
     new_shape = list(data.shape)
@@ -260,4 +277,4 @@ def interpolate_points_along_axis_spline(
         new_energy = scipy.interpolate.splev(new_coords, tck, der=0)
         swapped_points[i] = new_energy
 
-    return points  # type: ignore
+    return points  # type: ignore[no-any-return]

@@ -14,10 +14,7 @@ _BC0Inv = TypeVar("_BC0Inv", bound=BasisConfig[Any, Any, Any])
 
 
 class EigenstateColllection(TypedDict, Generic[_BC0Inv]):
-    """
-    Represents a collection of eigenstates, each with the same basis
-    but a variety of different bloch phases
-    """
+    """Represents a collection of eigenstates, each with the same basis but a variety of different bloch phases."""
 
     basis: _BC0Inv
     bloch_phases: np.ndarray[tuple[int, Literal[3]], np.dtype[np.float_]]
@@ -28,11 +25,13 @@ class EigenstateColllection(TypedDict, Generic[_BC0Inv]):
 def save_eigenstate_collection(
     path: Path, eigenstates: EigenstateColllection[Any]
 ) -> None:
+    """Save an eigenstate collection to an npy file."""
     np.save(path, eigenstates)
 
 
 def load_eigenstate_collection(path: Path) -> EigenstateColllection[Any]:
-    return np.load(path, allow_pickle=True)[()]  # type:ignore
+    """Load an eigenstate collection from an npy file."""
+    return np.load(path, allow_pickle=True)[()]  # type:ignore[no-any-return]
 
 
 def calculate_eigenstate_collection(
@@ -44,6 +43,22 @@ def calculate_eigenstate_collection(
     *,
     subset_by_index: tuple[int, int] | None = None,
 ) -> EigenstateColllection[_BC0Inv]:
+    """
+    Calculate an eigenstate collection with the given bloch phases.
+
+    Parameters
+    ----------
+    hamiltonian_generator : Callable[[np.ndarray[tuple[Literal[3]], np.dtype[np.float_]]], Hamiltonian[_BC0Inv]]
+        Function used to generate the hamiltonian
+    bloch_phases : np.ndarray[tuple[int, Literal[3]], np.dtype[np.float_]]
+        List of bloch phases
+    subset_by_index : tuple[int, int] | None, optional
+        subset_by_index, by default (0,0)
+
+    Returns
+    -------
+    EigenstateColllection[_BC0Inv]
+    """
     subset_by_index = (0, 0) if subset_by_index is None else subset_by_index
     n_states = 1 + subset_by_index[1] - subset_by_index[0]
 
@@ -73,6 +88,19 @@ def select_eigenstate(
     bloch_idx: int,
     band_idx: int,
 ) -> Eigenstate[_BC0Inv]:
+    """
+    Select an eigenstate from an eigenstate collection.
+
+    Parameters
+    ----------
+    collection : EigenstateColllection[_BC0Inv]
+    bloch_idx : int
+    band_idx : int
+
+    Returns
+    -------
+    Eigenstate[_BC0Inv]
+    """
     return {
         "basis": collection["basis"],
         "vector": collection["vectors"][bloch_idx, band_idx],

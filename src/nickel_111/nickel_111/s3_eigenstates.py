@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from typing import TYPE_CHECKING, Any, Literal
 
 import numpy as np
@@ -59,6 +61,6 @@ def generate_eigenstates_data() -> None:
 
     # _generate_eigenstate_collection_sho(bloch_phases, (23, 23, 10)) # noqa: ERA001
 
-    # _generate_eigenstate_collection_sho(bloch_phases, (23, 23, 12)) # noqa: ERA001
+    _generate_eigenstate_collection_sho(bloch_phases, (23, 23, 12))
 
     _generate_eigenstate_collection_sho(bloch_phases, (25, 25, 16))

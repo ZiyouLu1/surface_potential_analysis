@@ -1,4 +1,4 @@
-from functools import cache, cached_property
+from functools import cached_property
 from typing import Generic, Literal, TypeVar
 
 import hamiltonian_generator
@@ -29,7 +29,7 @@ _L4 = TypeVar("_L4", bound=int)
 _L5 = TypeVar("_L5", bound=int)
 
 
-class SurfaceHamiltonianUtil(Generic[_L0, _L1, _L2, _L3, _L4, _L5]):
+class _SurfaceHamiltonianUtil(Generic[_L0, _L1, _L2, _L3, _L4, _L5]):
     _potential: Potential[_L0, _L1, _L2]
 
     _config: SHOBasisConfig
@@ -45,17 +45,14 @@ class SurfaceHamiltonianUtil(Generic[_L0, _L1, _L2, _L3, _L4, _L5]):
         self._potential = potential
         self._config = config
         self._resolution = resolution
-        # self._potential_offset = potential_offset
         if 2 * (self._resolution[0] - 1) > self._potential["basis"][0]["n"]:
-            print(self._resolution[0], self._potential["basis"][0]["n"])
-            raise AssertionError(
-                "Potential does not have enough resolution in x direction"
+            raise AssertionError(  # noqa: TRY003
+                "Not have enough resolution in x0"  # noqa: EM101
             )
 
         if 2 * (self._resolution[1] - 1) > self._potential["basis"][1]["n"]:
-            print(self._resolution[1], self._potential["basis"][1]["n"])
-            raise AssertionError(
-                "Potential does not have enough resolution in y direction"
+            raise AssertionError(  # noqa: TRY003
+                "Not have enough resolution in x1"  # noqa: EM101
             )
 
     @property
@@ -64,29 +61,29 @@ class SurfaceHamiltonianUtil(Generic[_L0, _L1, _L2, _L3, _L4, _L5]):
 
     @property
     def z_offset(self) -> float:
-        return self._config["x_origin"][2]  # type:ignore
+        return self._config["x_origin"][2]  # type:ignore[return-value]
 
     @property
-    def Nx(self) -> int:
-        return self.points.shape[0]  # type:ignore
+    def nx(self) -> int:
+        return self.points.shape[0]  # type:ignore[no-any-return]
 
     @property
-    def Ny(self) -> int:
-        return self.points.shape[1]  # type:ignore
+    def ny(self) -> int:
+        return self.points.shape[1]  # type:ignore[no-any-return]
 
     @property
-    def Nz(self) -> int:
-        return self.points.shape[2]  # type:ignore
+    def nz(self) -> int:
+        return self.points.shape[2]  # type:ignore[no-any-return]
 
     @property
     def dz(self) -> float:
         util = BasisUtil(self._potential["basis"][2])
-        return np.linalg.norm(util.fundamental_dx)  # type:ignore
+        return np.linalg.norm(util.fundamental_dx)  # type:ignore[return-value]
 
     @property
     def z_distances(self) -> np.ndarray[tuple[int], np.dtype[np.float_]]:
         return calculate_x_distances(
-            self._potential["basis"][2], self._config["x_origin"]  # type: ignore
+            self._potential["basis"][2], self._config["x_origin"]  # type: ignore[arg-type]
         )
 
     @property
@@ -139,9 +136,6 @@ class SurfaceHamiltonianUtil(Generic[_L0, _L1, _L2, _L3, _L4, _L5]):
 
         energies = diagonal_energies + other_energies
 
-        if False and not np.allclose(energies, energies.conjugate().T):
-            raise AssertionError("Hamiltonian is not hermitian")
-
         return {"array": energies, "basis": self.basis}
 
     @cached_property
@@ -151,12 +145,12 @@ class SurfaceHamiltonianUtil(Generic[_L0, _L1, _L2, _L3, _L4, _L5]):
         util = BasisConfigUtil(self.basis)
 
         x0t, x1t, zt = np.meshgrid(
-            util.x0_basis.nk_points,  # type: ignore
-            util.x1_basis.nk_points,  # type: ignore
-            util.x2_basis.nx_points,  # type: ignore
+            util.x0_basis.nk_points,  # type: ignore[misc]
+            util.x1_basis.nk_points,  # type: ignore[misc]
+            util.x2_basis.nx_points,  # type: ignore[misc]
             indexing="ij",
         )
-        return np.array([x0t.ravel(), x1t.ravel(), zt.ravel()])  # type: ignore
+        return np.array([x0t.ravel(), x1t.ravel(), zt.ravel()])  # type: ignore[no-any-return]
 
     def _calculate_diagonal_energy(
         self, bloch_phase: np.ndarray[tuple[Literal[3]], np.dtype[np.float_]]
@@ -175,34 +169,30 @@ class SurfaceHamiltonianUtil(Generic[_L0, _L1, _L2, _L3, _L4, _L5]):
         ky_points = dkx0[1] * kx0_coords + dkx1[1] * kx1_coords + bloch_phase[1]
         y_energy = (hbar * ky_points) ** 2 / (2 * mass)
         z_energy = (hbar * sho_omega) * (nkz_coords + 0.5)
-        return x_energy + y_energy + z_energy  # type: ignore
+        return x_energy + y_energy + z_energy  # type: ignore[no-any-return]
 
-    @cache
     def get_sho_potential(self) -> np.ndarray[tuple[int], np.dtype[np.float_]]:
         mass = self._config["mass"]
         sho_omega = self._config["sho_omega"]
-        return 0.5 * mass * sho_omega**2 * np.square(self.z_distances)  # type: ignore
+        return 0.5 * mass * sho_omega**2 * np.square(self.z_distances)  # type: ignore[no-any-return]
 
-    @cache
     def get_sho_subtracted_points(
         self,
     ) -> np.ndarray[tuple[int, int, int], np.dtype[np.float_]]:
-        return np.subtract(self.points, self.get_sho_potential())  # type: ignore
+        return np.subtract(self.points, self.get_sho_potential())  # type: ignore[no-any-return]
 
-    @cache
     def get_ft_potential(
         self,
     ) -> np.ndarray[tuple[int, int, int], np.dtype[np.complex128]]:
         subtracted_potential = self.get_sho_subtracted_points()
-        return np.fft.ifft2(subtracted_potential, axes=(0, 1))  # type: ignore
+        return np.fft.ifft2(subtracted_potential, axes=(0, 1))  # type: ignore[no-any-return]
 
-    @cache
     def _calculate_off_diagonal_energies_fast(
         self,
     ) -> np.ndarray[tuple[int, int], np.dtype[np.complex_]]:
         mass = self._config["mass"]
         sho_omega = self._config["sho_omega"]
-        return np.array(  # type: ignore
+        return np.array(  # type: ignore[no-any-return]
             hamiltonian_generator.calculate_off_diagonal_energies(
                 self.get_ft_potential().tolist(),
                 self._resolution,
@@ -213,11 +203,10 @@ class SurfaceHamiltonianUtil(Generic[_L0, _L1, _L2, _L3, _L4, _L5]):
             )
         )
 
-    @cache
     def _calculate_off_diagonal_entry(
         self, nz1: int, nz2: int, ndkx0: int, ndkx1: int
     ) -> float:
-        """Calculates the off diagonal energy using the 'folded' points ndkx, ndky"""
+        """Calculate the off diagonal energy using the 'folded' points ndkx, ndky."""
         ft_pot_points = self.get_ft_potential()[ndkx0, ndkx1]
         hermite1 = self.basis[2]["vectors"][nz1]
         hermite2 = self.basis[2]["vectors"][nz2]
@@ -242,14 +231,14 @@ class SurfaceHamiltonianUtil(Generic[_L0, _L1, _L2, _L3, _L4, _L5]):
 
                 # In reality we want to make sure ndkx < Nx (ie we should
                 # make sure we generate enough points in the interpolation)
-                ndkx0 = (nkx0_1 - nkx0_0) % self.Nx
-                ndkx1 = (nkx1_1 - nkx1_0) % self.Ny
+                ndkx0 = (nkx0_1 - nkx0_0) % self.nx
+                ndkx1 = (nkx1_1 - nkx1_0) % self.ny
 
                 hamiltonian[index1, index2] = self._calculate_off_diagonal_entry(
                     nz1, nz2, ndkx0, ndkx1
                 )
 
-        return hamiltonian  # type: ignore
+        return hamiltonian  # type: ignore[no-any-return]
 
 
 def total_surface_hamiltonian(
@@ -262,5 +251,19 @@ def total_surface_hamiltonian(
     TruncatedBasis[_L4, MomentumBasis[_L1]],
     ExplicitBasis[_L5, PositionBasis[_L2]],
 ]:
-    util = SurfaceHamiltonianUtil(potential, config, resolution)
+    """
+    Calculate a hamiltonian using the infinite sho basis.
+
+    Parameters
+    ----------
+    potential : Potential[_L0, _L1, _L2]
+    config : SHOBasisConfig
+    bloch_phase : np.ndarray[tuple[Literal[3]], np.dtype[np.float_]]
+    resolution : tuple[_L3, _L4, _L5]
+
+    Returns
+    -------
+    HamiltonianWithBasis[TruncatedBasis[_L3, MomentumBasis[_L0]], TruncatedBasis[_L4, MomentumBasis[_L1]], ExplicitBasis[_L5, PositionBasis[_L2]]]
+    """
+    util = _SurfaceHamiltonianUtil(potential, config, resolution)
     return util.hamiltonian(bloch_phase)

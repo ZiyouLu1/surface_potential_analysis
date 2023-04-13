@@ -3,7 +3,6 @@ from typing import TYPE_CHECKING, Any, Literal
 
 import numpy as np
 
-from surface_potential_analysis.basis import Basis, MomentumBasis
 from surface_potential_analysis.hamiltonian import (
     MomentumBasisStackedHamiltonian,
     _convert_explicit_basis_x2,
@@ -15,12 +14,14 @@ from surface_potential_analysis.hamiltonian import (
 if TYPE_CHECKING:
     from surface_potential_analysis.basis import Basis, MomentumBasis
 
+rng = np.random.default_rng()
+
 
 class HamiltonianTest(unittest.TestCase):
     def test_flatten_hamiltonian(self) -> None:
-        shape = np.random.randint(1, 10, size=3)
+        shape = rng.integers(1, 10, size=3)
         hamiltonian: MomentumBasisStackedHamiltonian[int, int, int] = {
-            "array": np.random.rand(*shape, *shape),
+            "array": rng.random(*shape, *shape),
             "basis": (
                 {
                     "n": shape.item(0),
@@ -52,9 +53,9 @@ class HamiltonianTest(unittest.TestCase):
         np.testing.assert_array_equal(actual["array"], expected)
 
     def test_stack_hamiltonian(self) -> None:
-        shape = np.random.randint(1, 10, size=3)
+        shape = rng.integers(1, 10, size=3)
         hamiltonian: MomentumBasisStackedHamiltonian[int, int, int] = {
-            "array": np.random.rand(*shape, *shape),
+            "array": rng.random((*shape, *shape)),
             "basis": (
                 {
                     "n": shape.item(0),
@@ -78,9 +79,9 @@ class HamiltonianTest(unittest.TestCase):
         np.testing.assert_array_equal(hamiltonian["array"], actual["array"])
 
     def test_truncate_hamiltonian(self) -> None:
-        shape = np.random.randint(2, 10, size=3)
+        shape = rng.integers(2, 10, size=3)
         hamiltonian: MomentumBasisStackedHamiltonian[int, int, int] = {
-            "array": np.random.rand(*shape, *shape),
+            "array": rng.random((*shape, *shape)),
             "basis": (
                 {
                     "n": shape.item(0),
@@ -99,9 +100,9 @@ class HamiltonianTest(unittest.TestCase):
                 },
             ),
         }
-        axis: Literal[0, 1, 2, -1, -2, -3] = np.random.randint(-3, 2)  # type: ignore
+        axis: Literal[0, 1, 2, -1, -2, -3] = rng.integers(-3, 2)  # type: ignore[assignment]
         expected_parent: MomentumBasis[Any] = hamiltonian["basis"][axis % 3]
-        size: int = np.random.randint(1, expected_parent["n"])
+        size: int = rng.integers(1, expected_parent["n"])
 
         truncated = truncate_hamiltonian_basis(hamiltonian, size, axis)
         expected_basis: list[Basis[Any, Any]] = list(hamiltonian["basis"])
@@ -110,7 +111,7 @@ class HamiltonianTest(unittest.TestCase):
             "n": size,
             "parent": expected_parent,
         }
-        for expected, actual in zip(expected_basis, truncated["basis"]):
+        for expected, actual in zip(expected_basis, truncated["basis"], strict=True):
             self.assertDictEqual(expected, actual)
 
         expected_shape = np.array(hamiltonian["array"].shape)
@@ -119,10 +120,10 @@ class HamiltonianTest(unittest.TestCase):
         np.testing.assert_array_equal(expected_shape, truncated["array"].shape)
 
     def test_convert_explicit_basis_x2_diagonal(self) -> None:
-        shape = np.random.randint(2, 10, size=3)
-        nz: int = np.random.randint(1, shape[2])  # type: ignore
+        shape = rng.integers(2, 10, size=3)
+        nz: int = rng.integers(1, shape[2])  # type: ignore[assignment]
 
-        points = np.random.rand(*shape, *shape)
+        points = rng.random((*shape, *shape))
         diagonal = np.eye(nz, shape.item(2))
 
         actual = _convert_explicit_basis_x2(points, diagonal)

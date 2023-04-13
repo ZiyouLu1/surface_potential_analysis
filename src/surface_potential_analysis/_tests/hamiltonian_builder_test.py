@@ -18,7 +18,7 @@ from surface_potential_analysis.hamiltonian_builder import (
     sho_subtracted_basis,
 )
 from surface_potential_analysis.hamiltonian_builder.sho_subtracted_basis import (
-    SurfaceHamiltonianUtil,
+    _SurfaceHamiltonianUtil,
 )
 from surface_potential_analysis.interpolation import interpolate_points_rfftn
 from surface_potential_analysis.sho_basis import SHOBasisConfig, calculate_x_distances
@@ -53,7 +53,7 @@ def _generate_symmetrical_points(
 
 
 def _generate_random_diagonal_hamiltonian() -> (
-    SurfaceHamiltonianUtil[Any, Any, Any, Any, Any, Any]
+    _SurfaceHamiltonianUtil[Any, Any, Any, Any, Any, Any]
 ):
     nkx = rng.integers(3, 10)
     nky = rng.integers(3, 10)
@@ -78,13 +78,13 @@ def _generate_random_diagonal_hamiltonian() -> (
             ),
         ),
     }
-    hamiltonian = SurfaceHamiltonianUtil(potentail, config, resolution)
+    hamiltonian = _SurfaceHamiltonianUtil(potentail, config, resolution)
 
     potentail2: Potential[Any, Any, Any] = {
         "points": np.tile(hamiltonian.get_sho_potential(), (2 * nkx, 2 * nky, 1)),
         "basis": potentail["basis"],
     }
-    return SurfaceHamiltonianUtil(potentail2, config, resolution)
+    return _SurfaceHamiltonianUtil(potentail2, config, resolution)
 
 
 class HamiltonianBuilderTest(unittest.TestCase):
@@ -106,7 +106,7 @@ class HamiltonianBuilderTest(unittest.TestCase):
                 ),
             ),
         }
-        hamiltonian = SurfaceHamiltonianUtil(potentail, config, resolution)
+        hamiltonian = _SurfaceHamiltonianUtil(potentail, config, resolution)
 
         expected = np.array([0.5, 1.5, 1.0, 2.0, 1.0, 2.0, 1.5, 2.5])
         diagonal_energy = hamiltonian._calculate_diagonal_energy(  # noqa: SLF001
@@ -133,7 +133,7 @@ class HamiltonianBuilderTest(unittest.TestCase):
                 ),
             ),
         }
-        hamiltonian = SurfaceHamiltonianUtil(potentail, config, resolution)
+        hamiltonian = _SurfaceHamiltonianUtil(potentail, config, resolution)
         expected = [2.0, 0.5, 0.0, 0.5, 2.0]
         np.testing.assert_equal(expected, hamiltonian.get_sho_potential())
 
@@ -159,7 +159,7 @@ class HamiltonianBuilderTest(unittest.TestCase):
                 ),
             ),
         }
-        hamiltonian = SurfaceHamiltonianUtil(potentail, config, resolution)
+        hamiltonian = _SurfaceHamiltonianUtil(potentail, config, resolution)
 
         potentail2: Potential[Any, Any, Any] = {
             "points": np.tile(hamiltonian.get_sho_potential(), (2 * nx, 2 * ny, 1)),
@@ -173,7 +173,7 @@ class HamiltonianBuilderTest(unittest.TestCase):
             ),
         }
 
-        hamiltonian = SurfaceHamiltonianUtil(potentail2, config, resolution)
+        hamiltonian = _SurfaceHamiltonianUtil(potentail2, config, resolution)
         actual = hamiltonian.get_sho_subtracted_points()
         expected = np.zeros(shape=(2 * nx, 2 * ny, nz))
 
@@ -202,7 +202,7 @@ class HamiltonianBuilderTest(unittest.TestCase):
             ),
         }
 
-        hamiltonian = SurfaceHamiltonianUtil(potentail, config, resolution)
+        hamiltonian = _SurfaceHamiltonianUtil(potentail, config, resolution)
         ft_potential = hamiltonian.get_ft_potential()
         np.testing.assert_almost_equal(
             np.imag(ft_potential), np.zeros_like(ft_potential)
@@ -211,7 +211,7 @@ class HamiltonianBuilderTest(unittest.TestCase):
 
     def test_get_fft_normalization(self) -> None:
         hamiltonian = _generate_random_diagonal_hamiltonian()
-        z_points = rng.random(hamiltonian.Nz)
+        z_points = rng.random(hamiltonian.nz)
         hamiltonian._potential["points"][0][0] = [  # noqa: SLF001
             x + o
             for (x, o) in zip(
@@ -223,9 +223,9 @@ class HamiltonianBuilderTest(unittest.TestCase):
 
         # fft should pick up a 1/v factor
         ft_potential = hamiltonian.get_ft_potential()
-        for iz in range(hamiltonian.Nz):
+        for iz in range(hamiltonian.nz):
             self.assertAlmostEqual(np.sum(ft_potential[:, :, iz]), z_points[iz])
-            ft_value = z_points[iz] / (hamiltonian.Nx * hamiltonian.Ny)
+            ft_value = z_points[iz] / (hamiltonian.nx * hamiltonian.ny)
             np.testing.assert_allclose(ft_potential[:, :, iz], ft_value)
 
     def test_get_off_diagonal_energies_zero(self) -> None:
@@ -261,7 +261,7 @@ class HamiltonianBuilderTest(unittest.TestCase):
             ),
         }
 
-        hamiltonian = SurfaceHamiltonianUtil(potentail, config, resolution)
+        hamiltonian = _SurfaceHamiltonianUtil(potentail, config, resolution)
 
         np.testing.assert_allclose(
             hamiltonian.hamiltonian(np.array([0, 0, 0]))["array"],
@@ -300,7 +300,7 @@ class HamiltonianBuilderTest(unittest.TestCase):
             ),
         }
 
-        hamiltonian = SurfaceHamiltonianUtil(potentail, config, resolution)
+        hamiltonian = _SurfaceHamiltonianUtil(potentail, config, resolution)
 
         np.testing.assert_allclose(
             hamiltonian._calculate_off_diagonal_energies_fast(),  # noqa: SLF001
