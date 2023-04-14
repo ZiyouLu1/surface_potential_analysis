@@ -6,7 +6,10 @@ from typing import Literal, TypeVar
 import numpy as np
 from scipy.constants import hbar
 
-from surface_potential_analysis.basis_config import BasisConfigUtil, MomentumBasisConfig
+from surface_potential_analysis.basis_config.basis_config import (
+    BasisConfigUtil,
+    MomentumBasisConfig,
+)
 from surface_potential_analysis.hamiltonian import (
     MomentumBasisHamiltonian,
     PositionBasisStackedHamiltonian,

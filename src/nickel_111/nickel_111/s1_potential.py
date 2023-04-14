@@ -1,9 +1,8 @@
 from typing import Any, TypeVar
 
 import numpy as np
-
 from surface_potential_analysis.basis import BasisVector
-from surface_potential_analysis.basis_config import (
+from surface_potential_analysis.basis_config.basis_config import (
     PositionBasisConfig,
     PositionBasisConfigUtil,
 )
@@ -107,7 +106,7 @@ def generate_raw_unit_cell_data() -> None:
         ]
     )
 
-    length = np.max(y_points) - np.min(y_points)
+    length = np.max(y_points) - np.min(y_points)  # type:ignore[operator]
     grid: UnevenPotential[Any, Any, Any] = {
         "basis": (
             {
@@ -134,7 +133,7 @@ def get_coordinate_fractions(
     vec0: tuple[float, float],
     vec1: tuple[float, float],
     coordinates: np.ndarray[Any, Any],
-):
+) -> np.ndarray[tuple[int, ...], np.dtype[np.float_]]:
     out = []
     for coord in coordinates:
         a = np.array(
@@ -145,7 +144,7 @@ def get_coordinate_fractions(
         )
         fraction = np.linalg.solve(a, [coord[0], coord[1]])
         out.append([fraction[0], fraction[1]])
-    return np.array(out)
+    return np.array(out)  # type:ignore[no-any-return]
 
 
 _L0Inv = TypeVar("_L0Inv", bound=int)
@@ -153,7 +152,7 @@ _L1Inv = TypeVar("_L1Inv", bound=int)
 _L2Inv = TypeVar("_L2Inv", bound=int)
 
 
-def interpolate_points_fourier_nickel(
+def interpolate_points_fourier_nickel(  # noqa: PLR0913
     points: np.ndarray[tuple[int, int], np.dtype[np.float_]],
     delta_x0_reciprocal: BasisVector,
     delta_x1_reciprocal: BasisVector,
@@ -162,15 +161,16 @@ def interpolate_points_fourier_nickel(
     shape: tuple[_L0Inv, _L1Inv],
 ) -> np.ndarray[tuple[_L0Inv, _L1Inv], np.dtype[np.float_]]:
     """
-    Given a uniform grid of points in the reciprocal spacing interpolate
-    a grid of points with the given shape into the real spacing using the fourier transform
-    """
+    Interpolate a grid of points with the given shape into the real spacing.
 
+    Given a uniform grid of points in the reciprocal spacing interpolate
+    a grid of points with the given shape into the real spacing using the fourier transform.
+    """
     ft_potential = np.fft.fft2(points, axes=(0, 1), norm="forward")
     old_basis_config: PositionBasisConfig[
         int, int, int
     ] = PositionBasisConfigUtil.from_resolution(
-        resolution=(*points.shape, 1)  # type:ignore
+        resolution=(*points.shape, 1)  # type:ignore[arg-type]
     )
     old_basis_util = PositionBasisConfigUtil(old_basis_config)
     nk_points_stacked = old_basis_util.fundamental_nk_points.reshape(
@@ -215,19 +215,16 @@ def interpolate_points_fourier_nickel(
     np.testing.assert_array_almost_equal(
         interpolated_points, np.abs(interpolated_points)
     )
-    return np.abs(interpolated_points).reshape(shape)  # type: ignore
+    return np.abs(interpolated_points).reshape(shape)  # type: ignore[no-any-return]
 
 
 def interpolate_energy_grid_xy_fourier_nickel(
     data: UnevenPotential[Any, Any, Any],
     delta_x0_real: tuple[float, float],
     delta_x1_real: tuple[float, float],
-    shape: tuple[_L0Inv, _L1Inv] = (40, 40),  # type:ignore
+    shape: tuple[_L0Inv, _L1Inv] = (40, 40),  # type:ignore[assignment]
 ) -> UnevenPotential[_L0Inv, _L1Inv, Any]:
-    """
-    Makes use of a fourier transform to increase the number of points
-    in the xy plane of the energy grid
-    """
+    """Make use of a fourier transform to increase the number of points in the xy plane of the energy grid."""
     old_points = np.array(data["points"])
     points = np.empty((shape[0], shape[1], old_points.shape[2]))
 
@@ -244,12 +241,12 @@ def interpolate_energy_grid_xy_fourier_nickel(
         "basis": (
             {
                 "_type": "position",
-                "delta_x": np.array([delta_x0_real[0], delta_x0_real[1], 1]),
+                "delta_x": np.array([delta_x0_real[0], delta_x0_real[1], 0]),
                 "n": shape[0],
             },
             {
                 "_type": "position",
-                "delta_x": np.array([delta_x1_real[0], delta_x1_real[1], 1]),
+                "delta_x": np.array([delta_x1_real[0], delta_x1_real[1], 0]),
                 "n": shape[1],
             },
             data["basis"][2],
@@ -265,14 +262,15 @@ def interpolate_energy_grid_fourier_nickel(
     shape: tuple[_L0Inv, _L1Inv, _L2Inv],
 ) -> Potential[_L0Inv, _L1Inv, _L2Inv]:
     """
-    Interpolate an energy grid using the fourier method, but in the xy direction we
-    ignore the initial lattice constants
+    Interpolate an energy grid using the fourier method.
+
+    In the xy direction we ignore the initial lattice constants
     """
     xy_interpolation = interpolate_energy_grid_xy_fourier_nickel(
         data, delta_x0_real, delta_x1_real, (shape[0], shape[1])
     )
     interpolated = interpolate_points_along_axis_spline(
-        xy_interpolation["points"], xy_interpolation["basis"][2], shape[2], -1
+        xy_interpolation["points"], xy_interpolation["basis"][2], shape[2], -1  # type: ignore[arg-type]
     )
 
     return {
@@ -285,15 +283,13 @@ def interpolate_energy_grid_fourier_nickel(
                 "n": shape[2],
             },
         ),
-        "points": interpolated,
+        "points": interpolated,  # type: ignore[typeddict-item]
     }
 
 
 def load_cleaned_energy_grid() -> UnevenPotential[Any, Any, Any]:
     data = load_raw_data_reciprocal_grid()
     normalized = normalize_potential(data)
-    # cutoff=4E-19, n=6, offset = 1e-20
-    # cutoff=3.2e-18, n=1, offset=1e-20
     return truncate_potential(normalized, cutoff=0.4e-18, n=1, offset=1e-20)
 
 
@@ -305,7 +301,7 @@ def get_interpolated_nickel_potential(
     truncated = truncate_potential(normalized, cutoff=0.4e-18, n=1, offset=1e-20)
 
     raw_data = load_raw_data()
-    x_width = np.max(raw_data["x_points"]) - np.min(raw_data["x_points"])  # type: ignore
+    x_width = np.max(raw_data["x_points"]) - np.min(raw_data["x_points"])  # type: ignore[operator]
 
     delta_x0_real = (2 * x_width, 0)
     delta_x1_real = (0.5 * delta_x0_real[0], np.sqrt(3) * delta_x0_real[0] / 2)
@@ -328,8 +324,8 @@ def generate_interpolated_data_john_grid() -> None:
     truncated = truncate_potential(normalized, cutoff=0.4e-18, n=1, offset=1e-20)
 
     raw_data = load_raw_data()
-    x_width = np.max(raw_data["x_points"]) - np.min(raw_data["x_points"])  # type: ignore
-    y_width = np.max(raw_data["y_points"]) - np.min(raw_data["y_points"])  # type: ignore
+    x_width = np.max(raw_data["x_points"]) - np.min(raw_data["x_points"])  # type: ignore[operator]
+    y_width = np.max(raw_data["y_points"]) - np.min(raw_data["y_points"])  # type: ignore[operator]
 
     delta_x0_real = (2 * x_width, 0)
     delta_x1_real = (0, 3 * y_width)

@@ -1,42 +1,33 @@
 import numpy as np
 from matplotlib import pyplot as plt
-
-from surface_potential_analysis.energy_data import (
-    EnergyGrid,
-    get_energy_points_xy_locations,
-    normalize_energy,
-    truncate_energy,
+from surface_potential_analysis.potential.plot import (
+    animate_potential_x0x1,
 )
-from surface_potential_analysis.energy_data_plot import (
-    animate_energy_grid_3D_in_x1z,
-    animate_energy_grid_3D_in_xy,
-    compare_energy_grid_to_all_raw_points,
-    plot_all_energy_points_z,
-    plot_energy_grid_points,
-    plot_energy_point_locations_on_grid,
-    plot_energy_points_location,
-    plot_potential_minimum_along_path,
-    plot_z_direction_energy_comparison_111,
-    plot_z_direction_energy_data_111,
+from surface_potential_analysis.potential.plot_point_potential import (
+    get_point_potential_xy_locations,
+    plot_point_potential_all_z,
+    plot_point_potential_location_xy,
 )
-from surface_potential_analysis.sho_wavefunction_plot import plot_sho_wavefunctions
+from surface_potential_analysis.potential.potential import (
+    normalize_potential,
+    truncate_potential,
+)
 
 from .s1_potential import (
     load_interpolated_grid,
-    load_john_interpolation,
     load_raw_data,
     load_raw_data_grid,
 )
 from .surface_data import save_figure
 
 
-def plot_raw_data_points():
+def plot_raw_data_points() -> None:
     data = load_raw_data()
-    fig, ax, _ = plot_energy_points_location(data)
+    fig, ax, _ = plot_point_potential_location_xy(data)
 
-    locations = get_energy_points_xy_locations(data)
+    locations = get_point_potential_xy_locations(data)
     e_min = []
-    for (x, y) in locations:
+    for x, y in locations:
         idx = np.argwhere(
             np.logical_and(
                 np.array(data["x_points"]) == x,
@@ -66,7 +57,7 @@ def plot_raw_data_points():
     fig.show()
     save_figure(fig, "nickel_raw_points.png")
 
-    fig, ax = plot_all_energy_points_z(data)
+    fig, ax = plot_point_potential_all_z(data)
     ax.set_ylim(0, 3 * 10**-19)
 
     ax.legend()
@@ -76,20 +67,19 @@ def plot_raw_data_points():
     input()
 
 
-def plot_raw_energy_grid_points():
-    grid = normalize_energy(load_raw_data_grid())
+def plot_raw_energy_grid_points() -> None:
+    grid = normalize_potential(load_raw_data_grid())
 
     fig, _, _ = plot_energy_grid_points(grid)
     fig.show()
 
     fig, ax, _ = plot_z_direction_energy_data_111(grid)
-    # ax.set_ylim(0, 0.2e-18)
     fig.show()
 
-    fig, _, _ani = animate_energy_grid_3D_in_xy(grid)
+    fig, _, _ani = animate_potential_x0x1(grid)
     fig.show()
 
-    truncated = truncate_energy(grid, cutoff=2e-19, n=1, offset=1e-20)
+    truncated = truncate_potential(grid, cutoff=2e-19, n=1, offset=1e-20)
     fig, ax = plot_z_direction_energy_comparison_111(truncated, grid)
     ax.set_ylim(0, 0.2e-18)
     fig.show()
@@ -102,25 +92,24 @@ def plot_raw_energy_grid_points():
         "points": ft_points.tolist(),
         "z_points": grid["z_points"],
     }
-    fig, ax, _ani1 = animate_energy_grid_3D_in_xy(ft_grid)
+    fig, ax, _ani1 = animate_potential_x0x1(ft_grid)
     # TODO: delta is wrong, plot generic points and then factor out into ft.
     ax.set_title("Plot of the ft of the raw potential")
     fig.show()
     input()
 
 
-def plot_interpolated_energy_grid_points():
+def plot_interpolated_energy_grid_points() -> None:
     grid = load_interpolated_grid()
 
     fig, ax, _ = plot_energy_grid_points(grid)
     fig.show()
 
-    raw = normalize_energy(load_raw_data_grid())
+    raw = normalize_potential(load_raw_data_grid())
     fig, ax = plot_z_direction_energy_comparison_111(grid, raw)
-    # ax.set_ylim(0, 0.2e-18)
     fig.show()
 
-    fig, ax, _ani = animate_energy_grid_3D_in_xy(grid, clim_max=0.2e-18)
+    fig, ax, _ani = animate_potential_x0x1(grid, clim=(0, 0.2e-18))
     z_energies = np.min(grid["points"], axis=2)
     xy_min = np.unravel_index(np.argmin(z_energies), z_energies.shape)
     x0_min = xy_min[0] / (1 + z_energies.shape[0])
@@ -152,46 +141,13 @@ def plot_interpolated_energy_grid_points():
         "points": ft_points.tolist(),
         "z_points": grid["z_points"],
     }
-    fig, ax, _ani1 = animate_energy_grid_3D_in_xy(ft_grid)
+    fig, ax, _ani1 = animate_potential_x0x1(ft_grid)
     ax.set_title("Plot of the ft of the interpolated potential")
     fig.show()
     input()
 
 
-def plot_john_interpolated_points():
-    data = load_john_interpolation()
-
-    fig, ax, _anim1 = animate_energy_grid_3D_in_xy(data)
-    ax.set_title(
-        "Plot of the interpolated Copper surface potential\n" "through the z plane"
-    )
-    fig.show()
-
-    fig, ax, _anim2 = animate_energy_grid_3D_in_x1z(data)
-    ax.set_title(
-        "Plot of the interpolated Copper surface potential\n" "through the y plane"
-    )
-
-    fig.show()
-    input()
-
-
-def compare_john_interpolation():
-    raw_points = load_raw_data()
-    interpolation = load_john_interpolation()
-
-    fig, ax, _anim2 = plot_energy_point_locations_on_grid(raw_points, interpolation)
-    fig.show()
-
-    fig, ax = compare_energy_grid_to_all_raw_points(raw_points, interpolation)
-    ax.set_ylim(0, 3 * 10**-19)
-    ax.set_title("Comparison between raw and interpolated potential for Nickel")
-    fig.show()
-    input()
-    save_figure(fig, "raw_interpolation_comparison.png")
-
-
-def calculate_raw_fcc_hcp_energy_jump():
+def calculate_raw_fcc_hcp_energy_jump() -> None:
     raw_points = load_raw_data()
 
     x_points = np.array(raw_points["x_points"])
@@ -202,20 +158,21 @@ def calculate_raw_fcc_hcp_energy_jump():
     p2 = points[np.logical_and(x_points == 0, y_points == np.max(y_points))]
     p3 = points[np.logical_and(x_points == 0, y_points == 0)]
 
-    print(np.min(p1))  # 0.0
-    print(np.min(p2))  # 2.95E-21J
-    print(np.min(p3))  # 9.67E-20J
+    print(np.min(p1))  # 0.0  # noqa: T201
+    print(np.min(p2))  # 2.95E-21J # noqa: T201
+    print(np.min(p3))  # 9.67E-20J # noqa: T201
 
 
-def plot_interpolation_with_sho_wavefunctions():
+def plot_interpolation_with_sho_wavefunctions() -> None:
     """
+    Investigate the extent to which SHO wavefunctions lie outside the potential.
+
     Is is possible that the SHO wavefunctions lie outside the interpolated potential
     or have energies for which they can see the truncation process.
 
     Plotting them alongside the interpolation in the hZ direction will allow us to
     diagnose these issues
     """
-
     grid = load_interpolated_grid()
     fig, ax = plt.subplots()
     plot_z_direction_energy_data_111(grid, ax=ax)
@@ -233,8 +190,7 @@ def plot_interpolation_with_sho_wavefunctions():
     input()
 
 
-def plot_potential_minimum_along_diagonal():
-
+def plot_potential_minimum_along_diagonal() -> None:
     fig, ax = plt.subplots()
 
     interpolation = load_interpolated_grid()
@@ -246,7 +202,7 @@ def plot_potential_minimum_along_diagonal():
     input()
 
 
-def plot_potential_minimum_along_edge():
+def plot_potential_minimum_along_edge() -> None:
     interpolation = load_interpolated_grid()
     fig, ax = plt.subplots()
     path = [

@@ -1,16 +1,3 @@
-from surface_potential_analysis.energy_data import as_interpolation
-from surface_potential_analysis.energy_eigenstate import (
-    EigenstateConfig,
-    generate_sho_config_minimum,
-)
-from surface_potential_analysis.hamiltonian import SurfaceHamiltonianUtil
-
-from .s1_potential import (
-    load_interpolated_copper_data,
-    load_spline_interpolated_relaxed_data,
-)
-
-
 def generate_hamiltonian(resolution: tuple[int, int, int] = (1, 1, 1)):
     data = load_interpolated_copper_data()
     interpolation = as_interpolation(data)

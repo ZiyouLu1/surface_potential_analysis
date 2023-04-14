@@ -3,7 +3,10 @@ from typing import TYPE_CHECKING
 
 import numpy as np
 
-from surface_potential_analysis.basis_config import BasisConfigUtil, MomentumBasisConfig
+from surface_potential_analysis.basis_config.basis_config import (
+    BasisConfigUtil,
+    MomentumBasisConfig,
+)
 from surface_potential_analysis.eigenstate.eigenstate_calculation import (
     calculate_energy,
 )

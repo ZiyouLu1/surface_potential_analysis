@@ -2,6 +2,7 @@
   "python.analysis.typeCheckingMode": "off",
   "python.analysis.diagnosticMode": "openFilesOnly",
   "python.linting.mypyEnabled": false,
+  "python.linting.enabled": false,
   // "python.linting.flake8Enabled": true,
   "python.formatting.provider": "black",
   // "isort.args": [
@@ -44,6 +45,7 @@
     "pcolormesh",
     "prefactor",
     "pyplot",
+    "rfft",
     "rfftn",
     "savefig",
     "scipy",

@@ -63,7 +63,7 @@ def plot_eigenstate_in_xy(
     return (fig, ax, mesh)
 
 
-def animate_eigenstate_3D_in_xy(
+def animate_eigenstate_3d_in_xy(
     config: EigenstateConfig,
     eigenstate: Eigenstate,
     *,
@@ -182,7 +182,7 @@ def plot_bloch_wavefunction_difference_in_x0z(
 ) -> tuple[Figure, Axes, QuadMesh]:
     """
     Plot the difference between the bloch wavefunction for the two eigenstates
-    at x1=x1_ind, where the
+    at x1=x1_ind, where the.
 
     Parameters
     ----------

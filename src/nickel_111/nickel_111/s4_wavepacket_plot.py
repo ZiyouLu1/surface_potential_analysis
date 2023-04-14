@@ -1,6 +1,5 @@
 import numpy as np
 from matplotlib import pyplot as plt
-
 from surface_potential_analysis.eigenstate.eigenstate import (
     convert_sho_eigenstate_to_position_basis,
 )
@@ -121,34 +120,11 @@ def plot_wavepacket_points_me() -> None:
 def plot_wavepacket_grid_all_equal() -> None:
     """
     Does the imaginary oscillation in the imaginary part of the wavefunction happen
-    if we choose a constant bloch wavefunction for all k
+    if we choose a constant bloch wavefunction for all k.
     """
-    # path = get_data_path(f"eigenstates_grid_{0}.json")
-    # eigenstates = load_energy_eigenstates(path)
-    # util = EigenstateConfigUtil(eigenstates["eigenstate_config"])
-    # eigenvector = np.zeros(np.prod(util.resolution))
-    # eigenvector[util.get_index(0, 0, 0)] = 1
     # eigenstates["eigenvectors"] = [
     #     eigenvector.tolist() for _ in eigenstates["eigenvectors"]
-    # ]
 
-    # z_points = [0.0]
-    # grid = calculate_wavepacket_grid_fourier(
-    #     eigenstates, z_points, x0_lim=(0, 10), x1_lim=(0, 10)
-    # )
-
-    # fig, _, _anim0 = animate_wavepacket_grid_3D_in_xy(grid, norm="symlog")
-    # fig.show()
-
-    # fig, _, _anim0 = animate_wavepacket_grid_3D_in_xy(
-    #     grid, norm="symlog", measure="real"
-    # )
-    # fig.show()
-
-    # fig, _, _anim0 = animate_wavepacket_grid_3D_in_xy(
-    #     grid, norm="symlog", measure="imag"
-    # )
-    # fig.show()
     input()
 
 
@@ -166,11 +142,7 @@ def plot_wavepacket_grid() -> None:
     wavepacket = load_wavepacket(path)
     normalized = normalize_wavepacket(wavepacket, 0, 0)
     # TODO:
-    # (
-    #         (util.delta_x0[0] + util.delta_x1[0]) / 3,
-    #         (util.delta_x0[1] + util.delta_x1[1]) / 3,
     #         0,
-    #     )
     fig, _, _anim1 = animate_wavepacket_x0x1(normalized, scale="symlog")
     fig.show()
 

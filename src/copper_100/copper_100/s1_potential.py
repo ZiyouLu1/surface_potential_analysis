@@ -1,96 +1,69 @@
-from surface_potential_analysis.energy_data import (
-    EnergyGrid,
-    fill_surface_from_z_maximum,
-    interpolate_energy_grid_3D_spline,
-    interpolate_energy_grid_fourier,
-    load_energy_grid,
-    normalize_energy,
-    save_energy_grid,
-    truncate_energy,
-    undo_truncate_energy,
+from typing import Any
+
+from surface_potential_analysis.potential.potential import (
+    Potential,
+    UnevenPotential,
+    interpolate_uneven_potential,
+    load_uneven_potential_json,
+    normalize_potential,
+    truncate_potential,
+    undo_truncate_potential,
 )
 
 from .surface_data import get_data_path
 
 
-def load_raw_copper_data():
+def load_raw_copper_potential() -> UnevenPotential[Any, Any, Any]:
     path = get_data_path("copper_raw_energies.json")
-    return load_energy_grid(path)
+    return load_uneven_potential_json(path)
 
 
-def load_relaxed_copper_data():
+def load_relaxed_copper_potential() -> UnevenPotential[Any, Any, Any]:
     path = get_data_path("raw_energies_relaxed_sp.json")
-    return load_energy_grid(path)
+    return load_uneven_potential_json(path)
 
 
-def load_interpolated_relaxed_data():
-    path = get_data_path("copper_interpolated_energies_relaxed.json")
-    return load_energy_grid(path)
-
-
-def load_spline_interpolated_relaxed_data():
-    path = get_data_path("copper_spline_interpolated_energies_relaxed.json")
-    return load_energy_grid(path)
-
-
-def load_interpolated_copper_data():
-    path = get_data_path("copper_interpolated_energies.json")
-    return load_energy_grid(path)
-
-
-def load_nc_raw_copper_data():
+def load_nc_raw_copper_potential() -> UnevenPotential[Any, Any, Any]:
     path = get_data_path("copper_nc_raw_energies.json")
-    return load_energy_grid(path)
+    return load_uneven_potential_json(path)
 
 
-def load_9h_copper_data():
+def load_9h_copper_potential() -> UnevenPotential[Any, Any, Any]:
     path = get_data_path("copper_9h_raw_energies.json")
-    return load_energy_grid(path)
+    return load_uneven_potential_json(path)
 
 
-def load_simple_copper_data():
-    path = get_data_path("copper_simple_raw_energies2.json")
-    return load_energy_grid(path)
-
-
-def load_clean_copper_data():
-    data = load_raw_copper_data()
-    data = normalize_energy(data)
-    data = fill_surface_from_z_maximum(data)
-    data = truncate_energy(data, cutoff=3e-18, n=6, offset=1e-20)
+def load_clean_copper_data() -> UnevenPotential[Any, Any, Any]:
+    data = load_raw_copper_potential()
+    data = normalize_potential(data)
+    data = truncate_potential(data, cutoff=3e-18, n=6, offset=1e-20)
     return data
 
 
-def calculate_interpolated_data(shape: tuple[float, float, float]) -> EnergyGrid:
-    data = load_raw_copper_data()
-    normalized = normalize_energy(data)
+def get_interpolated_potential(shape: tuple[int, int, int]) -> Potential[Any, Any, Any]:
+    data = load_raw_copper_potential()
+    normalized = normalize_potential(data)
 
     # The Top site has such an insanely large energy
     # We must bring it down first
-    truncated = truncate_energy(normalized, cutoff=1e-17, n=5, offset=1e-20)
-    truncated = truncate_energy(truncated, cutoff=0.5e-18, n=1, offset=0)
-    interpolated = interpolate_energy_grid_fourier(truncated, shape)
-    return undo_truncate_energy(interpolated, cutoff=0.5e-18, n=1, offset=0)
+    truncated = truncate_potential(normalized, cutoff=1e-17, n=5, offset=1e-20)
+    truncated = truncate_potential(truncated, cutoff=0.5e-18, n=1, offset=0)
+    interpolated = interpolate_uneven_potential(truncated, shape)
+    return undo_truncate_potential(interpolated, cutoff=0.5e-18, n=1, offset=0)
 
 
-def generate_interpolated_copper_data_fourier():
-    data = calculate_interpolated_data(shape=(62, 62, 120))
+def get_interpolated_potential_relaxed(
+    shape: tuple[int, int, int]
+) -> Potential[Any, Any, Any]:
+    data = load_relaxed_copper_potential()
+    normalized = normalize_potential(data)
 
-    path = get_data_path("copper_interpolated_energies.json")
-    save_energy_grid(data, path)
-
-
-def generate_interpolated_relaxed_copper_data_fourier():
-    data = load_relaxed_copper_data()
-    normalized = normalize_energy(data)
-    interpolated = interpolate_energy_grid_fourier(normalized, shape=(60, 60, 120))
-    path = get_data_path("copper_interpolated_energies_relaxed.json")
-    save_energy_grid(interpolated, path)
+    return interpolate_uneven_potential(normalized, shape)
 
 
-def generate_interpolated_copper_data_3D_spline():
-    data = load_relaxed_copper_data()
-    normalized = normalize_energy(data)
-    interpolated = interpolate_energy_grid_3D_spline(normalized, shape=(60, 60, 120))
+def generate_interpolated_copper_data_3d_spline():
+    data = load_relaxed_copper_potential()
+    normalized = normalize_potential(data)
+    interpolated = interpolate_energy_grid_3d_spline(normalized, shape=(60, 60, 120))
     path = get_data_path("copper_spline_interpolated_energies_relaxed.json")
     save_energy_grid(interpolated, path)

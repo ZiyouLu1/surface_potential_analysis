@@ -17,7 +17,9 @@ from .basis import (
 )
 
 _BX0Inv = TypeVar(
-    "_BX0Inv", bound=ExplicitBasis[int, PositionBasis[int] | MomentumBasis[int]]
+    "_BX0Inv",
+    bound=ExplicitBasis[int, PositionBasis[int]]
+    | ExplicitBasis[int, MomentumBasis[int]],
 )
 
 

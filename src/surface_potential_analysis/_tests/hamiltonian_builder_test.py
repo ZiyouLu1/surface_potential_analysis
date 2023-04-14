@@ -7,10 +7,14 @@ import scipy.linalg
 import scipy.special
 from scipy.constants import hbar
 
-from surface_potential_analysis.basis_config import (
+from surface_potential_analysis.basis_config.basis_config import (
     BasisConfigUtil,
     PositionBasisConfig,
     PositionBasisConfigUtil,
+)
+from surface_potential_analysis.basis_config.sho_basis import (
+    SHOBasisConfig,
+    calculate_x_distances,
 )
 from surface_potential_analysis.hamiltonian import convert_x2_to_explicit_basis
 from surface_potential_analysis.hamiltonian_builder import (
@@ -21,7 +25,6 @@ from surface_potential_analysis.hamiltonian_builder.sho_subtracted_basis import 
     _SurfaceHamiltonianUtil,
 )
 from surface_potential_analysis.interpolation import interpolate_points_rfftn
-from surface_potential_analysis.sho_basis import SHOBasisConfig, calculate_x_distances
 
 if TYPE_CHECKING:
     from surface_potential_analysis.potential.potential import Potential
@@ -393,7 +396,7 @@ class HamiltonianBuilderTest(unittest.TestCase):
             points, s=(2 * points.shape[0], 2 * points.shape[1]), axes=(0, 1)
         )
 
-        interpolated_potential: Potential[Any, Any, Any] = {
+        interpolated_potential: Potential[int, int, int] = {
             "basis": (
                 {
                     "n": interpolated_points.shape[0],
@@ -466,7 +469,7 @@ class HamiltonianBuilderTest(unittest.TestCase):
             points, s=(2 * points.shape[0], 2 * points.shape[1]), axes=(0, 1)
         )
 
-        interpolated_potential: Potential[Any, Any, Any] = {
+        interpolated_potential: Potential[int, int, int] = {
             "basis": (
                 {
                     "n": interpolated_points.shape[0],

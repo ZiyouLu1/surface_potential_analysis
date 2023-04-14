@@ -10,7 +10,7 @@ from surface_potential_analysis.basis.basis import (
     PositionBasis,
     explicit_momentum_basis_in_position,
 )
-from surface_potential_analysis.sho_basis import (
+from surface_potential_analysis.basis_config.sho_basis import (
     SHOBasisConfig,
     calculate_sho_wavefunction,
     infinate_sho_basis_from_config,
@@ -152,9 +152,5 @@ class SHOBasisTest(unittest.TestCase):
         basis1 = _normalize_sho_basis(
             infinate_sho_basis_from_config(parent, config, 16)
         )
-        basis2 = _normalize_sho_basis(
-            explicit_momentum_basis_in_position(
-                sho_basis_from_config(parent, config, 16)
-            )
-        )
+        basis2 = _normalize_sho_basis(sho_basis_from_config(parent, config, 16))
         np.testing.assert_array_almost_equal(basis1["vectors"], basis2["vectors"])

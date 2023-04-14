@@ -301,7 +301,7 @@ def plot_energy_grid_in_xy(
     return (fig, ax, mesh)
 
 
-def animate_energy_grid_3D_in_xy(
+def animate_energy_grid_3d_in_xy(
     grid: EnergyGrid, *, ax: Axes | None = None, clim_max: float | None = None
 ) -> tuple[Figure, Axes, matplotlib.animation.ArtistAnimation]:
     fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
@@ -350,7 +350,7 @@ def plot_energy_grid_in_x1z(
     return (fig, ax, mesh)
 
 
-def animate_energy_grid_3D_in_x1z(
+def animate_energy_grid_3d_in_x1z(
     grid: EnergyGrid, *, ax: Axes | None = None, clim_max: float | None = None
 ) -> tuple[Figure, Axes, matplotlib.animation.ArtistAnimation]:
     fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
@@ -455,7 +455,7 @@ def plot_energy_point_locations_on_grid(
 
 def calculate_cumulative_distances_along_path(path: ArrayLike, coordinates: NDArray):
     """
-    Get a list of cumulative distances along a path ([x_coord, y_coord, z_coord]) given a grid of coordinates
+    Get a list of cumulative distances along a path ([x_coord, y_coord, z_coord]) given a grid of coordinates.
 
     Parameters
     ----------

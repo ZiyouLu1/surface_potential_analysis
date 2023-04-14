@@ -7,19 +7,18 @@ from surface_potential_analysis.basis import (
     PositionBasis,
     TruncatedBasis,
 )
-from surface_potential_analysis.basis.basis import explicit_momentum_basis_in_position
-from surface_potential_analysis.hamiltonian import HamiltonianWithBasis
-from surface_potential_analysis.hamiltonian_builder import sho_subtracted_basis
-from surface_potential_analysis.sho_basis import (
+from surface_potential_analysis.basis_config.sho_basis import (
     infinate_sho_basis_from_config,
     sho_basis_from_config,
 )
+from surface_potential_analysis.hamiltonian import HamiltonianWithBasis
+from surface_potential_analysis.hamiltonian_builder import sho_subtracted_basis
 from surface_potential_analysis.util import timed
 
 from .s1_potential import get_interpolated_nickel_potential
 
 if TYPE_CHECKING:
-    from surface_potential_analysis.sho_basis import SHOBasisConfig
+    from surface_potential_analysis.basis_config.sho_basis import SHOBasisConfig
 
 _L0 = TypeVar("_L0", bound=int)
 _L1 = TypeVar("_L1", bound=int)
@@ -82,5 +81,5 @@ def generate_sho_basis(
     parent = get_interpolated_nickel_potential((1, 1, 1000))["basis"][2]
     return (
         infinate_sho_basis_from_config(parent, config, n),
-        explicit_momentum_basis_in_position(sho_basis_from_config(parent, config, n)),
+        sho_basis_from_config(parent, config, n),
     )

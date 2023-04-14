@@ -5,8 +5,14 @@ import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib.axes import Axes
 from matplotlib.figure import Figure
-
-from surface_potential_analysis.basis_config_plot import plot_projected_coordinates_2D
+from scipy.constants import electron_volt
+from surface_potential_analysis.basis_config.plot import plot_projected_coordinates_2d
+from surface_potential_analysis.interpolation import (
+    interpolate_points_fftn,
+    interpolate_points_rfft,
+    interpolate_points_rfftn,
+    pad_ft_points,
+)
 from surface_potential_analysis.potential import (
     Potential,
     UnevenPotential,
@@ -14,7 +20,9 @@ from surface_potential_analysis.potential import (
 )
 from surface_potential_analysis.potential.plot import (
     animate_potential_x0x1,
-    plot_potential_1D_comparison,
+    plot_potential_1d_comparison,
+    plot_potential_2d,
+    plot_potential_difference_2d,
     plot_potential_minimum_along_path,
     plot_potential_x0x1,
 )
@@ -28,6 +36,7 @@ from surface_potential_analysis.potential.plot_uneven_potential import (
 from surface_potential_analysis.potential.potential import mock_even_potential
 
 from .s1_potential import (
+    get_interpolated_nickel_potential,
     load_cleaned_energy_grid,
     load_interpolated_grid,
     load_interpolated_john_grid,
@@ -113,7 +122,7 @@ def plot_raw_energy_grid_points() -> None:
     potential = normalize_potential(load_raw_data_reciprocal_grid())
     mocked_potential = mock_even_potential(potential)
 
-    fig, _, _ = plot_projected_coordinates_2D(mocked_potential["basis"], 0, 2)
+    fig, _, _ = plot_projected_coordinates_2d(mocked_potential["basis"], 0, 2)
     fig.show()
 
     fig, ax = plot_z_direction_energy_data_nickel_reciprocal_points(potential)
@@ -143,14 +152,14 @@ def plot_raw_energy_grid_points() -> None:
 def plot_interpolated_energy_grid_points() -> None:
     potential = load_interpolated_grid()
 
-    fig, ax, _ = plot_projected_coordinates_2D(potential["basis"], 0, 2)
+    fig, ax, _ = plot_projected_coordinates_2d(potential["basis"], 0, 2)
     fig.show()
 
     fig, ax, _ani = animate_potential_x0x1(potential, clim=(0, 2e-19))
 
     raw_potential = load_raw_data_reciprocal_grid()
     mocked_raw_potential = mock_even_potential(raw_potential)
-    plot_projected_coordinates_2D(mocked_raw_potential["basis"], 0, 2, ax=ax)
+    plot_projected_coordinates_2d(mocked_raw_potential["basis"], 0, 2, ax=ax)
     fig.show()
 
     locations = get_nickel_comparison_points_x0x1(potential)
@@ -164,23 +173,13 @@ def plot_interpolated_energy_grid_points() -> None:
     for ln in ax.lines:
         ln.set_marker("x")
         ln.set_linestyle("")
-    _, _ = plot_potential_1D_comparison(potential, locations, ax=ax)
+    _, _ = plot_potential_1d_comparison(potential, locations, ax=ax)
     ax.set_ylim(0, 5e-18)
 
     fig.show()
 
-    # ft_points = np.abs(np.fft.ifft2(grid["points"], axes=(0, 1)))
-    # ft_points[0, 0] = 0
     # ft_grid: EnergyGrid = {
-    #     "delta_x0": grid["delta_x0"],
-    #     "delta_x1": grid["delta_x1"],
-    #     "points": ft_points.tolist(),
-    #     "z_points": grid["z_points"],
-    # }
-    # fig, ax, _ani1 = animate_energy_grid_3D_in_xy(ft_grid)
     # TODO: delta is wrong, plot generic points and then factor out into ft.
-    # ax.set_title("Plot of the ft of the interpolated potential")
-    # fig.show()
     input()
 
 
@@ -190,33 +189,22 @@ def plot_interpolated_energy_grid_reciprocal() -> None:
     points[points < 0] = np.max(points)
     potential["points"] = points
 
-    fig, ax, _ = plot_projected_coordinates_2D(potential["basis"], 0, 2)
+    fig, ax, _ = plot_projected_coordinates_2d(potential["basis"], 0, 2)
     fig.show()
 
     fig, ax, _ani = animate_potential_x0x1(potential)
 
     raw_grid = load_raw_data_reciprocal_grid()
     mocked_raw_grid = mock_even_potential(raw_grid)
-    plot_projected_coordinates_2D(mocked_raw_grid["basis"], 0, 2, ax=ax)
+    plot_projected_coordinates_2d(mocked_raw_grid["basis"], 0, 2, ax=ax)
     fig.show()
 
     comparison_points = get_nickel_comparison_points_x0x1(potential)
-    fig, ax = plot_potential_1D_comparison(potential, comparison_points)
+    fig, ax = plot_potential_1d_comparison(potential, comparison_points)
     ax.set_ylim(0, 0.2e-18)
     fig.show()
 
-    # ft_points = np.abs(np.fft.ifft2(grid["points"], axes=(0, 1)))
-    # ft_points[0, 0] = 0
     # ft_grid: EnergyGrid = {
-    #     "delta_x0": grid["delta_x0"],
-    #     "delta_x1": grid["delta_x1"],
-    #     "points": ft_points.tolist(),
-    #     "z_points": grid["z_points"],
-    # }
-    # fig, ax, _ani1 = animate_energy_grid_3D_in_xy(ft_grid)
-    # # TODO: delta is wrong, plot generic points and then factor out into ft.
-    # ax.set_title("Plot of the ft of the interpolated potential")
-    # fig.show()
     input()
 
 
@@ -247,13 +235,13 @@ def plot_john_interpolated_points() -> None:
 
     fig, ax, _anim1 = animate_potential_x0x1(mocked_data)
     ax.set_title(
-        "Plot of the interpolated Nickel surface potential\n" "through the x plane"
+        "Plot of the interpolated Nickel surface potential\nthrough the x plane"
     )
     fig.show()
 
     fig, ax, _anim2 = animate_potential_x0x1(mocked_data)
     ax.set_title(
-        "Plot of the interpolated Nickel surface potential\n" "through the y plane"
+        "Plot of the interpolated Nickel surface potential\nthrough the y plane"
     )
 
     fig.show()
@@ -274,7 +262,8 @@ def compare_john_interpolation() -> None:
     plot_point_potential_location_xy(raw_points, ax=ax)
     fig.show()
 
-    fig, ax = compare_energy_grid_to_all_raw_points(raw_points, john_interpolation)
+    fig, ax = plot_potential_2d(mocked_interpolation, 0, 2)
+    plot_point_potential_location_xy(raw_points, ax=ax)
     ax.set_ylim(0, 3 * 10**-19)
     ax.set_title("Comparison between raw and interpolated potential for Nickel")
     fig.show()
@@ -283,7 +272,7 @@ def compare_john_interpolation() -> None:
     fig, ax = plot_z_direction_energy_data_john(john_interpolation)
     my_interpolation = load_interpolated_grid()
     comparison_points = get_nickel_comparison_points_x0x1(my_interpolation)
-    fig, ax = plot_potential_1D_comparison(my_interpolation, comparison_points)
+    fig, ax = plot_potential_1d_comparison(my_interpolation, comparison_points)
     ax.set_ylim(0, 0.5e-18)
     fig.show()
     save_figure(fig, "original_and_new_interpolation_comparison.png")
@@ -292,13 +281,14 @@ def compare_john_interpolation() -> None:
 
 def plot_interpolation_with_sho_wavefunctions() -> None:
     """
+    Investigate the extent to which SHO wavefunctions lie outside the potential.
+
     Is is possible that the SHO wavefunctions lie outside the interpolated potential
     or have energies for which they can see the truncation process.
 
     Plotting them alongside the interpolation in the hZ direction will allow us to
     diagnose these issues
     """
-
     grid = load_interpolated_grid()
     fig, ax = plt.subplots()
     plot_z_direction_energy_data_111(grid, ax=ax)
@@ -374,8 +364,10 @@ def plot_potential_minimum_along_edge() -> None:
 
 def plot_potential_minimum_along_edge_reciprocal() -> None:
     """
+    Investigate symmetry in the potential minimum along the edge.
+
     Is it an issue with how we lay out the raw reciprocal data,
-    or is it a problem with the interpolation procedure?
+    or is it a problem with the interpolation procedure?.
 
     """
     potentail = load_raw_data_reciprocal_grid()
@@ -420,18 +412,17 @@ def plot_potential_minimum_along_edge_reciprocal() -> None:
 
 
 def test_potential_fourier_transform() -> None:
-    """
-    Since we are sampling in units of the bz we expect the potential to be the same at the origin
-    as this just represents the 'average potential'.
+    # Since we are sampling in units of the bz we expect the potential to be the same at the origin
+    # as this just represents the 'average potential'.
 
-    We also expect the off center to be equal,
-    but the irrational unit vectors prevent us from testing this
-    """
+    # We also expect the off center to be equal,
+    # but the irrational unit vectors prevent us from testing this
+
     interpolation = load_interpolated_grid()
     fft_me = np.fft.ifft2(interpolation["points"], axes=(0, 1))
     ftt_origin_me = fft_me[0, 0, np.argmin(np.abs(interpolation["basis"][2]))]
 
-    print(ftt_origin_me, np.min(np.abs(interpolation["basis"][2])))
+    print(ftt_origin_me, np.min(np.abs(interpolation["basis"][2])))  # noqa: T201
 
     x0_norm = np.linalg.norm(interpolation["basis"][0]["delta_x"])
     x1_norm = np.linalg.norm(interpolation["basis"][1]["delta_x"])
@@ -442,7 +433,7 @@ def test_potential_fourier_transform() -> None:
         * interpolation["basis"][1]["delta_x"][0]
     )
     fix_factor = x0_norm * x1_norm / (denom)
-    print(ftt_origin_me / fix_factor)
+    print(ftt_origin_me / fix_factor)  # noqa: T201
 
     john_grid_interpolation = load_interpolated_john_grid()
     fft_john = np.fft.ifft2(john_grid_interpolation["points"], axes=(0, 1))
@@ -450,7 +441,9 @@ def test_potential_fourier_transform() -> None:
         0, 0, np.argmin(np.abs(john_grid_interpolation["basis"][2]))
     ]
 
-    print(ftt_origin_john, np.min(np.abs(john_grid_interpolation["basis"][2])))
+    print(  # noqa: T201
+        ftt_origin_john, np.min(np.abs(john_grid_interpolation["basis"][2]))
+    )
 
     # Good enough
     # Max absolute difference: 3.31267687e-21
@@ -459,7 +452,7 @@ def test_potential_fourier_transform() -> None:
 
 
 def test_symmetry_point_interpolation() -> None:
-    """Does the interpolation contain the same points at x=0 and x=L"""
+    """Check if the interpolation contain the same points at x=0 and x=L."""
     raw_points = load_raw_data()
     interpolation = load_john_interpolation()
     points = np.array(interpolation["points"])
@@ -467,15 +460,219 @@ def test_symmetry_point_interpolation() -> None:
     try:
         np.testing.assert_array_equal(points[0, :, :], points[-1, :, :])
     except AssertionError:
-        print("Endpoint are not the same")
+        print("Endpoint are not the same")  # noqa: T201
     else:
-        print("Endpoint the same")
+        print("Endpoint the same")  # noqa: T201
 
-    delta_x = 2 * (np.max(raw_points["x_points"]) - np.min(raw_points["x_points"]))  # type: ignore
+    delta_x = 2 * (np.max(raw_points["x_points"]) - np.min(raw_points["x_points"]))  # type: ignore[operator]
     # These are calculated assuming no symmetry point!
     delta_x_john = interpolation["basis"][0]["delta_x"]
 
-    delta_y = 2 * (np.max(raw_points["y_points"]) - np.min(raw_points["y_points"]))  # type: ignore
+    delta_y = 2 * (np.max(raw_points["y_points"]) - np.min(raw_points["y_points"]))  # type: ignore[operator]
     delta_y_john = interpolation["basis"][1]["delta_x"]
     # True - we have excluded the symmetry points properly!
-    print(np.allclose([delta_y, delta_x], [delta_x_john, delta_y_john]))
+    print(np.allclose([delta_y, delta_x], [delta_x_john, delta_y_john]))  # noqa: T201
+
+
+def plot_interpolated_potential_difference() -> None:
+    potential0 = get_interpolated_nickel_potential((2 * 23, 2 * 23, 500))
+    potential1 = get_interpolated_nickel_potential((10 * 23, 10 * 23, 500))
+    potential1_0_basis: Potential[int, int, int] = {
+        "basis": potential0["basis"],
+        "points": potential1["points"][::5, ::5, :],
+    }
+
+    fig, _, _ = plot_potential_difference_2d(
+        potential0, potential1_0_basis, idx=0, z_axis=2
+    )
+    fig.show()
+    np.testing.assert_array_almost_equal(
+        potential0["points"], potential1_0_basis["points"]
+    )
+    # Max absolute difference: 5.42341872e-31
+    # Max relative difference: 6.79388726e-14
+    # i.e. we see no difference in the potential (as expected)
+
+    potential0_1_basis: Potential[int, int, int] = {
+        "basis": potential0["basis"],
+        "points": interpolate_points_rfftn(  # type:ignore[typeddict-item]
+            potential0["points"],  # type:ignore[arg-type]
+            s=(potential1["points"].shape[0], potential1["points"].shape[1]),
+            axes=(0, 1),
+        ),
+    }
+    np.testing.assert_array_almost_equal(
+        potential1["points"], potential0_1_basis["points"]
+    )
+    # Max absolute difference: 4.17565566e-21
+    # Max relative difference: 1.33803642
+    # i.e. we see no difference in the potential
+    # (as expected, since the larger potential is more 'smooth')
+
+    np.testing.assert_array_almost_equal(
+        potential0["points"], potential0_1_basis["points"][::5, ::5, :]
+    )
+    # Max absolute difference: 6.24892436e-23
+    # Max relative difference: 0.23842189
+
+    # this is bad - we should expect almost no error on the original points
+
+
+def plot_interpolated_potential_difference_rfft() -> None:
+    potential0 = get_interpolated_nickel_potential((2 * 23, 2 * 23, 500))
+    potential0_1_basis: Potential[int, int, int] = {
+        "basis": potential0["basis"],
+        "points": interpolate_points_rfftn(  # type:ignore[typeddict-item]
+            potential0["points"],  # type:ignore[arg-type]
+            s=(5 * potential0["points"].shape[0], 5 * potential0["points"].shape[1]),
+            axes=(0, 1),
+        )[::5, ::5, :],
+    }
+    fig, _, _ = plot_potential_difference_2d(
+        potential0, potential0_1_basis, idx=0, z_axis=2
+    )
+    fig.show()
+
+    potential0_1_basis1: Potential[int, int, int] = {
+        "basis": potential0["basis"],
+        "points": np.real(
+            interpolate_points_fftn(  # type:ignore[typeddict-item]
+                potential0["points"],  # type:ignore[arg-type]
+                s=(
+                    5 * potential0["points"].shape[0],
+                    5 * potential0["points"].shape[1],
+                ),
+                axes=(0, 1),
+            )
+        )[::5, ::5, :],
+    }
+    fig, _, _ = plot_potential_difference_2d(
+        potential0, potential0_1_basis1, idx=0, z_axis=2
+    )
+    fig.show()
+
+    fig, _, _ = plot_potential_2d(potential0, idx=0, z_axis=2)
+    fig.show()
+    input()
+
+
+def compare_potential_rfft() -> None:
+    potential0 = get_interpolated_nickel_potential((2 * 23, 2 * 23, 500))
+    potential1 = get_interpolated_nickel_potential((10 * 23, 10 * 23, 500))
+
+    potential0_1_basis: Potential[int, int, int] = {
+        "basis": potential0["basis"],
+        "points": interpolate_points_rfft(  # type:ignore[typeddict-item]
+            interpolate_points_rfft(
+                potential0["points"],  # type:ignore[arg-type]
+                potential1["points"].shape[0],
+                axis=0,
+            ),
+            potential1["points"].shape[1],
+            axis=1,
+        ),
+    }
+    np.testing.assert_array_almost_equal(
+        potential1["points"], potential0_1_basis["points"]
+    )
+    # Max absolute difference: 4.17415007e-21
+    # Max relative difference: 1.44881035
+
+    np.testing.assert_array_almost_equal(
+        potential0["points"], potential0_1_basis["points"][::5, ::5, :]
+    )
+    # Max absolute difference: 1.04279313e-22
+    # Max relative difference: 0.39221331
+
+    potential0_1_basis2: Potential[int, int, int] = {
+        "basis": potential0["basis"],
+        "points": interpolate_points_rfft(
+            interpolate_points_rfft(
+                potential0["points"] / electron_volt,
+                potential1["points"].shape[0],
+                axis=0,
+            ),
+            potential1["points"].shape[1],
+            axis=1,
+        )
+        * electron_volt,
+    }
+
+    np.testing.assert_array_almost_equal(
+        potential0["points"], potential0_1_basis2["points"][::5, ::5, :]
+    )
+    # Max absolute difference: 1.04279313e-22
+    # Max relative difference: 0.39221331
+
+    potential0_1_basis3: Potential[int, int, int] = {
+        "basis": potential0["basis"],
+        "points": interpolate_points_fftn(  # type:ignore[typeddict-item]
+            potential0["points"],  # type:ignore[arg-type]
+            s=(potential1["points"].shape[0], potential1["points"].shape[1]),
+            axes=(0, 1),
+        ),
+    }
+    np.testing.assert_array_almost_equal(
+        potential0["points"], potential0_1_basis3["points"][::5, ::5, :]
+    )
+    # Max absolute difference: 7.48043224e-32
+    # Max relative difference: 4.33468487e-13
+    # We get the right answer!!
+
+
+def analyze_interpolated_potential_difference_momentum() -> None:
+    potential0 = get_interpolated_nickel_potential((2 * 23, 2 * 23, 100))
+    potential1 = get_interpolated_nickel_potential((10 * 23, 10 * 23, 100))
+    potential1_0_basis: Potential[int, int, int] = {
+        "basis": potential0["basis"],
+        "points": potential1["points"][::5, ::5, :],
+    }
+
+    ft_points0 = np.fft.fft2(potential0["points"], axes=(0, 1), norm="forward")
+    ft_points1 = np.fft.fft2(potential1_0_basis["points"], axes=(0, 1), norm="forward")
+    np.testing.assert_array_almost_equal(ft_points0, ft_points1)
+    # Max absolute difference: 6.31088724e-30
+    # Max relative difference: 4.83872206e-05
+
+    ft_points1_original = pad_ft_points(
+        np.fft.fft2(potential1["points"], axes=(0, 1), norm="forward"),
+        s=(ft_points0.shape[0], ft_points0.shape[1]),
+        axes=(0, 1),
+    )
+
+    np.testing.assert_array_almost_equal(ft_points0, ft_points1_original)
+    np.testing.assert_array_equal(ft_points0, ft_points1_original)
+    # Max absolute difference: 2.15832122e-23
+    # Max relative difference: 4558.62118163
+
+    # The two potentials still agree on the value at the 'key' points
+    # in position basis, but in momentum basis the story is not so simple
+    # 2.15832122e-23 is actually a pretty large 'error'
+    # Maybe try rescaling, look at how this changes the interval between points!
+
+
+def plot_potential_difference_very_large_resolution() -> None:
+    p0 = get_interpolated_nickel_potential((100, 100, 250))
+    p1 = get_interpolated_nickel_potential((250, 250, 250))
+    potential0: Potential[int, int, int] = {
+        "basis": (
+            {"_type": "position", "delta_x": p0["basis"][0]["delta_x"], "n": 50},
+            {"_type": "position", "delta_x": p0["basis"][1]["delta_x"], "n": 50},
+            p0["basis"][2],
+        ),
+        "points": p0["points"][::2, ::2, :],
+    }
+    potential1: Potential[int, int, int] = {
+        "basis": potential0["basis"],
+        "points": p1["points"][::5, ::5, :],
+    }
+    amax = np.unravel_index(
+        np.argmax(np.abs(potential1["points"] - potential0["points"])),
+        potential0["points"].shape,
+    )
+    fig, _, _ = plot_potential_difference_2d(potential0, potential1, int(amax[2]), 2)
+    fig.show()
+
+    fig, _, _ = plot_potential_difference_2d(potential0, potential1, int(amax[0]), 0)
+    fig.show()
+    input()

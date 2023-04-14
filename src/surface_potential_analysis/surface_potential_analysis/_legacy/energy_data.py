@@ -43,7 +43,7 @@ def get_energy_points_xy_locations(data: EnergyPoints) -> list[tuple[float, floa
 class EnergyGrid(SurfaceConfig):
     """
     A grid of energy points uniformly spaced in the x1,x2 direction
-    And possibly unevenly spaced in the z direction
+    And possibly unevenly spaced in the z direction.
     """
 
     z_points: list[float]
@@ -53,7 +53,7 @@ class EnergyGrid(SurfaceConfig):
 class EnergyGridRaw(TypedDict):
     """
     A grid of energy points uniformly spaced in the x1,x2 direction
-    And possibly unevenly spaced in the z direction
+    And possibly unevenly spaced in the z direction.
     """
 
     delta_x0: list[float]
@@ -102,9 +102,8 @@ class EnergyInterpolation(TypedDict):
 def as_interpolation(data: EnergyGrid) -> EnergyInterpolation:
     """
     Converts between energy data and energy interpolation,
-    assuming the x,y,z points are evenly spaced
+    assuming the x,y,z points are evenly spaced.
     """
-
     dz = data["z_points"][1] - data["z_points"][0]
     nz = len(data["z_points"])
     z_points = np.linspace(0, dz * (nz - 1), nz) + data["z_points"][0]
@@ -130,7 +129,7 @@ def normalize_energy(data: EnergyGrid) -> EnergyGrid:
 # to be able to 'fill' the whole region we want
 def fill_subsurface_from_corner(data: EnergyGrid) -> EnergyGrid:
     points = np.array(data["points"], dtype=float)
-    points_to_fill: set[tuple[int, int, int]] = set([(0, 0, 0)])
+    points_to_fill: set[tuple[int, int, int]] = {(0, 0, 0)}
     fill_level = 1.6
 
     while len(points_to_fill) > 0:
@@ -203,7 +202,7 @@ def truncate_energy(
     data: EnergyGrid, *, cutoff=2e-17, n: int = 1, offset: float = 2e-18
 ) -> EnergyGrid:
     """
-    Reduce the maximum energy by taking the transformation
+    Reduce the maximum energy by taking the transformation.
 
     :math:`cutoff * np.log(1 + ((E + offset) / cutoff) ** n) ** (1 / n) - offset`
 
@@ -225,9 +224,7 @@ def truncate_energy(
 def undo_truncate_energy(
     data: EnergyGrid, *, cutoff=2e-17, n: int = 1, offset: float = 2e-18
 ) -> EnergyGrid:
-    """
-    The reverse of truncate_energy
-    """
+    """The reverse of truncate_energy."""
     truncated_points = np.array(data["points"], dtype=float)
     points = (
         cutoff * (np.exp((truncated_points + offset) / cutoff) - 1) ** (1 / n) - offset
@@ -243,8 +240,7 @@ def undo_truncate_energy(
 def repeat_original_data(
     data: EnergyGrid, x1_padding: int = 1, x2_padding: int = 1
 ) -> EnergyGrid:
-    """Repeat the original data using the x, y symmetry to improve the interpolation convergence"""
-
+    """Repeat the original data using the x, y symmetry to improve the interpolation convergence."""
     points = np.array(data["points"])
 
     x1_tile = 1 + 2 * x1_padding
@@ -335,7 +331,7 @@ def generate_interpolator(
     )
 
 
-def interpolate_energy_grid_3D_spline(
+def interpolate_energy_grid_3d_spline(
     data: EnergyGrid, shape: tuple[int, int, int] = (40, 40, 100)
 ) -> EnergyGrid:
     """
@@ -343,7 +339,6 @@ def interpolate_energy_grid_3D_spline(
 
     Note this requires that the two unit vectors in the xy plane are orthogonal
     """
-
     interpolator = generate_interpolator(data)
 
     z_points = list(np.linspace(data["z_points"][0], data["z_points"][-1], shape[2]))
@@ -368,7 +363,7 @@ def interpolate_energy_grid_3D_spline(
 def interpolate_energy_grid_z_spline(data: EnergyGrid, nz: int = 100) -> EnergyGrid:
     """
     Uses spline interpolation to increase the Z resolution,
-    spacing z linearly
+    spacing z linearly.
     """
     old_points = np.array(data["points"])
     z_points = list(np.linspace(data["z_points"][0], data["z_points"][-1], nz))
@@ -393,9 +388,7 @@ def interpolate_energy_grid_z_spline(data: EnergyGrid, nz: int = 100) -> EnergyG
 
 
 def get_ft_indexes(shape: tuple[int, int]):
-    """
-    Get a list of list of [x1_phase, x2_phase] for the fourier transform
-    """
+    """Get a list of list of [x1_phase, x2_phase] for the fourier transform."""
     ft_indices = np.indices(shape).transpose((1, 2, 0))
 
     x_indices = ft_indices[:, :, 0]
@@ -413,10 +406,7 @@ def get_ft_indexes(shape: tuple[int, int]):
 
 
 def get_ft_phases(shape: tuple[int, int]):
-    """
-    Get a list of list of [x1_phase, x2_phase] for the fourier transform
-    """
-
+    """Get a list of list of [x1_phase, x2_phase] for the fourier transform."""
     # List of list of [x1_phase, x2_phase]
     ft_phases = 2 * np.pi * get_ft_indexes(shape)
     return ft_phases
@@ -427,7 +417,7 @@ def interpolate_energy_grid_xy_fourier(
 ) -> EnergyGrid:
     """
     Makes use of a fourier transform to increase the number of points
-    in the xy plane of the energy grid
+    in the xy plane of the energy grid.
     """
     old_points = np.array(data["points"])
     x_interp = interpolate_real_points_along_axis_fourier(old_points, shape[0], axis=0)
@@ -444,11 +434,10 @@ def interpolate_energy_grid_fourier(
     data: EnergyGrid, shape: tuple[int, int, int] = (40, 40, 40)
 ) -> EnergyGrid:
     """
-    Interpolate an energy grid using the fourier method
+    Interpolate an energy grid using the fourier method.
 
     Makes use of a fourier transform to increase the number of points
     in the xy plane of the energy grid, and a cubic spline to interpolate in the z direction
     """
-
     xy_interpolation = interpolate_energy_grid_xy_fourier(data, (shape[0], shape[1]))
     return interpolate_energy_grid_z_spline(xy_interpolation, shape[2])

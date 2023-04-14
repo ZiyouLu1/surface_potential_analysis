@@ -5,7 +5,6 @@ from typing import Literal, TypedDict
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.axes import Axes
-
 from surface_potential_analysis.eigenstate.eigenstate import (
     Eigenstate,
     EigenstateConfig,
@@ -31,9 +30,9 @@ from surface_potential_analysis.wavepacket_grid import (
     reflect_wavepacket_in_axis,
 )
 from surface_potential_analysis.wavepacket_grid_plot import (
-    animate_ft_wavepacket_grid_3D_in_xy,
-    animate_wavepacket_grid_3D_in_x0z,
-    animate_wavepacket_grid_3D_in_xy,
+    animate_ft_wavepacket_grid_3d_in_xy,
+    animate_wavepacket_grid_3d_in_x0z,
+    animate_wavepacket_grid_3d_in_xy,
     plot_ft_wavepacket_grid_xy,
     plot_wavepacket_grid_x1,
     plot_wavepacket_grid_xy,
@@ -50,12 +49,6 @@ def plot_wavepacket_points():
 
     fig.show()
 
-    # eigenstate_list = get_eigenstate_list(eigenstates)
-    # fig, _, _ = animate_eigenstate_3D_in_xy(
-    #     eigenstates["eigenstate_config"], eigenstate_list[-1]
-    # )
-
-    # fig.show()
     input()
 
 
@@ -82,7 +75,7 @@ def plot_wavepacket_at_z_origin():
     input()
 
 
-def plot_wavepacket_3D():
+def plot_wavepacket_3d():
     path = get_data_path("eigenstates_grid_0.json")
     path = get_data_path("eigenstates_grid_1.json")
     eigenstates = load_energy_eigenstates(path)
@@ -91,15 +84,15 @@ def plot_wavepacket_3D():
     z_points = np.linspace(-2 * util.characteristic_z, 2 * util.characteristic_z)
     grid = calculate_wavepacket_grid_fourier(normalized, z_points, (-4, 4), (-4, 4))
 
-    fig, _, _ = animate_wavepacket_grid_3D_in_xy(grid)
+    fig, _, _ = animate_wavepacket_grid_3d_in_xy(grid)
     fig.show()
     input()
-    fig, _, _ = animate_wavepacket_grid_3D_in_x0z(grid)
+    fig, _, _ = animate_wavepacket_grid_3d_in_x0z(grid)
     fig.show()
     input()
 
 
-def plot_relaxed_wavefunction_3D():
+def plot_relaxed_wavefunction_3d():
     path = get_data_path("relaxed_eigenstates_wavepacket_low_res.json")
     path = get_data_path("relaxed_eigenstates_wavepacket.json")
     path = get_data_path("relaxed_eigenstates_hd_wavepacket.json")
@@ -107,11 +100,11 @@ def plot_relaxed_wavefunction_3D():
     wavepacket = load_wavepacket_grid(path)
     wavepacket = reflect_wavepacket_in_axis(wavepacket, axis=1)
 
-    fig, _, _ = animate_wavepacket_grid_3D_in_xy(wavepacket, measure="real")
+    fig, _, _ = animate_wavepacket_grid_3d_in_xy(wavepacket, measure="real")
     fig.show()
     input()
 
-    fig, _, _ = animate_wavepacket_grid_3D_in_x0z(wavepacket)
+    fig, _, _ = animate_wavepacket_grid_3d_in_x0z(wavepacket)
     fig.show()
     input()
 
@@ -120,12 +113,12 @@ def plot_new_wavepacket_relaxed():
     path = get_data_path("relaxed_eigenstates_wavepacket_new.json")
     wavepacket = load_wavepacket_grid(path)
 
-    fig, _, _ = animate_wavepacket_grid_3D_in_xy(wavepacket, measure="real")
+    fig, _, _ = animate_wavepacket_grid_3d_in_xy(wavepacket, measure="real")
     fig.show()
     input()
 
 
-def plot_wavepacket_difference_3D() -> None:
+def plot_wavepacket_difference_3d() -> None:
     path = get_data_path("relaxed_eigenstates_wavepacket.json")
     wavepacket_low_res = load_wavepacket_grid(path)
     path = get_data_path("relaxed_eigenstates_hd_wavepacket.json")
@@ -138,10 +131,10 @@ def plot_wavepacket_difference_3D() -> None:
 
     print(np.max(np.abs(wavepacket_low_res["points"])))
 
-    fig, _, _anim0 = animate_wavepacket_grid_3D_in_xy(wavepacket, measure="real")
+    fig, _, _anim0 = animate_wavepacket_grid_3d_in_xy(wavepacket, measure="real")
     fig.show()
 
-    fig, _, _anim1 = animate_ft_wavepacket_grid_3D_in_xy(wavepacket, measure="real")
+    fig, _, _anim1 = animate_ft_wavepacket_grid_3d_in_xy(wavepacket, measure="real")
     fig.show()
 
     new_points = np.mean(
@@ -152,17 +145,17 @@ def plot_wavepacket_difference_3D() -> None:
         "points": new_points.tolist(),
     }
 
-    fig, _, _anim2 = animate_wavepacket_grid_3D_in_xy(
+    fig, _, _anim2 = animate_wavepacket_grid_3d_in_xy(
         wavepacket_averaged, measure="real"
     )
     fig.show()
 
-    fig, _, _anim3 = animate_ft_wavepacket_grid_3D_in_xy(
+    fig, _, _anim3 = animate_ft_wavepacket_grid_3d_in_xy(
         wavepacket_averaged, measure="real"
     )
     fig.show()
 
-    fig, _, _anim4 = animate_ft_wavepacket_grid_3D_in_xy(wavepacket_hd, measure="real")
+    fig, _, _anim4 = animate_ft_wavepacket_grid_3d_in_xy(wavepacket_hd, measure="real")
     fig.show()
 
     input()
@@ -173,14 +166,9 @@ def plot_ft_hd_wavepacket_at_origin() -> None:
     wavepacket = load_wavepacket_grid(path)
     fig, _, _ = plot_wavepacket_grid_xy(wavepacket, z_ind=1, measure="real")
     fig.show()
-    # wavepacket = reflect_wavepacket_in_axis(wavepacket, axis=1)
     fig, _, _ = plot_ft_wavepacket_grid_xy(wavepacket, z_ind=1, measure="real")
 
     ft_points = np.fft.ifft2(wavepacket["points"], axes=(0, 1))
-    # ft_points[:+12, :+12, :] = 0
-    # ft_points[-12:, :+12, :] = 0
-    # ft_points[-12:, -12:, :] = 0
-    # ft_points[:+12, -12:, :] = 0
 
     new_points = np.fft.fft2(ft_points, axes=(0, 1))
     new_wavepacket: WavepacketGrid = {**wavepacket, "points": new_points.tolist()}
@@ -203,9 +191,6 @@ def plot_ft_hd_wavepacket_at_origin() -> None:
     }
     fig, _, _ = plot_wavepacket_grid_xy(fixed_wavepacket, z_ind=1, measure="real")
     fig.show()
-    # almost_zero = np.isclose(np.abs(ft_points), 0)
-    # print(np.count_nonzero(almost_zero))
-    # ft_points[almost_zero] = 1000000
     ft_surface = get_reciprocal_surface(wavepacket)
     fig, ax, mesh = plot_points_on_surface_xy(
         ft_surface, ft_points.tolist(), z_ind=1, measure="abs"
@@ -258,8 +243,6 @@ def compare_wavefunction_4_8_points():
     wavepacket_1 = load_wavepacket_grid_legacy(path)
 
     fig, ax = plt.subplots()
-    # _, _, l1 = plot_wavepacket_grid_x1(wavepacket_edge, x2_ind=24, z_ind=10, ax=ax)
-    # l1.set_label("8 point grid edge")
     _, _, l2 = plot_wavepacket_grid_x1(wavepacket_4, x2_ind=48, z_ind=10, ax=ax)
     l2.set_label("4 point grid")
     _, _, l3 = plot_wavepacket_grid_x1(wavepacket_offset, x2_ind=48, z_ind=10, ax=ax)
@@ -352,10 +335,10 @@ def compare_wavefunction_4_8_points():
     input()
 
 
-def compare_wavefunction_2D():
+def compare_wavefunction_2d():
     path = get_data_path("eigenstates_grid_0.json")
     eigenstates = load_energy_eigenstates(path)
-    normalized = normalize_eigenstate_phase_copper(eigenstates)
+    normalize_eigenstate_phase_copper(eigenstates)
 
     config = eigenstates["eigenstate_config"]
     eigenstate_list = get_eigenstate_list(eigenstates)
@@ -407,7 +390,7 @@ def compare_wavefunction_2D():
 def test_wavefunction_similarity() -> None:
     path = get_data_path("eigenstates_grid_0.json")
     eigenstates = load_energy_eigenstates(path)
-    normalized = normalize_eigenstate_phase_copper(eigenstates)
+    normalize_eigenstate_phase_copper(eigenstates)
 
     config = eigenstates["eigenstate_config"]
     util = EigenstateConfigUtil(config)
@@ -447,7 +430,7 @@ def test_wavefunction_similarity() -> None:
 def calculate_eigenstate_cross_product() -> None:
     path = get_data_path("eigenstates_grid_0.json")
     eigenstates = load_energy_eigenstates(path)
-    normalized = normalize_eigenstate_phase_copper(eigenstates)
+    normalize_eigenstate_phase_copper(eigenstates)
 
     eigenvector1 = eigenstates["eigenvectors"][0]
     eigenvector2 = eigenstates["eigenvectors"][144]
@@ -461,7 +444,7 @@ def calculate_eigenstate_cross_product() -> None:
 def investigate_approximate_eigenstates():
     path = get_data_path("eigenstates_grid_0.json")
     eigenstates = load_energy_eigenstates(path)
-    normalized = normalize_eigenstate_phase_copper(eigenstates)
+    normalize_eigenstate_phase_copper(eigenstates)
 
     eigenvector = eigenstates["eigenvectors"][144]
     print(eigenvector.__len__())
@@ -621,7 +604,7 @@ def compare_double_fourier_wavepacket():
 def test_eigenstate_k_precision():
     """
     Does the loss of prescision from util._get_fourier_coordinates_in_grid
-    cause additional noise in the wavepacket
+    cause additional noise in the wavepacket.
 
     It turns out no - this only accounts to around 10-16 error,
     and has no noticeable effect on the noise
@@ -652,8 +635,6 @@ def test_eigenstate_k_precision():
         actual_phase_points = np.exp(1j * actual_phases)
 
         np.testing.assert_array_almost_equal(phase_points, actual_phase_points)
-        # np.testing.assert_array_equal(phase_points, actual_phase_points)
-        # np.testing.assert_array_equal(for_each[0], for_each[1])
         # For the combined phases for each k we find
         # Mismatched elements: 12577 / 33856 (37.1%)
         # Max absolute difference: 1.77635684e-15

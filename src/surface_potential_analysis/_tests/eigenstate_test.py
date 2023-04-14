@@ -10,9 +10,13 @@ from surface_potential_analysis.basis import (
     MomentumBasis,
     TruncatedBasis,
 )
-from surface_potential_analysis.basis_config import (
+from surface_potential_analysis.basis_config.basis_config import (
     BasisConfigUtil,
     PositionBasisConfigUtil,
+)
+from surface_potential_analysis.basis_config.sho_basis import (
+    SHOBasisConfig,
+    infinate_sho_basis_from_config,
 )
 from surface_potential_analysis.eigenstate.eigenstate import (
     Eigenstate,
@@ -24,12 +28,10 @@ from surface_potential_analysis.eigenstate.eigenstate import (
     stack_eigenstate,
 )
 from surface_potential_analysis.eigenstate.eigenstate_collection_plot import (
-    get_projected_phases,
+    _get_projected_phases,
 )
-from surface_potential_analysis.sho_basis import (
-    SHOBasisConfig,
-    infinate_sho_basis_from_config,
-)
+
+rng = np.random.default_rng()
 
 
 def get_random_sho_eigenstate(
@@ -39,7 +41,7 @@ def get_random_sho_eigenstate(
     TruncatedBasis[Any, MomentumBasis[Any]],
     ExplicitBasis[int, Any],
 ]:
-    vector = np.array(np.random.rand(np.prod(resolution)), dtype=complex)
+    vector = np.array(rng.random(np.prod(resolution)), dtype=complex)
     vector /= np.linalg.norm(vector)
     return {
         "basis": (
@@ -81,15 +83,15 @@ class EigenstateTest(unittest.TestCase):
         expected = np.array([1, 2, 0, -1])
 
         direction = np.array([1, 0, 0])
-        actual = get_projected_phases(phases, direction)
+        actual = _get_projected_phases(phases, direction)
         np.testing.assert_array_equal(expected, actual)
 
         direction = np.array([2, 0, 0])
-        actual = get_projected_phases(phases, direction)
+        actual = _get_projected_phases(phases, direction)
         np.testing.assert_array_equal(expected, actual)
 
         direction = np.array([-1, 0, 0])
-        actual = get_projected_phases(phases, direction)
+        actual = _get_projected_phases(phases, direction)
         np.testing.assert_array_equal(-expected, actual)
 
     def test_random_stack_eigenstate(self) -> None:
@@ -97,7 +99,7 @@ class EigenstateTest(unittest.TestCase):
         util = PositionBasisConfigUtil(basis)
         eigenstate: Eigenstate[Any] = {
             "basis": basis,
-            "vector": np.array(np.random.rand(len(util)), dtype=complex),
+            "vector": np.array(rng.random(len(util)), dtype=complex),
         }
         stacked_eigenstate = stack_eigenstate(eigenstate)
 
@@ -132,13 +134,13 @@ class EigenstateTest(unittest.TestCase):
         np.testing.assert_array_almost_equal(expected["vector"], actual["vector"])
 
     def test_convert_sho_basis_explicit(self) -> None:
-        nx = np.random.randint(2, 10)
-        fundamental_nx = np.random.randint(nx, nx + 10)
-        ny = np.random.randint(2, 10)
-        fundamental_ny = np.random.randint(ny, ny + 10)
+        nx = rng.integers(2, 10)
+        fundamental_nx = rng.integers(nx, nx + 10)
+        ny = rng.integers(2, 10)
+        fundamental_ny = rng.integers(ny, ny + 10)
 
-        nz = np.random.randint(2, 10)
-        fundamental_nz = np.random.randint(nz, nz + 10)
+        nz = rng.integers(2, 10)
+        fundamental_nz = rng.integers(nz, nz + 10)
 
         eigenstate = get_random_sho_eigenstate(
             (nx, ny, nz), (fundamental_nx, fundamental_ny, fundamental_nz)

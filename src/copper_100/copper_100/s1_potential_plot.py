@@ -2,31 +2,12 @@ import matplotlib.pyplot as plt
 import numpy as np
 import scipy.constants
 
-from surface_potential_analysis.energy_data import load_energy_grid, normalize_energy
-from surface_potential_analysis.energy_data_plot import (
-    animate_energy_grid_3D_in_xy,
-    plot_energy_grid_locations,
-    plot_xz_plane_energy_copper_100,
-    plot_z_direction_energy_comparison_100,
-    plot_z_direction_energy_data_100,
-)
-from surface_potential_analysis.sho_wavefunction_plot import plot_sho_wavefunctions
-
-from .s1_potential import (
-    load_9h_copper_data,
-    load_interpolated_copper_data,
-    load_interpolated_relaxed_data,
-    load_nc_raw_copper_data,
-    load_raw_copper_data,
-    load_relaxed_copper_data,
-    load_spline_interpolated_relaxed_data,
-)
 from .surface_data import get_data_path, save_figure
 
 
 def plot_copper_raw_data():
-    data = load_raw_copper_data()
-    data = normalize_energy(data)
+    data = load_raw_copper_potential()
+    data = normalize_potential(data)
 
     fig, ax, _ = plot_z_direction_energy_data_100(data)
     ax.set_ylim(bottom=0, top=1e-18)
@@ -62,7 +43,6 @@ def plot_copper_9h_data():
 
 
 def plot_copper_relaxed_data():
-
     data_7h = load_raw_copper_data()
     data_7h_norm = normalize_energy(data_7h)
 
@@ -93,7 +73,7 @@ def plot_copper_relaxed_interpolated_data():
     fig.show()
     save_figure(fig, "relaxed_interpolated_data_xy.png")
 
-    fig, ax, _ani0 = animate_energy_grid_3D_in_xy(data)
+    fig, ax, _ani0 = animate_energy_grid_3d_in_xy(data)
     plot_energy_grid_locations(raw_data, ax=ax)
     fig.show()
 
@@ -109,7 +89,7 @@ def plot_copper_relaxed_interpolated_data():
     fig.show()
     save_figure(fig, "relaxed_interpolated_data_xy.png")
 
-    fig, ax, _ani1 = animate_energy_grid_3D_in_xy(data)
+    fig, ax, _ani1 = animate_energy_grid_3d_in_xy(data)
     plot_energy_grid_locations(raw_data, ax=ax)
     fig.show()
 
@@ -141,7 +121,6 @@ def plot_interpolation_with_sho_wavefunctions():
     Plotting them alongside the interpolation in the hZ direction will allow us to
     diagnose these issues
     """
-
     grid = load_interpolated_copper_data()
     fig, ax = plt.subplots()
     plot_z_direction_energy_data_100(grid, ax=ax)
@@ -160,7 +139,6 @@ def plot_interpolation_with_sho_wavefunctions():
 
 
 def compare_bridge_hollow_energy():
-
     print("--------------------------------------")
     print("Non-relaxed")
     data = load_interpolated_copper_data()

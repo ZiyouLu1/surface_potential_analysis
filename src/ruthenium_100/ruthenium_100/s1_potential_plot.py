@@ -1,22 +1,19 @@
 import numpy as np
-
-from surface_potential_analysis._legacy.energy_data import (
-    get_energy_points_xy_locations,
-)
-from surface_potential_analysis._legacy.energy_data_plot import (
-    plot_all_energy_points_z,
-    plot_energy_points_location,
+from surface_potential_analysis.potential.plot_point_potential import (
+    get_point_potential_xy_locations,
+    plot_point_potential_all_z,
+    plot_point_potential_location_xy,
 )
 
 from .s1_potential import load_raw_data
 from .surface_data import save_figure
 
 
-def plot_raw_data_points():
+def plot_raw_data_points() -> None:
     data = load_raw_data()
-    fig, ax, _ = plot_energy_points_location(data)
+    fig, ax, _ = plot_point_potential_location_xy(data)
 
-    locations = get_energy_points_xy_locations(data)
+    locations = get_point_potential_xy_locations(data)
     e_min = []
     for x, y in locations:
         idx = np.argwhere(
@@ -48,7 +45,7 @@ def plot_raw_data_points():
     fig.show()
     save_figure(fig, "raw_points.png")
 
-    fig, ax = plot_all_energy_points_z(data)
+    fig, ax = plot_point_potential_all_z(data)
     ax.set_ylim(-4.66e-17, -4.59e-17)
 
     ax.legend()

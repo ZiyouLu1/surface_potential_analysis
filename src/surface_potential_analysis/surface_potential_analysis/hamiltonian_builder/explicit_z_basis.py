@@ -9,7 +9,10 @@ from surface_potential_analysis.basis import (
     MomentumBasis,
     TruncatedBasis,
 )
-from surface_potential_analysis.basis_config import BasisConfig, BasisConfigUtil
+from surface_potential_analysis.basis_config.basis_config import (
+    BasisConfig,
+    BasisConfigUtil,
+)
 from surface_potential_analysis.hamiltonian import HamiltonianWithBasis
 from surface_potential_analysis.potential import Potential
 

@@ -7,7 +7,7 @@ from matplotlib.collections import QuadMesh
 from matplotlib.figure import Figure
 from matplotlib.lines import Line2D
 
-from surface_potential_analysis.basis_config import (
+from surface_potential_analysis.basis_config.basis_config import (
     MomentumBasisConfigUtil,
     get_projected_k_points,
 )
@@ -20,7 +20,7 @@ from surface_potential_analysis.util import (
 from .overlap import OverlapTransform
 
 
-def plot_overlap_transform_2D(
+def plot_overlap_transform_2d(
     overlap: OverlapTransform,
     idx: int,
     z_axis: Literal[0, 1, 2, -1, -2, -3],

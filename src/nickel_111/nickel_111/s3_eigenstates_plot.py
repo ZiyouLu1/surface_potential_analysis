@@ -9,7 +9,7 @@ from surface_potential_analysis.eigenstate.eigenstate_collection import (
     select_eigenstate,
 )
 from surface_potential_analysis.eigenstate.eigenstate_collection_plot import (
-    plot_energies_against_bloch_phase_1D,
+    plot_energies_against_bloch_phase_1d,
     plot_lowest_band_energies_against_bloch_kx,
 )
 from surface_potential_analysis.eigenstate.plot import animate_eigenstate_x0x1
@@ -36,6 +36,21 @@ def analyze_band_convergence() -> None:
     _, _, ln = plot_lowest_band_energies_against_bloch_kx(eigenstates, ax=ax)
     ln.set_label("(25,25,16)")
 
+    path = get_data_path("eigenstates_23_23_10_large.npy")
+    eigenstates = load_eigenstate_collection(path)
+    _, _, ln = plot_lowest_band_energies_against_bloch_kx(eigenstates, ax=ax)
+    ln.set_label("(23,23,10)")
+
+    path = get_data_path("eigenstates_23_23_12_large.npy")
+    eigenstates = load_eigenstate_collection(path)
+    _, _, ln = plot_lowest_band_energies_against_bloch_kx(eigenstates, ax=ax)
+    ln.set_label("(23,23,12)")
+
+    path = get_data_path("eigenstates_25_25_16_large.npy")
+    eigenstates = load_eigenstate_collection(path)
+    _, _, ln = plot_lowest_band_energies_against_bloch_kx(eigenstates, ax=ax)
+    ln.set_label("(25,25,16)")
+
     ax.legend()
     ax.set_title(
         "Plot of lowest band energies\n"
@@ -49,11 +64,11 @@ def analyze_band_convergence() -> None:
 
     path = get_data_path("eigenstates_25_25_16.npy")
     eigenstates = load_eigenstate_collection(path)
-    _, _, ln = plot_energies_against_bloch_phase_1D(
+    _, _, ln = plot_energies_against_bloch_phase_1d(
         eigenstates, np.array([1, 0, 0]), band=0, ax=ax
     )
     ln.set_label("n=0")
-    _, _, ln = plot_energies_against_bloch_phase_1D(
+    _, _, ln = plot_energies_against_bloch_phase_1d(
         eigenstates, np.array([1, 0, 0]), band=1, ax=ax
     )
     ln.set_label("n=1")
@@ -66,14 +81,14 @@ def analyze_band_convergence() -> None:
 
     path = get_data_path("eigenstates_23_23_12.npy")
     eigenstates = load_eigenstate_collection(path)
-    _, _, ln = plot_energies_against_bloch_phase_1D(
+    _, _, ln = plot_energies_against_bloch_phase_1d(
         eigenstates, np.array([1, 0, 0]), band=1, ax=ax
     )
     ln.set_label("(23,23,12)")
 
     path = get_data_path("eigenstates_25_25_16.npy")
     eigenstates = load_eigenstate_collection(path)
-    _, _, ln = plot_energies_against_bloch_phase_1D(
+    _, _, ln = plot_energies_against_bloch_phase_1d(
         eigenstates, np.array([1, 0, 0]), band=1, ax=ax
     )
     ln.set_label("(25,25,16)")
@@ -91,7 +106,7 @@ def plot_sho_basis_states() -> None:
     collection = load_eigenstate_collection(path)
 
     eigenstate = select_eigenstate(collection, 0, 0)
-    fig, _ = plot_explicit_basis_states_x(eigenstate["basis"][2], measure="real")
+    fig, _, _ = plot_explicit_basis_states_x(eigenstate["basis"][2], measure="real")
     fig.show()
     input()
 

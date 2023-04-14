@@ -1,51 +1,29 @@
 import numpy as np
-from numpy.typing import NDArray
-
-from surface_potential_analysis.eigenstate.eigenstate import EigenstateConfigUtil
-from surface_potential_analysis.energy_eigenstate import (
-    load_energy_eigenstates,
-    normalize_eigenstate_phase,
-)
 from surface_potential_analysis.interpolation import (
-    interpolate_real_points_along_axis_fourier,
+    interpolate_points_rfft,
 )
-from surface_potential_analysis.overlap_transform import (
-    calculate_overlap_transform,
-    save_overlap_transform,
-)
-from surface_potential_analysis.wavepacket_grid import (
-    WavepacketGrid,
-    calculate_inner_product,
+from surface_potential_analysis.overlap.calculation import calculate_overlap
+from surface_potential_analysis.overlap.overlap import save_overlap
+from surface_potential_analysis.wavepacket.wavepacket import (
+    Wavepacket,
     calculate_normalisation,
-    calculate_wavepacket_grid_fourier,
-    load_wavepacket_grid,
-    save_wavepacket_grid,
+    load_wavepacket,
 )
 
 from .surface_data import get_data_path
 
 
-def generate_fcc_wavepacket() -> WavepacketGrid:
+def generate_fcc_wavepacket() -> Wavepacket:
     path = get_data_path("eigenstates_grid_0.json")
-    eigenstates = load_energy_eigenstates(path)
-    util = EigenstateConfigUtil(eigenstates["eigenstate_config"])
-    eigenstates = normalize_eigenstate_phase(eigenstates, (0, 0, 0))
-
-    z_points = np.linspace(-5 * util.characteristic_z, 5 * util.characteristic_z, 1000)
-    grid = calculate_wavepacket_grid_fourier(
-        eigenstates, z_points.tolist(), x0_lim=(-4, 4), x1_lim=(-4, 4)
-    )
-    return grid
-    path = get_data_path("fcc_wavepacket.json")
-    # save_wavepacket_grid(grid, path)
-    return load_wavepacket_grid(path)
+    return load_wavepacket(path)
 
 
-def generate_next_fcc_wavepacket() -> WavepacketGrid:
+def generate_next_fcc_wavepacket() -> Wavepacket:
     """
     Generate a wavepacket grid of a neighboring fcc wavefunction.
+
     This is just the original wavepacket shifted by -delta_x0,
-    which we can achieve by rolling the wavepacket
+    which we can achieve by rolling the wavepacket.
 
     Returns
     -------
@@ -69,7 +47,7 @@ def generate_next_fcc_wavepacket() -> WavepacketGrid:
     return load_wavepacket_grid(path)
 
 
-def generate_hcp_wavepacket() -> WavepacketGrid:
+def generate_hcp_wavepacket() -> Wavepacket:
     path = get_data_path("eigenstates_grid_1.json")
     eigenstates = load_energy_eigenstates(path)
     util = EigenstateConfigUtil(eigenstates["eigenstate_config"])
@@ -88,15 +66,14 @@ def generate_hcp_wavepacket() -> WavepacketGrid:
     )
     return grid
     path = get_data_path("hcp_wavepacket.json")
-    # save_wavepacket_grid(grid, path)
     return load_wavepacket_grid(path)
 
 
-def generate_next_hcp_wavepacket() -> WavepacketGrid:
+def generate_next_hcp_wavepacket() -> Wavepacket:
     """
     Generate a wavepacket grid of a neighboring hcp wavefunction.
     This is just the original wavepacket shifted by -delta_x0,
-    which we can achieve by rolling the wavepacket
+    which we can achieve by rolling the wavepacket.
 
     Returns
     -------
@@ -128,54 +105,55 @@ def generate_next_hcp_wavepacket() -> WavepacketGrid:
     return load_wavepacket_grid(path)
 
 
-def calculate_overlap_factor():
+def calculate_overlap_factor()->None:
     wavepacket_fcc = generate_fcc_wavepacket()
     # 0.9989499296071063 1000 -3 3
     # 0.9994494691023869 2000 -3 3
     # 0.9989999372435083 1000 -4 4
-    print(calculate_normalisation(wavepacket_fcc))
+    print(calculate_normalisation(wavepacket_fcc)) # noqa: T201
 
     wavepacket_hcp = generate_hcp_wavepacket()
     # 0.9989454040074838
-    print(calculate_normalisation(wavepacket_hcp))
-    # -2.592593651271823e-07 (should be 0)
-    print(calculate_inner_product(wavepacket_fcc, wavepacket_hcp))
+    print(calculate_normalisation(wavepacket_hcp)) # noqa: T201
 
     wavepacket_next_fcc = generate_next_fcc_wavepacket()
-    # -1.381731140564679e-09 (should be 0)
-    print(calculate_inner_product(wavepacket_fcc, wavepacket_next_fcc))
-
     wavepacket_next_hcp = generate_next_hcp_wavepacket()
-    # 4.12815207838777e-09
-    print(calculate_inner_product(wavepacket_hcp, wavepacket_next_hcp))
 
-    transform_hcp_fcc = calculate_overlap_transform(wavepacket_fcc, wavepacket_hcp)
+    overlap_hcp_fcc = calculate_overlap(wavepacket_fcc, wavepacket_hcp)
+    # -2.592593651271823e-07 (should be 0)
+    print(np.sum(overlap_hcp_fcc["vector"])) # noqa: T201
     path = get_data_path("overlap_transform_shifted_hcp_fcc.npz")
-    save_overlap_transform(path, transform_hcp_fcc)
+    save_overlap(path, overlap_hcp_fcc)
 
-    transform_fcc_fcc = calculate_overlap_transform(wavepacket_fcc, wavepacket_next_fcc)
+    overlap_fcc_fcc = calculate_overlap(wavepacket_fcc, wavepacket_next_fcc)
+    # -1.381731140564679e-09 (should be 0)
+    print(np.sum(overlap_fcc_fcc["vector"])) # noqa: T201
     path = get_data_path("overlap_transform_orthogonal_fcc_fcc.npz")
-    save_overlap_transform(path, transform_fcc_fcc)
+    save_overlap(path, overlap_fcc_fcc)
 
-    transform_hcp_hcp = calculate_overlap_transform(wavepacket_hcp, wavepacket_next_hcp)
+    overlap_hcp_hcp = calculate_overlap(wavepacket_hcp, wavepacket_next_hcp)
+    # 4.12815207838777e-09
+    print(np.sum(overlap_hcp_hcp["vector"]))  # noqa: T201
     path = get_data_path("overlap_transform_orthogonal_hcp_hcp.npz")
-    save_overlap_transform(path, transform_hcp_hcp)
+    save_overlap(path, overlap_hcp_hcp)
 
 
 def interpolate_real_wavepacket_grid_points_fourier(
     grid: WavepacketGrid, shape: tuple[int, int]
 ) -> NDArray:
-    return interpolate_real_points_along_axis_fourier(
-        interpolate_real_points_along_axis_fourier(grid["points"], shape[0], axis=0),
+    return interpolate_points_rfft(
+        interpolate_points_rfft(grid["points"], shape[0], axis=0),
         shape[1],
         axis=1,
     )
 
 
-def calculate_overlap_factor_interpolated():
+def calculate_overlap_factor_interpolated() -> None:
     """
-    To test the effect of the finite resolution of the overlap
-    We calculate the integral after doubling the resolution in the xy direction
+    Test the effect of the finite resolution of the overlap.
+
+    To test the effect we calculate the integral after doubling the
+    resolution in the xy direction.
     """
     wavepacket_fcc = generate_fcc_wavepacket()
     old_shape = np.shape(wavepacket_fcc["points"])[0:2]
@@ -214,7 +192,7 @@ def pad_wavepacket_xy(grid: WavepacketGrid, shape: tuple[int, int]) -> Wavepacke
 def calculate_overlap_factor_extended() -> None:
     """
     To test the effect of the finite grid has on the overlap factor
-    since the overlap tends to zero far from the center we can just pad the with zeroes
+    since the overlap tends to zero far from the center we can just pad the with zeroes.
 
     Even better we can pad it with zeroes that doesn't necessarily match up with the grid spacing
     """

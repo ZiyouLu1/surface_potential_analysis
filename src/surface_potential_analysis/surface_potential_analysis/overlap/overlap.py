@@ -3,31 +3,51 @@ from typing import Any, Generic, TypedDict, TypeVar
 
 import numpy as np
 
-from surface_potential_analysis.basis import Basis, MomentumBasis
-from surface_potential_analysis.basis_config import BasisConfig
+from surface_potential_analysis.basis_config.basis_config import (
+    BasisConfig,
+    MomentumBasisConfig,
+)
 
-_BX0Cov = TypeVar("_BX0Cov", bound=Basis[Any, Any], covariant=True)
-_BX1Cov = TypeVar("_BX1Cov", bound=Basis[Any, Any], covariant=True)
-_BX2Cov = TypeVar("_BX2Cov", bound=Basis[Any, Any], covariant=True)
-
-
-class Overlap(TypedDict, Generic[_BX0Cov, _BX1Cov, _BX2Cov]):
-    basis: BasisConfig[_BX0Cov, _BX1Cov, _BX2Cov]
+_BC0Cov = TypeVar("_BC0Cov", bound=BasisConfig[Any, Any, Any], covariant=True)
 
 
-def save_overlap(path: Path, overlap: Overlap):
+class Overlap(TypedDict, Generic[_BC0Cov]):
+    """Represents the result of an overlap calculation of two wavepackets."""
+
+    basis: _BC0Cov
+    vector: np.ndarray[tuple[int], np.dtype[np.complex_]]
+
+
+def save_overlap(path: Path, overlap: Overlap[Any]) -> None:
+    """
+    Save an overlap calculation to a file.
+
+    Parameters
+    ----------
+    path : Path
+    overlap : Overlap[Any]
+    """
     state = np.array(overlap, dtype=dict)
     np.save(path, state)
 
 
-def load_overlap(path: Path) -> Overlap[Any, Any, Any, Any, Any]:
-    return np.load(path)[()]  # type:ignore
+def load_overlap(path: Path) -> Overlap[Any]:
+    """
+    Load an overlap from a file.
+
+    Parameters
+    ----------
+    path : Path
+
+    Returns
+    -------
+    Overlap[Any]
+    """
+    return np.load(path)[()]  # type:ignore[no-any-return]
 
 
-_L0Inv = TypeVar("_L0Inv", bound=Basis[Any, Any])
-_L1Inv = TypeVar("_L1Inv", bound=Basis[Any, Any])
-_L2Inv = TypeVar("_L2Inv", bound=Basis[Any, Any])
+_L0Inv = TypeVar("_L0Inv", bound=int)
+_L1Inv = TypeVar("_L1Inv", bound=int)
+_L2Inv = TypeVar("_L2Inv", bound=int)
 
-OverlapTransform = Overlap[
-    MomentumBasis[_L0Inv], MomentumBasis[_L1Inv], MomentumBasis[_L2Inv]
-]
+OverlapTransform = Overlap[MomentumBasisConfig[_L0Inv, _L1Inv, _L2Inv]]

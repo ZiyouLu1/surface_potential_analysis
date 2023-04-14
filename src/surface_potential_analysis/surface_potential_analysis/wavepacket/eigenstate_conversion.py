@@ -3,7 +3,7 @@ from typing import Any, TypeVar
 import numpy as np
 
 from surface_potential_analysis.basis.basis import Basis, MomentumBasis
-from surface_potential_analysis.basis_config import BasisConfigUtil
+from surface_potential_analysis.basis_config.basis_config import BasisConfigUtil
 from surface_potential_analysis.eigenstate.eigenstate import EigenstateWithBasis
 from surface_potential_analysis.wavepacket.wavepacket import WavepacketWithBasis
 
@@ -24,7 +24,7 @@ def furl_eigenstate(
     _NS0Inv, _NS1Inv, MomentumBasis[int], MomentumBasis[int], _BX2Inv
 ]:
     """
-    Convert an eigenstate into a wavepacket of a smaller unit cell
+    Convert an eigenstate into a wavepacket of a smaller unit cell.
 
     Parameters
     ----------
@@ -75,7 +75,7 @@ def unfurl_wavepacket(
     ]
 ) -> EigenstateWithBasis[MomentumBasis[int], MomentumBasis[int], _BX2Inv]:
     """
-    Convert a wavepacket into an eigenstate of the irreducible unit cell
+    Convert a wavepacket into an eigenstate of the irreducible unit cell.
 
     Parameters
     ----------

@@ -2,7 +2,7 @@ import unittest
 
 import numpy as np
 
-from surface_potential_analysis.basis_config import (
+from surface_potential_analysis.basis_config.basis_config import (
     MomentumBasisConfigUtil,
     PositionBasisConfigUtil,
 )

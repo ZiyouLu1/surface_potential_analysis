@@ -14,7 +14,7 @@ if TYPE_CHECKING:
     from pathlib import Path
 
     from surface_potential_analysis.basis import PositionBasis
-    from surface_potential_analysis.basis_config import PositionBasisConfig
+    from surface_potential_analysis.basis_config.basis_config import PositionBasisConfig
 
 _L0Cov = TypeVar("_L0Cov", bound=int, covariant=True)
 _L1Cov = TypeVar("_L1Cov", bound=int, covariant=True)
@@ -59,7 +59,7 @@ def load_potential(path: Path) -> Potential[Any, Any, Any]:
     Potential[Any, Any, Any]
         _description_
     """
-    return np.load(path, allow_pickle=True)[()]  # type:ignore[]
+    return np.load(path, allow_pickle=True)[()]  # type:ignore[no-any-return]
 
 
 def load_potential_grid_json(path: Path) -> Potential[Any, Any, Any]:
@@ -143,7 +143,7 @@ def load_uneven_potential(path: Path) -> UnevenPotential[Any, Any, Any]:
     -------
     UnevenPotential[Any, Any, Any]
     """
-    return np.load(path, allow_pickle=True)[()]  # type:ignore[]
+    return np.load(path, allow_pickle=True)[()]  # type:ignore[no-any-return]
 
 
 def load_uneven_potential_json(
@@ -209,7 +209,7 @@ def normalize_potential(data: _GPInv) -> _GPInv:
     """
     points = data["points"]
     normalized_points = points - points.min()
-    return {"points": normalized_points, "basis": data["basis"]}  # type: ignore[]
+    return {"points": normalized_points, "basis": data["basis"]}  # type: ignore[return-value]
 
 
 def truncate_potential(
@@ -227,7 +227,7 @@ def truncate_potential(
         cutoff * np.log(1 + ((data["points"] + offset) / cutoff) ** n) ** (1 / n)
         - offset
     )
-    return {"points": points, "basis": data["basis"]}  # type: ignore[]
+    return {"points": points, "basis": data["basis"]}  # type: ignore[return-value]
 
 
 def undo_truncate_potential(
@@ -237,11 +237,11 @@ def undo_truncate_potential(
     points = (
         cutoff * (np.exp((data["points"] + offset) / cutoff) - 1) ** (1 / n) - offset
     )
-    return {"points": points, "basis": data["basis"]}  # type: ignore[]
+    return {"points": points, "basis": data["basis"]}  # type: ignore[return-value]
 
 
 def interpolate_uneven_potential(
-    data: UnevenPotential[Any, Any, Any], shape: tuple[_L0Inv, _L1Inv, _L2Inv]
+    data: UnevenPotential[int, int, int], shape: tuple[_L0Inv, _L1Inv, _L2Inv]
 ) -> Potential[_L0Inv, _L1Inv, _L2Inv]:
     """
     Interpolate an energy grid using the fourier method.
@@ -274,7 +274,7 @@ def interpolate_uneven_potential(
                 "delta_x": np.array([0, 0, data["basis"][2][-1] - data["basis"][2][0]]),
             },
         ),
-        "points": interpolated,  # type: ignore[]
+        "points": interpolated,  # type: ignore[typeddict-item]
     }
 
 
@@ -299,7 +299,7 @@ def mock_even_potential(
             {
                 "_type": "position",
                 "delta_x": np.array([0, 0, 1], dtype=float),
-                "n": len(uneven["basis"][2]),  # type: ignore[]
+                "n": len(uneven["basis"][2]),  # type: ignore[typeddict-item]
             },
         ),
         "points": uneven["points"],

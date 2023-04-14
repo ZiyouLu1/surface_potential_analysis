@@ -11,50 +11,6 @@ from surface_potential_analysis.util import slice_along_axis
 _DT = TypeVar("_DT", bound=np.dtype[Any])
 
 
-def interpolate_real_points_along_axis_fourier(
-    points: np.ndarray[tuple[int, ...], np.dtype[np.float_]], n: int, axis: int = -1
-) -> np.ndarray[tuple[int, ...], np.dtype[np.float_]]:
-    """
-    interpolate along the given axis to a new length n.
-
-    Given a uniformly spaced (real) grid of points interpolate along the given
-    axis to a new length n.
-
-    This makes use of the fact that the potential is real, and therefore if the
-    input is even along the interpolation axis we get an additional ft point for 'free'
-    using the hermitian property of the fourier transform
-
-    Parameters
-    ----------
-    points :  np.ndarray[tuple[int, ...], np.dtype[np.float_]]
-        The initial set of points to interpolate
-    n : int
-        The number of points in the interpolated grid
-    axis : int, optional
-        The axis over which to interpolate, by default -1
-
-    Returns
-    -------
-     np.ndarray[tuple[int, ...], np.dtype[np.float_]]
-        The points interpolated along the given axis
-    """
-    # We use the forward norm here, as otherwise we would also need to
-    # scale the ft_potential by a factor of n / shape[axis]
-    # when we pad or truncate it
-    ft_potential = scipy.fft.rfft(points, axis=axis, norm="forward")
-    # Invert the rfft, padding (or truncating) for the new length n
-    interpolated_potential = scipy.fft.irfft(ft_potential, n, axis=axis, norm="forward")
-
-    if np.all(np.isreal(ft_potential)):
-        # Force the symmetric potential to stay symmetric
-        # Due to issues with numerical precision it diverges by around 1E-34
-        lower_half = slice_along_axis(slice(1, (n + 1) // 2), axis=axis)
-        upper_half = slice_along_axis(slice(None, n // 2, -1), axis=axis)
-        interpolated_potential[upper_half] = interpolated_potential[lower_half]
-
-    return interpolated_potential  # type:ignore[no-any-return]
-
-
 def pad_ft_points(
     array: np.ndarray[tuple[int, ...], _DT], s: Sequence[int], axes: Sequence[int]
 ) -> np.ndarray[tuple[int, ...], _DT]:
@@ -150,6 +106,45 @@ def interpolate_points_fftn(
     )
 
 
+def pad_ft_points_real_axis(
+    array: np.ndarray[tuple[int, ...], _DT], n: int, axis: int = -1
+) -> np.ndarray[tuple[int, ...], _DT]:
+    """
+    Pad the points in the fourier transform with zeros, along the 'real' axis.
+
+    Pad the points in the fourier transform with zeros, keeping the frequencies of
+    each point the same in the initial and final grid, using the rfft storage of
+    frequencies. Note n is the length of the 'non-ft' points, not the length of
+    the resulting array in the 'axis' direction
+
+    Parameters
+    ----------
+    array : NDArray
+        The array to pad
+    n : int
+        The target length of the non-ft points (the new length along the given axis is n//2 + 1)
+    axes : NDArray
+        The axis to pad
+
+    Returns
+    -------
+    NDArray
+        The padded array
+    """
+    padded_shape = np.array(array.shape)
+    padded_shape[axis] = n // 2 + 1
+
+    padded: np.ndarray[tuple[int, ...], _DT] = np.zeros(
+        shape=padded_shape, dtype=array.dtype
+    )
+    relevant_slice = slice(min(padded.shape[axis], array.shape[axis]))
+    padded[slice_along_axis(relevant_slice, axis)] = array[
+        slice_along_axis(relevant_slice, axis)
+    ]
+
+    return padded
+
+
 def interpolate_points_rfftn(
     points: np.ndarray[tuple[int, ...], np.dtype[np.float_]],
     s: Sequence[int],
@@ -157,6 +152,10 @@ def interpolate_points_rfftn(
 ) -> np.ndarray[tuple[int, ...], np.dtype[np.float_]]:
     """
     Interpolate points using a real fourier transform.
+
+    This method performs poorly compared to fft2 if there is some large
+    maximum in the potential, due to weirdness with the automatic ft
+    points padding
 
     Parameters
     ----------
@@ -176,6 +175,50 @@ def interpolate_points_rfftn(
     return scipy.fft.irfftn(  # type:ignore[no-any-return]
         padded, s, axes=axes_arr, norm="forward", overwrite_x=True
     )
+
+
+def interpolate_points_rfft(
+    points: np.ndarray[tuple[int, ...], np.dtype[np.float_]], n: int, axis: int = -1
+) -> np.ndarray[tuple[int, ...], np.dtype[np.float_]]:
+    """
+    interpolate along the given axis to a new length n.
+
+    Given a uniformly spaced (real) grid of points interpolate along the given
+    axis to a new length n.
+
+    This makes use of the fact that the potential is real, and therefore if the
+    input is even along the interpolation axis we get an additional ft point for 'free'
+    using the hermitian property of the fourier transform
+
+    Parameters
+    ----------
+    points :  np.ndarray[tuple[int, ...], np.dtype[np.float_]]
+        The initial set of points to interpolate
+    n : int
+        The number of points in the interpolated grid
+    axis : int, optional
+        The axis over which to interpolate, by default -1
+
+    Returns
+    -------
+     np.ndarray[tuple[int, ...], np.dtype[np.float_]]
+        The points interpolated along the given axis
+    """
+    # We use the forward norm here, as otherwise we would also need to
+    # scale the ft_potential by a factor of n / shape[axis]
+    # when we pad or truncate it
+    ft_potential = scipy.fft.rfft(points, axis=axis, norm="forward")
+    # Invert the rfft, padding (or truncating) for the new length n
+    interpolated_potential = scipy.fft.irfft(ft_potential, n, axis=axis, norm="forward")
+
+    if np.all(np.isreal(ft_potential)):
+        # Force the symmetric potential to stay symmetric
+        # Due to issues with numerical precision it diverges by around 1E-34
+        lower_half = slice_along_axis(slice(1, (n + 1) // 2), axis=axis)
+        upper_half = slice_along_axis(slice(None, n // 2, -1), axis=axis)
+        interpolated_potential[upper_half] = interpolated_potential[lower_half]
+
+    return interpolated_potential  # type:ignore[no-any-return]
 
 
 # ruff: noqa: ERA001

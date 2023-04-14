@@ -3,14 +3,12 @@ import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.image import AxesImage
 from numpy.typing import NDArray
-
 from surface_potential_analysis.wavepacket_grid import WavepacketGrid
 
 from .surface_data import save_figure
 
 
 def symmetrize_wavepacket_about_far_edge(wavepacket: WavepacketGrid) -> WavepacketGrid:
-
     points = np.array(wavepacket["points"])
 
     reflected_shape = (
@@ -32,8 +30,7 @@ def symmetrize_wavepacket_about_far_edge(wavepacket: WavepacketGrid) -> Wavepack
     }
 
 
-def plot_overlap_fraction_2D(overlap_fraction: NDArray):
-
+def plot_overlap_fraction_2d(overlap_fraction: NDArray):
     max_index = np.unravel_index(
         np.argmax(overlap_fraction.ravel()), overlap_fraction.shape
     )

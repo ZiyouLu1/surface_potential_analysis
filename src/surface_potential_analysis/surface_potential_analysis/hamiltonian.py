@@ -9,7 +9,7 @@ from surface_potential_analysis.basis.basis import (
     PositionBasis,
     is_basis_type,
 )
-from surface_potential_analysis.basis_config import (
+from surface_potential_analysis.basis_config.basis_config import (
     BasisConfig,
     BasisConfigUtil,
     MomentumBasisConfig,
@@ -187,7 +187,7 @@ def truncate_hamiltonian_basis(
 ):
     parent_basis: FundamentalBasis[Any] = hamiltonian["basis"][axis % 3]
     if not is_basis_type(parent_basis, "momentum"):
-        raise NotImplementedError()
+        raise NotImplementedError
     padded = pad_ft_points(
         hamiltonian["array"], s=(len, len), axes=(axis % 3, 3 + (axis % 3))
     )
@@ -241,7 +241,7 @@ def expand_hamiltonian_basis(
 ) -> StackedHamiltonianWithBasis[
     _BX0Inv | _CBX0Inv, _BX1Inv | _CBX1Inv, _BX2Inv | _CBX2Inv
 ]:
-    raise NotImplementedError()
+    raise NotImplementedError
 
 
 _BX = TypeVar("_BX", bound=Basis[Any, Any], contravariant=True)
@@ -283,7 +283,7 @@ def hamiltonian_axis_in_basis(
     | StackedHamiltonianWithBasis[_BX0Inv, _BX, _BX2Inv]
     | StackedHamiltonianWithBasis[_BX0Inv, _BX1Inv, _BX]
 ):
-    raise NotImplementedError()
+    raise NotImplementedError
 
 
 def stacked_hamiltonian_in_basis(
@@ -291,7 +291,7 @@ def stacked_hamiltonian_in_basis(
     basis: _BC0Inv,
 ) -> StackedHamiltonian[_BC0Inv]:
     """
-    Transform a stacked hamiltonian into the given basis
+    Transform a stacked hamiltonian into the given basis.
 
     Parameters
     ----------
@@ -312,7 +312,7 @@ def hamiltonian_in_basis(
     basis: _BC0Inv,
 ) -> Hamiltonian[_BC0Inv]:
     """
-    Transform a hamiltonian into the given basis
+    Transform a hamiltonian into the given basis.
 
     Parameters
     ----------

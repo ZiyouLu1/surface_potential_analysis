@@ -5,7 +5,7 @@ from typing import Any, Generic, Literal, TypedDict, TypeVar
 import numpy as np
 
 from surface_potential_analysis.basis import Basis
-from surface_potential_analysis.basis_config import (
+from surface_potential_analysis.basis_config.basis_config import (
     BasisConfig,
     BasisConfigUtil,
     MomentumBasisConfig,
@@ -67,14 +67,33 @@ MomentumBasisWavepacket = Wavepacket[
 
 
 def save_wavepacket(path: Path, wavepacket: Wavepacket[Any, Any, Any]) -> None:
+    """
+    Save a wavepacket in the npy format.
+
+    Parameters
+    ----------
+    path : Path
+    wavepacket : Wavepacket[Any, Any, Any]
+    """
     np.save(path, wavepacket)
 
 
 def load_wavepacket(path: Path) -> Wavepacket[Any, Any, Any]:
-    return np.load(path)[()]  # type:ignore
+    """
+    Load a wavepacket from the npy format.
+
+    Parameters
+    ----------
+    path : Path
+
+    Returns
+    -------
+    Wavepacket[Any, Any, Any]
+    """
+    return np.load(path)[()]  # type:ignore[no-any-return]
 
 
-def get_wavepacket_sample_index(
+def _get_wavepacket_sample_index(
     shape: np.ndarray[tuple[Literal[2], int, int], np.dtype[np.int_]]
 ) -> np.ndarray[tuple[Literal[2], int], np.dtype[np.int_]]:
     n_x0 = np.fft.ifftshift(
@@ -85,28 +104,51 @@ def get_wavepacket_sample_index(
     )
 
     x0v, x1v = np.meshgrid(n_x0, n_x1)
-    return np.array([x0v, x1v])  # type: ignore
+    return np.array([x0v, x1v])  # type: ignore[no-any-return]
 
 
 def get_wavepacket_sample_fractions(
     shape: np.ndarray[tuple[Literal[2]], np.dtype[np.int_]]
 ) -> np.ndarray[tuple[Literal[2], int, int], np.dtype[np.float_]]:
+    """
+    Get the frequencies of the samples in a wavepacket, as a fraction of dk.
+
+    Parameters
+    ----------
+    shape : np.ndarray[tuple[Literal[2]], np.dtype[np.int_]]
+
+    Returns
+    -------
+    np.ndarray[tuple[Literal[2], int, int], np.dtype[np.float_]]
+    """
     # TODO: what should be the convention here
     x0v, x1v = np.meshgrid(
         np.fft.fftfreq(shape.item(0), 1),
         np.fft.fftfreq(shape.item(1), 1),
         indexing="ij",
     )
-    return np.array([x0v, x1v])  # type: ignore
+    return np.array([x0v, x1v])  # type: ignore[no-any-return]
 
 
 def get_wavepacket_sample_frequencies(
     basis: BasisConfig[Any, Any, Any],
     shape: np.ndarray[tuple[Literal[2]], np.dtype[np.int_]],
 ) -> np.ndarray[tuple[Literal[3], int, int], np.dtype[np.float_]]:
+    """
+    Get the frequencies used in a given wavepacket.
+
+    Parameters
+    ----------
+    basis : BasisConfig[Any, Any, Any]
+    shape : np.ndarray[tuple[Literal[2]], np.dtype[np.int_]]
+
+    Returns
+    -------
+    np.ndarray[tuple[Literal[3], int, int], np.dtype[np.float_]]
+    """
     util = BasisConfigUtil(basis)
     fractions = get_wavepacket_sample_fractions(shape)
-    return (  # type: ignore
+    return (  # type: ignore[no-any-return]
         util.dk0[:, np.newaxis, np.newaxis] * fractions[np.newaxis, 0]
         + util.dk1[:, np.newaxis, np.newaxis] * fractions[np.newaxis, 1]
     )
@@ -121,6 +163,19 @@ def generate_wavepacket(
     *,
     save_bands: np.ndarray[tuple[int], np.dtype[np.int_]] | None = None
 ) -> np.ndarray[tuple[int], np.dtype[Wavepacket[_NS0Inv, _NS1Inv, _BC0Inv]]]:
+    """
+    Generate a wavepacket with the given number of samples.
+
+    Parameters
+    ----------
+    hamiltonian_generator : Callable[[np.ndarray[tuple[Literal[3]], np.dtype[np.float_]]], Hamiltonian[_BC0Inv]]
+    samples : tuple[_NS0Inv, _NS1Inv]
+    save_bands : np.ndarray[tuple[int], np.dtype[np.int_]] | None, optional
+
+    Returns
+    -------
+    np.ndarray[tuple[int], np.dtype[Wavepacket[_NS0Inv, _NS1Inv, _BC0Inv]]]
+    """
     h = hamiltonian_generator(np.array([0, 0, 0]))
     basis_length = len(BasisConfigUtil(h["basis"]))
     save_bands = np.array([0]) if save_bands is None else save_bands
@@ -139,7 +194,7 @@ def generate_wavepacket(
         (is0, is1) = np.unravel_index(i, samples)
         for b, band in enumerate(save_bands):
             out[b]["vectors"][is0, is1] = eigenstates["vectors"][band]
-    return out  # type: ignore
+    return out  # type: ignore[no-any-return]
 
 
 def get_global_phases(
@@ -174,7 +229,7 @@ def get_global_phases(
         :, np.newaxis, np.newaxis
     ]
 
-    return (  # type: ignore
+    return (  # type: ignore[no-any-return]
         2 * np.pi * np.sum(np.multiply(position_fractions, momentum_fractions), axis=0)
     )
 
@@ -219,16 +274,45 @@ def normalize_wavepacket(
     phases = np.exp(-1j * (bloch_angles + global_phases - angle))
     fixed_eigenvectors = eigenvectors * phases[:, :, np.newaxis]
 
-    return {  # type: ignore
+    return {  # type: ignore[return-value]
         "basis": wavepacket["basis"],
-        "eigenvectors": fixed_eigenvectors,
+        "vectors": fixed_eigenvectors,
     }
 
 
 def select_wavepacket_eigenstate(
     wavepacket: Wavepacket[int, int, _BC0Inv], idx: tuple[int, int]
 ) -> Eigenstate[_BC0Inv]:
+    """
+    Select a specific eigenstate from the wavepacket.
+
+    Parameters
+    ----------
+    wavepacket : Wavepacket[int, int, _BC0Inv]
+    idx : tuple[int, int]
+
+    Returns
+    -------
+    Eigenstate[_BC0Inv]
+    """
     return {
         "basis": wavepacket["basis"],
         "vector": wavepacket["vectors"][idx[0], idx[1]],
     }
+
+
+def calculate_normalisation(wavepacket: Wavepacket[int, int, Any]) -> float:
+    """
+    calculate the normalization of a wavepacket.
+
+    This should always be 1
+
+    Parameters
+    ----------
+    wavepacket : Wavepacket[Any]
+
+    Returns
+    -------
+    float
+    """
+    return np.sum(np.conj(wavepacket["vectors"]) * wavepacket["vectors"])

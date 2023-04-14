@@ -1,46 +1,35 @@
+import numpy as np
 from matplotlib import pyplot as plt
-
-from surface_potential_analysis.eigenstate.plot import animate_eigenstate_3D_in_xy
-from surface_potential_analysis.energy_eigenstate import (
-    filter_eigenstates_band,
-    get_eigenstate_list,
-    load_energy_eigenstates,
+from surface_potential_analysis.eigenstate.eigenstate_collection import (
+    load_eigenstate_collection,
+    select_eigenstate,
 )
-from surface_potential_analysis.energy_eigenstates_plot import (
-    plot_lowest_band_in_kx,
-    plot_nth_band_in_kx,
+from surface_potential_analysis.eigenstate.eigenstate_collection_plot import (
+    plot_energies_against_bloch_phase_1d,
+    plot_lowest_band_energies_against_bloch_kx,
 )
+from surface_potential_analysis.eigenstate.plot import animate_eigenstate_x0x1
 
 from .surface_data import get_data_path, save_figure
 
 
-def analyze_band_convergence():
+def analyze_band_convergence() -> None:
     fig, ax = plt.subplots()
 
-    path = get_data_path("eigenstates_23_23_10.json")
-    eigenstates = load_energy_eigenstates(path)
-    _, _, ln = plot_lowest_band_in_kx(eigenstates, ax=ax)
+    path = get_data_path("eigenstates_23_23_10_large.npy")
+    eigenstates = load_eigenstate_collection(path)
+    _, _, ln = plot_lowest_band_energies_against_bloch_kx(eigenstates, ax=ax)
     ln.set_label("(23,23,10)")
 
-    path = get_data_path("eigenstates_23_23_12.json")
-    eigenstates = load_energy_eigenstates(path)
-    _, _, ln = plot_lowest_band_in_kx(eigenstates, ax=ax)
+    path = get_data_path("eigenstates_23_23_12.npy")
+    eigenstates = load_eigenstate_collection(path)
+    _, _, ln = plot_lowest_band_energies_against_bloch_kx(eigenstates, ax=ax)
     ln.set_label("(23,23,12)")
 
-    path = get_data_path("eigenstates_25_25_16.json")
-    eigenstates = load_energy_eigenstates(path)
-    _, _, ln = plot_lowest_band_in_kx(eigenstates, ax=ax)
+    path = get_data_path("eigenstates_25_25_16.npy")
+    eigenstates = load_eigenstate_collection(path)
+    _, _, ln = plot_lowest_band_energies_against_bloch_kx(eigenstates, ax=ax)
     ln.set_label("(25,25,16)")
-
-    path = get_data_path("eigenstates_23_23_16.json")
-    eigenstates = load_energy_eigenstates(path)
-    _, _, ln = plot_lowest_band_in_kx(eigenstates, ax=ax)
-    ln.set_label("(23,23,16)")
-
-    path = get_data_path("eigenstates_21_21_16.json")
-    eigenstates = load_energy_eigenstates(path)
-    _, _, ln = plot_lowest_band_in_kx(eigenstates, ax=ax)
-    ln.set_label("(21,21,16)")
 
     ax.legend()
     ax.set_title(
@@ -53,11 +42,15 @@ def analyze_band_convergence():
 
     fig, ax = plt.subplots()
 
-    path = get_data_path("eigenstates_25_25_16.json")
-    eigenstates = load_energy_eigenstates(path)
-    _, _, ln = plot_nth_band_in_kx(eigenstates, n=0, ax=ax)
+    path = get_data_path("eigenstates_25_25_16.npy")
+    eigenstates = load_eigenstate_collection(path)
+    _, _, ln = plot_energies_against_bloch_phase_1d(
+        eigenstates, np.array([1, 0, 0]), band=0, ax=ax
+    )
     ln.set_label("n=0")
-    _, _, ln = plot_nth_band_in_kx(eigenstates, n=1, ax=ax)
+    _, _, ln = plot_energies_against_bloch_phase_1d(
+        eigenstates, np.array([1, 0, 0]), band=1, ax=ax
+    )
     ln.set_label("n=1")
 
     ax.legend()
@@ -66,14 +59,18 @@ def analyze_band_convergence():
 
     fig, ax = plt.subplots()
 
-    path = get_data_path("eigenstates_23_23_12.json")
-    eigenstates = load_energy_eigenstates(path)
-    _, _, ln = plot_nth_band_in_kx(eigenstates, n=1, ax=ax)
+    path = get_data_path("eigenstates_23_23_12.npy")
+    eigenstates = load_eigenstate_collection(path)
+    _, _, ln = plot_energies_against_bloch_phase_1d(
+        eigenstates, np.array([1, 0, 0]), band=1, ax=ax
+    )
     ln.set_label("(23,23,12)")
 
-    path = get_data_path("eigenstates_25_25_16.json")
-    eigenstates = load_energy_eigenstates(path)
-    _, _, ln = plot_nth_band_in_kx(eigenstates, n=1, ax=ax)
+    path = get_data_path("eigenstates_25_25_16.npy")
+    eigenstates = load_eigenstate_collection(path)
+    _, _, ln = plot_energies_against_bloch_phase_1d(
+        eigenstates, np.array([1, 0, 0]), band=1, ax=ax
+    )
     ln.set_label("(25,25,16)")
 
     ax.legend()
@@ -83,22 +80,16 @@ def analyze_band_convergence():
     input()
 
 
-def plot_eigenstate_for_each_band():
-    """
-    Check to see if the eigenstates look as they are supposed to
-    """
+def plot_eigenstate_for_each_band() -> None:
+    """Check to see if the eigenstates look as they are supposed to."""
     path = get_data_path("eigenstates_29_29_12.json")
-    eigenstates = load_energy_eigenstates(path)
+    eigenstates = load_eigenstate_collection(path)
 
-    eigenstate = get_eigenstate_list(filter_eigenstates_band(eigenstates, n=0))[0]
-    fig, _, _anim1 = animate_eigenstate_3D_in_xy(
-        eigenstates["eigenstate_config"], eigenstate
-    )
+    eigenstate = select_eigenstate(eigenstates, bloch_idx=0, band_idx=0)
+    fig, _, _anim1 = animate_eigenstate_x0x1(eigenstate)
     fig.show()
 
-    eigenstate = get_eigenstate_list(filter_eigenstates_band(eigenstates, n=1))[0]
-    fig, _, _anim2 = animate_eigenstate_3D_in_xy(
-        eigenstates["eigenstate_config"], eigenstate
-    )
+    eigenstate = select_eigenstate(eigenstates, bloch_idx=0, band_idx=1)
+    fig, _, _anim2 = animate_eigenstate_x0x1(eigenstate)
     fig.show()
     input()

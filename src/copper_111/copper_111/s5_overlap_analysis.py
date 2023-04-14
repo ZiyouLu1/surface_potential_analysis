@@ -1,23 +1,19 @@
 import numpy as np
 from matplotlib import pyplot as plt
-
-from surface_potential_analysis.overlap_transform import load_overlap_transform
-from surface_potential_analysis.overlap_transform_plot import (
+from surface_potential_analysis.overlap.overlap import load_overlap
+from surface_potential_analysis.overlap.plot import (
+    plot_overlap_transform_2d,
     plot_overlap_transform_along_diagonal,
-    plot_overlap_transform_x0z,
-    plot_overlap_transform_xy,
-    plot_overlap_xy,
 )
 
 from .surface_data import get_data_path, save_figure
 
 
-def plot_overlap():
-    path = get_data_path("overlap_transform_hcp_fcc.npz")
-    # path = get_data_path("overlap_transform_interpolated_hcp_fcc.npz")
-    overlap = load_overlap_transform(path)
+def plot_overlap() -> None:
+    path = get_data_path("overlap_hcp_fcc.npz")
+    overlap = load_overlap(path)
 
-    fig, ax, _ = plot_overlap_transform_xy(overlap)
+    fig, ax, _ = plot_overlap_transform_2d(overlap, 0, 2)
     ax.set_title(
         "Plot of the overlap transform for ikz=0\n"
         "showing oscillation in the direction corresponding to\n"
@@ -26,7 +22,7 @@ def plot_overlap():
     save_figure(fig, "2d_overlap_transform_kx_ky.png")
     fig.show()
 
-    fig, ax, _ = plot_overlap_xy(overlap)
+    fig, ax, _ = plot_overlap_transform_2d(overlap, 0, 2)
     ax.set_title(
         "Plot of the overlap summed over z\n"
         "showing the FCC and HCP asymmetry\n"
@@ -35,7 +31,7 @@ def plot_overlap():
     save_figure(fig, "2d_overlap_kx_ky.png")
     fig.show()
 
-    fig, ax, _ = plot_overlap_transform_x0z(overlap)
+    fig, ax, _ = plot_overlap_transform_2d(overlap, 0, 1)
     ax.set_title(
         "Plot of the overlap transform for ikx1=0\n"
         "A very sharp peak in the kz direction"
@@ -51,10 +47,6 @@ def plot_overlap():
     _, _, ln = plot_overlap_transform_along_diagonal(overlap, measure="imag", ax=ax)
     ln.set_label("imag")
 
-    # ax2 = ax.twinx()
-    # _, _, ln = plot_overlap_transform_along_diagonal(overlap, measure="angle", ax=ax2)
-    # ln.set_label("angle")
-
     ax.legend()
     ax.set_title(
         "Plot of the wavefunction along the diagonal,\nshowing an oscillation in the overlap"
@@ -64,11 +56,11 @@ def plot_overlap():
     input()
 
 
-def fit_overlap_transform():
-    path = get_data_path("overlap_transform_hcp_fcc.npz")
-    overlap = load_overlap_transform(path)
-    points = overlap["points"]
+def fit_overlap_transform() -> None:
+    path = get_data_path("overlap_hcp_fcc.npz")
+    overlap = load_overlap(path)
+    points = overlap["vector"]
 
-    print(points[0, 0, 0])
-    print(np.max(np.abs(points[:, :, 0])))
-    print(np.max(np.abs(points[:, :])))
+    print(points[0, 0, 0])  # noqa: T201
+    print(np.max(np.abs(points[:, :, 0])))  # noqa: T201
+    print(np.max(np.abs(points[:, :])))  # noqa: T201

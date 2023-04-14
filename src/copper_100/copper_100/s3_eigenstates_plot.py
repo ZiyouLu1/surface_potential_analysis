@@ -6,28 +6,6 @@ from matplotlib.axes import Axes
 from matplotlib.figure import Figure
 from matplotlib.lines import Line2D
 
-from surface_potential_analysis.eigenstate.eigenstate import (
-    Eigenstate,
-    EigenstateConfig,
-    EigenstateConfigUtil,
-)
-from surface_potential_analysis.eigenstate.plot import (
-    animate_eigenstate_3D_in_xy,
-    plot_bloch_wavefunction_difference_in_x0z,
-    plot_eigenstate_along_path,
-    plot_eigenstate_x0z,
-)
-from surface_potential_analysis.energy_eigenstate import (
-    filter_eigenstates_band,
-    get_eigenstate_list,
-    load_energy_eigenstates,
-    normalize_eigenstate_phase,
-)
-from surface_potential_analysis.energy_eigenstates_plot import (
-    plot_lowest_band_in_kx,
-    plot_nth_band_in_kx,
-)
-
 from .surface_data import get_data_path, save_figure
 
 
@@ -144,13 +122,13 @@ def analyze_eigenvalue_convergence_relaxed():
     input()
 
 
-def plot_lowest_eigenstate_3D_xy():
+def plot_lowest_eigenstate_3d_xy():
     path = get_data_path("eigenstates_relaxed_10_10_14.json")
     eigenstates = load_energy_eigenstates(path)
 
     eigenstate = get_eigenstate_list(filter_eigenstates_band(eigenstates, n=0))[-1]
 
-    fig, _, _anim = animate_eigenstate_3D_in_xy(
+    fig, _, _anim = animate_eigenstate_3d_in_xy(
         eigenstates["eigenstate_config"], eigenstate, measure="real"
     )
     fig.show()
@@ -308,7 +286,7 @@ def plot_bloch_wavefunction_difference_at_boundary():
 def analyze_oversampling_effect():
     """
     Does the effect of sampling a larger grid of points in k space change the
-    eigenvector of the groundstate significantly?
+    eigenvector of the groundstate significantly?.
     """
     path = get_data_path("oversampled_eigenstates.json")
     oversampled = load_energy_eigenstates(path)

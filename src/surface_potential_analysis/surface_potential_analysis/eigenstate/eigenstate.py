@@ -11,7 +11,7 @@ from surface_potential_analysis.basis import (
     PositionBasis,
     TruncatedBasis,
 )
-from surface_potential_analysis.basis_config import (
+from surface_potential_analysis.basis_config.basis_config import (
     BasisConfig,
     BasisConfigUtil,
     MomentumBasisConfig,
@@ -59,7 +59,7 @@ MomentumBasisEigenstate = Eigenstate[MomentumBasisConfig[_L0Cov, _L1Cov, _L2Cov]
 class EigenstateList(TypedDict, Generic[_BC0Cov]):
     """
     Represents a list of eigenstates, each with the same basis
-    and bloch wavevector
+    and bloch wavevector.
     """
 
     basis: _BC0Cov
@@ -84,13 +84,13 @@ _L2Inv = TypeVar("_L2Inv", bound=int, covariant=True)
 def convert_eigenstate_to_momentum_basis(
     eigenstate: PositionBasisEigenstate[_L0Inv, _L1Inv, _L2Inv]
 ) -> MomentumBasisEigenstate[_L0Inv, _L1Inv, _L2Inv]:
-    raise NotImplementedError()
+    raise NotImplementedError
 
 
 def convert_eigenstate_to_position_basis(
     eigenstate: MomentumBasisEigenstate[_L0Inv, _L1Inv, _L2Inv]
 ) -> PositionBasisEigenstate[_L0Inv, _L1Inv, _L2Inv]:
-    raise NotImplementedError()
+    raise NotImplementedError
 
 
 class StackedEigenstate(TypedDict, Generic[_BC0Cov]):
@@ -113,7 +113,7 @@ def flatten_eigenstate(state: StackedEigenstate[_BC0Inv]) -> Eigenstate[_BC0Inv]
 def _convert_momentum_basis_x01_to_position(
     eigenstate: StackedEigenstateWithBasis[
         TruncatedBasis[Any, MomentumBasis[_L0Inv]] | MomentumBasis[_L0Inv],
-        TruncatedBasis[Any, MomentumBasis[_L1Inv]] | MomentumBasis[_L0Inv],
+        TruncatedBasis[Any, MomentumBasis[_L1Inv]] | MomentumBasis[_L1Inv],
         _BX0Inv,
     ]
 ) -> StackedEigenstateWithBasis[PositionBasis[_L0Inv], PositionBasis[_L1Inv], _BX0Inv]:
@@ -174,3 +174,43 @@ def convert_sho_eigenstate_to_position_basis(
     xy_converted = _convert_momentum_basis_x01_to_position(stacked)
     converted = _convert_explicit_basis_x2_to_position(xy_converted)
     return flatten_eigenstate(converted)
+
+
+def convert_eigenstate_01_axis_to_position_basis(
+    eigenstate: EigenstateWithBasis[
+        MomentumBasis[_L0Inv],
+        MomentumBasis[_L1Inv],
+        _BX0Inv,
+    ]
+) -> EigenstateWithBasis[PositionBasis[_L0Inv], PositionBasis[_L1Inv], _BX0Inv]:
+    """
+    convert eigenstate to position basis in the x0 and x1 direction.
+
+    Parameters
+    ----------
+    eigenstate : EigenstateWithBasis[ MomentumBasis[_L0Inv], MomentumBasis[_L1Inv], _BX0Inv, ]
+
+    Returns
+    -------
+    EigenstateWithBasis[PositionBasis[_L0Inv], PositionBasis[_L1Inv], _BX0Inv]
+    """
+    stacked = stack_eigenstate(eigenstate)
+    converted = _convert_momentum_basis_x01_to_position(stacked)
+    return flatten_eigenstate(converted)
+
+
+def calculate_normalisation(eigenstate: Eigenstate[Any]) -> float:
+    """
+    calculate the normalization of an eigenstate.
+
+    This should always be 1
+
+    Parameters
+    ----------
+    eigenstate: Eigenstate[Any]
+
+    Returns
+    -------
+    float
+    """
+    return np.sum(np.conj(eigenstate["vector"]) * eigenstate["vector"])

@@ -3,7 +3,7 @@ from typing import Any
 
 import numpy as np
 
-from surface_potential_analysis.basis_config import (
+from surface_potential_analysis.basis_config.basis_config import (
     MomentumBasisConfigUtil,
     PositionBasisConfigUtil,
 )
@@ -53,7 +53,7 @@ class WavepacketTest(unittest.TestCase):
         wavepacket["vectors"][1][1][0] = 5
         wavepacket["vectors"][2][1][0] = 6
 
-        expected = np.zeros((162))
+        expected = np.zeros(162)
         expected[np.ravel_multi_index((0, 0, 0), (9, 6, 3))] = 1
         expected[np.ravel_multi_index((1, 0, 0), (9, 6, 3))] = 2
         expected[np.ravel_multi_index((8, 0, 0), (9, 6, 3))] = 3

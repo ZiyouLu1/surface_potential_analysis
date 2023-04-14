@@ -102,7 +102,7 @@ def is_basis_type(
     return basis["_type"] == _type
 
 
-def get_fundamental_basis(
+def _get_fundamental_basis(
     basis: BasisWithLength[_L1Inv, Any]
 ) -> FundamentalBasis[_L1Inv]:
     if is_basis_type(basis, "explicit") or is_basis_type(basis, "truncated"):
@@ -128,7 +128,7 @@ class BasisUtil(Generic[B]):
 
     @cached_property
     def fundamental_basis(self) -> FundamentalBasis[Any]:
-        return get_fundamental_basis(self._basis)
+        return _get_fundamental_basis(self._basis)
 
     @overload
     def get_fundamental_basis_in(

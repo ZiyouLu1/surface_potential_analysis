@@ -14,7 +14,18 @@ _L0Inv = TypeVar("_L0Inv", bound=int)
 def get_point_potential_xy_locations(
     potential: PointPotential[_L0Inv],
 ) -> np.ndarray[tuple[Literal[2], int], np.dtype[np.float_]]:
-    return np.array(  # type: ignore
+    """
+    Get xy locations in a point potential.
+
+    Parameters
+    ----------
+    potential : PointPotential[_L0Inv]
+
+    Returns
+    -------
+    np.ndarray[tuple[Literal[2], int], np.dtype[np.float_]]
+    """
+    return np.array(  # type: ignore[no-any-return]
         [
             (x, y)
             for x in np.unique(potential["x_points"])
@@ -28,6 +39,19 @@ def get_point_potential_xy_locations(
 def plot_point_potential_location_xy(
     potential: PointPotential[Any], *, ax: Axes | None = None
 ) -> tuple[Figure, Axes, Line2D]:
+    """
+    Plot the xy locations of a point potential.
+
+    Parameters
+    ----------
+    potential : PointPotential[Any]
+    ax : Axes | None, optional
+        axis, by default None
+
+    Returns
+    -------
+    tuple[Figure, Axes, Line2D]
+    """
     fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
 
     points = get_point_potential_xy_locations(potential)
@@ -44,6 +68,19 @@ def plot_point_potential_location_xy(
 def plot_point_potential_all_z(
     potential: PointPotential[Any], *, ax: Axes | None = None
 ) -> tuple[Figure, Axes]:
+    """
+    Plot the z dependance of all xy locations in the point potential.
+
+    Parameters
+    ----------
+    potential : PointPotential[Any]
+    ax : Axes | None, optional
+        axis, by default None
+
+    Returns
+    -------
+    tuple[Figure, Axes]
+    """
     fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
 
     points = get_point_potential_xy_locations(potential)

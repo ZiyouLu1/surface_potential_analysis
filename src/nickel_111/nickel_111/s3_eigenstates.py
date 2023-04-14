@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, Literal
 
 import numpy as np
-from surface_potential_analysis.basis_config import BasisConfigUtil
+from surface_potential_analysis.basis_config.basis_config import BasisConfigUtil
 from surface_potential_analysis.eigenstate.eigenstate_collection import (
     EigenstateColllection,
     calculate_eigenstate_collection,
@@ -27,7 +27,7 @@ def _calculate_eigenstate_collection_sho(
         x: np.ndarray[tuple[Literal[3]], np.dtype[np.float_]]
     ) -> Hamiltonian[Any]:
         return generate_hamiltonian_sho(
-            shape=(2 * resolution[0], 2 * resolution[1], 500),
+            shape=(200, 200, 501),
             bloch_phase=x,
             resolution=resolution,
         )
@@ -59,8 +59,8 @@ def generate_eigenstates_data() -> None:
 
     # _generate_eigenstate_collection_sho(bloch_phases, (10, 10, 5))  # noqa: ERA001
 
-    # _generate_eigenstate_collection_sho(bloch_phases, (23, 23, 10)) # noqa: ERA001
+    _generate_eigenstate_collection_sho(bloch_phases, (23, 23, 10))
 
-    _generate_eigenstate_collection_sho(bloch_phases, (23, 23, 12))
+    # _generate_eigenstate_collection_sho(bloch_phases, (23, 23, 12)) # noqa: ERA001
 
-    _generate_eigenstate_collection_sho(bloch_phases, (25, 25, 16))
+    # _generate_eigenstate_collection_sho(bloch_phases, (25, 25, 16)) # noqa: ERA001

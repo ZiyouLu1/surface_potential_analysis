@@ -1,25 +1,15 @@
 import numpy as np
-
-from surface_potential_analysis.eigenstate.eigenstate import EigenstateConfigUtil
-from surface_potential_analysis.energy_eigenstate import (
-    load_energy_eigenstates,
-    normalize_eigenstate_phase,
-)
-from surface_potential_analysis.overlap_transform import (
-    calculate_overlap_transform,
-    save_overlap_transform,
-)
-from surface_potential_analysis.wavepacket_grid import (
-    WavepacketGrid,
-    calculate_inner_product,
+from surface_potential_analysis.overlap.calculation import calculate_overlap
+from surface_potential_analysis.overlap.overlap import save_overlap
+from surface_potential_analysis.wavepacket.wavepacket import (
+    Wavepacket,
     calculate_normalisation,
-    calculate_wavepacket_grid_fourier,
 )
 
 from .surface_data import get_data_path
 
 
-def generate_fcc_wavepacket() -> WavepacketGrid:
+def generate_fcc_wavepacket() -> Wavepacket:
     path = get_data_path("eigenstates_grid_0.json")
     eigenstates = load_energy_eigenstates(path)
     util = EigenstateConfigUtil(eigenstates["eigenstate_config"])
@@ -32,11 +22,11 @@ def generate_fcc_wavepacket() -> WavepacketGrid:
     return grid
 
 
-def generate_next_fcc_wavepacket() -> WavepacketGrid:
+def generate_next_fcc_wavepacket() -> Wavepacket:
     """
     Generate a wavepacket grid of a neighboring fcc wavefunction.
     This is just the original wavepacket shifted by -delta_x0,
-    which we can achieve by rolling the wavepacket
+    which we can achieve by rolling the wavepacket.
 
     Returns
     -------
@@ -57,7 +47,7 @@ def generate_next_fcc_wavepacket() -> WavepacketGrid:
     return grid
 
 
-def generate_hcp_wavepacket() -> WavepacketGrid:
+def generate_hcp_wavepacket() -> Wavepacket:
     path = get_data_path("eigenstates_grid_1.json")
     eigenstates = load_energy_eigenstates(path)
     util = EigenstateConfigUtil(eigenstates["eigenstate_config"])
@@ -77,11 +67,11 @@ def generate_hcp_wavepacket() -> WavepacketGrid:
     return grid
 
 
-def generate_next_hcp_wavepacket() -> WavepacketGrid:
+def generate_next_hcp_wavepacket() -> Wavepacket:
     """
     Generate a wavepacket grid of a neighboring hcp wavefunction.
     This is just the original wavepacket shifted by -delta_x0,
-    which we can achieve by rolling the wavepacket
+    which we can achieve by rolling the wavepacket.
 
     Returns
     -------
@@ -110,33 +100,27 @@ def generate_next_hcp_wavepacket() -> WavepacketGrid:
     return grid
 
 
-def calculate_overlap_factor():
+def calculate_overlap_factor() -> None:
     wavepacket_fcc = generate_fcc_wavepacket()
-    # 0.9989302646383079 1000 -3 3
-    print(calculate_normalisation(wavepacket_fcc))
+    print(calculate_normalisation(wavepacket_fcc))  # noqa: T201
 
     wavepacket_hcp = generate_hcp_wavepacket()
-    # 0.9989198947450144
-    print(calculate_normalisation(wavepacket_hcp))
-    # -4.1023209529753966e-07 (should be 0)
-    print(calculate_inner_product(wavepacket_fcc, wavepacket_hcp))
+    print(calculate_normalisation(wavepacket_hcp))  # noqa: T201
 
     wavepacket_next_fcc = generate_next_fcc_wavepacket()
-    # -4.0051421011364586e-10 (should be 0)
-    print(calculate_inner_product(wavepacket_fcc, wavepacket_next_fcc))
-
     wavepacket_next_hcp = generate_next_hcp_wavepacket()
-    # 2.3287538434176675e-09 (should be 0)
-    print(calculate_inner_product(wavepacket_hcp, wavepacket_next_hcp))
 
-    transform_hcp_fcc = calculate_overlap_transform(wavepacket_fcc, wavepacket_hcp)
-    path = get_data_path("overlap_transform_hcp_fcc.npz")
-    save_overlap_transform(path, transform_hcp_fcc)
+    overlap_hcp_fcc = calculate_overlap(wavepacket_fcc, wavepacket_hcp)
+    print(np.sum(overlap_hcp_fcc["vector"]))  # noqa: T201
+    path = get_data_path("overlap_hcp_fcc.npz")
+    save_overlap(path, overlap_hcp_fcc)
 
-    transform_fcc_fcc = calculate_overlap_transform(wavepacket_fcc, wavepacket_next_fcc)
-    path = get_data_path("overlap_transform_fcc_fcc.npz")
-    save_overlap_transform(path, transform_fcc_fcc)
+    overlap_fcc_fcc = calculate_overlap(wavepacket_fcc, wavepacket_next_fcc)
+    print(np.sum(overlap_fcc_fcc["vector"]))  # noqa: T201
+    path = get_data_path("overlap_fcc_fcc.npz")
+    save_overlap(path, overlap_fcc_fcc)
 
-    transform_hcp_hcp = calculate_overlap_transform(wavepacket_hcp, wavepacket_next_hcp)
-    path = get_data_path("overlap_transform_hcp_hcp.npz")
-    save_overlap_transform(path, transform_hcp_hcp)
+    overlap_hcp_hcp = calculate_overlap(wavepacket_hcp, wavepacket_next_hcp)
+    print(np.sum(overlap_hcp_hcp["vector"]))  # noqa: T201
+    path = get_data_path("overlap_hcp_hcp.npz")
+    save_overlap(path, overlap_hcp_hcp)

@@ -1,6 +1,4 @@
 import numpy as np
-
-from copper_100.s1_potential import calculate_interpolated_data
 from surface_potential_analysis.eigenstate.eigenstate import EigenstateConfig
 from surface_potential_analysis.energy_data import (
     as_interpolation,
@@ -14,6 +12,8 @@ from surface_potential_analysis.hamiltonian import (
     SurfaceHamiltonianUtil,
     calculate_energy_eigenstates,
 )
+
+from copper_100.s1_potential import get_interpolated_potential
 
 from .s2_hamiltonian import generate_hamiltonian, generate_hamiltonian_relaxed
 from .surface_data import get_data_path
@@ -29,11 +29,6 @@ def generate_eigenstates_data_relaxed():
     eigenstates = calculate_energy_eigenstates(h, kx_points, ky_points)
     path = get_data_path("eigenstates_17_17_13.json")
     save_energy_eigenstates(eigenstates, path)
-
-    # h = generate_hamiltonian_relaxed(resolution=(6, 6, 14))
-    # eigenstates = calculate_energy_eigenstates(h, kx_points, ky_points)
-    # path = get_data_path("eigenstates_6_6_14.json")
-    # save_energy_eigenstates(eigenstates, path)
 
     h = generate_hamiltonian_relaxed(resolution=(17, 17, 15))
     eigenstates = calculate_energy_eigenstates(h, kx_points, ky_points)
@@ -51,13 +46,6 @@ def generate_eigenstates_data_relaxed():
     eigenstates = calculate_energy_eigenstates(h, kx_points, ky_points)
     path = get_data_path("eigenstates_21_21_15.json")
     save_energy_eigenstates(eigenstates, path)
-
-    # h = generate_hamiltonian_relaxed(resolution=(12, 12, 15))
-    # eigenstates = calculate_energy_eigenstates(
-    #     h, kx_points, ky_points, include_bands=list(range(5))
-    # )
-    # path = get_data_path("eigenstates_12_12_15.json")
-    # save_energy_eigenstates(eigenstates, path)
 
 
 def generate_eigenstates_data():
@@ -116,11 +104,8 @@ def generate_eigenstates_data():
 
 
 def generate_oversampled_eigenstates_data():
-    """
-    Check that oversampling the potential has no effect on the resulting eigenstates
-    """
-
-    data = calculate_interpolated_data((46, 46, 100))
+    """Check that oversampling the potential has no effect on the resulting eigenstates."""
+    data = get_interpolated_potential((46, 46, 100))
     data = interpolate_energy_grid_xy_fourier(data, (92, 92, 100))
     config: EigenstateConfig = {
         "mass": 1.6735575e-27,

@@ -1,13 +1,14 @@
-from typing import Any, Literal
+from typing import TYPE_CHECKING, Any, Literal
 
 import numpy as np
-
-from surface_potential_analysis.hamiltonian import Hamiltonian
 from surface_potential_analysis.wavepacket import save_wavepacket
 from surface_potential_analysis.wavepacket.wavepacket import generate_wavepacket
 
 from .s2_hamiltonian import generate_hamiltonian_sho
 from .surface_data import get_data_path
+
+if TYPE_CHECKING:
+    from surface_potential_analysis.hamiltonian import Hamiltonian
 
 
 def generate_nickel_wavepacket_sho() -> None:
@@ -27,6 +28,6 @@ def generate_nickel_wavepacket_sho() -> None:
         samples=(8, 8),
         save_bands=save_bands,
     )
-    for k, wavepacket in zip(save_bands, wavepackets):
+    for k, wavepacket in zip(save_bands, wavepackets, strict=True):
         path = get_data_path(f"wavepacket_{k}.npy")
         save_wavepacket(path, wavepacket)

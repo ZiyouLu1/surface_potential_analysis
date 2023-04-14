@@ -1,79 +1,42 @@
 import numpy as np
-
-from surface_potential_analysis.energy_data import (
-    EnergyGrid,
-    EnergyPoints,
-    interpolate_energy_grid_fourier,
-    load_energy_grid,
-    load_energy_points,
-    normalize_energy,
-    save_energy_grid,
-    truncate_energy,
-    undo_truncate_energy,
+from surface_potential_analysis.potential.point_potential import (
+    PointPotential,
+    load_point_potential_json,
+)
+from surface_potential_analysis.potential.potential import (
+    Potential,
+    UnevenPotential,
+    interpolate_uneven_potential,
+    load_potential,
+    load_uneven_potential,
+    normalize_potential,
+    save_potential,
+    save_uneven_potential,
+    truncate_potential,
+    undo_truncate_potential,
 )
 
 from .surface_data import get_data_path
 
 
-def load_raw_data() -> EnergyPoints:
+def load_raw_data() -> PointPotential[int]:
     path = get_data_path("raw_data.json")
-    return load_energy_points(path)
+    return load_point_potential_json(path)
 
 
-def load_raw_data_grid() -> EnergyGrid:
-    path = get_data_path("raw_data_reflected.json")
-    return load_energy_grid(path)
+def load_raw_data_grid() -> UnevenPotential[int, int, int]:
+    path = get_data_path("raw_data_reflected.npy")
+    return load_uneven_potential(path)
 
 
-def load_john_interpolation() -> EnergyGrid:
-    path = get_data_path("john_interpolated_data.json")
-    return load_energy_grid(path)
-
-
-def load_interpolated_grid() -> EnergyGrid:
-    path = get_data_path("interpolated_data.json")
-    return load_energy_grid(path)
-
-
-# def reflect_coordinate(
-#     coord: tuple[float, float], perpendicular_line: tuple[float, float]
-# ):
-#     coord_a = np.array(coord)
-#     perpendicular_line_a = np.divide(
-#         perpendicular_line, np.linalg.norm(perpendicular_line)
-#     )
-
-#     return tuple(
-#         coord_a - 2 * np.dot(coord_a, perpendicular_line_a) * perpendicular_line_a
-#     )
-
-
-# def fold_coordinate_into_lhp(
-#     delta_x1: tuple[float, float],
-#     delta_x2: tuple[float, float],
-#     coord: tuple[float, float],
-# ):
-#     v_symmetry_perp = (-delta_x2[0], delta_x1[1])
-#     is_lhp = np.dot(coord, np.divide(delta_x1, np.linalg.norm(delta_x1))) > np.dot(
-#         coord, np.divide(delta_x2, np.linalg.norm(delta_x2))
-#     )
-#     if is_lhp:
-#         print("is_lhp")
-#         return coord
-#     return reflect_coordinate(coord, v_symmetry_perp)
-
-
-# def get_coordinate_in_irreducible_region(
-#     delta_x1: tuple[float, float],
-#     delta_x2: tuple[float, float],
-#     coord: tuple[float, float],
-# ):
-#     return fold_coordinate_into_lhp(delta_x1, delta_x2, coord)
+def load_interpolated_grid() -> Potential[int, int, int]:
+    path = get_data_path("interpolated_data.npy")
+    return load_potential(path)
 
 
 def map_irreducible_points_into_unit_cell(
-    irreducible_points: EnergyPoints,
-) -> EnergyGrid:
+    irreducible_points: PointPotential[int],
+) -> UnevenPotential[int, int, int]:
     z_points = np.sort(np.unique(irreducible_points["z_points"]))
     xy_points = np.unique(
         np.array([irreducible_points["x_points"], irreducible_points["y_points"]]).T,
@@ -114,22 +77,8 @@ def map_irreducible_points_into_unit_cell(
         (4, +4): (0, 8),
     }
 
-    # mapping = [
-    #     [(+8,-4), (+7,-3), (+6,-2), (+5,-1), (+4,+0), (+3,+1), (+2, 2), (+3,+1), (4,+0), (5,-1), (6,-2), (7,-3), (8,-4)],
-    #     [(+7,-3), (+6,-3), (+5,-2), (+4,-1), (+3,+0), (+2,+1), (+2, 1), (+3,+0), (4,-1), (5,-2), (6,-3), (7,-3), (7,-3)],
-    #     [(+6,-2), (+5,-2), (+4,-2), (+3,-1), (+2,+0), (+1,+1), (+2, 0), (+3,-1), (4,-2), (5,-2), (6,-2), (7,-2), (6,-2)],
-    #     [(+5,-1), (+4,-1), (+3,-1), (+2,-1), (+1,+0), (+1,+0), (+2,-1), (+3,-1), (4,-1), (5,-1), (6,-1), (6,-1), (5,-1)],
-    #     [(+4,+0), (+3, 0), (+2, 0), (+1, 0), (+0,+0), (+1,+0), (+2, 0), (+3,+0), (4, 0), (5, 0), (6, 0), (5, 0), (4,+0)],
-    #     [(+3,+1), (+2,+1), (+1,+1), (+1,+0), (+1,+0), (+1,+1), (+2, 1), (+3,+1), (4, 1), (5, 1), (5, 1), (4, 1), (3,+1)],
-    #     [(+2,+2), (+2,+1), (+2,+0), (+2,-1), (+2,+0), (+2,+1), (+2, 2), (+3,+2), (4, 2), (5, 2), (4, 2), (3, 2), (2,+2)],
-    #     [(+3,+1), (+3,+0), (+3,-1), (+3,-1), (+3,+0), (+3,+1), (+3, 2), (+3,+3), (4, 3), (4, 3), (3, 3), (3, 2), (3,+1)],
-    #     [(+4,+0), (+4,-1), (+4,-2), (+4,-1), (+4,+0), (+4,+1), (+4, 2), (+4,+3), (4, 4), (4, 3), (4, 2), (4, 1), (4,+0)],
-    #     [(+5,-1), (+5,-2), (+5,-2), (+5,-1), (+5,+0), (+5,+1), (+5, 2), (+4,+3), (4, 3), (5, 2), (5, 1), (5, 0), (5,-1)],
-    #     [(+6,-2), (+6,-3), (+6,-2), (+6,-1), (+6,+0), (+5,+1), (+4, 2), (+3,+3), (4, 2), (5, 1), (6, 0), (6,-1), (6,-2)],
-    #     [(+7,-3), (+7,-3), (+7,-2), (+6,-1), (+5,+0), (+4,+1), (+3, 2), (+3,+2), (4, 1), (5, 0), (6,-1), (7,-2), (7,-3)],
-    #     [(+8,-4), (+7,-3), (+6,-2), (+5,-1), (+4,+0), (+3,+1), (+2, 2), (+3,+1), (4, 0), (5,-1), (6,-2), (7,-3), (8,-4)],
-    # ]
     # Should really be this way round (ie when we plot), and then reverse the y direction and swap x, y axis to get the usual indexing
+    # ruff: noqa: ERA001
     # mapping = [
     #     [(+8,-4), (+7,-3), (+6,-2), (+5,-1), (+4,+0), (+3,+1), (+2,+2), (+3,+1), (+4,+0), (+5,-1), (+6,-2), (+7,-3), (+8,-4)],
     #     [(+7,-3), ( _, _), ( _, _), ( _, _), ( _, _), ( _, _), ( _, _), ( _, _), ( _, _), ( _, _), ( _, _), (+6,-3), (+7,-3)],
@@ -181,62 +130,66 @@ def map_irreducible_points_into_unit_cell(
 
             curr = z_points_in_xy.get((ix, iy), [])
 
-            isAtXYZ = np.logical_and(
+            is_at_xyz = np.logical_and(
                 np.logical_and(
                     np.array(irreducible_points["x_points"]) == x,
                     np.array(irreducible_points["y_points"]) == y,
                 ),
                 np.array(irreducible_points["z_points"]) == z,
             )
-            if np.count_nonzero(isAtXYZ) != 1:
-                raise AssertionError("More than one point found")
-            curr.append(np.array(irreducible_points["points"])[isAtXYZ][0])
+            if np.count_nonzero(is_at_xyz) != 1:
+                raise AssertionError("More than one point found")  # noqa: TRY003, EM101
+            curr.append(np.array(irreducible_points["points"])[is_at_xyz][0])
             z_points_in_xy[(ix, iy)] = curr
 
-    final_grid = [[z_points_in_xy[xy_coord] for xy_coord in m] for m in mapping_in_xy]
+    final_grid = np.array(
+        [[z_points_in_xy[xy_coord] for xy_coord in m] for m in mapping_in_xy]
+    )
 
-    x_width = np.max(irreducible_points["x_points"]) - np.min(
+    x_width = np.max(irreducible_points["x_points"]) - np.min(  # type: ignore[operator]
         irreducible_points["x_points"]
     )
-    y_height = np.max(irreducible_points["y_points"]) - np.min(
+    y_height = np.max(irreducible_points["y_points"]) - np.min(  # type: ignore[operator]
         irreducible_points["y_points"]
     )
     diagonal_length = np.sqrt(np.square(y_height / 2) + np.square(x_width))
 
-    delta_x0 = (2 * x_width, 0)
-    delta_x1 = (0.5 * delta_x0[0], np.sqrt(3) * delta_x0[0] / 2)
+    delta_x0 = np.array([2 * x_width, 0, 0])
+    delta_x1 = np.array([0.5 * delta_x0[0], np.sqrt(3) * delta_x0[0] / 2, 0])
 
     if not np.allclose(delta_x1[1], y_height / 2 + diagonal_length):
-        raise AssertionError(
-            f"{delta_x1[1]} not close to {y_height / 2 + diagonal_length}"
+        raise AssertionError(  # noqa: TRY003
+            f"{delta_x1[1]} not close to {y_height / 2 + diagonal_length}"  # noqa: EM102
         )
     return {
-        "delta_x0": delta_x0,
-        "delta_x1": delta_x1,
+        "basis": (
+            {"_type": "position", "delta_x": delta_x0, "n": final_grid.shape[0]},
+            {"_type": "position", "delta_x": delta_x1, "n": final_grid.shape[1]},
+            z_points,
+        ),
         "points": final_grid,
-        "z_points": z_points.tolist(),
     }
 
 
-def generate_reflected_data():
+def generate_reflected_data() -> None:
     irreducible_points = load_raw_data()
     data = map_irreducible_points_into_unit_cell(irreducible_points)
-    path = get_data_path("raw_data_reflected.json")
-    save_energy_grid(data, path)
+    path = get_data_path("raw_data_reflected.npy")
+    save_uneven_potential(path, data)
 
 
-def calculate_interpolated_data(shape: tuple[int, int, int]) -> EnergyGrid:
+def get_interpolated_potential(shape: tuple[int, int, int]) -> Potential[int, int, int]:
     grid = load_raw_data_grid()
-    normalized = normalize_energy(grid)
+    normalized = normalize_potential(grid)
 
-    truncated = truncate_energy(normalized, cutoff=1e-17, n=5, offset=1e-20)
-    truncated = truncate_energy(truncated, cutoff=3e-19, n=1, offset=1e-20)
-    data = interpolate_energy_grid_fourier(truncated, shape)
-    return undo_truncate_energy(data, cutoff=3e-19, n=1, offset=1e-20)
+    truncated = truncate_potential(normalized, cutoff=1e-17, n=5, offset=1e-20)
+    truncated = truncate_potential(truncated, cutoff=3e-19, n=1, offset=1e-20)
+    data = interpolate_uneven_potential(truncated, shape)
+    return undo_truncate_potential(data, cutoff=3e-19, n=1, offset=1e-20)
 
 
-def generate_interpolated_data():
-    data = calculate_interpolated_data((70, 70, 100))
+def generate_interpolated_data() -> None:
+    data = get_interpolated_potential((70, 70, 100))
 
-    path = get_data_path("interpolated_data.json")
-    save_energy_grid(data, path)
+    path = get_data_path("interpolated_data.npy")
+    save_potential(path, data)

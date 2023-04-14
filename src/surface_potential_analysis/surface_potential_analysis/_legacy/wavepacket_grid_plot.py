@@ -56,7 +56,7 @@ def plot_ft_wavepacket_grid_xy(
     return fig, ax, mesh
 
 
-def animate_wavepacket_grid_3D_in_xy(
+def animate_wavepacket_grid_3d_in_xy(
     grid: WavepacketGrid,
     *,
     ax: Axes | None = None,
@@ -95,7 +95,7 @@ def animate_wavepacket_grid_3D_in_xy(
     return (fig, ax, ani)
 
 
-def animate_ft_wavepacket_grid_3D_in_xy(
+def animate_ft_wavepacket_grid_3d_in_xy(
     grid: WavepacketGrid,
     *,
     ax: Axes | None = None,
@@ -110,7 +110,7 @@ def animate_ft_wavepacket_grid_3D_in_xy(
         "z_points": grid["z_points"],
         "points": ft_points.tolist(),
     }
-    (fig, ax, ani) = animate_wavepacket_grid_3D_in_xy(
+    (fig, ax, ani) = animate_wavepacket_grid_3d_in_xy(
         ft_grid, ax=ax, measure=measure, norm=norm
     )
 
@@ -140,7 +140,7 @@ def plot_wavepacket_grid_x0z(
     return fig, ax, mesh
 
 
-def animate_wavepacket_grid_3D_in_x0z(
+def animate_wavepacket_grid_3d_in_x0z(
     grid: WavepacketGrid,
     *,
     ax: Axes | None = None,

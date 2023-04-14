@@ -3,7 +3,7 @@ from typing import Any, TypeVar
 import numpy as np
 import scipy.linalg
 
-from surface_potential_analysis.basis_config import BasisConfig
+from surface_potential_analysis.basis_config.basis_config import BasisConfig
 from surface_potential_analysis.hamiltonian import Hamiltonian
 from surface_potential_analysis.util import timed
 

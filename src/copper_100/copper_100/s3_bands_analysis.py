@@ -5,12 +5,6 @@ from typing import TypedDict
 import numpy as np
 import scipy.constants
 from matplotlib import pyplot as plt
-from numpy.typing import NDArray
-
-from surface_potential_analysis.surface_hamiltonian_plot import (
-    plot_bands_occupation,
-    plot_first_4_eigenvectors,
-)
 
 from .s2_hamiltonian import generate_hamiltonian, generate_hamiltonian_relaxed
 from .surface_data import get_data_path, save_figure
@@ -32,7 +26,6 @@ def load_copper_eigenvalues(path: Path) -> CopperEigenvalues:
 
 
 def generate_copper_eigenvalues():
-
     hamiltonian = generate_hamiltonian(resolution=(25, 25, 16))
 
     eigenvalues_origin, _ = hamiltonian.calculate_eigenvalues(0, 0)
@@ -91,7 +84,6 @@ def plot_copper_bands_occupation():
 
 
 def list_first_copper_band_with_widths():
-
     print("----------------------------------------")
     print("Not relaxed data")
 
@@ -123,12 +115,11 @@ def list_first_copper_band_with_widths():
 
 def find_band_with_1mev_bandwidth():
     """
-    Activated tunnelling has an energy of 197meV
+    Activated tunnelling has an energy of 197meV.
 
     John: The key thing is not the physical barrier,
     but the energy wrt the ground state of the first band with a decent (eg 1meV) bandwidth
     """
-
     print("----------------------------------------")
     print("Relaxed data")
 
@@ -150,10 +141,7 @@ def find_band_with_1mev_bandwidth():
 
 
 def find_band_with_relevant_energy():
-    """
-    Activated tunnelling has an energy of 197meV - which band would this correspond to?
-    """
-
+    """Activated tunnelling has an energy of 197meV - which band would this correspond to?."""
     print("----------------------------------------")
     print("Relaxed data")
 
@@ -225,7 +213,6 @@ def plot_tst_rate_arrhenius():
 
     rate_120k = calculate_tst_rate(120, eigenvalues)
     rate_190k = calculate_tst_rate(190, eigenvalues)
-    # Ln(R) = Ln(R0) - E / KT
     # E / K * (1/T1 - 1/T2) =
     difference_rate = np.log(rate_120k) - np.log(rate_190k)
     difference_t = ((1 / 120) - (1 / 190)) / scipy.constants.Boltzmann

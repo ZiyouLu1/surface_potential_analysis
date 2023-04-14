@@ -13,7 +13,6 @@ from surface_potential_analysis.basis import (
     MomentumBasis,
     PositionBasis,
 )
-from surface_potential_analysis.basis.basis import get_fundamental_basis
 
 _BX0Cov = TypeVar("_BX0Cov", bound=Basis[Any, Any], covariant=True)
 _BX1Cov = TypeVar("_BX1Cov", bound=Basis[Any, Any], covariant=True)
@@ -63,12 +62,14 @@ class BasisConfigUtil(Generic[_BX0Cov, _BX1Cov, _BX2Cov]):
         self,
     ) -> np.ndarray[tuple[Literal[3], int], np.dtype[np.int_]]:
         x0t, x1t, x2t = np.meshgrid(
-            self.x0_basis.fundamental_nk_points,  # type: ignore
-            self.x1_basis.fundamental_nk_points,  # type: ignore
-            self.x2_basis.fundamental_nk_points,  # type: ignore
+            self.x0_basis.fundamental_nk_points,  # type: ignore[misc]
+            self.x1_basis.fundamental_nk_points,  # type: ignore[misc]
+            self.x2_basis.fundamental_nk_points,  # type: ignore[misc]
             indexing="ij",
         )
-        return np.array([x0t.ravel(), x1t.ravel(), x2t.ravel()])  # type:ignore
+        return np.array(  # type:ignore[no-any-return]
+            [x0t.ravel(), x1t.ravel(), x2t.ravel()]
+        )
 
     @property
     def fundamental_k_points(
@@ -76,19 +77,21 @@ class BasisConfigUtil(Generic[_BX0Cov, _BX1Cov, _BX2Cov]):
     ) -> np.ndarray[tuple[Literal[3], int], np.dtype[np.float_]]:
         nk_points = self.fundamental_nk_points[:, np.newaxis, :]
         basis_vectors = np.array([self.dk0, self.dk1, self.dk2])[:, :, np.newaxis]
-        return np.sum(basis_vectors * nk_points, axis=0)  # type: ignore
+        return np.sum(basis_vectors * nk_points, axis=0)  # type: ignore[no-any-return]
 
     @property
     def fundamental_nx_points(
         self,
     ) -> np.ndarray[tuple[Literal[3], int], np.dtype[np.int_]]:
         x0t, x1t, x2t = np.meshgrid(
-            self.x0_basis.fundamental_nx_points,  # type: ignore
-            self.x1_basis.fundamental_nx_points,  # type: ignore
-            self.x2_basis.fundamental_nx_points,  # type: ignore
+            self.x0_basis.fundamental_nx_points,  # type: ignore[misc]
+            self.x1_basis.fundamental_nx_points,  # type: ignore[misc]
+            self.x2_basis.fundamental_nx_points,  # type: ignore[misc]
             indexing="ij",
         )
-        return np.array([x0t.ravel(), x1t.ravel(), x2t.ravel()])  # type:ignore
+        return np.array(  # type:ignore[no-any-return]
+            [x0t.ravel(), x1t.ravel(), x2t.ravel()]
+        )
 
     @property
     def fundamental_x_points(
@@ -98,7 +101,7 @@ class BasisConfigUtil(Generic[_BX0Cov, _BX1Cov, _BX2Cov]):
         basis_vectors = np.array(
             [self.fundamental_dx0, self.fundamental_dx1, self.fundamental_dx2]
         )[:, :, np.newaxis]
-        return np.sum(basis_vectors * nx_points, axis=0)  # type: ignore
+        return np.sum(basis_vectors * nx_points, axis=0)  # type: ignore[no-any-return]
 
     @cached_property
     def x0_basis(self) -> BasisUtil[_BX0Cov]:
@@ -106,11 +109,11 @@ class BasisConfigUtil(Generic[_BX0Cov, _BX1Cov, _BX2Cov]):
 
     @property
     def fundamental_n0(self) -> int:
-        return self.x0_basis.fundamental_n  # type: ignore
+        return self.x0_basis.fundamental_n  # type: ignore[misc]
 
     @property
     def n0(self) -> int:
-        return self.x0_basis.n  # type: ignore
+        return self.x0_basis.n  # type: ignore[misc]
 
     @property
     def delta_x0(self) -> np.ndarray[tuple[Literal[3]], np.dtype[np.float_]]:
@@ -118,17 +121,17 @@ class BasisConfigUtil(Generic[_BX0Cov, _BX1Cov, _BX2Cov]):
 
     @cached_property
     def fundamental_dx0(self) -> BasisVector:
-        return self.delta_x0 / self.fundamental_n0  # type: ignore
+        return self.delta_x0 / self.fundamental_n0  # type: ignore[no-any-return]
 
     @cached_property
     def fundamental_delta_k0(self) -> BasisVector:
-        return self.fundamental_n0 * self.dk0  # type: ignore
+        return self.fundamental_n0 * self.dk0  # type: ignore[no-any-return]
 
     @cached_property
     def dk0(self) -> np.ndarray[tuple[Literal[3]], np.dtype[np.float_]]:
         # See https://physics.stackexchange.com/questions/340860/reciprocal-lattice-in-2d
         out = 2 * np.pi * np.cross(self.delta_x1, self.delta_x2) / self.volume
-        return out  # type:ignore
+        return out  # type:ignore[no-any-return]
 
     @cached_property
     def x1_basis(self) -> BasisUtil[_BX1Cov]:
@@ -136,11 +139,11 @@ class BasisConfigUtil(Generic[_BX0Cov, _BX1Cov, _BX2Cov]):
 
     @property
     def fundamental_n1(self) -> int:
-        return self.x1_basis.fundamental_n  # type: ignore
+        return self.x1_basis.fundamental_n  # type: ignore[misc]
 
     @property
     def n1(self) -> int:
-        return self.x1_basis.n  # type: ignore
+        return self.x1_basis.n  # type: ignore[misc]
 
     @property
     def delta_x1(self) -> np.ndarray[tuple[Literal[3]], np.dtype[np.float_]]:
@@ -148,17 +151,17 @@ class BasisConfigUtil(Generic[_BX0Cov, _BX1Cov, _BX2Cov]):
 
     @cached_property
     def fundamental_dx1(self) -> BasisVector:
-        return self.delta_x1 / self.fundamental_n1  # type: ignore
+        return self.delta_x1 / self.fundamental_n1  # type: ignore[no-any-return]
 
     @cached_property
     def fundamental_delta_k1(self) -> BasisVector:
-        return self.fundamental_n1 * self.dk1  # type: ignore
+        return self.fundamental_n1 * self.dk1  # type: ignore[no-any-return]
 
     @cached_property
     def dk1(self) -> np.ndarray[tuple[Literal[3]], np.dtype[np.float_]]:
         # See https://physics.stackexchange.com/questions/340860/reciprocal-lattice-in-2d
         out = 2 * np.pi * np.cross(self.delta_x2, self.delta_x0) / self.volume
-        return out  # type:ignore
+        return out  # type:ignore[no-any-return]
 
     @cached_property
     def x2_basis(self) -> BasisUtil[_BX2Cov]:
@@ -166,11 +169,11 @@ class BasisConfigUtil(Generic[_BX0Cov, _BX1Cov, _BX2Cov]):
 
     @property
     def fundamental_n2(self) -> int:
-        return self.x2_basis.fundamental_n  # type: ignore
+        return self.x2_basis.fundamental_n  # type: ignore[misc]
 
     @property
     def n2(self) -> int:
-        return self.x2_basis.n  # type: ignore
+        return self.x2_basis.n  # type: ignore[misc]
 
     @property
     def delta_x2(self) -> np.ndarray[tuple[Literal[3]], np.dtype[np.float_]]:
@@ -178,21 +181,21 @@ class BasisConfigUtil(Generic[_BX0Cov, _BX1Cov, _BX2Cov]):
 
     @cached_property
     def fundamental_dx2(self) -> BasisVector:
-        return self.delta_x2 / self.fundamental_n2  # type: ignore
+        return self.delta_x2 / self.fundamental_n2  # type: ignore[no-any-return]
 
     @cached_property
     def fundamental_delta_k2(self) -> BasisVector:
-        return self.fundamental_n2 * self.dk2  # type: ignore
+        return self.fundamental_n2 * self.dk2  # type: ignore[no-any-return]
 
     @cached_property
     def dk2(self) -> np.ndarray[tuple[Literal[3]], np.dtype[np.float_]]:
         # See https://physics.stackexchange.com/questions/340860/reciprocal-lattice-in-2d
         out = 2 * np.pi * np.cross(self.delta_x0, self.delta_x1) / self.volume
-        return out  # type:ignore
+        return out  # type:ignore[no-any-return]
 
     @cached_property
     def shape(self) -> tuple[int, int, int]:
-        return (self.x0_basis.n, self.x1_basis.n, self.x2_basis.n)
+        return (self.x0_basis.n, self.x1_basis.n, self.x2_basis.n)  # type: ignore[misc]
 
     def __len__(self) -> int:
         return int(np.prod(self.shape))
@@ -202,10 +205,14 @@ class BasisConfigUtil(Generic[_BX0Cov, _BX1Cov, _BX2Cov]):
 
     def get_stacked_index(self, idx: int) -> tuple[int, int, int]:
         stacked = np.unravel_index(idx, self.shape)
-        return tuple([s.item() for s in stacked])  # type: ignore
+        return tuple([s.item() for s in stacked])  # type: ignore[return-value]
 
     def get_fundamental_basis(self) -> FundamentalBasisConfig[Any, Any, Any]:
-        return tuple([get_fundamental_basis(b) for b in self._config])  # type: ignore
+        return (
+            self.x0_basis.fundamental_basis,
+            self.x1_basis.fundamental_basis,
+            self.x2_basis.fundamental_basis,
+        )
 
     @overload
     def get_fundamental_basis_in(
@@ -389,7 +396,7 @@ def get_projected_k_points(
     Get a grid of points projected perpendicular to the given basis axis
     at the given index along this axis
     This throws away the componet of the cooridnate grid in the direction
-    parallel to axis
+    parallel to axis.
 
     Parameters
     ----------
@@ -412,10 +419,10 @@ def get_fundamental_x_points_projected(
     axis: Literal[0, 1, 2, -1, -2, -3],
 ) -> np.ndarray[tuple[Literal[2], int, int], np.dtype[np.float_]]:
     """
-    Get a grid of points projected perpendicular to the given basis axis
-    at the given index along this axis
+    Get a grid of points projected perpendicular to the given basis axis, at the given index along this axis.
+
     This throws away the componet of the cooridnate grid in the direction
-    parallel to axis
+    parallel to axis.
 
     Parameters
     ----------
@@ -429,6 +436,8 @@ def get_fundamental_x_points_projected(
         The coordinates in the plane perpendicular to axis
     """
     fundamental = BasisConfigUtil(basis).get_fundamental_basis()
-    rotated = FundamentalBasisConfigUtil(fundamental).get_rotated_basis(axis)
+    rotated = FundamentalBasisConfigUtil(fundamental).get_rotated_basis(
+        axis, np.array([0, 0, 1])
+    )
     util = BasisConfigUtil(rotated)
     return util.fundamental_x_points.reshape(3, *util.shape)[0:2]

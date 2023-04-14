@@ -12,14 +12,17 @@ from surface_potential_analysis.basis import (
     PositionBasis,
     TruncatedBasis,
 )
-from surface_potential_analysis.basis_config import BasisConfig, BasisConfigUtil
-from surface_potential_analysis.hamiltonian import HamiltonianWithBasis
-from surface_potential_analysis.potential import Potential
-from surface_potential_analysis.sho_basis import (
+from surface_potential_analysis.basis_config.basis_config import (
+    BasisConfig,
+    BasisConfigUtil,
+)
+from surface_potential_analysis.basis_config.sho_basis import (
     SHOBasisConfig,
     calculate_x_distances,
     infinate_sho_basis_from_config,
 )
+from surface_potential_analysis.hamiltonian import HamiltonianWithBasis
+from surface_potential_analysis.potential import Potential
 
 _L0 = TypeVar("_L0", bound=int)
 _L1 = TypeVar("_L1", bound=int)

@@ -12,10 +12,10 @@ from surface_potential_analysis.eigenstate.eigenstate import (
     convert_eigenstate_to_position_basis,
 )
 from surface_potential_analysis.eigenstate.plot import (
-    animate_eigenstate_3D,
-    plot_eigenstate_2D,
+    animate_eigenstate_3d,
+    plot_eigenstate_2d,
     plot_eigenstate_along_path,
-    plot_eigenstate_difference_2D,
+    plot_eigenstate_difference_2d,
 )
 from surface_potential_analysis.wavepacket.eigenstate_conversion import (
     unfurl_wavepacket,
@@ -48,7 +48,7 @@ def plot_wavepacket_sample_frequencies(
     return fig, ax, line
 
 
-def plot_wavepacket_2D(
+def plot_wavepacket_2d(
     wavepacket: MomentumBasisWavepacket[int, int, int, int, int],
     idx: int,
     z_axis: Literal[0, 1, 2, -1, -2, -3],
@@ -59,7 +59,7 @@ def plot_wavepacket_2D(
 ) -> tuple[Figure, Axes, QuadMesh]:
     eigenstate_momentum = unfurl_wavepacket(wavepacket)
     eigenstate = convert_eigenstate_to_position_basis(eigenstate_momentum)
-    return plot_eigenstate_2D(
+    return plot_eigenstate_2d(
         eigenstate, idx, z_axis, ax=ax, measure=measure, scale=scale
     )
 
@@ -72,7 +72,7 @@ def plot_wavepacket_x0x1(
     measure: Literal["real", "imag", "abs"] = "abs",
     scale: Literal["symlog", "linear"] = "linear",
 ) -> tuple[Figure, Axes, QuadMesh]:
-    return plot_wavepacket_2D(
+    return plot_wavepacket_2d(
         wavepacket, x3_idx, 2, ax=ax, measure=measure, scale=scale
     )
 
@@ -85,7 +85,7 @@ def plot_wavepacket_x1x2(
     measure: Literal["real", "imag", "abs"] = "abs",
     scale: Literal["symlog", "linear"] = "linear",
 ) -> tuple[Figure, Axes, QuadMesh]:
-    return plot_wavepacket_2D(
+    return plot_wavepacket_2d(
         wavepacket, x0_idx, 0, ax=ax, measure=measure, scale=scale
     )
 
@@ -98,12 +98,12 @@ def plot_wavepacket_x2x0(
     measure: Literal["real", "imag", "abs"] = "abs",
     scale: Literal["symlog", "linear"] = "linear",
 ) -> tuple[Figure, Axes, QuadMesh]:
-    return plot_wavepacket_2D(
+    return plot_wavepacket_2d(
         wavepacket, x1_idx, 1, ax=ax, measure=measure, scale=scale
     )
 
 
-def plot_wavepacket_difference_2D(
+def plot_wavepacket_difference_2d(
     wavepacket0: MomentumBasisWavepacket[_NS0, _NS1, _L0Inv, _L1Inv, _L2Inv],
     wavepacket1: MomentumBasisWavepacket[_NS0, _NS1, _L0Inv, _L1Inv, _L2Inv],
     idx: int,
@@ -119,12 +119,12 @@ def plot_wavepacket_difference_2D(
     eigenstate_momentum1 = unfurl_wavepacket(wavepacket1)
     eigenstate1 = convert_eigenstate_to_position_basis(eigenstate_momentum1)
 
-    return plot_eigenstate_difference_2D(
+    return plot_eigenstate_difference_2d(
         eigenstate0, eigenstate1, idx, z_axis, ax=ax, measure=measure, scale=scale
     )
 
 
-def animate_wavepacket_3D(
+def animate_wavepacket_3d(
     wavepacket: MomentumBasisWavepacket[int, int, int, int, int],
     z_axis: Literal[0, 1, 2, -1, -2, -3],
     *,
@@ -134,7 +134,7 @@ def animate_wavepacket_3D(
 ) -> tuple[Figure, Axes, ArtistAnimation]:
     eigenstate_momentum = unfurl_wavepacket(wavepacket)
     eigenstate = convert_eigenstate_to_position_basis(eigenstate_momentum)
-    return animate_eigenstate_3D(
+    return animate_eigenstate_3d(
         eigenstate, z_axis, ax=ax, measure=measure, scale=scale
     )
 
@@ -146,7 +146,7 @@ def animate_wavepacket_x0x1(
     measure: Literal["real", "imag", "abs"] = "abs",
     scale: Literal["symlog", "linear"] = "linear",
 ) -> tuple[Figure, Axes, ArtistAnimation]:
-    return animate_wavepacket_3D(wavepacket, 2, ax=ax, measure=measure, scale=scale)
+    return animate_wavepacket_3d(wavepacket, 2, ax=ax, measure=measure, scale=scale)
 
 
 def animate_wavepacket_x1x2(
@@ -156,7 +156,7 @@ def animate_wavepacket_x1x2(
     measure: Literal["real", "imag", "abs"] = "abs",
     scale: Literal["symlog", "linear"] = "linear",
 ) -> tuple[Figure, Axes, ArtistAnimation]:
-    return animate_wavepacket_3D(wavepacket, 0, ax=ax, measure=measure, scale=scale)
+    return animate_wavepacket_3d(wavepacket, 0, ax=ax, measure=measure, scale=scale)
 
 
 def animate_wavepacket_x2x0(
@@ -166,7 +166,7 @@ def animate_wavepacket_x2x0(
     measure: Literal["real", "imag", "abs"] = "abs",
     scale: Literal["symlog", "linear"] = "linear",
 ) -> tuple[Figure, Axes, ArtistAnimation]:
-    return animate_wavepacket_3D(wavepacket, 1, ax=ax, measure=measure, scale=scale)
+    return animate_wavepacket_3d(wavepacket, 1, ax=ax, measure=measure, scale=scale)
 
 
 def plot_wavepacket_along_path(
