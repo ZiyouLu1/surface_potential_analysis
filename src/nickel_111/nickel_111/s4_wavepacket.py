@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from typing import TYPE_CHECKING, Any, Literal
 
 import numpy as np
@@ -16,9 +18,9 @@ def generate_nickel_wavepacket_sho() -> None:
         x: np.ndarray[tuple[Literal[3]], np.dtype[np.float_]]
     ) -> Hamiltonian[Any]:
         return generate_hamiltonian_sho(
-            shape=(46, 46, 100),
+            shape=(250, 250, 250),
             bloch_phase=x,
-            resolution=(23, 23, 16),
+            resolution=(23, 23, 12),
         )
 
     save_bands = np.arange(20)

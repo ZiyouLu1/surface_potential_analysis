@@ -162,7 +162,7 @@ def generate_wavepacket(
     samples: tuple[_NS0Inv, _NS1Inv],
     *,
     save_bands: np.ndarray[tuple[int], np.dtype[np.int_]] | None = None
-) -> np.ndarray[tuple[int], np.dtype[Wavepacket[_NS0Inv, _NS1Inv, _BC0Inv]]]:
+) -> list[Wavepacket[_NS0Inv, _NS1Inv, _BC0Inv]]:
     """
     Generate a wavepacket with the given number of samples.
 
@@ -179,22 +179,23 @@ def generate_wavepacket(
     h = hamiltonian_generator(np.array([0, 0, 0]))
     basis_length = len(BasisConfigUtil(h["basis"]))
     save_bands = np.array([0]) if save_bands is None else save_bands
+    subset_by_index: tuple[int, int] = (np.min(save_bands), np.max(save_bands))
 
     vectors = np.empty((*samples, basis_length), dtype=np.complex128)
-    out = np.array(
-        [{"basis": h["basis"], "vectors": vectors} for _ in save_bands],
-        dtype=Wavepacket[_NS0Inv, _NS1Inv, _BC0Inv],
-    )
+    out: list[Wavepacket[_NS0Inv, _NS1Inv, _BC0Inv]] = [
+        {"basis": h["basis"], "vectors": vectors} for _ in save_bands
+    ]
 
     frequencies = get_wavepacket_sample_frequencies(h["basis"], np.array(samples))
-    for i, bloch_frequency in enumerate(frequencies.T.reshape(-1, 2)):
+    for i, bloch_frequency in enumerate(frequencies.T.reshape(-1, 3)):
         h = hamiltonian_generator(bloch_frequency)
-        eigenstates = calculate_eigenstates(h)
+        eigenstates = calculate_eigenstates(h, subset_by_index)
 
         (is0, is1) = np.unravel_index(i, samples)
         for b, band in enumerate(save_bands):
-            out[b]["vectors"][is0, is1] = eigenstates["vectors"][band]
-    return out  # type: ignore[no-any-return]
+            band_idx = band - subset_by_index[0]
+            out[b]["vectors"][is0, is1] = eigenstates["vectors"][band_idx]
+    return out
 
 
 def get_global_phases(
