@@ -161,7 +161,7 @@ class BasisConfigUtil(Generic[_BX0Cov, _BX1Cov, _BX2Cov]):
     def dk1(self) -> np.ndarray[tuple[Literal[3]], np.dtype[np.float_]]:
         # See https://physics.stackexchange.com/questions/340860/reciprocal-lattice-in-2d
         out = 2 * np.pi * np.cross(self.delta_x2, self.delta_x0) / self.volume
-        return out  # type:ignore[no-any-return]
+        return out  # type:ignore[no-any-return]  # noqa: RET504
 
     @cached_property
     def x2_basis(self) -> BasisUtil[_BX2Cov]:
@@ -229,10 +229,10 @@ class BasisConfigUtil(Generic[_BX0Cov, _BX1Cov, _BX2Cov]):
     def get_fundamental_basis_in(
         self, _type: Literal["position", "momentum"]
     ) -> FundamentalBasisConfig[Any, Any, Any]:
-        return (  # type: ignore
-            {"_type": _type, "n": self.fundamental_n0, "delta_x": self.delta_x0},  # type: ignore
-            {"_type": _type, "n": self.fundamental_n1, "delta_x": self.delta_x1},  # type: ignore
-            {"_type": _type, "n": self.fundamental_n2, "delta_x": self.delta_x2},  # type: ignore
+        return (  # type: ignore[return-value]
+            {"_type": _type, "n": self.fundamental_n0, "delta_x": self.delta_x0},  # type: ignore[misc]
+            {"_type": _type, "n": self.fundamental_n1, "delta_x": self.delta_x1},  # type: ignore[misc]
+            {"_type": _type, "n": self.fundamental_n2, "delta_x": self.delta_x2},  # type: ignore[misc]
         )
 
 
@@ -270,7 +270,7 @@ def _get_rotation_matrix(
     u, v, w = uvw
 
     # Compute rotation matrix - re-expressed to show structure
-    return (  # type: ignore
+    return (  # type: ignore[no-any-return]
         rcos * np.eye(3)
         + rsin * np.array([[0, -w, v], [w, 0, -u], [-v, u, 0]])
         + (1.0 - rcos) * uvw[:, None] * uvw[None, :]
@@ -287,8 +287,8 @@ class FundamentalBasisConfigUtil(BasisConfigUtil[_FBX0, _FBX1, _FBX2]):
         direction: BasisVector | None = None,
     ) -> BasisConfig[_FBX0, _FBX1, _FBX2]:
         matrix = _get_rotation_matrix(self._config[axis]["delta_x"], direction)
-        return (
-            {  # type: ignore
+        return (  # type: ignore[return-value]
+            {
                 "_type": self._config[0]["_type"],
                 "n": self._config[0]["n"],
                 "delta_x": np.dot(matrix, self._config[0]["delta_x"]),
@@ -331,17 +331,17 @@ class MomentumBasisConfigUtil(
         return (
             {
                 "_type": "position",
-                "n": len(self.x0_basis),  # type:ignore
+                "n": len(self.x0_basis),  # type:ignore[typeddict-item]
                 "delta_x": self.delta_x0,
             },
             {
                 "_type": "position",
-                "n": len(self.x1_basis),  # type:ignore
+                "n": len(self.x1_basis),  # type:ignore[typeddict-item]
                 "delta_x": self.delta_x1,
             },
             {
                 "_type": "position",
-                "n": len(self.delta_x2),  # type:ignore
+                "n": len(self.delta_x2),  # type:ignore[typeddict-item]
                 "delta_x": self.delta_x2,
             },
         )
@@ -372,17 +372,17 @@ class PositionBasisConfigUtil(
         return (
             {
                 "_type": "momentum",
-                "n": len(self.x0_basis),  # type:ignore
+                "n": len(self.x0_basis),  # type:ignore[typeddict-item]
                 "delta_x": self.delta_x0,
             },
             {
                 "_type": "momentum",
-                "n": len(self.x1_basis),  # type:ignore
+                "n": len(self.x1_basis),  # type:ignore[typeddict-item]
                 "delta_x": self.delta_x1,
             },
             {
                 "_type": "momentum",
-                "n": len(self.x2_basis),  # type:ignore
+                "n": len(self.x2_basis),  # type:ignore[typeddict-item]
                 "delta_x": self.delta_x2,
             },
         )
@@ -393,8 +393,8 @@ def get_projected_k_points(
     axis: Literal[0, 1, 2, -1, -2, -3],
 ) -> np.ndarray[tuple[Literal[2], int, int], np.dtype[np.float_]]:
     """
-    Get a grid of points projected perpendicular to the given basis axis
-    at the given index along this axis
+    Get a grid of points projected perpendicular to the given basis axis.
+
     This throws away the componet of the cooridnate grid in the direction
     parallel to axis.
 
