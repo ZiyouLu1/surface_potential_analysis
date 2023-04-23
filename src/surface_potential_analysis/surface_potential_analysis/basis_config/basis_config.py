@@ -46,6 +46,12 @@ class BasisConfigUtil(Generic[_BX0Cov, _BX1Cov, _BX2Cov]):
         self._config = config
 
     @cached_property
+    def utils(
+        self,
+    ) -> tuple[BasisUtil[_BX0Cov], BasisUtil[_BX1Cov], BasisUtil[_BX2Cov]]:
+        return (self.x0_basis, self.x1_basis, self.x2_basis)
+
+    @cached_property
     def volume(self) -> float:
         out = np.dot(self.delta_x0, np.cross(self.delta_x1, self.delta_x2))
         assert out != 0
@@ -197,6 +203,10 @@ class BasisConfigUtil(Generic[_BX0Cov, _BX1Cov, _BX2Cov]):
     def shape(self) -> tuple[int, int, int]:
         return (self.x0_basis.n, self.x1_basis.n, self.x2_basis.n)  # type: ignore[misc]
 
+    @cached_property
+    def fundamental_shape(self) -> tuple[int, int, int]:
+        return (self.x0_basis.fundamental_n, self.x1_basis.fundamental_n, self.x2_basis.fundamental_n)  # type: ignore[misc]
+
     def __len__(self) -> int:
         return int(np.prod(self.shape))
 
@@ -233,6 +243,60 @@ class BasisConfigUtil(Generic[_BX0Cov, _BX1Cov, _BX2Cov]):
             {"_type": _type, "n": self.fundamental_n0, "delta_x": self.delta_x0},  # type: ignore[misc]
             {"_type": _type, "n": self.fundamental_n1, "delta_x": self.delta_x1},  # type: ignore[misc]
             {"_type": _type, "n": self.fundamental_n2, "delta_x": self.delta_x2},  # type: ignore[misc]
+        )
+
+    def get_rotated_basis(
+        self,
+        axis: Literal[0, 1, 2, -1, -2, -3] = 0,
+        direction: BasisVector | None = None,
+    ) -> BasisConfig[_BX0Cov, _BX1Cov, _BX2Cov]:
+        matrix = _get_rotation_matrix(self.utils[axis].delta_x, direction)
+        return (  # type: ignore[return-value]
+            {
+                **self._config[0],
+                **(
+                    {"delta_x": np.dot(matrix, self._config[0]["delta_x"])}
+                    if self._config[0].get("parent", None) is None
+                    else {
+                        "parent": {
+                            **self._config[0]["parent"],
+                            "delta_x": np.dot(
+                                matrix, self._config[0]["parent"]["delta_x"]
+                            ),
+                        }
+                    }
+                ),
+            },
+            {
+                **self._config[1],
+                **(
+                    {"delta_x": np.dot(matrix, self._config[1]["delta_x"])}
+                    if self._config[1].get("parent", None) is None
+                    else {
+                        "parent": {
+                            **self._config[1]["parent"],
+                            "delta_x": np.dot(
+                                matrix, self._config[1]["parent"]["delta_x"]
+                            ),
+                        }
+                    }
+                ),
+            },
+            {
+                **self._config[2],
+                **(
+                    {"delta_x": np.dot(matrix, self._config[2]["delta_x"])}
+                    if self._config[2].get("parent", None) is None
+                    else {
+                        "parent": {
+                            **self._config[2]["parent"],
+                            "delta_x": np.dot(
+                                matrix, self._config[2]["parent"]["delta_x"]
+                            ),
+                        }
+                    }
+                ),
+            },
         )
 
 
@@ -277,39 +341,8 @@ def _get_rotation_matrix(
     )
 
 
-class FundamentalBasisConfigUtil(BasisConfigUtil[_FBX0, _FBX1, _FBX2]):
-    def get_fundamental_basis(self) -> BasisConfig[_FBX0, _FBX1, _FBX2]:
-        return self._config
-
-    def get_rotated_basis(
-        self,
-        axis: Literal[0, 1, 2, -1, -2, -3] = 0,
-        direction: BasisVector | None = None,
-    ) -> BasisConfig[_FBX0, _FBX1, _FBX2]:
-        matrix = _get_rotation_matrix(self._config[axis]["delta_x"], direction)
-        return (  # type: ignore[return-value]
-            {
-                "_type": self._config[0]["_type"],
-                "n": self._config[0]["n"],
-                "delta_x": np.dot(matrix, self._config[0]["delta_x"]),
-            },
-            {
-                "_type": self._config[1]["_type"],
-                "n": self._config[1]["n"],
-                "delta_x": np.dot(matrix, self._config[1]["delta_x"]),
-            },
-            {
-                "_type": self._config[2]["_type"],
-                "n": self._config[2]["n"],
-                "delta_x": np.dot(matrix, self._config[2]["delta_x"]),
-            },
-        )
-
-
 class MomentumBasisConfigUtil(
-    FundamentalBasisConfigUtil[
-        MomentumBasis[_L0Cov], MomentumBasis[_L1Cov], MomentumBasis[_L2Cov]
-    ]
+    BasisConfigUtil[MomentumBasis[_L0Cov], MomentumBasis[_L1Cov], MomentumBasis[_L2Cov]]
 ):
     @staticmethod
     def from_resolution(
@@ -348,9 +381,7 @@ class MomentumBasisConfigUtil(
 
 
 class PositionBasisConfigUtil(
-    FundamentalBasisConfigUtil[
-        PositionBasis[_L0Cov], PositionBasis[_L1Cov], PositionBasis[_L2Cov]
-    ]
+    BasisConfigUtil[PositionBasis[_L0Cov], PositionBasis[_L1Cov], PositionBasis[_L2Cov]]
 ):
     @staticmethod
     def from_resolution(
@@ -388,8 +419,8 @@ class PositionBasisConfigUtil(
         )
 
 
-def get_projected_k_points(
-    basis: MomentumBasisConfig[_L0Inv, _L1Inv, _L2Inv],
+def get_fundamental_projected_k_points(
+    basis: BasisConfig[Any, Any, Any],
     axis: Literal[0, 1, 2, -1, -2, -3],
 ) -> np.ndarray[tuple[Literal[2], int, int], np.dtype[np.float_]]:
     """
@@ -409,12 +440,12 @@ def get_projected_k_points(
     np.ndarray[tuple[Literal[2], int, int], np.dtype[np.float_]]
         The coordinates in the plane perpendicular to axis
     """
-    rotated = MomentumBasisConfigUtil(basis).get_rotated_basis(axis)
-    util = FundamentalBasisConfigUtil(rotated)
-    return util.fundamental_k_points.reshape(3, *util.shape)[0:2,]
+    rotated = BasisConfigUtil(basis).get_rotated_basis(axis)
+    util = BasisConfigUtil(rotated)
+    return util.fundamental_k_points.reshape(3, *util.fundamental_shape)[0:2,]
 
 
-def get_fundamental_x_points_projected(
+def get_fundamental_projected_x_points(
     basis: BasisConfig[Any, Any, Any],
     axis: Literal[0, 1, 2, -1, -2, -3],
 ) -> np.ndarray[tuple[Literal[2], int, int], np.dtype[np.float_]]:
@@ -435,9 +466,6 @@ def get_fundamental_x_points_projected(
     np.ndarray[tuple[Literal[2], int, int], np.dtype[np.float_]]
         The coordinates in the plane perpendicular to axis
     """
-    fundamental = BasisConfigUtil(basis).get_fundamental_basis()
-    rotated = FundamentalBasisConfigUtil(fundamental).get_rotated_basis(
-        axis, np.array([0, 0, 1])
-    )
+    rotated = BasisConfigUtil(basis).get_rotated_basis(axis, np.array([0, 0, 1]))
     util = BasisConfigUtil(rotated)
-    return util.fundamental_x_points.reshape(3, *util.shape)[0:2]
+    return util.fundamental_x_points.reshape(3, *util.fundamental_shape)[0:2]

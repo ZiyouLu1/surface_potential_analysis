@@ -5,7 +5,7 @@ from surface_potential_analysis.wavepacket.plot import (
 )
 from surface_potential_analysis.wavepacket.wavepacket import (
     load_wavepacket,
-    normalize_wavepacket,
+    normalize_wavepacket_position_basis,
 )
 
 from .surface_data import get_data_path, save_figure
@@ -30,7 +30,7 @@ def animate_copper_111_wavepacket() -> None:
 def plot_wavepacket_at_z_origin() -> None:
     path = get_data_path("eigenstates_grid_0.json")
     wavepacket = load_wavepacket(path)
-    normalized = normalize_wavepacket(wavepacket)
+    normalized = normalize_wavepacket_position_basis(wavepacket)
 
     fig, ax, _ = plot_wavepacket_x0x1(normalized, 0, measure="abs")
     fig.show()
@@ -55,7 +55,7 @@ def plot_wavepacket_at_z_origin() -> None:
         (util.delta_x0[1] + util.delta_x1[1]) / 3,
         0,
     )
-    normalized = normalize_wavepacket(wavepacket, origin)
+    normalized = normalize_wavepacket_position_basis(wavepacket, origin)
 
     fig, ax, _ = plot_wavepacket_x0x1(normalized, 0, measure="abs")
     fig.show()

@@ -1,26 +1,55 @@
+from typing import Literal
+
 import numpy as np
 from matplotlib import pyplot as plt
+from surface_potential_analysis.basis.basis import (
+    ExplicitBasis,
+    MomentumBasis,
+    PositionBasis,
+    TruncatedBasis,
+)
+from surface_potential_analysis.basis_config.basis_config import BasisConfig
 from surface_potential_analysis.eigenstate.eigenstate import (
+    convert_sho_eigenstate_to_fundamental_xy,
     convert_sho_eigenstate_to_position_basis,
 )
 from surface_potential_analysis.eigenstate.plot import animate_eigenstate_x1x2
 from surface_potential_analysis.wavepacket.plot import (
     animate_wavepacket_x0x1,
+    plot_wavepacket_energies_momentum,
+    plot_wavepacket_energies_position,
     plot_wavepacket_sample_frequencies,
 )
 from surface_potential_analysis.wavepacket.wavepacket import (
+    Wavepacket,
+    convert_sho_wavepacket_to_momentum,
     get_wavepacket_sample_fractions,
     load_wavepacket,
-    normalize_wavepacket,
+    normalize_sho_wavepacket,
+    normalize_wavepacket_position_basis,
     select_wavepacket_eigenstate,
 )
 
 from .surface_data import get_data_path, save_figure
 
 
-def plot_wavepacket_points() -> None:
-    path = get_data_path("eigenstates_grid_0.json")
-    wavepacket = load_wavepacket(path)
+def load_nickel_wavepacket(
+    idx: int,
+) -> Wavepacket[
+    Literal[8],
+    Literal[8],
+    BasisConfig[
+        TruncatedBasis[Literal[23], MomentumBasis[Literal[250]]],
+        TruncatedBasis[Literal[23], MomentumBasis[Literal[250]]],
+        ExplicitBasis[Literal[12], PositionBasis[Literal[250]]],
+    ],
+]:
+    path = get_data_path(f"wavepacket_{idx}.npy")
+    return load_wavepacket(path)
+
+
+def plot_nickel_wavepacket_points() -> None:
+    wavepacket = load_nickel_wavepacket(0)
 
     fig, _, _ = plot_wavepacket_sample_frequencies(wavepacket)
     fig.show()
@@ -28,30 +57,42 @@ def plot_wavepacket_points() -> None:
     input()
 
 
+def plot_nickel_wavepacket_energies() -> None:
+    wavepacket = load_nickel_wavepacket(0)
+    fig, _, _ = plot_wavepacket_energies_momentum(wavepacket)
+    fig.show()
+
+    fig, _, _ = plot_wavepacket_energies_position(wavepacket)
+    fig.show()
+    input()
+
+
 def animate_wavepacket_eigenstates_x1x2() -> None:
-    path = get_data_path("eigenstates_grid_0.json")
-    wavepacket = load_wavepacket(path)
+    wavepacket = load_nickel_wavepacket(0)
 
     eigenstate = select_wavepacket_eigenstate(wavepacket, (0, 0))
-    eigenstate_position = convert_sho_eigenstate_to_position_basis(eigenstate)
+    fundamental = convert_sho_eigenstate_to_fundamental_xy(eigenstate)
+    eigenstate_position = convert_sho_eigenstate_to_position_basis(fundamental)
 
     fig, _, _anim0 = animate_eigenstate_x1x2(eigenstate_position, measure="real")
     fig.show()
 
-    path = get_data_path("eigenstates_grid_1.json")
+    path = get_data_path("wavepacket_1.npy")
     wavepacket = load_wavepacket(path)
 
     eigenstate = select_wavepacket_eigenstate(wavepacket, (0, 0))
-    eigenstate_position = convert_sho_eigenstate_to_position_basis(eigenstate)
+    fundamental = convert_sho_eigenstate_to_fundamental_xy(eigenstate)
+    eigenstate_position = convert_sho_eigenstate_to_position_basis(fundamental)
 
     fig, _, _anim1 = animate_eigenstate_x1x2(eigenstate_position, measure="real")
     fig.show()
 
-    path = get_data_path("eigenstates_grid_2.json")
+    path = get_data_path("wavepacket_2.npy")
     wavepacket = load_wavepacket(path)
 
     eigenstate = select_wavepacket_eigenstate(wavepacket, (0, 0))
-    eigenstate_position = convert_sho_eigenstate_to_position_basis(eigenstate)
+    fundamental = convert_sho_eigenstate_to_fundamental_xy(eigenstate)
+    eigenstate_position = convert_sho_eigenstate_to_position_basis(fundamental)
 
     fig, _, _anim2 = animate_eigenstate_x1x2(eigenstate_position, measure="real")
     fig.show()
@@ -83,11 +124,11 @@ def plot_wavepacket_points_john() -> None:
         ]
     )
     # = 2 x 2pi / delta_y
-    G1 = 2.9419 * 10**10
-    nqdim = 4
+    g1 = 2.9419 * 10**10
+    n_q_dim = 4
 
-    qx_points = G1 * ((np.sqrt(3) / 2) * a[:, 0] + 0 * a[:, 1]) / nqdim
-    qy_points = G1 * ((1 / 2) * a[:, 0] + a[:, 1]) / nqdim
+    qx_points = g1 * ((np.sqrt(3) / 2) * a[:, 0] + 0 * a[:, 1]) / n_q_dim
+    qy_points = g1 * ((1 / 2) * a[:, 0] + a[:, 1]) / n_q_dim
 
     fig, ax = plt.subplots()
     (line,) = ax.plot(qx_points, qy_points)
@@ -117,32 +158,21 @@ def plot_wavepacket_points_me() -> None:
     save_figure(fig, "my_wavepacket_points.png")
 
 
-def plot_wavepacket_grid_all_equal() -> None:
-    """
-    Does the imaginary oscillation in the imaginary part of the wavefunction happen
-    if we choose a constant bloch wavefunction for all k.
-    """
-    # eigenstates["eigenvectors"] = [
-    #     eigenvector.tolist() for _ in eigenstates["eigenvectors"]
+def animate_wavepacket() -> None:
+    wavepacket = load_nickel_wavepacket(0)
+    normalized = normalize_sho_wavepacket(wavepacket, 0, 0)
 
-    input()
+    momentum = convert_sho_wavepacket_to_momentum(normalized)
 
-
-def plot_wavepacket_grid() -> None:
-    path = get_data_path(f"eigenstates_grid_{0}.json")
-    wavepacket = load_wavepacket(path)
-    normalized = normalize_wavepacket(wavepacket, 0, 0)
-
-    fig, _, _anim0 = animate_wavepacket_x0x1(normalized, scale="symlog")
+    fig, _, _anim0 = animate_wavepacket_x0x1(momentum, scale="symlog")
     fig.show()
 
     input()
 
-    path = get_data_path(f"eigenstates_grid_{1}.json")
+    path = get_data_path(f"wavepacket_{1}.npy")
     wavepacket = load_wavepacket(path)
-    normalized = normalize_wavepacket(wavepacket, 0, 0)
-    # TODO:
-    #         0,
+    normalized = normalize_wavepacket_position_basis(wavepacket, 0, 0)
+
     fig, _, _anim1 = animate_wavepacket_x0x1(normalized, scale="symlog")
     fig.show()
 

@@ -23,9 +23,9 @@ from surface_potential_analysis.eigenstate.eigenstate import (
     EigenstateWithBasis,
     _convert_explicit_basis_x2_to_position,
     _convert_momentum_basis_x01_to_position,
+    _flatten_eigenstate,
+    _stack_eigenstate,
     convert_sho_eigenstate_to_position_basis,
-    flatten_eigenstate,
-    stack_eigenstate,
 )
 from surface_potential_analysis.eigenstate.eigenstate_collection_plot import (
     _get_projected_phases,
@@ -101,7 +101,7 @@ class EigenstateTest(unittest.TestCase):
             "basis": basis,
             "vector": np.array(rng.random(len(util)), dtype=complex),
         }
-        stacked_eigenstate = stack_eigenstate(eigenstate)
+        stacked_eigenstate = _stack_eigenstate(eigenstate)
 
         np.testing.assert_array_equal(
             eigenstate["vector"],
@@ -110,20 +110,20 @@ class EigenstateTest(unittest.TestCase):
 
         np.testing.assert_array_equal(
             eigenstate["vector"],
-            flatten_eigenstate(stacked_eigenstate)["vector"],
+            _flatten_eigenstate(stacked_eigenstate)["vector"],
         )
 
     def test_convert_explicit_basis_x2_to_position_shape(self) -> None:
         eigenstate = get_random_sho_eigenstate((10, 12, 9), (10, 12, 13))
 
-        eigenstate_stacked = stack_eigenstate(eigenstate)
+        eigenstate_stacked = _stack_eigenstate(eigenstate)
         stacked_position = _convert_explicit_basis_x2_to_position(eigenstate_stacked)
 
         np.testing.assert_array_equal((10, 12, 13), stacked_position["vector"].shape)
 
     def test_convert_sho_basis_order(self) -> None:
         eigenstate = get_random_sho_eigenstate((5, 6, 9), (10, 10, 10))
-        stacked = stack_eigenstate(eigenstate)
+        stacked = _stack_eigenstate(eigenstate)
 
         expected = _convert_momentum_basis_x01_to_position(
             _convert_explicit_basis_x2_to_position(stacked)
@@ -145,7 +145,7 @@ class EigenstateTest(unittest.TestCase):
         eigenstate = get_random_sho_eigenstate(
             (nx, ny, nz), (fundamental_nx, fundamental_ny, fundamental_nz)
         )
-        stacked = stack_eigenstate(eigenstate)
+        stacked = _stack_eigenstate(eigenstate)
 
         for i in range(nz):
             vector = np.zeros(fundamental_nz)

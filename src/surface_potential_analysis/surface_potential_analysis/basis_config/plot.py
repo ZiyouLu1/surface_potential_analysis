@@ -7,7 +7,7 @@ from matplotlib.lines import Line2D
 
 from surface_potential_analysis.basis_config.basis_config import (
     PositionBasisConfig,
-    get_fundamental_x_points_projected,
+    get_fundamental_projected_x_points,
 )
 from surface_potential_analysis.util import slice_along_axis
 
@@ -41,7 +41,7 @@ def plot_projected_coordinates_2d(
     tuple[Figure, Axes, Line2D]
     """
     fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
-    coordinates = get_fundamental_x_points_projected(basis, z_axis)[
+    coordinates = get_fundamental_projected_x_points(basis, z_axis)[
         slice_along_axis(idx, (z_axis % 3) + 1)
     ].reshape(2, -1)
 

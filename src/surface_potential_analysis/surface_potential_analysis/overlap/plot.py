@@ -9,7 +9,7 @@ from matplotlib.lines import Line2D
 
 from surface_potential_analysis.basis_config.basis_config import (
     MomentumBasisConfigUtil,
-    get_projected_k_points,
+    get_fundamental_projected_k_points,
 )
 from surface_potential_analysis.eigenstate.plot import get_measured_data
 from surface_potential_analysis.util import (
@@ -32,7 +32,7 @@ def plot_overlap_transform_2d(
     # TODO: shifted transform
     fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
 
-    coordinates = get_projected_k_points(overlap["basis"], z_axis)[
+    coordinates = get_fundamental_projected_k_points(overlap["basis"], z_axis)[
         slice_along_axis(idx, (z_axis % 3) + 1)
     ]
     util = MomentumBasisConfigUtil(overlap["basis"])

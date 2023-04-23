@@ -110,6 +110,25 @@ def _get_fundamental_basis(
     return basis  # type: ignore[return-value]
 
 
+def as_fundamental_basis(
+    basis: TruncatedBasis[_L1Inv, MomentumBasis[_L2Inv]] | MomentumBasis[_L2Inv]
+) -> MomentumBasis[_L1Inv]:
+    """
+    Given a truncated basis in momentum convert to a momentum basis of a lower resolution.
+
+    Parameters
+    ----------
+    basis : TruncatedBasis[_L1Inv, MomentumBasis[_L2Inv]]
+
+    Returns
+    -------
+    MomentumBasis[_L1Inv]
+    """
+    if is_basis_type(basis, "momentum"):
+        return basis
+    return {"_type": "momentum", "delta_x": basis["parent"]["delta_x"], "n": basis["n"]}  # type: ignore[typeddict-item]
+
+
 B = TypeVar("B", bound=Basis[Any, Any])
 
 
@@ -148,7 +167,14 @@ class BasisUtil(Generic[B]):
         return {"_type": _type, "n": self.fundamental_n, "delta_x": self.delta_x}  # type: ignore[misc,return-value]
 
     @property
-    def fundamental_n(self: BasisUtil[BasisWithLength[_L1Inv, Any]]) -> _L1Inv:
+    def fundamental_n(
+        self: BasisUtil[PositionBasis[_L1Inv]]
+        | BasisUtil[MomentumBasis[_L1Inv]]
+        | BasisUtil[TruncatedBasis[_L2Inv, PositionBasis[_L1Inv]]]
+        | BasisUtil[TruncatedBasis[_L2Inv, MomentumBasis[_L1Inv]]]
+        | BasisUtil[ExplicitBasis[_L2Inv, PositionBasis[_L1Inv]]]
+        | BasisUtil[ExplicitBasis[_L2Inv, MomentumBasis[_L1Inv]]]
+    ) -> _L1Inv:
         return self.fundamental_basis["n"]  # type: ignore[no-any-return]
 
     @property

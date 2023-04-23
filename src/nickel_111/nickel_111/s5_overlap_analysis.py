@@ -2,7 +2,6 @@ import numpy as np
 import scipy.optimize
 from matplotlib import pyplot as plt
 from numpy.typing import NDArray
-
 from surface_potential_analysis.overlap_transform import (
     OverlapTransform,
     load_overlap_transform,
@@ -56,10 +55,7 @@ def make_transform_real_at(
 
 def plot_overlap():
     path = get_data_path("overlap_transform_shifted_hcp_fcc.npz")
-    # path = get_data_path("overlap_transform_interpolated_hcp_fcc.npz")
-    # path = get_data_path("overlap_transform_extended_hcp_fcc.npz")
     overlap = load_overlap_transform(path)
-    # overlap = make_transform_real_at(overlap, point=(1, 1, 0))
     fig, ax, _ = plot_overlap_transform_xy(overlap)
     ax.set_title(
         "Plot of the overlap transform for ikz=0\n"
@@ -128,59 +124,12 @@ def plot_overlap():
         )
     )
     k_points = np.linspace(0, delta_k, 5000)
-    # fit_points = (
     #     0.75
-    #     * np.max(np.abs(overlap["points"]))
-    #     * np.exp(-((k_points - (delta_k / 2)) ** 2) / (delta_k / 8) ** 2)
-    # )
-    # ax.plot(k_points, fit_points)
-    # fit_points = (
     #     1.1
-    #     * np.max(np.abs(overlap["points"]))
-    #     * np.exp(-((k_points - (delta_k / 2)) ** 2) / (delta_k / 7) ** 2)
-    # )
 
-    # ax.plot(k_points, fit_points)
-
-    # fit_points = (
     #     0.4
-    #     * np.max(np.abs(overlap["points"]))
-    #     * np.exp(-((k_points - (delta_k / 2)) ** 2) / (delta_k / 7) ** 2)
-    # )
 
-    # ax.plot(k_points, fit_points)
-
-    # fit_points = (
-    #     (0.75 - 0.35 * np.cos(4 * np.pi * (k_points - (delta_k / 2)) / (delta_k / 8)))
-    #     * np.max(np.abs(overlap["points"]))
-    #     * np.exp(-((k_points - (delta_k / 2)) ** 2) / (delta_k / 7) ** 2)
-    # )
-    # ax.plot(k_points, fit_points)
-
-    # fit_points = (
-    #     (0.72 - 0.35 * np.cos(4 * np.pi * (k_points - (delta_k / 2)) / (delta_k / 8)))
-    #     * np.min(np.real(overlap["points"]))
-    #     * np.exp(-((k_points - (delta_k / 2)) ** 2) / (delta_k / 7) ** 2)
-    # )
-    # ax.plot(k_points, fit_points)
-
-    # fit_points = (
-    #     (
-    #         -np.sign(k_points - (delta_k / 2)) * 0.27
-    #         - 0.4 * np.sin(4 * np.pi * (k_points - (delta_k / 2)) / (delta_k / 8))
-    #     )
-    #     * np.min(np.real(overlap["points"]))
-    #     * np.exp(-((k_points - (delta_k / 2)) ** 2) / (delta_k / 7) ** 2)
-    # )
-    # ax.plot(k_points, fit_points)
-
-    # fit_points = (
     #     -2
-    #     * ((k_points - (delta_k / 2)) / (delta_k / 8))
-    #     * (0.72 - 0.35 * np.cos(4 * np.pi * (k_points - (delta_k / 2)) / (delta_k / 8)))
-    #     * np.min(np.real(overlap["points"]))
-    #     * np.exp(-((k_points - (delta_k / 2)) ** 2) / (delta_k / 7) ** 2)
-    # )
 
     ax2 = ax.twinx()
     _, _, ln = plot_overlap_transform_along_diagonal(overlap, measure="angle", ax=ax2)
@@ -224,10 +173,10 @@ def fit_overlap_transform():
     print(np.max(np.abs(points[:, :])))
 
     print(points.shape)
-    print((points[177, 177, 0]))
-    print((points[177, 178, 0]))
-    print((points[178, 177, 0]))
-    print((points[178, 178, 0]))
+    print(points[177, 177, 0])
+    print(points[177, 178, 0])
+    print(points[178, 177, 0])
+    print(points[178, 178, 0])
 
     print(get_max_point(overlap))
     (ikx0, ikx1, _) = get_max_point(overlap)

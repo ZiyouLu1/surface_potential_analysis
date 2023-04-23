@@ -66,6 +66,7 @@ def furl_eigenstate(
             eigenstate["basis"][2],
         ),
         "vectors": flattened,
+        "energies": np.zeros(flattened.shape[0:2]),
     }
 
 

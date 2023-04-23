@@ -8,6 +8,8 @@ _L0Cov = TypeVar("_L0Cov", bound=int, covariant=True)
 
 
 class PointPotential(TypedDict, Generic[_L0Cov]):
+    """Represents an uneven potential, given at a series of points in the unit cell."""
+
     x_points: np.ndarray[tuple[_L0Cov], np.dtype[np.float_]]
     y_points: np.ndarray[tuple[_L0Cov], np.dtype[np.float_]]
     z_points: np.ndarray[tuple[_L0Cov], np.dtype[np.float_]]
@@ -17,6 +19,18 @@ class PointPotential(TypedDict, Generic[_L0Cov]):
 def load_point_potential_json(
     path: Path,
 ) -> PointPotential[Any]:
+    """
+    Load a point potential from a JSON format.
+
+    Parameters
+    ----------
+    path : Path
+
+    Returns
+    -------
+    PointPotential[Any]
+    """
+
     class SurfacePotentialRaw(TypedDict):
         x_points: list[float]
         y_points: list[float]
