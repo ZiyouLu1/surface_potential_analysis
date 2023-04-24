@@ -10,6 +10,7 @@ from surface_potential_analysis.basis.basis import (
     MomentumBasis,
     PositionBasis,
     TruncatedBasis,
+    as_fundamental_basis,
 )
 from surface_potential_analysis.basis_config.basis_config import (
     BasisConfig,
@@ -19,13 +20,17 @@ from surface_potential_analysis.basis_config.basis_config import (
 )
 from surface_potential_analysis.eigenstate.eigenstate import (
     Eigenstate,
+    convert_eigenstate_to_position_basis,
     convert_sho_eigenstate_to_momentum_basis,
-    convert_sho_eigenstate_to_position_basis,
 )
 from surface_potential_analysis.eigenstate.eigenstate_calculation import (
     calculate_eigenstates,
 )
+from surface_potential_analysis.eigenstate.eigenstate_collection import (
+    EigenstateColllection,
+)
 from surface_potential_analysis.hamiltonian import Hamiltonian
+from surface_potential_analysis.util import timed
 
 _L0Inv = TypeVar("_L0Inv", bound=int)
 _L1Inv = TypeVar("_L1Inv", bound=int)
@@ -166,6 +171,40 @@ def get_wavepacket_sample_frequencies(
     )
 
 
+def as_eigenstate_collection(
+    wavepacket: Wavepacket[_NS0Inv, _NS1Inv, _BC0Inv]
+) -> EigenstateColllection[_BC0Inv]:
+    """
+    Convert a wavepacket into an eigenstate collection.
+
+    Parameters
+    ----------
+    wavepacket : Wavepacket[_NS0Inv, _NS1Inv, _BC0Inv]
+
+    Returns
+    -------
+    EigenstateColllection[_BC0Inv]
+    """
+    return {
+        "basis": wavepacket["basis"],
+        "bloch_phases": get_wavepacket_sample_frequencies(
+            wavepacket["basis"], wavepacket["energies"].shape
+        ).reshape(3, -1),
+        "energies": wavepacket["energies"].reshape(-1),
+        "vectors": wavepacket["vectors"].reshape(wavepacket["energies"].size, -1),
+    }
+
+
+def _from_eigenstate_collection(
+    collection: EigenstateColllection[_BC0Inv], shape: tuple[_NS0Inv, _NS1Inv]
+) -> Wavepacket[Any, Any, _BC0Inv]:
+    return {
+        "basis": collection["basis"],
+        "energies": collection["energies"].reshape(shape),
+        "vectors": collection["vectors"].reshape(*shape, -1),
+    }
+
+
 def generate_wavepacket(
     hamiltonian_generator: Callable[
         [np.ndarray[tuple[Literal[3]], np.dtype[np.float_]]],
@@ -243,9 +282,9 @@ def _get_global_phases(
         np.array(wavepacket["vectors"].shape[0:2])
     )
     # i / Ni
-    position_fractions = np.array([i / len(util) for i in stacked_idx[0:2]])[
-        :, np.newaxis, np.newaxis
-    ]
+    position_fractions = np.array(
+        [f / util.shape[i] for (i, f) in enumerate(stacked_idx[0:2])]
+    )[:, np.newaxis, np.newaxis]
 
     return (  # type: ignore[no-any-return]
         2 * np.pi * np.sum(np.multiply(position_fractions, momentum_fractions), axis=0)
@@ -404,31 +443,32 @@ def get_eigenstate(
     }
 
 
-def _get_bloch_phase_sho_basis_eigenstate(
+def _get_bloch_phase_momentum_basis_eigenstate(
     eigenstate: Eigenstate[
         BasisConfig[
-            TruncatedBasis[_L0Inv, MomentumBasis[_LF0Inv]],
-            TruncatedBasis[_L1Inv, MomentumBasis[_LF1Inv]],
-            ExplicitBasis[_L2Inv, PositionBasis[_LF2Inv]],
+            MomentumBasis[_LF0Inv],
+            MomentumBasis[_LF1Inv],
+            MomentumBasis[_LF2Inv],
         ],
     ],
     idx: int | tuple[int, int, int] = 0,
 ) -> float:
-    util = BasisConfigUtil(eigenstate["basis"])
+    converted = convert_eigenstate_to_position_basis(eigenstate)
+
+    util = BasisConfigUtil(converted["basis"])
     flat_idx = util.get_flat_index(idx) if isinstance(idx, tuple) else idx
-
-    position_basis_eigenstate = convert_sho_eigenstate_to_position_basis(eigenstate)
-    return np.angle(position_basis_eigenstate["vector"][flat_idx])
+    return np.angle(converted["vector"][flat_idx])
 
 
-def _get_bloch_phase_sho_basis(
+@timed
+def _get_bloch_phase_momentum_basis(
     wavepacket: Wavepacket[
         _NS0Inv,
         _NS1Inv,
         BasisConfig[
-            TruncatedBasis[_L0Inv, MomentumBasis[_LF0Inv]],
-            TruncatedBasis[_L1Inv, MomentumBasis[_LF1Inv]],
-            ExplicitBasis[_L2Inv, PositionBasis[_LF2Inv]],
+            MomentumBasis[_LF0Inv],
+            MomentumBasis[_LF1Inv],
+            MomentumBasis[_LF2Inv],
         ],
     ],
     idx: int | tuple[int, int, int] = 0,
@@ -450,20 +490,23 @@ def _get_bloch_phase_sho_basis(
     """
     return np.array(  # type:ignore[no-any-return]
         [
-            _get_bloch_phase_sho_basis_eigenstate(get_eigenstate(wavepacket, i), idx)
+            _get_bloch_phase_momentum_basis_eigenstate(
+                get_eigenstate(wavepacket, i), idx
+            )
             for i in range(wavepacket["energies"].size)
         ]
     ).reshape(*wavepacket["energies"].shape)
 
 
-def normalize_sho_wavepacket(
+@timed
+def normalize_momentum_wavepacket(
     wavepacket: Wavepacket[
         _NS0Inv,
         _NS1Inv,
         BasisConfig[
-            TruncatedBasis[_L0Inv, MomentumBasis[_LF0Inv]],
-            TruncatedBasis[_L1Inv, MomentumBasis[_LF1Inv]],
-            ExplicitBasis[_L2Inv, PositionBasis[_LF2Inv]],
+            MomentumBasis[_LF0Inv],
+            MomentumBasis[_LF1Inv],
+            MomentumBasis[_LF2Inv],
         ],
     ],
     idx: int | tuple[int, int, int] = 0,
@@ -472,13 +515,13 @@ def normalize_sho_wavepacket(
     _NS0Inv,
     _NS1Inv,
     BasisConfig[
-        TruncatedBasis[_L0Inv, MomentumBasis[_LF0Inv]],
-        TruncatedBasis[_L1Inv, MomentumBasis[_LF1Inv]],
-        ExplicitBasis[_L2Inv, PositionBasis[_LF2Inv]],
+        MomentumBasis[_LF0Inv],
+        MomentumBasis[_LF1Inv],
+        MomentumBasis[_LF2Inv],
     ],
 ]:
     """
-    normalize a wavepacket in explicit basis.
+    normalize a wavepacket in momentum basis.
 
     Parameters
     ----------
@@ -495,7 +538,7 @@ def normalize_sho_wavepacket(
     -------
     Wavepacket[ _NS0Inv, _NS1Inv, BasisConfig[ TruncatedBasis[_L0Inv, MomentumBasis[_LF0Inv]], TruncatedBasis[_L1Inv, MomentumBasis[_LF1Inv]], ExplicitBasis[_L2Inv, PositionBasis[_LF2Inv]], ], ]
     """
-    bloch_angles = _get_bloch_phase_sho_basis(wavepacket, idx)
+    bloch_angles = _get_bloch_phase_momentum_basis(wavepacket, idx)
     global_phases = _get_global_phases(wavepacket, idx)
 
     phases = np.exp(-1j * (bloch_angles + global_phases - angle))
@@ -545,11 +588,11 @@ def convert_sho_wavepacket_to_momentum(
             ]
             for i in range(wavepacket["energies"].size)
         ]
-    ).reshape(*wavepacket["vectors"].shape)
+    ).reshape(*wavepacket["energies"].shape, -1)
     return {
         "basis": (
-            wavepacket["basis"][0]["parent"],
-            wavepacket["basis"][1]["parent"],
+            as_fundamental_basis(wavepacket["basis"][0]),
+            as_fundamental_basis(wavepacket["basis"][1]),
             {
                 "_type": "momentum",
                 "delta_x": wavepacket["basis"][2]["parent"]["delta_x"],

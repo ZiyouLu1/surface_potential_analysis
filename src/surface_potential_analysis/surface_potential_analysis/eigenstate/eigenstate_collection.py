@@ -13,13 +13,14 @@ from surface_potential_analysis.hamiltonian import Hamiltonian
 from .eigenstate import Eigenstate
 from .eigenstate_calculation import calculate_eigenstates
 
+_BC0Cov = TypeVar("_BC0Cov", bound=BasisConfig[Any, Any, Any], covariant=True)
 _BC0Inv = TypeVar("_BC0Inv", bound=BasisConfig[Any, Any, Any])
 
 
-class EigenstateColllection(TypedDict, Generic[_BC0Inv]):
+class EigenstateColllection(TypedDict, Generic[_BC0Cov]):
     """Represents a collection of eigenstates, each with the same basis but a variety of different bloch phases."""
 
-    basis: _BC0Inv
+    basis: _BC0Cov
     bloch_phases: np.ndarray[tuple[int, Literal[3]], np.dtype[np.float_]]
     vectors: np.ndarray[tuple[int, int, int], np.dtype[np.complex_]]
     energies: np.ndarray[tuple[int, int], np.dtype[np.float_]]

@@ -25,8 +25,7 @@ from surface_potential_analysis.wavepacket.wavepacket import (
     convert_sho_wavepacket_to_momentum,
     get_wavepacket_sample_fractions,
     load_wavepacket,
-    normalize_sho_wavepacket,
-    normalize_wavepacket_position_basis,
+    normalize_momentum_wavepacket,
     select_wavepacket_eigenstate,
 )
 
@@ -158,20 +157,17 @@ def plot_wavepacket_points_me() -> None:
     save_figure(fig, "my_wavepacket_points.png")
 
 
-def animate_wavepacket() -> None:
+def animate_nickel_wavepacket() -> None:
     wavepacket = load_nickel_wavepacket(0)
-    normalized = normalize_sho_wavepacket(wavepacket, 0, 0)
+    momentum = convert_sho_wavepacket_to_momentum(wavepacket)
+    normalized = normalize_momentum_wavepacket(momentum, (0, 0, 117), 0)
 
-    momentum = convert_sho_wavepacket_to_momentum(normalized)
-
-    fig, _, _anim0 = animate_wavepacket_x0x1(momentum, scale="symlog")
+    fig, _, _anim0 = animate_wavepacket_x0x1(normalized, scale="symlog")
     fig.show()
 
-    input()
-
-    path = get_data_path(f"wavepacket_{1}.npy")
-    wavepacket = load_wavepacket(path)
-    normalized = normalize_wavepacket_position_basis(wavepacket, 0, 0)
+    wavepacket = load_nickel_wavepacket(1)
+    momentum = convert_sho_wavepacket_to_momentum(wavepacket)
+    normalized = normalize_momentum_wavepacket(momentum, (8, 8, 118), 0)
 
     fig, _, _anim1 = animate_wavepacket_x0x1(normalized, scale="symlog")
     fig.show()

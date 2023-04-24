@@ -110,8 +110,27 @@ def _get_fundamental_basis(
     return basis  # type: ignore[return-value]
 
 
+@overload
+def as_fundamental_basis(basis: MomentumBasis[_L1Inv]) -> MomentumBasis[_L1Inv]:
+    ...
+
+
+@overload
 def as_fundamental_basis(
-    basis: TruncatedBasis[_L1Inv, MomentumBasis[_L2Inv]] | MomentumBasis[_L2Inv]
+    basis: TruncatedBasis[_L1Inv, MomentumBasis[_L2Inv]]
+) -> MomentumBasis[_L1Inv]:
+    ...
+
+
+@overload
+def as_fundamental_basis(
+    basis: TruncatedBasis[_L1Inv, MomentumBasis[_L2Inv]] | MomentumBasis[_L1Inv]
+) -> MomentumBasis[_L1Inv]:
+    ...
+
+
+def as_fundamental_basis(
+    basis: TruncatedBasis[_L1Inv, MomentumBasis[_L2Inv]] | MomentumBasis[_L1Inv]
 ) -> MomentumBasis[_L1Inv]:
     """
     Given a truncated basis in momentum convert to a momentum basis of a lower resolution.

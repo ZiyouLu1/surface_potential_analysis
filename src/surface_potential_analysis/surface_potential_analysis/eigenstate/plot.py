@@ -5,6 +5,7 @@ from matplotlib import pyplot as plt
 from matplotlib.animation import ArtistAnimation
 from matplotlib.axes import Axes
 from matplotlib.collections import QuadMesh
+from matplotlib.colors import Normalize, SymLogNorm
 from matplotlib.figure import Figure
 from matplotlib.lines import Line2D
 
@@ -112,6 +113,21 @@ def plot_eigenstate_difference_2d(
     )
 
 
+def _get_norm(
+    scale: Literal["symlog", "linear"],
+    clim: tuple[float | None, float | None] = (None, None),
+) -> Normalize:
+    match scale:
+        case "linear":
+            return Normalize(vmin=clim[0], vmax=clim[1])
+        case "symlog":
+            return SymLogNorm(
+                vmin=clim[0],
+                vmax=clim[1],
+                linthresh=None if clim[1] is None else 1e-4 * clim[1],
+            )
+
+
 def animate_eigenstate_3d(
     eigenstate: PositionBasisEigenstate[_L0Inv, _L1Inv, _L2Inv],
     z_axis: Literal[0, 1, 2, -1, -2, -3],
@@ -146,11 +162,14 @@ def animate_eigenstate_3d(
     min_clim: float = (
         0 if measure == "abs" else np.min([i[0].get_clim()[0] for i in frames])
     )
+    clim = (min_clim, max_clim)
+    norm = _get_norm(scale, clim)
     for (mesh,) in frames:
-        mesh.set_norm(scale)
-        mesh.set_clim(min_clim, max_clim)
-    mesh0.set_norm(scale)
-    mesh0.set_clim(min_clim, max_clim)
+        mesh.set_norm(norm)
+        mesh.set_clim(*clim)
+
+    mesh0.set_norm(norm)
+    mesh0.set_clim(*clim)
 
     ani = ArtistAnimation(fig, frames)
     ax.set_aspect("equal", adjustable="box")

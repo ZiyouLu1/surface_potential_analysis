@@ -33,6 +33,8 @@ _BX2Inv = TypeVar("_BX2Inv", bound=Basis[Any, Any])
 
 
 class Eigenstate(TypedDict, Generic[_BC0Cov]):
+    """represents an eigenstate in an explicit basis."""
+
     basis: _BC0Cov
     vector: np.ndarray[tuple[int], np.dtype[np.complex_]]
 
@@ -41,11 +43,30 @@ EigenstateWithBasis = Eigenstate[BasisConfig[_BX0Cov, _BX1Cov, _BX2Cov]]
 
 
 def save_eigenstate(path: Path, eigenstates: Eigenstate[Any]) -> None:
+    """
+    Save an eigenstate in an npy file.
+
+    Parameters
+    ----------
+    path : Path
+    eigenstates : Eigenstate[Any]
+    """
     state = np.array(eigenstates, dtype=Eigenstate)
     np.save(path, state)
 
 
 def load_eigenstate(path: Path) -> Eigenstate[Any]:
+    """
+    Load an eigenstate from an npy file.
+
+    Parameters
+    ----------
+    path : Path
+
+    Returns
+    -------
+    Eigenstate[Any]
+    """
     return np.load(path)[()]  # type:ignore[no-any-return]
 
 
@@ -88,69 +109,69 @@ _LF2Inv = TypeVar("_LF2Inv", bound=int)
 def convert_eigenstate_to_momentum_basis(
     eigenstate: PositionBasisEigenstate[_L0Inv, _L1Inv, _L2Inv]
 ) -> MomentumBasisEigenstate[_L0Inv, _L1Inv, _L2Inv]:
-    basis = BasisConfigUtil(eigenstate["basis"])
+    util = BasisConfigUtil(eigenstate["basis"])
     transformed = np.fft.fftn(
-        eigenstate["vector"],
+        eigenstate["vector"].reshape(util.shape),
         axes=(0, 1, 2),
-        s=(basis.fundamental_n0, basis.fundamental_n1, basis.fundamental_n2),
+        s=(util.fundamental_n0, util.fundamental_n1, util.fundamental_n2),
         norm="ortho",
     )
     return {
         "basis": (
             {
                 "_type": "momentum",
-                "delta_x": basis.delta_x0,
-                "n": basis.fundamental_n0,  # type: ignore[typeddict-item]
+                "delta_x": util.delta_x0,
+                "n": util.fundamental_n0,  # type: ignore[typeddict-item]
             },
             {
                 "_type": "momentum",
-                "delta_x": basis.delta_x1,
-                "n": basis.fundamental_n1,  # type: ignore[typeddict-item]
+                "delta_x": util.delta_x1,
+                "n": util.fundamental_n1,  # type: ignore[typeddict-item]
             },
             {
                 "_type": "momentum",
-                "delta_x": basis.delta_x2,
-                "n": basis.fundamental_n2,  # type: ignore[typeddict-item]
+                "delta_x": util.delta_x2,
+                "n": util.fundamental_n2,  # type: ignore[typeddict-item]
             },
         ),
-        "vector": transformed,
+        "vector": transformed.reshape(-1),
     }
 
 
 def convert_eigenstate_to_position_basis(
     eigenstate: MomentumBasisEigenstate[_L0Inv, _L1Inv, _L2Inv]
 ) -> PositionBasisEigenstate[_L0Inv, _L1Inv, _L2Inv]:
-    basis = BasisConfigUtil(eigenstate["basis"])
+    util = BasisConfigUtil(eigenstate["basis"])
     padded = pad_ft_points(
-        eigenstate["vector"],
-        s=(basis.fundamental_n0, basis.fundamental_n1, basis.fundamental_n2),
+        eigenstate["vector"].reshape(util.shape),
+        s=(util.fundamental_n0, util.fundamental_n1, util.fundamental_n2),
         axes=(0, 1, 2),
     )
     transformed = np.fft.ifftn(
         padded,
         axes=(0, 1, 2),
-        s=(basis.fundamental_n0, basis.fundamental_n1, basis.fundamental_n2),
+        s=(util.fundamental_n0, util.fundamental_n1, util.fundamental_n2),
         norm="ortho",
     )
     return {
         "basis": (
             {
                 "_type": "position",
-                "delta_x": basis.delta_x0,
-                "n": basis.fundamental_n0,  # type: ignore[typeddict-item]
+                "delta_x": util.delta_x0,
+                "n": util.fundamental_n0,  # type: ignore[typeddict-item]
             },
             {
                 "_type": "position",
-                "delta_x": basis.delta_x1,
-                "n": basis.fundamental_n1,  # type: ignore[typeddict-item]
+                "delta_x": util.delta_x1,
+                "n": util.fundamental_n1,  # type: ignore[typeddict-item]
             },
             {
                 "_type": "position",
-                "delta_x": basis.delta_x2,
-                "n": basis.fundamental_n2,  # type: ignore[typeddict-item]
+                "delta_x": util.delta_x2,
+                "n": util.fundamental_n2,  # type: ignore[typeddict-item]
             },
         ),
-        "vector": transformed,
+        "vector": transformed.reshape(-1),
     }
 
 
@@ -180,10 +201,10 @@ def _convert_momentum_basis_x01_to_position(
         _BX0Inv,
     ]
 ) -> StackedEigenstateWithBasis[PositionBasis[_L0Inv], PositionBasis[_L1Inv], _BX0Inv]:
-    basis = BasisConfigUtil(eigenstate["basis"])
+    util = BasisConfigUtil(eigenstate["basis"])
     padded = pad_ft_points(
         eigenstate["vector"],
-        s=[basis.fundamental_n0, basis.fundamental_n1],
+        s=[util.fundamental_n0, util.fundamental_n1],
         axes=(0, 1),
     )
     transformed = np.fft.ifftn(padded, axes=(0, 1), norm="ortho")
@@ -191,13 +212,13 @@ def _convert_momentum_basis_x01_to_position(
         "basis": (
             {
                 "_type": "position",
-                "delta_x": basis.delta_x0,
-                "n": basis.fundamental_n0,  # type: ignore[typeddict-item]
+                "delta_x": util.delta_x0,
+                "n": util.fundamental_n0,  # type: ignore[typeddict-item]
             },
             {
                 "_type": "position",
-                "delta_x": basis.delta_x1,
-                "n": basis.fundamental_n1,  # type: ignore[typeddict-item]
+                "delta_x": util.delta_x1,
+                "n": util.fundamental_n1,  # type: ignore[typeddict-item]
             },
             eigenstate["basis"][2],
         ),

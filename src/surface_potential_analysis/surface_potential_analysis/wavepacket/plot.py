@@ -145,11 +145,11 @@ def plot_wavepacket_energies_momentum(
 
     basis = get_wavepacket_sample_basis(wavepacket)
     coordinates = get_fundamental_projected_k_points(basis, 2)[:, :, :, 0]
-    data = np.fft.ifftshift(wavepacket["energies"])
+    points = np.fft.ifftshift(wavepacket["energies"])
 
     shifted_coordinates = np.fft.ifftshift(coordinates, axes=(1, 2))
 
-    mesh = ax.pcolormesh(*shifted_coordinates, data, shading="nearest")
+    mesh = ax.pcolormesh(*shifted_coordinates, points, shading="nearest")
     mesh.set_norm(scale)
     ax.set_aspect("equal", adjustable="box")
     fig.colorbar(mesh, ax=ax, format="%4.1e")
