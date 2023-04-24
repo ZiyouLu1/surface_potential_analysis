@@ -395,7 +395,7 @@ def select_wavepacket_eigenstate(
     }
 
 
-def calculate_normalisation(wavepacket: Wavepacket[int, int, Any]) -> float:
+def calculate_normalisation(wavepacket: Wavepacket[_NS0Inv, _NS1Inv, _BC0Inv]) -> float:
     """
     calculate the normalization of a wavepacket.
 
@@ -409,7 +409,9 @@ def calculate_normalisation(wavepacket: Wavepacket[int, int, Any]) -> float:
     -------
     float
     """
-    return np.sum(np.conj(wavepacket["vectors"]) * wavepacket["vectors"])
+    n_states = np.prod(wavepacket["energies"].shape)
+    total_norm = np.sum(np.conj(wavepacket["vectors"]) * wavepacket["vectors"])
+    return total_norm / n_states
 
 
 def get_eigenstate(

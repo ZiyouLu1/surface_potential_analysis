@@ -20,18 +20,18 @@ _L0Inv = TypeVar("_L0Inv", bound=int)
 
 
 def electron_occupation(
-    energies: np.ndarray[tuple[_L0Inv], np.dtype[np.float_]], T: float
+    energies: np.ndarray[tuple[_L0Inv], np.dtype[np.float_]], temperature: float
 ) -> np.ndarray[tuple[_L0Inv], np.dtype[np.float_]]:
-    kt = Boltzmann * T
+    kt = Boltzmann * temperature
     e = np.array(energies)
-    return 1 / (1 + np.exp((e - fermi_energy_nickel) / kt))  # type: ignore
+    return 1 / (1 + np.exp((e - fermi_energy_nickel) / kt))  # type: ignore[no-any-return]
 
 
 def overlap_potential(
     dk_points: np.ndarray[tuple[_L0Inv], np.dtype[np.float_]]
 ) -> np.ndarray[tuple[_L0Inv], np.dtype[np.float_]]:
     """
-    _summary_
+    _summary_.
 
     Parameters
     ----------
@@ -43,15 +43,14 @@ def overlap_potential(
     NDarray
         A list of the overlap potential at each point
     """
-
     alpha = 2 / bohr_radius
-    print(alpha)
+    print(alpha)  # noqa: T201
 
     q_points = np.linalg.norm(dk_points, axis=-1)
 
     prefactor = elementary_charge**2 / (epsilon_0 * q_points**2)
     aa = 1 / (1 + (q_points / alpha) ** 2) ** 2
-    return prefactor * (aa - 1)  # type: ignore
+    return prefactor * (aa - 1)  # type: ignore[no-any-return]
 
 
 def plot_electron_occupation() -> None:
@@ -67,7 +66,7 @@ def plot_electron_occupation() -> None:
     fig, ax = plt.subplots()
     ax.plot(qx_points, overlap_potential(dk_points))
     ax.set_title(
-        "Plot of the Electron Hydrogen potential\n" "as a function of momentum transfer"
+        "Plot of the Electron Hydrogen potential\nas a function of momentum transfer"
     )
     ax.set_ylim(None, 0)
     ax.set_xlim(0, None)

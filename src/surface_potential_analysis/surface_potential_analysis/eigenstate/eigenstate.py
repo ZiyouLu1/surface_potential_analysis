@@ -113,7 +113,7 @@ def convert_eigenstate_to_momentum_basis(
     transformed = np.fft.fftn(
         eigenstate["vector"].reshape(util.shape),
         axes=(0, 1, 2),
-        s=(util.fundamental_n0, util.fundamental_n1, util.fundamental_n2),
+        s=util.fundamental_shape,
         norm="ortho",
     )
     return {
@@ -144,13 +144,13 @@ def convert_eigenstate_to_position_basis(
     util = BasisConfigUtil(eigenstate["basis"])
     padded = pad_ft_points(
         eigenstate["vector"].reshape(util.shape),
-        s=(util.fundamental_n0, util.fundamental_n1, util.fundamental_n2),
+        s=util.fundamental_shape,
         axes=(0, 1, 2),
     )
     transformed = np.fft.ifftn(
         padded,
         axes=(0, 1, 2),
-        s=(util.fundamental_n0, util.fundamental_n1, util.fundamental_n2),
+        s=util.fundamental_shape,
         norm="ortho",
     )
     return {

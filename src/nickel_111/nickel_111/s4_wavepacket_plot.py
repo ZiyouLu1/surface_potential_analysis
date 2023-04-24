@@ -1,14 +1,5 @@
-from typing import Literal
-
 import numpy as np
 from matplotlib import pyplot as plt
-from surface_potential_analysis.basis.basis import (
-    ExplicitBasis,
-    MomentumBasis,
-    PositionBasis,
-    TruncatedBasis,
-)
-from surface_potential_analysis.basis_config.basis_config import BasisConfig
 from surface_potential_analysis.eigenstate.eigenstate import (
     convert_sho_eigenstate_to_fundamental_xy,
     convert_sho_eigenstate_to_position_basis,
@@ -21,7 +12,6 @@ from surface_potential_analysis.wavepacket.plot import (
     plot_wavepacket_sample_frequencies,
 )
 from surface_potential_analysis.wavepacket.wavepacket import (
-    Wavepacket,
     convert_sho_wavepacket_to_momentum,
     get_wavepacket_sample_fractions,
     load_wavepacket,
@@ -29,22 +19,9 @@ from surface_potential_analysis.wavepacket.wavepacket import (
     select_wavepacket_eigenstate,
 )
 
+from nickel_111.s4_wavepacket import load_nickel_wavepacket
+
 from .surface_data import get_data_path, save_figure
-
-
-def load_nickel_wavepacket(
-    idx: int,
-) -> Wavepacket[
-    Literal[8],
-    Literal[8],
-    BasisConfig[
-        TruncatedBasis[Literal[23], MomentumBasis[Literal[250]]],
-        TruncatedBasis[Literal[23], MomentumBasis[Literal[250]]],
-        ExplicitBasis[Literal[12], PositionBasis[Literal[250]]],
-    ],
-]:
-    path = get_data_path(f"wavepacket_{idx}.npy")
-    return load_wavepacket(path)
 
 
 def plot_nickel_wavepacket_points() -> None:

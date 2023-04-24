@@ -2,7 +2,7 @@ import nickel_111
 
 
 def main() -> None:
-    nickel_111.s4_wavepacket_plot.animate_nickel_wavepacket()
+    nickel_111.s5_overlap_analysis.plot_fcc_hcp_overlap_transform_along_diagonal()
 
 
 if __name__ == "__main__":

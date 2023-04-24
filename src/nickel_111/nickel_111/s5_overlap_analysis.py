@@ -1,33 +1,62 @@
+from typing import Literal, TypeVar
+
 import numpy as np
 import scipy.optimize
 from matplotlib import pyplot as plt
-from numpy.typing import NDArray
-from surface_potential_analysis.overlap_transform import (
+from surface_potential_analysis.basis_config.basis_config import (
+    BasisConfigUtil,
+    MomentumBasisConfig,
+    PositionBasisConfig,
+)
+from surface_potential_analysis.overlap.overlap import (
+    Overlap,
     OverlapTransform,
-    load_overlap_transform,
+    convert_overlap_momentum_basis,
+    load_overlap,
 )
-from surface_potential_analysis.overlap_transform_plot import (
+from surface_potential_analysis.overlap.plot import (
+    plot_overlap_2d,
+    plot_overlap_transform_2d,
     plot_overlap_transform_along_diagonal,
-    plot_overlap_transform_x0z,
-    plot_overlap_transform_xy,
-    plot_overlap_xy,
 )
-from surface_potential_analysis.surface_config import get_surface_xy_points
 
 from .surface_data import get_data_path, save_figure
 
+_L0Inv = TypeVar("_L0Inv", bound=int)
+_L1Inv = TypeVar("_L1Inv", bound=int)
+_L2Inv = TypeVar("_L2Inv", bound=int)
 
-def get_max_point(overlap: OverlapTransform) -> tuple[int, int, int]:
-    points = np.asarray(overlap["points"])
+
+def load_overlap_fcc_hcp() -> Overlap[PositionBasisConfig[int, int, int]]:
+    path = get_data_path("overlap_hcp_fcc.npy")
+    return load_overlap(path)
+
+
+def load_overlap_fcc_fcc() -> Overlap[PositionBasisConfig[int, int, int]]:
+    path = get_data_path("overlap_fcc_fcc.npy")
+    return load_overlap(path)
+
+
+def load_overlap_hcp_hcp() -> Overlap[PositionBasisConfig[int, int, int]]:
+    path = get_data_path("overlap_hcp_hcp.npy")
+    return load_overlap(path)
+
+
+def get_max_point(
+    overlap: OverlapTransform[_L0Inv, _L1Inv, _L2Inv]
+) -> tuple[int, int, int]:
+    points = np.asarray(overlap["vector"])
     (ikx0, ikx1, inz) = np.unravel_index(np.argmax(np.abs(points)), shape=points.shape)
     return (int(ikx0), int(ikx1), int(inz))
 
 
 def make_transform_real_at(
-    overlap: OverlapTransform, point: tuple[int, int, int] | None = None
-) -> OverlapTransform:
+    overlap: OverlapTransform[_L0Inv, _L1Inv, _L2Inv],
+    point: tuple[int, int, int] | int | None = None,
+) -> OverlapTransform[_L0Inv, _L1Inv, _L2Inv]:
     """
-    Shift the phase of the overlap transform such that is it real at point
+    Shift the phase of the overlap transform such that is it real at point.
+
     This is equivalent to shifting the origin of the real space grid we use when
     calculating the overlap.
 
@@ -42,21 +71,22 @@ def make_transform_real_at(
     OverlapTransform
         A new overlap transform, which is real at the given point
     """
-    point = get_max_point(overlap) if point is None else point
+    util = BasisConfigUtil(overlap["basis"]).shape
+    point = np.argmax(np.abs(overlap["vector"])) if point is None else point
+    point = point if isinstance(point, int) else np.unravel_index(point, util.shape)
 
-    new_points = overlap["points"] * np.exp(-1j * np.angle(overlap["points"][point]))
+    new_points = overlap["vector"] * np.exp(-1j * np.angle(overlap["vector"][point]))
     return {
-        "dkx0": overlap["dkx0"],
-        "dkx1": overlap["dkx1"],
-        "dkz": overlap["dkz"],
-        "points": new_points,
+        "basis": overlap["basis"],
+        "vector": new_points,
     }
 
 
-def plot_overlap():
-    path = get_data_path("overlap_transform_shifted_hcp_fcc.npz")
-    overlap = load_overlap_transform(path)
-    fig, ax, _ = plot_overlap_transform_xy(overlap)
+def plot_fcc_hcp_overlap_transform() -> None:
+    overlap = load_overlap_fcc_hcp()
+    overlap_transform = convert_overlap_momentum_basis(overlap)
+
+    fig, ax, _ = plot_overlap_transform_2d(overlap_transform, 0, 2, measure="abs")
     ax.set_title(
         "Plot of the overlap transform for ikz=0\n"
         "showing oscillation in the direction corresponding to\n"
@@ -65,7 +95,7 @@ def plot_overlap():
     save_figure(fig, "2d_overlap_transform_kx_ky.png")
     fig.show()
 
-    fig, ax, _ = plot_overlap_transform_xy(overlap, measure="real")
+    fig, ax, _ = plot_overlap_transform_2d(overlap_transform, 0, 2, measure="real")
     ax.set_title(
         "Plot of the overlap transform for ikz=0\n"
         "showing oscillation in the direction corresponding to\n"
@@ -74,7 +104,7 @@ def plot_overlap():
     save_figure(fig, "2d_overlap_transform_real_kx_ky.png")
     fig.show()
 
-    fig, ax, _ = plot_overlap_transform_xy(overlap, measure="imag")
+    fig, ax, _ = plot_overlap_transform_2d(overlap_transform, 0, 2, measure="imag")
     ax.set_title(
         "Plot of the overlap transform for ikz=0\n"
         "showing oscillation in the direction corresponding to\n"
@@ -83,7 +113,48 @@ def plot_overlap():
     save_figure(fig, "2d_overlap_transform_imag_kx_ky.png")
     fig.show()
 
-    fig, ax, _ = plot_overlap_xy(overlap)
+    fig, ax, _ = plot_overlap_transform_2d(overlap_transform, 0, 0)
+    ax.set_title(
+        "Plot of the overlap transform for ikx1=0\n"
+        "A very sharp peak in the kz direction"
+    )
+    ax.set_ylim(-4e11, 4e11)
+    save_figure(fig, "2d_overlap_fraction_kx1_kz.png")
+    fig.show()
+    input()
+
+
+def plot_fcc_hcp_overlap_transform_along_diagonal() -> None:
+    overlap = load_overlap_fcc_hcp()
+    overlap_transform = convert_overlap_momentum_basis(overlap)
+
+    fig, ax = plt.subplots()
+    _, _, ln = plot_overlap_transform_along_diagonal(
+        overlap_transform, 2, measure="abs", ax=ax
+    )
+    ln.set_label("abs")
+    _, _, ln = plot_overlap_transform_along_diagonal(
+        overlap_transform, 2, measure="real", ax=ax
+    )
+    ln.set_label("real")
+    _, _, ln = plot_overlap_transform_along_diagonal(
+        overlap_transform, 2, measure="imag", ax=ax
+    )
+    ln.set_label("imag")
+
+    ax.legend()
+    ax.set_title(
+        "Plot of the wavefunction along the diagonal,\nshowing an oscillation in the overlap"
+    )
+
+    save_figure(fig, "diagonal_1d_overlap_fraction.png")
+    fig.show()
+    input()
+
+
+def plot_fcc_hcp_overlap() -> None:
+    overlap = load_overlap_fcc_hcp()
+    fig, ax, _ = plot_overlap_2d(overlap, 177, 2, measure="abs")
     ax.set_title(
         "Plot of the overlap summed over z\n"
         "showing the FCC and HCP asymmetry\n"
@@ -92,7 +163,7 @@ def plot_overlap():
     save_figure(fig, "2d_overlap_kx_ky.png")
     fig.show()
 
-    fig, ax, _ = plot_overlap_xy(overlap, measure="real")
+    fig, ax, _ = plot_overlap_2d(overlap, 177, 2, measure="real")
     ax.set_title(
         "Plot of the overlap summed over z\n"
         "showing the FCC and HCP asymmetry\n"
@@ -100,23 +171,10 @@ def plot_overlap():
     )
     save_figure(fig, "2d_overlap_real_kx_ky.png")
     fig.show()
+    input()
 
-    fig, ax, _ = plot_overlap_transform_x0z(overlap)
-    ax.set_title(
-        "Plot of the overlap transform for ikx1=0\n"
-        "A very sharp peak in the kz direction"
-    )
-    save_figure(fig, "2d_overlap_fraction_kx1_kz.png")
-    fig.show()
 
-    fig, ax = plt.subplots()
-    _, _, ln = plot_overlap_transform_along_diagonal(overlap, measure="abs", ax=ax)
-    ln.set_label("abs")
-    _, _, ln = plot_overlap_transform_along_diagonal(overlap, measure="real", ax=ax)
-    ln.set_label("real")
-    _, _, ln = plot_overlap_transform_along_diagonal(overlap, measure="imag", ax=ax)
-    ln.set_label("imag")
-
+def _() -> None:
     delta_k = np.linalg.norm(
         np.add(
             np.multiply(overlap["dkx0"], overlap["points"].shape[0]),
@@ -164,9 +222,9 @@ def plot_overlap():
 
 
 def fit_overlap_transform():
-    path = get_data_path("overlap_transform_hcp_fcc.npz")
-    overlap = load_overlap_transform(path)
-    points = overlap["points"]
+    overlap = load_overlap_fcc_hcp()
+    overlap_transform = convert_overlap_momentum_basis(overlap)
+    points = overlap_transform["vector"]
 
     print(points[0, 0, 0])
     print(np.max(np.abs(points[:, :, 0])))
@@ -250,37 +308,37 @@ def fit_overlap_transform():
     input()
 
 
-def calculate_max_overlap_transform(overlap: OverlapTransform):
-    points = overlap["points"]
-    xy_points = get_surface_xy_points(
-        {
-            "delta_x0": (
-                overlap["dkx0"][0] * points.shape[0],
-                overlap["dkx0"][1] * points.shape[0],
-            ),
-            "delta_x1": (
-                overlap["dkx1"][0] * points.shape[1],
-                overlap["dkx1"][1] * points.shape[1],
-            ),
-        },
-        shape=(points.shape[0], points.shape[1]),
-    )
-    (ikx0, ikx1, ikz) = np.unravel_index(np.argmax(np.abs(points)), shape=points.shape)
-    xy_points -= xy_points[points.shape[0] // 2, points.shape[1] // 2]
+def calculate_max_overlap(
+    overlap: Overlap[PositionBasisConfig[_L0Inv, _L1Inv, _L2Inv]],
+) -> tuple[complex, np.ndarray[tuple[Literal[3]], np.dtype[np.float_]]]:
+    points = overlap["vector"]
+    util = BasisConfigUtil(overlap["basis"])
+    arg_max = np.argmax(np.abs(points))
+    x_point = util.fundamental_x_points[:, arg_max]
 
-    xy_point = xy_points[ikx0, ikx1]
-    return points[ikx0, ikx1, ikz], xy_point
+    return points[arg_max], x_point
 
 
-def print_max_overlaps():
-    path = get_data_path("overlap_transform_hcp_fcc.npz")
-    overlap = load_overlap_transform(path)
-    print(calculate_max_overlap_transform(overlap))
+def calculate_max_overlap_transform(
+    overlap: Overlap[MomentumBasisConfig[_L0Inv, _L1Inv, _L2Inv]],
+) -> tuple[complex, np.ndarray[tuple[Literal[3]], np.dtype[np.float_]]]:
+    points = overlap["vector"]
+    util = BasisConfigUtil(overlap["basis"])
+    arg_max = np.argmax(np.abs(points))
+    k_point = util.fundamental_k_points[:, arg_max]
 
-    path = get_data_path("overlap_transform_fcc_fcc.npz")
-    overlap = load_overlap_transform(path)
-    print(calculate_max_overlap_transform(overlap))
+    return points[arg_max], k_point
 
-    path = get_data_path("overlap_transform_hcp_hcp.npz")
-    overlap = load_overlap_transform(path)
-    print(calculate_max_overlap_transform(overlap))
+
+def print_max_overlap_transforms() -> None:
+    overlap = load_overlap_fcc_hcp()
+    overlap_transform = convert_overlap_momentum_basis(overlap)
+    print(calculate_max_overlap_transform(overlap_transform))  # noqa: T201
+
+    overlap = load_overlap_fcc_fcc()
+    overlap_transform = convert_overlap_momentum_basis(overlap)
+    print(calculate_max_overlap_transform(overlap_transform))  # noqa: T201
+
+    overlap = load_overlap_hcp_hcp()
+    overlap_transform = convert_overlap_momentum_basis(overlap)
+    print(calculate_max_overlap_transform(overlap_transform))  # noqa: T201

@@ -65,7 +65,7 @@ def furl_eigenstate(
             },
             eigenstate["basis"][2],
         ),
-        "vectors": flattened,
+        "vectors": flattened * np.sqrt(ns0 * ns1),
         "energies": np.zeros(flattened.shape[0:2]),
     }
 
@@ -89,7 +89,7 @@ def unfurl_wavepacket(
         The eigenstate of the larger unit cell. Note this eigenstate has a
         smaller dk (for each axis dk = dk_i / NS)
     """
-    (ns0, ns1, _) = wavepacket["vectors"].shape
+    (ns0, ns1) = wavepacket["energies"].shape
     (nx0, nx1, nx2) = BasisConfigUtil(wavepacket["basis"]).shape
     stacked = wavepacket["vectors"].reshape(ns0, ns1, nx0, nx1, nx2)
 
@@ -119,5 +119,5 @@ def unfurl_wavepacket(
             },
             wavepacket["basis"][2],
         ),
-        "vector": flattened,
+        "vector": flattened / np.sqrt(ns0 * ns1),
     }
