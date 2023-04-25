@@ -19,6 +19,7 @@ from surface_potential_analysis.potential import (
     normalize_potential,
 )
 from surface_potential_analysis.potential.plot import (
+    animate_potential_difference_2d,
     animate_potential_x0x1,
     plot_potential_1d_comparison,
     plot_potential_2d,
@@ -178,8 +179,21 @@ def plot_interpolated_energy_grid_points() -> None:
 
     fig.show()
 
-    # ft_grid: EnergyGrid = {
-    # TODO: delta is wrong, plot generic points and then factor out into ft.
+    input()
+
+
+def plot_nickel_energy_grid_symmetry() -> None:
+    potential = load_interpolated_grid()
+
+    reflected_potential: Potential[Any, Any, Any] = {
+        "basis": potential["basis"],
+        "points": potential["points"].swapaxes(0, 1),
+    }
+    fig, _, _ani0 = animate_potential_x0x1(reflected_potential, clim=(0, 2e-19))
+    fig.show()
+
+    fig, _, _ani1 = animate_potential_difference_2d(potential, reflected_potential, 2)
+    fig.show()
     input()
 
 

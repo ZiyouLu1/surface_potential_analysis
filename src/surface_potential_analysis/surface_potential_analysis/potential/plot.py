@@ -414,6 +414,44 @@ def animate_potential_x2x0(
     return animate_potential_3d(potential, 1, ax=ax, scale=scale, clim=clim)
 
 
+def animate_potential_difference_2d(
+    potential0: Potential[_L0Inv, _L1Inv, _L2Inv],
+    potential1: Potential[_L0Inv, _L1Inv, _L2Inv],
+    z_axis: Literal[0, 1, 2, -1, -2, -3],
+    *,
+    ax: Axes | None = None,
+    scale: Literal["symlog", "linear"] = "linear",
+    clim: tuple[float | None, float | None] = (None, None),
+) -> tuple[Figure, Axes, QuadMesh]:
+    """
+    Animate the absolute relative difference between two potentials in 2d, perpendicular to z_axis.
+
+    Parameters
+    ----------
+    potential0 : Potential[_L0Inv, _L1Inv, _L2Inv]
+    potential1 : Potential[_L0Inv, _L1Inv, _L2Inv]
+    z_axis : Literal[0, 1, 2,
+        axis perpendicular to which to plot the data
+    ax : Axes | None, optional
+        plot axis, by default None
+    scale : Literal[&quot;symlog&quot;, &quot;linear&quot;], optional
+        scale, by default "linear"
+    clim : tuple[float  |  None, float  |  None], optional
+        clim, by default (None, None)
+
+    Returns
+    -------
+    tuple[Figure, Axes, QuadMesh]
+    """
+    potential: Potential[_L0Inv, _L1Inv, _L2Inv] = {
+        "basis": potential0["basis"],
+        "points": np.abs(
+            (potential0["points"] - potential1["points"]) / potential0["points"]
+        ),
+    }
+    return animate_potential_3d(potential, z_axis, ax=ax, scale=scale, clim=clim)
+
+
 def plot_potential_along_path(
     potential: Potential[_L0Inv, _L1Inv, _L2Inv],
     path: np.ndarray[tuple[Literal[3], int], np.dtype[np.int_]],

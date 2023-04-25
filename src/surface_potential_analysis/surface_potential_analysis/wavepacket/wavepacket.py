@@ -20,14 +20,16 @@ from surface_potential_analysis.basis_config.basis_config import (
 )
 from surface_potential_analysis.eigenstate.eigenstate import (
     Eigenstate,
-    convert_eigenstate_to_position_basis,
-    convert_sho_eigenstate_to_momentum_basis,
 )
 from surface_potential_analysis.eigenstate.eigenstate_calculation import (
     calculate_eigenstates,
 )
 from surface_potential_analysis.eigenstate.eigenstate_collection import (
     EigenstateColllection,
+)
+from surface_potential_analysis.eigenstate.eigenstate_conversion import (
+    convert_eigenstate_to_position_basis,
+    convert_sho_eigenstate_to_momentum_basis,
 )
 from surface_potential_analysis.hamiltonian import Hamiltonian
 from surface_potential_analysis.util import timed
@@ -111,8 +113,8 @@ def load_wavepacket(path: Path) -> Wavepacket[Any, Any, Any]:
 
 
 def _get_wavepacket_sample_index(
-    shape: np.ndarray[tuple[Literal[2], int, int], np.dtype[np.int_]]
-) -> np.ndarray[tuple[Literal[2], int], np.dtype[np.int_]]:
+    shape: np.ndarray[tuple[Literal[2]], np.dtype[np.int_]]
+) -> np.ndarray[tuple[Literal[2], int, int], np.dtype[np.int_]]:
     n_x0 = np.fft.ifftshift(
         np.arange((-shape.item(0) + 1) // 2, (shape.item(0) - 1) // 2)
     )
@@ -410,8 +412,8 @@ def calculate_normalisation(wavepacket: Wavepacket[_NS0Inv, _NS1Inv, _BC0Inv]) -
     float
     """
     n_states = np.prod(wavepacket["energies"].shape)
-    total_norm = np.sum(np.conj(wavepacket["vectors"]) * wavepacket["vectors"])
-    return total_norm / n_states
+    total_norm: complex = np.sum(np.conj(wavepacket["vectors"]) * wavepacket["vectors"])
+    return float(total_norm / n_states)
 
 
 def get_eigenstate(
@@ -459,7 +461,7 @@ def _get_bloch_phase_momentum_basis_eigenstate(
 
     util = BasisConfigUtil(converted["basis"])
     flat_idx = util.get_flat_index(idx) if isinstance(idx, tuple) else idx
-    return np.angle(converted["vector"][flat_idx])
+    return float(np.angle(converted["vector"][flat_idx]))
 
 
 @timed
@@ -567,8 +569,8 @@ def convert_sho_wavepacket_to_momentum(
     _NS0Inv,
     _NS1Inv,
     BasisConfig[
-        MomentumBasis[_LF0Inv],
-        MomentumBasis[_LF1Inv],
+        MomentumBasis[_L0Inv],
+        MomentumBasis[_L1Inv],
         MomentumBasis[_LF2Inv],
     ],
 ]:

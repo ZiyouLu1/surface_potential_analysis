@@ -56,6 +56,9 @@ def generate_hamiltonian_sho(
         Hamiltonian in the specified basis
     """
     potential = get_interpolated_nickel_potential(shape)
+    potential["points"] = 0.5 * (
+        potential["points"] + potential["points"].swapaxes(0, 1)
+    )
     config: SHOBasisConfig = {
         "sho_omega": 195636899474736.66,
         "mass": 1.6735575e-27,

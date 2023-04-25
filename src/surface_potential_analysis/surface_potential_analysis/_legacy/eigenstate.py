@@ -1,19 +1,17 @@
 from functools import cached_property
 from typing import TypedDict
 
+import hamiltonian_generator
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
 from scipy.constants import hbar
 
-import hamiltonian_generator
 from surface_potential_analysis._legacy.sho_wavefunction import (
     calculate_sho_wavefunction,
 )
 from surface_potential_analysis._legacy.surface_config import (
     SurfaceConfig,
-    SurfaceConfigNew,
     SurfaceConfigUtil,
-    SurfaceConfigUtilNew,
     get_surface_xy_points,
 )
 
@@ -72,18 +70,10 @@ def calculate_wavefunction_fast(
     )
 
 
-# class EigenstateConfigUtilNew(SurfaceConfigUtilNew):
-#     _config: EigenstateConfigNew
-
-#     def __init__(self, config: EigenstateConfigNew) -> None:
-#         super().__init__(config)
-
-
 class EigenstateConfigUtil(SurfaceConfigUtil):
     _config: EigenstateConfig
 
     def __init__(self, config: EigenstateConfig) -> None:
-        print(config)
         super().__init__(config)
 
     @property
@@ -107,12 +97,12 @@ class EigenstateConfigUtil(SurfaceConfigUtil):
         return np.array(np.rint(np.fft.fftfreq(self.Nkx0, 1 / self.Nkx0)), dtype=int)
 
     @property
-    def Nkx1(self) -> int:
+    def Nk1(self) -> int:
         return self.resolution[1]
 
     @property
     def nkx1_points(self):
-        return np.array(np.rint(np.fft.fftfreq(self.Nkx1, 1 / self.Nkx1)), dtype=int)
+        return np.array(np.rint(np.fft.fftfreq(self.Nk1, 1 / self.Nk1)), dtype=int)
 
     @property
     def Nkz(self) -> int:
@@ -124,7 +114,7 @@ class EigenstateConfigUtil(SurfaceConfigUtil):
 
     @property
     def characteristic_z(self) -> float:
-        """Get the characteristic Z length, given by sqrt(hbar / m * omega)"""
+        """Get the characteristic Z length, given by sqrt(hbar / m * omega)."""
         return np.sqrt(hbar / (self.mass * self.sho_omega))
 
     @cached_property
@@ -135,8 +125,8 @@ class EigenstateConfigUtil(SurfaceConfigUtil):
         return np.array([x0t.ravel(), x1t.ravel(), zt.ravel()]).T
 
     def get_index(self, nkx0: int, nkx1: int, nz: int) -> int:
-        ikx0 = (nkx0 % self.Nkx0) * self.Nkx1 * self.Nkz
-        ikx1 = (nkx1 % self.Nkx1) * self.Nkz
+        ikx0 = (nkx0 % self.Nkx0) * self.Nk1 * self.Nkz
+        ikx1 = (nkx1 % self.Nk1) * self.Nkz
         return ikx0 + ikx1 + nz
 
     def calculate_wavefunction_slow(
@@ -176,7 +166,7 @@ class EigenstateConfigUtil(SurfaceConfigUtil):
     ) -> NDArray:
         """
         Calculates the bloch wavefunction at the fundamental points in the unit cell
-        (ie the points we have information on based off of the information given in the eigenvector)
+        (ie the points we have information on based off of the information given in the eigenvector).
 
         Note we use the convention that (ignoring the ikx1 direction)
 
@@ -205,7 +195,7 @@ class EigenstateConfigUtil(SurfaceConfigUtil):
         )
 
         # List, list, list of amplitudes for each ikx, iky, ikz
-        eigenvector_array = np.reshape(eigenvector, (self.Nkx0, self.Nkx1, self.Nkz))
+        eigenvector_array = np.reshape(eigenvector, (self.Nkx0, self.Nk1, self.Nkz))
 
         # List, list, list of amplitudes for each ix, iy, ikz
         # Use the "forward" norm to prevent the extra factor of 1/nx, 1/ny here
@@ -227,7 +217,7 @@ class EigenstateConfigUtil(SurfaceConfigUtil):
         nx0 = x0_lim[1] - x0_lim[0]
         nx1 = x1_lim[1] - x1_lim[0]
         # Create a fake surface config containing the whole region in a single unit cell
-        xy_shape = (self.Nkx0 * nx0, self.Nkx1 * nx1)
+        xy_shape = (self.Nkx0 * nx0, self.Nk1 * nx1)
         config: SurfaceConfig = {
             "delta_x0": (
                 nx0 * self.delta_x0[0],
@@ -278,15 +268,14 @@ class EigenstateConfigUtil(SurfaceConfigUtil):
             of amplitudes for each ix, iy, iz
 
         """
-
         x0v, x1v = np.meshgrid(
             np.arange(self.Nkx0 * x0_lim[0], self.Nkx0 * x0_lim[1]),
-            np.arange(self.Nkx1 * x1_lim[0], self.Nkx1 * x1_lim[1]),
+            np.arange(self.Nk1 * x1_lim[0], self.Nk1 * x1_lim[1]),
             indexing="ij",
         )
 
         phases = (ns[0] * x0v / (self.Nkx0 * Ns[0])) + (
-            ns[1] * x1v / (self.Nkx1 * Ns[1])
+            ns[1] * x1v / (self.Nk1 * Ns[1])
         )
         phase_points = np.exp(2j * np.pi * (phases))
 
@@ -325,7 +314,6 @@ class EigenstateConfigUtil(SurfaceConfigUtil):
             of amplitudes for each ix, iy, iz
 
         """
-
         xy_points = self._get_fourier_coordinates_in_grid(x0_lim, x1_lim)
 
         kx = eigenstate["kx"]

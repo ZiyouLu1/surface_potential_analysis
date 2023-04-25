@@ -8,7 +8,6 @@ import scipy.fft
 from numpy.typing import NDArray
 
 from .energy_eigenstate import (
-    EigenstateConfig,
     EigenstateConfigUtil,
     EnergyEigenstatesLegacy,
     get_eigenstate_list,
@@ -33,11 +32,10 @@ class WavepacketGridRaw(TypedDict):
 # class WavepacketNew(EigenstateConfigNew):
 #     """
 #     A wavepacket is a collection of eigenstates evenly sampling the
-#     first brillouin zone (ie in the k points between 0 and dkx0) in the
+#     first brillouin zone (ie in the k points between 0 and dk0) in the
 #     x0 and x1 direction.
 #     """
 
-#     eigenvectors: NDArray
 #     """list of list of eigenvectors in the wavepacket"""
 
 
@@ -174,7 +172,7 @@ def calculate_wavepacket_grid_fourier(
     """
     Since we generate the energy eigenstates from a limited number of k states in
     the x0, x1 direction we do not have the information necessary to properly interpolate
-    to spacing on a finer mesh than the fourier transform
+    to spacing on a finer mesh than the fourier transform.
     """
     util = EigenstateConfigUtil(eigenstates["eigenstate_config"])
     nx0 = x0_lim[1] - x0_lim[0]
@@ -195,20 +193,14 @@ def calculate_wavepacket_grid_fourier(
     }
 
     points = np.zeros(shape, dtype=complex)
-    # Ns = int(np.sqrt(len(eigenstates["eigenvectors"])))
-    for i, eigenstate in enumerate(get_eigenstate_list(eigenstates)):
+    for _i, eigenstate in enumerate(get_eigenstate_list(eigenstates)):
         print(eigenstate["kx"], eigenstate["ky"])
         wfn = util.calculate_wavefunction_slow_grid_fourier(
             eigenstate, z_points, x0_lim, x1_lim
         )
-        # wfn = util.calculate_wavefunction_slow_grid_fourier_exact_phase(
-        #     eigenstate["eigenvector"],
-        #     (i // Ns, i % Ns),
-        #     (Ns, Ns),
         #     z_points,
         #     x0_lim,
         #     x1_lim,
-        # )
         points += wfn / np.sqrt(len(eigenstates["eigenvectors"]))
 
     grid["points"] = points.tolist()
@@ -223,7 +215,7 @@ def calculate_wavepacket_grid_fourier_fourier(
 ) -> WavepacketGrid:
     """
     Calculate the wavepacket in the first unit cell without explicitly referencing the
-    individual frequencies
+    individual frequencies.
 
     Since we generate the energy eigenstates from a limited number of k states in
     the x0, x1 direction we do not have the information necessary to properly interpolate
@@ -282,8 +274,8 @@ def calculate_wavepacket_grid_fourier_fourier(
     # for each point xi
     summed = np.zeros(shape, dtype=complex)
     for ix0 in range(x0_lim[0] * util.Nkx0, x0_lim[1] * util.Nkx0):
-        for ix1 in range(x1_lim[0] * util.Nkx1, x1_lim[1] * util.Nkx1):
-            summed[ix0, ix1] = interpolated[ix0, ix1, ix0 % util.Nkx0, ix1 % util.Nkx1]
+        for ix1 in range(x1_lim[0] * util.Nk1, x1_lim[1] * util.Nk1):
+            summed[ix0, ix1] = interpolated[ix0, ix1, ix0 % util.Nkx0, ix1 % util.Nk1]
     # since the negative ix0 wrap around we need to shift the large x components back
     points = np.fft.fftshift(summed, axes=(0, 1)).tolist()
 
@@ -330,8 +322,6 @@ def calculate_wavepacket_grid(
         print(eigenstate["kx"], eigenstate["ky"])
         wfn = util.calculate_wavefunction_fast(eigenstate, coordinates_flat)
         points += wfn.reshape(shape) / np.sqrt(len(eigenstates["eigenvectors"]))
-        # wfn = util.calculate_wavefunction_slow_grid_fourier(eigenstate, z_points)
-        # points += wfn / len(eigenstates["eigenvectors"])
 
     grid["points"] = points.tolist()
     return grid
@@ -340,7 +330,7 @@ def calculate_wavepacket_grid(
 def calculate_inner_product(grid0: WavepacketGrid, grid1: WavepacketGrid) -> complex:
     """
     Calculates the inner product of two wavepacket grids
-    equal to the (0,0) point on the overlap transform
+    equal to the (0,0) point on the overlap transform.
 
     Parameters
     ----------

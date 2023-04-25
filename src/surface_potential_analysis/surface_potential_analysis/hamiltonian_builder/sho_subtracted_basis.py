@@ -158,18 +158,18 @@ class _SurfaceHamiltonianUtil(Generic[_L0, _L1, _L2, _L3, _L4, _L5]):
     def _calculate_diagonal_energy(
         self, bloch_phase: np.ndarray[tuple[Literal[3]], np.dtype[np.float_]]
     ) -> np.ndarray[tuple[int], np.dtype[np.float_]]:
-        kx0_coords, kx1_coords, nkz_coords = self.eigenstate_indexes
+        k0_coords, k1_coords, nkz_coords = self.eigenstate_indexes
 
         util = BasisConfigUtil(self.basis)
 
-        dkx0 = util.dk0
-        dkx1 = util.dk1
+        dk0 = util.dk0
+        dk1 = util.dk1
         mass = self._config["mass"]
         sho_omega = self._config["sho_omega"]
 
-        kx_points = dkx0[0] * kx0_coords + dkx1[0] * kx1_coords + bloch_phase[0]
+        kx_points = dk0[0] * k0_coords + dk1[0] * k1_coords + bloch_phase[0]
         x_energy = (hbar * kx_points) ** 2 / (2 * mass)
-        ky_points = dkx0[1] * kx0_coords + dkx1[1] * kx1_coords + bloch_phase[1]
+        ky_points = dk0[1] * k0_coords + dk1[1] * k1_coords + bloch_phase[1]
         y_energy = (hbar * ky_points) ** 2 / (2 * mass)
         z_energy = (hbar * sho_omega) * (nkz_coords + 0.5)
         return x_energy + y_energy + z_energy  # type: ignore[no-any-return]
@@ -207,10 +207,10 @@ class _SurfaceHamiltonianUtil(Generic[_L0, _L1, _L2, _L3, _L4, _L5]):
         )
 
     def _calculate_off_diagonal_entry(
-        self, nz1: int, nz2: int, ndkx0: int, ndkx1: int
+        self, nz1: int, nz2: int, ndk0: int, ndk1: int
     ) -> float:
         """Calculate the off diagonal energy using the 'folded' points ndkx, ndky."""
-        ft_pot_points = self.get_ft_potential()[ndkx0, ndkx1]
+        ft_pot_points = self.get_ft_potential()[ndk0, ndk1]
         hermite1 = self.basis[2]["vectors"][nz1]
         hermite2 = self.basis[2]["vectors"][nz2]
 
@@ -224,8 +224,8 @@ class _SurfaceHamiltonianUtil(Generic[_L0, _L1, _L2, _L3, _L4, _L5]):
         n_coordinates = len(self.eigenstate_indexes.T)
         hamiltonian = np.zeros(shape=(n_coordinates, n_coordinates))
 
-        for index1, [nkx0_0, nkx1_0, nz1] in enumerate(self.eigenstate_indexes.T):
-            for index2, [nkx0_1, nkx1_1, nz2] in enumerate(self.eigenstate_indexes.T):
+        for index1, [nk0_0, nk1_0, nz1] in enumerate(self.eigenstate_indexes.T):
+            for index2, [nk0_1, nk1_1, nz2] in enumerate(self.eigenstate_indexes.T):
                 # Number of jumps in units of dkx for this matrix element
 
                 # As k-> k+ Nx * dkx the ft potential is left unchanged
@@ -234,11 +234,11 @@ class _SurfaceHamiltonianUtil(Generic[_L0, _L1, _L2, _L3, _L4, _L5]):
 
                 # In reality we want to make sure ndkx < Nx (ie we should
                 # make sure we generate enough points in the interpolation)
-                ndkx0 = (nkx0_1 - nkx0_0) % self.nx
-                ndkx1 = (nkx1_1 - nkx1_0) % self.ny
+                ndk0 = (nk0_1 - nk0_0) % self.nx
+                ndk1 = (nk1_1 - nk1_0) % self.ny
 
                 hamiltonian[index1, index2] = self._calculate_off_diagonal_entry(
-                    nz1, nz2, ndkx0, ndkx1
+                    nz1, nz2, ndk0, ndk1
                 )
 
         return hamiltonian  # type: ignore[no-any-return]

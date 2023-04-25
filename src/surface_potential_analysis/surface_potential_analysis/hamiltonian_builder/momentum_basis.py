@@ -72,20 +72,20 @@ def hamiltonian_from_mass(
     bloch_phase = np.array([0.0, 0.0, 0.0]) if bloch_phase is None else bloch_phase
     util = BasisConfigUtil(basis)
 
-    kx0_coords, kx1_coords, kx2_coords = util.fundamental_nk_points
-    kx0_coords += bloch_phase[0]
-    kx1_coords += bloch_phase[1]
+    k0_coords, k1_coords, kx2_coords = util.fundamental_nk_points
+    k0_coords += bloch_phase[0]
+    k1_coords += bloch_phase[1]
     kx2_coords += bloch_phase[2]
 
     dk0 = util.dk0
     dk1 = util.dk1
     dk2 = util.dk2
 
-    kx_points = dk0[0] * kx0_coords + dk1[0] * kx1_coords + dk2[0] * kx2_coords
+    kx_points = dk0[0] * k0_coords + dk1[0] * k1_coords + dk2[0] * kx2_coords
     x_energy = (hbar * (kx_points)) ** 2 / (2 * mass)
-    ky_points = dk0[1] * kx0_coords + dk1[1] * kx1_coords + dk2[1] * kx2_coords
+    ky_points = dk0[1] * k0_coords + dk1[1] * k1_coords + dk2[1] * kx2_coords
     y_energy = (hbar * ky_points) ** 2 / (2 * mass)
-    kz_points = dk0[2] * kx0_coords + dk1[2] * kx1_coords + dk2[2] * kx2_coords
+    kz_points = dk0[2] * k0_coords + dk1[2] * k1_coords + dk2[2] * kx2_coords
     z_energy = (hbar * kz_points) ** 2 / (2 * mass)
 
     energy = x_energy + y_energy + z_energy

@@ -1,6 +1,6 @@
 import numpy as np
 from matplotlib import pyplot as plt
-from surface_potential_analysis.eigenstate.eigenstate import (
+from surface_potential_analysis.eigenstate.eigenstate_conversion import (
     convert_sho_eigenstate_to_fundamental_xy,
     convert_sho_eigenstate_to_position_basis,
 )

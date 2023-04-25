@@ -208,7 +208,7 @@ def interpolate_points_fourier_nickel(  # noqa: PLR0913
     # Sum over phase from x and y, raise to exp(-i * phi)
     summed_phases = np.exp(1j * np.sum(interpolated_phases, axis=-1))
     # Multiply the exponential by the prefactor form the fourier transform
-    # Add the contribution from each ikx1, ikx2
+    # Add the contribution from each ik1, ik2
     interpolated_points = np.sum(
         np.multiply(ft_potential[np.newaxis, :, :], summed_phases), axis=(1, 2)
     )
@@ -313,7 +313,7 @@ def get_interpolated_nickel_potential(
 
 
 def generate_interpolated_data() -> None:
-    potential = get_interpolated_nickel_potential((60, 60, 100))
+    potential = get_interpolated_nickel_potential((209, 209, 501))
     path = get_data_path("interpolated_data.npy")
     save_potential(path, potential)
 

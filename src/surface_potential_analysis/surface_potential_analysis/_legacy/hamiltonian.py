@@ -1,15 +1,16 @@
+from collections.abc import Sequence
 from functools import cache
 from pathlib import Path
-from typing import Any, Sequence
+from typing import Any
 
+import hamiltonian_generator
 import numpy as np
 from numpy.typing import NDArray
 from scipy.constants import hbar
 
-import hamiltonian_generator
 from surface_potential_analysis._legacy.brillouin_zone import grid_space
+from surface_potential_analysis.util import timed
 
-from ..util import timed
 from .energy_data import EnergyInterpolation
 from .energy_eigenstate import (
     Eigenstate,
@@ -32,7 +33,7 @@ def get_hamiltonian_from_potential(potential: NDArray):
     Given a potential in position basis [ix0, ix1, ix2]
     Gets the hamiltonian of a potential for a given points, in position basis,
     with indexing [ix0, ix1, ix2, jx0, jx1, jx2].
-    This is just a matrix with the potential along the diagonals
+    This is just a matrix with the potential along the diagonals.
     """
     hamiltonian = diag_along_axis(
         diag_along_axis(diag_along_axis(potential, axis=2), axis=1),
@@ -48,7 +49,7 @@ def get_hamiltonian_from_potential(potential: NDArray):
 def transform_hamiltonian_into_momentum_basis(hamiltonian: NDArray):
     """
     Given a hamiltonian in position basis, with indexing [ix0, ix1, ix2, jx0, jx1, jx2]
-    return the hamiltonian in momentum basis
+    return the hamiltonian in momentum basis.
     """
     return np.fft.ifftn(
         np.fft.fftn(hamiltonian, axes=(0, 1, 2), norm="ortho"),
@@ -60,7 +61,7 @@ def transform_hamiltonian_into_momentum_basis(hamiltonian: NDArray):
 def transform_hamiltonian_into_position_basis(hamiltonian: NDArray):
     """
     Given a hamiltonian in momentum basis, with indexing [ikx0, ikx1, ikx2, jkx0, jkx1, jkx2]
-    return the hamiltonian in position basis
+    return the hamiltonian in position basis.
     """
     return np.fft.fftn(
         np.fft.ifftn(hamiltonian, axes=(0, 1, 2), norm="ortho"),
@@ -72,16 +73,10 @@ def transform_hamiltonian_into_position_basis(hamiltonian: NDArray):
 def flatten_hamiltonian(hamiltonian: NDArray):
     """
     Given a hamiltonian with indexing [ix0, ix1, ix2, jx0, jx1, jx2]
-    return the flattenned hamiltonian with indexing [i,j]
+    return the flattenned hamiltonian with indexing [i,j].
     """
     print(hamiltonian.shape, hamiltonian.shape[0:3])
     n_states = np.prod(hamiltonian.shape[0:3])
-
-    # x0t, x1t, x2t = np.meshgrid(
-    #     np.arange(shape[0]), np.arange(shape[1]), np.arange(shape[2]), indexing="ij"
-    # )
-    # coords = np.array([x0t.ravel(), x1t.ravel(), x2t.ravel()]).T
-    # out = np.zeros((n_states,n_states))
 
     return hamiltonian.reshape(n_states, n_states)
 
@@ -110,8 +105,8 @@ class SurfaceHamiltonianUtil(EigenstateConfigUtil):
                 "Potential does not have enough resolution in x direction"
             )
 
-        if 2 * (self.Nkx1 - 1) > self.Ny:
-            print(self.Nkx1, self.Ny)
+        if 2 * (self.Nk1 - 1) > self.Ny:
+            print(self.Nk1, self.Ny)
             raise AssertionError(
                 "Potential does not have enough resolution in y direction"
             )
@@ -136,7 +131,7 @@ class SurfaceHamiltonianUtil(EigenstateConfigUtil):
     def lattuice_coordinates(self) -> NDArray:
         """
         Lattice coordinates as calculated from delta_x0, delta_x1 with the origin at the center
-        Note we dont include the repeated symmetry point in the potential
+        Note we dont include the repeated symmetry point in the potential.
         """
         return grid_space(
             self.delta_x0, self.delta_x1, shape=(self.Nx, self.Ny), endpoint=False
@@ -194,7 +189,7 @@ class SurfaceHamiltonianUtil(EigenstateConfigUtil):
 
     @cache
     def _calculate_sho_wavefunction_points(self, n: int) -> NDArray:
-        """Generates the nth SHO wavefunction using the current config"""
+        """Generates the nth SHO wavefunction using the current config."""
         return calculate_sho_wavefunction(self.z_points, self.sho_omega, self.mass, n)
 
     @cache
@@ -213,7 +208,7 @@ class SurfaceHamiltonianUtil(EigenstateConfigUtil):
 
     @cache
     def _calculate_off_diagonal_entry(self, nz1, nz2, ndkx0, ndkx1) -> float:
-        """Calculates the off diagonal energy using the 'folded' points ndkx, ndky"""
+        """Calculates the off diagonal energy using the 'folded' points ndkx, ndky."""
         ft_pot_points = self.get_ft_potential()[ndkx0, ndkx1]
         hermite1 = self._calculate_sho_wavefunction_points(nz1)
         hermite2 = self._calculate_sho_wavefunction_points(nz2)
@@ -256,7 +251,7 @@ class SurfaceHamiltonianUtil(EigenstateConfigUtil):
     ) -> tuple[list[float], list[Eigenstate]]:
         """
         Returns the eigenvalues as a list of vectors,
-        ie v[i] is the eigenvector associated to the eigenvalue w[i]
+        ie v[i] is the eigenvector associated to the eigenvalue w[i].
         """
         hamiltonian = self.hamiltonian(kx, ky)
 

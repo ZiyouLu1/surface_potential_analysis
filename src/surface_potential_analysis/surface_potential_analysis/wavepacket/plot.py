@@ -15,7 +15,7 @@ from surface_potential_analysis.basis_config.basis_config import (
     get_fundamental_projected_k_points,
     get_fundamental_projected_x_points,
 )
-from surface_potential_analysis.eigenstate.eigenstate import (
+from surface_potential_analysis.eigenstate.eigenstate_conversion import (
     convert_eigenstate_to_position_basis,
 )
 from surface_potential_analysis.eigenstate.plot import (

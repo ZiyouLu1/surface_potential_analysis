@@ -46,8 +46,8 @@ def get_max_point(
     overlap: OverlapTransform[_L0Inv, _L1Inv, _L2Inv]
 ) -> tuple[int, int, int]:
     points = np.asarray(overlap["vector"])
-    (ikx0, ikx1, inz) = np.unravel_index(np.argmax(np.abs(points)), shape=points.shape)
-    return (int(ikx0), int(ikx1), int(inz))
+    (ik0, ik1, inz) = np.unravel_index(np.argmax(np.abs(points)), shape=points.shape)
+    return (int(ik0), int(ik1), int(inz))
 
 
 def make_transform_real_at(

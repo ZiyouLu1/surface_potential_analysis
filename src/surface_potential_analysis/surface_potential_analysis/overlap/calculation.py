@@ -4,7 +4,7 @@ import numpy as np
 
 from surface_potential_analysis.basis.basis import Basis, MomentumBasis, PositionBasis
 from surface_potential_analysis.basis_config.basis_config import BasisConfig
-from surface_potential_analysis.eigenstate.eigenstate import (
+from surface_potential_analysis.eigenstate.eigenstate_conversion import (
     convert_eigenstate_to_position_basis,
 )
 from surface_potential_analysis.overlap.overlap import Overlap

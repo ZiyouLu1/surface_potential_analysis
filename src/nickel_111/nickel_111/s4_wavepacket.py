@@ -57,5 +57,5 @@ def generate_nickel_wavepacket_sho() -> None:
         save_bands=save_bands,
     )
     for k, wavepacket in zip(save_bands, wavepackets, strict=True):
-        path = get_data_path(f"wavepacket_{k}.npy")
+        path = get_data_path(f"wavepacket_symmetric_{k}.npy")
         save_wavepacket(path, wavepacket)

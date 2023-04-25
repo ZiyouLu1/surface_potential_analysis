@@ -107,22 +107,22 @@ class _SurfaceHamiltonianUtil(Generic[_L0, _L1, _L2, _L3, _L4, _L5]):
     ) -> np.ndarray[tuple[int], np.dtype[np.float_]]:
         util = BasisConfigUtil(self._basis)
 
-        kx0_coords, kx1_coords, kx2_fundamental = np.meshgrid(
+        k0_coords, k1_coords, kx2_fundamental = np.meshgrid(
             util.x0_basis.nk_points,  # type: ignore[misc]
             util.x1_basis.nk_points,  # type: ignore[misc]
             util.x2_basis.fundamental_nk_points,  # type: ignore[misc]
             indexing="ij",
         )
 
-        dkx0 = util.dk0
-        dkx1 = util.dk1
+        dk0 = util.dk0
+        dk1 = util.dk1
         mass = self._mass
 
-        k0_points = dkx0[0] * kx0_coords + dkx1[0] * kx1_coords + bloch_phase[0]
+        k0_points = dk0[0] * k0_coords + dk1[0] * k1_coords + bloch_phase[0]
         x0_energy = (hbar * k0_points) ** 2 / (2 * mass)
-        k1_points = dkx0[1] * kx0_coords + dkx1[1] * kx1_coords + bloch_phase[1]
+        k1_points = dk0[1] * k0_coords + dk1[1] * k1_coords + bloch_phase[1]
         x1_energy = (hbar * k1_points) ** 2 / (2 * mass)
-        k2_points = dkx0[2] * kx0_coords + dkx1[2] * kx1_coords + bloch_phase[2]
+        k2_points = dk0[2] * k0_coords + dk1[2] * k1_coords + bloch_phase[2]
         x2_energy = (hbar * k2_points) ** 2 / (2 * mass)
         return x0_energy + x1_energy + x2_energy  # type: ignore[no-any-return]
 
