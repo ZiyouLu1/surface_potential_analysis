@@ -18,16 +18,17 @@ from surface_potential_analysis.basis_config.sho_basis import (
     SHOBasisConfig,
     infinate_sho_basis_from_config,
 )
-from surface_potential_analysis.eigenstate.eigenstate import (
-    Eigenstate,
-    EigenstateWithBasis,
-)
-from surface_potential_analysis.eigenstate.eigenstate_conversion import (
+from surface_potential_analysis.eigenstate.conversion import (
     _convert_explicit_basis_x2_to_position,
     _convert_momentum_basis_x01_to_position,
     _flatten_eigenstate,
     _stack_eigenstate,
+    convert_eigenstate_to_basis,
     convert_sho_eigenstate_to_position_basis,
+)
+from surface_potential_analysis.eigenstate.eigenstate import (
+    Eigenstate,
+    EigenstateWithBasis,
 )
 
 _rng = np.random.default_rng()
@@ -104,6 +105,10 @@ class EigenstateConversionTest(unittest.TestCase):
 
         np.testing.assert_array_equal((10, 12, 13), stacked_position["vector"].shape)
 
+        position = _flatten_eigenstate(stacked_position)
+        expected = convert_eigenstate_to_basis(eigenstate, position["basis"])
+        np.testing.assert_array_equal(position["vector"], expected["vector"])
+
     def test_convert_sho_basis_order(self) -> None:
         eigenstate = _get_random_sho_eigenstate((5, 6, 9), (10, 10, 10))
         stacked = _stack_eigenstate(eigenstate)
@@ -115,6 +120,10 @@ class EigenstateConversionTest(unittest.TestCase):
             _convert_momentum_basis_x01_to_position(stacked)
         )
         np.testing.assert_array_almost_equal(expected["vector"], actual["vector"])
+
+        actual_flat = _flatten_eigenstate(actual)
+        expected_flat = convert_eigenstate_to_basis(eigenstate, actual_flat["basis"])
+        np.testing.assert_array_equal(expected_flat["vector"], actual_flat["vector"])
 
     def test_convert_sho_basis_explicit(self) -> None:
         nx = _rng.integers(2, 10)
@@ -221,3 +230,25 @@ class EigenstateConversionTest(unittest.TestCase):
         np.testing.assert_allclose(
             expected["vector"], np.array(actual) / np.linalg.norm(actual)
         )
+
+    def test_convert_sho_eigenstate(self) -> None:
+        resolution = (5, 6, 9)
+        eigenstate = _get_random_sho_eigenstate(resolution, (10, 10, 100))
+        config: SHOBasisConfig = {
+            "mass": hbar**2,
+            "sho_omega": 1 / hbar,
+            "x_origin": np.array([0, 0, -10]),
+        }
+
+        eigenstate["basis"] = (
+            eigenstate["basis"][0],
+            eigenstate["basis"][1],
+            infinate_sho_basis_from_config(
+                eigenstate["basis"][2]["parent"], config, resolution[2]
+            ),
+        )
+
+        actual = convert_sho_eigenstate_to_position_basis(eigenstate)
+
+        expected = convert_eigenstate_to_basis(eigenstate, actual["basis"])
+        np.testing.assert_array_equal(actual["vector"], expected["vector"])

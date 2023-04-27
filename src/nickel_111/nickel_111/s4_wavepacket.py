@@ -35,7 +35,7 @@ def load_nickel_wavepacket(
         ExplicitBasis[Literal[12], PositionBasis[Literal[250]]],
     ],
 ]:
-    path = get_data_path(f"wavepacket_{idx}.npy")
+    path = get_data_path(f"wavepacket_large_{idx}.npy")
     return load_wavepacket(path)
 
 
@@ -53,9 +53,9 @@ def generate_nickel_wavepacket_sho() -> None:
 
     wavepackets = generate_wavepacket(
         hamiltonian_generator,
-        samples=(8, 8),
+        samples=(12, 12),
         save_bands=save_bands,
     )
     for k, wavepacket in zip(save_bands, wavepackets, strict=True):
-        path = get_data_path(f"wavepacket_symmetric_{k}.npy")
+        path = get_data_path(f"wavepacket_large_{k}.npy")
         save_wavepacket(path, wavepacket)

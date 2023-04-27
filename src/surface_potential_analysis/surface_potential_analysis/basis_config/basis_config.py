@@ -203,6 +203,10 @@ class BasisConfigUtil(Generic[_BX0Cov, _BX1Cov, _BX2Cov]):
     def shape(self) -> tuple[int, int, int]:
         return (self.x0_basis.n, self.x1_basis.n, self.x2_basis.n)  # type: ignore[misc]
 
+    @property
+    def size(self) -> int:
+        return np.prod(self.shape)  # type: ignore[return-value]
+
     @cached_property
     def fundamental_shape(self) -> tuple[int, int, int]:
         return (self.x0_basis.fundamental_n, self.x1_basis.fundamental_n, self.x2_basis.fundamental_n)  # type: ignore[misc]

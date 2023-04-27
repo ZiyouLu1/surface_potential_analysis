@@ -21,7 +21,16 @@ class PositionBasis(TypedDict, Generic[_LCov]):
 
 
 class MomentumBasis(TypedDict, Generic[_LCov]):
-    """Represents a basis in momentum space."""
+    """
+    Represents a basis in momentum space.
+
+    We use the convention outlined here https://austen.uk/courses/tqm/second-quantization/
+    where
+    Vk = sum_r V_r e^-ikr / sqrt(N)
+    ie to convert a vector from postion to momentum basis you do the np.fft.fft
+    with norm = ortho, and to convert a vector from momentum to position you do the
+    inverse fft
+    """
 
     _type: Literal["momentum"]
     n: _LCov
@@ -146,145 +155,6 @@ def as_fundamental_basis(
     if is_basis_type(basis, "momentum"):
         return basis
     return {"_type": "momentum", "delta_x": basis["parent"]["delta_x"], "n": basis["n"]}  # type: ignore[typeddict-item]
-
-
-@overload
-def as_explicit_position_basis(
-    basis: MomentumBasis[_L1Inv],
-) -> ExplicitBasis[_L1Inv, PositionBasis[_L1Inv]]:
-    ...
-
-
-@overload
-def as_explicit_position_basis(
-    basis: PositionBasis[_L1Inv],
-) -> ExplicitBasis[_L1Inv, PositionBasis[_L1Inv]]:
-    ...
-
-
-@overload
-def as_explicit_position_basis(
-    basis: PositionBasis[_L1Inv] | MomentumBasis[_L1Inv],
-) -> ExplicitBasis[_L1Inv, PositionBasis[_L1Inv]]:
-    ...
-
-
-@overload
-def as_explicit_position_basis(
-    basis: TruncatedBasis[_L1Inv, MomentumBasis[_L2Inv]]
-) -> ExplicitBasis[_L1Inv, PositionBasis[_L2Inv]]:
-    ...
-
-
-@overload
-def as_explicit_position_basis(
-    basis: TruncatedBasis[_L1Inv, PositionBasis[_L2Inv]]
-) -> ExplicitBasis[_L1Inv, PositionBasis[_L2Inv]]:
-    ...
-
-
-@overload
-def as_explicit_position_basis(
-    basis: TruncatedBasis[_L1Inv, PositionBasis[_L2Inv]]
-    | TruncatedBasis[_L1Inv, MomentumBasis[_L2Inv]]
-) -> ExplicitBasis[_L1Inv, PositionBasis[_L2Inv]]:
-    ...
-
-
-@overload
-def as_explicit_position_basis(
-    basis: ExplicitBasis[_L1Inv, MomentumBasis[_L2Inv]]
-) -> ExplicitBasis[_L1Inv, PositionBasis[_L2Inv]]:
-    ...
-
-
-@overload
-def as_explicit_position_basis(
-    basis: ExplicitBasis[_L1Inv, PositionBasis[_L2Inv]]
-) -> ExplicitBasis[_L1Inv, PositionBasis[_L2Inv]]:
-    ...
-
-
-@overload
-def as_explicit_position_basis(
-    basis: TruncatedBasis[_L1Inv, MomentumBasis[_L2Inv]]
-    | MomentumBasis[_L1Inv]
-    | TruncatedBasis[_L1Inv, PositionBasis[_L2Inv]]
-    | PositionBasis[_L1Inv]
-    | ExplicitBasis[_L1Inv, MomentumBasis[_L2Inv]]
-    | ExplicitBasis[_L1Inv, PositionBasis[_L2Inv]]
-) -> ExplicitBasis[_L1Inv, PositionBasis[_L2Inv]]:
-    ...
-
-
-def as_explicit_position_basis(
-    basis: TruncatedBasis[_L1Inv, MomentumBasis[_L2Inv]]
-    | MomentumBasis[_L1Inv]
-    | TruncatedBasis[_L1Inv, PositionBasis[_L2Inv]]
-    | PositionBasis[_L1Inv]
-    | ExplicitBasis[_L1Inv, MomentumBasis[_L2Inv]]
-    | ExplicitBasis[_L1Inv, PositionBasis[_L2Inv]]
-) -> ExplicitBasis[_L1Inv, PositionBasis[_L2Inv]]:
-    """
-    Convert a basis into an explicit position basis.
-
-    Parameters
-    ----------
-    basis : TruncatedBasis[_L1Inv, MomentumBasis[_L2Inv]] | MomentumBasis[_L1Inv] | TruncatedBasis[_L1Inv, PositionBasis[_L2Inv]] | PositionBasis[_L1Inv] | ExplicitBasis[_L1Inv, MomentumBasis[_L2Inv]] | ExplicitBasis[_L1Inv, PositionBasis[_L2Inv]]
-        original basis
-
-    Returns
-    -------
-    ExplicitBasis[_L1Inv, PositionBasis[_L2Inv]]
-        explicit position basis
-    """
-    if is_basis_type(basis, "position"):
-        return {
-            "_type": "explicit",
-            "parent": {
-                "_type": "position",
-                "delta_x": basis["delta_x"],
-                "n": basis["n"],  # type:ignore[typeddict-item]
-            },
-            "vectors": np.eye(basis["n"], basis["n"]),
-        }
-    if is_basis_type(basis, "momentum"):
-        return {
-            "_type": "explicit",
-            "parent": {
-                "_type": "position",
-                "delta_x": basis["delta_x"],
-                "n": basis["n"],  # type:ignore[typeddict-item]
-            },
-            "vectors": np.fft.ifft(
-                np.eye(basis["n"], basis["n"]), axis=1, norm="ortho"
-            ),
-        }
-    if is_basis_type(basis, "truncated"):
-        # TODO: position - what does this mean??
-        return {
-            "_type": "explicit",
-            "parent": {
-                "_type": "position",
-                "delta_x": basis["parent"]["delta_x"],
-                "n": basis["parent"]["n"],
-            },
-            "vectors": np.fft.ifft(
-                np.eye(basis["n"], basis["parent"]["n"]), axis=1, norm="ortho"
-            ),
-        }
-    if is_basis_type(basis, "explicit") and basis["parent"]["_type"] == "momentum":
-        return {
-            "_type": "explicit",
-            "parent": {
-                "_type": "position",
-                "delta_x": basis["parent"]["delta_x"],
-                "n": basis["parent"]["n"],
-            },
-            "vectors": np.fft.ifft(basis["vectors"], axis=1, norm="ortho"),
-        }
-
-    return basis  # type:ignore[return-value]
 
 
 B = TypeVar("B", bound=Basis[Any, Any])

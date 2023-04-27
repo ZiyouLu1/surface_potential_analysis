@@ -18,6 +18,10 @@ from surface_potential_analysis.basis_config.basis_config import (
     MomentumBasisConfig,
     PositionBasisConfig,
 )
+from surface_potential_analysis.eigenstate.conversion import (
+    convert_eigenstate_to_position_basis,
+    convert_sho_eigenstate_to_momentum_basis,
+)
 from surface_potential_analysis.eigenstate.eigenstate import (
     Eigenstate,
 )
@@ -26,10 +30,6 @@ from surface_potential_analysis.eigenstate.eigenstate_calculation import (
 )
 from surface_potential_analysis.eigenstate.eigenstate_collection import (
     EigenstateColllection,
-)
-from surface_potential_analysis.eigenstate.eigenstate_conversion import (
-    convert_eigenstate_to_position_basis,
-    convert_sho_eigenstate_to_momentum_basis,
 )
 from surface_potential_analysis.hamiltonian import Hamiltonian
 from surface_potential_analysis.util import timed

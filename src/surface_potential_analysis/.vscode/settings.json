@@ -27,17 +27,15 @@
         "teh"
     ],
     "python.formatting.provider": "black",
-    "isort.args": [
-        "--profile",
-        "black"
-    ],
-    "isort.check": true,
     "editor.codeActionsOnSave": {
-        "source.organizeImports": true,
         "source.fixAll": true
     },
     "editor.formatOnSave": true,
     "autoDocstring.docstringFormat": "numpy",
     "autoDocstring.generateDocstringOnEnter": true,
     "autoDocstring.startOnNewLine": true,
+    "python.linting.mypyEnabled": false,
+    "python.linting.enabled": false,
+    "python.analysis.typeCheckingMode": "off",
+    "python.analysis.diagnosticMode": "openFilesOnly",
 }

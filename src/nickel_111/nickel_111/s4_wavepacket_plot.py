@@ -1,6 +1,6 @@
 import numpy as np
 from matplotlib import pyplot as plt
-from surface_potential_analysis.eigenstate.eigenstate_conversion import (
+from surface_potential_analysis.eigenstate.conversion import (
     convert_sho_eigenstate_to_fundamental_xy,
     convert_sho_eigenstate_to_position_basis,
 )
@@ -34,12 +34,13 @@ def plot_nickel_wavepacket_points() -> None:
 
 
 def plot_nickel_wavepacket_energies() -> None:
-    wavepacket = load_nickel_wavepacket(0)
-    fig, _, _ = plot_wavepacket_energies_momentum(wavepacket)
-    fig.show()
+    for i in range(10):
+        wavepacket = load_nickel_wavepacket(i)
+        fig, _, _ = plot_wavepacket_energies_momentum(wavepacket)
+        fig.show()
 
-    fig, _, _ = plot_wavepacket_energies_position(wavepacket)
-    fig.show()
+        fig, _, _ = plot_wavepacket_energies_position(wavepacket)
+        fig.show()
     input()
 
 

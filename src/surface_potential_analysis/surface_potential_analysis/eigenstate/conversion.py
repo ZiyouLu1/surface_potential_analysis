@@ -10,15 +10,12 @@ from surface_potential_analysis.basis import (
     PositionBasis,
     TruncatedBasis,
 )
-from surface_potential_analysis.basis.basis import (
-    BasisUtil,
-    as_explicit_position_basis,
-    as_fundamental_basis,
-)
+from surface_potential_analysis.basis.basis import BasisUtil, as_fundamental_basis
 from surface_potential_analysis.basis_config.basis_config import (
     BasisConfig,
     BasisConfigUtil,
 )
+from surface_potential_analysis.basis_config.conversion import convert_vector
 from surface_potential_analysis.eigenstate.eigenstate import (
     Eigenstate,
     EigenstateWithBasis,
@@ -67,26 +64,6 @@ def _flatten_eigenstate(state: _StackedEigenstate[_BC0Inv]) -> Eigenstate[_BC0In
     return {"basis": state["basis"], "vector": state["vector"].reshape(-1)}
 
 
-def get_basis_conversion_matrix(
-    basis0: _BC0Inv, basis1: _BC1Inv
-) -> np.ndarray[tuple[_L0Inv, _L0Inv], np.dtype[np.complex_]]:
-    """
-    Given two basis states, get the matrix to convert between the two states.
-
-    Parameters
-    ----------
-    basis0 : _BC0Inv
-        basis to convert from
-    basis1 : _BC1Inv
-        basis to convert to
-
-    Returns
-    -------
-    np.ndarray[tuple[_L0Inv, _L0Inv], np.dtype[np.complex_]]
-    """
-    _vectors0 = as_explicit_position_basis(basis0[0])["vectors"]
-
-
 def convert_eigenstate_to_basis(
     eigenstate: Eigenstate[_BC0Inv], basis: _BC1Inv
 ) -> Eigenstate[_BC1Inv]:
@@ -102,8 +79,8 @@ def convert_eigenstate_to_basis(
     -------
     Eigenstate[_BC1Inv]
     """
-    conversion = get_basis_conversion_matrix(eigenstate["basis"], basis)
-    return {"basis": basis, "vector": np.dot(eigenstate["vector"], conversion)}
+    converted = convert_vector(eigenstate["vector"], eigenstate["basis"], basis)
+    return {"basis": basis, "vector": converted}
 
 
 def convert_eigenstate_to_momentum_basis(

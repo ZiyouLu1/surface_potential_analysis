@@ -1,6 +1,9 @@
 import matplotlib.pyplot as plt
 import numpy as np
 from surface_potential_analysis.basis.plot import plot_explicit_basis_states_x
+from surface_potential_analysis.eigenstate.conversion import (
+    convert_sho_eigenstate_to_position_basis,
+)
 from surface_potential_analysis.eigenstate.eigenstate_collection import (
     load_eigenstate_collection,
     select_eigenstate,
@@ -8,9 +11,6 @@ from surface_potential_analysis.eigenstate.eigenstate_collection import (
 from surface_potential_analysis.eigenstate.eigenstate_collection_plot import (
     plot_energies_against_bloch_phase_1d,
     plot_lowest_band_energies_against_bloch_kx,
-)
-from surface_potential_analysis.eigenstate.eigenstate_conversion import (
-    convert_sho_eigenstate_to_position_basis,
 )
 from surface_potential_analysis.eigenstate.plot import animate_eigenstate_x0x1
 
