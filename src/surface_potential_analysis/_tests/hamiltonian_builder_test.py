@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import unittest
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, TypeVar
 
 import hamiltonian_generator
 import numpy as np
@@ -9,6 +9,7 @@ import scipy.linalg
 import scipy.special
 from scipy.constants import hbar
 
+from _tests.utils import convert_explicit_basis_x2
 from surface_potential_analysis.basis_config.basis_config import (
     BasisConfigUtil,
     PositionBasisConfig,
@@ -19,7 +20,9 @@ from surface_potential_analysis.basis_config.sho_basis import (
     calculate_x_distances,
 )
 from surface_potential_analysis.hamiltonian.hamiltonian import (
-    convert_x2_to_explicit_basis,
+    HamiltonianWithBasis,
+    flatten_hamiltonian,
+    stack_hamiltonian,
 )
 from surface_potential_analysis.hamiltonian_builder import (
     momentum_basis,
@@ -31,9 +34,44 @@ from surface_potential_analysis.hamiltonian_builder.sho_subtracted_basis import 
 from surface_potential_analysis.interpolation import interpolate_points_rfftn
 
 if TYPE_CHECKING:
+    from surface_potential_analysis.basis.basis import (
+        Basis,
+        ExplicitBasis,
+        MomentumBasis,
+        PositionBasis,
+    )
     from surface_potential_analysis.potential.potential import Potential
 
+    _BX0Inv = TypeVar("_BX0Inv", bound=Basis[Any, Any])
+    _BX1Inv = TypeVar("_BX1Inv", bound=Basis[Any, Any])
+
+    _L0Inv = TypeVar("_L0Inv", bound=int)
+    _L1Inv = TypeVar("_L1Inv", bound=int)
+
 rng = np.random.default_rng()
+
+
+def _convert_x2_to_explicit_basis(
+    hamiltonian: HamiltonianWithBasis[_BX0Inv, _BX1Inv, MomentumBasis[_L0Inv]],
+    basis: ExplicitBasis[_L1Inv, PositionBasis[_L0Inv]],
+) -> HamiltonianWithBasis[
+    _BX0Inv, _BX1Inv, ExplicitBasis[_L1Inv, PositionBasis[_L0Inv]]
+]:
+    stacked = stack_hamiltonian(hamiltonian)
+
+    x2_position = np.fft.fftn(
+        np.fft.ifftn(stacked["array"], axes=(2,), norm="ortho"),
+        axes=(5,),
+        norm="ortho",
+    )
+    x2_explicit = convert_explicit_basis_x2(x2_position, basis["vectors"])
+
+    return flatten_hamiltonian(
+        {
+            "basis": (hamiltonian["basis"][0], hamiltonian["basis"][1], basis),
+            "array": x2_explicit,  # type: ignore[typeddict-item]
+        }
+    )
 
 
 def _generate_random_potential(
@@ -414,7 +452,7 @@ class HamiltonianBuilderTest(unittest.TestCase):
                 },
                 potential["basis"][2],
             ),
-            "points": interpolated_points, #type:ignore[typeddict-item]
+            "points": interpolated_points,  # type:ignore[typeddict-item]
         }
 
         actual = sho_subtracted_basis.total_surface_hamiltonian(
@@ -424,7 +462,7 @@ class HamiltonianBuilderTest(unittest.TestCase):
             (points.shape[0], points.shape[1], nz),
         )
 
-        expected = convert_x2_to_explicit_basis(
+        expected = _convert_x2_to_explicit_basis(
             momentum_builder_result, actual["basis"][2]
         )
 
@@ -487,7 +525,7 @@ class HamiltonianBuilderTest(unittest.TestCase):
                 },
                 potential["basis"][2],
             ),
-            "points": interpolated_points,#type:ignore[typeddict-item]
+            "points": interpolated_points,  # type:ignore[typeddict-item]
         }
 
         actual = sho_subtracted_basis.total_surface_hamiltonian(
@@ -497,7 +535,7 @@ class HamiltonianBuilderTest(unittest.TestCase):
             (points.shape[0], points.shape[1], nz),
         )
 
-        expected = convert_x2_to_explicit_basis(
+        expected = _convert_x2_to_explicit_basis(
             momentum_builder_result, actual["basis"][2]
         )
 

@@ -23,6 +23,23 @@ def plot_uneven_potential_z(
     ax: Axes | None = None,
     scale: Literal["symlog", "linear"] = "linear",
 ) -> tuple[Figure, Axes, Line2D]:
+    """
+    Plot an uneven potential in 1d, in the x2 direction.
+
+    Parameters
+    ----------
+    potential : UnevenPotential[_L0Inv, _L1Inv, _L2Inv]
+    idx : tuple[int, int]
+        [x0,x2] index
+    ax : Axes | None, optional
+        plot axis, by default None
+    scale : Literal[&quot;symlog&quot;, &quot;linear&quot;], optional
+        scale, by default "linear"
+
+    Returns
+    -------
+    tuple[Figure, Axes, Line2D]
+    """
     fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
 
     coordinates = potential["basis"][2]
@@ -42,6 +59,23 @@ def plot_uneven_potential_z_comparison(
     ax: Axes | None = None,
     scale: Literal["symlog", "linear"] = "linear",
 ) -> tuple[Figure, Axes]:
+    """
+    Plot a nuneven potential in 1d along the x2 direction.
+
+    Parameters
+    ----------
+    potential : UnevenPotential[_L0Inv, _L1Inv, _L2Inv]
+    comparison_points : dict[str, tuple[int, int]]
+        dictionary mapping plot label to [x0 idx, x1 idx]
+    ax : Axes | None, optional
+        plot axis, by default None
+    scale : Literal[&quot;symlog&quot;, &quot;linear&quot;], optional
+        scale, by default "linear"
+
+    Returns
+    -------
+    tuple[Figure, Axes]
+    """
     fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
     for label, idx in comparison_points.items():
         (_, _, line) = plot_uneven_potential_z(potential, idx, ax=ax, scale=scale)

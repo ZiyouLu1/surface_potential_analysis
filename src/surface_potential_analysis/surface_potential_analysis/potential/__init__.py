@@ -1,3 +1,10 @@
+"""
+Represents a potential in a given basis.
+
+The potential is an operator, diagonal in position basis, and therefor can be stored as l
+rather than l**2 points
+"""
+
 from __future__ import annotations
 
 from .point_potential import PointPotential, load_point_potential_json

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import numpy as np
-from surface_potential_analysis.overlap.calculation import calculate_overlap
+from surface_potential_analysis.overlap.calculation import calculate_wavepacket_overlap
 from surface_potential_analysis.overlap.overlap import save_overlap
 from surface_potential_analysis.wavepacket.wavepacket import (
     Wavepacket,
@@ -112,17 +112,17 @@ def calculate_overlap_factor() -> None:
     wavepacket_next_fcc = generate_next_fcc_wavepacket()
     wavepacket_next_hcp = generate_next_hcp_wavepacket()
 
-    overlap_hcp_fcc = calculate_overlap(wavepacket_fcc, wavepacket_hcp)
+    overlap_hcp_fcc = calculate_wavepacket_overlap(wavepacket_fcc, wavepacket_hcp)
     print(np.sum(overlap_hcp_fcc["vector"]))  # noqa: T201
     path = get_data_path("overlap_hcp_fcc.npz")
     save_overlap(path, overlap_hcp_fcc)
 
-    overlap_fcc_fcc = calculate_overlap(wavepacket_fcc, wavepacket_next_fcc)
+    overlap_fcc_fcc = calculate_wavepacket_overlap(wavepacket_fcc, wavepacket_next_fcc)
     print(np.sum(overlap_fcc_fcc["vector"]))  # noqa: T201
     path = get_data_path("overlap_fcc_fcc.npz")
     save_overlap(path, overlap_fcc_fcc)
 
-    overlap_hcp_hcp = calculate_overlap(wavepacket_hcp, wavepacket_next_hcp)
+    overlap_hcp_hcp = calculate_wavepacket_overlap(wavepacket_hcp, wavepacket_next_hcp)
     print(np.sum(overlap_hcp_hcp["vector"]))  # noqa: T201
     path = get_data_path("overlap_hcp_hcp.npz")
     save_overlap(path, overlap_hcp_hcp)

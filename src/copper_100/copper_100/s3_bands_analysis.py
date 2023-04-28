@@ -14,17 +14,17 @@ if TYPE_CHECKING:
     from pathlib import Path
 
 
-class CopperEigenvalues(TypedDict):
+class _CopperEigenvalues(TypedDict):
     center: list[float]
     k_max: list[float]
 
 
-def save_copper_eigenvalues(data: CopperEigenvalues, path: Path) -> None:
+def save_copper_eigenvalues(data: _CopperEigenvalues, path: Path) -> None:
     with path.open("w") as f:
         json.dump(data, f)
 
 
-def load_copper_eigenvalues(path: Path) -> CopperEigenvalues:
+def load_copper_eigenvalues(path: Path) -> _CopperEigenvalues:
     with path.open("r") as f:
         return json.load(f)
 
@@ -40,7 +40,7 @@ def generate_copper_eigenvalues():
     eigenvalues_k_max, _ = hamiltonian.calculate_eigenvalues(max_kx, max_ky)
     sorted_eigenvalues_k_max = np.sort(eigenvalues_k_max)
 
-    values_not_relaxed: CopperEigenvalues = {
+    values_not_relaxed: _CopperEigenvalues = {
         "center": sorted_eigenvalues_origin.tolist(),
         "k_max": sorted_eigenvalues_k_max.tolist(),
     }
@@ -57,7 +57,7 @@ def generate_copper_eigenvalues():
     eigenvalues_k_max, _ = hamiltonian.calculate_eigenvalues(max_kx, max_ky)
     sorted_eigenvalues_k_max = np.sort(eigenvalues_k_max)
 
-    values_relaxed: CopperEigenvalues = {
+    values_relaxed: _CopperEigenvalues = {
         "center": sorted_eigenvalues_origin.tolist(),
         "k_max": sorted_eigenvalues_k_max.tolist(),
     }
@@ -178,12 +178,12 @@ def find_band_with_relevant_energy():
     print("----------------------------------------")
 
 
-def calculate_bandwidths(eigenvalues: CopperEigenvalues) -> list[float]:
+def calculate_bandwidths(eigenvalues: _CopperEigenvalues) -> list[float]:
     return np.abs(np.subtract(eigenvalues["k_max"], eigenvalues["center"]))
 
 
 def calculate_tst_rate_contributions(
-    temperature: float, eigenvalues: CopperEigenvalues
+    temperature: float, eigenvalues: _CopperEigenvalues
 ) -> NDArray:
     bandwidths = calculate_bandwidths(eigenvalues)
     frequencies = bandwidths / (scipy.constants.hbar * np.pi)
@@ -195,7 +195,7 @@ def calculate_tst_rate_contributions(
     return (frequencies * tunnelling_contributions) / normalization
 
 
-def calculate_tst_rate(temperature: float, eigenvalues: CopperEigenvalues) -> float:
+def calculate_tst_rate(temperature: float, eigenvalues: _CopperEigenvalues) -> float:
     return np.sum(calculate_tst_rate_contributions(temperature, eigenvalues))
 
 

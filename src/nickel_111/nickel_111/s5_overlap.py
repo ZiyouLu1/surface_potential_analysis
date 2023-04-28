@@ -7,7 +7,7 @@ from surface_potential_analysis.basis_config.basis_config import (
     BasisConfigUtil,
     MomentumBasisConfig,
 )
-from surface_potential_analysis.overlap.calculation import calculate_overlap
+from surface_potential_analysis.overlap.calculation import calculate_wavepacket_overlap
 from surface_potential_analysis.overlap.overlap import save_overlap
 from surface_potential_analysis.wavepacket.conversion import (
     convert_wavepacket_to_basis,
@@ -92,7 +92,7 @@ def calculate_overlap_nickel() -> None:
     # 0.9999999999997532
     print(calculate_normalisation(wavepacket_hcp))  # noqa: T201
 
-    overlap_hcp_fcc = calculate_overlap(wavepacket_fcc, wavepacket_hcp)
+    overlap_hcp_fcc = calculate_wavepacket_overlap(wavepacket_fcc, wavepacket_hcp)
     # -3.6208117396279577e-17 (should be 0)
     print(np.sum(overlap_hcp_fcc["vector"]))  # noqa: T201
     path = get_data_path("overlap_hcp_fcc.npy")
@@ -100,7 +100,7 @@ def calculate_overlap_nickel() -> None:
 
     wavepacket_next_fcc = generate_next_fcc_wavepacket()
 
-    overlap_fcc_fcc = calculate_overlap(wavepacket_fcc, wavepacket_next_fcc)
+    overlap_fcc_fcc = calculate_wavepacket_overlap(wavepacket_fcc, wavepacket_next_fcc)
     # -1.381731140564679e-09 (should be 0)
     print(np.sum(overlap_fcc_fcc["vector"]))  # noqa: T201
     path = get_data_path("overlap_fcc_fcc.npy")
@@ -108,7 +108,7 @@ def calculate_overlap_nickel() -> None:
 
     wavepacket_next_hcp = generate_next_hcp_wavepacket()
 
-    overlap_hcp_hcp = calculate_overlap(wavepacket_hcp, wavepacket_next_hcp)
+    overlap_hcp_hcp = calculate_wavepacket_overlap(wavepacket_hcp, wavepacket_next_hcp)
     # 4.12815207838777e-09
     print(np.sum(overlap_hcp_hcp["vector"]))  # noqa: T201
     path = get_data_path("overlap_hcp_hcp.npy")

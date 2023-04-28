@@ -160,6 +160,7 @@ def as_fundamental_basis(
 B = TypeVar("B", bound=Basis[Any, Any])
 
 
+# ruff: noqa: D102
 class BasisUtil(Generic[B]):
     """Helper class for dealing with Basis."""
 
@@ -192,7 +193,19 @@ class BasisUtil(Generic[B]):
     def get_fundamental_basis_in(
         self, _type: Literal["position", "momentum"]
     ) -> FundamentalBasis[Any]:
-        return {"_type": _type, "n": self.fundamental_n, "delta_x": self.delta_x}  # type: ignore[misc,return-value]
+        """
+        Get the fundamental basis for the given type.
+
+        Parameters
+        ----------
+        _type : Literal[&quot;position&quot;, &quot;momentum&quot;]
+            basis type
+
+        Returns
+        -------
+        FundamentalBasis[Any]
+        """
+        return {"_type": _type, "n": self.fundamental_n, "delta_x": self.delta_x}  # type: ignore[misc,return-value,dict-item]
 
     @property
     def fundamental_n(
@@ -210,15 +223,18 @@ class BasisUtil(Generic[B]):
         self: BasisUtil[BasisWithLength[_L1Inv, Any]]
     ) -> np.ndarray[tuple[_L1Inv], np.dtype[np.int_]]:
         # We want points from (-self.Nk + 1) // 2 to (self.Nk - 1) // 2
+        n = self.fundamental_n  # type:ignore[misc]
         return np.fft.ifftshift(  # type:ignore[no-any-return]
-            np.arange((-self.fundamental_n + 1) // 2, (self.fundamental_n + 1) // 2)
+            np.arange((-n + 1) // 2, (n + 1) // 2)
         )
 
     @property
     def fundamental_nx_points(
         self: BasisUtil[BasisWithLength[_L1Inv, Any]]
     ) -> np.ndarray[tuple[_L1Inv], np.dtype[np.int_]]:
-        return np.arange(0, self.fundamental_n, dtype=int)  # type:ignore[no-any-return]
+        return np.arange(  # type:ignore[no-any-return]
+            0, self.fundamental_n, dtype=int  # type:ignore[misc]
+        )
 
     @property
     def n(self: BasisUtil[BasisWithLength[_L1Inv, Any]]) -> _L1Inv:
@@ -251,16 +267,6 @@ class BasisUtil(Generic[B]):
         self,
     ) -> np.ndarray[tuple[Literal[3], _LCov], np.dtype[np.float_]]:
         return self.fundamental_dx[:, np.newaxis] * self.fundamental_nx_points[np.newaxis, :]  # type: ignore[no-any-return,misc]
-
-
-class PositionBasisUtil(BasisUtil[PositionBasis[Any]]):
-    @property
-    def dx(self) -> BasisVector:
-        return self.delta_x / self.n  # type: ignore[no-any-return,misc]
-
-    @property
-    def x_points(self) -> np.ndarray[tuple[Literal[3], _LCov], np.dtype[np.float_]]:
-        return self.dx[:, np.newaxis] * self.nx_points[np.newaxis, :]  # type: ignore[no-any-return,misc]
 
 
 def explicit_momentum_basis_in_position(

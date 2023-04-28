@@ -42,7 +42,17 @@ ignore_missing_imports = true
 
 [tool.ruff]
 select = ["ALL"]
-ignore = ["COM812", "E501", "ANN101", "S101", "D100", "D103", "D104", "D105"]
+ignore = [
+    "COM812",
+    "E501",
+    "ANN101",
+    "S101",
+    "D100",
+    "D101",
+    "D103",
+    "D104",
+    "D105",
+]
 target-version = "py311"
 
 [tool.ruff.pydocstyle]

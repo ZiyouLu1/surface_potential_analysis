@@ -1,3 +1,5 @@
+"""A collection of methods to help with the analysis of a Platinum 111 surface."""
+
 from __future__ import annotations
 
 from . import s1_potential, s1_potential_plot, surface_data

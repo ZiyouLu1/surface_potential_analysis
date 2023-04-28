@@ -39,7 +39,10 @@ FundamentalBasisConfig = BasisConfig[
 ]
 
 
+# ruff: noqa: D102
 class BasisConfigUtil(Generic[_BX0Cov, _BX1Cov, _BX2Cov]):
+    """A class to help with the manipulation of basis configs."""
+
     _config: BasisConfig[_BX0Cov, _BX1Cov, _BX2Cov]
 
     def __init__(self, config: BasisConfig[_BX0Cov, _BX1Cov, _BX2Cov]) -> None:
@@ -240,10 +243,28 @@ class BasisConfigUtil(Generic[_BX0Cov, _BX1Cov, _BX2Cov]):
         return np.ravel_multi_index(idx, self.shape, mode=mode).item()
 
     def get_stacked_index(self, idx: int) -> tuple[int, int, int]:
+        """
+        Given a flat index, produce a stacked index.
+
+        Parameters
+        ----------
+        idx : int
+
+        Returns
+        -------
+        tuple[int, int, int]
+        """
         stacked = np.unravel_index(idx, self.shape)
         return tuple([s.item() for s in stacked])  # type: ignore[return-value]
 
     def get_fundamental_basis(self) -> FundamentalBasisConfig[Any, Any, Any]:
+        """
+        Get the fundamental basis of the basis config.
+
+        Returns
+        -------
+        FundamentalBasisConfig[Any, Any, Any]
+        """
         return (
             self.x0_basis.fundamental_basis,
             self.x1_basis.fundamental_basis,
@@ -265,6 +286,17 @@ class BasisConfigUtil(Generic[_BX0Cov, _BX1Cov, _BX2Cov]):
     def get_fundamental_basis_in(
         self, _type: Literal["position", "momentum"]
     ) -> FundamentalBasisConfig[Any, Any, Any]:
+        """
+        Get the fundamental basis of the given type.
+
+        Parameters
+        ----------
+        _type : Literal[&quot;position&quot;, &quot;momentum&quot;]
+
+        Returns
+        -------
+        FundamentalBasisConfig[Any, Any, Any]
+        """
         return (  # type: ignore[return-value]
             {"_type": _type, "n": self.fundamental_n0, "delta_x": self.delta_x0},  # type: ignore[misc]
             {"_type": _type, "n": self.fundamental_n1, "delta_x": self.delta_x1},  # type: ignore[misc]
@@ -276,18 +308,33 @@ class BasisConfigUtil(Generic[_BX0Cov, _BX1Cov, _BX2Cov]):
         axis: Literal[0, 1, 2, -1, -2, -3] = 0,
         direction: BasisVector | None = None,
     ) -> BasisConfig[_BX0Cov, _BX1Cov, _BX2Cov]:
+        """
+        Get the basis, rotated such that axis is along the basis vector direction.
+
+        Parameters
+        ----------
+        axis : Literal[0, 1, 2, -1, -2, -3], optional
+            axis to point along the basis vector direction, by default 0
+        direction : BasisVector | None, optional
+            basis vector to point along, by default [0,0,1]
+
+        Returns
+        -------
+        BasisConfig[_BX0Cov, _BX1Cov, _BX2Cov]
+            _description_
+        """
         matrix = _get_rotation_matrix(self.utils[axis].delta_x, direction)
         return (  # type: ignore[return-value]
             {
                 **self._config[0],
                 **(
-                    {"delta_x": np.dot(matrix, self._config[0]["delta_x"])}
+                    {"delta_x": np.dot(matrix, self._config[0]["delta_x"])}  # type: ignore[typeddict-item]
                     if self._config[0].get("parent", None) is None
                     else {
                         "parent": {
-                            **self._config[0]["parent"],
+                            **self._config[0]["parent"],  # type: ignore[typeddict-item]
                             "delta_x": np.dot(
-                                matrix, self._config[0]["parent"]["delta_x"]
+                                matrix, self._config[0]["parent"]["delta_x"]  # type: ignore[typeddict-item]
                             ),
                         }
                     }
@@ -296,13 +343,13 @@ class BasisConfigUtil(Generic[_BX0Cov, _BX1Cov, _BX2Cov]):
             {
                 **self._config[1],
                 **(
-                    {"delta_x": np.dot(matrix, self._config[1]["delta_x"])}
+                    {"delta_x": np.dot(matrix, self._config[1]["delta_x"])}  # type: ignore[typeddict-item]
                     if self._config[1].get("parent", None) is None
                     else {
                         "parent": {
-                            **self._config[1]["parent"],
+                            **self._config[1]["parent"],  # type: ignore[typeddict-item]
                             "delta_x": np.dot(
-                                matrix, self._config[1]["parent"]["delta_x"]
+                                matrix, self._config[1]["parent"]["delta_x"]  # type: ignore[typeddict-item]
                             ),
                         }
                     }
@@ -311,28 +358,19 @@ class BasisConfigUtil(Generic[_BX0Cov, _BX1Cov, _BX2Cov]):
             {
                 **self._config[2],
                 **(
-                    {"delta_x": np.dot(matrix, self._config[2]["delta_x"])}
+                    {"delta_x": np.dot(matrix, self._config[2]["delta_x"])}  # type: ignore[typeddict-item]
                     if self._config[2].get("parent", None) is None
                     else {
                         "parent": {
-                            **self._config[2]["parent"],
+                            **self._config[2]["parent"],  # type: ignore[typeddict-item]
                             "delta_x": np.dot(
-                                matrix, self._config[2]["parent"]["delta_x"]
+                                matrix, self._config[2]["parent"]["delta_x"]  # type: ignore[typeddict-item]
                             ),
                         }
                     }
                 ),
             },
         )
-
-
-_FBX0 = TypeVar("_FBX0", bound=FundamentalBasis[Any])
-_FBX1 = TypeVar("_FBX1", bound=FundamentalBasis[Any])
-_FBX2 = TypeVar("_FBX2", bound=FundamentalBasis[Any])
-
-_L0Inv = TypeVar("_L0Inv", bound=int)
-_L1Inv = TypeVar("_L1Inv", bound=int)
-_L2Inv = TypeVar("_L2Inv", bound=int)
 
 
 def _get_rotation_matrix(
@@ -370,11 +408,25 @@ def _get_rotation_matrix(
 class MomentumBasisConfigUtil(
     BasisConfigUtil[MomentumBasis[_L0Cov], MomentumBasis[_L1Cov], MomentumBasis[_L2Cov]]
 ):
+    """A class to help with the manipulation of Momentum basis configs."""
+
     @staticmethod
     def from_resolution(
         resolution: tuple[_L0Cov, _L1Cov, _L2Cov],
         delta_x: tuple[BasisVector, BasisVector, BasisVector] | None = None,
     ) -> MomentumBasisConfig[_L0Cov, _L1Cov, _L2Cov]:
+        """
+        Get a momentum basis from a given delta_x and resolution.
+
+        Parameters
+        ----------
+        resolution : tuple[_L0Cov, _L1Cov, _L2Cov]
+        delta_x : tuple[BasisVector, BasisVector, BasisVector] | None, optional
+
+        Returns
+        -------
+        MomentumBasisConfig[_L0Cov, _L1Cov, _L2Cov]
+        """
         delta_x = (
             (np.array([1, 0, 0]), np.array([0, 1, 0]), np.array([0, 0, 1]))
             if delta_x is None
@@ -387,6 +439,13 @@ class MomentumBasisConfigUtil(
         )
 
     def get_reciprocal_basis(self) -> PositionBasisConfig[_L0Cov, _L1Cov, _L2Cov]:
+        """
+        Get the reciprocal basis.
+
+        Returns
+        -------
+        PositionBasisConfig[_L0Cov, _L1Cov, _L2Cov]
+        """
         return (
             {
                 "_type": "position",
@@ -409,11 +468,25 @@ class MomentumBasisConfigUtil(
 class PositionBasisConfigUtil(
     BasisConfigUtil[PositionBasis[_L0Cov], PositionBasis[_L1Cov], PositionBasis[_L2Cov]]
 ):
+    """A class to help with the manipulation of position basis configs."""
+
     @staticmethod
     def from_resolution(
         resolution: tuple[_L0Cov, _L1Cov, _L2Cov],
         delta_x: tuple[BasisVector, BasisVector, BasisVector] | None = None,
     ) -> PositionBasisConfig[_L0Cov, _L1Cov, _L2Cov]:
+        """
+        Get a position basis from a given delta_x and resolution.
+
+        Parameters
+        ----------
+        resolution : tuple[_L0Cov, _L1Cov, _L2Cov]
+        delta_x : tuple[BasisVector, BasisVector, BasisVector] | None, optional
+
+        Returns
+        -------
+        PositionBasisConfig[_L0Cov, _L1Cov, _L2Cov]
+        """
         delta_x = (
             (np.array([1, 0, 0]), np.array([0, 1, 0]), np.array([0, 0, 1]))
             if delta_x is None
@@ -426,6 +499,13 @@ class PositionBasisConfigUtil(
         )
 
     def get_reciprocal_basis(self) -> MomentumBasisConfig[_L0Cov, _L1Cov, _L2Cov]:
+        """
+        Get the reciprocal basis.
+
+        Returns
+        -------
+        MomentumBasisConfig[_L0Cov, _L1Cov, _L2Cov]
+        """
         return (
             {
                 "_type": "momentum",
