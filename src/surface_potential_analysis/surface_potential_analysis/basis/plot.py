@@ -1,10 +1,9 @@
-from typing import Literal, TypeVar
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Literal, TypeVar
 
 import numpy as np
 from matplotlib import pyplot as plt
-from matplotlib.axes import Axes
-from matplotlib.figure import Figure
-from matplotlib.lines import Line2D
 
 from surface_potential_analysis.util import get_measured_data
 
@@ -15,6 +14,11 @@ from .basis import (
     PositionBasis,
     explicit_momentum_basis_in_position,
 )
+
+if TYPE_CHECKING:
+    from matplotlib.axes import Axes
+    from matplotlib.figure import Figure
+    from matplotlib.lines import Line2D
 
 _BX0Inv = TypeVar(
     "_BX0Inv",

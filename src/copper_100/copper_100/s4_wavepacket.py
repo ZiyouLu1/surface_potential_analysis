@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import numpy as np
 from surface_potential_analysis.eigenstate.eigenstate import EigenstateConfigUtil
 from surface_potential_analysis.energy_eigenstate import (

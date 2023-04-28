@@ -1,10 +1,10 @@
+from __future__ import annotations
+
 import json
-from pathlib import Path
-from typing import Literal, TypedDict
+from typing import TYPE_CHECKING, Literal, TypedDict
 
 import matplotlib.pyplot as plt
 import numpy as np
-from matplotlib.axes import Axes
 from surface_potential_analysis.eigenstate.eigenstate import (
     Eigenstate,
     EigenstateConfig,
@@ -41,6 +41,10 @@ from surface_potential_analysis.wavepacket_grid_plot import (
 from .s4_wavepacket import normalize_eigenstate_phase_copper
 from .surface_data import get_data_path, save_figure
 
+if TYPE_CHECKING:
+    from pathlib import Path
+
+    from matplotlib.axes import Axes
 
 def plot_wavepacket_points():
     path = get_data_path("eigenstates_grid_0.json")

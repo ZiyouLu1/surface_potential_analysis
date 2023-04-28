@@ -1,5 +1,6 @@
-from pathlib import Path
-from typing import Any, Generic, TypedDict, TypeVar
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Any, Generic, TypedDict, TypeVar
 
 import numpy as np
 
@@ -10,6 +11,9 @@ from surface_potential_analysis.basis_config.basis_config import (
     PositionBasisConfig,
 )
 from surface_potential_analysis.interpolation import pad_ft_points
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 _BC0Cov = TypeVar("_BC0Cov", bound=BasisConfig[Any, Any, Any], covariant=True)
 

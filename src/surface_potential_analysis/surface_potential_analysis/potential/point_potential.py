@@ -1,8 +1,12 @@
+from __future__ import annotations
+
 import json
-from pathlib import Path
-from typing import Any, Generic, TypedDict, TypeVar
+from typing import TYPE_CHECKING, Any, Generic, TypedDict, TypeVar
 
 import numpy as np
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 _L0Cov = TypeVar("_L0Cov", bound=int, covariant=True)
 

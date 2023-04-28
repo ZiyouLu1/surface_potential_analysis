@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import numpy as np
 from matplotlib import pyplot as plt
 from surface_potential_analysis.eigenstate.conversion import (

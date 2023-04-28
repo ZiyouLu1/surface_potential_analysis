@@ -1,9 +1,8 @@
+from __future__ import annotations
+
 import matplotlib.animation
 import matplotlib.pyplot as plt
 import numpy as np
-from matplotlib.image import AxesImage
-from numpy.typing import NDArray
-from surface_potential_analysis.wavepacket_grid import WavepacketGrid
 
 from .surface_data import save_figure
 

@@ -1,15 +1,20 @@
-from typing import Literal, TypeVar
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Literal, TypeVar
 
 from matplotlib import pyplot as plt
-from matplotlib.axes import Axes
-from matplotlib.figure import Figure
-from matplotlib.lines import Line2D
 
 from surface_potential_analysis.basis_config.basis_config import (
     PositionBasisConfig,
     get_fundamental_projected_x_points,
 )
 from surface_potential_analysis.util import slice_along_axis
+
+if TYPE_CHECKING:
+    from matplotlib.axes import Axes
+    from matplotlib.figure import Figure
+    from matplotlib.lines import Line2D
+
 
 _L0Inv = TypeVar("_L0Inv", bound=int)
 _L1Inv = TypeVar("_L1Inv", bound=int)

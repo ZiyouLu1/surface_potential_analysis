@@ -1,10 +1,14 @@
+from __future__ import annotations
+
 import datetime
 from collections.abc import Callable
 from functools import wraps
-from types import EllipsisType
-from typing import Any, Literal, TypeVar
+from typing import TYPE_CHECKING, Any, Literal, TypeVar
 
 import numpy as np
+
+if TYPE_CHECKING:
+    from types import EllipsisType
 
 F = TypeVar("F", bound=Callable[..., Any])
 

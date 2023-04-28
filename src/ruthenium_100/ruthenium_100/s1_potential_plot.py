@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import numpy as np
 from surface_potential_analysis.potential.plot_point_potential import (
     get_point_potential_xy_locations,

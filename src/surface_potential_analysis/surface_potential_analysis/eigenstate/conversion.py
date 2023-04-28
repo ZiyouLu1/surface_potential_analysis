@@ -1,4 +1,6 @@
-from typing import Any, Generic, TypedDict, TypeVar, overload
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Any, Generic, TypedDict, TypeVar, overload
 
 import numpy as np
 
@@ -16,13 +18,15 @@ from surface_potential_analysis.basis_config.basis_config import (
     BasisConfigUtil,
 )
 from surface_potential_analysis.basis_config.conversion import convert_vector
-from surface_potential_analysis.eigenstate.eigenstate import (
-    Eigenstate,
-    EigenstateWithBasis,
-    MomentumBasisEigenstate,
-    PositionBasisEigenstate,
-)
 from surface_potential_analysis.interpolation import pad_ft_points
+
+if TYPE_CHECKING:
+    from surface_potential_analysis.eigenstate.eigenstate import (
+        Eigenstate,
+        EigenstateWithBasis,
+        MomentumBasisEigenstate,
+        PositionBasisEigenstate,
+    )
 
 _BC0Cov = TypeVar("_BC0Cov", bound=BasisConfig[Any, Any, Any], covariant=True)
 _BC0Inv = TypeVar("_BC0Inv", bound=BasisConfig[Any, Any, Any])

@@ -49,6 +49,7 @@
     "rfftn",
     "savefig",
     "scipy",
+    "Seitz",
     "sharey",
     "suptitle",
     "symlog",

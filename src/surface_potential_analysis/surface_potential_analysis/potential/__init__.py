@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from .point_potential import PointPotential, load_point_potential_json
 from .potential import (
     Potential,

@@ -1,8 +1,8 @@
+from __future__ import annotations
+
 from typing import Generic, TypeVar
 
-# TestType = TypeVar("TestType", bound=int)
 TestType = TypeVar("TestType", bound=int, covariant=True)
-# TestType = TypeVar("TestType", bound=int, contravariant=True)
 
 
 class Test(Generic[TestType]):
@@ -14,19 +14,19 @@ _LCov = TypeVar("_LCov", bound=int, covariant=True)
 _LCon = TypeVar("_LCon", bound=int, contravariant=True)
 
 
-def b(basis: Test[_LInv]) -> None:
+def b(_basis: Test[_LInv]) -> None:
     return
 
 
-def c(basis: Test[_LCov]) -> None:
+def c(_basis: Test[_LCov]) -> None:
     return
 
 
-def d(basis: Test[_LCon]) -> None:
+def d(_basis: Test[_LCon]) -> None:
     return
 
 
-def e(basis: Test[int]) -> None:
+def e(_basis: Test[int]) -> None:
     return
 
 

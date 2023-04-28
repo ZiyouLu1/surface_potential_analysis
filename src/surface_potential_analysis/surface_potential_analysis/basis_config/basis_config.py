@@ -55,13 +55,13 @@ class BasisConfigUtil(Generic[_BX0Cov, _BX1Cov, _BX2Cov]):
     def volume(self) -> float:
         out = np.dot(self.delta_x0, np.cross(self.delta_x1, self.delta_x2))
         assert out != 0
-        return out  # type:ignore
+        return out  # type:ignore[no-any-return]
 
     @cached_property
     def reciprocal_volume(self) -> float:
         out = np.dot(self.dk0, np.cross(self.dk1, self.dk2))
         assert out != 0
-        return out  # type:ignore
+        return out  # type:ignore[no-any-return]
 
     @property
     def fundamental_nk_points(
@@ -136,8 +136,9 @@ class BasisConfigUtil(Generic[_BX0Cov, _BX1Cov, _BX2Cov]):
     @cached_property
     def dk0(self) -> np.ndarray[tuple[Literal[3]], np.dtype[np.float_]]:
         # See https://physics.stackexchange.com/questions/340860/reciprocal-lattice-in-2d
-        out = 2 * np.pi * np.cross(self.delta_x1, self.delta_x2) / self.volume
-        return out  # type:ignore[no-any-return]
+        return (  # type:ignore[no-any-return]
+            2 * np.pi * np.cross(self.delta_x1, self.delta_x2) / self.volume
+        )
 
     @cached_property
     def x1_basis(self) -> BasisUtil[_BX1Cov]:
@@ -196,8 +197,9 @@ class BasisConfigUtil(Generic[_BX0Cov, _BX1Cov, _BX2Cov]):
     @cached_property
     def dk2(self) -> np.ndarray[tuple[Literal[3]], np.dtype[np.float_]]:
         # See https://physics.stackexchange.com/questions/340860/reciprocal-lattice-in-2d
-        out = 2 * np.pi * np.cross(self.delta_x0, self.delta_x1) / self.volume
-        return out  # type:ignore[no-any-return]
+        return (  # type:ignore[no-any-return]
+            2 * np.pi * np.cross(self.delta_x0, self.delta_x1) / self.volume
+        )
 
     @cached_property
     def shape(self) -> tuple[int, int, int]:
@@ -214,8 +216,28 @@ class BasisConfigUtil(Generic[_BX0Cov, _BX1Cov, _BX2Cov]):
     def __len__(self) -> int:
         return int(np.prod(self.shape))
 
-    def get_flat_index(self, idx: tuple[int, int, int]) -> int:
-        return np.ravel_multi_index(idx, self.shape).item()
+    def get_flat_index(
+        self,
+        idx: tuple[int, int, int],
+        *,
+        mode: Literal["raise", "wrap", "clip"] = "raise",
+    ) -> int:
+        """
+        Given a stacked index, get the flat index into the Wigner-Seitz cell.
+
+        Parameters
+        ----------
+        idx : tuple[int, int, int]
+            The stacked index
+        mode : Literal[&quot;raise&quot;, &quot;wrap&quot;, &quot;clip&quot;], optional
+            Specifies how out-of-bounds indices are handled, by default "raise"
+
+        Returns
+        -------
+        int
+            the flattened index into the Wigner-Seitz cell
+        """
+        return np.ravel_multi_index(idx, self.shape, mode=mode).item()
 
     def get_stacked_index(self, idx: int) -> tuple[int, int, int]:
         stacked = np.unravel_index(idx, self.shape)

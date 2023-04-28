@@ -1,17 +1,6 @@
+from __future__ import annotations
+
 import numpy as np
-from surface_potential_analysis.eigenstate.eigenstate import EigenstateConfig
-from surface_potential_analysis.energy_data import (
-    as_interpolation,
-    interpolate_energy_grid_xy_fourier,
-)
-from surface_potential_analysis.energy_eigenstate import (
-    EnergyEigenstatesLegacy,
-    save_energy_eigenstates,
-)
-from surface_potential_analysis.hamiltonian.hamiltonian import (
-    SurfaceHamiltonianUtil,
-    calculate_energy_eigenstates,
-)
 
 from copper_100.s1_potential import get_interpolated_potential
 

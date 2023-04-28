@@ -1,7 +1,11 @@
+from __future__ import annotations
+
 import os
 from pathlib import Path
+from typing import TYPE_CHECKING
 
-from matplotlib.figure import Figure
+if TYPE_CHECKING:
+    from matplotlib.figure import Figure
 
 
 def get_out_path(filename: str) -> Path:

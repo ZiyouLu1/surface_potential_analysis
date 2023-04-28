@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from functools import cached_property
-from typing import Generic, Literal, TypeVar
+from typing import TYPE_CHECKING, Generic, Literal, TypeVar
 
 import hamiltonian_generator
 import numpy as np
@@ -21,8 +23,10 @@ from surface_potential_analysis.basis_config.sho_basis import (
     calculate_x_distances,
     infinate_sho_basis_from_config,
 )
-from surface_potential_analysis.hamiltonian import HamiltonianWithBasis
-from surface_potential_analysis.potential import Potential
+
+if TYPE_CHECKING:
+    from surface_potential_analysis.hamiltonian import HamiltonianWithBasis
+    from surface_potential_analysis.potential import Potential
 
 _L0 = TypeVar("_L0", bound=int)
 _L1 = TypeVar("_L1", bound=int)

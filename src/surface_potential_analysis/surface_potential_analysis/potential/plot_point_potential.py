@@ -1,12 +1,16 @@
-from typing import Any, Literal, TypeVar
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Any, Literal, TypeVar
 
 import numpy as np
 from matplotlib import pyplot as plt
-from matplotlib.axes import Axes
-from matplotlib.figure import Figure
-from matplotlib.lines import Line2D
 
-from .point_potential import PointPotential
+if TYPE_CHECKING:
+    from matplotlib.axes import Axes
+    from matplotlib.figure import Figure
+    from matplotlib.lines import Line2D
+
+    from .point_potential import PointPotential
 
 _L0Inv = TypeVar("_L0Inv", bound=int)
 

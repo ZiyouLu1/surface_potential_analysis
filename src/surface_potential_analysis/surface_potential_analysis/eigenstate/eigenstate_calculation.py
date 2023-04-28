@@ -1,13 +1,17 @@
-from typing import Any, TypeVar
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Any, TypeVar
 
 import numpy as np
 import scipy.linalg
 
 from surface_potential_analysis.basis_config.basis_config import BasisConfig
-from surface_potential_analysis.hamiltonian import Hamiltonian
 from surface_potential_analysis.util import timed
 
-from .eigenstate import Eigenstate, EigenstateList
+if TYPE_CHECKING:
+    from surface_potential_analysis.hamiltonian import Hamiltonian
+
+    from .eigenstate import Eigenstate, EigenstateList
 
 _BC0Inv = TypeVar("_BC0Inv", bound=BasisConfig[Any, Any, Any])
 

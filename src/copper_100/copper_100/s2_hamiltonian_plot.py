@@ -1,8 +1,4 @@
-from surface_potential_analysis.energy_data import as_interpolation
-from surface_potential_analysis.energy_eigenstate import EigenstateConfig
-from surface_potential_analysis.sho_wavefunction_plot import (
-    plot_energy_with_sho_potential_at_hollow,
-)
+from __future__ import annotations
 
 from .s1_potential import (
     load_interpolated_copper_data,
@@ -13,8 +9,6 @@ from .s1_potential import (
 def plot_interpolation_with_sho_config() -> None:
     data = load_interpolated_copper_data()
     interpolation = as_interpolation(data)
-    # 80% 99514067252307.23
-    # 50% 117905964225836.06
     config: EigenstateConfig = {
         "mass": 1.6735575e-27,
         "sho_omega": 117905964225836.06,  # 1e14,
@@ -29,8 +23,6 @@ def plot_interpolation_with_sho_config() -> None:
 def plot_relaxed_interpolation_with_sho_config() -> None:
     data = load_spline_interpolated_relaxed_data()
     interpolation = as_interpolation(data)
-    # 80% 99514067252307.23
-    # 50% 117905964225836.06
     config: EigenstateConfig = {
         "mass": 1.6735575e-27,
         "sho_omega": 111119431700988.45,  # 1e14,

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import matplotlib.pyplot as plt
 import numpy as np
 from surface_potential_analysis.basis.plot import plot_explicit_basis_states_x

@@ -1,11 +1,15 @@
-from typing import Literal, TypeVar
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Literal, TypeVar
 
 from matplotlib import pyplot as plt
-from matplotlib.axes import Axes
-from matplotlib.figure import Figure
-from matplotlib.lines import Line2D
 
-from surface_potential_analysis.potential.potential import UnevenPotential
+if TYPE_CHECKING:
+    from matplotlib.axes import Axes
+    from matplotlib.figure import Figure
+    from matplotlib.lines import Line2D
+
+    from surface_potential_analysis.potential.potential import UnevenPotential
 
 _L0Inv = TypeVar("_L0Inv", bound=int)
 _L1Inv = TypeVar("_L1Inv", bound=int)

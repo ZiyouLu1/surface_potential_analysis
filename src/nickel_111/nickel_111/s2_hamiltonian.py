@@ -1,24 +1,26 @@
+from __future__ import annotations
+
 from typing import TYPE_CHECKING, Literal, TypeVar
 
 import numpy as np
-from surface_potential_analysis.basis import (
-    ExplicitBasis,
-    MomentumBasis,
-    PositionBasis,
-    TruncatedBasis,
-)
 from surface_potential_analysis.basis_config.sho_basis import (
     infinate_sho_basis_from_config,
     sho_basis_from_config,
 )
-from surface_potential_analysis.hamiltonian import HamiltonianWithBasis
 from surface_potential_analysis.hamiltonian_builder import sho_subtracted_basis
 from surface_potential_analysis.util import timed
 
 from .s1_potential import get_interpolated_nickel_potential
 
 if TYPE_CHECKING:
+    from surface_potential_analysis.basis import (
+        ExplicitBasis,
+        MomentumBasis,
+        PositionBasis,
+        TruncatedBasis,
+    )
     from surface_potential_analysis.basis_config.sho_basis import SHOBasisConfig
+    from surface_potential_analysis.hamiltonian import HamiltonianWithBasis
 
 _L0 = TypeVar("_L0", bound=int)
 _L1 = TypeVar("_L1", bound=int)

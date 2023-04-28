@@ -1,7 +1,8 @@
-from typing import Any, TypeVar
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Any, TypeVar
 
 import numpy as np
-from surface_potential_analysis.basis import BasisVector
 from surface_potential_analysis.basis_config.basis_config import (
     PositionBasisConfig,
     PositionBasisConfigUtil,
@@ -25,6 +26,9 @@ from surface_potential_analysis.potential import (
 )
 
 from .surface_data import get_data_path
+
+if TYPE_CHECKING:
+    from surface_potential_analysis.basis import BasisVector
 
 
 def load_raw_data() -> PointPotential[Any]:

@@ -1,6 +1,7 @@
+from __future__ import annotations
+
 import numpy as np
 from matplotlib import pyplot as plt
-
 from surface_potential_analysis.overlap_transform import load_overlap_transform
 from surface_potential_analysis.overlap_transform_plot import (
     plot_overlap_transform_along_x0,
@@ -65,9 +66,6 @@ def plot_overlap():
     _, _, ln = plot_overlap_transform_along_x0(overlap, measure="imag", ax=ax)
     ln.set_label("imag")
 
-    # ax2 = ax.twinx()
-    # _, _, ln = plot_overlap_transform_along_x0(overlap, measure="angle", ax=ax2)
-    # ln.set_label("angle")
 
     ax.legend()
     ax.set_title(

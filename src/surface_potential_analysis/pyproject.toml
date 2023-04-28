@@ -33,9 +33,13 @@ ignore_missing_imports = true
 [tool.ruff]
 select = ["ALL"]
 ignore = ["COM812", "E501", "ANN101", "S101", "PT009", "D100", "D105"]
+target-version = "py311"
 
 [tool.ruff.pydocstyle]
 convention = "numpy"
+
+[tool.ruff.isort]
+required-imports = ["from __future__ import annotations"]
 
 [build-system]
 requires = ["poetry-core"]

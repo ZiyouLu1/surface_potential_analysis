@@ -1,14 +1,18 @@
-from typing import Any, Literal, TypeVar
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Any, Literal, TypeVar
 
 import numpy as np
 from matplotlib import pyplot as plt
-from matplotlib.axes import Axes
-from matplotlib.figure import Figure
-from matplotlib.lines import Line2D
 
 from surface_potential_analysis.basis_config.basis_config import BasisConfig
 
-from .eigenstate_collection import EigenstateColllection
+if TYPE_CHECKING:
+    from matplotlib.axes import Axes
+    from matplotlib.figure import Figure
+    from matplotlib.lines import Line2D
+
+    from .eigenstate_collection import EigenstateColllection
 
 _BC0Inv = TypeVar("_BC0Inv", bound=BasisConfig[Any, Any, Any])
 

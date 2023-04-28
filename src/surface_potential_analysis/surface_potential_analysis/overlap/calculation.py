@@ -1,18 +1,22 @@
-from typing import TypeVar
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, TypeVar
 
 import numpy as np
 
-from surface_potential_analysis.basis.basis import MomentumBasis, PositionBasis
-from surface_potential_analysis.basis_config.basis_config import BasisConfig
 from surface_potential_analysis.eigenstate.conversion import (
     convert_momentum_basis_eigenstate_to_position_basis,
 )
-from surface_potential_analysis.overlap.overlap import Overlap
 from surface_potential_analysis.util import timed
-from surface_potential_analysis.wavepacket import Wavepacket
 from surface_potential_analysis.wavepacket.eigenstate_conversion import (
     unfurl_wavepacket,
 )
+
+if TYPE_CHECKING:
+    from surface_potential_analysis.basis.basis import MomentumBasis, PositionBasis
+    from surface_potential_analysis.basis_config.basis_config import BasisConfig
+    from surface_potential_analysis.overlap.overlap import Overlap
+    from surface_potential_analysis.wavepacket import Wavepacket
 
 _L0Inv = TypeVar("_L0Inv", bound=int)
 _L1Inv = TypeVar("_L1Inv", bound=int)

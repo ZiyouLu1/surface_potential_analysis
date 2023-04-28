@@ -1,3 +1,6 @@
+from __future__ import annotations
+
+
 def generate_hamiltonian(resolution: tuple[int, int, int] = (1, 1, 1)):
     data = load_interpolated_copper_data()
     interpolation = as_interpolation(data)

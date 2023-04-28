@@ -1,4 +1,5 @@
 """Utility functions to help with the generation of a sho basis."""
+from __future__ import annotations
 
 import math
 from typing import TYPE_CHECKING, Any, Literal, TypedDict, TypeVar

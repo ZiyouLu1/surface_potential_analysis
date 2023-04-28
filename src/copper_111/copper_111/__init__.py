@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from . import (
     s1_potential,
     s1_potential_plot,

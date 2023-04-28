@@ -1,11 +1,17 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 import numpy as np
 from matplotlib import pyplot as plt
-from surface_potential_analysis.basis.basis import ExplicitBasis, PositionBasis
 from surface_potential_analysis.basis.plot import plot_explicit_basis_states_x
 from surface_potential_analysis.hamiltonian.hamiltonian import stack_hamiltonian
 from surface_potential_analysis.interpolation import pad_ft_points
 
 from .s2_hamiltonian import generate_hamiltonian_sho, generate_sho_basis
+
+if TYPE_CHECKING:
+    from surface_potential_analysis.basis.basis import ExplicitBasis, PositionBasis
 
 
 def _normalize_sho_basis(

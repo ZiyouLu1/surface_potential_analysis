@@ -1,6 +1,6 @@
-from collections.abc import Callable
-from pathlib import Path
-from typing import Any, Generic, Literal, TypedDict, TypeVar
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Any, Generic, Literal, TypedDict, TypeVar
 
 import numpy as np
 
@@ -11,16 +11,21 @@ from surface_potential_analysis.basis_config.basis_config import (
     MomentumBasisConfig,
     PositionBasisConfig,
 )
-from surface_potential_analysis.eigenstate.eigenstate import (
-    Eigenstate,
-)
 from surface_potential_analysis.eigenstate.eigenstate_calculation import (
     calculate_eigenstates,
 )
-from surface_potential_analysis.eigenstate.eigenstate_collection import (
-    EigenstateColllection,
-)
-from surface_potential_analysis.hamiltonian import Hamiltonian
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+    from pathlib import Path
+
+    from surface_potential_analysis.eigenstate.eigenstate import (
+        Eigenstate,
+    )
+    from surface_potential_analysis.eigenstate.eigenstate_collection import (
+        EigenstateColllection,
+    )
+    from surface_potential_analysis.hamiltonian import Hamiltonian
 
 _L0Inv = TypeVar("_L0Inv", bound=int)
 _L1Inv = TypeVar("_L1Inv", bound=int)

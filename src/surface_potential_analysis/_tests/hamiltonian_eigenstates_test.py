@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import unittest
 from typing import TYPE_CHECKING
 
@@ -15,26 +17,29 @@ if TYPE_CHECKING:
     from surface_potential_analysis.hamiltonian import MomentumBasisHamiltonian
 
 
+rng = np.random.default_rng()
+
+
 class HamiltonianEigenstates(unittest.TestCase):
     def test_calculate_energy_diagonal(self) -> None:
         basis: MomentumBasisConfig[int, int, int] = (
             {
-                "n": np.random.randint(1, 10),
+                "n": rng.integers(1, 10),
                 "_type": "momentum",
                 "delta_x": np.array([1, 0, 0]),
             },
             {
-                "n": np.random.randint(1, 10),
+                "n": rng.integers(1, 10),
                 "_type": "momentum",
                 "delta_x": np.array([0, 1, 0]),
             },
             {
-                "n": np.random.randint(1, 10),
+                "n": rng.integers(1, 10),
                 "_type": "momentum",
                 "delta_x": np.array([0, 0, 1]),
             },
         )
-        energies = np.random.rand(len(BasisConfigUtil(basis)))
+        energies = rng.random(len(BasisConfigUtil(basis)))
         hamiltonian: MomentumBasisHamiltonian[int, int, int] = {
             "basis": basis,
             "array": np.diag(energies),
@@ -42,7 +47,7 @@ class HamiltonianEigenstates(unittest.TestCase):
         actual: list[complex] = []
         for i in range(len(BasisConfigUtil(basis))):
             vector = np.zeros(shape=len(BasisConfigUtil(basis)), dtype=complex)
-            vector[i] = np.exp(1j * 2 * np.pi * np.random.rand())
+            vector[i] = np.exp(1j * 2 * np.pi * rng.random())
 
             actual.append(
                 calculate_energy(hamiltonian, {"basis": basis, "vector": vector})

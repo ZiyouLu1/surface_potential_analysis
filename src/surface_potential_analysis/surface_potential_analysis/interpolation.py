@@ -1,12 +1,16 @@
+from __future__ import annotations
+
 import itertools
-from collections.abc import Sequence
-from typing import Any, TypeVar
+from typing import TYPE_CHECKING, Any, TypeVar
 
 import numpy as np
 import scipy.fft
 import scipy.interpolate
 
 from surface_potential_analysis.util import slice_along_axis
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
 
 _DT = TypeVar("_DT", bound=np.dtype[Any])
 _S0Inv = TypeVar("_S0Inv", bound=tuple[int, ...])

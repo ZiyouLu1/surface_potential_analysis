@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from surface_potential_analysis.wavepacket.plot import (
     animate_wavepacket_x0x1,
     plot_wavepacket_sample_frequencies,

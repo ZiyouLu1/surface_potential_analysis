@@ -1,12 +1,9 @@
-from typing import Any, Literal, TypeVar
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Any, Literal, TypeVar
 
 import numpy as np
 from matplotlib import pyplot as plt
-from matplotlib.animation import ArtistAnimation
-from matplotlib.axes import Axes
-from matplotlib.collections import QuadMesh
-from matplotlib.figure import Figure
-from matplotlib.lines import Line2D
 
 from surface_potential_analysis.basis.basis import Basis, MomentumBasis
 from surface_potential_analysis.basis_config.basis_config import (
@@ -34,6 +31,14 @@ from .wavepacket import (
     Wavepacket,
     get_wavepacket_sample_frequencies,
 )
+
+if TYPE_CHECKING:
+    from matplotlib.animation import ArtistAnimation
+    from matplotlib.axes import Axes
+    from matplotlib.collections import QuadMesh
+    from matplotlib.figure import Figure
+    from matplotlib.lines import Line2D
+
 
 _NS0Inv = TypeVar("_NS0Inv", bound=int)
 _NS1Inv = TypeVar("_NS1Inv", bound=int)

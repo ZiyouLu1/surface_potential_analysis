@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from .hamiltonian import (
     Hamiltonian,
     HamiltonianWithBasis,

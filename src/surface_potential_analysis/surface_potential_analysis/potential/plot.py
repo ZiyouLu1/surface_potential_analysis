@@ -1,13 +1,10 @@
-from collections.abc import Mapping
-from typing import Literal, TypeVar
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Literal, TypeVar
 
 import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib.animation import ArtistAnimation
-from matplotlib.axes import Axes
-from matplotlib.collections import QuadMesh
-from matplotlib.figure import Figure
-from matplotlib.lines import Line2D
 
 from surface_potential_analysis.basis.basis import BasisUtil
 from surface_potential_analysis.basis_config.basis_config import (
@@ -19,7 +16,15 @@ from surface_potential_analysis.util import (
     slice_along_axis,
 )
 
-from .potential import Potential
+if TYPE_CHECKING:
+    from collections.abc import Mapping
+
+    from matplotlib.axes import Axes
+    from matplotlib.collections import QuadMesh
+    from matplotlib.figure import Figure
+    from matplotlib.lines import Line2D
+
+    from .potential import Potential
 
 _L0Inv = TypeVar("_L0Inv", bound=int)
 _L1Inv = TypeVar("_L1Inv", bound=int)

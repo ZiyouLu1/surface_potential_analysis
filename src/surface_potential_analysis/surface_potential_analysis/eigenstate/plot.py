@@ -1,13 +1,11 @@
-from typing import Literal, TypeVar
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Literal, TypeVar
 
 import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib.animation import ArtistAnimation
-from matplotlib.axes import Axes
-from matplotlib.collections import QuadMesh
 from matplotlib.colors import Normalize, SymLogNorm
-from matplotlib.figure import Figure
-from matplotlib.lines import Line2D
 
 from surface_potential_analysis.basis_config.basis_config import (
     PositionBasisConfigUtil,
@@ -19,7 +17,13 @@ from surface_potential_analysis.util import (
     slice_along_axis,
 )
 
-from .eigenstate import PositionBasisEigenstate
+if TYPE_CHECKING:
+    from matplotlib.axes import Axes
+    from matplotlib.collections import QuadMesh
+    from matplotlib.figure import Figure
+    from matplotlib.lines import Line2D
+
+    from .eigenstate import PositionBasisEigenstate
 
 _L0Inv = TypeVar("_L0Inv", bound=int)
 _L1Inv = TypeVar("_L1Inv", bound=int)
@@ -50,7 +54,7 @@ def plot_eigenstate_2d(
     fig.colorbar(mesh, ax=ax, format="%4.1e")
 
     ax.set_xlabel(f"x{0 if (z_axis % 3) != 0 else 1} axis")
-    ax.set_ylabel(f"x{2 if (z_axis % 3) != 2 else 1} axis")
+    ax.set_ylabel(f"x{2 if (z_axis % 3) != 2 else 1} axis")  # noqa: PLR2004
 
     return fig, ax, mesh
 

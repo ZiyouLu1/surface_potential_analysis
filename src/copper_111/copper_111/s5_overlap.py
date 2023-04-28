@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import numpy as np
 from surface_potential_analysis.overlap.calculation import calculate_overlap
 from surface_potential_analysis.overlap.overlap import save_overlap

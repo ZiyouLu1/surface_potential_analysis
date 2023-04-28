@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 import unittest
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import hamiltonian_generator
 import numpy as np
@@ -28,10 +30,12 @@ from surface_potential_analysis.eigenstate.conversion import (
     convert_eigenstate_to_basis,
     convert_sho_eigenstate_to_position_basis,
 )
-from surface_potential_analysis.eigenstate.eigenstate import (
-    Eigenstate,
-    EigenstateWithBasis,
-)
+
+if TYPE_CHECKING:
+    from surface_potential_analysis.eigenstate.eigenstate import (
+        Eigenstate,
+        EigenstateWithBasis,
+    )
 
 _rng = np.random.default_rng()
 

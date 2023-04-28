@@ -1,6 +1,7 @@
+from __future__ import annotations
+
 import json
-from pathlib import Path
-from typing import TypedDict
+from typing import TYPE_CHECKING, TypedDict
 
 import numpy as np
 import scipy.constants
@@ -8,6 +9,9 @@ from matplotlib import pyplot as plt
 
 from .s2_hamiltonian import generate_hamiltonian, generate_hamiltonian_relaxed
 from .surface_data import get_data_path, save_figure
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 
 class CopperEigenvalues(TypedDict):

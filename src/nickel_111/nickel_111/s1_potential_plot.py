@@ -1,10 +1,10 @@
+from __future__ import annotations
+
 import math
-from typing import Any, Literal, TypeVar
+from typing import TYPE_CHECKING, Any, Literal, TypeVar
 
 import numpy as np
 from matplotlib import pyplot as plt
-from matplotlib.axes import Axes
-from matplotlib.figure import Figure
 from scipy.constants import electron_volt
 from surface_potential_analysis.basis_config.plot import plot_projected_coordinates_2d
 from surface_potential_analysis.interpolation import (
@@ -47,6 +47,10 @@ from .s1_potential import (
     load_raw_data_reciprocal_grid,
 )
 from .surface_data import save_figure
+
+if TYPE_CHECKING:
+    from matplotlib.axes import Axes
+    from matplotlib.figure import Figure
 
 
 def get_nickel_comparison_points_x0x1(

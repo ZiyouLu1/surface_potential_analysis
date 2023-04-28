@@ -1,4 +1,6 @@
-from typing import Literal, TypeVar
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Literal, TypeVar
 
 import numpy as np
 from scipy.constants import hbar
@@ -16,8 +18,10 @@ from surface_potential_analysis.hamiltonian.hamiltonian import (
     add_hamiltonian,
     flatten_hamiltonian,
 )
-from surface_potential_analysis.potential import Potential
 from surface_potential_analysis.util import timed
+
+if TYPE_CHECKING:
+    from surface_potential_analysis.potential import Potential
 
 _L0 = TypeVar("_L0", bound=int)
 _L1 = TypeVar("_L1", bound=int)

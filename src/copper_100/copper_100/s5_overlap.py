@@ -1,5 +1,6 @@
-import numpy as np
+from __future__ import annotations
 
+import numpy as np
 from surface_potential_analysis.eigenstate.eigenstate import EigenstateConfigUtil
 from surface_potential_analysis.energy_eigenstate import (
     load_energy_eigenstates,
@@ -44,7 +45,7 @@ def generate_next_neighboring_wavepacket() -> WavepacketGrid:
     """
     Generate a wavepacket grid of a neighboring groundstate wavefunction.
     This is just the original wavepacket shifted by -delta_x0,
-    which we can achieve by rolling the wavepacket
+    which we can achieve by rolling the wavepacket.
 
     Returns
     -------
@@ -97,7 +98,6 @@ def generate_wavepacket_double_fourier() -> WavepacketGrid:
     ]
     grid = grid_chunks[0]
     # grid["points"] = np.concatenate(
-    #     [chunk["points"] for chunk in grid_chunks], axis=-1
     # ).tolist()
     print(np.shape(grid["points"]))
     return grid
@@ -107,7 +107,7 @@ def generate_next_neighboring_wavepacket_double_fourier() -> WavepacketGrid:
     """
     Generate a wavepacket grid of a neighboring groundstate wavefunction.
     This is just the original wavepacket shifted by -delta_x0,
-    which we can achieve by rolling the wavepacket
+    which we can achieve by rolling the wavepacket.
 
     Returns
     -------
@@ -134,7 +134,6 @@ def generate_next_neighboring_wavepacket_double_fourier() -> WavepacketGrid:
     for i, g in enumerate(grid_chunks):
         points[:, :, i] = g["points"][0]
     grid["points"] = points.tolist()
-    # print(np.shape(grid["points"]))
     return grid
 
 

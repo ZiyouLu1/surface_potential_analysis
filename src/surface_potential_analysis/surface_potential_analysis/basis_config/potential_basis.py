@@ -1,20 +1,24 @@
-from typing import Generic, Literal, TypedDict, TypeVar
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Generic, Literal, TypedDict, TypeVar
 
 import numpy as np
 
-from surface_potential_analysis.basis.basis import (
-    ExplicitBasis,
-    PositionBasis,
-)
-from surface_potential_analysis.basis_config.basis_config import PositionBasisConfig
-from surface_potential_analysis.eigenstate.eigenstate import EigenstateList
 from surface_potential_analysis.eigenstate.eigenstate_calculation import (
     calculate_eigenstates,
 )
 from surface_potential_analysis.hamiltonian_builder.momentum_basis import (
     total_surface_hamiltonian,
 )
-from surface_potential_analysis.potential.potential import Potential
+
+if TYPE_CHECKING:
+    from surface_potential_analysis.basis.basis import (
+        ExplicitBasis,
+        PositionBasis,
+    )
+    from surface_potential_analysis.basis_config.basis_config import PositionBasisConfig
+    from surface_potential_analysis.eigenstate.eigenstate import EigenstateList
+    from surface_potential_analysis.potential.potential import Potential
 
 _L0Cov = TypeVar("_L0Cov", covariant=True)
 _L1Cov = TypeVar("_L1Cov", covariant=True)
