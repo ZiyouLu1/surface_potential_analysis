@@ -16,7 +16,9 @@ def interpolate_real_points_fourier(
     points: np.ndarray[tuple[int, int], Any], shape: tuple[int, int]
 ) -> np.ndarray[tuple[int, int], Any]:
     x_interp = interpolate_points_rfft(points, shape[0], axis=0)
-    return interpolate_points_rfft(x_interp, shape[1], axis=1)
+    return interpolate_points_rfft(  # type:ignore[return-value]
+        x_interp, shape[1], axis=1
+    )
 
 
 def interpolate_complex_points_fourier(

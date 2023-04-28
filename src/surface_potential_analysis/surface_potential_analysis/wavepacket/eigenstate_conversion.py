@@ -5,7 +5,9 @@ import numpy as np
 from surface_potential_analysis.basis.basis import Basis, MomentumBasis
 from surface_potential_analysis.basis_config.basis_config import BasisConfigUtil
 from surface_potential_analysis.eigenstate.eigenstate import EigenstateWithBasis
-from surface_potential_analysis.wavepacket.wavepacket import WavepacketWithBasis
+from surface_potential_analysis.util import timed
+
+from .wavepacket import WavepacketWithBasis
 
 _NS0Inv = TypeVar("_NS0Inv", bound=int)
 _NS1Inv = TypeVar("_NS1Inv", bound=int)
@@ -69,7 +71,7 @@ def furl_eigenstate(
         "energies": np.zeros(flattened.shape[0:2]),
     }
 
-
+@timed
 def unfurl_wavepacket(
     wavepacket: WavepacketWithBasis[
         _NS0Inv, _NS1Inv, MomentumBasis[_L0Inv], MomentumBasis[_L1Inv], _BX2Inv

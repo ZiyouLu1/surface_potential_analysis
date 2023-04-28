@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING, Any, Literal
 
 import numpy as np
 
-from surface_potential_analysis.hamiltonian import (
+from surface_potential_analysis.hamiltonian.hamiltonian import (
     MomentumBasisStackedHamiltonian,
     _convert_explicit_basis_x2,
     flatten_hamiltonian,
@@ -21,7 +21,7 @@ class HamiltonianTest(unittest.TestCase):
     def test_flatten_hamiltonian(self) -> None:
         shape = rng.integers(1, 10, size=3)
         hamiltonian: MomentumBasisStackedHamiltonian[int, int, int] = {
-            "array": rng.random(*shape, *shape),
+            "array": rng.random((*shape, *shape)),
             "basis": (
                 {
                     "n": shape.item(0),

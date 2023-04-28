@@ -5,10 +5,12 @@ import hamiltonian_generator
 import numpy as np
 from scipy.constants import hbar
 
+from _tests.utils import get_random_explicit_basis
 from surface_potential_analysis.basis.basis import (
     ExplicitBasis,
     MomentumBasis,
     TruncatedBasis,
+    as_fundamental_basis,
 )
 from surface_potential_analysis.basis_config.basis_config import (
     BasisConfigUtil,
@@ -43,6 +45,11 @@ def _get_random_sho_eigenstate(
 ]:
     vector = np.array(_rng.random(np.prod(resolution)), dtype=complex)
     vector /= np.linalg.norm(vector)
+
+    x2_basis = get_random_explicit_basis(
+        "position", fundamental_n=fundamental_resolution[2], n=resolution[2]
+    )
+    x2_basis["parent"]["delta_x"] = np.array([0, 0, 20])
     return {
         "basis": (
             {
@@ -63,15 +70,7 @@ def _get_random_sho_eigenstate(
                     "n": fundamental_resolution[1],
                 },
             },
-            {
-                "_type": "explicit",
-                "parent": {
-                    "_type": "position",
-                    "delta_x": np.array([0, 0, 20]),
-                    "n": fundamental_resolution[2],
-                },
-                "vectors": np.zeros((resolution[2], fundamental_resolution[2])),
-            },
+            x2_basis,
         ),
         "vector": vector,
     }
@@ -107,7 +106,7 @@ class EigenstateConversionTest(unittest.TestCase):
 
         position = _flatten_eigenstate(stacked_position)
         expected = convert_eigenstate_to_basis(eigenstate, position["basis"])
-        np.testing.assert_array_equal(position["vector"], expected["vector"])
+        np.testing.assert_array_almost_equal(position["vector"], expected["vector"])
 
     def test_convert_sho_basis_order(self) -> None:
         eigenstate = _get_random_sho_eigenstate((5, 6, 9), (10, 10, 10))
@@ -123,7 +122,9 @@ class EigenstateConversionTest(unittest.TestCase):
 
         actual_flat = _flatten_eigenstate(actual)
         expected_flat = convert_eigenstate_to_basis(eigenstate, actual_flat["basis"])
-        np.testing.assert_array_equal(expected_flat["vector"], actual_flat["vector"])
+        np.testing.assert_array_almost_equal(
+            expected_flat["vector"], actual_flat["vector"]
+        )
 
     def test_convert_sho_basis_explicit(self) -> None:
         nx = _rng.integers(2, 10)
@@ -231,9 +232,10 @@ class EigenstateConversionTest(unittest.TestCase):
             expected["vector"], np.array(actual) / np.linalg.norm(actual)
         )
 
-    def test_convert_sho_eigenstate(self) -> None:
+    def test_convert_truncated_basis_eigenstate(self) -> None:
         resolution = (5, 6, 9)
         eigenstate = _get_random_sho_eigenstate(resolution, (10, 10, 100))
+
         config: SHOBasisConfig = {
             "mass": hbar**2,
             "sho_omega": 1 / hbar,
@@ -251,4 +253,28 @@ class EigenstateConversionTest(unittest.TestCase):
         actual = convert_sho_eigenstate_to_position_basis(eigenstate)
 
         expected = convert_eigenstate_to_basis(eigenstate, actual["basis"])
-        np.testing.assert_array_equal(actual["vector"], expected["vector"])
+
+        np.testing.assert_array_almost_equal(actual["vector"], expected["vector"])
+
+    def test_convert_random_sho_eigenstate(self) -> None:
+        resolution = (5, 6, 9)
+        eigenstate = _get_random_sho_eigenstate(resolution, (10, 10, 100))
+
+        actual = convert_sho_eigenstate_to_position_basis(eigenstate)
+
+        expected = convert_eigenstate_to_basis(eigenstate, actual["basis"])
+        np.testing.assert_array_almost_equal(actual["vector"], expected["vector"])
+
+    def test_convert_random_explicit_z_eigenstate(self) -> None:
+        resolution = (5, 6, 9)
+        eigenstate = _get_random_sho_eigenstate(resolution, (10, 10, 100))
+        eigenstate["basis"] = (  # type:ignore[typeddict-item]
+            as_fundamental_basis(eigenstate["basis"][0]),
+            as_fundamental_basis(eigenstate["basis"][1]),
+            eigenstate["basis"][2],
+        )
+
+        actual = convert_sho_eigenstate_to_position_basis(eigenstate)
+
+        expected = convert_eigenstate_to_basis(eigenstate, actual["basis"])
+        np.testing.assert_array_almost_equal(actual["vector"], expected["vector"])

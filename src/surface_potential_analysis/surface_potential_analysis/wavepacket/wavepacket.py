@@ -5,22 +5,11 @@ from typing import Any, Generic, Literal, TypedDict, TypeVar
 import numpy as np
 
 from surface_potential_analysis.basis import Basis
-from surface_potential_analysis.basis.basis import (
-    ExplicitBasis,
-    MomentumBasis,
-    PositionBasis,
-    TruncatedBasis,
-    as_fundamental_basis,
-)
 from surface_potential_analysis.basis_config.basis_config import (
     BasisConfig,
     BasisConfigUtil,
     MomentumBasisConfig,
     PositionBasisConfig,
-)
-from surface_potential_analysis.eigenstate.conversion import (
-    convert_eigenstate_to_position_basis,
-    convert_sho_eigenstate_to_momentum_basis,
 )
 from surface_potential_analysis.eigenstate.eigenstate import (
     Eigenstate,
@@ -32,19 +21,13 @@ from surface_potential_analysis.eigenstate.eigenstate_collection import (
     EigenstateColllection,
 )
 from surface_potential_analysis.hamiltonian import Hamiltonian
-from surface_potential_analysis.util import timed
 
 _L0Inv = TypeVar("_L0Inv", bound=int)
 _L1Inv = TypeVar("_L1Inv", bound=int)
 _L2Inv = TypeVar("_L2Inv", bound=int)
 
-_LF0Inv = TypeVar("_LF0Inv", bound=int)
-_LF1Inv = TypeVar("_LF1Inv", bound=int)
-_LF2Inv = TypeVar("_LF2Inv", bound=int)
-
 _BC0Cov = TypeVar("_BC0Cov", bound=BasisConfig[Any, Any, Any], covariant=True)
 _BC0Inv = TypeVar("_BC0Inv", bound=BasisConfig[Any, Any, Any])
-
 
 _BX0Inv = TypeVar("_BX0Inv", bound=Basis[Any, Any])
 _BX1Inv = TypeVar("_BX1Inv", bound=Basis[Any, Any])
@@ -254,128 +237,6 @@ def generate_wavepacket(
     return out
 
 
-def _get_global_phases(
-    wavepacket: Wavepacket[_NS0Inv, _NS1Inv, BasisConfig[_BX0Inv, _BX1Inv, _BX2Inv]],
-    idx: int | tuple[int, int, int] = 0,
-) -> np.ndarray[tuple[_NS0Inv, _NS1Inv], np.dtype[np.float_]]:
-    """
-    Get the global bloch phase at a given index in the irreducible cell.
-
-    returns a list of the global phase of each eigenstate in the wavepacket
-
-    Parameters
-    ----------
-    wavepacket : Wavepacket[_NS0Inv, _NS1Inv, BasisConfig[_BX0Inv, _BX1Inv, _BX2Inv]]
-        The wavepacket to get the global phase for
-    idx : int | tuple[int, int, int], optional
-        The index in ravelled or unravelled form, by default 0
-
-    Returns
-    -------
-    np.ndarray[tuple[_NS0Inv, _NS1Inv], np.dtype[np.float_]]
-        list of list of phases for each is0, is1 sampled in the wavepacket
-    """
-    util = BasisConfigUtil(wavepacket["basis"])
-    stacked_idx = idx if isinstance(idx, tuple) else util.get_stacked_index(idx)
-    # Total phase given by k.x = dk * j/Nj * i * delta_x / Ni
-    #                          = 2 * pi * j/Nj * i / Ni
-    # j / Nj
-    momentum_fractions = get_wavepacket_sample_fractions(
-        np.array(wavepacket["vectors"].shape[0:2])
-    )
-    # i / Ni
-    position_fractions = np.array(
-        [f / util.shape[i] for (i, f) in enumerate(stacked_idx[0:2])]
-    )[:, np.newaxis, np.newaxis]
-
-    return (  # type: ignore[no-any-return]
-        2 * np.pi * np.sum(np.multiply(position_fractions, momentum_fractions), axis=0)
-    )
-
-
-def _get_bloch_phase_position_basis(
-    wavepacket: Wavepacket[
-        _NS0Inv,
-        _NS1Inv,
-        BasisConfig[
-            PositionBasis[_L0Inv], PositionBasis[_L1Inv], PositionBasis[_L2Inv]
-        ],
-    ],
-    idx: int | tuple[int, int, int] = 0,
-) -> np.ndarray[tuple[_NS0Inv, _NS1Inv], np.dtype[np.float_]]:
-    """
-    Get the phase of the bloch wavefunctions at the given point in position space.
-
-    Parameters
-    ----------
-    wavepacket : Wavepacket[ _NS0Inv, _NS1Inv, BasisConfig[PositionBasis[_L0Inv], PositionBasis[_L1Inv], PositionBasis[_L2Inv]]]
-        the wavepacket to calculate the phase of
-    idx : int | tuple[int, int, int], optional
-        the index in real space, by default 0
-
-    Returns
-    -------
-    np.ndarray[tuple[_NS0Inv, _NS1Inv], np.dtype[np.float_]]
-        the angle for each point in the wavepacket
-    """
-    eigenvectors = wavepacket["vectors"]
-    # TODO use irreducible basis here?
-    util = BasisConfigUtil(wavepacket["basis"])
-
-    flat_idx = util.get_flat_index(idx) if isinstance(idx, tuple) else idx
-    return np.angle(eigenvectors[:, :, flat_idx])  # type:ignore[return-value]
-
-
-W = TypeVar("W", bound=PositionBasisWavepacket[Any, Any, Any, Any, Any])
-
-
-def normalize_wavepacket_position_basis(
-    wavepacket: Wavepacket[
-        _NS0Inv,
-        _NS1Inv,
-        BasisConfig[
-            PositionBasis[_L0Inv], PositionBasis[_L1Inv], PositionBasis[_L2Inv]
-        ],
-    ],
-    idx: int | tuple[int, int, int] = 0,
-    angle: float = 0,
-) -> Wavepacket[
-    _NS0Inv,
-    _NS1Inv,
-    BasisConfig[PositionBasis[_L0Inv], PositionBasis[_L1Inv], PositionBasis[_L2Inv]],
-]:
-    """
-    Normalize the eigenstates in a wavepacket.
-
-    Parameters
-    ----------
-    wavepacket : Wavepacket[_NS0Inv, _NS1Inv, BasisConfig[PositionBasis[_L0Inv], PositionBasis[_L1Inv], PositionBasis[_L2Inv]]]
-    idx : int | tuple[int, int, int], optional
-        Index of the eigenstate to normalize, by default 0
-        This index is taken in the irreducible unit cell
-    angle: float, optional
-        Angle to normalize the wavepacket to at the point idx.
-        Each wavefunction will have the phase exp(i * angle) at the position
-        given by idx
-
-    Returns
-    -------
-    Wavepacket: Wavepacket[_NS0Inv, _NS1Inv, BasisConfig[PositionBasis[_L0Inv], PositionBasis[_L1Inv], PositionBasis[_L2Inv]]]
-        The wavepacket, normalized
-    """
-    bloch_angles = _get_bloch_phase_position_basis(wavepacket, idx)
-    global_phases = _get_global_phases(wavepacket, idx)
-
-    phases = np.exp(-1j * (bloch_angles + global_phases - angle))
-    fixed_eigenvectors = wavepacket["vectors"] * phases[:, :, np.newaxis]
-
-    return {  # type: ignore[return-value]
-        "basis": wavepacket["basis"],
-        "vectors": fixed_eigenvectors,
-        "energies": wavepacket["energies"],
-    }
-
-
 def select_wavepacket_eigenstate(
     wavepacket: Wavepacket[_NS0Inv, _NS1Inv, _BC0Inv], idx: tuple[int, int]
 ) -> Eigenstate[_BC0Inv]:
@@ -395,25 +256,6 @@ def select_wavepacket_eigenstate(
         "basis": wavepacket["basis"],
         "vector": wavepacket["vectors"][idx[0], idx[1]],
     }
-
-
-def calculate_normalisation(wavepacket: Wavepacket[_NS0Inv, _NS1Inv, _BC0Inv]) -> float:
-    """
-    calculate the normalization of a wavepacket.
-
-    This should always be 1
-
-    Parameters
-    ----------
-    wavepacket : Wavepacket[Any]
-
-    Returns
-    -------
-    float
-    """
-    n_states = np.prod(wavepacket["energies"].shape)
-    total_norm: complex = np.sum(np.conj(wavepacket["vectors"]) * wavepacket["vectors"])
-    return float(total_norm / n_states)
 
 
 def get_eigenstate(
@@ -444,165 +286,4 @@ def get_eigenstate(
     return {
         "basis": wavepacket["basis"],
         "vector": wavepacket["vectors"][unraveled_index],
-    }
-
-
-def _get_bloch_phase_momentum_basis_eigenstate(
-    eigenstate: Eigenstate[
-        BasisConfig[
-            MomentumBasis[_LF0Inv],
-            MomentumBasis[_LF1Inv],
-            MomentumBasis[_LF2Inv],
-        ],
-    ],
-    idx: int | tuple[int, int, int] = 0,
-) -> float:
-    converted = convert_eigenstate_to_position_basis(eigenstate)
-
-    util = BasisConfigUtil(converted["basis"])
-    flat_idx = util.get_flat_index(idx) if isinstance(idx, tuple) else idx
-    return float(np.angle(converted["vector"][flat_idx]))
-
-
-@timed
-def _get_bloch_phase_momentum_basis(
-    wavepacket: Wavepacket[
-        _NS0Inv,
-        _NS1Inv,
-        BasisConfig[
-            MomentumBasis[_LF0Inv],
-            MomentumBasis[_LF1Inv],
-            MomentumBasis[_LF2Inv],
-        ],
-    ],
-    idx: int | tuple[int, int, int] = 0,
-) -> np.ndarray[tuple[_NS0Inv, _NS1Inv], np.dtype[np.float_]]:
-    """
-    Get the phase of the bloch wavefunctions at the given point in position space.
-
-    Parameters
-    ----------
-    wavepacket : Wavepacket[ _NS0Inv, _NS1Inv, BasisConfig[PositionBasis[_L0Inv], PositionBasis[_L1Inv], _BX2Inv]]
-        the wavepacket to calculate the phase of
-    idx : int | tuple[int, int, int], optional
-        the index in real space, by default 0
-
-    Returns
-    -------
-    np.ndarray[tuple[_NS0Inv, _NS1Inv], np.dtype[np.float_]]
-        the angle for each point in the wavepacket
-    """
-    return np.array(  # type:ignore[no-any-return]
-        [
-            _get_bloch_phase_momentum_basis_eigenstate(
-                get_eigenstate(wavepacket, i), idx
-            )
-            for i in range(wavepacket["energies"].size)
-        ]
-    ).reshape(*wavepacket["energies"].shape)
-
-
-@timed
-def normalize_momentum_wavepacket(
-    wavepacket: Wavepacket[
-        _NS0Inv,
-        _NS1Inv,
-        BasisConfig[
-            MomentumBasis[_LF0Inv],
-            MomentumBasis[_LF1Inv],
-            MomentumBasis[_LF2Inv],
-        ],
-    ],
-    idx: int | tuple[int, int, int] = 0,
-    angle: float = 0,
-) -> Wavepacket[
-    _NS0Inv,
-    _NS1Inv,
-    BasisConfig[
-        MomentumBasis[_LF0Inv],
-        MomentumBasis[_LF1Inv],
-        MomentumBasis[_LF2Inv],
-    ],
-]:
-    """
-    normalize a wavepacket in momentum basis.
-
-    Parameters
-    ----------
-    wavepacket : Wavepacket[ _NS0Inv, _NS1Inv, BasisConfig[ TruncatedBasis[_L0Inv, MomentumBasis[_LF0Inv]], TruncatedBasis[_L1Inv, MomentumBasis[_LF1Inv]], ExplicitBasis[_L2Inv, PositionBasis[_LF2Inv]], ], ]
-    idx : int | tuple[int, int, int], optional
-        Index of the eigenstate to normalize, by default 0
-        This index is taken in the irreducible unit cell
-    angle: float, optional
-        Angle to normalize the wavepacket to at the point idx.
-        Each wavefunction will have the phase exp(i * angle) at the position
-        given by idx
-
-    Returns
-    -------
-    Wavepacket[ _NS0Inv, _NS1Inv, BasisConfig[ TruncatedBasis[_L0Inv, MomentumBasis[_LF0Inv]], TruncatedBasis[_L1Inv, MomentumBasis[_LF1Inv]], ExplicitBasis[_L2Inv, PositionBasis[_LF2Inv]], ], ]
-    """
-    bloch_angles = _get_bloch_phase_momentum_basis(wavepacket, idx)
-    global_phases = _get_global_phases(wavepacket, idx)
-
-    phases = np.exp(-1j * (bloch_angles + global_phases - angle))
-    fixed_eigenvectors = wavepacket["vectors"] * phases[:, :, np.newaxis]
-
-    return {
-        "basis": wavepacket["basis"],
-        "vectors": fixed_eigenvectors,
-        "energies": wavepacket["energies"],
-    }
-
-
-def convert_sho_wavepacket_to_momentum(
-    wavepacket: Wavepacket[
-        _NS0Inv,
-        _NS1Inv,
-        BasisConfig[
-            TruncatedBasis[_L0Inv, MomentumBasis[_LF0Inv]],
-            TruncatedBasis[_L1Inv, MomentumBasis[_LF1Inv]],
-            ExplicitBasis[_L2Inv, PositionBasis[_LF2Inv]],
-        ],
-    ]
-) -> Wavepacket[
-    _NS0Inv,
-    _NS1Inv,
-    BasisConfig[
-        MomentumBasis[_L0Inv],
-        MomentumBasis[_L1Inv],
-        MomentumBasis[_LF2Inv],
-    ],
-]:
-    """
-    Convert a sho wavepacket to momentum basis.
-
-    Parameters
-    ----------
-    wavepacket : Wavepacket[_NS0Inv, _NS1Inv, BasisConfig[ TruncatedBasis[_L0Inv, MomentumBasis[_LF0Inv]], TruncatedBasis[_L1Inv, MomentumBasis[_LF1Inv]], ExplicitBasis[_L2Inv, PositionBasis[_LF2Inv]]]]
-
-    Returns
-    -------
-    Wavepacket[ _NS0Inv, _NS1Inv, BasisConfig[MomentumBasis[_LF0Inv], MomentumBasis[_LF1Inv], MomentumBasis[_LF2Inv]]]
-    """
-    vectors = np.array(
-        [
-            convert_sho_eigenstate_to_momentum_basis(get_eigenstate(wavepacket, i))[
-                "vector"
-            ]
-            for i in range(wavepacket["energies"].size)
-        ]
-    ).reshape(*wavepacket["energies"].shape, -1)
-    return {
-        "basis": (
-            as_fundamental_basis(wavepacket["basis"][0]),
-            as_fundamental_basis(wavepacket["basis"][1]),
-            {
-                "_type": "momentum",
-                "delta_x": wavepacket["basis"][2]["parent"]["delta_x"],
-                "n": wavepacket["basis"][2]["parent"]["n"],
-            },
-        ),
-        "vectors": vectors,
-        "energies": wavepacket["energies"],
     }

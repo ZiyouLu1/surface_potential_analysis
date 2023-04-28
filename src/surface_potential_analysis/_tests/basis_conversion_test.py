@@ -97,6 +97,8 @@ class BasisConversionTest(unittest.TestCase):
         n = 10
 
         basis = get_random_explicit_basis("position", fundamental_n=n, n=1)
+        basis["vectors"] = np.ones_like(basis["vectors"])
+        basis["vectors"] /= np.linalg.norm(basis["vectors"])
 
         transformed = explicit_position_basis_in_momentum(basis)
         expected = np.zeros_like(basis["vectors"])

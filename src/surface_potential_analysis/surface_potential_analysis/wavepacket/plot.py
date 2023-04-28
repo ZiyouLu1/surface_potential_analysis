@@ -16,7 +16,7 @@ from surface_potential_analysis.basis_config.basis_config import (
     get_fundamental_projected_x_points,
 )
 from surface_potential_analysis.eigenstate.conversion import (
-    convert_eigenstate_to_position_basis,
+    convert_momentum_basis_eigenstate_to_position_basis,
 )
 from surface_potential_analysis.eigenstate.plot import (
     animate_eigenstate_3d,
@@ -238,7 +238,9 @@ def plot_wavepacket_2d(
     tuple[Figure, Axes, QuadMesh]
     """
     eigenstate_momentum = unfurl_wavepacket(wavepacket)
-    eigenstate = convert_eigenstate_to_position_basis(eigenstate_momentum)
+    eigenstate = convert_momentum_basis_eigenstate_to_position_basis(
+        eigenstate_momentum
+    )
     return plot_eigenstate_2d(
         eigenstate, idx, z_axis, ax=ax, measure=measure, scale=scale
     )
@@ -376,10 +378,14 @@ def plot_wavepacket_difference_2d(
     tuple[Figure, Axes, QuadMesh]
     """
     eigenstate_momentum0 = unfurl_wavepacket(wavepacket0)
-    eigenstate0 = convert_eigenstate_to_position_basis(eigenstate_momentum0)
+    eigenstate0 = convert_momentum_basis_eigenstate_to_position_basis(
+        eigenstate_momentum0
+    )
 
     eigenstate_momentum1 = unfurl_wavepacket(wavepacket1)
-    eigenstate1 = convert_eigenstate_to_position_basis(eigenstate_momentum1)
+    eigenstate1 = convert_momentum_basis_eigenstate_to_position_basis(
+        eigenstate_momentum1
+    )
 
     return plot_eigenstate_difference_2d(
         eigenstate0, eigenstate1, idx, z_axis, ax=ax, measure=measure, scale=scale
@@ -414,7 +420,9 @@ def animate_wavepacket_3d(
     tuple[Figure, Axes, ArtistAnimation]
     """
     eigenstate_momentum = unfurl_wavepacket(wavepacket)
-    eigenstate = convert_eigenstate_to_position_basis(eigenstate_momentum)
+    eigenstate = convert_momentum_basis_eigenstate_to_position_basis(
+        eigenstate_momentum
+    )
     return animate_eigenstate_3d(
         eigenstate, z_axis, ax=ax, measure=measure, scale=scale
     )
@@ -529,7 +537,9 @@ def plot_wavepacket_along_path(
     tuple[Figure, Axes, Line2D]
     """
     eigenstate_momentum = unfurl_wavepacket(wavepacket)
-    eigenstate = convert_eigenstate_to_position_basis(eigenstate_momentum)
+    eigenstate = convert_momentum_basis_eigenstate_to_position_basis(
+        eigenstate_momentum
+    )
     return plot_eigenstate_along_path(
         eigenstate, path, ax=ax, measure=measure, scale=scale
     )

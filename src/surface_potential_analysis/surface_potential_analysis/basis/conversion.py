@@ -10,6 +10,7 @@ from surface_potential_analysis.basis.basis import (
     TruncatedBasis,
     is_basis_type,
 )
+from surface_potential_analysis.interpolation import pad_ft_points
 
 _L0Inv = TypeVar("_L0Inv", bound=int)
 _L1Inv = TypeVar("_L1Inv", bound=int)
@@ -138,9 +139,15 @@ def as_explicit_position_basis(
                 "_type": "position",
                 "delta_x": basis["parent"]["delta_x"],
                 "n": basis["parent"]["n"],
-            },
-            "vectors": np.fft.ifft(
-                np.eye(basis["n"], basis["parent"]["n"]), axis=1, norm="ortho"
+            },  # pad_ft_points selects the relevant states in the truncated momentum basis
+            "vectors": pad_ft_points(  # type: ignore[typeddict-item]
+                np.fft.ifft(
+                    np.eye(basis["parent"]["n"], basis["parent"]["n"]),
+                    axis=1,
+                    norm="ortho",
+                ),
+                s=(basis["n"],),
+                axes=(0,),
             ),
         }
     if is_basis_type(basis, "explicit") and basis["parent"]["_type"] == "momentum":
@@ -174,6 +181,6 @@ def get_basis_conversion_matrix(
     -------
     np.ndarray[tuple[_L0Inv, _L0Inv], np.dtype[np.complex_]]
     """
-    vectors0 = as_explicit_position_basis(basis0)["vectors"]
-    vectors1 = as_explicit_position_basis(basis1)["vectors"]
-    return np.dot(vectors0, np.conj(vectors1).T)
+    vectors0: np.ndarray[Any, Any] = as_explicit_position_basis(basis0)["vectors"]
+    vectors1: np.ndarray[Any, Any] = as_explicit_position_basis(basis1)["vectors"]
+    return np.dot(vectors0, np.conj(vectors1).T)  # type: ignore[no-any-return]

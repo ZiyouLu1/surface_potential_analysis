@@ -9,10 +9,11 @@ import scipy.interpolate
 from surface_potential_analysis.util import slice_along_axis
 
 _DT = TypeVar("_DT", bound=np.dtype[Any])
+_S0Inv = TypeVar("_S0Inv", bound=tuple[int, ...])
 
 
 def pad_ft_points(
-    array: np.ndarray[tuple[int, ...], _DT], s: Sequence[int], axes: Sequence[int]
+    array: np.ndarray[_S0Inv, _DT], s: Sequence[int], axes: Sequence[int]
 ) -> np.ndarray[tuple[int, ...], _DT]:
     """
     Pad the points in the fourier transform with zeros.
@@ -107,7 +108,7 @@ def interpolate_points_fftn(
 
 
 def pad_ft_points_real_axis(
-    array: np.ndarray[tuple[int, ...], _DT], n: int, axis: int = -1
+    array: np.ndarray[_S0Inv, _DT], n: int, axis: int = -1
 ) -> np.ndarray[tuple[int, ...], _DT]:
     """
     Pad the points in the fourier transform with zeros, along the 'real' axis.
@@ -146,7 +147,7 @@ def pad_ft_points_real_axis(
 
 
 def interpolate_points_rfftn(
-    points: np.ndarray[tuple[int, ...], np.dtype[np.float_]],
+    points: np.ndarray[_S0Inv, np.dtype[np.float_]],
     s: Sequence[int],
     axes: Sequence[int] | None = None,
 ) -> np.ndarray[tuple[int, ...], np.dtype[np.float_]]:
@@ -178,7 +179,7 @@ def interpolate_points_rfftn(
 
 
 def interpolate_points_rfft(
-    points: np.ndarray[tuple[int, ...], np.dtype[np.float_]], n: int, axis: int = -1
+    points: np.ndarray[_S0Inv, np.dtype[np.float_]], n: int, axis: int = -1
 ) -> np.ndarray[tuple[int, ...], np.dtype[np.float_]]:
     """
     interpolate along the given axis to a new length n.
@@ -298,7 +299,7 @@ def interpolate_points_rfft(
 
 
 def interpolate_points_along_axis_spline(
-    data: np.ndarray[tuple[int, ...], np.dtype[np.float_]],
+    data: np.ndarray[_S0Inv, np.dtype[np.float_]],
     old_coords: np.ndarray[tuple[int], np.dtype[np.float_]],
     n: int,
     axis: int = -1,

@@ -8,7 +8,7 @@ from surface_potential_analysis.energy_eigenstate import (
     EnergyEigenstatesLegacy,
     save_energy_eigenstates,
 )
-from surface_potential_analysis.hamiltonian import (
+from surface_potential_analysis.hamiltonian.hamiltonian import (
     SurfaceHamiltonianUtil,
     calculate_energy_eigenstates,
 )

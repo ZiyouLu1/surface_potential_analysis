@@ -1,5 +1,4 @@
 import numpy as np
-
 from surface_potential_analysis.eigenstate.eigenstate import EigenstateConfigUtil
 from surface_potential_analysis.energy_eigenstate import (
     EnergyEigenstatesLegacy,
@@ -7,7 +6,9 @@ from surface_potential_analysis.energy_eigenstate import (
     load_energy_eigenstates,
     normalize_eigenstate_phase,
 )
-from surface_potential_analysis.hamiltonian import generate_energy_eigenstates_grid
+from surface_potential_analysis.hamiltonian.hamiltonian import (
+    generate_energy_eigenstates_grid,
+)
 from surface_potential_analysis.wavepacket_grid import (
     calculate_wavepacket_grid,
     calculate_wavepacket_grid_fourier,
@@ -28,8 +29,6 @@ def generate_eigenstates_grid_relaxed():
     h = generate_hamiltonian(resolution=(21, 21, 14))
     path = get_data_path("eigenstates_grid_relaxed.json")
 
-    # h = generate_hamiltonian(resolution=(12, 12, 15))
-    # path = get_data_path("eigenstates_grid_relaxed_hd.json")
 
     generate_energy_eigenstates_grid(path, h, size=(4, 4))
 

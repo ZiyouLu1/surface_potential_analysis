@@ -27,16 +27,19 @@ if TYPE_CHECKING:
 def load_nickel_wavepacket(
     idx: int,
 ) -> Wavepacket[
-    Literal[8],
-    Literal[8],
+    Literal[12],
+    Literal[12],
     BasisConfig[
-        TruncatedBasis[Literal[23], MomentumBasis[Literal[250]]],
-        TruncatedBasis[Literal[23], MomentumBasis[Literal[250]]],
+        TruncatedBasis[Literal[23], MomentumBasis[Literal[23]]],
+        TruncatedBasis[Literal[23], MomentumBasis[Literal[23]]],
         ExplicitBasis[Literal[12], PositionBasis[Literal[250]]],
     ],
 ]:
     path = get_data_path(f"wavepacket_large_{idx}.npy")
-    return load_wavepacket(path)
+    wavepacket = load_wavepacket(path)
+    wavepacket["basis"][0]["parent"]["n"] = 23
+    wavepacket["basis"][1]["parent"]["n"] = 23
+    return wavepacket
 
 
 def generate_nickel_wavepacket_sho() -> None:

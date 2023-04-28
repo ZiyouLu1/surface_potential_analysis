@@ -8,7 +8,7 @@ from scipy.constants import hbar
 from surface_potential_analysis.basis.basis import (
     ExplicitBasis,
     PositionBasis,
-    explicit_momentum_basis_in_position,
+    explicit_position_basis_in_momentum,
 )
 from surface_potential_analysis.basis_config.sho_basis import (
     SHOBasisConfig,
@@ -134,7 +134,7 @@ class SHOBasisTest(unittest.TestCase):
         norm = np.linalg.norm(basis["vectors"], axis=1)
         np.testing.assert_array_almost_equal(norm, np.ones_like(norm))
 
-        transformed = explicit_momentum_basis_in_position(basis)
+        transformed = explicit_position_basis_in_momentum(basis)
         norm = np.linalg.norm(transformed["vectors"], axis=1)
         np.testing.assert_array_almost_equal(norm, np.ones_like(norm))
 
@@ -144,7 +144,7 @@ class SHOBasisTest(unittest.TestCase):
             "sho_omega": 1 / hbar,
             "x_origin": np.array([0, 0, -5 * np.pi]),
         }
-        parent: PositionBasis[Literal[1001]] = {
+        parent: PositionBasis[int] = {
             "_type": "position",
             "delta_x": np.array([0, 0, 10 * np.pi]),
             "n": 1001,

@@ -55,7 +55,7 @@ def get_random_explicit_basis(
     parent: PositionBasis[int] | MomentumBasis[int] = {  # type:ignore[misc,assignment]
         "_type": _type,
         "delta_x": np.array([1, 0, 0]),
-        "n": n,
+        "n": fundamental_n,
     }
 
     return {

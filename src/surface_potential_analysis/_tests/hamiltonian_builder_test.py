@@ -16,7 +16,9 @@ from surface_potential_analysis.basis_config.sho_basis import (
     SHOBasisConfig,
     calculate_x_distances,
 )
-from surface_potential_analysis.hamiltonian import convert_x2_to_explicit_basis
+from surface_potential_analysis.hamiltonian.hamiltonian import (
+    convert_x2_to_explicit_basis,
+)
 from surface_potential_analysis.hamiltonian_builder import (
     momentum_basis,
     sho_subtracted_basis,
@@ -58,9 +60,9 @@ def _generate_symmetrical_points(
 def _generate_random_diagonal_hamiltonian() -> (
     _SurfaceHamiltonianUtil[Any, Any, Any, Any, Any, Any]
 ):
-    nkx = rng.integers(3, 10)
-    nky = rng.integers(3, 10)
-    nkz = rng.integers(3, 10)
+    nkx = rng.integers(3, 5)
+    nky = rng.integers(3, 5)
+    nkz = rng.integers(3, 5)
 
     nz = rng.integers(5, 100)
     z_offset = 20 * rng.random()
@@ -410,7 +412,7 @@ class HamiltonianBuilderTest(unittest.TestCase):
                 },
                 potential["basis"][2],
             ),
-            "points": interpolated_points,
+            "points": interpolated_points, #type:ignore[typeddict-item]
         }
 
         actual = sho_subtracted_basis.total_surface_hamiltonian(
@@ -483,7 +485,7 @@ class HamiltonianBuilderTest(unittest.TestCase):
                 },
                 potential["basis"][2],
             ),
-            "points": interpolated_points,
+            "points": interpolated_points,#type:ignore[typeddict-item]
         }
 
         actual = sho_subtracted_basis.total_surface_hamiltonian(

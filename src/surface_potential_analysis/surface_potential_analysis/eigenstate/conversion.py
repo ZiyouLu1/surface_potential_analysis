@@ -53,10 +53,8 @@ class _StackedEigenstate(TypedDict, Generic[_BC0Cov]):
 StackedEigenstateWithBasis = _StackedEigenstate[BasisConfig[_BX0Cov, _BX1Cov, _BX2Cov]]
 
 
-def _stack_eigenstate(
-    state: Eigenstate[BasisConfig[_BX0Inv, _BX1Inv, _BX2Inv]]
-) -> _StackedEigenstate[BasisConfig[_BX0Inv, _BX1Inv, _BX2Inv]]:
-    util = BasisConfigUtil(state["basis"])
+def _stack_eigenstate(state: Eigenstate[_BC0Inv]) -> _StackedEigenstate[_BC0Inv]:
+    util = BasisConfigUtil[Any, Any, Any](state["basis"])
     return {"basis": state["basis"], "vector": state["vector"].reshape(util.shape)}
 
 
@@ -83,7 +81,7 @@ def convert_eigenstate_to_basis(
     return {"basis": basis, "vector": converted}
 
 
-def convert_eigenstate_to_momentum_basis(
+def convert_position_basis_eigenstate_to_momentum_basis(
     eigenstate: PositionBasisEigenstate[_L0Inv, _L1Inv, _L2Inv]
 ) -> MomentumBasisEigenstate[_L0Inv, _L1Inv, _L2Inv]:
     """
@@ -126,7 +124,7 @@ def convert_eigenstate_to_momentum_basis(
     }
 
 
-def convert_eigenstate_to_position_basis(
+def convert_momentum_basis_eigenstate_to_position_basis(
     eigenstate: MomentumBasisEigenstate[_L0Inv, _L1Inv, _L2Inv]
 ) -> PositionBasisEigenstate[_L0Inv, _L1Inv, _L2Inv]:
     """

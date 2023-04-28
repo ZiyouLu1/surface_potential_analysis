@@ -1,6 +1,3 @@
-"""Tools for generating a surface hamiltonian in the momentum basis."""
-
-
 from typing import Literal, TypeVar
 
 import numpy as np
@@ -10,11 +7,13 @@ from surface_potential_analysis.basis_config.basis_config import (
     BasisConfigUtil,
     MomentumBasisConfig,
 )
-from surface_potential_analysis.hamiltonian import (
+from surface_potential_analysis.hamiltonian.conversion import (
+    convert_hamiltonian_to_momentum_basis,
+)
+from surface_potential_analysis.hamiltonian.hamiltonian import (
     MomentumBasisHamiltonian,
     PositionBasisStackedHamiltonian,
     add_hamiltonian,
-    convert_stacked_hamiltonian_to_momentum_basis,
     flatten_hamiltonian,
 )
 from surface_potential_analysis.potential import Potential
@@ -112,8 +111,8 @@ def total_surface_hamiltonian(
     MomentumBasisHamiltonian[_L0, _L1, _L2]
     """
     potential_hamiltonian = hamiltonian_from_potential(potential)
-    potential_in_momentum = flatten_hamiltonian(
-        convert_stacked_hamiltonian_to_momentum_basis(potential_hamiltonian)
+    potential_in_momentum = convert_hamiltonian_to_momentum_basis(
+        flatten_hamiltonian(potential_hamiltonian)
     )
 
     kinetic = hamiltonian_from_mass(potential_in_momentum["basis"], mass, bloch_phase)
