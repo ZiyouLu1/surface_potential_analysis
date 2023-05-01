@@ -16,6 +16,11 @@ from surface_potential_analysis.util import (
     slice_along_axis,
 )
 
+from ._comparison_points import (
+    get_100_comparison_points_x2,
+    get_111_comparison_points_x2,
+)
+
 if TYPE_CHECKING:
     from collections.abc import Mapping
 
@@ -104,6 +109,68 @@ def plot_potential_1d_comparison(
         line.set_label(label)
     ax.legend()
     return fig, ax
+
+
+def plot_potential_1d_x2_comparison_111(
+    potential: Potential[_L0Inv, _L1Inv, _L2Inv],
+    offset: tuple[int, int] = (0, 0),
+    *,
+    ax: Axes | None = None,
+    scale: Literal["symlog", "linear"] = "linear",
+) -> tuple[Figure, Axes]:
+    """
+    Plot the potential along the x2 at the relevant 111 sites.
+
+    Parameters
+    ----------
+    potential : Potential[_L0Inv, _L1Inv, _L2Inv]
+    offset : tuple[int, int]
+        index of the fcc site
+    ax : Axes | None, optional
+        plot axis, by default None
+    scale : Literal[&quot;symlog&quot;, &quot;linear&quot;], optional
+        scale, by default "linear"
+
+    Returns
+    -------
+    tuple[Figure, Axes]
+    """
+    points = get_111_comparison_points_x2(potential, offset)
+    comparison_points = {k: (2, v) for (k, v) in points.items()}
+    return plot_potential_1d_comparison(
+        potential, comparison_points, ax=ax, scale=scale
+    )
+
+
+def plot_potential_1d_x2_comparison_100(
+    potential: Potential[_L0Inv, _L1Inv, _L2Inv],
+    offset: tuple[int, int] = (0, 0),
+    *,
+    ax: Axes | None = None,
+    scale: Literal["symlog", "linear"] = "linear",
+) -> tuple[Figure, Axes]:
+    """
+    Plot the potential along the x2 at the relevant 100 sites.
+
+    Parameters
+    ----------
+    potential : Potential[_L0Inv, _L1Inv, _L2Inv]
+    offset : tuple[int, int]
+        index of the fcc site
+    ax : Axes | None, optional
+        plot axis, by default None
+    scale : Literal[&quot;symlog&quot;, &quot;linear&quot;], optional
+        scale, by default "linear"
+
+    Returns
+    -------
+    tuple[Figure, Axes]
+    """
+    points = get_100_comparison_points_x2(potential, offset)
+    comparison_points = {k: (2, v) for (k, v) in points.items()}
+    return plot_potential_1d_comparison(
+        potential, comparison_points, ax=ax, scale=scale
+    )
 
 
 def plot_potential_2d(

@@ -242,10 +242,7 @@ def plot_wavepacket_2d(
     -------
     tuple[Figure, Axes, QuadMesh]
     """
-    eigenstate_momentum = unfurl_wavepacket(wavepacket)
-    eigenstate = convert_momentum_basis_eigenstate_to_position_basis(
-        eigenstate_momentum
-    )
+    eigenstate = unfurl_wavepacket(wavepacket)
     return plot_eigenstate_2d(
         eigenstate, idx, z_axis, ax=ax, measure=measure, scale=scale
     )

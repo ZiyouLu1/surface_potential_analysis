@@ -4,6 +4,15 @@ from typing import TYPE_CHECKING, Literal
 
 import matplotlib.pyplot as plt
 import numpy as np
+from surface_potential_analysis.eigenstate.eigenstate_collection import (
+    load_eigenstate_collection,
+    select_eigenstate,
+)
+from surface_potential_analysis.eigenstate.eigenstate_collection_plot import (
+    plot_energies_against_bloch_phase_1d,
+    plot_lowest_band_energies_against_bloch_kx,
+)
+from surface_potential_analysis.eigenstate.plot import animate_eigenstate_x0x1
 
 from .surface_data import get_data_path, save_figure
 
@@ -13,42 +22,42 @@ if TYPE_CHECKING:
     from matplotlib.lines import Line2D
 
 
-def analyze_eigenvalue_convergence():
+def analyze_eigenvalue_convergence() -> None:
     fig, ax = plt.subplots()
 
     path = get_data_path("eigenstates_25_25_14.json")
-    eigenstates = load_energy_eigenstates(path)
-    _, _, ln = plot_lowest_band_in_kx(eigenstates, ax=ax)
+    eigenstates = load_eigenstate_collection(path)
+    _, _, ln = plot_lowest_band_energies_against_bloch_kx(eigenstates, ax=ax)
     ln.set_label("(25,25,14)")
 
     path = get_data_path("eigenstates_23_23_14.json")
-    eigenstates = load_energy_eigenstates(path)
-    _, _, ln = plot_lowest_band_in_kx(eigenstates, ax=ax)
+    eigenstates = load_eigenstate_collection(path)
+    _, _, ln = plot_lowest_band_energies_against_bloch_kx(eigenstates, ax=ax)
     ln.set_label("(23,23,14)")
 
     path = get_data_path("eigenstates_23_23_15.json")
-    eigenstates = load_energy_eigenstates(path)
-    _, _, ln = plot_lowest_band_in_kx(eigenstates, ax=ax)
+    eigenstates = load_eigenstate_collection(path)
+    _, _, ln = plot_lowest_band_energies_against_bloch_kx(eigenstates, ax=ax)
     ln.set_label("(23,23,15)")
 
     path = get_data_path("eigenstates_23_23_16.json")
-    eigenstates = load_energy_eigenstates(path)
-    _, _, ln = plot_lowest_band_in_kx(eigenstates, ax=ax)
+    eigenstates = load_eigenstate_collection(path)
+    _, _, ln = plot_lowest_band_energies_against_bloch_kx(eigenstates, ax=ax)
     ln.set_label("(23,23,16)")
 
     path = get_data_path("eigenstates_25_25_16.json")
-    eigenstates = load_energy_eigenstates(path)
-    _, _, ln = plot_lowest_band_in_kx(eigenstates, ax=ax)
+    eigenstates = load_eigenstate_collection(path)
+    _, _, ln = plot_lowest_band_energies_against_bloch_kx(eigenstates, ax=ax)
     ln.set_label("(25,25,16)")
 
     path = get_data_path("eigenstates_23_23_17.json")
-    eigenstates = load_energy_eigenstates(path)
-    _, _, ln = plot_lowest_band_in_kx(eigenstates, ax=ax)
+    eigenstates = load_eigenstate_collection(path)
+    _, _, ln = plot_lowest_band_energies_against_bloch_kx(eigenstates, ax=ax)
     ln.set_label("(23,23,17)")
 
     path = get_data_path("eigenstates_23_23_18.json")
-    eigenstates = load_energy_eigenstates(path)
-    _, _, ln = plot_lowest_band_in_kx(eigenstates, ax=ax)
+    eigenstates = load_eigenstate_collection(path)
+    _, _, ln = plot_lowest_band_energies_against_bloch_kx(eigenstates, ax=ax)
     ln.set_label("(23,23,18)")
 
     ax.set_title(
@@ -65,27 +74,27 @@ def analyze_eigenvalue_convergence():
     input()
 
 
-def analyze_eigenvalue_convergence_relaxed():
+def analyze_eigenvalue_convergence_relaxed() -> None:
     fig, ax = plt.subplots()
 
     path = get_data_path("eigenstates_relaxed_17_17_15.json")
-    eigenstates = load_energy_eigenstates(path)
-    _, _, ln = plot_lowest_band_in_kx(eigenstates, ax=ax)
+    eigenstates = load_eigenstate_collection(path)
+    _, _, ln = plot_lowest_band_energies_against_bloch_kx(eigenstates, ax=ax)
     ln.set_label("(17,17,15)")
 
     path = get_data_path("eigenstates_relaxed_21_21_14.json")
-    eigenstates = load_energy_eigenstates(path)
-    _, _, ln = plot_lowest_band_in_kx(eigenstates, ax=ax)
+    eigenstates = load_eigenstate_collection(path)
+    _, _, ln = plot_lowest_band_energies_against_bloch_kx(eigenstates, ax=ax)
     ln.set_label("(21,21,14)")
 
     path = get_data_path("eigenstates_relaxed_21_21_15.json")
-    eigenstates = load_energy_eigenstates(path)
-    _, _, ln = plot_lowest_band_in_kx(eigenstates, ax=ax)
+    eigenstates = load_eigenstate_collection(path)
+    _, _, ln = plot_lowest_band_energies_against_bloch_kx(eigenstates, ax=ax)
     ln.set_label("(21,21,15)")
 
     path = get_data_path("eigenstates_relaxed_17_17_13.json")
-    eigenstates = load_energy_eigenstates(path)
-    _, _, ln = plot_lowest_band_in_kx(eigenstates, ax=ax)
+    eigenstates = load_eigenstate_collection(path)
+    _, _, ln = plot_lowest_band_energies_against_bloch_kx(eigenstates, ax=ax)
     ln.set_label("(17,17,13)")
 
     ax.set_title(
@@ -103,13 +112,17 @@ def analyze_eigenvalue_convergence_relaxed():
     fig, ax = plt.subplots()
 
     path = get_data_path("eigenstates_relaxed_10_10_14.json")
-    eigenstates = load_energy_eigenstates(path)
-    _, _, ln = plot_nth_band_in_kx(eigenstates, n=4, ax=ax)
+    eigenstates = load_eigenstate_collection(path)
+    _, _, ln = plot_energies_against_bloch_phase_1d(
+        eigenstates, np.array([1.0, 0, 0]), 4, ax=ax
+    )
     ln.set_label("(10,10,14)")
 
     path = get_data_path("eigenstates_relaxed_12_12_15.json")
-    eigenstates = load_energy_eigenstates(path)
-    _, _, ln = plot_nth_band_in_kx(eigenstates, n=4, ax=ax)
+    eigenstates = load_eigenstate_collection(path)
+    _, _, ln = plot_energies_against_bloch_phase_1d(
+        eigenstates, np.array([1.0, 0, 0]), 4, ax=ax
+    )
     ln.set_label("(12,12,15)")
 
     ax.set_title(
@@ -126,21 +139,18 @@ def analyze_eigenvalue_convergence_relaxed():
     input()
 
 
-def plot_lowest_eigenstate_3d_xy():
+def plot_lowest_eigenstate_3d_xy() -> None:
     path = get_data_path("eigenstates_relaxed_10_10_14.json")
-    eigenstates = load_energy_eigenstates(path)
+    collection = load_eigenstate_collection(path)
 
-    eigenstate = get_eigenstate_list(filter_eigenstates_band(eigenstates, n=0))[-1]
+    eigenstate = select_eigenstate(collection, 0, 0)
 
-    fig, _, _anim = animate_eigenstate_3d_in_xy(
-        eigenstates["eigenstate_config"], eigenstate, measure="real"
-    )
+    fig, _, _anim = animate_eigenstate_x0x1(eigenstate, measure="real")
     fig.show()
     input()
 
 
 def plot_eigenstate_z_hollow_site(
-    config: EigenstateConfig,
     eigenstate: Eigenstate,
     *,
     ax: Axes | None = None,
@@ -154,18 +164,18 @@ def plot_eigenstate_z_hollow_site(
     return plot_eigenstate_along_path(config, eigenstate, points, ax=ax)
 
 
-def analyze_eigenvector_convergence_z():
+def analyze_eigenvector_convergence_z() -> None:
     fig, ax = plt.subplots()
 
     path = get_data_path("eigenstates_25_25_16.json")
-    eigenstates = load_energy_eigenstates(path)
+    eigenstates = load_eigenstate_collection(path)
     _, _, ln = plot_eigenstate_z_hollow_site(
         eigenstates["eigenstate_config"], get_eigenstate_list(eigenstates)[0], ax=ax
     )
     ln.set_label("(25,25,16) kx=G/2")
 
     path = get_data_path("eigenstates_23_23_16.json")
-    eigenstates = load_energy_eigenstates(path)
+    eigenstates = load_eigenstate_collection(path)
     _, _, l2 = plot_eigenstate_z_hollow_site(
         eigenstates["eigenstate_config"], get_eigenstate_list(eigenstates)[0], ax=ax
     )
@@ -192,15 +202,15 @@ def plot_eigenstate_through_bridge(
     )
 
 
-def analyze_eigenvector_convergence_through_bridge():
+def analyze_eigenvector_convergence_through_bridge() -> None:
     path = get_data_path("eigenstates_25_25_14.json")
-    eigenstates = load_energy_eigenstates(path)
+    eigenstates = load_eigenstate_collection(path)
 
     fig, ax = plt.subplots()
     ax2 = ax.twinx()
 
     path = get_data_path("eigenstates_23_23_15.json")
-    eigenstates = load_energy_eigenstates(path)
+    eigenstates = load_eigenstate_collection(path)
     normalized = normalize_eigenstate_phase(eigenstates)
     _, _, ln = plot_eigenstate_through_bridge(
         eigenstates["eigenstate_config"], get_eigenstate_list(normalized)[5], ax=ax
@@ -237,16 +247,16 @@ def analyze_eigenvector_convergence_through_bridge():
     input()
 
 
-def plot_bloch_wavefunction_difference_at_boundary():
+def plot_bloch_wavefunction_difference_at_boundary() -> None:
     path = get_data_path("eigenstates_23_23_16.json")
-    eigenstates0 = load_energy_eigenstates(path)
+    eigenstates0 = load_eigenstate_collection(path)
     eigenstate0 = get_eigenstate_list(eigenstates0)[0]
 
     fig, ax, _ = plot_eigenstate_x0z(eigenstates0["eigenstate_config"], eigenstate0)
     fig.show()
 
     path = get_data_path("eigenstates_25_25_16.json")
-    eigenstates1 = load_energy_eigenstates(path)
+    eigenstates1 = load_eigenstate_collection(path)
     eigenstate1 = get_eigenstate_list(eigenstates1)[0]
 
     fig, ax, _ = plot_eigenstate_x0z(eigenstates1["eigenstate_config"], eigenstate1)
@@ -287,10 +297,11 @@ def plot_bloch_wavefunction_difference_at_boundary():
     input()
 
 
-def analyze_oversampling_effect():
+def analyze_oversampling_effect() -> None:
     """
-    Does the effect of sampling a larger grid of points in k space change the
-    eigenvector of the groundstate significantly?.
+    Check if the effect of sampling a larger grid of points in k space.
+
+    Does this change the eigenvector of the groundstate significantly?.
     """
     path = get_data_path("oversampled_eigenstates.json")
     oversampled = load_energy_eigenstates(path)

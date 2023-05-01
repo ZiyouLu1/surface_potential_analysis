@@ -2,13 +2,19 @@ from __future__ import annotations
 
 import numpy as np
 from matplotlib import pyplot as plt
+from surface_potential_analysis.basis_config.plot import plot_projected_coordinates_2d
 from surface_potential_analysis.potential.plot import (
     animate_potential_x0x1,
+    plot_potential_1d_x2_comparison_111,
+    plot_potential_minimum_along_path,
 )
 from surface_potential_analysis.potential.plot_point_potential import (
     get_point_potential_xy_locations,
     plot_point_potential_all_z,
     plot_point_potential_location_xy,
+)
+from surface_potential_analysis.potential.plot_uneven_potential import (
+    plot_uneven_potential_z_comparison_111,
 )
 from surface_potential_analysis.potential.potential import (
     normalize_potential,
@@ -16,9 +22,9 @@ from surface_potential_analysis.potential.potential import (
 )
 
 from .s1_potential import (
-    load_interpolated_grid,
+    load_interpolated_potential,
     load_raw_data,
-    load_raw_data_grid,
+    load_raw_data_potential,
 )
 from .surface_data import save_figure
 
@@ -69,30 +75,31 @@ def plot_raw_data_points() -> None:
     input()
 
 
-def plot_raw_energy_grid_points() -> None:
-    grid = normalize_potential(load_raw_data_grid())
+def plot_raw_potential_points() -> None:
+    potential = normalize_potential(load_raw_data_potential())
 
-    fig, _, _ = plot_energy_grid_points(grid)
+    fig, _, _ = plot_projected_coordinates_2d(potential["basis"], 0, 2)
     fig.show()
 
-    fig, ax, _ = plot_z_direction_energy_data_111(grid)
+    fig, ax, _ = plot_potential_1d_x2_comparison_111(potential)
     fig.show()
 
-    fig, _, _ani = animate_potential_x0x1(grid)
+    fig, _, _ani = animate_potential_x0x1(potential)
     fig.show()
 
-    truncated = truncate_potential(grid, cutoff=2e-19, n=1, offset=1e-20)
-    fig, ax = plot_z_direction_energy_comparison_111(truncated, grid)
+    truncated = truncate_potential(potential, cutoff=2e-19, n=1, offset=1e-20)
+    fig, ax = plot_uneven_potential_z_comparison_111(truncated)
+    plot_potential_1d_x2_comparison_111(potential, ax=ax)
     ax.set_ylim(0, 0.2e-18)
     fig.show()
 
-    ft_points = np.abs(np.fft.ifft2(grid["points"], axes=(0, 1)))
+    ft_points = np.abs(np.fft.ifft2(potential["points"], axes=(0, 1)))
     ft_points[0, 0] = 0
     ft_grid: EnergyGrid = {
-        "delta_x0": grid["delta_x0"],
-        "delta_x1": grid["delta_x1"],
+        "delta_x0": potential["delta_x0"],
+        "delta_x1": potential["delta_x1"],
         "points": ft_points.tolist(),
-        "z_points": grid["z_points"],
+        "z_points": potential["z_points"],
     }
     fig, ax, _ani1 = animate_potential_x0x1(ft_grid)
     # TODO: delta is wrong, plot generic points and then factor out into ft.
@@ -102,23 +109,24 @@ def plot_raw_energy_grid_points() -> None:
 
 
 def plot_interpolated_energy_grid_points() -> None:
-    grid = load_interpolated_grid()
+    potential = load_interpolated_potential()
 
-    fig, ax, _ = plot_energy_grid_points(grid)
+    fig, ax, _ = plot_projected_coordinates_2d(potential, idx=0, z_axis=2)
     fig.show()
 
-    raw = normalize_potential(load_raw_data_grid())
-    fig, ax = plot_z_direction_energy_comparison_111(grid, raw)
+    raw = normalize_potential(load_raw_data_potential())
+    fig, ax = plot_uneven_potential_z_comparison_111(raw)
+    plot_potential_1d_x2_comparison_111(potential, ax=ax)
     fig.show()
 
-    fig, ax, _ani = animate_potential_x0x1(grid, clim=(0, 0.2e-18))
-    z_energies = np.min(grid["points"], axis=2)
+    fig, ax, _ani = animate_potential_x0x1(potential, clim=(0, 0.2e-18))
+    z_energies = np.min(potential["points"], axis=2)
     xy_min = np.unravel_index(np.argmin(z_energies), z_energies.shape)
     x0_min = xy_min[0] / (1 + z_energies.shape[0])
     x1_min = xy_min[1] / (1 + z_energies.shape[1])
     (line,) = ax.plot(
-        x0_min * grid["delta_x0"][0] + x1_min * grid["delta_x1"][0],
-        x0_min * grid["delta_x0"][1] + x1_min * grid["delta_x1"][1],
+        x0_min * potential["delta_x0"][0] + x1_min * potential["delta_x1"][0],
+        x0_min * potential["delta_x0"][1] + x1_min * potential["delta_x1"][1],
     )
     line.set_marker("x")
 
@@ -135,13 +143,13 @@ def plot_interpolated_energy_grid_points() -> None:
     fig.show()
     input()
 
-    ft_points = np.abs(np.fft.ifft2(grid["points"], axes=(0, 1)))
+    ft_points = np.abs(np.fft.ifft2(potential["points"], axes=(0, 1)))
     ft_points[0, 0] = 0
     ft_grid: EnergyGrid = {
-        "delta_x0": grid["delta_x0"],
-        "delta_x1": grid["delta_x1"],
+        "delta_x0": potential["delta_x0"],
+        "delta_x1": potential["delta_x1"],
         "points": ft_points.tolist(),
-        "z_points": grid["z_points"],
+        "z_points": potential["z_points"],
     }
     fig, ax, _ani1 = animate_potential_x0x1(ft_grid)
     ax.set_title("Plot of the ft of the interpolated potential")
@@ -175,11 +183,11 @@ def plot_interpolation_with_sho_wavefunctions() -> None:
     Plotting them alongside the interpolation in the hZ direction will allow us to
     diagnose these issues
     """
-    grid = load_interpolated_grid()
+    potential = load_interpolated_potential()
     fig, ax = plt.subplots()
-    plot_z_direction_energy_data_111(grid, ax=ax)
+    plot_potential_1d_x2_comparison_111(potential, ax=ax)
     plot_sho_wavefunctions(
-        grid["z_points"],
+        potential["z_points"],
         sho_omega=179704637926161.6,
         mass=1.6735575e-27,
         first_n=16,
@@ -195,7 +203,7 @@ def plot_interpolation_with_sho_wavefunctions() -> None:
 def plot_potential_minimum_along_diagonal() -> None:
     fig, ax = plt.subplots()
 
-    interpolation = load_interpolated_grid()
+    interpolation = load_interpolated_potential()
     path = [(x, x) for x in range(np.shape(interpolation["points"])[0])]
     _, _, _ = plot_potential_minimum_along_path(interpolation, path, ax=ax)
     fig.show()
@@ -205,22 +213,24 @@ def plot_potential_minimum_along_diagonal() -> None:
 
 
 def plot_potential_minimum_along_edge() -> None:
-    interpolation = load_interpolated_grid()
+    interpolation = load_interpolated_potential()
     fig, ax = plt.subplots()
-    path = [
-        (np.shape(interpolation["points"])[0] - (x), x)
-        for x in range(np.shape(interpolation["points"])[0])
-    ]
+    path = np.array(
+        [
+            (np.shape(interpolation["points"])[0] - (x), x)
+            for x in range(np.shape(interpolation["points"])[0])
+        ]
+    ).T
     # Add a fake point here so they line up. path[0] is not included in the unit cell
-    path[0] = path[2]
+    path[:, 0] = path[:, 2]
     _, _, line = plot_potential_minimum_along_path(interpolation, path, ax=ax)
     line.set_label("diagonal")
 
-    path = [(x, 0) for x in range(np.shape(interpolation["points"])[0])]
+    path = np.array([(x, 0) for x in range(np.shape(interpolation["points"])[0])]).T
     _, _, line = plot_potential_minimum_along_path(interpolation, path, ax=ax)
     line.set_label("x1=0")
 
-    path = [(0, y) for y in range(np.shape(interpolation["points"])[1])]
+    path = np.array([(0, y) for y in range(np.shape(interpolation["points"])[1])]).T
     _, _, line = plot_potential_minimum_along_path(interpolation, path, ax=ax)
     line.set_label("x0=0")
 

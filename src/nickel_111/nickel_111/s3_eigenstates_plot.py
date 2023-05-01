@@ -3,9 +3,6 @@ from __future__ import annotations
 import matplotlib.pyplot as plt
 import numpy as np
 from surface_potential_analysis.basis.plot import plot_explicit_basis_states_x
-from surface_potential_analysis.eigenstate.conversion import (
-    convert_sho_eigenstate_to_position_basis,
-)
 from surface_potential_analysis.eigenstate.eigenstate_collection import (
     load_eigenstate_collection,
     select_eigenstate,
@@ -119,21 +116,17 @@ def plot_eigenstate_for_each_band() -> None:
     collection = load_eigenstate_collection(path)
 
     eigenstate = select_eigenstate(collection, 0, 0)
-    eigenstate_position = convert_sho_eigenstate_to_position_basis(eigenstate)
-    fig, _, _anim0 = animate_eigenstate_x0x1(eigenstate_position)
+    fig, _, _anim0 = animate_eigenstate_x0x1(eigenstate)
     fig.show()
 
     eigenstate = select_eigenstate(collection, 0, 1)
-    eigenstate_position = convert_sho_eigenstate_to_position_basis(eigenstate)
-    fig, _, _anim1 = animate_eigenstate_x0x1(eigenstate_position)
+    fig, _, _anim1 = animate_eigenstate_x0x1(eigenstate)
     fig.show()
 
     eigenstate = select_eigenstate(collection, 0, 2)
-    eigenstate_position = convert_sho_eigenstate_to_position_basis(eigenstate)
-    fig, _, _anim2 = animate_eigenstate_x0x1(eigenstate_position)
+    fig, _, _anim2 = animate_eigenstate_x0x1(eigenstate)
     fig.show()
 
     eigenstate = select_eigenstate(collection, 0, 3)
-    eigenstate_position = convert_sho_eigenstate_to_position_basis(eigenstate)
-    fig, _, _anim3 = animate_eigenstate_x0x1(eigenstate_position)
+    fig, _, _anim3 = animate_eigenstate_x0x1(eigenstate)
     fig.show()

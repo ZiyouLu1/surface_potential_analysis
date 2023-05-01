@@ -61,11 +61,3 @@ def get_interpolated_potential_relaxed(
     normalized = normalize_potential(data)
 
     return interpolate_uneven_potential(normalized, shape)
-
-
-def generate_interpolated_copper_data_3d_spline():
-    data = load_relaxed_copper_potential()
-    normalized = normalize_potential(data)
-    interpolated = interpolate_energy_grid_3d_spline(normalized, shape=(60, 60, 120))
-    path = get_data_path("copper_spline_interpolated_energies_relaxed.json")
-    save_energy_grid(interpolated, path)

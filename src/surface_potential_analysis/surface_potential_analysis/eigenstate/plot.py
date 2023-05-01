@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Literal, TypeVar
+from typing import TYPE_CHECKING, Any, Literal, TypeVar
 
 import numpy as np
 from matplotlib import pyplot as plt
@@ -8,9 +8,12 @@ from matplotlib.animation import ArtistAnimation
 from matplotlib.colors import Normalize, SymLogNorm
 
 from surface_potential_analysis.basis_config.basis_config import (
+    BasisConfig,
+    BasisConfigUtil,
     PositionBasisConfigUtil,
     get_fundamental_projected_x_points,
 )
+from surface_potential_analysis.eigenstate.conversion import convert_eigenstate_to_basis
 from surface_potential_analysis.util import (
     calculate_cumulative_distances_along_path,
     get_measured_data,
@@ -23,15 +26,26 @@ if TYPE_CHECKING:
     from matplotlib.figure import Figure
     from matplotlib.lines import Line2D
 
-    from .eigenstate import PositionBasisEigenstate
+    from .eigenstate import Eigenstate, PositionBasisEigenstate
+
+_BC0Inv = TypeVar("_BC0Inv", bound=BasisConfig[Any, Any, Any])
 
 _L0Inv = TypeVar("_L0Inv", bound=int)
 _L1Inv = TypeVar("_L1Inv", bound=int)
 _L2Inv = TypeVar("_L2Inv", bound=int)
 
 
+def _convert_eigenstate_to_position(
+    eigenstate: Eigenstate[_BC0Inv],
+) -> PositionBasisEigenstate[Any, Any, Any]:
+    util = BasisConfigUtil(eigenstate["basis"])
+    return convert_eigenstate_to_basis(
+        eigenstate, util.get_fundamental_basis_in("position")
+    )
+
+
 def plot_eigenstate_2d(
-    eigenstate: PositionBasisEigenstate[_L0Inv, _L1Inv, _L2Inv],
+    eigenstate: Eigenstate[_BC0Inv],
     idx: int,
     z_axis: Literal[0, 1, 2, -1, -2, -3],
     *,
@@ -44,7 +58,7 @@ def plot_eigenstate_2d(
 
     Parameters
     ----------
-    eigenstate : PositionBasisEigenstate[_L0Inv, _L1Inv, _L2Inv]
+    eigenstate : Eigenstate[_BC0Inv]
     idx : int
         index along z_axis to plot
     z_axis : Literal[0, 1, 2, -1, -2, -3]
@@ -61,6 +75,7 @@ def plot_eigenstate_2d(
     tuple[Figure, Axes, QuadMesh]
     """
     fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
+    eigenstate = _convert_eigenstate_to_position(eigenstate)
 
     coordinates = get_fundamental_projected_x_points(eigenstate["basis"], z_axis)[
         slice_along_axis(idx, (z_axis % 3) + 1)
@@ -81,7 +96,7 @@ def plot_eigenstate_2d(
 
 
 def plot_eigenstate_x0x1(
-    eigenstate: PositionBasisEigenstate[_L0Inv, _L1Inv, _L2Inv],
+    eigenstate: Eigenstate[_BC0Inv],
     x2_idx: int,
     *,
     ax: Axes | None = None,
@@ -113,7 +128,7 @@ def plot_eigenstate_x0x1(
 
 
 def plot_eigenstate_x1x2(
-    eigenstate: PositionBasisEigenstate[_L0Inv, _L1Inv, _L2Inv],
+    eigenstate: Eigenstate[_BC0Inv],
     x0_idx: int,
     *,
     ax: Axes | None = None,
@@ -145,7 +160,7 @@ def plot_eigenstate_x1x2(
 
 
 def plot_eigenstate_x2x0(
-    eigenstate: PositionBasisEigenstate[_L0Inv, _L1Inv, _L2Inv],
+    eigenstate: Eigenstate[_BC0Inv],
     x1_idx: int,
     *,
     ax: Axes | None = None,
@@ -233,7 +248,7 @@ def _get_norm(
 
 
 def animate_eigenstate_3d(
-    eigenstate: PositionBasisEigenstate[_L0Inv, _L1Inv, _L2Inv],
+    eigenstate: Eigenstate[_BC0Inv],
     z_axis: Literal[0, 1, 2, -1, -2, -3],
     *,
     ax: Axes | None = None,
@@ -260,6 +275,7 @@ def animate_eigenstate_3d(
     tuple[Figure, Axes, ArtistAnimation]
     """
     fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
+    eigenstate = _convert_eigenstate_to_position(eigenstate)
 
     coordinates = get_fundamental_projected_x_points(eigenstate["basis"], z_axis)
     util = PositionBasisConfigUtil(eigenstate["basis"])
@@ -305,7 +321,7 @@ def animate_eigenstate_3d(
 
 
 def animate_eigenstate_x0x1(
-    eigenstate: PositionBasisEigenstate[_L0Inv, _L1Inv, _L2Inv],
+    eigenstate: Eigenstate[_BC0Inv],
     *,
     ax: Axes | None = None,
     measure: Literal["real", "imag", "abs"] = "abs",
@@ -332,7 +348,7 @@ def animate_eigenstate_x0x1(
 
 
 def animate_eigenstate_x1x2(
-    eigenstate: PositionBasisEigenstate[_L0Inv, _L1Inv, _L2Inv],
+    eigenstate: Eigenstate[_BC0Inv],
     *,
     ax: Axes | None = None,
     measure: Literal["real", "imag", "abs"] = "abs",
@@ -359,7 +375,7 @@ def animate_eigenstate_x1x2(
 
 
 def animate_eigenstate_x2x0(
-    eigenstate: PositionBasisEigenstate[_L0Inv, _L1Inv, _L2Inv],
+    eigenstate: Eigenstate[_BC0Inv],
     *,
     ax: Axes | None = None,
     measure: Literal["real", "imag", "abs"] = "abs",
@@ -386,7 +402,7 @@ def animate_eigenstate_x2x0(
 
 
 def plot_eigenstate_along_path(
-    eigenstate: PositionBasisEigenstate[_L0Inv, _L1Inv, _L2Inv],
+    eigenstate: Eigenstate[_BC0Inv],
     path: np.ndarray[tuple[Literal[3], int], np.dtype[np.int_]],
     *,
     ax: Axes | None = None,
@@ -394,7 +410,7 @@ def plot_eigenstate_along_path(
     scale: Literal["symlog", "linear"] = "linear",
 ) -> tuple[Figure, Axes, Line2D]:
     """
-    Plot an eigenstate in 1d along the given path.
+    Plot an eigenstate in 1d along the given path in position basis.
 
     Parameters
     ----------
@@ -413,6 +429,7 @@ def plot_eigenstate_along_path(
     tuple[Figure, Axes, Line2D]
     """
     fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
+    eigenstate = _convert_eigenstate_to_position(eigenstate)
 
     util = PositionBasisConfigUtil(eigenstate["basis"])
     points = eigenstate["vector"].reshape(*util.shape)[*path]

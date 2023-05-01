@@ -4,28 +4,29 @@ import numpy as np
 from matplotlib import pyplot as plt
 from surface_potential_analysis.eigenstate.conversion import (
     convert_sho_eigenstate_to_fundamental_xy,
-    convert_sho_eigenstate_to_position_basis,
 )
-from surface_potential_analysis.eigenstate.plot import animate_eigenstate_x1x2
-from surface_potential_analysis.wavepacket.conversion import (
-    convert_sho_wavepacket_to_momentum,
-)
-from surface_potential_analysis.wavepacket.normalization import (
-    normalize_wavepacket,
+from surface_potential_analysis.eigenstate.plot import (
+    animate_eigenstate_x1x2,
+    plot_eigenstate_x0x1,
 )
 from surface_potential_analysis.wavepacket.plot import (
     animate_wavepacket_x0x1,
     plot_wavepacket_energies_momentum,
     plot_wavepacket_energies_position,
     plot_wavepacket_sample_frequencies,
+    plot_wavepacket_x0x1,
 )
 from surface_potential_analysis.wavepacket.wavepacket import (
+    get_eigenstate,
     get_wavepacket_sample_fractions,
     load_wavepacket,
-    select_wavepacket_eigenstate,
 )
 
-from nickel_111.s4_wavepacket import load_nickel_wavepacket
+from nickel_111.s4_wavepacket import (
+    MAXIMUM_POINTS,
+    load_nickel_wavepacket,
+    load_normalized_nickel_wavepacket_momentum,
+)
 
 from .surface_data import get_data_path, save_figure
 
@@ -53,31 +54,25 @@ def plot_nickel_wavepacket_energies() -> None:
 def animate_wavepacket_eigenstates_x1x2() -> None:
     wavepacket = load_nickel_wavepacket(0)
 
-    eigenstate = select_wavepacket_eigenstate(wavepacket, (0, 0))
+    eigenstate = get_eigenstate(wavepacket, (0, 0))
     fundamental = convert_sho_eigenstate_to_fundamental_xy(eigenstate)
-    eigenstate_position = convert_sho_eigenstate_to_position_basis(fundamental)
-
-    fig, _, _anim0 = animate_eigenstate_x1x2(eigenstate_position, measure="real")
+    fig, _, _anim0 = animate_eigenstate_x1x2(fundamental, measure="real")
     fig.show()
 
     path = get_data_path("wavepacket_1.npy")
     wavepacket = load_wavepacket(path)
 
-    eigenstate = select_wavepacket_eigenstate(wavepacket, (0, 0))
+    eigenstate = get_eigenstate(wavepacket, (0, 0))
     fundamental = convert_sho_eigenstate_to_fundamental_xy(eigenstate)
-    eigenstate_position = convert_sho_eigenstate_to_position_basis(fundamental)
-
-    fig, _, _anim1 = animate_eigenstate_x1x2(eigenstate_position, measure="real")
+    fig, _, _anim1 = animate_eigenstate_x1x2(fundamental, measure="real")
     fig.show()
 
     path = get_data_path("wavepacket_2.npy")
     wavepacket = load_wavepacket(path)
 
-    eigenstate = select_wavepacket_eigenstate(wavepacket, (0, 0))
+    eigenstate = get_eigenstate(wavepacket, (0, 0))
     fundamental = convert_sho_eigenstate_to_fundamental_xy(eigenstate)
-    eigenstate_position = convert_sho_eigenstate_to_position_basis(fundamental)
-
-    fig, _, _anim2 = animate_eigenstate_x1x2(eigenstate_position, measure="real")
+    fig, _, _anim2 = animate_eigenstate_x1x2(fundamental, measure="real")
     fig.show()
     input()
 
@@ -142,18 +137,39 @@ def plot_wavepacket_points_me() -> None:
 
 
 def animate_nickel_wavepacket() -> None:
-    wavepacket = load_nickel_wavepacket(0)
-    momentum = convert_sho_wavepacket_to_momentum(wavepacket)
-    normalized = normalize_wavepacket(momentum, (0, 0, 117), 0)
+    wavepacket = load_normalized_nickel_wavepacket_momentum(0, (0, 0, 117), 0)
 
-    fig, _, _anim0 = animate_wavepacket_x0x1(normalized, scale="symlog")
+    fig, _, _anim0 = animate_wavepacket_x0x1(wavepacket, scale="symlog")
     fig.show()
 
-    wavepacket = load_nickel_wavepacket(1)
-    momentum = convert_sho_wavepacket_to_momentum(wavepacket)
-    normalized = normalize_wavepacket(momentum, (8, 8, 118), 0)
+    wavepacket = load_normalized_nickel_wavepacket_momentum(1, (8, 8, 118), 0)
 
-    fig, _, _anim1 = animate_wavepacket_x0x1(normalized, scale="symlog")
+    fig, _, _anim1 = animate_wavepacket_x0x1(wavepacket, scale="symlog")
     fig.show()
+
+    input()
+
+
+def plot_wavepacket_at_maximum_points() -> None:
+    for band in range(20):
+        max_point = MAXIMUM_POINTS[band]
+        normalized = load_normalized_nickel_wavepacket_momentum(band, max_point, 0)
+
+        fig, ax, _ = plot_wavepacket_x0x1(normalized, max_point[2], measure="abs")
+        fig.show()
+        ax.set_title(f"Plot of abs(wavefunction) for ix2={max_point[2]}")
+        save_figure(fig, f"./wavepacket/wavepacket_{band}.png")
+    input()
+
+
+def plot_nickel_wavepacket_eigenstate() -> None:
+    for band in range(20):
+        wavepacket = load_nickel_wavepacket(band)
+        eigenstate = get_eigenstate(wavepacket, 0)
+
+        fig, ax, _ = plot_eigenstate_x0x1(
+            eigenstate, MAXIMUM_POINTS[band][2], measure="abs"
+        )
+        fig.show()
 
     input()

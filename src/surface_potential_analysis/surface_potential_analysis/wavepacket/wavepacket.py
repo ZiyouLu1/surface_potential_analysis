@@ -202,7 +202,7 @@ def generate_wavepacket(
     ],
     samples: tuple[_NS0Inv, _NS1Inv],
     *,
-    save_bands: np.ndarray[tuple[int], np.dtype[np.int_]] | None = None
+    save_bands: np.ndarray[tuple[int], np.dtype[np.int_]] | None = None,
 ) -> list[Wavepacket[_NS0Inv, _NS1Inv, _BC0Inv]]:
     """
     Generate a wavepacket with the given number of samples.
@@ -240,27 +240,6 @@ def generate_wavepacket(
             out[b]["vectors"][is0, is1] = eigenstates["vectors"][band_idx]
             out[b]["energies"][is0, is1] = eigenstates["energies"][band_idx]
     return out
-
-
-def select_wavepacket_eigenstate(
-    wavepacket: Wavepacket[_NS0Inv, _NS1Inv, _BC0Inv], idx: tuple[int, int]
-) -> Eigenstate[_BC0Inv]:
-    """
-    Select a specific eigenstate from the wavepacket.
-
-    Parameters
-    ----------
-    wavepacket : Wavepacket[int, int, _BC0Inv]
-    idx : tuple[int, int]
-
-    Returns
-    -------
-    Eigenstate[_BC0Inv]
-    """
-    return {
-        "basis": wavepacket["basis"],
-        "vector": wavepacket["vectors"][idx[0], idx[1]],
-    }
 
 
 def get_eigenstate(

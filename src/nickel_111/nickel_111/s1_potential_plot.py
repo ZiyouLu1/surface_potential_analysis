@@ -21,7 +21,7 @@ from surface_potential_analysis.potential import (
 from surface_potential_analysis.potential.plot import (
     animate_potential_difference_2d,
     animate_potential_x0x1,
-    plot_potential_1d_comparison,
+    plot_potential_1d_x2_comparison_111,
     plot_potential_2d,
     plot_potential_difference_2d,
     plot_potential_minimum_along_path,
@@ -33,14 +33,15 @@ from surface_potential_analysis.potential.plot_point_potential import (
 )
 from surface_potential_analysis.potential.plot_uneven_potential import (
     plot_uneven_potential_z_comparison,
+    plot_uneven_potential_z_comparison_111,
 )
 from surface_potential_analysis.potential.potential import mock_even_potential
 
 from .s1_potential import (
     get_interpolated_nickel_potential,
     load_cleaned_energy_grid,
-    load_interpolated_grid,
     load_interpolated_john_grid,
+    load_interpolated_potential,
     load_interpolated_reciprocal_grid,
     load_john_interpolation,
     load_raw_data,
@@ -51,30 +52,6 @@ from .surface_data import save_figure
 if TYPE_CHECKING:
     from matplotlib.axes import Axes
     from matplotlib.figure import Figure
-
-
-def get_nickel_comparison_points_x0x1(
-    potential: Potential[Any, Any, Any]
-) -> dict[str, tuple[tuple[int, int], Literal[2]]]:
-    points = potential["points"]
-    return {
-        "Top Site": (
-            (math.floor(2 * points.shape[0] / 3), math.floor(2 * points.shape[1] / 3)),
-            2,
-        ),
-        "Bridge Site": (
-            (math.floor(points.shape[0] / 6), math.floor(points.shape[1] / 6)),
-            2,
-        ),
-        "FCC Site": (
-            (0, 0),
-            2,
-        ),
-        "HCP Site": (
-            (math.floor(points.shape[0] / 3), math.floor(points.shape[1] / 3)),
-            2,
-        ),
-    }
 
 
 def get_nickel_reciprocal_comparison_points_x0x1(
@@ -138,16 +115,13 @@ def plot_raw_energy_grid_points() -> None:
     fig.show()
 
     cleaned = load_cleaned_energy_grid()
-    mocked = mock_even_potential(cleaned)
-    locations = get_nickel_comparison_points_x0x1(mocked)
-    locations_uneven = {k: v[0] for (k, v) in locations.items()}
-    fig, ax = plot_uneven_potential_z_comparison(cleaned, locations_uneven)
+
+    fig, ax = plot_uneven_potential_z_comparison_111(cleaned)
     for ln in ax.lines:
         ln.set_marker("x")
         ln.set_linestyle("")
-    locations = get_nickel_comparison_points_x0x1(mocked_potential)
-    locations_uneven = {k: v[0] for (k, v) in locations.items()}
-    plot_uneven_potential_z_comparison(potential, locations_uneven, ax=ax)
+
+    plot_uneven_potential_z_comparison_111(potential, ax=ax)
     ax.set_ylim(0, 0.2e-18)
     fig.show()
 
@@ -155,7 +129,7 @@ def plot_raw_energy_grid_points() -> None:
 
 
 def plot_interpolated_energy_grid_points() -> None:
-    potential = load_interpolated_grid()
+    potential = load_interpolated_potential()
 
     fig, ax, _ = plot_projected_coordinates_2d(potential["basis"], 0, 2)
     fig.show()
@@ -167,7 +141,6 @@ def plot_interpolated_energy_grid_points() -> None:
     plot_projected_coordinates_2d(mocked_raw_potential["basis"], 0, 2, ax=ax)
     fig.show()
 
-    locations = get_nickel_comparison_points_x0x1(potential)
     raw_grid = normalize_potential(load_raw_data_reciprocal_grid())
     raw_grid["basis"] = (
         raw_grid["basis"][0],
@@ -178,7 +151,7 @@ def plot_interpolated_energy_grid_points() -> None:
     for ln in ax.lines:
         ln.set_marker("x")
         ln.set_linestyle("")
-    _, _ = plot_potential_1d_comparison(potential, locations, ax=ax)
+    _, _ = plot_potential_1d_x2_comparison_111(potential, ax=ax)
     ax.set_ylim(0, 5e-18)
 
     fig.show()
@@ -187,7 +160,7 @@ def plot_interpolated_energy_grid_points() -> None:
 
 
 def plot_nickel_energy_grid_symmetry() -> None:
-    potential = load_interpolated_grid()
+    potential = load_interpolated_potential()
 
     reflected_potential: Potential[Any, Any, Any] = {
         "basis": potential["basis"],
@@ -217,8 +190,7 @@ def plot_interpolated_energy_grid_reciprocal() -> None:
     plot_projected_coordinates_2d(mocked_raw_grid["basis"], 0, 2, ax=ax)
     fig.show()
 
-    comparison_points = get_nickel_comparison_points_x0x1(potential)
-    fig, ax = plot_potential_1d_comparison(potential, comparison_points)
+    fig, ax = plot_potential_1d_x2_comparison_111(potential)
     ax.set_ylim(0, 0.2e-18)
     fig.show()
 
@@ -288,9 +260,8 @@ def compare_john_interpolation() -> None:
     save_figure(fig, "raw_interpolation_comparison.png")
 
     fig, ax = plot_z_direction_energy_data_john(john_interpolation)
-    my_interpolation = load_interpolated_grid()
-    comparison_points = get_nickel_comparison_points_x0x1(my_interpolation)
-    fig, ax = plot_potential_1d_comparison(my_interpolation, comparison_points)
+    my_interpolation = load_interpolated_potential()
+    fig, ax = plot_potential_1d_x2_comparison_111(my_interpolation)
     ax.set_ylim(0, 0.5e-18)
     fig.show()
     save_figure(fig, "original_and_new_interpolation_comparison.png")
@@ -307,11 +278,11 @@ def plot_interpolation_with_sho_wavefunctions() -> None:
     Plotting them alongside the interpolation in the hZ direction will allow us to
     diagnose these issues
     """
-    grid = load_interpolated_grid()
+    potential = load_interpolated_potential()
     fig, ax = plt.subplots()
-    plot_z_direction_energy_data_111(grid, ax=ax)
+    plot_potential_1d_x2_comparison_111(potential, ax=ax)
     plot_sho_wavefunctions(
-        grid["z_points"],
+        potential["z_points"],
         sho_omega=195636899474736.66,
         mass=1.6735575e-27,
         first_n=16,
@@ -327,7 +298,7 @@ def plot_interpolation_with_sho_wavefunctions() -> None:
 def plot_potential_minimum_along_diagonal() -> None:
     fig, ax = plt.subplots()
 
-    interpolation = load_interpolated_grid()
+    interpolation = load_interpolated_potential()
     path = np.array([(x, x) for x in range(np.shape(interpolation["points"])[0])])
     _, _, line = plot_potential_minimum_along_path(interpolation, path, ax=ax)
     line.set_label("My Interpolation")
@@ -349,7 +320,7 @@ def plot_potential_minimum_along_diagonal() -> None:
 
 
 def plot_potential_minimum_along_edge() -> None:
-    interpolation = load_interpolated_grid()
+    interpolation = load_interpolated_potential()
     fig, ax = plt.subplots()
 
     # Note we are 'missing' two points here!
@@ -436,7 +407,7 @@ def test_potential_fourier_transform() -> None:
     # We also expect the off center to be equal,
     # but the irrational unit vectors prevent us from testing this
 
-    interpolation = load_interpolated_grid()
+    interpolation = load_interpolated_potential()
     fft_me = np.fft.ifft2(interpolation["points"], axes=(0, 1))
     ftt_origin_me = fft_me[0, 0, np.argmin(np.abs(interpolation["basis"][2]))]
 

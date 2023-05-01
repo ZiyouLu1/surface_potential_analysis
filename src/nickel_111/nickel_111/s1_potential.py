@@ -46,7 +46,7 @@ def load_john_interpolation() -> UnevenPotential[Any, Any, Any]:
     return load_uneven_potential(path)
 
 
-def load_interpolated_grid() -> Potential[Any, Any, Any]:
+def load_interpolated_potential() -> Potential[Any, Any, Any]:
     path = get_data_path("interpolated_data.npy")
     return load_potential(path)
 

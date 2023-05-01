@@ -3,40 +3,62 @@ from __future__ import annotations
 import matplotlib.pyplot as plt
 import numpy as np
 import scipy.constants
+from surface_potential_analysis.basis_config.plot import plot_projected_coordinates_2d
+from surface_potential_analysis.potential.plot import (
+    animate_potential_x0x1,
+    plot_potential_1d_x2_comparison_100,
+    plot_potential_x0x1,
+)
+from surface_potential_analysis.potential.plot_uneven_potential import (
+    plot_uneven_potential_z_comparison_100,
+)
+from surface_potential_analysis.potential.potential import (
+    mock_even_potential,
+    normalize_potential,
+)
 
-from .surface_data import get_data_path, save_figure
+from copper_100.s1_potential import (
+    get_interpolated_potential,
+    get_interpolated_potential_relaxed,
+    load_9h_copper_potential,
+    load_nc_raw_copper_potential,
+    load_raw_copper_potential,
+    load_relaxed_copper_potential,
+)
+
+from .surface_data import save_figure
 
 
-def plot_copper_raw_data():
+def plot_copper_raw_data() -> None:
     data = load_raw_copper_potential()
     data = normalize_potential(data)
 
-    fig, ax, _ = plot_z_direction_energy_data_100(data)
+    fig, ax, _ = plot_uneven_potential_z_comparison_100(data)
     ax.set_ylim(bottom=0, top=1e-18)
     fig.show()
     save_figure(fig, "copper_raw_data_z_direction.png")
 
-    plot_xz_plane_energy_copper_100(data)
+    plot_potential_x0x1(mock_even_potential(data))
 
 
-def plot_copper_nc_data():
-    data = normalize_energy(load_nc_raw_copper_data())
+def plot_copper_nc_data() -> None:
+    data = normalize_potential(load_nc_raw_copper_potential())
 
-    fig, ax, _ = plot_z_direction_energy_data_100(data)
+    fig, ax, _ = plot_uneven_potential_z_comparison_100(data)
     ax.set_ylim(bottom=-0.1e-18, top=1e-18)
     fig.show()
     input()
     save_figure(fig, "copper_raw_data_z_direction_nc.png")
 
 
-def plot_copper_9h_data():
-    data = normalize_energy(load_9h_copper_data())
+def plot_copper_9h_data() -> None:
+    data = normalize_potential(load_9h_copper_potential())
 
-    data_7h = load_raw_copper_data()
-    data_7h_norm = normalize_energy(data_7h)
+    data_7h = load_raw_copper_potential()
+    data_7h_norm = normalize_potential(data_7h)
 
-    fig, ax, _ = plot_z_direction_energy_data_100(data)
-    _, _, _ = plot_z_direction_energy_data_100(data_7h_norm, ax=ax)
+    fig, ax, _ = plot_uneven_potential_z_comparison_100(data)
+    _, _, _ = plot_uneven_potential_z_comparison_100(data_7h_norm, ax=ax)
     ax.set_ylim(bottom=-0.1e-18, top=1e-18)
 
     fig.show()
@@ -44,16 +66,16 @@ def plot_copper_9h_data():
     save_figure(fig, "copper_raw_data_z_direction_9h.png")
 
 
-def plot_copper_relaxed_data():
-    data_7h = load_raw_copper_data()
-    data_7h_norm = normalize_energy(data_7h)
+def plot_copper_relaxed_data() -> None:
+    data_7h = load_raw_copper_potential()
+    data_7h_norm = normalize_potential(data_7h)
 
-    data_relaxed = load_relaxed_copper_data()
-    data_relaxed_norm = normalize_energy(data_relaxed)
+    data_relaxed = load_relaxed_copper_potential()
+    data_relaxed_norm = normalize_potential(data_relaxed)
 
     fig, ax = plt.subplots()
-    _, _, _ = plot_z_direction_energy_data_100(data_relaxed_norm, ax=ax)
-    _, _, _ = plot_z_direction_energy_data_100(data_7h_norm, ax=ax)
+    _, _, _ = plot_uneven_potential_z_comparison_100(data_relaxed_norm, ax=ax)
+    _, _, _ = plot_uneven_potential_z_comparison_100(data_7h_norm, ax=ax)
 
     ax.set_ylim(bottom=-0.1e-18, top=1e-18)
 
@@ -62,72 +84,60 @@ def plot_copper_relaxed_data():
     save_figure(fig, "copper_raw_data_z_direction_vs_relaxed.png")
 
 
-def plot_copper_relaxed_interpolated_data():
-    data = load_interpolated_relaxed_data()
-    raw_data = normalize_energy(load_relaxed_copper_data())
+def plot_copper_relaxed_interpolated_data() -> None:
+    data = get_interpolated_potential_relaxed((50, 50, 250))
+    raw_data = normalize_potential(load_relaxed_copper_potential())
 
-    fig, ax = plot_z_direction_energy_comparison_100(data, raw_data)
+    fig, ax = plot_potential_1d_x2_comparison_100(data, raw_data)
     ax.set_ylim(bottom=0, top=1e-18)
     fig.show()
     save_figure(fig, "relaxed_interpolated_data_comparison.png")
 
-    fig = plot_xz_plane_energy_copper_100(data)
+    fig, ax, _ = plot_potential_x0x1(data)
     fig.show()
     save_figure(fig, "relaxed_interpolated_data_xy.png")
 
-    fig, ax, _ani0 = animate_energy_grid_3d_in_xy(data)
-    plot_energy_grid_locations(raw_data, ax=ax)
+    fig, ax, _ani0 = animate_potential_x0x1(data)
+    plot_projected_coordinates_2d(mock_even_potential(raw_data)["basis"], 0, 2, ax=ax)
     fig.show()
 
-    spline_data = load_spline_interpolated_relaxed_data()
-    raw_data = normalize_energy(load_relaxed_copper_data())
+    raw_data = normalize_potential(load_relaxed_copper_potential())
 
-    fig, ax = plot_z_direction_energy_comparison_100(spline_data, raw_data)
-    ax.set_ylim(bottom=0, top=1e-18)
-    fig.show()
-    save_figure(fig, "relaxed_interpolated_data_comparison.png")
-
-    fig = plot_xz_plane_energy_copper_100(spline_data)
-    fig.show()
-    save_figure(fig, "relaxed_interpolated_data_xy.png")
-
-    fig, ax, _ani1 = animate_energy_grid_3d_in_xy(data)
-    plot_energy_grid_locations(raw_data, ax=ax)
+    fig, ax, _ani1 = animate_potential_x0x1(data)
+    plot_projected_coordinates_2d(mock_even_potential(raw_data)["basis"], 0, 2, ax=ax)
     fig.show()
 
     input()
 
 
-def plot_copper_interpolated_data():
-    path = get_data_path("copper_interpolated_energies.json")
-    data = load_energy_grid(path)
+def plot_copper_interpolated_data() -> None:
+    data = get_interpolated_potential((50, 50, 100))
 
-    raw_data = normalize_energy(load_raw_copper_data())
+    raw_data = normalize_potential(load_raw_copper_potential())
 
-    fig, ax = plot_z_direction_energy_comparison_100(data, raw_data)
+    fig, ax = plot_potential_1d_x2_comparison_100(data, raw_data)
     ax.set_ylim(bottom=0, top=1e-18)
     fig.show()
     save_figure(fig, "copper_interpolated_data_comparison.png")
 
-    fig = plot_xz_plane_energy_copper_100(data)
+    fig, ax, _ = plot_potential_x0x1(data)
     fig.show()
     input()
     save_figure(fig, "copper_interpolated_data_xy.png")
 
 
-def plot_interpolation_with_sho_wavefunctions():
-    """
-    Is is possible that the SHO wavefunctions lie outside the interpolated potential
-    or have energies for which they can see the truncation process.
+def plot_interpolation_with_sho_wavefunctions() -> None:
+    # Is is possible that the SHO wavefunctions lie outside the interpolated potential
+    # or have energies for which they can see the truncation process.
 
-    Plotting them alongside the interpolation in the hZ direction will allow us to
-    diagnose these issues
-    """
-    grid = load_interpolated_copper_data()
+    # Plotting them alongside the interpolation in the hZ direction will allow us to
+    # diagnose these issues
+
+    potential = get_interpolated_potential((50, 50, 100))
     fig, ax = plt.subplots()
-    plot_z_direction_energy_data_100(grid, ax=ax)
+    plot_potential_1d_x2_comparison_100(potential, ax=ax)
     plot_sho_wavefunctions(
-        grid["z_points"],
+        potential["z_points"],
         sho_omega=117905964225836.06,
         mass=1.6735575e-27,
         first_n=16,
@@ -140,18 +150,20 @@ def plot_interpolation_with_sho_wavefunctions():
     input()
 
 
-def compare_bridge_hollow_energy():
-    print("--------------------------------------")
-    print("Non-relaxed")
-    data = load_interpolated_copper_data()
+def compare_bridge_hollow_energy() -> None:
+    print("--------------------------------------")  # noqa: T201
+    print("Non-relaxed")  # noqa: T201
+    data = get_interpolated_potential((50, 50, 100))
     points = np.array(data["points"])
-    print(points.shape)
+    print(points.shape)  # noqa: T201
 
-    print("Bridge ", np.min(points[points.shape[0] // 2, 0, :]))
-    print("Hollow ", np.min(points[points.shape[0] // 2, points.shape[1] // 2, :]))
-    print("Top ", np.min(points[0, 0, :]))
-    print("Free ", np.max(points[:, :, -1]))
-    print(
+    print("Bridge ", np.min(points[points.shape[0] // 2, 0, :]))  # noqa: T201
+    print(  # noqa: T201
+        "Hollow ", np.min(points[points.shape[0] // 2, points.shape[1] // 2, :])
+    )
+    print("Top ", np.min(points[0, 0, :]))  # noqa: T201
+    print("Free ", np.max(points[:, :, -1]))  # noqa: T201
+    print(  # noqa: T201
         "Max free E variation",
         np.max(
             np.abs(points[:, :, -1] - np.max(points[:, :, -1]))
@@ -161,15 +173,17 @@ def compare_bridge_hollow_energy():
         "%",
     )
 
-    data = normalize_energy(load_raw_copper_data())
+    data = normalize_potential(load_raw_copper_potential())
     points = np.array(data["points"])
-    print(points.shape)
+    print(points.shape)  # noqa: T201
 
-    print("Bridge ", np.min(points[points.shape[0] // 2, 0, :]))
-    print("Hollow ", np.min(points[points.shape[0] // 2, points.shape[1] // 2, :]))
-    print("Top ", np.min(points[0, 0, :]))
-    print("Free ", np.max(points[:, :, -1]))
-    print(
+    print("Bridge ", np.min(points[points.shape[0] // 2, 0, :]))  # noqa: T201
+    print(  # noqa: T201
+        "Hollow ", np.min(points[points.shape[0] // 2, points.shape[1] // 2, :])
+    )
+    print("Top ", np.min(points[0, 0, :]))  # noqa: T201
+    print("Free ", np.max(points[:, :, -1]))  # noqa: T201
+    print(  # noqa: T201
         "Max free E variation",
         np.max(
             np.abs(points[:, :, -1] - np.max(points[:, :, -1]))
@@ -178,19 +192,21 @@ def compare_bridge_hollow_energy():
         * 100,
         "%",
     )
-    print("--------------------------------------")
+    print("--------------------------------------")  # noqa: T201
 
-    print("--------------------------------------")
-    print("Relaxed")
-    data = load_interpolated_relaxed_data()
+    print("--------------------------------------")  # noqa: T201
+    print("Relaxed")  # noqa: T201
+    data = get_interpolated_potential_relaxed((50, 50, 100))
     points = np.array(data["points"])
-    print(points.shape)
+    print(points.shape)  # noqa: T201
 
-    print("Bridge ", np.min(points[points.shape[0] // 2, 0, :]))
-    print("Hollow ", np.min(points[points.shape[0] // 2, points.shape[1] // 2, :]))
-    print("Top ", np.min(points[0, 0, :]))
-    print("Free ", np.max(points[:, :, -1]))
-    print(
+    print("Bridge ", np.min(points[points.shape[0] // 2, 0, :]))  # noqa: T201
+    print(  # noqa: T201
+        "Hollow ", np.min(points[points.shape[0] // 2, points.shape[1] // 2, :])
+    )
+    print("Top ", np.min(points[0, 0, :]))  # noqa: T201
+    print("Free ", np.max(points[:, :, -1]))  # noqa: T201
+    print(  # noqa: T201
         "Max free E variation",
         np.max(
             np.abs(points[:, :, -1] - np.max(points[:, :, -1]))
@@ -200,15 +216,17 @@ def compare_bridge_hollow_energy():
         "%",
     )
 
-    data = normalize_energy(load_relaxed_copper_data())
+    data = normalize_potential(load_relaxed_copper_potential())
     points = np.array(data["points"])
-    print(points.shape)
+    print(points.shape)  # noqa: T201
 
-    print("Bridge ", np.min(points[points.shape[0] // 2, 0, :]))
-    print("Hollow ", np.min(points[points.shape[0] // 2, points.shape[1] // 2, :]))
-    print("Top ", np.min(points[0, 0, :]))
-    print("Free ", np.max(points[:, :, -1]))
-    print(
+    print("Bridge ", np.min(points[points.shape[0] // 2, 0, :]))  # noqa: T201
+    print(  # noqa: T201
+        "Hollow ", np.min(points[points.shape[0] // 2, points.shape[1] // 2, :])
+    )
+    print("Top ", np.min(points[0, 0, :]))  # noqa: T201
+    print("Free ", np.max(points[:, :, -1]))  # noqa: T201
+    print(  # noqa: T201
         "Max free E variation",
         np.max(
             np.abs(points[:, :, -1] - np.max(points[:, :, -1]))
@@ -217,12 +235,11 @@ def compare_bridge_hollow_energy():
         * 100,
         "%",
     )
-    print("--------------------------------------")
+    print("--------------------------------------")  # noqa: T201
 
 
-def calculate_hollow_free_energy_jump():
-    path = get_data_path("copper_relaxed_raw_energies.json")
-    data = load_energy_grid(path)
+def calculate_hollow_free_energy_jump() -> None:
+    data = load_relaxed_copper_potential()
 
     points = np.array(data["points"], dtype=float)
     middle_x_index = points.shape[0] // 2
@@ -235,13 +252,13 @@ def calculate_hollow_free_energy_jump():
     max_index = np.argmax(hollow_points[hollow_points < 0])
     max_value = hollow_points[hollow_points < 0][max_index]
 
-    print(
+    print(  # noqa: T201
         min_index,
         f"{min_value} J",
         f"{min_value / scipy.constants.elementary_charge} eV",
     )
 
-    print(
+    print(  # noqa: T201
         max_index,
         f"{max_value} J",
         f"{max_value / scipy.constants.elementary_charge} eV",

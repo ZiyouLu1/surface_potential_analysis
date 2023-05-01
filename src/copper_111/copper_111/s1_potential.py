@@ -26,12 +26,12 @@ def load_raw_data() -> PointPotential[int]:
     return load_point_potential_json(path)
 
 
-def load_raw_data_grid() -> UnevenPotential[int, int, int]:
+def load_raw_data_potential() -> UnevenPotential[int, int, int]:
     path = get_data_path("raw_data_reflected.npy")
     return load_uneven_potential(path)
 
 
-def load_interpolated_grid() -> Potential[int, int, int]:
+def load_interpolated_potential() -> Potential[int, int, int]:
     path = get_data_path("interpolated_data.npy")
     return load_potential(path)
 
@@ -181,7 +181,7 @@ def generate_reflected_data() -> None:
 
 
 def get_interpolated_potential(shape: tuple[int, int, int]) -> Potential[int, int, int]:
-    grid = load_raw_data_grid()
+    grid = load_raw_data_potential()
     normalized = normalize_potential(grid)
 
     truncated = truncate_potential(normalized, cutoff=1e-17, n=5, offset=1e-20)

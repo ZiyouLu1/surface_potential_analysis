@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import json
-from typing import TYPE_CHECKING, Any, Generic, TypedDict, TypeVar
+from typing import TYPE_CHECKING, Any, Generic, TypedDict, TypeVar, overload
 
 import numpy as np
 
@@ -195,7 +195,23 @@ _GenericPotential = (
 _GPInv = TypeVar("_GPInv", bound=_GenericPotential[Any, Any, Any])
 
 
-def normalize_potential(data: _GPInv) -> _GPInv:
+@overload
+def normalize_potential(
+    data: Potential[_L0Inv, _L1Inv, _L2Inv]
+) -> Potential[_L0Inv, _L1Inv, _L2Inv]:
+    ...
+
+
+@overload
+def normalize_potential(
+    data: UnevenPotential[_L0Inv, _L1Inv, _L2Inv]
+) -> UnevenPotential[_L0Inv, _L1Inv, _L2Inv]:
+    ...
+
+
+def normalize_potential(
+    data: _GenericPotential[_L0Inv, _L1Inv, _L2Inv]
+) -> _GenericPotential[_L0Inv, _L1Inv, _L2Inv]:
     """
     Set the minimum of the potential to 0.
 
@@ -209,12 +225,38 @@ def normalize_potential(data: _GPInv) -> _GPInv:
     """
     points = data["points"]
     normalized_points = points - points.min()
-    return {"points": normalized_points, "basis": data["basis"]}  # type: ignore[return-value]
+    return {"points": normalized_points, "basis": data["basis"]}  # type: ignore[return-value,misc]
+
+
+@overload
+def truncate_potential(
+    data: Potential[_L0Inv, _L1Inv, _L2Inv],
+    *,
+    cutoff: float = 2e-17,
+    n: int = 1,
+    offset: float = 2e-18,
+) -> Potential[_L0Inv, _L1Inv, _L2Inv]:
+    ...
+
+
+@overload
+def truncate_potential(
+    data: UnevenPotential[_L0Inv, _L1Inv, _L2Inv],
+    *,
+    cutoff: float = 2e-17,
+    n: int = 1,
+    offset: float = 2e-18,
+) -> UnevenPotential[_L0Inv, _L1Inv, _L2Inv]:
+    ...
 
 
 def truncate_potential(
-    data: _GPInv, *, cutoff: float = 2e-17, n: int = 1, offset: float = 2e-18
-) -> _GPInv:
+    data: _GenericPotential[_L0Inv, _L1Inv, _L2Inv],
+    *,
+    cutoff: float = 2e-17,
+    n: int = 1,
+    offset: float = 2e-18,
+) -> _GenericPotential[_L0Inv, _L1Inv, _L2Inv]:
     """
     Reduce the maximum energy by taking the transformation.
 
@@ -227,7 +269,7 @@ def truncate_potential(
         cutoff * np.log(1 + ((data["points"] + offset) / cutoff) ** n) ** (1 / n)
         - offset
     )
-    return {"points": points, "basis": data["basis"]}  # type: ignore[return-value]
+    return {"points": points, "basis": data["basis"]}  # type: ignore[return-value,misc]
 
 
 def undo_truncate_potential(

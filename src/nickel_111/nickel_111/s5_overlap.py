@@ -4,23 +4,20 @@ from typing import Literal
 
 import numpy as np
 from surface_potential_analysis.basis_config.basis_config import (
-    BasisConfigUtil,
     MomentumBasisConfig,
 )
 from surface_potential_analysis.overlap.calculation import calculate_wavepacket_overlap
 from surface_potential_analysis.overlap.overlap import save_overlap
-from surface_potential_analysis.wavepacket.conversion import (
-    convert_wavepacket_to_basis,
-)
 from surface_potential_analysis.wavepacket.normalization import (
     calculate_normalisation,
-    normalize_wavepacket,
 )
 from surface_potential_analysis.wavepacket.wavepacket import (
     Wavepacket,
 )
 
-from nickel_111.s4_wavepacket import load_nickel_wavepacket
+from nickel_111.s4_wavepacket import (
+    load_normalized_nickel_wavepacket_momentum,
+)
 
 from .surface_data import get_data_path
 
@@ -31,22 +28,8 @@ _NickelWavepacket = Wavepacket[
 ]
 
 
-def load_nickel_wavepacket_momentum(
-    idx: int, norm: int | tuple[int, int, int] = 0, angle: float = 0
-) -> _NickelWavepacket:
-    wavepacket = load_nickel_wavepacket(idx)
-    util = BasisConfigUtil(wavepacket["basis"])
-    basis: MomentumBasisConfig[Literal[24], Literal[24], Literal[250]] = (
-        {"_type": "momentum", "delta_x": util.delta_x0, "n": 24},
-        {"_type": "momentum", "delta_x": util.delta_x1, "n": 24},
-        {"_type": "momentum", "delta_x": util.delta_x2, "n": 250},
-    )
-    normalized = normalize_wavepacket(wavepacket, norm, angle)
-    return convert_wavepacket_to_basis(normalized, basis)
-
-
 def generate_fcc_wavepacket() -> _NickelWavepacket:
-    return load_nickel_wavepacket_momentum(0, (0, 0, 117), 0)
+    return load_normalized_nickel_wavepacket_momentum(0, (0, 0, 117), 0)
 
 
 def generate_next_fcc_wavepacket() -> _NickelWavepacket:
@@ -61,11 +44,11 @@ def generate_next_fcc_wavepacket() -> _NickelWavepacket:
     WavepacketGrid
         Wavepacket at the next fcc site
     """
-    return load_nickel_wavepacket_momentum(0, (24, 24, 117), 0)
+    return load_normalized_nickel_wavepacket_momentum(0, (24, 24, 117), 0)
 
 
 def generate_hcp_wavepacket() -> _NickelWavepacket:
-    return load_nickel_wavepacket_momentum(1, (8, 8, 117), 0)
+    return load_normalized_nickel_wavepacket_momentum(1, (8, 8, 117), 0)
 
 
 def generate_next_hcp_wavepacket() -> _NickelWavepacket:
@@ -80,7 +63,7 @@ def generate_next_hcp_wavepacket() -> _NickelWavepacket:
     WavepacketGrid
         Wavepacket at the next hcp site
     """
-    return load_nickel_wavepacket_momentum(1, (32, 32, 117), 0)
+    return load_normalized_nickel_wavepacket_momentum(1, (32, 32, 117), 0)
 
 
 def calculate_overlap_nickel() -> None:

@@ -8,7 +8,7 @@ if TYPE_CHECKING:
     from matplotlib.figure import Figure
 
 
-def get_out_path(filename: str) -> Path:
+def get_out_path(filename: str | Path) -> Path:
     out_folder_env = os.getenv("OUT_FOLDER")
     out_folder = (
         Path(out_folder_env)
@@ -18,12 +18,12 @@ def get_out_path(filename: str) -> Path:
     return out_folder / "nickel_111" / filename
 
 
-def save_figure(fig: Figure, filename: str) -> None:
+def save_figure(fig: Figure, filename: str | Path) -> None:
     path = get_out_path(filename)
     fig.savefig(path)
 
 
-def get_data_path(filename: str) -> Path:
+def get_data_path(filename: str | Path) -> Path:
     data_folder_env = os.getenv("DATA_FOLDER")
     data_folder = (
         Path(data_folder_env)

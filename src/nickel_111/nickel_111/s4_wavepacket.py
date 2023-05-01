@@ -3,7 +3,10 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, Literal
 
 import numpy as np
+from surface_potential_analysis.basis_config.basis_config import BasisConfigUtil
 from surface_potential_analysis.wavepacket import save_wavepacket
+from surface_potential_analysis.wavepacket.conversion import convert_wavepacket_to_basis
+from surface_potential_analysis.wavepacket.normalization import normalize_wavepacket
 from surface_potential_analysis.wavepacket.wavepacket import (
     Wavepacket,
     generate_wavepacket,
@@ -20,8 +23,34 @@ if TYPE_CHECKING:
         PositionBasis,
         TruncatedBasis,
     )
-    from surface_potential_analysis.basis_config.basis_config import BasisConfig
+    from surface_potential_analysis.basis_config.basis_config import (
+        BasisConfig,
+        MomentumBasisConfig,
+    )
     from surface_potential_analysis.hamiltonian import Hamiltonian
+
+MAXIMUM_POINTS: list[tuple[int, int, int]] = [
+    (0, 0, 117),
+    (8, 8, 117),
+    (2, 21, 124),
+    (22, 0, 128),
+    (11, 6, 124),
+    (10, 8, 128),
+    (4, 4, 130),
+    (0, 0, 100),
+    (8, 7, 101),
+    (4, 16, 130),
+    (4, 4, 130),
+    (0, 0, 131),
+    (23, 3, 125),
+    (5, 5, 128),
+    (1, 1, 108),
+    (1, 21, 115),
+    (7, 7, 107),
+    (7, 10, 110),
+    (6, 12, 122),
+    (20, 1, 140),
+]
 
 
 def load_nickel_wavepacket(
@@ -40,6 +69,24 @@ def load_nickel_wavepacket(
     wavepacket["basis"][0]["parent"]["n"] = 24
     wavepacket["basis"][1]["parent"]["n"] = 24
     return wavepacket
+
+
+def load_normalized_nickel_wavepacket_momentum(
+    idx: int, norm: int | tuple[int, int, int] = 0, angle: float = 0
+) -> Wavepacket[
+    Literal[12],
+    Literal[12],
+    MomentumBasisConfig[Literal[24], Literal[24], Literal[250]],
+]:
+    wavepacket = load_nickel_wavepacket(idx)
+    util = BasisConfigUtil(wavepacket["basis"])
+    basis: MomentumBasisConfig[Literal[24], Literal[24], Literal[250]] = (
+        {"_type": "momentum", "delta_x": util.delta_x0, "n": 24},
+        {"_type": "momentum", "delta_x": util.delta_x1, "n": 24},
+        {"_type": "momentum", "delta_x": util.delta_x2, "n": 250},
+    )
+    normalized = normalize_wavepacket(wavepacket, norm, angle)
+    return convert_wavepacket_to_basis(normalized, basis)
 
 
 def generate_nickel_wavepacket_sho() -> None:

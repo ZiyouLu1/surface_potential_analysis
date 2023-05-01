@@ -5,17 +5,17 @@ from surface_potential_analysis.wavepacket.plot import (
     plot_wavepacket_sample_frequencies,
     plot_wavepacket_x0x1,
 )
-from surface_potential_analysis.wavepacket.wavepacket import (
-    load_wavepacket,
-    normalize_wavepacket_position_basis,
-)
 
-from .surface_data import get_data_path, save_figure
+from .s4_wavepacket import (
+    MAXIMUM_POINTS,
+    load_copper_wavepacket,
+    load_normalized_copper_wavepacket_momentum,
+)
+from .surface_data import save_figure
 
 
 def plot_wavepacket_points() -> None:
-    path = get_data_path("eigenstates_grid_0.json")
-    wavepacket = load_wavepacket(path)
+    wavepacket = load_copper_wavepacket(0)
     fig, _, _ = plot_wavepacket_sample_frequencies(wavepacket)
 
     fig.show()
@@ -24,53 +24,60 @@ def plot_wavepacket_points() -> None:
 
 
 def animate_copper_111_wavepacket() -> None:
-    path = get_data_path("eigenstates_grid_0.json")
-    wavepacket = load_wavepacket(path)
-    animate_wavepacket_x0x1(wavepacket)
+    wavepacket = load_normalized_copper_wavepacket_momentum(0, (0, 0, 102), 0)
+    fig, _, _anim0 = animate_wavepacket_x0x1(wavepacket)
+    fig.show()
+
+    wavepacket = load_normalized_copper_wavepacket_momentum(1, (8, 8, 103), 0)
+    fig, _, _anim1 = animate_wavepacket_x0x1(wavepacket)
+    fig.show()
+    input()
 
 
 def plot_wavepacket_at_z_origin() -> None:
-    path = get_data_path("eigenstates_grid_0.json")
-    wavepacket = load_wavepacket(path)
-    normalized = normalize_wavepacket_position_basis(wavepacket)
+    normalized = load_normalized_copper_wavepacket_momentum(0, (0, 0, 102), 0)
 
-    fig, ax, _ = plot_wavepacket_x0x1(normalized, 0, measure="abs")
+    fig, ax, _ = plot_wavepacket_x0x1(normalized, 102, measure="abs")
     fig.show()
     ax.set_title("Plot of abs(wavefunction) for z=0")
     save_figure(fig, "wavepacket_grid_z_origin.png")
 
-    fig, ax, _ = plot_wavepacket_x0x1(normalized, 0, measure="real")
+    fig, ax, _ = plot_wavepacket_x0x1(normalized, 102, measure="real")
     fig.show()
     ax.set_title("Plot of real(wavefunction) for z=0")
     save_figure(fig, "wavepacket_grid_z_origin_real.png")
 
-    fig, ax, _ = plot_wavepacket_x0x1(normalized, 0, measure="imag")
+    fig, ax, _ = plot_wavepacket_x0x1(normalized, 102, measure="imag")
     fig.show()
     ax.set_title("Plot of imag(wavefunction) for z=0")
     save_figure(fig, "wavepacket_grid_z_origin_imag.png")
 
-    path = get_data_path("eigenstates_grid_1.json")
-    wavepacket = load_wavepacket(path)
+    normalized = load_normalized_copper_wavepacket_momentum(1, (8, 8, 103), 0)
 
-    origin = (
-        (util.delta_x0[0] + util.delta_x1[0]) / 3,
-        (util.delta_x0[1] + util.delta_x1[1]) / 3,
-        0,
-    )
-    normalized = normalize_wavepacket_position_basis(wavepacket, origin)
-
-    fig, ax, _ = plot_wavepacket_x0x1(normalized, 0, measure="abs")
+    fig, ax, _ = plot_wavepacket_x0x1(normalized, 103, measure="abs")
     fig.show()
     ax.set_title("Plot of abs(wavefunction) for z=0")
     save_figure(fig, "wavepacket_grid_z_origin.png")
 
-    fig, ax, _ = plot_wavepacket_x0x1(normalized, 0, measure="real")
+    fig, ax, _ = plot_wavepacket_x0x1(normalized, 103, measure="real")
     fig.show()
     ax.set_title("Plot of real(wavefunction) for z=0")
     save_figure(fig, "wavepacket_grid_z_origin_real.png")
 
-    fig, ax, _ = plot_wavepacket_x0x1(normalized, 0, measure="imag")
+    fig, ax, _ = plot_wavepacket_x0x1(normalized, 103, measure="imag")
     fig.show()
     ax.set_title("Plot of imag(wavefunction) for z=0")
 
+    input()
+
+
+def plot_wavepacket_at_maximum_points() -> None:
+    for band in range(20):
+        max_point = MAXIMUM_POINTS[band]
+        normalized = load_normalized_copper_wavepacket_momentum(band, max_point, 0)
+
+        fig, ax, _ = plot_wavepacket_x0x1(normalized, max_point[2], measure="abs")
+        fig.show()
+        ax.set_title("Plot of abs(wavefunction) for z=zmax")
+        save_figure(fig, f"wavepacket_grid_{band}.png")
     input()
