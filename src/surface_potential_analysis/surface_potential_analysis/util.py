@@ -81,9 +81,12 @@ def calculate_cumulative_distances_along_path(
 _SInv = TypeVar("_SInv", bound=tuple[Any])
 
 
+Measure = Literal["real", "imag", "abs", "angle"]
+
+
 def get_measured_data(
     data: np.ndarray[_SInv, np.dtype[np.complex_]],
-    measure: Literal["real", "imag", "abs", "angle"],
+    measure: Measure,
 ) -> np.ndarray[_SInv, np.dtype[np.float_]]:
     """
     Transform data with the given measure.

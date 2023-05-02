@@ -1,11 +1,11 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Literal, TypeVar
+from typing import TYPE_CHECKING, TypeVar
 
 import numpy as np
 from matplotlib import pyplot as plt
 
-from surface_potential_analysis.util import get_measured_data
+from surface_potential_analysis.util import Measure, get_measured_data
 
 from .basis import (
     BasisUtil,
@@ -31,7 +31,7 @@ def plot_explicit_basis_states_x(
     basis: _BX0Inv,
     *,
     ax: Axes | None = None,
-    measure: Literal["real", "imag", "abs", "angle"] = "abs",
+    measure: Measure = "abs",
 ) -> tuple[Figure, Axes, list[Line2D]]:
     """Plot basis states against position."""
     fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
@@ -61,7 +61,7 @@ def plot_explicit_basis_state_x(
     idx: int = 0,
     *,
     ax: Axes | None = None,
-    measure: Literal["real", "imag", "abs", "angle"] = "abs",
+    measure: Measure = "abs",
 ) -> tuple[Figure, Axes, Line2D]:
     """Plot basis states against position."""
     fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()

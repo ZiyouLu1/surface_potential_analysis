@@ -6,7 +6,6 @@ from surface_potential_analysis.energy_eigenstate import (
     EnergyEigenstatesLegacy,
     filter_eigenstates_grid,
     load_energy_eigenstates,
-    normalize_eigenstate_phase,
 )
 from surface_potential_analysis.hamiltonian.hamiltonian import (
     generate_energy_eigenstates_grid,
@@ -21,16 +20,9 @@ from .s2_hamiltonian import generate_hamiltonian
 from .surface_data import get_data_path
 
 
-def normalize_eigenstate_phase_copper(data: EnergyEigenstatesLegacy):
-    util = EigenstateConfigUtil(data["eigenstate_config"])
-    origin_point = (util.delta_x0[0] / 2, util.delta_x1[1] / 2, 0)
-    return normalize_eigenstate_phase(data, origin_point)
-
-
 def generate_eigenstates_grid_relaxed():
     h = generate_hamiltonian(resolution=(21, 21, 14))
     path = get_data_path("eigenstates_grid_relaxed.json")
-
 
     generate_energy_eigenstates_grid(path, h, size=(4, 4))
 

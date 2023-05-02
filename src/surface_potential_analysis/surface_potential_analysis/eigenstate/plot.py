@@ -15,6 +15,7 @@ from surface_potential_analysis.basis_config.basis_config import (
 )
 from surface_potential_analysis.eigenstate.conversion import convert_eigenstate_to_basis
 from surface_potential_analysis.util import (
+    Measure,
     calculate_cumulative_distances_along_path,
     get_measured_data,
     slice_along_axis,
@@ -50,7 +51,7 @@ def plot_eigenstate_2d(
     z_axis: Literal[0, 1, 2, -1, -2, -3],
     *,
     ax: Axes | None = None,
-    measure: Literal["real", "imag", "abs", "angle"] = "abs",
+    measure: Measure = "abs",
     scale: Literal["symlog", "linear"] = "linear",
 ) -> tuple[Figure, Axes, QuadMesh]:
     """
@@ -100,7 +101,7 @@ def plot_eigenstate_x0x1(
     x2_idx: int,
     *,
     ax: Axes | None = None,
-    measure: Literal["real", "imag", "abs"] = "abs",
+    measure: Measure = "abs",
     scale: Literal["symlog", "linear"] = "linear",
 ) -> tuple[Figure, Axes, QuadMesh]:
     """
@@ -132,7 +133,7 @@ def plot_eigenstate_x1x2(
     x0_idx: int,
     *,
     ax: Axes | None = None,
-    measure: Literal["real", "imag", "abs"] = "abs",
+    measure: Measure = "abs",
     scale: Literal["symlog", "linear"] = "linear",
 ) -> tuple[Figure, Axes, QuadMesh]:
     """
@@ -164,7 +165,7 @@ def plot_eigenstate_x2x0(
     x1_idx: int,
     *,
     ax: Axes | None = None,
-    measure: Literal["real", "imag", "abs"] = "abs",
+    measure: Measure = "abs",
     scale: Literal["symlog", "linear"] = "linear",
 ) -> tuple[Figure, Axes, QuadMesh]:
     """
@@ -192,13 +193,13 @@ def plot_eigenstate_x2x0(
 
 
 def plot_eigenstate_difference_2d(
-    eigenstate0: PositionBasisEigenstate[_L0Inv, _L1Inv, _L2Inv],
-    eigenstate1: PositionBasisEigenstate[_L0Inv, _L1Inv, _L2Inv],
+    eigenstate_0: PositionBasisEigenstate[_L0Inv, _L1Inv, _L2Inv],
+    eigenstate_1: PositionBasisEigenstate[_L0Inv, _L1Inv, _L2Inv],
     idx: int,
     z_axis: Literal[0, 1, 2, -1, -2, -3],
     *,
     ax: Axes | None = None,
-    measure: Literal["real", "imag", "abs"] = "abs",
+    measure: Measure = "abs",
     scale: Literal["symlog", "linear"] = "linear",
 ) -> tuple[Figure, Axes, QuadMesh]:
     """
@@ -206,8 +207,8 @@ def plot_eigenstate_difference_2d(
 
     Parameters
     ----------
-    eigenstate0 : PositionBasisEigenstate[_L0Inv, _L1Inv, _L2Inv]
-    eigenstate1 : PositionBasisEigenstate[_L0Inv, _L1Inv, _L2Inv]
+    eigenstate_0 : PositionBasisEigenstate[_L0Inv, _L1Inv, _L2Inv]
+    eigenstate_1 : PositionBasisEigenstate[_L0Inv, _L1Inv, _L2Inv]
     idx : int
         index along z_axis to plot
     z_axis : Literal[0, 1, 2, -1, -2, -3]
@@ -224,8 +225,8 @@ def plot_eigenstate_difference_2d(
     tuple[Figure, Axes, QuadMesh]
     """
     eigenstate: PositionBasisEigenstate[_L0Inv, _L1Inv, _L2Inv] = {
-        "basis": eigenstate0["basis"],
-        "vector": eigenstate0["vector"] - eigenstate1["vector"],
+        "basis": eigenstate_0["basis"],
+        "vector": eigenstate_0["vector"] - eigenstate_1["vector"],
     }
     return plot_eigenstate_2d(
         eigenstate, idx, z_axis, ax=ax, measure=measure, scale=scale
@@ -252,7 +253,7 @@ def animate_eigenstate_3d(
     z_axis: Literal[0, 1, 2, -1, -2, -3],
     *,
     ax: Axes | None = None,
-    measure: Literal["real", "imag", "abs"] = "abs",
+    measure: Measure = "abs",
     scale: Literal["symlog", "linear"] = "linear",
 ) -> tuple[Figure, Axes, ArtistAnimation]:
     """
@@ -324,7 +325,7 @@ def animate_eigenstate_x0x1(
     eigenstate: Eigenstate[_BC0Inv],
     *,
     ax: Axes | None = None,
-    measure: Literal["real", "imag", "abs"] = "abs",
+    measure: Measure = "abs",
     scale: Literal["symlog", "linear"] = "linear",
 ) -> tuple[Figure, Axes, ArtistAnimation]:
     """
@@ -351,7 +352,7 @@ def animate_eigenstate_x1x2(
     eigenstate: Eigenstate[_BC0Inv],
     *,
     ax: Axes | None = None,
-    measure: Literal["real", "imag", "abs"] = "abs",
+    measure: Measure = "abs",
     scale: Literal["symlog", "linear"] = "linear",
 ) -> tuple[Figure, Axes, ArtistAnimation]:
     """
@@ -378,7 +379,7 @@ def animate_eigenstate_x2x0(
     eigenstate: Eigenstate[_BC0Inv],
     *,
     ax: Axes | None = None,
-    measure: Literal["real", "imag", "abs"] = "abs",
+    measure: Measure = "abs",
     scale: Literal["symlog", "linear"] = "linear",
 ) -> tuple[Figure, Axes, ArtistAnimation]:
     """
@@ -406,7 +407,7 @@ def plot_eigenstate_along_path(
     path: np.ndarray[tuple[Literal[3], int], np.dtype[np.int_]],
     *,
     ax: Axes | None = None,
-    measure: Literal["real", "imag", "abs"] = "abs",
+    measure: Measure = "abs",
     scale: Literal["symlog", "linear"] = "linear",
 ) -> tuple[Figure, Axes, Line2D]:
     """

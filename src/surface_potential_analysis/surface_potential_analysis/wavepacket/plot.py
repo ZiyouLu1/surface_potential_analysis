@@ -21,7 +21,7 @@ from surface_potential_analysis.eigenstate.plot import (
     plot_eigenstate_along_path,
     plot_eigenstate_difference_2d,
 )
-from surface_potential_analysis.util import get_measured_data
+from surface_potential_analysis.util import Measure, get_measured_data
 from surface_potential_analysis.wavepacket.eigenstate_conversion import (
     unfurl_wavepacket,
 )
@@ -170,7 +170,7 @@ def plot_wavepacket_energies_position(
     wavepacket: Wavepacket[_NS0Inv, _NS1Inv, BasisConfig[_BX0Inv, _BX1Inv, _BX2Inv]],
     *,
     ax: Axes | None = None,
-    measure: Literal["real", "imag", "abs"] = "abs",
+    measure: Measure = "abs",
     scale: Literal["symlog", "linear"] = "linear",
 ) -> tuple[Figure, Axes, QuadMesh]:
     """
@@ -217,7 +217,7 @@ def plot_wavepacket_2d(
     z_axis: Literal[0, 1, 2, -1, -2, -3],
     *,
     ax: Axes | None = None,
-    measure: Literal["real", "imag", "abs"] = "abs",
+    measure: Measure = "abs",
     scale: Literal["symlog", "linear"] = "linear",
 ) -> tuple[Figure, Axes, QuadMesh]:
     """
@@ -253,7 +253,7 @@ def plot_wavepacket_x0x1(
     x2_idx: int,
     *,
     ax: Axes | None = None,
-    measure: Literal["real", "imag", "abs"] = "abs",
+    measure: Measure = "abs",
     scale: Literal["symlog", "linear"] = "linear",
 ) -> tuple[Figure, Axes, QuadMesh]:
     """
@@ -286,7 +286,7 @@ def plot_wavepacket_x1x2(
     x0_idx: int,
     *,
     ax: Axes | None = None,
-    measure: Literal["real", "imag", "abs"] = "abs",
+    measure: Measure = "abs",
     scale: Literal["symlog", "linear"] = "linear",
 ) -> tuple[Figure, Axes, QuadMesh]:
     """
@@ -319,7 +319,7 @@ def plot_wavepacket_x2x0(
     x1_idx: int,
     *,
     ax: Axes | None = None,
-    measure: Literal["real", "imag", "abs"] = "abs",
+    measure: Measure = "abs",
     scale: Literal["symlog", "linear"] = "linear",
 ) -> tuple[Figure, Axes, QuadMesh]:
     """
@@ -354,7 +354,7 @@ def plot_wavepacket_difference_2d(
     z_axis: Literal[0, 1, 2, -1, -2, -3],
     *,
     ax: Axes | None = None,
-    measure: Literal["real", "imag", "abs"] = "abs",
+    measure: Measure = "abs",
     scale: Literal["symlog", "linear"] = "linear",
 ) -> tuple[Figure, Axes, QuadMesh]:
     """
@@ -380,17 +380,17 @@ def plot_wavepacket_difference_2d(
     tuple[Figure, Axes, QuadMesh]
     """
     eigenstate_momentum0 = unfurl_wavepacket(wavepacket0)
-    eigenstate0 = convert_momentum_basis_eigenstate_to_position_basis(
+    eigenstate_0 = convert_momentum_basis_eigenstate_to_position_basis(
         eigenstate_momentum0
     )
 
     eigenstate_momentum1 = unfurl_wavepacket(wavepacket1)
-    eigenstate1 = convert_momentum_basis_eigenstate_to_position_basis(
+    eigenstate_1 = convert_momentum_basis_eigenstate_to_position_basis(
         eigenstate_momentum1
     )
 
     return plot_eigenstate_difference_2d(
-        eigenstate0, eigenstate1, idx, z_axis, ax=ax, measure=measure, scale=scale
+        eigenstate_0, eigenstate_1, idx, z_axis, ax=ax, measure=measure, scale=scale
     )
 
 
@@ -399,7 +399,7 @@ def animate_wavepacket_3d(
     z_axis: Literal[0, 1, 2, -1, -2, -3],
     *,
     ax: Axes | None = None,
-    measure: Literal["real", "imag", "abs"] = "abs",
+    measure: Measure = "abs",
     scale: Literal["symlog", "linear"] = "linear",
 ) -> tuple[Figure, Axes, ArtistAnimation]:
     """
@@ -434,7 +434,7 @@ def animate_wavepacket_x0x1(
     wavepacket: MomentumBasisWavepacket[_NS0Inv, _NS1Inv, _L0Inv, _L1Inv, _L2Inv],
     *,
     ax: Axes | None = None,
-    measure: Literal["real", "imag", "abs"] = "abs",
+    measure: Measure = "abs",
     scale: Literal["symlog", "linear"] = "linear",
 ) -> tuple[Figure, Axes, ArtistAnimation]:
     """
@@ -461,7 +461,7 @@ def animate_wavepacket_x1x2(
     wavepacket: MomentumBasisWavepacket[_NS0Inv, _NS1Inv, _L0Inv, _L1Inv, _L2Inv],
     *,
     ax: Axes | None = None,
-    measure: Literal["real", "imag", "abs"] = "abs",
+    measure: Measure = "abs",
     scale: Literal["symlog", "linear"] = "linear",
 ) -> tuple[Figure, Axes, ArtistAnimation]:
     """
@@ -488,7 +488,7 @@ def animate_wavepacket_x2x0(
     wavepacket: MomentumBasisWavepacket[_NS0Inv, _NS1Inv, _L0Inv, _L1Inv, _L2Inv],
     *,
     ax: Axes | None = None,
-    measure: Literal["real", "imag", "abs"] = "abs",
+    measure: Measure = "abs",
     scale: Literal["symlog", "linear"] = "linear",
 ) -> tuple[Figure, Axes, ArtistAnimation]:
     """
@@ -516,7 +516,7 @@ def plot_wavepacket_along_path(
     path: np.ndarray[tuple[Literal[3], int], np.dtype[np.int_]],
     *,
     ax: Axes | None = None,
-    measure: Literal["real", "imag", "abs"] = "abs",
+    measure: Measure = "abs",
     scale: Literal["symlog", "linear"] = "linear",
 ) -> tuple[Figure, Axes, Line2D]:
     """

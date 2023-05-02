@@ -12,6 +12,7 @@ from surface_potential_analysis.basis_config.basis_config import (
     get_fundamental_projected_x_points,
 )
 from surface_potential_analysis.util import (
+    Measure,
     calculate_cumulative_distances_along_path,
     get_measured_data,
     slice_along_axis,
@@ -36,7 +37,7 @@ def plot_overlap_2d(
     z_axis: Literal[0, 1, 2, -1, -2, -3],
     *,
     ax: Axes | None = None,
-    measure: Literal["real", "imag", "abs"] = "abs",
+    measure: Measure = "abs",
     scale: Literal["symlog", "linear"] = "linear",
 ) -> tuple[Figure, Axes, QuadMesh]:
     """
@@ -87,7 +88,7 @@ def plot_overlap_transform_2d(
     z_axis: Literal[0, 1, 2, -1, -2, -3],
     *,
     ax: Axes | None = None,
-    measure: Literal["real", "imag", "abs"] = "abs",
+    measure: Measure = "abs",
     scale: Literal["symlog", "linear"] = "linear",
 ) -> tuple[Figure, Axes, QuadMesh]:
     """
@@ -138,7 +139,7 @@ def plot_overlap_transform_along_path(
     path: np.ndarray[tuple[Literal[3], int], np.dtype[np.int_]],
     *,
     ax: Axes | None = None,
-    measure: Literal["real", "imag", "abs", "angle"] = "abs",
+    measure: Measure = "abs",
     scale: Literal["symlog", "linear"] = "linear",
 ) -> tuple[Figure, Axes, Line2D]:
     """
@@ -176,7 +177,7 @@ def plot_overlap_transform_along_diagonal(
     overlap: OverlapTransform[_L0Inv, _L1Inv, _L2Inv],
     k2_ind: int = 0,
     *,
-    measure: Literal["real", "imag", "abs", "angle"] = "abs",
+    measure: Measure = "abs",
     ax: Axes | None = None,
     scale: Literal["symlog", "linear"] = "linear",
 ) -> tuple[Figure, Axes, Line2D]:
@@ -210,7 +211,7 @@ def plot_overlap_transform_along_x0(
     k1_ind: int = 0,
     k2_ind: int = 0,
     *,
-    measure: Literal["real", "imag", "abs", "angle"] = "abs",
+    measure: Measure = "abs",
     ax: Axes | None = None,
     scale: Literal["symlog", "linear"] = "linear",
 ) -> tuple[Figure, Axes, Line2D]:
