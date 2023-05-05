@@ -39,7 +39,7 @@ def pad_ft_points(
     NDArray
         The padded array
     """
-    shape_arr = np.asarray(array.shape)
+    shape_arr = np.array(array.shape)
     axes_arr = np.asarray(axes)
 
     padded_shape = shape_arr.copy()
@@ -106,7 +106,7 @@ def interpolate_points_fftn(
     ft_points = scipy.fft.fftn(points, axes=axes_arr, norm="forward")
     # pad (or truncate) for the new lengths s
     padded = pad_ft_points(ft_points, s, axes_arr)
-    return scipy.fft.ifftn(  # type:ignore[no-any-return]
+    return scipy.fft.ifftn(  # type: ignore[no-any-return]
         padded, s, axes=axes_arr, norm="forward", overwrite_x=True
     )
 
@@ -177,7 +177,7 @@ def interpolate_points_rfftn(
     # pad (or truncate) for the new lengths s
     # we don't need to pad the last axis here, as it is handled correctly by irfftn
     padded = pad_ft_points(ft_points, s[:-1], axes_arr[:-1])
-    return scipy.fft.irfftn(  # type:ignore[no-any-return]
+    return scipy.fft.irfftn(  # type: ignore[no-any-return]
         padded, s, axes=axes_arr, norm="forward", overwrite_x=True
     )
 
@@ -223,83 +223,7 @@ def interpolate_points_rfft(
         upper_half = slice_along_axis(slice(None, n // 2, -1), axis=axis)
         interpolated_potential[upper_half] = interpolated_potential[lower_half]
 
-    return interpolated_potential  # type:ignore[no-any-return]
-
-
-# ruff: noqa: ERA001
-
-
-# The old method, of padding which only worked for a 2D array
-# def interpolate_points_fourier_complex(
-#     points: list[list[complex]], shape: tuple[int, int]
-# ) -> list[list[complex]]:
-#     """
-#     Given a uniform grid of points in the unit cell interpolate
-#     a grid of points with the given shape using the fourier transform
-
-#     We don't make use of the fact that the potential is real in this case,
-#     and as such the output may not be real
-#     """
-#     ft_potential = np.fft.fft2(points, norm="forward")
-#     original_shape = ft_potential.shape
-#     sample_shape = (
-#         np.min([original_shape[0], shape[0]]),
-#         np.min([original_shape[1], shape[1]]),
-#     )
-#     new_ft_potential = np.zeros(shape, dtype=complex)
-
-#     # See https://numpy.org/doc/stable/reference/generated/numpy.fft.fftfreq.html for the choice of frequencies
-#     # We want to map points to the location with the same frequency in the final ft grid
-#     # We want points with ftt freq from -(n)//2 to -1 in uhp
-#     kx_floor = sample_shape[0] // 2
-#     ky_floor = sample_shape[1] // 2
-#     # We want points with ftt freq from 0 to (n+1)//2 - 1 in lhp
-#     kx_ceil = (sample_shape[0] + 1) // 2
-#     ky_ceil = (sample_shape[1] + 1) // 2
-
-#     new_ft_potential[:kx_ceil, :ky_ceil] = ft_potential[:kx_ceil, :ky_ceil]
-#     if kx_floor != 0:
-#         new_ft_potential[-kx_floor:, :ky_ceil] = ft_potential[-kx_floor:, :ky_ceil]
-#     if ky_floor != 0:
-#         new_ft_potential[:kx_ceil, -ky_floor:] = ft_potential[:kx_ceil, -ky_floor:]
-#     if ky_floor != 0 and ky_floor != 0:
-#         new_ft_potential[-kx_floor:, -ky_floor:] = ft_potential[-kx_floor:, -ky_floor:]
-
-#     new_points = np.fft.ifft2(new_ft_potential, norm="forward")
-#     return new_points.tolist()
-
-
-# The old method, which would produce a wavefunction
-# which was slightly asymmetric if supplied wth
-# a symmetric wavefunction
-# def interpolate_points_fourier(
-#     points: list[list[float]], shape: tuple[int, int]
-# ) -> list[list[float]]:
-#     """
-#     Given a uniform grid of points in the unit cell interpolate
-#     a grid of points with the given shape using the fourier transform
-#     """
-#     ft_potential = np.fft.ifft2(points)
-#     ft_indices = get_ft_indexes((ft_potential.shape[0], ft_potential.shape[1]))
-
-#     # List of [x1_frac, x2_frac] for the interpolated grid
-#     fractions = get_point_fractions(shape, endpoint=False)
-#     # print(fractions)
-#     # print(ft_indices)
-#     # List of (List of list of [x1_phase, x2_phase] for the interpolated grid)
-#     interpolated_phases = np.multiply(
-#         fractions[:, np.newaxis, np.newaxis, :],
-#         ft_indices[np.newaxis, :, :, :],
-#     )
-#     # Sum over phase from x and y, raise to exp(-i * phi)
-#     summed_phases = np.exp(-2j * np.pi * np.sum(interpolated_phases, axis=-1))
-#     # print(summed_phases)
-#     # Multiply the exponential by the prefactor form the fourier transform
-#     # Add the contribution from each ikx1, ikx2
-#     interpolated_points = np.sum(
-#         np.multiply(ft_potential[np.newaxis, :, :], summed_phases), axis=(1, 2)
-#     )
-#     return np.real_if_close(interpolated_points).reshape(shape).tolist()
+    return interpolated_potential  # type: ignore[no-any-return]
 
 
 def interpolate_points_along_axis_spline(

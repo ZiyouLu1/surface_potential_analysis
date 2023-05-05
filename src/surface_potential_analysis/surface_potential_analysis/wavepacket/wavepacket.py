@@ -97,7 +97,7 @@ def load_wavepacket(path: Path) -> Wavepacket[Any, Any, Any]:
     -------
     Wavepacket[Any, Any, Any]
     """
-    return np.load(path, allow_pickle=True)[()]  # type:ignore[no-any-return]
+    return np.load(path, allow_pickle=True)[()]  # type: ignore[no-any-return]
 
 
 def _get_wavepacket_sample_index(
@@ -262,12 +262,9 @@ def get_eigenstate(
     -------
     Eigenstate[_BC0Inv]
     """
-    unraveled_index = (
-        idx
-        if isinstance(idx, tuple)
-        else (np.unravel_index(idx, wavepacket["energies"].shape))
-    )
+    shape = wavepacket["energies"].shape
+    stacked_idx = idx if isinstance(idx, tuple) else (np.unravel_index(idx, shape))
     return {
         "basis": wavepacket["basis"],
-        "vector": wavepacket["vectors"][unraveled_index],
+        "vector": wavepacket["vectors"][stacked_idx],
     }

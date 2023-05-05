@@ -8,12 +8,12 @@ from matplotlib import pyplot as plt
 from surface_potential_analysis.basis_config.basis_config import (
     BasisConfigUtil,
     PositionBasisConfig,
+    calculate_cumulative_k_distances_along_path,
     get_fundamental_projected_k_points,
     get_fundamental_projected_x_points,
 )
 from surface_potential_analysis.util import (
     Measure,
-    calculate_cumulative_distances_along_path,
     get_measured_data,
     slice_along_axis,
 )
@@ -31,7 +31,7 @@ _L1Inv = TypeVar("_L1Inv", bound=int)
 _L2Inv = TypeVar("_L2Inv", bound=int)
 
 
-def plot_overlap_2d(
+def plot_overlap_2d_x(
     overlap: Overlap[PositionBasisConfig[_L0Inv, _L1Inv, _L2Inv]],
     idx: int,
     z_axis: Literal[0, 1, 2, -1, -2, -3],
@@ -82,7 +82,7 @@ def plot_overlap_2d(
     return fig, ax, mesh
 
 
-def plot_overlap_transform_2d(
+def plot_overlap_2d_k(
     overlap: OverlapTransform[_L0Inv, _L1Inv, _L2Inv],
     idx: int,
     z_axis: Literal[0, 1, 2, -1, -2, -3],
@@ -134,10 +134,11 @@ def plot_overlap_transform_2d(
     return fig, ax, mesh
 
 
-def plot_overlap_transform_along_path(
+def plot_overlap_along_path_k(
     overlap: OverlapTransform[_L0Inv, _L1Inv, _L2Inv],
     path: np.ndarray[tuple[Literal[3], int], np.dtype[np.int_]],
     *,
+    wrap_distances: bool = False,
     ax: Axes | None = None,
     measure: Measure = "abs",
     scale: Literal["symlog", "linear"] = "linear",
@@ -150,6 +151,8 @@ def plot_overlap_transform_along_path(
     overlap : OverlapTransform
     path : np.ndarray[tuple[3, int], np.dtype[np.int_]]
         path, as a list of index for each coordinate
+    wrap_distances : bool, optional
+        should the coordinates be wrapped into the unit cell, by default False
     ax : Axes | None, optional
         plot axis, by default None
     measure : Literal[&quot;real&quot;, &quot;imag&quot;, &quot;abs&quot;, &quot;angle&quot;], optional
@@ -164,8 +167,8 @@ def plot_overlap_transform_along_path(
     util = BasisConfigUtil(overlap["basis"])
     points = overlap["vector"].reshape(util.shape)[*path]
     data = get_measured_data(points, measure)
-    distances = calculate_cumulative_distances_along_path(
-        path, util.fundamental_k_points.reshape(3, *util.shape)
+    distances = calculate_cumulative_k_distances_along_path(
+        overlap["basis"], path, wrap_distances=wrap_distances
     )
     (line,) = ax.plot(distances, data)
     ax.set_yscale(scale)
@@ -173,7 +176,7 @@ def plot_overlap_transform_along_path(
     return fig, ax, line
 
 
-def plot_overlap_transform_along_diagonal(
+def plot_overlap_along_k_diagonal(
     overlap: OverlapTransform[_L0Inv, _L1Inv, _L2Inv],
     k2_ind: int = 0,
     *,
@@ -201,12 +204,10 @@ def plot_overlap_transform_along_diagonal(
     util = BasisConfigUtil(overlap["basis"])
     path = np.array([[i, i, k2_ind] for i in range(util.shape[0])]).T
 
-    return plot_overlap_transform_along_path(
-        overlap, path, measure=measure, scale=scale, ax=ax
-    )
+    return plot_overlap_along_path_k(overlap, path, measure=measure, scale=scale, ax=ax)
 
 
-def plot_overlap_transform_along_x0(
+def plot_overlap_along_k0(
     overlap: OverlapTransform[_L0Inv, _L1Inv, _L2Inv],
     k1_ind: int = 0,
     k2_ind: int = 0,
@@ -237,6 +238,4 @@ def plot_overlap_transform_along_x0(
     util = BasisConfigUtil(overlap["basis"])
     path = np.array([[i, k1_ind, k2_ind] for i in range(util.shape[0])]).T
 
-    return plot_overlap_transform_along_path(
-        overlap, path, measure=measure, scale=scale, ax=ax
-    )
+    return plot_overlap_along_path_k(overlap, path, measure=measure, scale=scale, ax=ax)

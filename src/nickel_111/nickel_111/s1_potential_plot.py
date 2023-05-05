@@ -6,7 +6,11 @@ from typing import TYPE_CHECKING, Any, Literal, TypeVar
 import numpy as np
 from matplotlib import pyplot as plt
 from scipy.constants import electron_volt
-from surface_potential_analysis.basis_config.plot import plot_projected_coordinates_2d
+from surface_potential_analysis.basis.plot import plot_explicit_basis_states_x
+from surface_potential_analysis.basis_config.plot import plot_projected_x_points_2d
+from surface_potential_analysis.basis_config.sho_basis import (
+    infinate_sho_basis_from_config,
+)
 from surface_potential_analysis.interpolation import (
     interpolate_points_fftn,
     interpolate_points_rfft,
@@ -19,11 +23,11 @@ from surface_potential_analysis.potential import (
     normalize_potential,
 )
 from surface_potential_analysis.potential.plot import (
-    animate_potential_difference_2d,
+    animate_potential_difference_2d_x,
     animate_potential_x0x1,
     plot_potential_1d_x2_comparison_111,
-    plot_potential_2d,
-    plot_potential_difference_2d,
+    plot_potential_2d_x,
+    plot_potential_difference_2d_x,
     plot_potential_minimum_along_path,
     plot_potential_x0x1,
 )
@@ -104,7 +108,7 @@ def plot_raw_energy_grid_points() -> None:
     potential = normalize_potential(load_raw_data_reciprocal_grid())
     mocked_potential = mock_even_potential(potential)
 
-    fig, _, _ = plot_projected_coordinates_2d(mocked_potential["basis"], 0, 2)
+    fig, _, _ = plot_projected_x_points_2d(mocked_potential["basis"], 0, 2)
     fig.show()
 
     fig, ax = plot_z_direction_energy_data_nickel_reciprocal_points(potential)
@@ -131,14 +135,14 @@ def plot_raw_energy_grid_points() -> None:
 def plot_interpolated_energy_grid_points() -> None:
     potential = load_interpolated_potential()
 
-    fig, ax, _ = plot_projected_coordinates_2d(potential["basis"], 0, 2)
+    fig, ax, _ = plot_projected_x_points_2d(potential["basis"], 0, 2)
     fig.show()
 
     fig, ax, _ani = animate_potential_x0x1(potential, clim=(0, 2e-19))
 
     raw_potential = load_raw_data_reciprocal_grid()
     mocked_raw_potential = mock_even_potential(raw_potential)
-    plot_projected_coordinates_2d(mocked_raw_potential["basis"], 0, 2, ax=ax)
+    plot_projected_x_points_2d(mocked_raw_potential["basis"], 0, 2, ax=ax)
     fig.show()
 
     raw_grid = normalize_potential(load_raw_data_reciprocal_grid())
@@ -169,7 +173,7 @@ def plot_nickel_energy_grid_symmetry() -> None:
     fig, _, _ani0 = animate_potential_x0x1(reflected_potential, clim=(0, 2e-19))
     fig.show()
 
-    fig, _, _ani1 = animate_potential_difference_2d(potential, reflected_potential, 2)
+    fig, _, _ani1 = animate_potential_difference_2d_x(potential, reflected_potential, 2)
     fig.show()
     input()
 
@@ -180,14 +184,14 @@ def plot_interpolated_energy_grid_reciprocal() -> None:
     points[points < 0] = np.max(points)
     potential["points"] = points
 
-    fig, ax, _ = plot_projected_coordinates_2d(potential["basis"], 0, 2)
+    fig, ax, _ = plot_projected_x_points_2d(potential["basis"], 0, 2)
     fig.show()
 
     fig, ax, _ani = animate_potential_x0x1(potential)
 
     raw_grid = load_raw_data_reciprocal_grid()
     mocked_raw_grid = mock_even_potential(raw_grid)
-    plot_projected_coordinates_2d(mocked_raw_grid["basis"], 0, 2, ax=ax)
+    plot_projected_x_points_2d(mocked_raw_grid["basis"], 0, 2, ax=ax)
     fig.show()
 
     fig, ax = plot_potential_1d_x2_comparison_111(potential)
@@ -252,7 +256,7 @@ def compare_john_interpolation() -> None:
     plot_point_potential_location_xy(raw_points, ax=ax)
     fig.show()
 
-    fig, ax = plot_potential_2d(mocked_interpolation, 0, 2)
+    fig, ax, _ = plot_potential_2d_x(mocked_interpolation, 0, 2)
     plot_point_potential_location_xy(raw_points, ax=ax)
     ax.set_ylim(0, 3 * 10**-19)
     ax.set_title("Comparison between raw and interpolated potential for Nickel")
@@ -281,11 +285,16 @@ def plot_interpolation_with_sho_wavefunctions() -> None:
     potential = load_interpolated_potential()
     fig, ax = plt.subplots()
     plot_potential_1d_x2_comparison_111(potential, ax=ax)
-    plot_sho_wavefunctions(
-        potential["z_points"],
-        sho_omega=195636899474736.66,
-        mass=1.6735575e-27,
-        first_n=16,
+    plot_explicit_basis_states_x(
+        infinate_sho_basis_from_config(
+            potential["basis"][2],
+            {
+                "mass": 1.6735575e-27,
+                "sho_omega": 195636899474736.66,
+                "x_origin": np.array([0, 0, 0]),
+            },
+            16,
+        ),
         ax=ax,
     )
     ax.set_ylim(0, 0.5e-18)
@@ -471,7 +480,7 @@ def plot_interpolated_potential_difference() -> None:
         "points": potential1["points"][::5, ::5, :],
     }
 
-    fig, _, _ = plot_potential_difference_2d(
+    fig, _, _ = plot_potential_difference_2d_x(
         potential0, potential1_0_basis, idx=0, z_axis=2
     )
     fig.show()
@@ -484,8 +493,8 @@ def plot_interpolated_potential_difference() -> None:
 
     potential0_1_basis: Potential[int, int, int] = {
         "basis": potential0["basis"],
-        "points": interpolate_points_rfftn(  # type:ignore[typeddict-item]
-            potential0["points"],  # type:ignore[arg-type]
+        "points": interpolate_points_rfftn(  # type: ignore[typeddict-item]
+            potential0["points"],  # type: ignore[arg-type]
             s=(potential1["points"].shape[0], potential1["points"].shape[1]),
             axes=(0, 1),
         ),
@@ -511,13 +520,13 @@ def plot_interpolated_potential_difference_rfft() -> None:
     potential0 = get_interpolated_nickel_potential((2 * 23, 2 * 23, 500))
     potential0_1_basis: Potential[int, int, int] = {
         "basis": potential0["basis"],
-        "points": interpolate_points_rfftn(  # type:ignore[typeddict-item]
-            potential0["points"],  # type:ignore[arg-type]
+        "points": interpolate_points_rfftn(  # type: ignore[typeddict-item]
+            potential0["points"],  # type: ignore[arg-type]
             s=(5 * potential0["points"].shape[0], 5 * potential0["points"].shape[1]),
             axes=(0, 1),
         )[::5, ::5, :],
     }
-    fig, _, _ = plot_potential_difference_2d(
+    fig, _, _ = plot_potential_difference_2d_x(
         potential0, potential0_1_basis, idx=0, z_axis=2
     )
     fig.show()
@@ -525,8 +534,8 @@ def plot_interpolated_potential_difference_rfft() -> None:
     potential0_1_basis1: Potential[int, int, int] = {
         "basis": potential0["basis"],
         "points": np.real(
-            interpolate_points_fftn(  # type:ignore[typeddict-item]
-                potential0["points"],  # type:ignore[arg-type]
+            interpolate_points_fftn(  # type: ignore[typeddict-item]
+                potential0["points"],  # type: ignore[arg-type]
                 s=(
                     5 * potential0["points"].shape[0],
                     5 * potential0["points"].shape[1],
@@ -535,12 +544,12 @@ def plot_interpolated_potential_difference_rfft() -> None:
             )
         )[::5, ::5, :],
     }
-    fig, _, _ = plot_potential_difference_2d(
+    fig, _, _ = plot_potential_difference_2d_x(
         potential0, potential0_1_basis1, idx=0, z_axis=2
     )
     fig.show()
 
-    fig, _, _ = plot_potential_2d(potential0, idx=0, z_axis=2)
+    fig, _, _ = plot_potential_2d_x(potential0, idx=0, z_axis=2)
     fig.show()
     input()
 
@@ -551,9 +560,9 @@ def compare_potential_rfft() -> None:
 
     potential0_1_basis: Potential[int, int, int] = {
         "basis": potential0["basis"],
-        "points": interpolate_points_rfft(  # type:ignore[typeddict-item]
+        "points": interpolate_points_rfft(  # type: ignore[typeddict-item]
             interpolate_points_rfft(
-                potential0["points"],  # type:ignore[arg-type]
+                potential0["points"],  # type: ignore[arg-type]
                 potential1["points"].shape[0],
                 axis=0,
             ),
@@ -595,8 +604,8 @@ def compare_potential_rfft() -> None:
 
     potential0_1_basis3: Potential[int, int, int] = {
         "basis": potential0["basis"],
-        "points": interpolate_points_fftn(  # type:ignore[typeddict-item]
-            potential0["points"],  # type:ignore[arg-type]
+        "points": interpolate_points_fftn(  # type: ignore[typeddict-item]
+            potential0["points"],  # type: ignore[arg-type]
             s=(potential1["points"].shape[0], potential1["points"].shape[1]),
             axes=(0, 1),
         ),
@@ -655,13 +664,13 @@ def plot_potential_difference_very_large_resolution() -> None:
         "basis": potential0["basis"],
         "points": p1["points"][::5, ::5, :],
     }
-    amax = np.unravel_index(
+    a_max = np.unravel_index(
         np.argmax(np.abs(potential1["points"] - potential0["points"])),
         potential0["points"].shape,
     )
-    fig, _, _ = plot_potential_difference_2d(potential0, potential1, int(amax[2]), 2)
+    fig, _, _ = plot_potential_difference_2d_x(potential0, potential1, int(a_max[2]), 2)
     fig.show()
 
-    fig, _, _ = plot_potential_difference_2d(potential0, potential1, int(amax[0]), 0)
+    fig, _, _ = plot_potential_difference_2d_x(potential0, potential1, int(a_max[0]), 0)
     fig.show()
     input()

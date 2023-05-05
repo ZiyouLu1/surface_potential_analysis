@@ -105,7 +105,7 @@ def stack_hamiltonian(hamiltonian: Hamiltonian[_BC0Inv]) -> StackedHamiltonian[_
     -------
     StackedHamiltonian[_BC0Inv]
     """
-    basis = BasisConfigUtil[Any, Any, Any](hamiltonian["basis"])
+    basis = BasisConfigUtil(hamiltonian["basis"])
     return {
         "basis": hamiltonian["basis"],
         "array": hamiltonian["array"].reshape(*basis.shape, *basis.shape),

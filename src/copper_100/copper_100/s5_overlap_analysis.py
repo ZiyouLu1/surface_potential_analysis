@@ -7,9 +7,9 @@ from surface_potential_analysis.overlap.overlap import (
     load_overlap,
 )
 from surface_potential_analysis.overlap.plot import (
-    plot_overlap_2d,
-    plot_overlap_transform_2d,
-    plot_overlap_transform_along_x0,
+    plot_overlap_2d_k,
+    plot_overlap_2d_x,
+    plot_overlap_along_k0,
 )
 
 from .surface_data import get_data_path, save_figure
@@ -21,7 +21,7 @@ def plot_overlap() -> None:
     overlap = load_overlap(path)
     overlap_transform = convert_overlap_momentum_basis(overlap)
 
-    fig, ax, _ = plot_overlap_transform_2d(overlap_transform, 0, 2)
+    fig, ax, _ = plot_overlap_2d_k(overlap_transform, 0, 2)
     ax.set_title(
         "Plot of the overlap transform for ikz=0\n"
         "showing oscillation in the direction corresponding to\n"
@@ -30,7 +30,7 @@ def plot_overlap() -> None:
     save_figure(fig, "2d_overlap_transform_kx_ky.png")
     fig.show()
 
-    fig, ax, _ = plot_overlap_transform_2d(overlap_transform, 0, 2, measure="real")
+    fig, ax, _ = plot_overlap_2d_k(overlap_transform, 0, 2, measure="real")
     ax.set_title(
         "Plot of the overlap transform for ikz=0\n"
         "showing oscillation in the direction corresponding to\n"
@@ -39,7 +39,7 @@ def plot_overlap() -> None:
     save_figure(fig, "2d_overlap_transform_real_kx_ky.png")
     fig.show()
 
-    fig, ax, _ = plot_overlap_transform_2d(overlap_transform, 0, 2, measure="imag")
+    fig, ax, _ = plot_overlap_2d_k(overlap_transform, 0, 2, measure="imag")
     ax.set_title(
         "Plot of the overlap transform for ikz=0\n"
         "showing oscillation in the direction corresponding to\n"
@@ -48,12 +48,12 @@ def plot_overlap() -> None:
     save_figure(fig, "2d_overlap_transform_imag_kx_ky.png")
     fig.show()
 
-    fig, ax, _ = plot_overlap_2d(overlap, 0, 2)
+    fig, ax, _ = plot_overlap_2d_x(overlap, 0, 2)
     ax.set_title("Plot of the overlap summed over z")
     save_figure(fig, "2d_overlap_kx_ky.png")
     fig.show()
 
-    fig, ax, _ = plot_overlap_transform_2d(overlap_transform, 0, 1)
+    fig, ax, _ = plot_overlap_2d_k(overlap_transform, 0, 1)
     ax.set_title(
         "Plot of the overlap transform for ikx1=0 with a decay in the kz direction"
     )
@@ -62,11 +62,11 @@ def plot_overlap() -> None:
     fig.show()
 
     fig, ax = plt.subplots()
-    _, _, ln = plot_overlap_transform_along_x0(overlap_transform, measure="abs", ax=ax)
+    _, _, ln = plot_overlap_along_k0(overlap_transform, measure="abs", ax=ax)
     ln.set_label("abs")
-    _, _, ln = plot_overlap_transform_along_x0(overlap_transform, measure="real", ax=ax)
+    _, _, ln = plot_overlap_along_k0(overlap_transform, measure="real", ax=ax)
     ln.set_label("real")
-    _, _, ln = plot_overlap_transform_along_x0(overlap_transform, measure="imag", ax=ax)
+    _, _, ln = plot_overlap_along_k0(overlap_transform, measure="imag", ax=ax)
     ln.set_label("imag")
 
     ax.legend()

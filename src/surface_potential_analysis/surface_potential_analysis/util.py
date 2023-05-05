@@ -28,7 +28,7 @@ def timed(f: F) -> F:  # noqa: D103
 def slice_along_axis(
     slice_at_axis: slice | int | None, axis: int = -1
 ) -> tuple[EllipsisType | slice | int | None, ...] | tuple[slice | int | None, ...]:
-    """Return a slice such that the 1d slice provided by slice_inds, slices along the dimension provided."""
+    """Return a slice such that the 1d slice provided by slice_at_axis, slices along the dimension provided."""
     from_end = False
     if axis < 0:  # choosing axis at the end
         from_end = True
@@ -75,7 +75,7 @@ def calculate_cumulative_distances_along_path(
     )
     cum_distances = np.cumsum(distances)
     # Add back initial distance
-    return np.insert(cum_distances, 0, 0)  # type:ignore[no-any-return]
+    return np.insert(cum_distances, 0, 0)  # type: ignore[no-any-return]
 
 
 _SInv = TypeVar("_SInv", bound=tuple[Any])

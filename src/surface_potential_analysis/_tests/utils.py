@@ -26,7 +26,6 @@ if TYPE_CHECKING:
 rng = np.random.default_rng()
 
 
-
 def convert_explicit_basis_x2(
     hamiltonian: _StackedHamiltonianPoints[_L0Inv, _L1Inv, _L2Inv],
     basis: np.ndarray[tuple[_LInv, _L2Inv], np.dtype[np.complex_]],
@@ -41,6 +40,7 @@ def convert_explicit_basis_x2(
         * basis.conj().reshape(1, 1, *basis.shape, 1, 1, 1),
         axis=3,
     )
+
 
 @overload
 def get_random_explicit_basis(
@@ -79,7 +79,7 @@ def get_random_explicit_basis(
     )
     n = rng.integers(1, fundamental_n) if n is None else n
     vectors = special_ortho_group.rvs(fundamental_n)[:n]
-    parent: PositionBasis[int] | MomentumBasis[int] = {  # type:ignore[misc,assignment]
+    parent: PositionBasis[int] | MomentumBasis[int] = {  # type: ignore[misc,assignment]
         "_type": _type,
         "delta_x": np.array([1, 0, 0]),
         "n": fundamental_n,

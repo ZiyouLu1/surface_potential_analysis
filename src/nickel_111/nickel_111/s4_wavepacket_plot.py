@@ -1,12 +1,19 @@
 from __future__ import annotations
 
+from typing import TYPE_CHECKING, Any, TypeVar
+
 import numpy as np
 from matplotlib import pyplot as plt
+from surface_potential_analysis.basis_config.plot import (
+    plot_fundamental_projected_x_at_points,
+)
 from surface_potential_analysis.eigenstate.conversion import (
     convert_sho_eigenstate_to_fundamental_xy,
+    flaten_eigenstate_x,
 )
 from surface_potential_analysis.eigenstate.plot import (
     animate_eigenstate_x1x2,
+    plot_eigenstate_along_path,
     plot_eigenstate_x0x1,
 )
 from surface_potential_analysis.wavepacket.plot import (
@@ -26,9 +33,15 @@ from nickel_111.s4_wavepacket import (
     MAXIMUM_POINTS,
     load_nickel_wavepacket,
     load_normalized_nickel_wavepacket_momentum,
+    load_two_point_normalized_nickel_wavepacket_momentum,
 )
 
 from .surface_data import get_data_path, save_figure
+
+if TYPE_CHECKING:
+    from surface_potential_analysis.basis_config.basis_config import BasisConfig
+
+    _BC0Inv = TypeVar("_BC0Inv", bound=BasisConfig[Any, Any, Any])
 
 
 def plot_nickel_wavepacket_points() -> None:
@@ -151,9 +164,11 @@ def animate_nickel_wavepacket() -> None:
 
 
 def plot_wavepacket_at_maximum_points() -> None:
-    for band in range(20):
+    for band in range(0, 6):
         max_point = MAXIMUM_POINTS[band]
-        normalized = load_normalized_nickel_wavepacket_momentum(band, max_point, 0)
+        # normalized = load_normalized_nickel_wavepacket_momentum(band, max_point, 0)  # noqa: ERA001
+        # normalized = load_two_point_normalized_nickel_wavepacket_momentum(band, 0) # noqa: ERA001
+        normalized = load_two_point_normalized_nickel_wavepacket_momentum(band, 0)
 
         fig, ax, _ = plot_wavepacket_x0x1(normalized, max_point[2], measure="abs")
         fig.show()
@@ -172,4 +187,52 @@ def plot_nickel_wavepacket_eigenstate() -> None:
         )
         fig.show()
 
+    input()
+
+
+def plot_phase_around_origin() -> None:
+    wavepacket = load_nickel_wavepacket(band=2)
+    eigenstate = get_eigenstate(wavepacket, 0)
+
+    flat = flaten_eigenstate_x(eigenstate, 124, 2)
+    flat["basis"][0]["parent"]["n"] = 92  # type: ignore[typeddict-item]
+    flat["basis"][1]["parent"]["n"] = 92  # type: ignore[typeddict-item]
+    # 2, 21, 124
+    path = np.array(
+        [
+            [8, 6, 4, 2, 89, 86, 83, 80],
+            [80, 83, 86, 89, 2, 4, 6, 8],
+            [0, 0, 0, 0, 0, 0, 0, 0],
+        ]
+    )
+
+    fig, ax, _ = plot_eigenstate_x0x1(flat, 0)
+    plot_fundamental_projected_x_at_points(flat["basis"], path, z_axis=2, ax=ax)
+    fig.show()
+
+    fig, ax, _ = plot_eigenstate_x0x1(flat, 0, measure="real")
+    plot_fundamental_projected_x_at_points(flat["basis"], path, z_axis=2, ax=ax)
+    fig.show()
+
+    fig, ax, _ = plot_eigenstate_along_path(flat, path, wrap_distances=True)
+    ax.set_title("plot of abs against distance for the eigenstate")
+    fig.show()
+
+    fig, ax, _ = plot_eigenstate_along_path(
+        flat, path, wrap_distances=True, measure="angle"
+    )
+    ax.set_title("plot of angle against distance for the eigenstate")
+    fig.show()
+
+    fig, ax, _ = plot_eigenstate_along_path(
+        flat, path, wrap_distances=True, measure="real"
+    )
+    ax.set_title("plot of real against distance for the eigenstate")
+    fig.show()
+
+    fig, ax, _ = plot_eigenstate_along_path(
+        flat, path, wrap_distances=True, measure="imag"
+    )
+    ax.set_title("plot of imag against distance for the eigenstate")
+    fig.show()
     input()

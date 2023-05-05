@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import unittest
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Generic, TypedDict, TypeVar
 
 import hamiltonian_generator
 import numpy as np
@@ -9,12 +9,16 @@ from scipy.constants import hbar
 
 from _tests.utils import get_random_explicit_basis
 from surface_potential_analysis.basis.basis import (
+    Basis,
     ExplicitBasis,
+    FundamentalBasis,
     MomentumBasis,
+    PositionBasis,
     TruncatedBasis,
     as_fundamental_basis,
 )
 from surface_potential_analysis.basis_config.basis_config import (
+    BasisConfig,
     BasisConfigUtil,
     PositionBasisConfigUtil,
 )
@@ -23,21 +27,149 @@ from surface_potential_analysis.basis_config.sho_basis import (
     infinate_sho_basis_from_config,
 )
 from surface_potential_analysis.eigenstate.conversion import (
-    _convert_explicit_basis_x2_to_position,
-    _convert_momentum_basis_x01_to_position,
-    _flatten_eigenstate,
-    _stack_eigenstate,
     convert_eigenstate_to_basis,
-    convert_sho_eigenstate_to_position_basis,
 )
+from surface_potential_analysis.interpolation import pad_ft_points
 
 if TYPE_CHECKING:
     from surface_potential_analysis.eigenstate.eigenstate import (
         Eigenstate,
         EigenstateWithBasis,
+        PositionBasisEigenstate,
     )
 
 _rng = np.random.default_rng()
+
+_BC0Cov = TypeVar("_BC0Cov", bound=BasisConfig[Any, Any, Any], covariant=True)
+_BC0Inv = TypeVar("_BC0Inv", bound=BasisConfig[Any, Any, Any])
+
+_BX0Cov = TypeVar("_BX0Cov", bound=Basis[Any, Any], covariant=True)
+_BX1Cov = TypeVar("_BX1Cov", bound=Basis[Any, Any], covariant=True)
+_BX2Cov = TypeVar("_BX2Cov", bound=Basis[Any, Any], covariant=True)
+
+_BX0Inv = TypeVar("_BX0Inv", bound=Basis[Any, Any])
+_BX1Inv = TypeVar("_BX1Inv", bound=Basis[Any, Any])
+
+_L0Inv = TypeVar("_L0Inv", bound=int, covariant=True)
+_L1Inv = TypeVar("_L1Inv", bound=int, covariant=True)
+_L2Inv = TypeVar("_L2Inv", bound=int, covariant=True)
+
+_LF0Inv = TypeVar("_LF0Inv", bound=int)
+_LF1Inv = TypeVar("_LF1Inv", bound=int)
+_LF2Inv = TypeVar("_LF2Inv", bound=int)
+
+_PInv = TypeVar("_PInv", bound=FundamentalBasis[Any])
+
+
+class _StackedEigenstate(TypedDict, Generic[_BC0Cov]):
+    basis: _BC0Cov
+    vector: np.ndarray[tuple[int, int, int], np.dtype[np.complex_]]
+
+
+StackedEigenstateWithBasis = _StackedEigenstate[BasisConfig[_BX0Cov, _BX1Cov, _BX2Cov]]
+
+
+def _stack_eigenstate(state: Eigenstate[_BC0Inv]) -> _StackedEigenstate[_BC0Inv]:
+    util = BasisConfigUtil(state["basis"])
+    return {"basis": state["basis"], "vector": state["vector"].reshape(util.shape)}
+
+
+def _flatten_eigenstate(state: _StackedEigenstate[_BC0Inv]) -> Eigenstate[_BC0Inv]:
+    return {"basis": state["basis"], "vector": state["vector"].reshape(-1)}
+
+
+def _convert_explicit_basis_x2_to_position(
+    eigenstate: StackedEigenstateWithBasis[_BX0Inv, _BX1Inv, ExplicitBasis[Any, _PInv]]
+) -> StackedEigenstateWithBasis[_BX0Inv, _BX1Inv, _PInv]:
+    vector = np.sum(
+        eigenstate["vector"][:, :, :, np.newaxis]
+        * eigenstate["basis"][2]["vectors"][np.newaxis, np.newaxis, :, :],
+        axis=2,
+    )
+    return {
+        "basis": (
+            eigenstate["basis"][0],
+            eigenstate["basis"][1],
+            eigenstate["basis"][2]["parent"],
+        ),
+        "vector": vector,
+    }
+
+def _convert_momentum_basis_x01_to_position(
+    eigenstate: StackedEigenstateWithBasis[
+        TruncatedBasis[Any, MomentumBasis[_L0Inv]] | MomentumBasis[_L0Inv],
+        TruncatedBasis[Any, MomentumBasis[_L1Inv]] | MomentumBasis[_L1Inv],
+        _BX0Inv,
+    ]
+    | StackedEigenstateWithBasis[
+        MomentumBasis[_L0Inv],
+        MomentumBasis[_L1Inv],
+        _BX0Inv,
+    ]
+    | StackedEigenstateWithBasis[
+        TruncatedBasis[Any, MomentumBasis[_L0Inv]],
+        TruncatedBasis[Any, MomentumBasis[_L1Inv]],
+        _BX0Inv,
+    ]
+) -> StackedEigenstateWithBasis[PositionBasis[_L0Inv], PositionBasis[_L1Inv], _BX0Inv]:
+    util = BasisConfigUtil(eigenstate["basis"])
+    padded = pad_ft_points(
+        eigenstate["vector"],  # type: ignore[arg-type]
+        s=[util.fundamental_n0, util.fundamental_n1],
+        axes=(0, 1),
+    )
+    transformed = np.fft.ifftn(padded, axes=(0, 1), norm="ortho")
+    return {
+        "basis": (
+            {
+                "_type": "position",
+                "delta_x": util.delta_x0,
+                "n": util.fundamental_n0,  # type: ignore[typeddict-item]
+            },
+            {
+                "_type": "position",
+                "delta_x": util.delta_x1,
+                "n": util.fundamental_n1,  # type: ignore[typeddict-item]
+            },
+            eigenstate["basis"][2],
+        ),
+        "vector": transformed,
+    }
+
+
+
+def _convert_sho_eigenstate_to_position_basis(
+    eigenstate: EigenstateWithBasis[
+        TruncatedBasis[_L0Inv, MomentumBasis[_LF0Inv]] | MomentumBasis[_LF0Inv],
+        TruncatedBasis[_L1Inv, MomentumBasis[_LF1Inv]] | MomentumBasis[_LF1Inv],
+        ExplicitBasis[_L2Inv, PositionBasis[_LF2Inv]],
+    ]
+    | EigenstateWithBasis[
+        MomentumBasis[_LF0Inv],
+        MomentumBasis[_LF1Inv],
+        ExplicitBasis[_L2Inv, PositionBasis[_LF2Inv]],
+    ]
+    | EigenstateWithBasis[
+        TruncatedBasis[_L0Inv, MomentumBasis[_LF0Inv]],
+        TruncatedBasis[_L1Inv, MomentumBasis[_LF1Inv]],
+        ExplicitBasis[_L2Inv, PositionBasis[_LF2Inv]],
+    ]
+) -> PositionBasisEigenstate[_LF0Inv, _LF1Inv, _LF2Inv]:
+    """
+    Given an eigenstate in sho basis convert it into position basis.
+
+    Parameters
+    ----------
+    eigenstate : EigenstateWithBasis[ TruncatedBasis[_L0Inv, MomentumBasis[_LF0Inv]]  |  MomentumBasis[_LF0Inv], TruncatedBasis[_L1Inv, MomentumBasis[_LF1Inv]]  |  MomentumBasis[_LF1Inv], ExplicitBasis[_L2Inv, PositionBasis[_LF2Inv]], ]
+
+    Returns
+    -------
+    PositionBasisEigenstate[_LF0Inv, _LF1Inv, _LF2Inv]
+    """
+    stacked = _stack_eigenstate(eigenstate)  # type: ignore[arg-type]
+    xy_converted = _convert_momentum_basis_x01_to_position(stacked)
+    converted = _convert_explicit_basis_x2_to_position(xy_converted)
+    return _flatten_eigenstate(converted)
 
 
 def _get_random_sho_eigenstate(
@@ -194,7 +326,7 @@ class EigenstateConversionTest(unittest.TestCase):
                 points.T.tolist(),
             )
 
-            expected = convert_sho_eigenstate_to_position_basis(eigenstate)
+            expected = _convert_sho_eigenstate_to_position_basis(eigenstate)
             np.testing.assert_allclose(
                 expected["vector"], np.array(actual) / np.linalg.norm(actual)
             )
@@ -231,7 +363,7 @@ class EigenstateConversionTest(unittest.TestCase):
             points.T.tolist(),
         )
 
-        expected = convert_sho_eigenstate_to_position_basis(eigenstate)
+        expected = _convert_sho_eigenstate_to_position_basis(eigenstate)
         np.testing.assert_allclose(
             expected["vector"], np.array(actual) / np.linalg.norm(actual)
         )
@@ -254,7 +386,7 @@ class EigenstateConversionTest(unittest.TestCase):
             ),
         )
 
-        actual = convert_sho_eigenstate_to_position_basis(eigenstate)
+        actual = _convert_sho_eigenstate_to_position_basis(eigenstate)
 
         expected = convert_eigenstate_to_basis(eigenstate, actual["basis"])
 
@@ -264,7 +396,7 @@ class EigenstateConversionTest(unittest.TestCase):
         resolution = (5, 6, 9)
         eigenstate = _get_random_sho_eigenstate(resolution, (10, 10, 100))
 
-        actual = convert_sho_eigenstate_to_position_basis(eigenstate)
+        actual = _convert_sho_eigenstate_to_position_basis(eigenstate)
 
         expected = convert_eigenstate_to_basis(eigenstate, actual["basis"])
         np.testing.assert_array_almost_equal(actual["vector"], expected["vector"])
@@ -272,13 +404,13 @@ class EigenstateConversionTest(unittest.TestCase):
     def test_convert_random_explicit_z_eigenstate(self) -> None:
         resolution = (5, 6, 9)
         eigenstate = _get_random_sho_eigenstate(resolution, (10, 10, 100))
-        eigenstate["basis"] = (  # type:ignore[typeddict-item]
+        eigenstate["basis"] = (  # type: ignore[typeddict-item]
             as_fundamental_basis(eigenstate["basis"][0]),
             as_fundamental_basis(eigenstate["basis"][1]),
             eigenstate["basis"][2],
         )
 
-        actual = convert_sho_eigenstate_to_position_basis(eigenstate)
+        actual = _convert_sho_eigenstate_to_position_basis(eigenstate)
 
         expected = convert_eigenstate_to_basis(eigenstate, actual["basis"])
         np.testing.assert_array_almost_equal(actual["vector"], expected["vector"])

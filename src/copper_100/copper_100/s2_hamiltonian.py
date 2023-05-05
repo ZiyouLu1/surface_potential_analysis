@@ -1,41 +1,111 @@
 from __future__ import annotations
 
+from typing import TYPE_CHECKING, Literal, TypeVar
 
-def generate_hamiltonian(resolution: tuple[int, int, int] = (1, 1, 1)):
-    data = load_interpolated_copper_data()
-    interpolation = as_interpolation(data)
-    config: EigenstateConfig = {
-        "mass": 1.6735575e-27,
-        "sho_omega": 117905964225836.06,
-        "delta_x0": data["delta_x0"],
-        "delta_x1": data["delta_x1"],
-        "resolution": resolution,
-    }
+import numpy as np
+from surface_potential_analysis.hamiltonian_builder import sho_subtracted_basis
+from surface_potential_analysis.util import timed
 
-    z_offset = -1.840551985155284e-10
-    return SurfaceHamiltonianUtil(config, interpolation, z_offset)
+from copper_100.s1_potential import (
+    get_interpolated_potential,
+    get_interpolated_potential_relaxed,
+)
 
-
-def generate_hamiltonian_relaxed(resolution: tuple[int, int, int] = (1, 1, 1)):
-    data = load_spline_interpolated_relaxed_data()
-    interpolation = as_interpolation(data)
-    config: EigenstateConfig = {
-        "mass": 1.6735575e-27,
-        "sho_omega": 111119431700988.45,
-        "delta_x0": data["delta_x0"],
-        "delta_x1": data["delta_x1"],
-        "resolution": resolution,
-    }
-
-    z_offset = -1.8866087481825024e-10
-    return SurfaceHamiltonianUtil(config, interpolation, z_offset)
-
-
-def generate_sho_config():
-    data = load_spline_interpolated_relaxed_data()
-    interpolation = as_interpolation(data)
-    mass = 1.6735575e-27
-    omega, z_offset = generate_sho_config_minimum(
-        interpolation, mass, initial_guess=1e14
+if TYPE_CHECKING:
+    from surface_potential_analysis.basis import (
+        ExplicitBasis,
+        MomentumBasis,
+        PositionBasis,
+        TruncatedBasis,
     )
-    print(omega, z_offset)
+    from surface_potential_analysis.basis_config.sho_basis import SHOBasisConfig
+    from surface_potential_analysis.hamiltonian import HamiltonianWithBasis
+
+_L0 = TypeVar("_L0", bound=int)
+_L1 = TypeVar("_L1", bound=int)
+_L2 = TypeVar("_L2", bound=int)
+_L3 = TypeVar("_L3", bound=int)
+_L4 = TypeVar("_L4", bound=int)
+_L5 = TypeVar("_L5", bound=int)
+
+
+@timed
+def generate_hamiltonian_sho(
+    shape: tuple[_L0, _L1, _L2],
+    bloch_phase: np.ndarray[tuple[Literal[3]], np.dtype[np.float_]],
+    resolution: tuple[_L3, _L4, _L5],
+) -> HamiltonianWithBasis[
+    TruncatedBasis[_L3, MomentumBasis[_L0]],
+    TruncatedBasis[_L4, MomentumBasis[_L1]],
+    ExplicitBasis[_L5, PositionBasis[_L2]],
+]:
+    """
+    Generate a Hamiltonian using an infinate SHO basis.
+
+    Parameters
+    ----------
+    shape : tuple[_L0, _L1, _L2]
+        Shape of the initial potential
+    bloch_phase : np.ndarray[tuple[Literal[3]], np.dtype[np.float_]]
+        Bloch phase
+    resolution : tuple[_L3, _L4, _L5]
+        Resolution of the truncated basis in x,y
+
+    Returns
+    -------
+    HamiltonianWithBasis[TruncatedBasis[_L3, MomentumBasis[_L0]], TruncatedBasis[_L4, MomentumBasis[_L1]], ExplicitBasis[_L5, PositionBasis[_L2]]]
+        Hamiltonian in the specified basis
+    """
+    potential = get_interpolated_potential(shape)
+    potential["points"] = 0.5 * (
+        potential["points"] + potential["points"].swapaxes(0, 1)
+    )
+    config: SHOBasisConfig = {
+        "sho_omega": 117905964225836.06,
+        "mass": 1.6735575e-27,
+        "x_origin": np.array([0, 0, -1.840551985155284e-10]),
+    }
+    return sho_subtracted_basis.total_surface_hamiltonian(
+        potential, config, bloch_phase, resolution
+    )
+
+
+@timed
+def generate_hamiltonian_sho_relaxed(
+    shape: tuple[_L0, _L1, _L2],
+    bloch_phase: np.ndarray[tuple[Literal[3]], np.dtype[np.float_]],
+    resolution: tuple[_L3, _L4, _L5],
+) -> HamiltonianWithBasis[
+    TruncatedBasis[_L3, MomentumBasis[_L0]],
+    TruncatedBasis[_L4, MomentumBasis[_L1]],
+    ExplicitBasis[_L5, PositionBasis[_L2]],
+]:
+    """
+    Generate a Hamiltonian using an infinate SHO basis.
+
+    Parameters
+    ----------
+    shape : tuple[_L0, _L1, _L2]
+        Shape of the initial potential
+    bloch_phase : np.ndarray[tuple[Literal[3]], np.dtype[np.float_]]
+        Bloch phase
+    resolution : tuple[_L3, _L4, _L5]
+        Resolution of the truncated basis in x,y
+
+    Returns
+    -------
+    HamiltonianWithBasis[TruncatedBasis[_L3, MomentumBasis[_L0]], TruncatedBasis[_L4, MomentumBasis[_L1]], ExplicitBasis[_L5, PositionBasis[_L2]]]
+        Hamiltonian in the specified basis
+    """
+    potential = get_interpolated_potential_relaxed(shape)
+    potential["points"] = 0.5 * (
+        potential["points"] + potential["points"].swapaxes(0, 1)
+    )
+    config: SHOBasisConfig = {
+        "sho_omega": 111119431700988.45,
+        "mass": 1.6735575e-27,
+        "x_origin": np.array([0, 0, -1.8866087481825024e-10]),
+    }
+    return sho_subtracted_basis.total_surface_hamiltonian(
+        potential, config, bloch_phase, resolution
+    )

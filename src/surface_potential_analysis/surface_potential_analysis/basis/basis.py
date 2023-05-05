@@ -171,8 +171,8 @@ class BasisUtil(Generic[B]):
 
     def __len__(self: BasisUtil[Basis[_L1Inv, Any]]) -> _L1Inv:
         if is_basis_type(self._basis, "explicit"):
-            return self._basis["vectors"].shape[0]  # type:ignore[no-any-return]
-        return self._basis["n"]  # type:ignore[no-any-return,typeddict-item]
+            return self._basis["vectors"].shape[0]  # type: ignore[no-any-return]
+        return self._basis["n"]  # type: ignore[no-any-return,typeddict-item]
 
     @cached_property
     def fundamental_basis(self) -> FundamentalBasis[Any]:
@@ -223,8 +223,8 @@ class BasisUtil(Generic[B]):
         self: BasisUtil[BasisWithLength[_L1Inv, Any]]
     ) -> np.ndarray[tuple[_L1Inv], np.dtype[np.int_]]:
         # We want points from (-self.Nk + 1) // 2 to (self.Nk - 1) // 2
-        n = self.fundamental_n  # type:ignore[misc]
-        return np.fft.ifftshift(  # type:ignore[no-any-return]
+        n = self.fundamental_n  # type: ignore[misc]
+        return np.fft.ifftshift(  # type: ignore[no-any-return]
             np.arange((-n + 1) // 2, (n + 1) // 2)
         )
 
@@ -232,8 +232,8 @@ class BasisUtil(Generic[B]):
     def fundamental_nx_points(
         self: BasisUtil[BasisWithLength[_L1Inv, Any]]
     ) -> np.ndarray[tuple[_L1Inv], np.dtype[np.int_]]:
-        return np.arange(  # type:ignore[no-any-return]
-            0, self.fundamental_n, dtype=int  # type:ignore[misc]
+        return np.arange(  # type: ignore[no-any-return]
+            0, self.fundamental_n, dtype=int  # type: ignore[misc]
         )
 
     @property
@@ -244,13 +244,13 @@ class BasisUtil(Generic[B]):
     def nx_points(
         self: BasisUtil[BasisWithLength[_L1Inv, Any]]
     ) -> np.ndarray[tuple[_L1Inv], np.dtype[np.int_]]:
-        return np.arange(0, self.n, dtype=int)  # type:ignore[no-any-return]
+        return np.arange(0, self.n, dtype=int)  # type: ignore[no-any-return]
 
     @property
     def nk_points(
         self: BasisUtil[BasisWithLength[_L1Inv, Any]]
     ) -> np.ndarray[tuple[_L1Inv], np.dtype[np.int_]]:
-        return np.fft.ifftshift(  # type:ignore[no-any-return]
+        return np.fft.ifftshift(  # type: ignore[no-any-return]
             np.arange((-self.n + 1) // 2, (self.n + 1) // 2)
         )
 

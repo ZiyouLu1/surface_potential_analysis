@@ -110,7 +110,7 @@ def generate_raw_unit_cell_data() -> None:
         ]
     )
 
-    length = np.max(y_points) - np.min(y_points)  # type:ignore[operator]
+    length = np.max(y_points) - np.min(y_points)  # type: ignore[operator]
     grid: UnevenPotential[Any, Any, Any] = {
         "basis": (
             {
@@ -148,7 +148,7 @@ def get_coordinate_fractions(
         )
         fraction = np.linalg.solve(a, [coord[0], coord[1]])
         out.append([fraction[0], fraction[1]])
-    return np.array(out)  # type:ignore[no-any-return]
+    return np.array(out)  # type: ignore[no-any-return]
 
 
 _L0Inv = TypeVar("_L0Inv", bound=int)
@@ -174,7 +174,7 @@ def interpolate_points_fourier_nickel(  # noqa: PLR0913
     old_basis_config: PositionBasisConfig[
         int, int, int
     ] = PositionBasisConfigUtil.from_resolution(
-        resolution=(*points.shape, 1)  # type:ignore[arg-type]
+        resolution=(*points.shape, 1)  # type: ignore[arg-type]
     )
     old_basis_util = PositionBasisConfigUtil(old_basis_config)
     nk_points_stacked = old_basis_util.fundamental_nk_points.reshape(
@@ -226,7 +226,7 @@ def interpolate_energy_grid_xy_fourier_nickel(
     data: UnevenPotential[Any, Any, Any],
     delta_x0_real: tuple[float, float],
     delta_x1_real: tuple[float, float],
-    shape: tuple[_L0Inv, _L1Inv] = (40, 40),  # type:ignore[assignment]
+    shape: tuple[_L0Inv, _L1Inv] = (40, 40),  # type: ignore[assignment]
 ) -> UnevenPotential[_L0Inv, _L1Inv, Any]:
     """Make use of a fourier transform to increase the number of points in the xy plane of the energy grid."""
     old_points = np.array(data["points"])

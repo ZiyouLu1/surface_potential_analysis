@@ -43,6 +43,6 @@ def calculate_energy(
     complex
         The energy of the Eigenvector given Hamiltonian
     """
-    return np.linalg.multi_dot(  # type:ignore[no-any-return]
+    return np.linalg.multi_dot(  # type: ignore[no-any-return]
         [np.conj(eigenstate["vector"]), hamiltonian["array"], eigenstate["vector"]]
     )

@@ -117,7 +117,7 @@ def as_explicit_position_basis(
             "parent": {
                 "_type": "position",
                 "delta_x": basis["delta_x"],
-                "n": basis["n"],  # type:ignore[typeddict-item]
+                "n": basis["n"],  # type: ignore[typeddict-item]
             },
             "vectors": np.eye(basis["n"], basis["n"]),
         }
@@ -127,7 +127,7 @@ def as_explicit_position_basis(
             "parent": {
                 "_type": "position",
                 "delta_x": basis["delta_x"],
-                "n": basis["n"],  # type:ignore[typeddict-item]
+                "n": basis["n"],  # type: ignore[typeddict-item]
             },
             "vectors": np.fft.ifft(
                 np.eye(basis["n"], basis["n"]), axis=1, norm="ortho"
@@ -163,7 +163,7 @@ def as_explicit_position_basis(
             "vectors": np.fft.ifft(basis["vectors"], axis=1, norm="ortho"),
         }
 
-    return basis  # type:ignore[return-value]
+    return basis  # type: ignore[return-value]
 
 
 def get_basis_conversion_matrix(

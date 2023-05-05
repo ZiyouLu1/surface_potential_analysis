@@ -78,6 +78,6 @@ def plot_wavepacket_at_maximum_points() -> None:
 
         fig, ax, _ = plot_wavepacket_x0x1(normalized, max_point[2], measure="abs")
         fig.show()
-        ax.set_title("Plot of abs(wavefunction) for z=zmax")
+        ax.set_title("Plot of abs(wavefunction) for z=z max")
         save_figure(fig, f"wavepacket_grid_{band}.png")
     input()

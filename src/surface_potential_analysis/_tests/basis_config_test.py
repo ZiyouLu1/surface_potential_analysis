@@ -7,6 +7,8 @@ import numpy as np
 from surface_potential_analysis.basis_config.basis_config import (
     MomentumBasisConfigUtil,
     PositionBasisConfigUtil,
+    _wrap_distance,
+    calculate_cumulative_x_distances_along_path,
 )
 from surface_potential_analysis.util import slice_along_axis
 
@@ -157,7 +159,7 @@ class TestBasisConfig(unittest.TestCase):
         util = PositionBasisConfigUtil(basis)
 
         for i in (0, 1, 2):
-            rotated = util.get_rotated_basis(i)  # type:ignore[arg-type]
+            rotated = util.get_rotated_basis(i)  # type: ignore[arg-type]
             np.testing.assert_array_almost_equal(
                 rotated[i]["delta_x"], [0, 0, np.linalg.norm(delta_x[i])]
             )
@@ -168,7 +170,7 @@ class TestBasisConfig(unittest.TestCase):
                 )
 
             direction = rng.random(3)
-            rotated = util.get_rotated_basis(i, direction)  # type:ignore[arg-type]
+            rotated = util.get_rotated_basis(i, direction)  # type: ignore[arg-type]
             np.testing.assert_almost_equal(
                 np.dot(rotated[i]["delta_x"], direction),
                 np.linalg.norm(direction) * np.linalg.norm(rotated[i]["delta_x"]),
@@ -325,3 +327,39 @@ class TestBasisConfig(unittest.TestCase):
         np.testing.assert_array_almost_equal(expected_kx, actual_k[0])
         np.testing.assert_array_almost_equal(expected_ky, actual_k[1])
         np.testing.assert_array_almost_equal(expected_kz, actual_k[2])
+
+    def test_wrap_distance(self) -> None:
+        expected = [0, 1, -1, 0, 1, -1, 0]
+        distances = np.array([-3, -2, -1, 0, 1, 2, 3])
+        for e, d in zip(expected, distances, strict=True):
+            np.testing.assert_equal(_wrap_distance(d, 3), e, f"d={d}, l=3")
+        np.testing.assert_array_equal(_wrap_distance(distances, 3), expected)
+
+        expected = [0, 1, -2, -1, 0, 1, -2, -1, 0]
+        distances = np.array([-4, -3, -2, -1, 0, 1, 2, 3, 4])
+        for e, d in zip(expected, distances, strict=True):
+            np.testing.assert_equal(_wrap_distance(d, 4), e, f"d={d}, l=4")
+        np.testing.assert_array_equal(_wrap_distance(distances, 4), expected)
+
+    def test_calculate_cumulative_distances_along_path(self) -> None:
+        dx = (
+            np.array([1, 0, 0], dtype=float),
+            np.array([0, 1, 0], dtype=float),
+            np.array([0, 0, 1], dtype=float),
+        )
+        basis = PositionBasisConfigUtil.from_resolution((3, 3, 3), dx)
+
+        distances = calculate_cumulative_x_distances_along_path(
+            basis, np.array([[0, 1], [0, 0], [0, 0]])
+        )
+        np.testing.assert_array_equal(distances, [0, 1])
+
+        distances = calculate_cumulative_x_distances_along_path(
+            basis, np.array([[0, 2], [0, 0], [0, 0]])
+        )
+        np.testing.assert_array_equal(distances, [0, 2])
+
+        distances = calculate_cumulative_x_distances_along_path(
+            basis, np.array([[0, 2], [0, 0], [0, 0]]), wrap_distances=True
+        )
+        np.testing.assert_array_equal(distances, [0, 1])

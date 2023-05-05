@@ -3,7 +3,7 @@ from __future__ import annotations
 import matplotlib.pyplot as plt
 import numpy as np
 import scipy.constants
-from surface_potential_analysis.basis_config.plot import plot_projected_coordinates_2d
+from surface_potential_analysis.basis_config.plot import plot_projected_x_points_2d
 from surface_potential_analysis.potential.plot import (
     animate_potential_x0x1,
     plot_potential_1d_x2_comparison_100,
@@ -33,18 +33,20 @@ def plot_copper_raw_data() -> None:
     data = load_raw_copper_potential()
     data = normalize_potential(data)
 
-    fig, ax, _ = plot_uneven_potential_z_comparison_100(data)
+    fig, ax = plot_uneven_potential_z_comparison_100(data)
     ax.set_ylim(bottom=0, top=1e-18)
     fig.show()
     save_figure(fig, "copper_raw_data_z_direction.png")
 
-    plot_potential_x0x1(mock_even_potential(data))
+    fig, _ = plot_potential_x0x1(mock_even_potential(data), 0)
+    fig.show()
+    input()
 
 
 def plot_copper_nc_data() -> None:
     data = normalize_potential(load_nc_raw_copper_potential())
 
-    fig, ax, _ = plot_uneven_potential_z_comparison_100(data)
+    fig, ax = plot_uneven_potential_z_comparison_100(data)
     ax.set_ylim(bottom=-0.1e-18, top=1e-18)
     fig.show()
     input()
@@ -57,8 +59,8 @@ def plot_copper_9h_data() -> None:
     data_7h = load_raw_copper_potential()
     data_7h_norm = normalize_potential(data_7h)
 
-    fig, ax, _ = plot_uneven_potential_z_comparison_100(data)
-    _, _, _ = plot_uneven_potential_z_comparison_100(data_7h_norm, ax=ax)
+    fig, ax = plot_uneven_potential_z_comparison_100(data)
+    _, _ = plot_uneven_potential_z_comparison_100(data_7h_norm, ax=ax)
     ax.set_ylim(bottom=-0.1e-18, top=1e-18)
 
     fig.show()
@@ -74,8 +76,8 @@ def plot_copper_relaxed_data() -> None:
     data_relaxed_norm = normalize_potential(data_relaxed)
 
     fig, ax = plt.subplots()
-    _, _, _ = plot_uneven_potential_z_comparison_100(data_relaxed_norm, ax=ax)
-    _, _, _ = plot_uneven_potential_z_comparison_100(data_7h_norm, ax=ax)
+    plot_uneven_potential_z_comparison_100(data_relaxed_norm, ax=ax)
+    plot_uneven_potential_z_comparison_100(data_7h_norm, ax=ax)
 
     ax.set_ylim(bottom=-0.1e-18, top=1e-18)
 
@@ -88,23 +90,24 @@ def plot_copper_relaxed_interpolated_data() -> None:
     data = get_interpolated_potential_relaxed((50, 50, 250))
     raw_data = normalize_potential(load_relaxed_copper_potential())
 
-    fig, ax = plot_potential_1d_x2_comparison_100(data, raw_data)
+    fig, ax = plot_potential_1d_x2_comparison_100(data)
+    plot_uneven_potential_z_comparison_100(raw_data, ax=ax)
     ax.set_ylim(bottom=0, top=1e-18)
     fig.show()
     save_figure(fig, "relaxed_interpolated_data_comparison.png")
 
-    fig, ax, _ = plot_potential_x0x1(data)
+    fig, ax, _ = plot_potential_x0x1(data, 0)
     fig.show()
     save_figure(fig, "relaxed_interpolated_data_xy.png")
 
     fig, ax, _ani0 = animate_potential_x0x1(data)
-    plot_projected_coordinates_2d(mock_even_potential(raw_data)["basis"], 0, 2, ax=ax)
+    plot_projected_x_points_2d(mock_even_potential(raw_data)["basis"], 0, 2, ax=ax)
     fig.show()
 
     raw_data = normalize_potential(load_relaxed_copper_potential())
 
     fig, ax, _ani1 = animate_potential_x0x1(data)
-    plot_projected_coordinates_2d(mock_even_potential(raw_data)["basis"], 0, 2, ax=ax)
+    plot_projected_x_points_2d(mock_even_potential(raw_data)["basis"], 0, 2, ax=ax)
     fig.show()
 
     input()
@@ -115,12 +118,13 @@ def plot_copper_interpolated_data() -> None:
 
     raw_data = normalize_potential(load_raw_copper_potential())
 
-    fig, ax = plot_potential_1d_x2_comparison_100(data, raw_data)
+    fig, ax = plot_potential_1d_x2_comparison_100(data)
+    plot_uneven_potential_z_comparison_100(raw_data, ax=ax)
     ax.set_ylim(bottom=0, top=1e-18)
     fig.show()
     save_figure(fig, "copper_interpolated_data_comparison.png")
 
-    fig, ax, _ = plot_potential_x0x1(data)
+    fig, ax, _ = plot_potential_x0x1(data, 0)
     fig.show()
     input()
     save_figure(fig, "copper_interpolated_data_xy.png")
@@ -173,8 +177,8 @@ def compare_bridge_hollow_energy() -> None:
         "%",
     )
 
-    data = normalize_potential(load_raw_copper_potential())
-    points = np.array(data["points"])
+    raw_data = normalize_potential(load_raw_copper_potential())
+    points = np.array(raw_data["points"])
     print(points.shape)  # noqa: T201
 
     print("Bridge ", np.min(points[points.shape[0] // 2, 0, :]))  # noqa: T201
@@ -216,8 +220,8 @@ def compare_bridge_hollow_energy() -> None:
         "%",
     )
 
-    data = normalize_potential(load_relaxed_copper_potential())
-    points = np.array(data["points"])
+    relaxed_data = normalize_potential(load_relaxed_copper_potential())
+    points = np.array(relaxed_data["points"])
     print(points.shape)  # noqa: T201
 
     print("Bridge ", np.min(points[points.shape[0] // 2, 0, :]))  # noqa: T201

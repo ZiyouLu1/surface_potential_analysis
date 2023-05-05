@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import TypeVar
+
 import numpy as np
 from surface_potential_analysis.potential.point_potential import (
     PointPotential,
@@ -19,6 +21,10 @@ from surface_potential_analysis.potential.potential import (
 )
 
 from .surface_data import get_data_path
+
+_L0Inv = TypeVar("_L0Inv", bound=int)
+_L1Inv = TypeVar("_L1Inv", bound=int)
+_L2Inv = TypeVar("_L2Inv", bound=int)
 
 
 def load_raw_data() -> PointPotential[int]:
@@ -180,7 +186,9 @@ def generate_reflected_data() -> None:
     save_uneven_potential(path, data)
 
 
-def get_interpolated_potential(shape: tuple[int, int, int]) -> Potential[int, int, int]:
+def get_interpolated_potential(
+    shape: tuple[_L0Inv, _L1Inv, _L2Inv]
+) -> Potential[_L0Inv, _L1Inv, _L2Inv]:
     grid = load_raw_data_potential()
     normalized = normalize_potential(grid)
 

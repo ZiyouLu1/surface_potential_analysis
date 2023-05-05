@@ -7,17 +7,16 @@ import numpy as np
 from surface_potential_analysis.basis import (
     Basis,
 )
+from surface_potential_analysis.basis.basis import MomentumBasis, PositionBasis
 from surface_potential_analysis.basis_config.basis_config import (
     BasisConfig,
-    MomentumBasisConfig,
-    PositionBasisConfig,
 )
 
 if TYPE_CHECKING:
     from pathlib import Path
 
+
 _BC0Cov = TypeVar("_BC0Cov", bound=BasisConfig[Any, Any, Any], covariant=True)
-_BC0Inv = TypeVar("_BC0Inv", bound=BasisConfig[Any, Any, Any])
 
 _BX0Cov = TypeVar("_BX0Cov", bound=Basis[Any, Any], covariant=True)
 _BX1Cov = TypeVar("_BX1Cov", bound=Basis[Any, Any], covariant=True)
@@ -58,7 +57,7 @@ def load_eigenstate(path: Path) -> Eigenstate[Any]:
     -------
     Eigenstate[Any]
     """
-    return np.load(path, allow_pickle=True)[()]  # type:ignore[no-any-return]
+    return np.load(path, allow_pickle=True)[()]  # type: ignore[no-any-return]
 
 
 _L0Cov = TypeVar("_L0Cov", bound=int, covariant=True)
@@ -66,9 +65,13 @@ _L1Cov = TypeVar("_L1Cov", bound=int, covariant=True)
 _L2Cov = TypeVar("_L2Cov", bound=int, covariant=True)
 
 
-PositionBasisEigenstate = Eigenstate[PositionBasisConfig[_L0Cov, _L1Cov, _L2Cov]]
+PositionBasisEigenstate = Eigenstate[
+    BasisConfig[PositionBasis[_L0Cov], PositionBasis[_L1Cov], PositionBasis[_L2Cov]]
+]
 
-MomentumBasisEigenstate = Eigenstate[MomentumBasisConfig[_L0Cov, _L1Cov, _L2Cov]]
+MomentumBasisEigenstate = Eigenstate[
+    BasisConfig[MomentumBasis[_L0Cov], MomentumBasis[_L1Cov], MomentumBasis[_L2Cov]]
+]
 
 
 class EigenstateList(TypedDict, Generic[_BC0Cov]):
@@ -103,7 +106,7 @@ def load_eigenstate_list(path: Path) -> EigenstateList[Any]:
     -------
     EigenstateList[Any]
     """
-    return np.load(path, allow_pickle=True)[()]  # type:ignore[no-any-return]
+    return np.load(path, allow_pickle=True)[()]  # type: ignore[no-any-return]
 
 
 def calculate_normalisation(eigenstate: Eigenstate[Any]) -> float:

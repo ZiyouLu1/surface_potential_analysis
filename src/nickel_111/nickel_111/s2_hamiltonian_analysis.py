@@ -80,7 +80,7 @@ def test_hamiltonian_large_resolution() -> None:
     )
     h1_stacked = stack_hamiltonian(h1)
     expected = pad_ft_points(
-        h1_stacked["array"],  # type:ignore[arg-type]
+        h1_stacked["array"],  # type: ignore[arg-type]
         (resolution0[0], resolution0[0], resolution0[0], resolution0[0]),
         axes=(0, 1, 3, 4),
     )[:, :, : resolution0[2], :, :, : resolution0[2]]

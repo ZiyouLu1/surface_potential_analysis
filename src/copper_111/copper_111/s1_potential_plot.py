@@ -2,7 +2,11 @@ from __future__ import annotations
 
 import numpy as np
 from matplotlib import pyplot as plt
-from surface_potential_analysis.basis_config.plot import plot_projected_coordinates_2d
+from surface_potential_analysis.basis.plot import plot_explicit_basis_states_x
+from surface_potential_analysis.basis_config.plot import plot_projected_x_points_2d
+from surface_potential_analysis.basis_config.sho_basis import (
+    infinate_sho_basis_from_config,
+)
 from surface_potential_analysis.potential.plot import (
     animate_potential_x0x1,
     plot_potential_1d_x2_comparison_111,
@@ -17,6 +21,7 @@ from surface_potential_analysis.potential.plot_uneven_potential import (
     plot_uneven_potential_z_comparison_111,
 )
 from surface_potential_analysis.potential.potential import (
+    mock_even_potential,
     normalize_potential,
     truncate_potential,
 )
@@ -34,7 +39,7 @@ def plot_raw_data_points() -> None:
     fig, ax, _ = plot_point_potential_location_xy(data)
 
     locations = get_point_potential_xy_locations(data)
-    e_min = []
+    e_min: list[float] = []
     for x, y in locations:
         idx = np.argwhere(
             np.logical_and(
@@ -77,19 +82,20 @@ def plot_raw_data_points() -> None:
 
 def plot_raw_potential_points() -> None:
     potential = normalize_potential(load_raw_data_potential())
+    mocked = mock_even_potential(potential)
 
-    fig, _, _ = plot_projected_coordinates_2d(potential["basis"], 0, 2)
+    fig, _, _ = plot_projected_x_points_2d(mocked["basis"], 0, 2)
     fig.show()
 
-    fig, ax, _ = plot_potential_1d_x2_comparison_111(potential)
+    fig, ax = plot_potential_1d_x2_comparison_111(mocked)
     fig.show()
 
-    fig, _, _ani = animate_potential_x0x1(potential)
+    fig, _, _ani = animate_potential_x0x1(mocked)
     fig.show()
 
     truncated = truncate_potential(potential, cutoff=2e-19, n=1, offset=1e-20)
     fig, ax = plot_uneven_potential_z_comparison_111(truncated)
-    plot_potential_1d_x2_comparison_111(potential, ax=ax)
+    plot_potential_1d_x2_comparison_111(mocked, ax=ax)
     ax.set_ylim(0, 0.2e-18)
     fig.show()
 
@@ -111,7 +117,7 @@ def plot_raw_potential_points() -> None:
 def plot_interpolated_energy_grid_points() -> None:
     potential = load_interpolated_potential()
 
-    fig, ax, _ = plot_projected_coordinates_2d(potential, idx=0, z_axis=2)
+    fig, ax, _ = plot_projected_x_points_2d(potential, idx=0, z_axis=2)
     fig.show()
 
     raw = normalize_potential(load_raw_data_potential())
@@ -186,13 +192,19 @@ def plot_interpolation_with_sho_wavefunctions() -> None:
     potential = load_interpolated_potential()
     fig, ax = plt.subplots()
     plot_potential_1d_x2_comparison_111(potential, ax=ax)
-    plot_sho_wavefunctions(
-        potential["z_points"],
-        sho_omega=179704637926161.6,
-        mass=1.6735575e-27,
-        first_n=16,
+    plot_explicit_basis_states_x(
+        infinate_sho_basis_from_config(
+            potential["basis"][2],
+            {
+                "mass": 1.6735575e-27,
+                "sho_omega": 179704637926161.6,
+                "x_origin": np.array([0, 0, -9.848484848484871e-11]),
+            },
+            16,
+        ),
         ax=ax,
     )
+
     ax.set_ylim(0, 0.5e-18)
     fig.show()
 

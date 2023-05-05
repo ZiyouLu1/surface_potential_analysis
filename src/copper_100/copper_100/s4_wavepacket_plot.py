@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Literal
 import matplotlib.pyplot as plt
 import numpy as np
 from surface_potential_analysis.eigenstate.plot import (
-    plot_eigenstate_difference_2d,
+    plot_eigenstate_difference_2d_x,
     plot_eigenstate_x0x1,
 )
 from surface_potential_analysis.wavepacket.normalization import normalize_wavepacket
@@ -60,7 +60,7 @@ def plot_wavepacket_at_z_origin() -> None:
     input()
 
 
-def plot_wavepacket_3d() -> None:
+def plot_wavepacket_3d_x() -> None:
     path = get_data_path("eigenstates_grid_0.json")
     path = get_data_path("eigenstates_grid_1.json")
     eigenstates = load_wavepacket(path)
@@ -298,9 +298,9 @@ def compare_wavefunction_eigenstate_2d() -> None:
     fig.show()
 
     fig, axs = plt.subplots(1, 2)
-    (_, ax, _) = plot_eigenstate_difference_2d(eigenstate_1, eigenstate_0, 2, axs[0])
+    (_, ax, _) = plot_eigenstate_difference_2d_x(eigenstate_1, eigenstate_0, 2, axs[0])
     ax.set_title("(-dkx/2, -dky/2) vs (0,0)")
-    (_, ax, _) = plot_eigenstate_difference_2d(eigenstate_2, eigenstate_0, 2, axs[1])
+    (_, ax, _) = plot_eigenstate_difference_2d_x(eigenstate_2, eigenstate_0, 2, axs[1])
     ax.set_title("(-dkx/2, 0) vs (0,0)")
 
     fig.suptitle("Plot of difference in the absolute value of the Bloch wavefunctions")

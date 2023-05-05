@@ -24,15 +24,22 @@
     "arange",
     "argmax",
     "argmin",
+    "asarray",
     "atol",
     "clim",
     "colorbar",
     "dtype",
     "eigenstate",
     "eigenstates",
+    "fftn",
     "hbar",
     "ifft",
+    "ifftn",
+    "ifftshift",
     "imshow",
+    "irfft",
+    "irfftn",
+    "isreal",
     "linestyle",
     "linspace",
     "matplotlib",
@@ -51,6 +58,8 @@
     "scipy",
     "Seitz",
     "sharey",
+    "splev",
+    "splrep",
     "suptitle",
     "symlog",
     "twinx",
@@ -69,13 +78,14 @@
     "ylim",
     "yscale"
   ],
-  // "python.linting.mypyArgs": [
-  //   "--follow-imports=error",
-  //   "--ignore-missing-imports",
-  //   "--show-column-numbers",
-  //   "--no-pretty",
-  //   "--check-untyped-defs",
-  //   "--strict"
+  // "mypy.args": [
+  // "--follow-imports=error",
+  // "--ignore-missing-imports",
+  // "--show-column-numbers",
+  // "--no-pretty",
+  // "--check-untyped-defs",
+  // "--strict"
+  // "--enable-incomplete-feature=Unpack"
   // ],
   // "python.linting.flake8Args": [
   //   "--ignore=E501,W503,E203,E301,E302"
@@ -109,5 +119,8 @@
     "./src/platinum_111",
     "./src/ruthenium_100",
     "./src/nickel_111"
-  ]
+  ],
+  "[python]": {
+    "editor.defaultFormatter": "ms-python.black-formatter"
+  },
 }

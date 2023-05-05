@@ -48,6 +48,12 @@ class WavepacketTest(unittest.TestCase):
         actual = _get_global_phases(wavepacket, idx)
         np.testing.assert_array_equal(actual, np.zeros_like(actual))
 
+        idx_array = rng.integers(0, np.product(resolution).item(), size=(10, 10, 11))
+        actual_large = _get_global_phases(wavepacket, idx_array)
+        np.testing.assert_array_equal(actual_large.shape, (ns0, ns1, *idx_array.shape))
+        np.testing.assert_equal(actual_large[0, 0], 0)
+        np.testing.assert_equal(actual_large[:, :, idx_array == 0], 0)
+
     def test_unfurl_wavepacket(self) -> None:
         wavepacket: MomentumBasisWavepacket[int, int, int, int, int] = {
             "basis": MomentumBasisConfigUtil.from_resolution((3, 3, 3)),

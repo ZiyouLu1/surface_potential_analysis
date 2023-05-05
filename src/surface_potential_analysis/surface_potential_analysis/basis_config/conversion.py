@@ -37,7 +37,7 @@ def convert_vector(
     -------
     np.ndarray[tuple[int], np.dtype[np.complex_]]
     """
-    util = BasisConfigUtil[Any, Any, Any](initial_basis)
+    util = BasisConfigUtil(initial_basis)
     swapped = vector.swapaxes(axis, -1)
     stacked = swapped.reshape(*swapped.shape[:-1], *util.shape)
     last_axis = swapped.ndim - 1
@@ -68,7 +68,7 @@ def convert_matrix(
     -------
     np.ndarray[tuple[int, int], np.dtype[np.complex_]]
     """
-    util = BasisConfigUtil[Any, Any, Any](initial_basis)
+    util = BasisConfigUtil(initial_basis)
     stacked = matrix.reshape(*util.shape, *util.shape)
     for i in range(3):
         matrix = get_basis_conversion_matrix(initial_basis[i], final_basis[i])
@@ -82,5 +82,5 @@ def convert_matrix(
         # Each product gets moved to the end,
         # so the 0th index of stacked corresponds to the ith axis
         stacked = np.tensordot(stacked, matrix_conj, axes=([0], [0]))
-    util = BasisConfigUtil[Any, Any, Any](final_basis)
-    return stacked.reshape(util.size, util.size)
+    final_size = BasisConfigUtil(final_basis).size
+    return stacked.reshape(final_size, final_size)

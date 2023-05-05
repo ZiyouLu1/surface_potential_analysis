@@ -20,8 +20,8 @@ if TYPE_CHECKING:
     from surface_potential_analysis.eigenstate.eigenstate import EigenstateList
     from surface_potential_analysis.potential.potential import Potential
 
-_L0Cov = TypeVar("_L0Cov", covariant=True)
-_L1Cov = TypeVar("_L1Cov", covariant=True)
+_L0Cov = TypeVar("_L0Cov", covariant=True, bound=int)
+_L1Cov = TypeVar("_L1Cov", covariant=True, bound=int)
 
 
 class PotentialBasisConfig(TypedDict, Generic[_L0Cov, _L1Cov]):
@@ -53,6 +53,7 @@ def get_potential_basis_config_eigenstates(
     hamiltonian = total_surface_hamiltonian(
         config["potential"], config["mass"], np.array([0, 0, 0])
     )
+    # TODO:
     return calculate_eigenstates(hamiltonian, subset_by_index=(0, config["n"] - 1))
 
 
@@ -74,5 +75,5 @@ def get_potential_basis_config_basis(
     return {
         "_type": "explicit",
         "parent": eigenstates["basis"][0],
-        "vectors": eigenstates["vectors"],
+        "vectors": eigenstates["vectors"],  # type: ignore[typeddict-item]
     }

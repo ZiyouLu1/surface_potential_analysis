@@ -4,9 +4,8 @@ from typing import TYPE_CHECKING, Any, TypeVar
 
 import numpy as np
 
-from surface_potential_analysis.basis_config.basis_config import BasisConfigUtil
 from surface_potential_analysis.eigenstate.conversion import (
-    convert_eigenstate_to_basis,
+    convert_eigenstate_to_position_basis,
     convert_momentum_basis_eigenstate_to_position_basis,
 )
 from surface_potential_analysis.util import timed
@@ -36,38 +35,38 @@ _NS1Inv = TypeVar("_NS1Inv", bound=int)
 
 
 def calculate_overlap_momentum_eigenstate(
+    eigenstate_0: Eigenstate[MomentumBasisConfig[_L0Inv, _L1Inv, _L2Inv]],
     eigenstate_1: Eigenstate[MomentumBasisConfig[_L0Inv, _L1Inv, _L2Inv]],
-    eigenstate2: Eigenstate[MomentumBasisConfig[_L0Inv, _L1Inv, _L2Inv]],
 ) -> Overlap[PositionBasisConfig[_L0Inv, _L1Inv, _L2Inv]]:
     """
     Calculate the overlap between two eigenstates in position basis.
 
     Parameters
     ----------
+    eigenstate_0 : Eigenstate[MomentumBasisConfig[_L0Inv,_L1Inv, _L2Inv]]
     eigenstate_1 : Eigenstate[MomentumBasisConfig[_L0Inv,_L1Inv, _L2Inv]]
-    eigenstate2 : Eigenstate[MomentumBasisConfig[_L0Inv,_L1Inv, _L2Inv]]
 
     Returns
     -------
     Overlap[PositionBasisConfig[_L0Inv,_L1Inv, _L2Inv]]
     """
-    converted1 = convert_momentum_basis_eigenstate_to_position_basis(eigenstate_1)
-    converted2 = convert_momentum_basis_eigenstate_to_position_basis(eigenstate2)
+    converted_1 = convert_momentum_basis_eigenstate_to_position_basis(eigenstate_0)
+    converted_2 = convert_momentum_basis_eigenstate_to_position_basis(eigenstate_1)
 
-    vector = np.conj(converted1["vector"]) * (converted2["vector"])
-    return {"basis": converted1["basis"], "vector": vector}
+    vector = np.conj(converted_1["vector"]) * (converted_2["vector"])
+    return {"basis": converted_1["basis"], "vector": vector}
 
 
 @timed
 def calculate_wavepacket_overlap(
-    wavepacket1: Wavepacket[
+    wavepacket_0: Wavepacket[
         _NS0Inv,
         _NS1Inv,
         BasisConfig[
             MomentumBasis[_L0Inv], MomentumBasis[_L1Inv], MomentumBasis[_L2Inv]
         ],
     ],
-    wavepacket2: Wavepacket[
+    wavepacket_1: Wavepacket[
         _NS0Inv,
         _NS1Inv,
         BasisConfig[
@@ -82,44 +81,42 @@ def calculate_wavepacket_overlap(
 
     Parameters
     ----------
-    wavepacket1 : Wavepacket[_NS0Inv, _NS1Inv, BasisConfig[MomentumBasis[_L0Inv], MomentumBasis[_L1Inv], _BX0Inv]]
-    wavepacket2 : Wavepacket[_NS0Inv, _NS1Inv, BasisConfig[MomentumBasis[_L0Inv], MomentumBasis[_L1Inv], _BX0Inv]]
+    wavepacket_0 : Wavepacket[_NS0Inv, _NS1Inv, BasisConfig[MomentumBasis[_L0Inv], MomentumBasis[_L1Inv], _BX0Inv]]
+    wavepacket_1 : Wavepacket[_NS0Inv, _NS1Inv, BasisConfig[MomentumBasis[_L0Inv], MomentumBasis[_L1Inv], _BX0Inv]]
 
     Returns
     -------
     Overlap[BasisConfig[PositionBasis[int], PositionBasis[int], _BX0Inv]]
     """
-    eigenstate_1 = convert_momentum_basis_eigenstate_to_position_basis(
-        unfurl_wavepacket(wavepacket1)
+    eigenstate_0 = convert_momentum_basis_eigenstate_to_position_basis(
+        unfurl_wavepacket(wavepacket_0)
     )
-    eigenstate2 = convert_momentum_basis_eigenstate_to_position_basis(
-        unfurl_wavepacket(wavepacket2)
+    eigenstate_1 = convert_momentum_basis_eigenstate_to_position_basis(
+        unfurl_wavepacket(wavepacket_1)
     )
 
-    vector = np.conj(eigenstate_1["vector"]) * (eigenstate2["vector"])
-    return {"basis": eigenstate_1["basis"], "vector": vector}
+    vector = np.conj(eigenstate_0["vector"]) * (eigenstate_1["vector"])
+    return {"basis": eigenstate_0["basis"], "vector": vector}
 
 
 def calculate_overlap_eigenstate(
+    eigenstate_0: Eigenstate[_BC0Inv],
     eigenstate_1: Eigenstate[_BC0Inv],
-    eigenstate2: Eigenstate[_BC0Inv],
 ) -> Overlap[PositionBasisConfig[int, int, int]]:
     """
     Calculate the overlap between two eigenstates in position basis.
 
     Parameters
     ----------
-    eigenstate_1 : Eigenstate[MomentumBasisConfig[_L0Inv,_L1Inv, _L2Inv]]
-    eigenstate2 : Eigenstate[MomentumBasisConfig[_L0Inv,_L1Inv, _L2Inv]]
+    eigenstate_0 : Eigenstate[_BC0Inv]
+    eigenstate_1 : Eigenstate[_BC0Inv]
 
     Returns
     -------
-    Overlap[PositionBasisConfig[_L0Inv,_L1Inv, _L2Inv]]
+    Overlap[PositionBasisConfig[int, int, int]]
     """
-    util = BasisConfigUtil[Any, Any, Any](eigenstate_1["basis"])
-    basis = util.get_fundamental_basis_in("position")
-    converted1 = convert_eigenstate_to_basis(eigenstate_1, basis)
-    converted2 = convert_eigenstate_to_basis(eigenstate2, basis)
+    converted_0 = convert_eigenstate_to_position_basis(eigenstate_0)
+    converted_1 = convert_eigenstate_to_position_basis(eigenstate_1)
 
-    vector = np.conj(converted1["vector"]) * (converted2["vector"])
-    return {"basis": basis, "vector": vector}
+    vector = np.conj(converted_0["vector"]) * (converted_1["vector"])
+    return {"basis": converted_0["basis"], "vector": vector}

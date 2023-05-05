@@ -16,7 +16,7 @@ from surface_potential_analysis.eigenstate.eigenstate_collection_plot import (
 from surface_potential_analysis.eigenstate.plot import (
     animate_eigenstate_x0x1,
     plot_eigenstate_along_path,
-    plot_eigenstate_difference_2d,
+    plot_eigenstate_difference_2d_x,
     plot_eigenstate_x2x0,
 )
 
@@ -239,21 +239,21 @@ def analyze_eigenvector_convergence_through_bridge() -> None:
 def plot_bloch_wavefunction_difference_at_boundary() -> None:
     path = get_data_path("eigenstates_23_23_16.json")
     collection = load_eigenstate_collection(path)
-    eigenstate0 = select_eigenstate(collection, 0, 0)
+    eigenstate_0 = select_eigenstate(collection, 0, 0)
 
-    fig, ax, _ = plot_eigenstate_x2x0(eigenstate0, 0)
+    fig, ax, _ = plot_eigenstate_x2x0(eigenstate_0, 0)
     fig.show()
 
     path = get_data_path("eigenstates_25_25_16.json")
     collection = load_eigenstate_collection(path)
-    eigenstate1 = select_eigenstate(collection, 0, 0)
+    eigenstate_1 = select_eigenstate(collection, 0, 0)
 
-    fig, ax, _ = plot_eigenstate_x2x0(eigenstate1, 0)
+    fig, ax, _ = plot_eigenstate_x2x0(eigenstate_1, 0)
     fig.show()
 
-    fig, ax, _ = plot_eigenstate_difference_2d(
-        eigenstate0,
-        eigenstate1,
+    fig, ax, _ = plot_eigenstate_difference_2d_x(
+        eigenstate_0,
+        eigenstate_1,
         0,
         z_axis=1,
         measure="abs",
@@ -262,9 +262,9 @@ def plot_bloch_wavefunction_difference_at_boundary() -> None:
     ax.set_title("Divergence in the Abs value of the wavefunction")
     fig.show()
 
-    fig, ax, _ = plot_eigenstate_difference_2d(
-        eigenstate0,
-        eigenstate1,
+    fig, ax, _ = plot_eigenstate_difference_2d_x(
+        eigenstate_0,
+        eigenstate_1,
         0,
         z_axis=1,
         measure="real",
@@ -273,9 +273,9 @@ def plot_bloch_wavefunction_difference_at_boundary() -> None:
     ax.set_title("Divergence in the real part of the wavefunction")
     fig.show()
 
-    fig, ax, _ = plot_eigenstate_difference_2d(
-        eigenstate0,
-        eigenstate1,
+    fig, ax, _ = plot_eigenstate_difference_2d_x(
+        eigenstate_0,
+        eigenstate_1,
         0,
         z_axis=1,
         measure="imag",

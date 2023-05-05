@@ -11,8 +11,8 @@ from surface_potential_analysis.overlap.overlap import (
     load_overlap,
 )
 from surface_potential_analysis.overlap.plot import (
-    plot_overlap_transform_2d,
-    plot_overlap_transform_along_diagonal,
+    plot_overlap_2d_k,
+    plot_overlap_along_k_diagonal,
 )
 
 from .surface_data import get_data_path, save_figure
@@ -30,7 +30,7 @@ def plot_overlap() -> None:
     overlap = load_overlap_fcc_hcp()
     overlap_transform = convert_overlap_momentum_basis(overlap)
 
-    fig, ax, _ = plot_overlap_transform_2d(overlap_transform, 0, 2)
+    fig, ax, _ = plot_overlap_2d_k(overlap_transform, 0, 2)
     ax.set_title(
         "Plot of the overlap transform for ikz=0\n"
         "showing oscillation in the direction corresponding to\n"
@@ -39,7 +39,7 @@ def plot_overlap() -> None:
     save_figure(fig, "2d_overlap_transform_kx_ky.png")
     fig.show()
 
-    fig, ax, _ = plot_overlap_transform_2d(overlap_transform, 0, 2)
+    fig, ax, _ = plot_overlap_2d_k(overlap_transform, 0, 2)
     ax.set_title(
         "Plot of the overlap summed over z\n"
         "showing the FCC and HCP asymmetry\n"
@@ -48,7 +48,7 @@ def plot_overlap() -> None:
     save_figure(fig, "2d_overlap_kx_ky.png")
     fig.show()
 
-    fig, ax, _ = plot_overlap_transform_2d(overlap_transform, 0, 1)
+    fig, ax, _ = plot_overlap_2d_k(overlap_transform, 0, 1)
     ax.set_title(
         "Plot of the overlap transform for ikx1=0\n"
         "A very sharp peak in the kz direction"
@@ -57,17 +57,11 @@ def plot_overlap() -> None:
     fig.show()
 
     fig, ax = plt.subplots()
-    _, _, ln = plot_overlap_transform_along_diagonal(
-        overlap_transform, measure="abs", ax=ax
-    )
+    _, _, ln = plot_overlap_along_k_diagonal(overlap_transform, measure="abs", ax=ax)
     ln.set_label("abs")
-    _, _, ln = plot_overlap_transform_along_diagonal(
-        overlap_transform, measure="real", ax=ax
-    )
+    _, _, ln = plot_overlap_along_k_diagonal(overlap_transform, measure="real", ax=ax)
     ln.set_label("real")
-    _, _, ln = plot_overlap_transform_along_diagonal(
-        overlap_transform, measure="imag", ax=ax
-    )
+    _, _, ln = plot_overlap_along_k_diagonal(overlap_transform, measure="imag", ax=ax)
     ln.set_label("imag")
 
     ax.legend()
@@ -85,7 +79,7 @@ def print_max_overlap_transform() -> None:
     util = BasisConfigUtil(overlap["basis"])
 
     print(overlap_transform["vector"][0])  # noqa: T201
-    print( # noqa: T201
+    print(  # noqa: T201
         np.max(np.abs(overlap_transform["vector"].reshape(*util.shape)[:, :, 0]))
     )
     print(np.max(np.abs(overlap_transform["vector"])))  # noqa: T201

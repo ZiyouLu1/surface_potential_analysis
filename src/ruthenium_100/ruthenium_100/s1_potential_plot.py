@@ -16,7 +16,7 @@ def plot_raw_data_points() -> None:
     fig, ax, _ = plot_point_potential_location_xy(data)
 
     locations = get_point_potential_xy_locations(data)
-    e_min = []
+    e_min: list[float] = []
     for x, y in locations:
         idx = np.argwhere(
             np.logical_and(

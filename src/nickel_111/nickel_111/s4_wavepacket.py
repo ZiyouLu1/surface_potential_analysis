@@ -6,7 +6,10 @@ import numpy as np
 from surface_potential_analysis.basis_config.basis_config import BasisConfigUtil
 from surface_potential_analysis.wavepacket import save_wavepacket
 from surface_potential_analysis.wavepacket.conversion import convert_wavepacket_to_basis
-from surface_potential_analysis.wavepacket.normalization import normalize_wavepacket
+from surface_potential_analysis.wavepacket.normalization import (
+    normalize_wavepacket,
+    normalize_wavepacket_two_point,
+)
 from surface_potential_analysis.wavepacket.wavepacket import (
     Wavepacket,
     generate_wavepacket,
@@ -54,7 +57,7 @@ MAXIMUM_POINTS: list[tuple[int, int, int]] = [
 
 
 def load_nickel_wavepacket(
-    idx: int,
+    band: int,
 ) -> Wavepacket[
     Literal[12],
     Literal[12],
@@ -64,7 +67,7 @@ def load_nickel_wavepacket(
         ExplicitBasis[Literal[12], PositionBasis[Literal[250]]],
     ],
 ]:
-    path = get_data_path(f"wavepacket_{idx}.npy")
+    path = get_data_path(f"wavepacket_{band}.npy")
     wavepacket = load_wavepacket(path)
     wavepacket["basis"][0]["parent"]["n"] = 24
     wavepacket["basis"][1]["parent"]["n"] = 24
@@ -72,20 +75,40 @@ def load_nickel_wavepacket(
 
 
 def load_normalized_nickel_wavepacket_momentum(
-    idx: int, norm: int | tuple[int, int, int] = 0, angle: float = 0
+    band: int, idx: int | tuple[int, int, int] = 0, angle: float = 0
 ) -> Wavepacket[
     Literal[12],
     Literal[12],
     MomentumBasisConfig[Literal[24], Literal[24], Literal[250]],
 ]:
-    wavepacket = load_nickel_wavepacket(idx)
+    wavepacket = load_nickel_wavepacket(band)
     util = BasisConfigUtil(wavepacket["basis"])
     basis: MomentumBasisConfig[Literal[24], Literal[24], Literal[250]] = (
         {"_type": "momentum", "delta_x": util.delta_x0, "n": 24},
         {"_type": "momentum", "delta_x": util.delta_x1, "n": 24},
         {"_type": "momentum", "delta_x": util.delta_x2, "n": 250},
     )
-    normalized = normalize_wavepacket(wavepacket, norm, angle)
+    normalized = normalize_wavepacket(wavepacket, idx, angle)
+    return convert_wavepacket_to_basis(normalized, basis)
+
+
+def load_two_point_normalized_nickel_wavepacket_momentum(
+    band: int, angle: float = 0
+) -> Wavepacket[
+    Literal[12],
+    Literal[12],
+    MomentumBasisConfig[Literal[24], Literal[24], Literal[250]],
+]:
+    wavepacket = load_nickel_wavepacket(band)
+    util = BasisConfigUtil(wavepacket["basis"])
+    basis: MomentumBasisConfig[Literal[24], Literal[24], Literal[250]] = (
+        {"_type": "momentum", "delta_x": util.delta_x0, "n": 24},
+        {"_type": "momentum", "delta_x": util.delta_x1, "n": 24},
+        {"_type": "momentum", "delta_x": util.delta_x2, "n": 250},
+    )
+    normalized = normalize_wavepacket_two_point(wavepacket, angle)
+    wavepacket["basis"][0]["parent"]["n"] = 24
+    wavepacket["basis"][1]["parent"]["n"] = 24
     return convert_wavepacket_to_basis(normalized, basis)
 
 

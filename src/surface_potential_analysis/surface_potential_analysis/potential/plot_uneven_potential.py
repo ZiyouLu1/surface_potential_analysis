@@ -113,7 +113,8 @@ def plot_uneven_potential_z_comparison_111(
     -------
     tuple[Figure, Axes]
     """
-    points = get_111_comparison_points_x2(potential, offset)
+    shape = (potential["basis"][0]["n"], potential["basis"][1]["n"])
+    points = get_111_comparison_points_x2(shape, offset)
     return plot_uneven_potential_z_comparison(potential, points, ax=ax, scale=scale)
 
 
@@ -141,5 +142,6 @@ def plot_uneven_potential_z_comparison_100(
     -------
     tuple[Figure, Axes]
     """
-    points = get_100_comparison_points_x2(potential, offset)
+    shape = (potential["basis"][0]["n"], potential["basis"][1]["n"])
+    points = get_100_comparison_points_x2(shape, offset)
     return plot_uneven_potential_z_comparison(potential, points, ax=ax, scale=scale)

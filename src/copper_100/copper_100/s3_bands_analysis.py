@@ -7,7 +7,6 @@ import numpy as np
 import scipy.constants
 from matplotlib import pyplot as plt
 
-from .s2_hamiltonian import generate_hamiltonian, generate_hamiltonian_relaxed
 from .surface_data import get_data_path, save_figure
 
 if TYPE_CHECKING:
@@ -29,7 +28,7 @@ def load_copper_eigenvalues(path: Path) -> _CopperEigenvalues:
         return json.load(f)
 
 
-def generate_copper_eigenvalues():
+def generate_copper_eigenvalues() -> None:
     hamiltonian = generate_hamiltonian(resolution=(25, 25, 16))
 
     eigenvalues_origin, _ = hamiltonian.calculate_eigenvalues(0, 0)
@@ -65,14 +64,14 @@ def generate_copper_eigenvalues():
     save_copper_eigenvalues(values_relaxed, path)
 
 
-def plot_first_copper_bands():
+def plot_first_copper_bands() -> None:
     h = generate_hamiltonian_relaxed(resolution=(8, 8, 13))
     fig = plot_first_4_eigenvectors(h)
     save_figure(fig, "copper_first_4_bands.png")
     fig.show()
 
 
-def plot_copper_bands_occupation():
+def plot_copper_bands_occupation() -> None:
     h = generate_hamiltonian_relaxed(resolution=(8, 8, 13))
     # Plot the eigenstate occupation. Need to think about there 'mu' is
     # i.e. we have more than one hydrogen adsorbed on the surface
@@ -87,7 +86,7 @@ def plot_copper_bands_occupation():
     save_figure(fig, "copper_bands_occupation.png")
 
 
-def list_first_copper_band_with_widths():
+def list_first_copper_band_with_widths() -> None:
     print("----------------------------------------")
     print("Not relaxed data")
 
@@ -117,7 +116,7 @@ def list_first_copper_band_with_widths():
     print("----------------------------------------")
 
 
-def find_band_with_1mev_bandwidth():
+def find_band_with_1mev_bandwidth() -> None:
     """
     Activated tunnelling has an energy of 197meV.
 
@@ -144,7 +143,7 @@ def find_band_with_1mev_bandwidth():
     print("----------------------------------------")
 
 
-def find_band_with_relevant_energy():
+def find_band_with_relevant_energy() -> None:
     """Activated tunnelling has an energy of 197meV - which band would this correspond to?."""
     print("----------------------------------------")
     print("Relaxed data")
@@ -199,7 +198,7 @@ def calculate_tst_rate(temperature: float, eigenvalues: _CopperEigenvalues) -> f
     return np.sum(calculate_tst_rate_contributions(temperature, eigenvalues))
 
 
-def plot_tst_rate_arrhenius():
+def plot_tst_rate_arrhenius() -> None:
     path = get_data_path("copper_eigenvalues_not_relaxed.json")
     eigenvalues = load_copper_eigenvalues(path)
 
@@ -227,7 +226,7 @@ def plot_tst_rate_arrhenius():
     input()
 
 
-def plot_first_4_eigenstates():
+def plot_first_4_eigenstates() -> None:
     hamiltonian = generate_hamiltonian_relaxed(resolution=(8, 8, 13))
 
     fig = plot_first_4_eigenvectors(hamiltonian)

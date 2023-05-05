@@ -77,20 +77,20 @@ class _SurfaceHamiltonianUtil(Generic[_L0, _L1, _L2, _L3, _L4, _L5]):
 
     @property
     def nx(self) -> int:
-        return self.points.shape[0]  # type:ignore[no-any-return]
+        return self.points.shape[0]  # type: ignore[no-any-return]
 
     @property
     def ny(self) -> int:
-        return self.points.shape[1]  # type:ignore[no-any-return]
+        return self.points.shape[1]  # type: ignore[no-any-return]
 
     @property
     def nz(self) -> int:
-        return self.points.shape[2]  # type:ignore[no-any-return]
+        return self.points.shape[2]  # type: ignore[no-any-return]
 
     @property
     def dz(self) -> float:
         util = BasisUtil(self._potential["basis"][2])
-        return np.linalg.norm(util.fundamental_dx)  # type:ignore[return-value]
+        return np.linalg.norm(util.fundamental_dx)  # type: ignore[return-value]
 
     def hamiltonian(
         self, bloch_phase: np.ndarray[tuple[Literal[3]], np.dtype[np.float_]]

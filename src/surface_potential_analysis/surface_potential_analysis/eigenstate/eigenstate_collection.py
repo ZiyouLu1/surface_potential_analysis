@@ -41,7 +41,7 @@ def save_eigenstate_collection(
 
 def load_eigenstate_collection(path: Path) -> EigenstateColllection[Any]:
     """Load an eigenstate collection from an npy file."""
-    return np.load(path, allow_pickle=True)[()]  # type:ignore[no-any-return]
+    return np.load(path, allow_pickle=True)[()]  # type: ignore[no-any-return]
 
 
 def calculate_eigenstate_collection(

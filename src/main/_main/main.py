@@ -4,7 +4,7 @@ import nickel_111
 
 
 def main() -> None:
-    nickel_111.s4_wavepacket_plot.plot_nickel_wavepacket_energies()
+    nickel_111.s4_wavepacket_plot.plot_wavepacket_at_maximum_points()
 
 
 if __name__ == "__main__":

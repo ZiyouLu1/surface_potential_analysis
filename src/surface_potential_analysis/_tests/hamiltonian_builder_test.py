@@ -88,7 +88,7 @@ def _generate_random_potential(
     out += random_array[::-1, ::+1].T
     out += random_array[::+1, ::-1].T
     out += random_array[::-1, ::-1].T
-    return out[:width, :width]  # type:ignore[no-any-return]
+    return out[:width, :width]  # type: ignore[no-any-return]
 
 
 def _generate_symmetrical_points(
@@ -452,7 +452,7 @@ class HamiltonianBuilderTest(unittest.TestCase):
                 },
                 potential["basis"][2],
             ),
-            "points": interpolated_points,  # type:ignore[typeddict-item]
+            "points": interpolated_points,  # type: ignore[typeddict-item]
         }
 
         actual = sho_subtracted_basis.total_surface_hamiltonian(
@@ -525,7 +525,7 @@ class HamiltonianBuilderTest(unittest.TestCase):
                 },
                 potential["basis"][2],
             ),
-            "points": interpolated_points,  # type:ignore[typeddict-item]
+            "points": interpolated_points,  # type: ignore[typeddict-item]
         }
 
         actual = sho_subtracted_basis.total_surface_hamiltonian(

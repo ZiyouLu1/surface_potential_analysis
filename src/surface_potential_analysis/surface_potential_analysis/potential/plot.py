@@ -9,10 +9,10 @@ from matplotlib.animation import ArtistAnimation
 from surface_potential_analysis.basis.basis import BasisUtil
 from surface_potential_analysis.basis_config.basis_config import (
     BasisConfigUtil,
+    calculate_cumulative_x_distances_along_path,
     get_fundamental_projected_x_points,
 )
 from surface_potential_analysis.util import (
-    calculate_cumulative_distances_along_path,
     slice_along_axis,
 )
 
@@ -135,10 +135,11 @@ def plot_potential_1d_x2_comparison_111(
     -------
     tuple[Figure, Axes]
     """
-    points = get_111_comparison_points_x2(potential, offset)
-    comparison_points = {k: (2, v) for (k, v) in points.items()}
+    (s0, s1, _) = BasisConfigUtil(potential["basis"]).shape
+    points = get_111_comparison_points_x2((s0, s1), offset)
+    comparison_points = {k: (v, 2) for (k, v) in points.items()}
     return plot_potential_1d_comparison(
-        potential, comparison_points, ax=ax, scale=scale
+        potential, comparison_points, ax=ax, scale=scale  # type: ignore[arg-type]
     )
 
 
@@ -166,14 +167,15 @@ def plot_potential_1d_x2_comparison_100(
     -------
     tuple[Figure, Axes]
     """
-    points = get_100_comparison_points_x2(potential, offset)
-    comparison_points = {k: (2, v) for (k, v) in points.items()}
+    (s0, s1, _) = BasisConfigUtil(potential["basis"]).shape
+    points = get_100_comparison_points_x2((s0, s1), offset)
+    comparison_points = {k: (v, 2) for (k, v) in points.items()}
     return plot_potential_1d_comparison(
-        potential, comparison_points, ax=ax, scale=scale
+        potential, comparison_points, ax=ax, scale=scale  # type: ignore[arg-type]
     )
 
 
-def plot_potential_2d(
+def plot_potential_2d_x(
     potential: Potential[_L0Inv, _L1Inv, _L2Inv],
     idx: int,
     z_axis: Literal[0, 1, 2, -1, -2, -3],
@@ -242,7 +244,7 @@ def plot_potential_x0x1(
     -------
     tuple[Figure, Axes, QuadMesh]
     """
-    return plot_potential_2d(potential, x3_idx, 2, ax=ax, scale=scale)
+    return plot_potential_2d_x(potential, x3_idx, 2, ax=ax, scale=scale)
 
 
 def plot_potential_x1x2(
@@ -269,7 +271,7 @@ def plot_potential_x1x2(
     -------
     tuple[Figure, Axes, QuadMesh]
     """
-    return plot_potential_2d(potential, x0_idx, 0, ax=ax, scale=scale)
+    return plot_potential_2d_x(potential, x0_idx, 0, ax=ax, scale=scale)
 
 
 def plot_potential_x2x0(
@@ -296,10 +298,10 @@ def plot_potential_x2x0(
     -------
     tuple[Figure, Axes, QuadMesh]
     """
-    return plot_potential_2d(potential, x1_idx, 1, ax=ax, scale=scale)
+    return plot_potential_2d_x(potential, x1_idx, 1, ax=ax, scale=scale)
 
 
-def plot_potential_difference_2d(
+def plot_potential_difference_2d_x(
     potential0: Potential[_L0Inv, _L1Inv, _L2Inv],
     potential1: Potential[_L0Inv, _L1Inv, _L2Inv],
     idx: int,
@@ -332,10 +334,10 @@ def plot_potential_difference_2d(
         "basis": potential0["basis"],
         "points": potential0["points"] - potential1["points"],
     }
-    return plot_potential_2d(potential, idx, z_axis, ax=ax, scale=scale)
+    return plot_potential_2d_x(potential, idx, z_axis, ax=ax, scale=scale)
 
 
-def animate_potential_3d(
+def animate_potential_3d_x(
     potential: Potential[_L0Inv, _L1Inv, _L2Inv],
     z_axis: Literal[0, 1, 2, -1, -2, -3],
     *,
@@ -429,7 +431,7 @@ def animate_potential_x0x1(
     -------
     tuple[Figure, Axes, ArtistAnimation]
     """
-    return animate_potential_3d(potential, 2, ax=ax, scale=scale, clim=clim)
+    return animate_potential_3d_x(potential, 2, ax=ax, scale=scale, clim=clim)
 
 
 def animate_potential_x1x2(
@@ -456,7 +458,7 @@ def animate_potential_x1x2(
     -------
     tuple[Figure, Axes, ArtistAnimation]
     """
-    return animate_potential_3d(potential, 0, ax=ax, scale=scale, clim=clim)
+    return animate_potential_3d_x(potential, 0, ax=ax, scale=scale, clim=clim)
 
 
 def animate_potential_x2x0(
@@ -483,10 +485,10 @@ def animate_potential_x2x0(
     -------
     tuple[Figure, Axes, ArtistAnimation]
     """
-    return animate_potential_3d(potential, 1, ax=ax, scale=scale, clim=clim)
+    return animate_potential_3d_x(potential, 1, ax=ax, scale=scale, clim=clim)
 
 
-def animate_potential_difference_2d(
+def animate_potential_difference_2d_x(
     potential0: Potential[_L0Inv, _L1Inv, _L2Inv],
     potential1: Potential[_L0Inv, _L1Inv, _L2Inv],
     z_axis: Literal[0, 1, 2, -1, -2, -3],
@@ -521,13 +523,14 @@ def animate_potential_difference_2d(
             (potential0["points"] - potential1["points"]) / potential0["points"]
         ),
     }
-    return animate_potential_3d(potential, z_axis, ax=ax, scale=scale, clim=clim)
+    return animate_potential_3d_x(potential, z_axis, ax=ax, scale=scale, clim=clim)
 
 
 def plot_potential_along_path(
     potential: Potential[_L0Inv, _L1Inv, _L2Inv],
     path: np.ndarray[tuple[Literal[3], int], np.dtype[np.int_]],
     *,
+    wrap_distances: bool = False,
     ax: Axes | None = None,
     scale: Literal["symlog", "linear"] = "linear",
 ) -> tuple[Figure, Axes, Line2D]:
@@ -538,6 +541,8 @@ def plot_potential_along_path(
     ----------
     potential : Potential[_L0Inv, _L1Inv, _L2Inv]
     path : np.ndarray[tuple[Literal[3], int], np.dtype[np.int_]]
+    wrap_distances : bool, optional
+        should the coordinates be wrapped into the unit cell, by default False
     ax : Axes | None, optional
         plot axis, by default None
     scale : Literal[&quot;symlog&quot;, &quot;linear&quot;], optional
@@ -550,9 +555,8 @@ def plot_potential_along_path(
     fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
 
     data = potential["points"][*path]
-    util = BasisConfigUtil(potential["basis"])
-    distances = calculate_cumulative_distances_along_path(
-        path, util.fundamental_x_points.reshape(3, *util.shape)
+    distances = calculate_cumulative_x_distances_along_path(
+        potential["basis"], path, wrap_distances=wrap_distances
     )
     (line,) = ax.plot(distances, data)
     ax.set_yscale(scale)

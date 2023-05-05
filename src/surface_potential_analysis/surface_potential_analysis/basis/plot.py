@@ -36,9 +36,9 @@ def plot_explicit_basis_states_x(
     """Plot basis states against position."""
     fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
     basis_in_position: ExplicitBasis[int, PositionBasis[int]] = (
-        basis  # type:ignore[assignment]
+        basis  # type: ignore[assignment]
         if basis["parent"]["_type"] == "position"
-        else explicit_momentum_basis_in_position(basis)  # type:ignore[arg-type]
+        else explicit_momentum_basis_in_position(basis)  # type: ignore[arg-type]
     )
     util = BasisUtil(basis_in_position)
 
@@ -66,9 +66,9 @@ def plot_explicit_basis_state_x(
     """Plot basis states against position."""
     fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
     basis_in_position: ExplicitBasis[int, PositionBasis[int]] = (
-        basis  # type:ignore[assignment]
+        basis  # type: ignore[assignment]
         if basis["parent"]["_type"] == "position"
-        else explicit_momentum_basis_in_position(basis)  # type:ignore[arg-type]
+        else explicit_momentum_basis_in_position(basis)  # type: ignore[arg-type]
     )
     util = BasisUtil(basis_in_position)
 

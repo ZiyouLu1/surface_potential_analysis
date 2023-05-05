@@ -59,7 +59,7 @@ def load_potential(path: Path) -> Potential[Any, Any, Any]:
     Potential[Any, Any, Any]
         _description_
     """
-    return np.load(path, allow_pickle=True)[()]  # type:ignore[no-any-return]
+    return np.load(path, allow_pickle=True)[()]  # type: ignore[no-any-return]
 
 
 def load_potential_grid_json(path: Path) -> Potential[Any, Any, Any]:
@@ -143,7 +143,7 @@ def load_uneven_potential(path: Path) -> UnevenPotential[Any, Any, Any]:
     -------
     UnevenPotential[Any, Any, Any]
     """
-    return np.load(path, allow_pickle=True)[()]  # type:ignore[no-any-return]
+    return np.load(path, allow_pickle=True)[()]  # type: ignore[no-any-return]
 
 
 def load_uneven_potential_json(

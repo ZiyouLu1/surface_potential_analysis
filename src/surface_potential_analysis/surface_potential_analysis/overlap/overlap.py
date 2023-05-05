@@ -49,7 +49,7 @@ def load_overlap(path: Path) -> Overlap[Any]:
     -------
     Overlap[Any]
     """
-    return np.load(path, allow_pickle=True)[()]  # type:ignore[no-any-return]
+    return np.load(path, allow_pickle=True)[()]  # type: ignore[no-any-return]
 
 
 _L0Inv = TypeVar("_L0Inv", bound=int)
