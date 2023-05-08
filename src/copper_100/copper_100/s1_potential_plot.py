@@ -3,7 +3,11 @@ from __future__ import annotations
 import matplotlib.pyplot as plt
 import numpy as np
 import scipy.constants
+from surface_potential_analysis.basis.plot import plot_explicit_basis_states_x
 from surface_potential_analysis.basis_config.plot import plot_projected_x_points_2d
+from surface_potential_analysis.basis_config.sho_basis import (
+    infinate_sho_basis_from_config,
+)
 from surface_potential_analysis.potential.plot import (
     animate_potential_x0x1,
     plot_potential_1d_x2_comparison_100,
@@ -38,7 +42,7 @@ def plot_copper_raw_data() -> None:
     fig.show()
     save_figure(fig, "copper_raw_data_z_direction.png")
 
-    fig, _ = plot_potential_x0x1(mock_even_potential(data), 0)
+    fig, _, _ = plot_potential_x0x1(mock_even_potential(data), 0)
     fig.show()
     input()
 
@@ -140,13 +144,19 @@ def plot_interpolation_with_sho_wavefunctions() -> None:
     potential = get_interpolated_potential((50, 50, 100))
     fig, ax = plt.subplots()
     plot_potential_1d_x2_comparison_100(potential, ax=ax)
-    plot_sho_wavefunctions(
-        potential["z_points"],
-        sho_omega=117905964225836.06,
-        mass=1.6735575e-27,
-        first_n=16,
+    plot_explicit_basis_states_x(
+        infinate_sho_basis_from_config(
+            potential["basis"][2],
+            {
+                "mass": 1.6735575e-27,
+                "sho_omega": 117905964225836.06,
+                "x_origin": np.array([0, 0, -1.840551985155284e-10]),
+            },
+            16,
+        ),
         ax=ax,
     )
+
     ax.set_ylim(0, 0.5e-18)
     fig.show()
 

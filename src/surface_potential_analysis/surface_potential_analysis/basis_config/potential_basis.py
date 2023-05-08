@@ -7,6 +7,9 @@ import numpy as np
 from surface_potential_analysis.eigenstate.eigenstate_calculation import (
     calculate_eigenstates,
 )
+from surface_potential_analysis.hamiltonian.conversion import (
+    convert_hamiltonian_to_position_basis,
+)
 from surface_potential_analysis.hamiltonian_builder.momentum_basis import (
     total_surface_hamiltonian,
 )
@@ -50,11 +53,11 @@ def get_potential_basis_config_eigenstates(
     -------
     EigenstateList[PositionBasisConfig[_L0Inv, Literal[1], Literal[1]]]
     """
-    hamiltonian = total_surface_hamiltonian(
+    h = total_surface_hamiltonian(
         config["potential"], config["mass"], np.array([0, 0, 0])
     )
-    # TODO:
-    return calculate_eigenstates(hamiltonian, subset_by_index=(0, config["n"] - 1))
+    position_h = convert_hamiltonian_to_position_basis(h)
+    return calculate_eigenstates(position_h, subset_by_index=(0, config["n"] - 1))
 
 
 def get_potential_basis_config_basis(

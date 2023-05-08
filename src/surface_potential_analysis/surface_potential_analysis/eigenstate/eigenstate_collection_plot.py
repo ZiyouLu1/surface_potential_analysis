@@ -57,13 +57,13 @@ def plot_energies_against_bloch_phase_1d(
     return fig, ax, line
 
 
-def plot_lowest_band_energies_against_bloch_kx(
+def plot_lowest_band_energies_against_bloch_k(
     collection: EigenstateColllection[_BC0Inv],
     *,
     ax: Axes | None = None,
 ) -> tuple[Figure, Axes, Line2D]:
     """
-    plot energies against bloch phase in the kx direction for the lowest band.
+    plot energies against bloch phase in the k direction for the lowest band.
 
     Parameters
     ----------

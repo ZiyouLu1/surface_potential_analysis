@@ -1,82 +1,47 @@
 from __future__ import annotations
 
-import json
-from typing import TYPE_CHECKING, TypedDict
+from typing import TypeVar
 
 import numpy as np
 import scipy.constants
 from matplotlib import pyplot as plt
+from surface_potential_analysis.wavepacket.plot import (
+    plot_wavepacket_energies_momentum,
+    plot_wavepacket_energies_position,
+)
 
-from .surface_data import get_data_path, save_figure
+from copper_100.s4_wavepacket import load_copper_wavepacket
 
-if TYPE_CHECKING:
-    from pathlib import Path
-
-
-class _CopperEigenvalues(TypedDict):
-    center: list[float]
-    k_max: list[float]
+from .surface_data import save_figure
 
 
-def save_copper_eigenvalues(data: _CopperEigenvalues, path: Path) -> None:
-    with path.open("w") as f:
-        json.dump(data, f)
+def plot_copper_wavepacket_energies() -> None:
+    for i in range(10):
+        wavepacket = load_copper_wavepacket(i)
+        fig, _, _ = plot_wavepacket_energies_momentum(wavepacket)
+        fig.show()
+
+        fig, _, _ = plot_wavepacket_energies_position(wavepacket)
+        fig.show()
+    input()
 
 
-def load_copper_eigenvalues(path: Path) -> _CopperEigenvalues:
-    with path.open("r") as f:
-        return json.load(f)
-
-
-def generate_copper_eigenvalues() -> None:
-    hamiltonian = generate_hamiltonian(resolution=(25, 25, 16))
-
-    eigenvalues_origin, _ = hamiltonian.calculate_eigenvalues(0, 0)
-    sorted_eigenvalues_origin = np.sort(eigenvalues_origin)
-
-    max_kx = (np.abs(hamiltonian.dkx0[0]) + np.abs(hamiltonian.dkx1[0])) / 2
-    max_ky = (np.abs(hamiltonian.dkx0[1]) + np.abs(hamiltonian.dkx1[1])) / 2
-    eigenvalues_k_max, _ = hamiltonian.calculate_eigenvalues(max_kx, max_ky)
-    sorted_eigenvalues_k_max = np.sort(eigenvalues_k_max)
-
-    values_not_relaxed: _CopperEigenvalues = {
-        "center": sorted_eigenvalues_origin.tolist(),
-        "k_max": sorted_eigenvalues_k_max.tolist(),
-    }
-    path = get_data_path("copper_eigenvalues_not_relaxed.json")
-    save_copper_eigenvalues(values_not_relaxed, path)
-
-    hamiltonian = generate_hamiltonian_relaxed(resolution=(21, 21, 15))
-
-    eigenvalues_origin, _ = hamiltonian.calculate_eigenvalues(0, 0)
-    sorted_eigenvalues_origin = np.sort(eigenvalues_origin)
-
-    max_kx = (np.abs(hamiltonian.dkx0[0]) + np.abs(hamiltonian.dkx1[0])) / 2
-    max_ky = (np.abs(hamiltonian.dkx0[1]) + np.abs(hamiltonian.dkx1[1])) / 2
-    eigenvalues_k_max, _ = hamiltonian.calculate_eigenvalues(max_kx, max_ky)
-    sorted_eigenvalues_k_max = np.sort(eigenvalues_k_max)
-
-    values_relaxed: _CopperEigenvalues = {
-        "center": sorted_eigenvalues_origin.tolist(),
-        "k_max": sorted_eigenvalues_k_max.tolist(),
-    }
-    path = get_data_path("copper_eigenvalues_relaxed.json")
-    save_copper_eigenvalues(values_relaxed, path)
-
-
-def plot_first_copper_bands() -> None:
-    h = generate_hamiltonian_relaxed(resolution=(8, 8, 13))
-    fig = plot_first_4_eigenvectors(h)
-    save_figure(fig, "copper_first_4_bands.png")
-    fig.show()
+def load_copper_eigenvalues() -> np.ndarray[tuple[int, int, int], np.dtype[np.float_]]:
+    out = np.zeros((10, 12, 12))
+    for i in range(10):
+        wavepacket = load_copper_wavepacket(i)
+        out[i] = wavepacket["energies"]
+    return out  # type: ignore[no-any-return]
 
 
 def plot_copper_bands_occupation() -> None:
-    h = generate_hamiltonian_relaxed(resolution=(8, 8, 13))
+    eigenvalues = load_copper_eigenvalues()[:, 0, 0]
     # Plot the eigenstate occupation. Need to think about there 'mu' is
     # i.e. we have more than one hydrogen adsorbed on the surface
     # And interaction between hydrogen would also ruin things
-    fig, ax, _ = plot_bands_occupation(h, temperature=60)
+    fig, ax = plt.subplots()
+
+    ax.plot(eigenvalues, np.exp(-eigenvalues / (scipy.constants.Boltzmann * 60)))
     ax.set_xlabel("Eigenvalue Index")
     ax.set_ylabel("Occupation Probability")
     ax.set_title(
@@ -87,33 +52,20 @@ def plot_copper_bands_occupation() -> None:
 
 
 def list_first_copper_band_with_widths() -> None:
-    print("----------------------------------------")
-    print("Not relaxed data")
+    print("----------------------------------------")  # noqa: T201
+    print("Not relaxed data")  # noqa: T201
 
-    path = get_data_path("copper_eigenvalues_not_relaxed.json")
-    eigenvalues = load_copper_eigenvalues(path)
+    eigenvalues = load_copper_eigenvalues()
+    center_eigenvalues = eigenvalues[:, 0, 0]
+    max_eigenvalues = np.max(eigenvalues, axis=0)
+    print("k=(0,0)")  # noqa: T201
+    print(np.subtract(center_eigenvalues, center_eigenvalues[0])[:5])  # noqa: T201
+    print("k=(max, max)")  # noqa: T201
+    print(np.subtract(max_eigenvalues, center_eigenvalues[0])[:5])  # noqa: T201
+    print("bandwidths")  # noqa: T201
+    print(np.subtract(max_eigenvalues, center_eigenvalues)[:5])  # noqa: T201
 
-    print("k=(0,0)")
-    print(np.subtract(eigenvalues["center"], eigenvalues["center"][0])[:5])
-    print("k=(max, max)")
-    print(np.subtract(eigenvalues["k_max"], eigenvalues["center"][0])[:5])
-    print("bandwidths")
-    print(np.subtract(eigenvalues["k_max"], eigenvalues["center"])[:5])
-
-    print("----------------------------------------")
-    print("Relaxed data")
-
-    path = get_data_path("copper_eigenvalues_relaxed.json")
-    eigenvalues = load_copper_eigenvalues(path)
-
-    print("k=(0,0)")
-    print(np.subtract(eigenvalues["center"], eigenvalues["center"][0])[:5])
-    print("k=(max, max)")
-    print(np.subtract(eigenvalues["k_max"], eigenvalues["center"][0])[:5])
-    print("bandwidths")
-    print(np.subtract(eigenvalues["k_max"], eigenvalues["center"])[:5])
-
-    print("----------------------------------------")
+    print("----------------------------------------")  # noqa: T201
 
 
 def find_band_with_1mev_bandwidth() -> None:
@@ -123,40 +75,39 @@ def find_band_with_1mev_bandwidth() -> None:
     John: The key thing is not the physical barrier,
     but the energy wrt the ground state of the first band with a decent (eg 1meV) bandwidth
     """
-    print("----------------------------------------")
-    print("Relaxed data")
+    print("----------------------------------------")  # noqa: T201
+    print("Relaxed data")  # noqa: T201
 
-    path = get_data_path("copper_eigenvalues_not_relaxed.json")
-    eigenvalues = load_copper_eigenvalues(path)
-    bandwidths = np.subtract(eigenvalues["k_max"], eigenvalues["center"])
+    eigenvalues = load_copper_eigenvalues()
+    center_eigenvalues = eigenvalues[:, 0, 0]
+    max_eigenvalues = np.max(eigenvalues, axis=0)
+
+    bandwidths = np.subtract(max_eigenvalues, center_eigenvalues)
     first_relevant = int(
         np.argmax(bandwidths > 1 * 10**-3 * scipy.constants.elementary_charge)
     )
 
-    print("band index", first_relevant)
-    print("band width", bandwidths[first_relevant])
-    print("k=0", eigenvalues["center"][first_relevant] - eigenvalues["center"][0])
-    print("bandwidths", bandwidths[: first_relevant + 3])
-    energies = np.subtract(eigenvalues["center"], eigenvalues["center"][0])
-    print("energies", energies[: first_relevant + 3])
+    print("band index", first_relevant)  # noqa: T201
+    print("band width", bandwidths[first_relevant])  # noqa: T201
+    print(  # noqa: T201
+        "k=0", center_eigenvalues[first_relevant] - center_eigenvalues[0]
+    )
+    print("bandwidths", bandwidths[: first_relevant + 3])  # noqa: T201
+    energies = np.subtract(center_eigenvalues, center_eigenvalues[0])
+    print("energies", energies[: first_relevant + 3])  # noqa: T201
 
-    print("----------------------------------------")
+    print("----------------------------------------")  # noqa: T201
 
 
 def find_band_with_relevant_energy() -> None:
     """Activated tunnelling has an energy of 197meV - which band would this correspond to?."""
-    print("----------------------------------------")
-    print("Relaxed data")
+    print("----------------------------------------")  # noqa: T201
+    print("Relaxed data")  # noqa: T201
 
-    hamiltonian = generate_hamiltonian_relaxed(resolution=(10, 10, 14))
+    eigenvalues = load_copper_eigenvalues()
+    eigenvalues_origin = eigenvalues[:, 0, 0]
 
-    eigenvalues_origin, _ = hamiltonian.calculate_eigenvalues(0, 0)
-    eigenvalues_origin = np.sort(eigenvalues_origin)
-
-    max_kx = (np.abs(hamiltonian.dkx0[0]) + np.abs(hamiltonian.dkx1[0])) / 2
-    max_ky = (np.abs(hamiltonian.dkx0[1]) + np.abs(hamiltonian.dkx1[1])) / 2
-    eigenvalues_max, _ = hamiltonian.calculate_eigenvalues(max_kx, max_ky)
-    eigenvalues_max = np.sort(eigenvalues_max)
+    eigenvalues_max = np.max(eigenvalues, axis=0)
 
     bandwidths = np.abs(eigenvalues_origin - eigenvalues_max)
     first_relevant = int(
@@ -166,41 +117,51 @@ def find_band_with_relevant_energy() -> None:
         np.argmax(bandwidths > 200 * 10**-3 * scipy.constants.elementary_charge)
     )
 
-    print("band index", first_relevant, last_relevant)
-    print("band width", bandwidths[first_relevant : last_relevant + 1])
-    print(
+    print("band index", first_relevant, last_relevant)  # noqa: T201
+    print("band width", bandwidths[first_relevant : last_relevant + 1])  # noqa: T201
+    print(  # noqa: T201
         "k=0",
         eigenvalues_origin[first_relevant : last_relevant + 1] - eigenvalues_origin[0],
     )
-    print(bandwidths[first_relevant : last_relevant + 1])
+    print(bandwidths[first_relevant : last_relevant + 1])  # noqa: T201
 
-    print("----------------------------------------")
+    print("----------------------------------------")  # noqa: T201
 
 
-def calculate_bandwidths(eigenvalues: _CopperEigenvalues) -> list[float]:
-    return np.abs(np.subtract(eigenvalues["k_max"], eigenvalues["center"]))
+_L0Inv = TypeVar("_L0Inv", bound=int)
+_L1Inv = TypeVar("_L1Inv", bound=int)
+_L2Inv = TypeVar("_L2Inv", bound=int)
+
+
+def calculate_bandwidths(
+    eigenvalues: np.ndarray[tuple[_L0Inv, _L1Inv, _L2Inv], np.dtype[np.float_]]
+) -> np.ndarray[tuple[_L0Inv], np.dtype[np.float_]]:
+    return np.abs(np.subtract(np.max(eigenvalues, axis=0), np.min(eigenvalues, axis=0)))  # type: ignore[no-any-return]
 
 
 def calculate_tst_rate_contributions(
-    temperature: float, eigenvalues: _CopperEigenvalues
-) -> NDArray:
+    temperature: float,
+    eigenvalues: np.ndarray[tuple[_L0Inv, _L1Inv, _L2Inv], np.dtype[np.float_]],
+) -> np.ndarray[tuple[_L0Inv], np.dtype[np.float_]]:
     bandwidths = calculate_bandwidths(eigenvalues)
     frequencies = bandwidths / (scipy.constants.hbar * np.pi)
     energies = np.array(eigenvalues["center"])
     tunnelling_contributions = np.exp(
         -energies / (scipy.constants.Boltzmann * temperature)
     )
-    normalization = np.sum(tunnelling_contributions)
-    return (frequencies * tunnelling_contributions) / normalization
+    normalization: float = np.sum(tunnelling_contributions)
+    return (frequencies * tunnelling_contributions) / normalization  # type: ignore[no-any-return]
 
 
-def calculate_tst_rate(temperature: float, eigenvalues: _CopperEigenvalues) -> float:
+def calculate_tst_rate(
+    temperature: float,
+    eigenvalues: np.ndarray[tuple[_L0Inv, _L1Inv, _L2Inv], np.dtype[np.float_]],
+) -> float:
     return np.sum(calculate_tst_rate_contributions(temperature, eigenvalues))
 
 
 def plot_tst_rate_arrhenius() -> None:
-    path = get_data_path("copper_eigenvalues_not_relaxed.json")
-    eigenvalues = load_copper_eigenvalues(path)
+    eigenvalues = load_copper_eigenvalues()
 
     temperatures = np.linspace(60, 150, 20)
     rates = [calculate_tst_rate(t, eigenvalues) for t in temperatures]
@@ -220,15 +181,7 @@ def plot_tst_rate_arrhenius() -> None:
     difference_rate = np.log(rate_120k) - np.log(rate_190k)
     difference_t = ((1 / 120) - (1 / 190)) / scipy.constants.Boltzmann
     energy = difference_rate / difference_t
-    print(energy)
+    print(energy)  # noqa: T201
 
-    print(np.argmax(calculate_tst_rate_contributions(130, eigenvalues)))
-    input()
-
-
-def plot_first_4_eigenstates() -> None:
-    hamiltonian = generate_hamiltonian_relaxed(resolution=(8, 8, 13))
-
-    fig = plot_first_4_eigenvectors(hamiltonian)
-    fig.show()
+    print(np.argmax(calculate_tst_rate_contributions(130, eigenvalues)))  # noqa: T201
     input()

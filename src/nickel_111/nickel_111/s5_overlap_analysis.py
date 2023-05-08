@@ -4,6 +4,11 @@ from typing import Literal, TypeVar
 
 import numpy as np
 from matplotlib import pyplot as plt
+from scipy.constants import Boltzmann
+from surface_dynamics_simulation.simulation_config import (
+    build_tunnelling_matrix,
+    simulate_tunnelling,
+)
 from surface_potential_analysis.basis_config.basis_config import (
     BasisConfigUtil,
     MomentumBasisConfig,
@@ -19,7 +24,10 @@ from surface_potential_analysis.overlap.plot import (
     plot_overlap_2d_k,
     plot_overlap_2d_x,
     plot_overlap_along_k_diagonal,
+    plot_overlap_k0k1,
 )
+
+from nickel_111.s4_wavepacket import load_nickel_wavepacket
 
 from .surface_data import get_data_path, save_figure
 
@@ -53,7 +61,7 @@ def get_max_point(
 
 def make_transform_real_at(
     overlap: OverlapTransform[_L0Inv, _L1Inv, _L2Inv],
-    point: tuple[int, int, int] | int | None = None,
+    point: tuple[int, int, int] | int | np.int_ | None = None,
 ) -> OverlapTransform[_L0Inv, _L1Inv, _L2Inv]:
     """
     Shift the phase of the overlap transform such that is it real at point.
@@ -74,7 +82,7 @@ def make_transform_real_at(
     """
     util = BasisConfigUtil(overlap["basis"])
     point = int(np.argmax(np.abs(overlap["vector"]))) if point is None else point
-    point = point if isinstance(point, int) else util.get_flat_index(point)
+    point = util.get_flat_index(point) if isinstance(point, tuple) else point
 
     new_points = overlap["vector"] * np.exp(-1j * np.angle(overlap["vector"][point]))
     return {"basis": overlap["basis"], "vector": new_points}
@@ -204,3 +212,95 @@ def print_max_overlap_transforms() -> None:
     overlap = load_overlap_hcp_hcp()
     overlap_transform = convert_overlap_momentum_basis(overlap)
     print(calculate_max_overlap_transform(overlap_transform))  # noqa: T201
+
+
+def load_overlap_nickel(i: int, j: int) -> Overlap[PositionBasisConfig[int, int, int]]:
+    path = get_data_path(f"overlap_{i}_{j}.npy")
+    return load_overlap(path)
+
+
+def print_max_and_min_overlap() -> None:
+    for i in range(6):
+        for j in range(i + 1, 6):
+            overlap = load_overlap_nickel(i, j)
+            overlap_transform = convert_overlap_momentum_basis(overlap)
+            print(f"i={i}, j={j}")  # noqa: T201
+            max_transform = calculate_max_overlap_transform(overlap_transform)
+            print(max_transform)  # noqa: T201
+            print(  # noqa: T201
+                np.abs(max_transform[0]), np.linalg.norm(max_transform[1])
+            )
+            k0_transform = overlap_transform["vector"][0]
+            print(k0_transform)  # noqa: T201
+            print(np.abs(k0_transform))  # noqa: T201
+
+
+def plot_all_abs_overlap_k() -> None:
+    for i in range(6):
+        for j in range(i + 1, 6):
+            overlap = load_overlap_nickel(i, j)
+            overlap_transform = convert_overlap_momentum_basis(overlap)
+
+            fig, ax, _ = plot_overlap_k0k1(overlap_transform, 0, measure="abs")
+            ax.set_title(f"Plot of the overlap transform for k2=0\nfor i={i} and j={j}")
+            save_figure(fig, f"overlap/abs_overlap_k0k1_plot_{i}_{j}.png")
+            fig.show()
+    input()
+
+
+def load_average_band_energies(
+    n_bands: _L0Inv,
+) -> np.ndarray[tuple[_L0Inv], np.dtype[np.float_]]:
+    energies = np.zeros((n_bands,))
+    for band in range(n_bands):
+        wavepacket = load_nickel_wavepacket(band)
+        energies[band] = wavepacket["energies"][0, 0]
+    return energies  # type: ignore[no-any-return]
+
+
+def build_incoherent_matrix(
+    n_bands: _L0Inv,
+) -> np.ndarray[tuple[_L0Inv, _L0Inv, Literal[4]], np.dtype[np.float_]]:
+    energies = load_average_band_energies(n_bands)
+    out = np.zeros((n_bands, n_bands, 4))
+    for i in range(n_bands):
+        for j in range(i + 1, n_bands):
+            rate = 2.56410914e-05
+            _exponential = np.exp(-(energies[i] - energies[j]) / (Boltzmann * 150))
+            print(_exponential)  # noqa: T201
+            out[i, j, 0] = rate
+            out[j, i, 0] = rate
+            out[i, i, 0] -= rate
+            out[j, j, 0] -= rate
+            out[i, j, 0] = rate
+            out[j, i, 0] = rate
+            out[i, i, 0] -= rate
+            out[j, j, 0] -= rate
+            continue
+            overlap = load_overlap_nickel(i, j)
+            overlap_transform = convert_overlap_momentum_basis(overlap)
+            print(f"i={i}, j={j}")  # noqa: T201
+            max_transform, _ = calculate_max_overlap_transform(overlap_transform)
+
+            rate = np.abs(max_transform) ** 2
+            out[i, j, 0] = rate
+            out[j, i, 0] = rate
+            out[i, i, 0] -= rate
+            out[j, j, 0] -= rate
+    return out  # type: ignore [no-any-return]
+
+
+def simulate_hydrogen_system() -> None:
+    coefficients = build_incoherent_matrix(2)
+    print(coefficients, coefficients.shape)  # noqa: T201
+    matrix = build_tunnelling_matrix(coefficients, (2, 2))
+    print(matrix)  # noqa: T201
+    times = np.array([0, 1, 2, 3, 4, 5]) * 2e4
+    out = simulate_tunnelling(matrix, np.array([1, 0, 0, 0, 0, 0, 0, 0]), times)
+    print(out)  # noqa: T201
+
+    fig, ax = plt.subplots()
+    for i in range(8):
+        ax.plot(times, out[i])
+    fig.show()
+    input()

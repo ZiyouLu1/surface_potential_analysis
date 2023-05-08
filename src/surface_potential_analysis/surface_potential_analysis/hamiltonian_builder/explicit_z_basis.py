@@ -93,25 +93,20 @@ class _SurfaceHamiltonianUtil(Generic[_L0, _L1, _L2, _L3, _L4, _L5]):
         return np.linalg.norm(util.fundamental_dx)  # type: ignore[return-value]
 
     def hamiltonian(
-        self, bloch_phase: np.ndarray[tuple[Literal[3]], np.dtype[np.float_]]
+        self, _bloch_phase: np.ndarray[tuple[Literal[3]], np.dtype[np.float_]]
     ) -> HamiltonianWithBasis[
         TruncatedBasis[_L3, MomentumBasis[_L0]],
         TruncatedBasis[_L4, MomentumBasis[_L1]],
         ExplicitBasis[_L5, MomentumBasis[_L2]],
     ]:
-        diagonal_energies = np.diag(self._calculate_diagonal_energy(bloch_phase))
-        other_energies = self._calculate_off_diagonal_energies_fast()
-
-        energies = diagonal_energies + other_energies
-
-        return {"array": energies, "basis": self._basis}
+        raise NotImplementedError
 
     def _calculate_diagonal_energy_fundamental_x2(
         self, bloch_phase: np.ndarray[tuple[Literal[3]], np.dtype[np.float_]]
     ) -> np.ndarray[tuple[int], np.dtype[np.float_]]:
         util = BasisConfigUtil(self._basis)
 
-        k0_coords, k1_coords, kx2_fundamental = np.meshgrid(
+        k0_coords, k1_coords, k2_fundamental = np.meshgrid(
             util.x0_basis.nk_points,  # type: ignore[misc]
             util.x1_basis.nk_points,  # type: ignore[misc]
             util.x2_basis.fundamental_nk_points,  # type: ignore[misc]
@@ -138,7 +133,7 @@ class _SurfaceHamiltonianUtil(Generic[_L0, _L1, _L2, _L3, _L4, _L5]):
 
 def total_surface_hamiltonian(
     potential: Potential[_L0, _L1, _L2],
-    bloch_phase: np.ndarray[tuple[Literal[2]], np.dtype[np.float_]],
+    bloch_phase: np.ndarray[tuple[Literal[3]], np.dtype[np.float_]],
     basis: BasisConfig[
         TruncatedBasis[_L3, MomentumBasis[_L0]],
         TruncatedBasis[_L4, MomentumBasis[_L1]],

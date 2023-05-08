@@ -9,7 +9,7 @@ from surface_potential_analysis.eigenstate.eigenstate_collection import (
 )
 from surface_potential_analysis.eigenstate.eigenstate_collection_plot import (
     plot_energies_against_bloch_phase_1d,
-    plot_lowest_band_energies_against_bloch_kx,
+    plot_lowest_band_energies_against_bloch_k,
 )
 from surface_potential_analysis.eigenstate.plot import animate_eigenstate_x0x1
 
@@ -22,32 +22,32 @@ def analyze_band_convergence() -> None:
 
     path = get_data_path("eigenstates_23_23_10.npy")
     eigenstates = load_eigenstate_collection(path)
-    _, _, ln = plot_lowest_band_energies_against_bloch_kx(eigenstates, ax=ax)
+    _, _, ln = plot_lowest_band_energies_against_bloch_k(eigenstates, ax=ax)
     ln.set_label("(23,23,10)")
 
     path = get_data_path("eigenstates_23_23_12.npy")
     eigenstates = load_eigenstate_collection(path)
-    _, _, ln = plot_lowest_band_energies_against_bloch_kx(eigenstates, ax=ax)
+    _, _, ln = plot_lowest_band_energies_against_bloch_k(eigenstates, ax=ax)
     ln.set_label("(23,23,12)")
 
     path = get_data_path("eigenstates_25_25_16.npy")
     eigenstates = load_eigenstate_collection(path)
-    _, _, ln = plot_lowest_band_energies_against_bloch_kx(eigenstates, ax=ax)
+    _, _, ln = plot_lowest_band_energies_against_bloch_k(eigenstates, ax=ax)
     ln.set_label("(25,25,16)")
 
     path = get_data_path("eigenstates_23_23_10_large.npy")
     eigenstates = load_eigenstate_collection(path)
-    _, _, ln = plot_lowest_band_energies_against_bloch_kx(eigenstates, ax=ax)
+    _, _, ln = plot_lowest_band_energies_against_bloch_k(eigenstates, ax=ax)
     ln.set_label("(23,23,10)")
 
     path = get_data_path("eigenstates_23_23_12_large.npy")
     eigenstates = load_eigenstate_collection(path)
-    _, _, ln = plot_lowest_band_energies_against_bloch_kx(eigenstates, ax=ax)
+    _, _, ln = plot_lowest_band_energies_against_bloch_k(eigenstates, ax=ax)
     ln.set_label("(23,23,12)")
 
     path = get_data_path("eigenstates_25_25_16_large.npy")
     eigenstates = load_eigenstate_collection(path)
-    _, _, ln = plot_lowest_band_energies_against_bloch_kx(eigenstates, ax=ax)
+    _, _, ln = plot_lowest_band_energies_against_bloch_k(eigenstates, ax=ax)
     ln.set_label("(25,25,16)")
 
     ax.legend()

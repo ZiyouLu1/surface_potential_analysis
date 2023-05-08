@@ -112,12 +112,12 @@ def get_wavepacket_sample_basis(
         {
             "_type": "momentum",
             "delta_x": util.delta_x0 * ns0,
-            "n": ns0,
+            "n": ns0,  # type: ignore[typeddict-item]
         },
         {
             "_type": "momentum",
             "delta_x": util.delta_x1 * ns1,
-            "n": ns1,
+            "n": ns1,  # type: ignore[typeddict-item]
         },
         {
             "_type": "momentum",
@@ -247,6 +247,99 @@ def plot_wavepacket_1d_x(
     return plot_eigenstate_1d_x(
         eigenstate, idx, axis, ax=ax, measure=measure, scale=scale
     )
+
+
+def plot_wavepacket_x0(
+    wavepacket: MomentumBasisWavepacket[_NS0Inv, _NS1Inv, _L0Inv, _L1Inv, _L2Inv],
+    idx: tuple[int, int] = (0, 0),
+    *,
+    ax: Axes | None = None,
+    measure: Measure = "abs",
+    scale: Literal["symlog", "linear"] = "linear",
+) -> tuple[Figure, Axes, Line2D]:
+    """
+    Plot a wavepacket in 2d along the x0 axis.
+
+    Parameters
+    ----------
+    wavepacket : MomentumBasisWavepacket[_NS0Inv, _NS1Inv, _L0Inv, _L1Inv, _L2Inv]
+    idx : tuple[int, int], optional
+        index through x1, x2 axis, by default (0,0)
+    ax : Axes | None, optional
+        plot axis, by default None
+    measure : Measure, optional
+        measure, by default "abs"
+    scale : Literal[&quot;symlog&quot;, &quot;linear&quot;], optional
+        scale, by default "linear"
+
+    Returns
+    -------
+    tuple[Figure, Axes, Line2D]
+    """
+    eigenstate = unfurl_wavepacket(wavepacket)
+    return plot_eigenstate_1d_x(eigenstate, idx, 0, ax=ax, measure=measure, scale=scale)
+
+
+def plot_wavepacket_x1(
+    wavepacket: MomentumBasisWavepacket[_NS0Inv, _NS1Inv, _L0Inv, _L1Inv, _L2Inv],
+    idx: tuple[int, int] = (0, 0),
+    *,
+    ax: Axes | None = None,
+    measure: Measure = "abs",
+    scale: Literal["symlog", "linear"] = "linear",
+) -> tuple[Figure, Axes, Line2D]:
+    """
+    Plot a wavepacket in 2d along the x1 axis.
+
+    Parameters
+    ----------
+    wavepacket : MomentumBasisWavepacket[_NS0Inv, _NS1Inv, _L0Inv, _L1Inv, _L2Inv]
+    idx : tuple[int, int], optional
+        index through x2, x0 axis, by default (0,0)
+    ax : Axes | None, optional
+        plot axis, by default None
+    measure : Measure, optional
+        measure, by default "abs"
+    scale : Literal[&quot;symlog&quot;, &quot;linear&quot;], optional
+        scale, by default "linear"
+
+    Returns
+    -------
+    tuple[Figure, Axes, Line2D]
+    """
+    eigenstate = unfurl_wavepacket(wavepacket)
+    return plot_eigenstate_1d_x(eigenstate, idx, 1, ax=ax, measure=measure, scale=scale)
+
+
+def plot_wavepacket_x2(
+    wavepacket: MomentumBasisWavepacket[_NS0Inv, _NS1Inv, _L0Inv, _L1Inv, _L2Inv],
+    idx: tuple[int, int] = (0, 0),
+    *,
+    ax: Axes | None = None,
+    measure: Measure = "abs",
+    scale: Literal["symlog", "linear"] = "linear",
+) -> tuple[Figure, Axes, Line2D]:
+    """
+    Plot a wavepacket in 2d along the x2 axis.
+
+    Parameters
+    ----------
+    wavepacket : MomentumBasisWavepacket[_NS0Inv, _NS1Inv, _L0Inv, _L1Inv, _L2Inv]
+    idx : tuple[int, int], optional
+        index through x0, x1 axis, by default (0,0)
+    ax : Axes | None, optional
+        plot axis, by default None
+    measure : Measure, optional
+        measure, by default "abs"
+    scale : Literal[&quot;symlog&quot;, &quot;linear&quot;], optional
+        scale, by default "linear"
+
+    Returns
+    -------
+    tuple[Figure, Axes, Line2D]
+    """
+    eigenstate = unfurl_wavepacket(wavepacket)
+    return plot_eigenstate_1d_x(eigenstate, idx, 2, ax=ax, measure=measure, scale=scale)
 
 
 def plot_wavepacket_2d_k(

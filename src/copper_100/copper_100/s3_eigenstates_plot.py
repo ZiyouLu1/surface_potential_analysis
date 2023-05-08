@@ -11,7 +11,7 @@ from surface_potential_analysis.eigenstate.eigenstate_collection import (
 )
 from surface_potential_analysis.eigenstate.eigenstate_collection_plot import (
     plot_energies_against_bloch_phase_1d,
-    plot_lowest_band_energies_against_bloch_kx,
+    plot_lowest_band_energies_against_bloch_k,
 )
 from surface_potential_analysis.eigenstate.plot import (
     animate_eigenstate_x0x1,
@@ -35,37 +35,37 @@ def analyze_eigenvalue_convergence() -> None:
 
     path = get_data_path("eigenstates_25_25_14.json")
     eigenstates = load_eigenstate_collection(path)
-    _, _, ln = plot_lowest_band_energies_against_bloch_kx(eigenstates, ax=ax)
+    _, _, ln = plot_lowest_band_energies_against_bloch_k(eigenstates, ax=ax)
     ln.set_label("(25,25,14)")
 
     path = get_data_path("eigenstates_23_23_14.json")
     eigenstates = load_eigenstate_collection(path)
-    _, _, ln = plot_lowest_band_energies_against_bloch_kx(eigenstates, ax=ax)
+    _, _, ln = plot_lowest_band_energies_against_bloch_k(eigenstates, ax=ax)
     ln.set_label("(23,23,14)")
 
     path = get_data_path("eigenstates_23_23_15.json")
     eigenstates = load_eigenstate_collection(path)
-    _, _, ln = plot_lowest_band_energies_against_bloch_kx(eigenstates, ax=ax)
+    _, _, ln = plot_lowest_band_energies_against_bloch_k(eigenstates, ax=ax)
     ln.set_label("(23,23,15)")
 
     path = get_data_path("eigenstates_23_23_16.json")
     eigenstates = load_eigenstate_collection(path)
-    _, _, ln = plot_lowest_band_energies_against_bloch_kx(eigenstates, ax=ax)
+    _, _, ln = plot_lowest_band_energies_against_bloch_k(eigenstates, ax=ax)
     ln.set_label("(23,23,16)")
 
     path = get_data_path("eigenstates_25_25_16.json")
     eigenstates = load_eigenstate_collection(path)
-    _, _, ln = plot_lowest_band_energies_against_bloch_kx(eigenstates, ax=ax)
+    _, _, ln = plot_lowest_band_energies_against_bloch_k(eigenstates, ax=ax)
     ln.set_label("(25,25,16)")
 
     path = get_data_path("eigenstates_23_23_17.json")
     eigenstates = load_eigenstate_collection(path)
-    _, _, ln = plot_lowest_band_energies_against_bloch_kx(eigenstates, ax=ax)
+    _, _, ln = plot_lowest_band_energies_against_bloch_k(eigenstates, ax=ax)
     ln.set_label("(23,23,17)")
 
     path = get_data_path("eigenstates_23_23_18.json")
     eigenstates = load_eigenstate_collection(path)
-    _, _, ln = plot_lowest_band_energies_against_bloch_kx(eigenstates, ax=ax)
+    _, _, ln = plot_lowest_band_energies_against_bloch_k(eigenstates, ax=ax)
     ln.set_label("(23,23,18)")
 
     ax.set_title(
@@ -87,22 +87,22 @@ def analyze_eigenvalue_convergence_relaxed() -> None:
 
     path = get_data_path("eigenstates_relaxed_17_17_15.json")
     eigenstates = load_eigenstate_collection(path)
-    _, _, ln = plot_lowest_band_energies_against_bloch_kx(eigenstates, ax=ax)
+    _, _, ln = plot_lowest_band_energies_against_bloch_k(eigenstates, ax=ax)
     ln.set_label("(17,17,15)")
 
     path = get_data_path("eigenstates_relaxed_21_21_14.json")
     eigenstates = load_eigenstate_collection(path)
-    _, _, ln = plot_lowest_band_energies_against_bloch_kx(eigenstates, ax=ax)
+    _, _, ln = plot_lowest_band_energies_against_bloch_k(eigenstates, ax=ax)
     ln.set_label("(21,21,14)")
 
     path = get_data_path("eigenstates_relaxed_21_21_15.json")
     eigenstates = load_eigenstate_collection(path)
-    _, _, ln = plot_lowest_band_energies_against_bloch_kx(eigenstates, ax=ax)
+    _, _, ln = plot_lowest_band_energies_against_bloch_k(eigenstates, ax=ax)
     ln.set_label("(21,21,15)")
 
     path = get_data_path("eigenstates_relaxed_17_17_13.json")
     eigenstates = load_eigenstate_collection(path)
-    _, _, ln = plot_lowest_band_energies_against_bloch_kx(eigenstates, ax=ax)
+    _, _, ln = plot_lowest_band_energies_against_bloch_k(eigenstates, ax=ax)
     ln.set_label("(17,17,13)")
 
     ax.set_title(

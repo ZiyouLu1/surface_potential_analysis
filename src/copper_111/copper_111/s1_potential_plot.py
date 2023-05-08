@@ -99,25 +99,13 @@ def plot_raw_potential_points() -> None:
     ax.set_ylim(0, 0.2e-18)
     fig.show()
 
-    ft_points = np.abs(np.fft.ifft2(potential["points"], axes=(0, 1)))
-    ft_points[0, 0] = 0
-    ft_grid: EnergyGrid = {
-        "delta_x0": potential["delta_x0"],
-        "delta_x1": potential["delta_x1"],
-        "points": ft_points.tolist(),
-        "z_points": potential["z_points"],
-    }
-    fig, ax, _ani1 = animate_potential_x0x1(ft_grid)
-    # TODO: delta is wrong, plot generic points and then factor out into ft.
-    ax.set_title("Plot of the ft of the raw potential")
-    fig.show()
     input()
 
 
 def plot_interpolated_energy_grid_points() -> None:
     potential = load_interpolated_potential()
 
-    fig, ax, _ = plot_projected_x_points_2d(potential, idx=0, z_axis=2)
+    fig, ax, _ = plot_projected_x_points_2d(potential["basis"], idx=0, z_axis=2)
     fig.show()
 
     raw = normalize_potential(load_raw_data_potential())
@@ -131,8 +119,10 @@ def plot_interpolated_energy_grid_points() -> None:
     x0_min = xy_min[0] / (1 + z_energies.shape[0])
     x1_min = xy_min[1] / (1 + z_energies.shape[1])
     (line,) = ax.plot(
-        x0_min * potential["delta_x0"][0] + x1_min * potential["delta_x1"][0],
-        x0_min * potential["delta_x0"][1] + x1_min * potential["delta_x1"][1],
+        x0_min * potential["basis"][0]["delta_x"][0]
+        + x1_min * potential["basis"][1]["delta_x"][0],
+        x0_min * potential["basis"][0]["delta_x"][1]
+        + x1_min * potential["basis"][1]["delta_x"][1],
     )
     line.set_marker("x")
 
@@ -141,24 +131,11 @@ def plot_interpolated_energy_grid_points() -> None:
     x0_min = xy_min[0] / (1 + z_energies.shape[0])
     x1_min = xy_min[1] / (1 + z_energies.shape[1])
     (line,) = ax.plot(
-        x0_min * raw["delta_x0"][0] + x1_min * raw["delta_x1"][0],
-        x0_min * raw["delta_x0"][1] + x1_min * raw["delta_x1"][1],
+        x0_min * raw["basis"][0]["delta_x"][0] + x1_min * raw["basis"][1]["delta_x"][0],
+        x0_min * raw["basis"][0]["delta_x"][1] + x1_min * raw["basis"][1]["delta_x"][1],
     )
     line.set_marker("x")
 
-    fig.show()
-    input()
-
-    ft_points = np.abs(np.fft.ifft2(potential["points"], axes=(0, 1)))
-    ft_points[0, 0] = 0
-    ft_grid: EnergyGrid = {
-        "delta_x0": potential["delta_x0"],
-        "delta_x1": potential["delta_x1"],
-        "points": ft_points.tolist(),
-        "z_points": potential["z_points"],
-    }
-    fig, ax, _ani1 = animate_potential_x0x1(ft_grid)
-    ax.set_title("Plot of the ft of the interpolated potential")
     fig.show()
     input()
 
@@ -216,7 +193,7 @@ def plot_potential_minimum_along_diagonal() -> None:
     fig, ax = plt.subplots()
 
     interpolation = load_interpolated_potential()
-    path = [(x, x) for x in range(np.shape(interpolation["points"])[0])]
+    path = np.array([(x, x) for x in range(np.shape(interpolation["points"])[0])]).T
     _, _, _ = plot_potential_minimum_along_path(interpolation, path, ax=ax)
     fig.show()
     save_figure(fig, "classical_trajectory_comparison.png")
