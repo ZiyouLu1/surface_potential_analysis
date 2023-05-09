@@ -103,7 +103,6 @@ def _get_global_phases(
     return 2 * np.pi * (x0_phase + x1_phase)  # type: ignore[no-any-return]
 
 
-@timed
 def _get_bloch_phases(
     wavepacket: Wavepacket[_NS0Inv, _NS1Inv, _BC0Inv],
     idx: SingleIndexLike = 0,
@@ -167,27 +166,6 @@ def normalize_wavepacket(
     }
 
 
-def _get_bloch_phases_two_point(
-    wavepacket: Wavepacket[_NS0Inv, _NS1Inv, _BC0Inv]
-) -> np.ndarray[tuple[_NS0Inv, _NS1Inv], np.dtype[np.float_]]:
-    converted = convert_wavepacket_to_position_basis(wavepacket)
-
-    max_idx: np.ndarray[tuple[_NS0Inv, _NS1Inv], np.dtype[np.int_]] = np.argmax(
-        np.abs(converted["vectors"]), axis=-1
-    )
-    mirror_idx = get_x01_mirrored_index(converted["basis"], max_idx)
-
-    max_point = converted["vectors"][max_idx]
-    mirror_point = converted["vectors"][mirror_idx]
-    return 0.5 * (np.angle(max_point) + np.angle(mirror_point))  # type: ignore[no-any-return]
-
-
-def _wrap_phases(
-    phases: np.ndarray[tuple[int], np.dtype[np.float_]], half_width: float = np.pi
-) -> np.ndarray[tuple[int], np.dtype[np.float_]]:
-    return (phases + half_width) % (2 * half_width) - half_width  # type: ignore[no-any-return]
-
-
 def get_wavepacket_two_points(
     wavepacket: Wavepacket[_NS0Inv, _NS1Inv, _BC0Inv], offset: tuple[int, int] = (0, 0)
 ) -> tuple[SingleStackedIndexLike, SingleStackedIndexLike]:
@@ -213,6 +191,12 @@ def get_wavepacket_two_points(
     idx_1 = get_x01_mirrored_index(converted["basis"], idx_0)
     idx_1 = wrap_index_around_origin_x01(converted["basis"], idx_1, origin)
     return (idx_0, idx_1)
+
+
+def _wrap_phases(
+    phases: np.ndarray[tuple[int], np.dtype[np.float_]], half_width: float = np.pi
+) -> np.ndarray[tuple[int], np.dtype[np.float_]]:
+    return (phases + half_width) % (2 * half_width) - half_width  # type: ignore[no-any-return]
 
 
 @timed

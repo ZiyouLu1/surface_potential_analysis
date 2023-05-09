@@ -51,6 +51,7 @@
     "meshgrid",
     "ncols",
     "ndarray",
+    "ndindex",
     "ndk",
     "nrows",
     "pcolormesh",

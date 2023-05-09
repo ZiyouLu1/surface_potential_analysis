@@ -322,7 +322,6 @@ def build_incoherent_matrix_fcc_hcp() -> (
 
 def simulate_hydrogen_system() -> None:
     coefficients = build_incoherent_matrix_fcc_hcp()
-    print(coefficients, coefficients.shape)  # noqa: T201
     grid_shape = (10, 10)
     matrix = build_tunnelling_matrix(coefficients, grid_shape)
 
@@ -331,7 +330,7 @@ def simulate_hydrogen_system() -> None:
     start[0] = 1
     out = simulate_tunnelling(matrix, start, times)
 
-    print(np.sum(np.abs(out[:, -1])), np.sum(out[:, -1]))
+    print(np.sum(np.abs(out[:, -1])), np.sum(out[:, -1]))  # noqa: T201
 
     fig, ax = plt.subplots()
     for i in range(start.size):

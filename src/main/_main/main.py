@@ -4,7 +4,7 @@ import nickel_111
 
 
 def main() -> None:
-    nickel_111.s4_wavepacket_plot.plot_two_point_wavepacket_with_idx()
+    nickel_111.s5_overlap_full.calculate_overlap_nickel()
 
 
 if __name__ == "__main__":
