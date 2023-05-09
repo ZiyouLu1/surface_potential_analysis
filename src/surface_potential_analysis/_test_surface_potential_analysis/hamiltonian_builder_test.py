@@ -9,7 +9,6 @@ import scipy.linalg
 import scipy.special
 from scipy.constants import hbar
 
-from _tests.utils import convert_explicit_basis_x2
 from surface_potential_analysis.basis_config.basis_config import (
     BasisConfigUtil,
     PositionBasisConfig,
@@ -32,6 +31,8 @@ from surface_potential_analysis.hamiltonian_builder.sho_subtracted_basis import 
     _SurfaceHamiltonianUtil,
 )
 from surface_potential_analysis.interpolation import interpolate_points_rfftn
+
+from .utils import convert_explicit_basis_x2
 
 if TYPE_CHECKING:
     from surface_potential_analysis.basis.basis import (

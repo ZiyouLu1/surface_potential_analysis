@@ -5,10 +5,11 @@ import unittest
 import numpy as np
 from scipy.stats import special_ortho_group
 
-from _tests.utils import get_random_explicit_basis
 from surface_potential_analysis.basis.basis import explicit_position_basis_in_momentum
 from surface_potential_analysis.basis_config.basis_config import BasisConfigUtil
 from surface_potential_analysis.basis_config.conversion import convert_vector
+
+from .utils import get_random_explicit_basis
 
 rng = np.random.default_rng()
 

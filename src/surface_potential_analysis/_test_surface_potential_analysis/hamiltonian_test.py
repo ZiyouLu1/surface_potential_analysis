@@ -4,16 +4,15 @@ import unittest
 
 import numpy as np
 
-from _tests.utils import convert_explicit_basis_x2
 from surface_potential_analysis.hamiltonian.hamiltonian import (
     MomentumBasisStackedHamiltonian,
     flatten_hamiltonian,
     stack_hamiltonian,
 )
 
+from .utils import convert_explicit_basis_x2
+
 rng = np.random.default_rng()
-
-
 
 
 class HamiltonianTest(unittest.TestCase):

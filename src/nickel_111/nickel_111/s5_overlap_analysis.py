@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import itertools
 from typing import TYPE_CHECKING, Literal, TypeVar
 
 import numpy as np
@@ -26,6 +27,7 @@ from surface_potential_analysis.overlap.plot import (
     plot_overlap_along_k_diagonal,
     plot_overlap_k0k1,
 )
+from surface_potential_analysis.util import npy_cached
 
 from nickel_111.s4_wavepacket import load_nickel_wavepacket
 
@@ -217,8 +219,17 @@ def print_max_overlap_transforms() -> None:
     print(calculate_max_overlap_transform(overlap_transform))  # noqa: T201
 
 
-def load_overlap_nickel(i: int, j: int) -> Overlap[PositionBasisConfig[int, int, int]]:
-    path = get_data_path(f"overlap_{i}_{j}.npy")
+def load_overlap_nickel(
+    i: int, j: int, offset: tuple[int, int] = (0, 0)
+) -> Overlap[PositionBasisConfig[int, int, int]]:
+    dx0, dx1 = offset
+    i, j = (i, j) if i < j else (j, i)
+    dx0, dx1 = (dx0 % 3, dx1 % 3) if i < j else ((-dx0) % 3, (-dx1) % 3)
+    match (dx0, dx1):
+        case (0, 2) | (1, 0) | (1, 2):
+            dx0, dx1 = dx1, dx0
+
+    path = get_data_path(f"overlap/overlap_{i}_{j}_{dx0}_{dx1}.npy")
     return load_overlap(path)
 
 
@@ -261,48 +272,33 @@ def load_average_band_energies(
     return energies  # type: ignore[no-any-return]
 
 
+@npy_cached(lambda n_bands: get_data_path(f"incoherent_matrix_{n_bands}_bands.npy"))
 def build_incoherent_matrix(
     n_bands: _L0Inv,
-) -> np.ndarray[tuple[_L0Inv, _L0Inv, Literal[4]], np.dtype[np.float_]]:
+) -> np.ndarray[tuple[_L0Inv, _L0Inv, Literal[9]], np.dtype[np.float_]]:
     # The coefficients np.ndarray[tuple[_L0Inv, _L0Inv, Literal[9]], np.dtype[np.float_]]
     # represent the total rate R[i,j,dx] from i to j with an offset of dx at the location i.
     energies = load_average_band_energies(n_bands)
     out = np.zeros((n_bands, n_bands, 9))
-    for i in range(n_bands):
-        for j in range(i + 1, n_bands):
-            rate = 2.56410914e-05
-            exponential = np.exp(-(energies[j] - energies[i]) / (Boltzmann * 150))
-            print(exponential)  # noqa: T201
-            out[i, j, 0] = rate * exponential
-            out[i, j, np.ravel_multi_index((-1, 0), (2, 2), mode="wrap")] = (
-                rate * exponential
-            )
-            out[i, j, np.ravel_multi_index((0, -1), (2, 2), mode="wrap")] = (
-                rate * exponential
-            )
-            out[j, i, 0] = rate / exponential
-            out[j, i, np.ravel_multi_index((1, 0), (2, 2), mode="wrap")] = (
-                rate / exponential
-            )
-            out[j, i, np.ravel_multi_index((0, 1), (2, 2), mode="wrap")] = (
-                rate / exponential
-            )
-            continue
-            overlap = load_overlap_nickel(i, j)
-            overlap_transform = convert_overlap_momentum_basis(overlap)
-            print(f"i={i}, j={j}")  # noqa: T201
-            max_transform, _ = calculate_max_overlap_transform(overlap_transform)
+    for i, j, dx0, dx1 in itertools.product(
+        range(n_bands), range(n_bands), range(-1, 2), range(-1, 2)
+    ):
+        offset = (dx0, dx1)
+        print(f"i={i}, j={j} offset={offset}")  # noqa: T201
+        overlap = load_overlap_nickel(i, j, offset)
+        overlap_transform = convert_overlap_momentum_basis(overlap)
 
-            rate = np.abs(max_transform) ** 2
-            out[i, j, 0] = rate
-            out[j, i, 0] = rate
-            out[i, i, 0] -= rate
-            out[j, j, 0] -= rate
+        max_overlap, _ = calculate_max_overlap_transform(overlap_transform)
+        exponential = np.exp(-(energies[j] - energies[i]) / (Boltzmann * 150))
+
+        dx = np.ravel_multi_index(offset, (3, 3), mode="wrap")
+        out[i, j, dx] = np.abs(max_overlap) ** 2 * exponential
+
     return out  # type: ignore [no-any-return]
 
 
 def build_incoherent_matrix_fcc_hcp() -> (
-    np.ndarray[tuple[Literal[2], Literal[2], Literal[4]], np.dtype[np.float_]]
+    np.ndarray[tuple[Literal[2], Literal[2], Literal[9]], np.dtype[np.float_]]
 ):
     # The coefficients np.ndarray[tuple[_L0Inv, _L0Inv, Literal[9]], np.dtype[np.float_]]
     # represent the total rate R[i,j,dx] from i to j with an offset of dx at the location i.
@@ -312,25 +308,32 @@ def build_incoherent_matrix_fcc_hcp() -> (
     exponential = np.exp(-(energies[0] - energies[1]) / (Boltzmann * 150))
     print(exponential)  # noqa: T201
     out[0, 1, 0] = rate * exponential
-    out[0, 1, np.ravel_multi_index((-1, 0), (2, 2), mode="wrap")] = rate * exponential
-    out[0, 1, np.ravel_multi_index((0, -1), (2, 2), mode="wrap")] = rate * exponential
+    out[0, 1, np.ravel_multi_index((-1, 0), (3, 3), mode="wrap")] = rate * exponential
+    out[0, 1, np.ravel_multi_index((0, -1), (3, 3), mode="wrap")] = rate * exponential
     out[1, 0, 0] = rate / exponential
-    out[1, 0, np.ravel_multi_index((1, 0), (2, 2), mode="wrap")] = rate / exponential
-    out[1, 0, np.ravel_multi_index((0, 1), (2, 2), mode="wrap")] = rate / exponential
+    out[1, 0, np.ravel_multi_index((1, 0), (3, 3), mode="wrap")] = rate / exponential
+    out[1, 0, np.ravel_multi_index((0, 1), (3, 3), mode="wrap")] = rate / exponential
     return out  # type: ignore [no-any-return]
 
 
 def simulate_hydrogen_system() -> None:
-    coefficients = build_incoherent_matrix_fcc_hcp()
+    n_states = 6
+    coefficients = build_incoherent_matrix(n_states)
     grid_shape = (10, 10)
     matrix = build_tunnelling_matrix(coefficients, grid_shape)
 
     times = np.array([0, 1, 2, 3, 4, 5]) * 2e4
-    start = np.zeros(np.prod(grid_shape) * 2)
+    start = np.zeros(np.prod(grid_shape) * n_states)
     start[0] = 1
     out = simulate_tunnelling(matrix, start, times)
 
     print(np.sum(np.abs(out[:, -1])), np.sum(out[:, -1]))  # noqa: T201
+    print(  # noqa: T201
+        np.sum(np.abs(out[:, -1].reshape(*grid_shape, n_states)[:, :, 0])),
+        np.sum(out[:, -1].reshape(*grid_shape, n_states)[:, :, 0]),
+        np.sum(np.abs(out[:, -1].reshape(*grid_shape, n_states)[:, :, 1])),
+        np.sum(out[:, -1].reshape(*grid_shape, n_states)[:, :, 1]),
+    )
 
     fig, ax = plt.subplots()
     for i in range(start.size):

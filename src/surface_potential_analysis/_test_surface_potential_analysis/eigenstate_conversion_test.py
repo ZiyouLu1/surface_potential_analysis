@@ -7,7 +7,6 @@ import hamiltonian_generator
 import numpy as np
 from scipy.constants import hbar
 
-from _tests.utils import get_random_explicit_basis
 from surface_potential_analysis.basis.basis import (
     Basis,
     ExplicitBasis,
@@ -30,6 +29,8 @@ from surface_potential_analysis.eigenstate.conversion import (
     convert_eigenstate_to_basis,
 )
 from surface_potential_analysis.interpolation import pad_ft_points
+
+from .utils import get_random_explicit_basis
 
 if TYPE_CHECKING:
     from surface_potential_analysis.eigenstate.eigenstate import (
@@ -95,6 +96,7 @@ def _convert_explicit_basis_x2_to_position(
         "vector": vector,
     }
 
+
 def _convert_momentum_basis_x01_to_position(
     eigenstate: StackedEigenstateWithBasis[
         TruncatedBasis[Any, MomentumBasis[_L0Inv]] | MomentumBasis[_L0Inv],
@@ -135,7 +137,6 @@ def _convert_momentum_basis_x01_to_position(
         ),
         "vector": transformed,
     }
-
 
 
 def _convert_sho_eigenstate_to_position_basis(

@@ -4,7 +4,6 @@ import unittest
 
 import numpy as np
 
-from _tests.utils import get_random_explicit_basis
 from surface_potential_analysis.basis.basis import (
     MomentumBasis,
     explicit_momentum_basis_in_position,
@@ -14,6 +13,8 @@ from surface_potential_analysis.basis.conversion import (
     as_explicit_position_basis,
     get_basis_conversion_matrix,
 )
+
+from .utils import get_random_explicit_basis
 
 rng = np.random.default_rng()
 

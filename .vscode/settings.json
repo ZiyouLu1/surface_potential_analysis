@@ -98,7 +98,7 @@
   "python.testing.unittestArgs": [
     "-v",
     "-s",
-    "./_tests",
+    "./_test_surface_dynamics_simulation",
     "-p",
     "test*.py"
   ],
@@ -108,7 +108,7 @@
   //   "./src/surface_potential_analysis"
   // ],
   "[json]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
+    // "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
   "autoDocstring.docstringFormat": "numpy",
   "autoDocstring.generateDocstringOnEnter": true,

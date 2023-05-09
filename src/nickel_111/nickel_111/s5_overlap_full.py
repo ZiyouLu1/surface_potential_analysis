@@ -16,5 +16,5 @@ def calculate_overlap_nickel() -> None:
                 wavepacket_i = load_wavepacket(i)
                 wavepacket_j = load_wavepacket(j, (dx0, dx1))
                 overlap_ij = calculate_wavepacket_overlap(wavepacket_i, wavepacket_j)
-                path = get_data_path(f"overlap/overlap_{i}_{j}_{dx0 % 2}_{dx1 % 2}.npy")
+                path = get_data_path(f"overlap/overlap_{i}_{j}_{dx0 % 3}_{dx1 % 3}.npy")
                 save_overlap(path, overlap_ij)

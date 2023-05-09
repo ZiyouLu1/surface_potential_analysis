@@ -54,7 +54,7 @@ def _get_solver_function(
 
 
 def build_tunnelling_matrix(
-    coefficients: np.ndarray[tuple[_L0Inv, _L0Inv, Literal[4]], np.dtype[np.float_]],
+    coefficients: np.ndarray[tuple[_L0Inv, _L0Inv, Literal[9]], np.dtype[np.float_]],
     shape: tuple[int, int],
 ) -> np.ndarray[tuple[int, int], np.dtype[np.float_]]:
     """
@@ -62,6 +62,9 @@ def build_tunnelling_matrix(
 
     The coefficients np.ndarray[tuple[_L0Inv, _L0Inv, Literal[9]], np.dtype[np.float_]]
     represent the total rate R[i,j,dx] from i to j with an offset of dx at the location i.
+
+    dx is indexed such that np.unravel_multi_index(offset, (3,3), mode="wrap") gives the flat index
+    for offsets (-1/+0/+1, -1/+0/+1)
 
     For example for a grid with i,j = {0,1}, ignoring tunnelling to neighboring unit cells
     - [0,0,0] = 0
@@ -103,7 +106,7 @@ def build_tunnelling_matrix(
                     jx0 = (ix0 + dix0) % out.shape[0]
                     jx1 = (ix1 + dix1) % out.shape[1]
 
-                    hop_idx = np.ravel_multi_index((dix0, dix1), (2, 2), mode="wrap")
+                    hop_idx = np.ravel_multi_index((dix0, dix1), (3, 3), mode="wrap")
                     rate = coefficients[n, m, hop_idx]
                     # Add the contribution from this rate to the total
 
