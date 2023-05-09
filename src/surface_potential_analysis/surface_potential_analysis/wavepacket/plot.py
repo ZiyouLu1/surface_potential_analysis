@@ -41,6 +41,8 @@ if TYPE_CHECKING:
     from matplotlib.figure import Figure
     from matplotlib.lines import Line2D
 
+    from surface_potential_analysis._types import SingleFlatIndexLike
+
 
 _NS0Inv = TypeVar("_NS0Inv", bound=int)
 _NS1Inv = TypeVar("_NS1Inv", bound=int)
@@ -344,7 +346,7 @@ def plot_wavepacket_x2(
 
 def plot_wavepacket_2d_k(
     wavepacket: MomentumBasisWavepacket[_NS0Inv, _NS1Inv, _L0Inv, _L1Inv, _L2Inv],
-    idx: int,
+    idx: SingleFlatIndexLike,
     kz_axis: Literal[0, 1, 2, -1, -2, -3],
     *,
     ax: Axes | None = None,
@@ -358,7 +360,7 @@ def plot_wavepacket_2d_k(
     ----------
     wavepacket : MomentumBasisWavepacket[_NS0Inv, _NS1Inv, _L0Inv, _L1Inv, _L2Inv]
         Wavepacket in momentum basis
-    idx : int
+    idx : SingleFlatIndexLike
         index along z_axis
     kz_axis : Literal[0, 1, 2]
         kz_axis, perpendicular to plotted direction
@@ -381,7 +383,7 @@ def plot_wavepacket_2d_k(
 
 def plot_wavepacket_k0k1(
     wavepacket: MomentumBasisWavepacket[_NS0Inv, _NS1Inv, _L0Inv, _L1Inv, _L2Inv],
-    k2_idx: int,
+    k2_idx: SingleFlatIndexLike,
     *,
     ax: Axes | None = None,
     measure: Measure = "abs",
@@ -394,7 +396,7 @@ def plot_wavepacket_k0k1(
     ----------
     wavepacket : MomentumBasisWavepacket[_NS0Inv, _NS1Inv, _L0Inv, _L1Inv, _L2Inv]
         Wavepacket in momentum basis
-    k2_idx : int
+    k2_idx : SingleFlatIndexLike
         index along k2 axis
     ax : Axes | None, optional
         plot axis, by default None
@@ -414,7 +416,7 @@ def plot_wavepacket_k0k1(
 
 def plot_wavepacket_k1k2(
     wavepacket: MomentumBasisWavepacket[_NS0Inv, _NS1Inv, _L0Inv, _L1Inv, _L2Inv],
-    k0_idx: int,
+    k0_idx: SingleFlatIndexLike,
     *,
     ax: Axes | None = None,
     measure: Measure = "abs",
@@ -427,7 +429,7 @@ def plot_wavepacket_k1k2(
     ----------
     wavepacket : MomentumBasisWavepacket[_NS0Inv, _NS1Inv, _L0Inv, _L1Inv, _L2Inv]
         Wavepacket in momentum basis
-    k0_idx : int
+    k0_idx : SingleFlatIndexLike
         index along k0 axis
     ax : Axes | None, optional
         plot axis, by default None
@@ -447,7 +449,7 @@ def plot_wavepacket_k1k2(
 
 def plot_wavepacket_k2k0(
     wavepacket: MomentumBasisWavepacket[_NS0Inv, _NS1Inv, _L0Inv, _L1Inv, _L2Inv],
-    k1_idx: int,
+    k1_idx: SingleFlatIndexLike,
     *,
     ax: Axes | None = None,
     measure: Measure = "abs",
@@ -460,7 +462,7 @@ def plot_wavepacket_k2k0(
     ----------
     wavepacket : MomentumBasisWavepacket[_NS0Inv, _NS1Inv, _L0Inv, _L1Inv, _L2Inv]
         Wavepacket in momentum basis
-    k1_idx : int
+    k1_idx : SingleFlatIndexLike
         index along k1 axis
     ax : Axes | None, optional
         plot axis, by default None
@@ -480,7 +482,7 @@ def plot_wavepacket_k2k0(
 
 def plot_wavepacket_2d_x(
     wavepacket: MomentumBasisWavepacket[_NS0Inv, _NS1Inv, _L0Inv, _L1Inv, _L2Inv],
-    idx: int,
+    idx: SingleFlatIndexLike,
     z_axis: Literal[0, 1, 2, -1, -2, -3],
     *,
     ax: Axes | None = None,
@@ -494,7 +496,7 @@ def plot_wavepacket_2d_x(
     ----------
     wavepacket : MomentumBasisWavepacket[_NS0Inv, _NS1Inv, _L0Inv, _L1Inv, _L2Inv]
         Wavepacket in momentum basis
-    idx : int
+    idx : SingleFlatIndexLike
         index along z_axis
     z_axis : Literal[0, 1, 2]
         z_axis, perpendicular to plotted direction
@@ -517,7 +519,7 @@ def plot_wavepacket_2d_x(
 
 def plot_wavepacket_x0x1(
     wavepacket: MomentumBasisWavepacket[_NS0Inv, _NS1Inv, _L0Inv, _L1Inv, _L2Inv],
-    x2_idx: int,
+    x2_idx: SingleFlatIndexLike,
     *,
     ax: Axes | None = None,
     measure: Measure = "abs",
@@ -530,7 +532,7 @@ def plot_wavepacket_x0x1(
     ----------
     wavepacket : MomentumBasisWavepacket[_NS0Inv, _NS1Inv, _L0Inv, _L1Inv, _L2Inv]
         Wavepacket in momentum basis
-    x2_idx : int
+    x2_idx : SingleFlatIndexLike
         index along x2 axis
     ax : Axes | None, optional
         plot axis, by default None
@@ -550,7 +552,7 @@ def plot_wavepacket_x0x1(
 
 def plot_wavepacket_x1x2(
     wavepacket: MomentumBasisWavepacket[_NS0Inv, _NS1Inv, _L0Inv, _L1Inv, _L2Inv],
-    x0_idx: int,
+    x0_idx: SingleFlatIndexLike,
     *,
     ax: Axes | None = None,
     measure: Measure = "abs",
@@ -563,7 +565,7 @@ def plot_wavepacket_x1x2(
     ----------
     wavepacket : MomentumBasisWavepacket[_NS0Inv, _NS1Inv, _L0Inv, _L1Inv, _L2Inv]
         Wavepacket in momentum basis
-    x0_idx : int
+    x0_idx : SingleFlatIndexLike
         index along x0 axis
     ax : Axes | None, optional
         plot axis, by default None
@@ -583,7 +585,7 @@ def plot_wavepacket_x1x2(
 
 def plot_wavepacket_x2x0(
     wavepacket: MomentumBasisWavepacket[_NS0Inv, _NS1Inv, _L0Inv, _L1Inv, _L2Inv],
-    x1_idx: int,
+    x1_idx: SingleFlatIndexLike,
     *,
     ax: Axes | None = None,
     measure: Measure = "abs",
@@ -596,7 +598,7 @@ def plot_wavepacket_x2x0(
     ----------
     wavepacket : MomentumBasisWavepacket[_NS0Inv, _NS1Inv, _L0Inv, _L1Inv, _L2Inv]
         Wavepacket in momentum basis
-    x1_idx : int
+    x1_idx : SingleFlatIndexLike
         index along x1 axis
     ax : Axes | None, optional
         plot axis, by default None
@@ -617,7 +619,7 @@ def plot_wavepacket_x2x0(
 def plot_wavepacket_difference_2d_x(
     wavepacket_0: MomentumBasisWavepacket[_NS0Inv, _NS1Inv, _L0Inv, _L1Inv, _L2Inv],
     wavepacket_1: MomentumBasisWavepacket[_NS0Inv, _NS1Inv, _L0Inv, _L1Inv, _L2Inv],
-    idx: int,
+    idx: SingleFlatIndexLike,
     z_axis: Literal[0, 1, 2, -1, -2, -3],
     *,
     ax: Axes | None = None,
@@ -631,7 +633,7 @@ def plot_wavepacket_difference_2d_x(
     ----------
     wavepacket_0 : MomentumBasisWavepacket[_NS0Inv, _NS1Inv, _L0Inv, _L1Inv, _L2Inv]
     wavepacket_1 : MomentumBasisWavepacket[_NS0Inv, _NS1Inv, _L0Inv, _L1Inv, _L2Inv]
-    idx : int
+    idx : SingleFlatIndexLike
         index along z_axis to plot
     z_axis : Literal[0, 1, 2,
         direction perpendicular to which to plot

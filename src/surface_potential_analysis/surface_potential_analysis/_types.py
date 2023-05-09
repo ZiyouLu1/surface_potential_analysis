@@ -8,7 +8,7 @@ import numpy as np
 # coerced into `<X>` (with the casting rule `same_kind`)
 _BoolLike_co = Union[bool, np.bool_]
 _UIntLike_co = Union[_BoolLike_co, np.unsignedinteger]
-_IntLike_co = Union[_BoolLike_co, int, np.integer]
+_IntLike_co = Union[int, np.integer]
 _FloatLike_co = Union[_IntLike_co, float, np.floating]
 _ComplexLike_co = Union[_FloatLike_co, complex, np.complexfloating]
 _TD64Like_co = Union[_IntLike_co, np.timedelta64]

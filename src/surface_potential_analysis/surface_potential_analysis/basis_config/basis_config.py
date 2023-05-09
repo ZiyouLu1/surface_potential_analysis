@@ -21,6 +21,7 @@ if TYPE_CHECKING:
         FlatIndexLike,
         IndexLike,
         SingleFlatIndexLike,
+        SingleIndexLike,
         SingleStackedIndexLike,
         StackedIndexLike,
         _IntLike_co,
@@ -639,28 +640,50 @@ def _wrap_distance(distance: Any, length: int) -> Any:
 
 @overload
 def wrap_index_around_origin_x01(
-    basis: _BC0Inv, idx: StackedIndexLike
-) -> StackedIndexLike:
+    basis: _BC0Inv, idx: SingleStackedIndexLike, origin_idx: SingleIndexLike = (0, 0, 0)
+) -> SingleStackedIndexLike:
     ...
 
 
 @overload
 def wrap_index_around_origin_x01(
-    basis: _BC0Inv, idx: FlatIndexLike
-) -> StackedIndexLike:
+    basis: _BC0Inv, idx: SingleFlatIndexLike, origin_idx: SingleIndexLike = (0, 0, 0)
+) -> SingleStackedIndexLike:
+    ...
+
+
+@overload
+def wrap_index_around_origin_x01(
+    basis: _BC0Inv,
+    idx: ArrayStackedIndexLike[_S0Inv],
+    origin_idx: SingleIndexLike = (0, 0, 0),
+) -> ArrayStackedIndexLike[_S0Inv]:
+    ...
+
+
+@overload
+def wrap_index_around_origin_x01(
+    basis: _BC0Inv,
+    idx: ArrayFlatIndexLike[_S0Inv],
+    origin_idx: SingleIndexLike = (0, 0, 0),
+) -> ArrayStackedIndexLike[_S0Inv]:
     ...
 
 
 def wrap_index_around_origin_x01(
-    basis: _BC0Inv, idx: StackedIndexLike | FlatIndexLike
+    basis: _BC0Inv,
+    idx: StackedIndexLike | FlatIndexLike,
+    origin_idx: SingleIndexLike = (0, 0, 0),
 ) -> StackedIndexLike:
     """
-    Given an index or list of indexes in stacked form, find the equivalent index closest to the origin.
+    Given an index or list of indexes in stacked form, find the equivalent index closest to the point origin_idx.
 
     Parameters
     ----------
     basis : _BC0Inv
-    idx : StackedIndexLike
+    idx : StackedIndexLike | FlatIndexLike
+    origin_idx : StackedIndexLike | FlatIndexLike, optional
+        origin to wrap around, by default (0, 0, 0)
 
     Returns
     -------
@@ -668,10 +691,15 @@ def wrap_index_around_origin_x01(
     """
     util = BasisConfigUtil(basis)
     idx = idx if isinstance(idx, tuple) else util.get_stacked_index(idx)
+    origin_idx = (
+        origin_idx
+        if isinstance(origin_idx, tuple)
+        else util.get_stacked_index(origin_idx)
+    )
     (n0, n1, _) = util.shape
     return (  # type: ignore[return-value]
-        _wrap_distance(idx[0], n0),
-        _wrap_distance(idx[1], n1),
+        _wrap_distance(idx[0] - origin_idx[0], n0) + origin_idx[0],
+        _wrap_distance(idx[1] - origin_idx[1], n1) + origin_idx[1],
         idx[2],
     )
 
@@ -825,10 +853,6 @@ def get_x01_mirrored_index(basis: _BC0Inv, idx: IndexLike) -> IndexLike:
         The mirrored index
     """
     util = BasisConfigUtil(basis)
-    stacked_idx = idx if isinstance(idx, tuple) else util.get_stacked_index(idx)
-    mirrored: StackedIndexLike = (  # type: ignore[assignment]
-        stacked_idx[1],
-        stacked_idx[0],
-        stacked_idx[2],
-    )
+    idx = idx if isinstance(idx, tuple) else util.get_stacked_index(idx)
+    mirrored: StackedIndexLike = (idx[1], idx[0], idx[2])  # type: ignore[assignment]
     return mirrored if isinstance(idx, tuple) else util.get_flat_index(mirrored)

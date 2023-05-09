@@ -4,27 +4,64 @@ from typing import TYPE_CHECKING, Any, TypeVar
 
 import numpy as np
 
-from surface_potential_analysis.basis.basis import Basis, MomentumBasis
-from surface_potential_analysis.basis_config.basis_config import BasisConfigUtil
+from surface_potential_analysis.basis_config.basis_config import (
+    BasisConfig,
+    BasisConfigUtil,
+)
 
 if TYPE_CHECKING:
+    from surface_potential_analysis.basis.basis import Basis, MomentumBasis
     from surface_potential_analysis.eigenstate.eigenstate import EigenstateWithBasis
 
     from .wavepacket import WavepacketWithBasis
 
+    _NS0Inv = TypeVar("_NS0Inv", bound=int)
+    _NS1Inv = TypeVar("_NS1Inv", bound=int)
 
-_NS0Inv = TypeVar("_NS0Inv", bound=int)
-_NS1Inv = TypeVar("_NS1Inv", bound=int)
+    _BX2Inv = TypeVar("_BX2Inv", bound=Basis[Any, Any])
+
+    _L0Inv = TypeVar("_L0Inv", bound=int)
+    _L1Inv = TypeVar("_L1Inv", bound=int)
 
 
-_BX2Inv = TypeVar("_BX2Inv", bound=Basis[Any, Any])
+def get_eigenstate_furled_basis(
+    eigenstate: EigenstateWithBasis[
+        MomentumBasis[_L0Inv], MomentumBasis[_L1Inv], _BX2Inv
+    ],
+    samples: tuple[_NS0Inv, _NS1Inv],
+) -> BasisConfig[MomentumBasis[int], MomentumBasis[int], _BX2Inv]:
+    """
+    Given an eigenstate and a sample size get the basis of the furled wavepacket.
 
-_L0Inv = TypeVar("_L0Inv", bound=int)
-_L1Inv = TypeVar("_L1Inv", bound=int)
+    Parameters
+    ----------
+    eigenstate : EigenstateWithBasis[ MomentumBasis[_L0Inv], MomentumBasis[_L1Inv], _BX2Inv]
+    samples : tuple[_NS0Inv, _NS1Inv]
+
+    Returns
+    -------
+    BasisConfig[MomentumBasis[int], MomentumBasis[int], _BX2Inv]
+    """
+    (ns0, ns1) = samples
+    return (
+        {
+            "_type": "momentum",
+            "delta_x": eigenstate["basis"][0]["delta_x"] / ns0,
+            "n": eigenstate["basis"][0]["n"] // ns0,
+        },
+        {
+            "_type": "momentum",
+            "delta_x": eigenstate["basis"][1]["delta_x"] / ns1,
+            "n": eigenstate["basis"][1]["n"] // ns1,
+        },
+        eigenstate["basis"][2],
+    )
 
 
 def furl_eigenstate(
-    eigenstate: EigenstateWithBasis[MomentumBasis[int], MomentumBasis[int], _BX2Inv],
+    eigenstate: EigenstateWithBasis[
+        MomentumBasis[_L0Inv], MomentumBasis[_L1Inv], _BX2Inv
+    ],
     samples: tuple[_NS0Inv, _NS1Inv],
 ) -> WavepacketWithBasis[
     _NS0Inv, _NS1Inv, MomentumBasis[int], MomentumBasis[int], _BX2Inv
@@ -58,22 +95,42 @@ def furl_eigenstate(
     flattened = unshifted.reshape(ns0, ns1, -1)
 
     return {
-        "basis": (
-            {
-                "_type": "momentum",
-                "delta_x": eigenstate["basis"][0]["delta_x"] / ns0,
-                "n": eigenstate["basis"][0]["n"] // ns0,
-            },
-            {
-                "_type": "momentum",
-                "delta_x": eigenstate["basis"][1]["delta_x"] / ns1,
-                "n": eigenstate["basis"][1]["n"] // ns1,
-            },
-            eigenstate["basis"][2],
-        ),
+        "basis": get_eigenstate_furled_basis(eigenstate, samples),
         "vectors": flattened * np.sqrt(ns0 * ns1),
         "energies": np.zeros(flattened.shape[0:2]),
     }
+
+
+def get_wavepacket_unfurled_basis(
+    wavepacket: WavepacketWithBasis[
+        _NS0Inv, _NS1Inv, MomentumBasis[_L0Inv], MomentumBasis[_L1Inv], _BX2Inv
+    ]
+) -> BasisConfig[MomentumBasis[int], MomentumBasis[int], _BX2Inv]:
+    """
+    Given a wavepacket get the basis of the unfurled eigenstate.
+
+    Parameters
+    ----------
+    wavepacket : WavepacketWithBasis[ _NS0Inv, _NS1Inv, MomentumBasis[_L0Inv], MomentumBasis[_L1Inv], _BX2Inv ]
+
+    Returns
+    -------
+    BasisConfig[MomentumBasis[int], MomentumBasis[int], _BX2Inv]
+    """
+    (ns0, ns1) = wavepacket["energies"].shape
+    return (
+        {
+            "_type": "momentum",
+            "delta_x": wavepacket["basis"][0]["delta_x"] * ns0,
+            "n": wavepacket["basis"][0]["n"] * ns0,
+        },
+        {
+            "_type": "momentum",
+            "delta_x": wavepacket["basis"][1]["delta_x"] * ns1,
+            "n": wavepacket["basis"][1]["n"] * ns1,
+        },
+        wavepacket["basis"][2],
+    )
 
 
 def unfurl_wavepacket(
@@ -112,18 +169,6 @@ def unfurl_wavepacket(
     flattened = unshifted.reshape(-1)
 
     return {
-        "basis": (
-            {
-                "_type": "momentum",
-                "delta_x": wavepacket["basis"][0]["delta_x"] * ns0,
-                "n": wavepacket["basis"][0]["n"] * ns0,
-            },
-            {
-                "_type": "momentum",
-                "delta_x": wavepacket["basis"][1]["delta_x"] * ns1,
-                "n": wavepacket["basis"][1]["n"] * ns1,
-            },
-            wavepacket["basis"][2],
-        ),
+        "basis": get_wavepacket_unfurled_basis(wavepacket),
         "vector": flattened / np.sqrt(ns0 * ns1),
     }

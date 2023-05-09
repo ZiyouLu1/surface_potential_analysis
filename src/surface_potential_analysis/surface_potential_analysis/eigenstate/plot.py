@@ -31,6 +31,8 @@ if TYPE_CHECKING:
     from matplotlib.figure import Figure
     from matplotlib.lines import Line2D
 
+    from surface_potential_analysis._types import SingleFlatIndexLike
+
     from .eigenstate import Eigenstate, PositionBasisEigenstate
 
 _BC0Inv = TypeVar("_BC0Inv", bound=BasisConfig[Any, Any, Any])
@@ -90,7 +92,7 @@ def plot_eigenstate_1d_x(
 
 def plot_eigenstate_2d_k(
     eigenstate: Eigenstate[_BC0Inv],
-    idx: int,
+    idx: SingleFlatIndexLike,
     kz_axis: Literal[0, 1, 2, -1, -2, -3],
     *,
     ax: Axes | None = None,
@@ -103,7 +105,7 @@ def plot_eigenstate_2d_k(
     Parameters
     ----------
     eigenstate : Eigenstate[_BC0Inv]
-    idx : int
+    idx : SingleFlatIndexLike
         index along z_axis to plot
     kz_axis : Literal[0, 1, 2, -1, -2, -3]
         axis perpendicular to which to plot
@@ -141,7 +143,7 @@ def plot_eigenstate_2d_k(
 
 def plot_eigenstate_k0k1(
     eigenstate: Eigenstate[_BC0Inv],
-    k2_idx: int,
+    k2_idx: SingleFlatIndexLike,
     *,
     ax: Axes | None = None,
     measure: Measure = "abs",
@@ -153,7 +155,7 @@ def plot_eigenstate_k0k1(
     Parameters
     ----------
     eigenstate : Eigenstate[_BC0Inv]
-    k2_idx : int
+    k2_idx : SingleFlatIndexLike
         index along the k2 axis to plot
     ax : Axes | None, optional
         plot axis, by default None
@@ -173,7 +175,7 @@ def plot_eigenstate_k0k1(
 
 def plot_eigenstate_k1k2(
     eigenstate: Eigenstate[_BC0Inv],
-    k0_idx: int,
+    k0_idx: SingleFlatIndexLike,
     *,
     ax: Axes | None = None,
     measure: Measure = "abs",
@@ -185,7 +187,7 @@ def plot_eigenstate_k1k2(
     Parameters
     ----------
     eigenstate : Eigenstate[_BC0Inv]
-    k0_idx : int
+    k0_idx : SingleFlatIndexLike
         index along the k0 axis to plot
     ax : Axes | None, optional
         plot axis, by default None
@@ -205,7 +207,7 @@ def plot_eigenstate_k1k2(
 
 def plot_eigenstate_k2k0(
     eigenstate: Eigenstate[_BC0Inv],
-    k1_idx: int,
+    k1_idx: SingleFlatIndexLike,
     *,
     ax: Axes | None = None,
     measure: Measure = "abs",
@@ -217,7 +219,7 @@ def plot_eigenstate_k2k0(
     Parameters
     ----------
     eigenstate : Eigenstate[_BC0Inv]
-    k1_idx : int
+    k1_idx : SingleFlatIndexLike
         index along the k1 axis to plot
     ax : Axes | None, optional
         plot axis, by default None
@@ -237,7 +239,7 @@ def plot_eigenstate_k2k0(
 
 def plot_eigenstate_2d_x(
     eigenstate: Eigenstate[_BC0Inv],
-    idx: int,
+    idx: SingleFlatIndexLike,
     z_axis: Literal[0, 1, 2, -1, -2, -3],
     *,
     ax: Axes | None = None,
@@ -250,7 +252,7 @@ def plot_eigenstate_2d_x(
     Parameters
     ----------
     eigenstate : Eigenstate[_BC0Inv]
-    idx : int
+    idx : SingleFlatIndexLike
         index along z_axis to plot
     z_axis : Literal[0, 1, 2, -1, -2, -3]
         axis perpendicular to which to plot
@@ -288,7 +290,7 @@ def plot_eigenstate_2d_x(
 
 def plot_eigenstate_x0x1(
     eigenstate: Eigenstate[_BC0Inv],
-    x2_idx: int,
+    x2_idx: SingleFlatIndexLike,
     *,
     ax: Axes | None = None,
     measure: Measure = "abs",
@@ -300,7 +302,7 @@ def plot_eigenstate_x0x1(
     Parameters
     ----------
     eigenstate : Eigenstate[_BC0Inv]
-    x2_idx : int
+    x2_idx : SingleFlatIndexLike
         index along the x2 axis to plot
     ax : Axes | None, optional
         plot axis, by default None
@@ -320,7 +322,7 @@ def plot_eigenstate_x0x1(
 
 def plot_eigenstate_x1x2(
     eigenstate: Eigenstate[_BC0Inv],
-    x0_idx: int,
+    x0_idx: SingleFlatIndexLike,
     *,
     ax: Axes | None = None,
     measure: Measure = "abs",
@@ -332,7 +334,7 @@ def plot_eigenstate_x1x2(
     Parameters
     ----------
     eigenstate : Eigenstate[_BC0Inv]
-    x0_idx : int
+    x0_idx : SingleFlatIndexLike
         index along the x0 axis to plot
     ax : Axes | None, optional
         plot axis, by default None
@@ -352,7 +354,7 @@ def plot_eigenstate_x1x2(
 
 def plot_eigenstate_x2x0(
     eigenstate: Eigenstate[_BC0Inv],
-    x1_idx: int,
+    x1_idx: SingleFlatIndexLike,
     *,
     ax: Axes | None = None,
     measure: Measure = "abs",
@@ -364,7 +366,7 @@ def plot_eigenstate_x2x0(
     Parameters
     ----------
     eigenstate : Eigenstate[_BC0Inv]
-    x1_idx : int
+    x1_idx : SingleFlatIndexLike
         index along the x1 axis to plot
     ax : Axes | None, optional
         plot axis, by default None
@@ -385,7 +387,7 @@ def plot_eigenstate_x2x0(
 def plot_eigenstate_difference_2d_x(
     eigenstate_0: PositionBasisEigenstate[_L0Inv, _L1Inv, _L2Inv],
     eigenstate_1: PositionBasisEigenstate[_L0Inv, _L1Inv, _L2Inv],
-    idx: int,
+    idx: SingleFlatIndexLike,
     z_axis: Literal[0, 1, 2, -1, -2, -3],
     *,
     ax: Axes | None = None,
@@ -399,7 +401,7 @@ def plot_eigenstate_difference_2d_x(
     ----------
     eigenstate_0 : PositionBasisEigenstate[_L0Inv, _L1Inv, _L2Inv]
     eigenstate_1 : PositionBasisEigenstate[_L0Inv, _L1Inv, _L2Inv]
-    idx : int
+    idx : SingleFlatIndexLike
         index along z_axis to plot
     z_axis : Literal[0, 1, 2, -1, -2, -3]
         axis perpendicular to which to plot

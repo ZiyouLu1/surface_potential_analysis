@@ -2,20 +2,22 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, Literal, TypeVar
 
+import numpy as np
 from matplotlib import pyplot as plt
 
 from surface_potential_analysis.basis_config.basis_config import (
     BasisConfig,
+    BasisConfigUtil,
     get_fundamental_projected_x_points,
 )
 from surface_potential_analysis.util import slice_along_axis
 
 if TYPE_CHECKING:
-    import numpy as np
     from matplotlib.axes import Axes
     from matplotlib.figure import Figure
     from matplotlib.lines import Line2D
 
+    from surface_potential_analysis._types import IndexLike, SingleFlatIndexLike
     from surface_potential_analysis.basis.basis import Basis
 
     _BX0Inv = TypeVar("_BX0Inv", bound=Basis[Any, Any])
@@ -25,7 +27,7 @@ if TYPE_CHECKING:
 
 def plot_projected_x_points_2d(
     basis: BasisConfig[_BX0Inv, _BX1Inv, _BX2Inv],
-    idx: int,
+    idx: SingleFlatIndexLike,
     z_axis: Literal[0, 1, 2, -1, -2, -3],
     *,
     ax: Axes | None = None,
@@ -66,7 +68,7 @@ def plot_projected_x_points_2d(
 def plot_fundamental_projected_x_at_points(
     basis: BasisConfig[_BX0Inv, _BX1Inv, _BX2Inv],
     points: np.ndarray[tuple[Literal[3], int], np.dtype[np.int_]],
-    z_axis: Literal[0, 1, 2, -1, -2, -3],
+    z_axis: Literal[0, 1, 2, -1, -2, -3] = 2,
     *,
     ax: Axes | None = None,
 ) -> tuple[Figure, Axes, Line2D]:
@@ -78,8 +80,8 @@ def plot_fundamental_projected_x_at_points(
     basis : BasisConfig[_BX0Inv, _BX1Inv, _BX2Inv]
     points : np.ndarray[tuple[Literal[3], int], np.dtype[np.int_]]
         coordinates to plot
-    z_axis : Literal[0, 1, 2, -1, -2, -3]
-        axis perpendicular to which to plot the points
+    z_axis : Literal[0, 1, 2, -1, -2, -3], optional
+        axis perpendicular to which to plot the points, by default 2
     ax : Axes | None, optional
         plot axis, by default None
 
@@ -99,3 +101,33 @@ def plot_fundamental_projected_x_at_points(
     ax.set_aspect("equal", adjustable="box")
 
     return fig, ax, line
+
+
+def plot_fundamental_projected_x_at_index(
+    basis: BasisConfig[_BX0Inv, _BX1Inv, _BX2Inv],
+    idx: IndexLike,
+    z_axis: Literal[0, 1, 2, -1, -2, -3] = 2,
+    *,
+    ax: Axes | None = None,
+) -> tuple[Figure, Axes, Line2D]:
+    """
+    Given an index-like object, plot all the projected points in the given basis.
+
+    Parameters
+    ----------
+    basis : BasisConfig[_BX0Inv, _BX1Inv, _BX2Inv]
+    idx : IndexLike
+        index to plot
+    z_axis : Literal[0, 1, 2, -1, -2, -3], optional
+        axis perpendicular to which to plot the points, by default 2
+    ax : Axes | None, optional
+        plot axis, by default None
+
+    Returns
+    -------
+    tuple[Figure, Axes, Line2D]
+    """
+    util = BasisConfigUtil(basis)
+    idx = idx if isinstance(idx, tuple) else util.get_stacked_index(idx)
+    points = np.array(idx).reshape(3, -1)
+    return plot_fundamental_projected_x_at_points(basis, points, z_axis, ax=ax)

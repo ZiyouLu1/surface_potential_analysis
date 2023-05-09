@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Literal, TypeVar
+from typing import TYPE_CHECKING, Literal, TypeVar
 
 import numpy as np
 from matplotlib import pyplot as plt
@@ -30,6 +30,9 @@ from surface_potential_analysis.overlap.plot import (
 from nickel_111.s4_wavepacket import load_nickel_wavepacket
 
 from .surface_data import get_data_path, save_figure
+
+if TYPE_CHECKING:
+    from surface_potential_analysis._types import SingleIndexLike
 
 _L0Inv = TypeVar("_L0Inv", bound=int)
 _L1Inv = TypeVar("_L1Inv", bound=int)
@@ -61,7 +64,7 @@ def get_max_point(
 
 def make_transform_real_at(
     overlap: OverlapTransform[_L0Inv, _L1Inv, _L2Inv],
-    point: tuple[int, int, int] | int | np.int_ | None = None,
+    idx: SingleIndexLike | None = None,
 ) -> OverlapTransform[_L0Inv, _L1Inv, _L2Inv]:
     """
     Shift the phase of the overlap transform such that is it real at point.
@@ -81,10 +84,10 @@ def make_transform_real_at(
         A new overlap transform, which is real at the given point
     """
     util = BasisConfigUtil(overlap["basis"])
-    point = int(np.argmax(np.abs(overlap["vector"]))) if point is None else point
-    point = util.get_flat_index(point) if isinstance(point, tuple) else point
+    idx = int(np.argmax(np.abs(overlap["vector"]))) if idx is None else idx
+    idx = util.get_flat_index(idx) if isinstance(idx, tuple) else idx
 
-    new_points = overlap["vector"] * np.exp(-1j * np.angle(overlap["vector"][point]))
+    new_points = overlap["vector"] * np.exp(-1j * np.angle(overlap["vector"][idx]))
     return {"basis": overlap["basis"], "vector": new_points}
 
 
@@ -261,21 +264,29 @@ def load_average_band_energies(
 def build_incoherent_matrix(
     n_bands: _L0Inv,
 ) -> np.ndarray[tuple[_L0Inv, _L0Inv, Literal[4]], np.dtype[np.float_]]:
+    # The coefficients np.ndarray[tuple[_L0Inv, _L0Inv, Literal[9]], np.dtype[np.float_]]
+    # represent the total rate R[i,j,dx] from i to j with an offset of dx at the location i.
     energies = load_average_band_energies(n_bands)
-    out = np.zeros((n_bands, n_bands, 4))
+    out = np.zeros((n_bands, n_bands, 9))
     for i in range(n_bands):
         for j in range(i + 1, n_bands):
             rate = 2.56410914e-05
-            _exponential = np.exp(-(energies[i] - energies[j]) / (Boltzmann * 150))
-            print(_exponential)  # noqa: T201
-            out[i, j, 0] = rate
-            out[j, i, 0] = rate
-            out[i, i, 0] -= rate
-            out[j, j, 0] -= rate
-            out[i, j, 0] = rate
-            out[j, i, 0] = rate
-            out[i, i, 0] -= rate
-            out[j, j, 0] -= rate
+            exponential = np.exp(-(energies[j] - energies[i]) / (Boltzmann * 150))
+            print(exponential)  # noqa: T201
+            out[i, j, 0] = rate * exponential
+            out[i, j, np.ravel_multi_index((-1, 0), (2, 2), mode="wrap")] = (
+                rate * exponential
+            )
+            out[i, j, np.ravel_multi_index((0, -1), (2, 2), mode="wrap")] = (
+                rate * exponential
+            )
+            out[j, i, 0] = rate / exponential
+            out[j, i, np.ravel_multi_index((1, 0), (2, 2), mode="wrap")] = (
+                rate / exponential
+            )
+            out[j, i, np.ravel_multi_index((0, 1), (2, 2), mode="wrap")] = (
+                rate / exponential
+            )
             continue
             overlap = load_overlap_nickel(i, j)
             overlap_transform = convert_overlap_momentum_basis(overlap)
@@ -290,17 +301,41 @@ def build_incoherent_matrix(
     return out  # type: ignore [no-any-return]
 
 
+def build_incoherent_matrix_fcc_hcp() -> (
+    np.ndarray[tuple[Literal[2], Literal[2], Literal[4]], np.dtype[np.float_]]
+):
+    # The coefficients np.ndarray[tuple[_L0Inv, _L0Inv, Literal[9]], np.dtype[np.float_]]
+    # represent the total rate R[i,j,dx] from i to j with an offset of dx at the location i.
+    energies = load_average_band_energies(2)
+    out = np.zeros((2, 2, 9))
+    rate = 2.56410914e-05
+    exponential = np.exp(-(energies[0] - energies[1]) / (Boltzmann * 150))
+    print(exponential)  # noqa: T201
+    out[0, 1, 0] = rate * exponential
+    out[0, 1, np.ravel_multi_index((-1, 0), (2, 2), mode="wrap")] = rate * exponential
+    out[0, 1, np.ravel_multi_index((0, -1), (2, 2), mode="wrap")] = rate * exponential
+    out[1, 0, 0] = rate / exponential
+    out[1, 0, np.ravel_multi_index((1, 0), (2, 2), mode="wrap")] = rate / exponential
+    out[1, 0, np.ravel_multi_index((0, 1), (2, 2), mode="wrap")] = rate / exponential
+    return out  # type: ignore [no-any-return]
+
+
 def simulate_hydrogen_system() -> None:
-    coefficients = build_incoherent_matrix(2)
+    coefficients = build_incoherent_matrix_fcc_hcp()
     print(coefficients, coefficients.shape)  # noqa: T201
-    matrix = build_tunnelling_matrix(coefficients, (2, 2))
-    print(matrix)  # noqa: T201
+    grid_shape = (10, 10)
+    matrix = build_tunnelling_matrix(coefficients, grid_shape)
+
     times = np.array([0, 1, 2, 3, 4, 5]) * 2e4
-    out = simulate_tunnelling(matrix, np.array([1, 0, 0, 0, 0, 0, 0, 0]), times)
-    print(out)  # noqa: T201
+    start = np.zeros(np.prod(grid_shape) * 2)
+    start[0] = 1
+    out = simulate_tunnelling(matrix, start, times)
+
+    print(np.sum(np.abs(out[:, -1])), np.sum(out[:, -1]))
 
     fig, ax = plt.subplots()
-    for i in range(8):
+    for i in range(start.size):
         ax.plot(times, out[i])
+    ax.set_title("Plot of state occupation against time")
     fig.show()
     input()

@@ -20,6 +20,7 @@ from .s2_hamiltonian import generate_hamiltonian_sho
 from .surface_data import get_data_path
 
 if TYPE_CHECKING:
+    from surface_potential_analysis._types import SingleIndexLike
     from surface_potential_analysis.basis.basis import (
         ExplicitBasis,
         MomentumBasis,
@@ -75,7 +76,7 @@ def load_nickel_wavepacket(
 
 
 def load_normalized_nickel_wavepacket_momentum(
-    band: int, idx: int | tuple[int, int, int] = 0, angle: float = 0
+    band: int, idx: SingleIndexLike = 0, angle: float = 0
 ) -> Wavepacket[
     Literal[12],
     Literal[12],
@@ -93,7 +94,7 @@ def load_normalized_nickel_wavepacket_momentum(
 
 
 def load_two_point_normalized_nickel_wavepacket_momentum(
-    band: int, angle: float = 0
+    band: int, offset: tuple[int, int] = (0, 0), angle: float = 0
 ) -> Wavepacket[
     Literal[12],
     Literal[12],
@@ -106,7 +107,7 @@ def load_two_point_normalized_nickel_wavepacket_momentum(
         {"_type": "momentum", "delta_x": util.delta_x1, "n": 24},
         {"_type": "momentum", "delta_x": util.delta_x2, "n": 250},
     )
-    normalized = normalize_wavepacket_two_point(wavepacket, angle)
+    normalized = normalize_wavepacket_two_point(wavepacket, offset, angle)
     wavepacket["basis"][0]["parent"]["n"] = 24
     wavepacket["basis"][1]["parent"]["n"] = 24
     return convert_wavepacket_to_basis(normalized, basis)

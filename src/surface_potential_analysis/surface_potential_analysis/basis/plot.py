@@ -20,6 +20,8 @@ if TYPE_CHECKING:
     from matplotlib.figure import Figure
     from matplotlib.lines import Line2D
 
+    from surface_potential_analysis._types import SingleFlatIndexLike
+
 _BX0Inv = TypeVar(
     "_BX0Inv",
     bound=ExplicitBasis[int, PositionBasis[int]]
@@ -58,7 +60,7 @@ def plot_explicit_basis_states_x(
 
 def plot_explicit_basis_state_x(
     basis: _BX0Inv,
-    idx: int = 0,
+    idx: SingleFlatIndexLike = 0,
     *,
     ax: Axes | None = None,
     measure: Measure = "abs",

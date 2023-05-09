@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING, Any, TypeVar
 import numpy as np
 from matplotlib import pyplot as plt
 from surface_potential_analysis.basis_config.plot import (
+    plot_fundamental_projected_x_at_index,
     plot_fundamental_projected_x_at_points,
 )
 from surface_potential_analysis.eigenstate.conversion import (
@@ -15,6 +16,12 @@ from surface_potential_analysis.eigenstate.plot import (
     animate_eigenstate_x1x2,
     plot_eigenstate_along_path,
     plot_eigenstate_x0x1,
+)
+from surface_potential_analysis.wavepacket.eigenstate_conversion import (
+    get_wavepacket_unfurled_basis,
+)
+from surface_potential_analysis.wavepacket.normalization import (
+    get_wavepacket_two_points,
 )
 from surface_potential_analysis.wavepacket.plot import (
     animate_wavepacket_x0x1,
@@ -163,16 +170,36 @@ def animate_nickel_wavepacket() -> None:
     input()
 
 
-def plot_wavepacket_at_maximum_points() -> None:
+def plot_wavepacket_at_maximum_points_x2() -> None:
     for band in range(0, 6):
         max_point = MAXIMUM_POINTS[band]
         # normalized = load_normalized_nickel_wavepacket_momentum(band, max_point, 0)  # noqa: ERA001
         # normalized = load_two_point_normalized_nickel_wavepacket_momentum(band, 0) # noqa: ERA001
-        normalized = load_two_point_normalized_nickel_wavepacket_momentum(band, 0)
+        normalized = load_two_point_normalized_nickel_wavepacket_momentum(band)
 
         fig, ax, _ = plot_wavepacket_x0x1(normalized, max_point[2], measure="abs")
         fig.show()
         ax.set_title(f"Plot of abs(wavefunction) for ix2={max_point[2]}")
+        save_figure(fig, f"./wavepacket/wavepacket_{band}.png")
+    input()
+
+
+def plot_two_point_wavepacket_with_idx() -> None:
+    offset = (2, 1)
+    for band in range(0, 6):
+        normalized = load_two_point_normalized_nickel_wavepacket_momentum(band, offset)
+
+        fig, ax = plt.subplots()
+
+        idx0, idx1 = get_wavepacket_two_points(normalized, offset)
+        unfurled_basis = get_wavepacket_unfurled_basis(normalized)
+        plot_fundamental_projected_x_at_index(unfurled_basis, idx0, ax=ax)
+        plot_fundamental_projected_x_at_index(unfurled_basis, idx1, ax=ax)
+
+        plot_wavepacket_x0x1(normalized, idx0[2], measure="abs", ax=ax)
+
+        fig.show()
+        ax.set_title(f"Plot of abs(wavefunction) for ix2={idx0[2]}")
         save_figure(fig, f"./wavepacket/wavepacket_{band}.png")
     input()
 

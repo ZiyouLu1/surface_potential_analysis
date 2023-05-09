@@ -23,6 +23,7 @@ from .s2_hamiltonian import (
 from .surface_data import get_data_path
 
 if TYPE_CHECKING:
+    from surface_potential_analysis._types import SingleIndexLike
     from surface_potential_analysis.basis.basis import (
         ExplicitBasis,
         MomentumBasis,
@@ -34,7 +35,7 @@ if TYPE_CHECKING:
 
 
 def load_copper_wavepacket(
-    idx: int,
+    band: int,
 ) -> Wavepacket[
     Literal[12],
     Literal[12],
@@ -44,7 +45,7 @@ def load_copper_wavepacket(
         ExplicitBasis[Literal[18], PositionBasis[Literal[250]]],
     ],
 ]:
-    path = get_data_path(f"wavepacket_{idx}.npy")
+    path = get_data_path(f"wavepacket_{band}.npy")
     wavepacket = load_wavepacket(path)
     wavepacket["basis"][0]["parent"]["n"] = 24
     wavepacket["basis"][1]["parent"]["n"] = 24
@@ -52,20 +53,20 @@ def load_copper_wavepacket(
 
 
 def load_normalized_copper_wavepacket_momentum(
-    idx: int, norm: int | tuple[int, int, int] = 0, angle: float = 0
+    band: int, idx: SingleIndexLike = 0, angle: float = 0
 ) -> Wavepacket[
     Literal[12],
     Literal[12],
     MomentumBasisConfig[Literal[24], Literal[24], Literal[250]],
 ]:
-    wavepacket = load_copper_wavepacket(idx)
+    wavepacket = load_copper_wavepacket(band)
     util = BasisConfigUtil(wavepacket["basis"])
     basis: MomentumBasisConfig[Literal[24], Literal[24], Literal[250]] = (
         {"_type": "momentum", "delta_x": util.delta_x0, "n": 24},
         {"_type": "momentum", "delta_x": util.delta_x1, "n": 24},
         {"_type": "momentum", "delta_x": util.delta_x2, "n": 250},
     )
-    normalized = normalize_wavepacket(wavepacket, norm, angle)
+    normalized = normalize_wavepacket(wavepacket, idx, angle)
     return convert_wavepacket_to_basis(normalized, basis)
 
 

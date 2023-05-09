@@ -24,6 +24,7 @@ if TYPE_CHECKING:
     from matplotlib.figure import Figure
     from matplotlib.lines import Line2D
 
+    from surface_potential_analysis._types import SingleFlatIndexLike
     from surface_potential_analysis.basis.basis import PositionBasis
 
     from .overlap import Overlap, OverlapTransform
@@ -37,7 +38,7 @@ def plot_overlap_2d_x(
     overlap: Overlap[
         BasisConfig[PositionBasis[_L0Inv], PositionBasis[_L1Inv], PositionBasis[_L2Inv]]
     ],
-    idx: int,
+    idx: SingleFlatIndexLike,
     z_axis: Literal[0, 1, 2, -1, -2, -3],
     *,
     ax: Axes | None = None,
@@ -50,7 +51,7 @@ def plot_overlap_2d_x(
     Parameters
     ----------
     overlap : OverlapTransform
-    idx : int
+    idx : SingleFlatIndexLike
         index along z_axis
     z_axis : Literal[0, 1, 2,-1, -2, -3]
         axis perpendicular to which to plot
@@ -87,7 +88,7 @@ def plot_overlap_2d_x(
 
 def plot_overlap_2d_k(
     overlap: OverlapTransform[_L0Inv, _L1Inv, _L2Inv],
-    idx: int,
+    idx: SingleFlatIndexLike,
     z_axis: Literal[0, 1, 2, -1, -2, -3],
     *,
     ax: Axes | None = None,
@@ -100,7 +101,7 @@ def plot_overlap_2d_k(
     Parameters
     ----------
     overlap : OverlapTransform
-    idx : int
+    idx : SingleFlatIndexLike
         index along z_axis
     z_axis : Literal[0, 1, 2,-1, -2, -3]
         axis perpendicular to which to plot
@@ -139,7 +140,7 @@ def plot_overlap_2d_k(
 
 def plot_overlap_k0k1(
     overlap: OverlapTransform[_L0Inv, _L1Inv, _L2Inv],
-    idx: int,
+    idx: SingleFlatIndexLike,
     *,
     ax: Axes | None = None,
     measure: Measure = "abs",
@@ -151,7 +152,7 @@ def plot_overlap_k0k1(
     Parameters
     ----------
     overlap : OverlapTransform[_L0Inv, _L1Inv, _L2Inv]
-    idx : int
+    idx : SingleFlatIndexLike
         index along k2
     ax : Axes | None, optional
         plot axis, by default None
@@ -169,7 +170,7 @@ def plot_overlap_k0k1(
 
 def plot_overlap_k1k2(
     overlap: OverlapTransform[_L0Inv, _L1Inv, _L2Inv],
-    idx: int,
+    idx: SingleFlatIndexLike,
     *,
     ax: Axes | None = None,
     measure: Measure = "abs",
@@ -181,7 +182,7 @@ def plot_overlap_k1k2(
     Parameters
     ----------
     overlap : OverlapTransform[_L0Inv, _L1Inv, _L2Inv]
-    idx : int
+    idx : SingleFlatIndexLike
         index along k0
     ax : Axes | None, optional
         plot axis, by default None
@@ -199,7 +200,7 @@ def plot_overlap_k1k2(
 
 def plot_overlap_k2k0(
     overlap: OverlapTransform[_L0Inv, _L1Inv, _L2Inv],
-    idx: int,
+    idx: SingleFlatIndexLike,
     *,
     ax: Axes | None = None,
     measure: Measure = "abs",
@@ -211,7 +212,7 @@ def plot_overlap_k2k0(
     Parameters
     ----------
     overlap : OverlapTransform[_L0Inv, _L1Inv, _L2Inv]
-    idx : int
+    idx : SingleFlatIndexLike
         index along k1
     ax : Axes | None, optional
         plot axis, by default None

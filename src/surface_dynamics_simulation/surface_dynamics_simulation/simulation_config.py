@@ -60,6 +60,28 @@ def build_tunnelling_matrix(
     """
     Given a list of hopping coefficients build the tunnelling matrix for a grid of the given shape.
 
+    The coefficients np.ndarray[tuple[_L0Inv, _L0Inv, Literal[9]], np.dtype[np.float_]]
+    represent the total rate R[i,j,dx] from i to j with an offset of dx at the location i.
+
+    For example for a grid with i,j = {0,1}, ignoring tunnelling to neighboring unit cells
+    - [0,0,0] = 0
+    - [0,1,0] is the rate out from 0 in to 1
+    - [1,0,0] is the rate out from 1 in to 0
+    the overall rate of change of site 0 is then [1,0,0] - [0,1,0]
+    ie the rate in from 1 minus the rate out from zero
+    Note: [i,i,0] should always be zero (for now, maybe later we add coherent??)
+    Note: all elements of R should be positive, as we are dealing with a rate of flow out
+    from i, which depends on the value at i
+
+    the resulting hopping matrix np.ndarray[tuple[int, int], np.dtype[np.float_]] M[i,j]
+    gives the total net rate of tunnelling from site i to site j, indexed such that
+    M.reshape(shape[0], shape[1],n_states,shape[0], shape[1],n_states)[i0,j0,n0,i1,j1,n1]
+    = MS[i0,j0,n0,i1,j1,n1]
+    gives the total change in the occupation probability at state [i0,j0,n0] per the probability
+    of occupation at site [i1,j1,n1]
+    ie d P[i0,j0,n0] / dt = MS[i0,j0,n0,i1,j1,n1] P[i1,j1,n1]
+    Note: M[i,i] = -sum_j M[j,i] i != j, since the
+
     Parameters
     ----------
     coefficients : np.ndarray[tuple[_L0Inv, _L0Inv, Literal[8]], np.dtype[np.float_]]
@@ -70,17 +92,26 @@ def build_tunnelling_matrix(
     np.ndarray[tuple[int, int], np.dtype[np.float_]]
     """
     n_states = coefficients.shape[0]
-    out = np.zeros((np.prod(shape), n_states, np.prod(shape), n_states))
+    out = np.zeros((*shape, n_states, *shape, n_states))
 
-    for ix in range(out.shape[0]):
-        for dix0 in [0, 1]:
-            for dix1 in [0, 1]:
-                ix0, ix1 = np.unravel_index(ix, shape)
-                jx = np.ravel_multi_index((ix0 + dix0, ix1 + dix1), shape, mode="wrap")
-                hop_idx = np.ravel_multi_index((dix0, dix1), (2, 2), mode="wrap")
-                print(ix, jx, coefficients[:, :, hop_idx])  # noqa: T201
-                # TODO: not += ??
-                out[ix, :, jx, :] += coefficients[:, :, hop_idx]
+    for ix0, ix1, n in np.ndindex((*shape, n_states)):
+        for dix0 in [-1, 0, 1]:
+            for dix1 in [-1, 0, 1]:
+                for m in range(n_states):
+                    # Calculate the hopping rate out from state ix0, ix1, n
+                    # in to the state jx0, jx1 m
+                    jx0 = (ix0 + dix0) % out.shape[0]
+                    jx1 = (ix1 + dix1) % out.shape[1]
+
+                    hop_idx = np.ravel_multi_index((dix0, dix1), (2, 2), mode="wrap")
+                    rate = coefficients[n, m, hop_idx]
+                    # Add the contribution from this rate to the total
+
+                    # negative sign as this is a rate out from site ix0, ix1, n
+                    # due to the occupation at ix0, ix1, n
+                    out[ix0, ix1, n, ix0, ix1, n] -= rate
+                    # positive sign as this is a rate in to site jx0, jx1, m
+                    out[jx0, jx1, m, ix0, ix1, n] += rate
 
     return out.reshape(np.prod(shape) * n_states, np.prod(shape) * n_states)  # type: ignore[no-any-return]
 
@@ -90,20 +121,15 @@ def simulate_tunnelling(  # noqa: D103
     initial_state: np.ndarray[tuple[_L0Inv], np.dtype[np.float_]],
     times: np.ndarray[tuple[_L1Inv], np.dtype[np.float_]],
 ) -> np.ndarray[tuple[_L0Inv, _L1Inv], np.dtype[np.float_]]:
-    print("is hermitian", scipy.linalg.ishermitian(matrix))  # noqa: T201
-    print("is symmetric", scipy.linalg.issymmetric(matrix))  # noqa: T201
-    energies, vectors = scipy.linalg.eigh(matrix)
+    energies, vectors = scipy.linalg.eig(matrix)
     print(energies.shape, vectors.shape)  # noqa: T201
 
     solved = scipy.linalg.solve(vectors, initial_state)
     print(solved.shape)  # noqa: T201
-    for i, e in enumerate(energies):
-        print(i, e, vectors[:, i])  # noqa: T201
 
     constants = solved[:, np.newaxis] * np.exp(
         energies[:, np.newaxis] * times[np.newaxis, :]
     )
-    print(constants)  # noqa: T201
 
     return np.sum(vectors[:, :, np.newaxis] * constants[np.newaxis], axis=1)  # type: ignore[no-any-return]
 

@@ -21,6 +21,8 @@ from surface_potential_analysis.interpolation import pad_ft_points
 from surface_potential_analysis.util import slice_along_axis
 
 if TYPE_CHECKING:
+    from surface_potential_analysis._types import SingleIndexLike
+
     from .eigenstate import (
         Eigenstate,
         EigenstateWithBasis,
@@ -107,7 +109,7 @@ def convert_eigenstate_to_momentum_basis(
 @overload
 def flaten_eigenstate_x(
     eigenstate: EigenstateWithBasis[_BX0Inv, _BX1Inv, _BX2Inv],
-    idx: int,
+    idx: SingleIndexLike,
     z_axis: Literal[0, -3],
 ) -> EigenstateWithBasis[PositionBasis[Literal[1]], _BX1Inv, _BX2Inv]:
     ...
@@ -116,7 +118,7 @@ def flaten_eigenstate_x(
 @overload
 def flaten_eigenstate_x(
     eigenstate: EigenstateWithBasis[_BX0Inv, _BX1Inv, _BX2Inv],
-    idx: int,
+    idx: SingleIndexLike,
     z_axis: Literal[1, -2],
 ) -> EigenstateWithBasis[_BX0Inv, PositionBasis[Literal[1]], _BX2Inv]:
     ...
@@ -125,7 +127,7 @@ def flaten_eigenstate_x(
 @overload
 def flaten_eigenstate_x(
     eigenstate: EigenstateWithBasis[_BX0Inv, _BX1Inv, _BX2Inv],
-    idx: int,
+    idx: SingleIndexLike,
     z_axis: Literal[2, -1],
 ) -> EigenstateWithBasis[_BX0Inv, _BX1Inv, PositionBasis[Literal[1]]]:
     ...
@@ -133,7 +135,7 @@ def flaten_eigenstate_x(
 
 def flaten_eigenstate_x(
     eigenstate: EigenstateWithBasis[_BX0Inv, _BX1Inv, _BX2Inv],
-    idx: int,
+    idx: SingleIndexLike,
     z_axis: Literal[0, 1, 2, -1, -2, -3],
 ) -> EigenstateWithBasis[Any, Any, Any]:
     """
@@ -158,6 +160,7 @@ def flaten_eigenstate_x(
         BasisUtil(eigenstate["basis"][2]).get_fundamental_basis_in("position"),
     )
     util = BasisConfigUtil(position_basis)
+    idx = util.get_flat_index(idx) if isinstance(idx, tuple) else idx
     converted = convert_eigenstate_to_basis(eigenstate, position_basis)
     flattened = (
         converted["vector"]

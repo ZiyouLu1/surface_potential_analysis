@@ -10,6 +10,8 @@ import numpy as np
 if TYPE_CHECKING:
     from types import EllipsisType
 
+    from surface_potential_analysis._types import _IntLike_co
+
 F = TypeVar("F", bound=Callable[..., Any])
 
 
@@ -26,8 +28,11 @@ def timed(f: F) -> F:  # noqa: D103
 
 
 def slice_along_axis(
-    slice_at_axis: slice | int | None, axis: int = -1
-) -> tuple[EllipsisType | slice | int | None, ...] | tuple[slice | int | None, ...]:
+    slice_at_axis: slice | _IntLike_co | None, axis: int = -1
+) -> (
+    tuple[EllipsisType | slice | _IntLike_co | None, ...]
+    | tuple[slice | _IntLike_co | None, ...]
+):
     """Return a slice such that the 1d slice provided by slice_at_axis, slices along the dimension provided."""
     from_end = False
     if axis < 0:  # choosing axis at the end

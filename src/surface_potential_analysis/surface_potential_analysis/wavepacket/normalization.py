@@ -25,6 +25,7 @@ if TYPE_CHECKING:
         ArrayIndexLike,
         IndexLike,
         SingleIndexLike,
+        SingleStackedIndexLike,
     )
 
 _BC0Inv = TypeVar("_BC0Inv", bound=BasisConfig[Any, Any, Any])
@@ -114,7 +115,7 @@ def _get_bloch_phases(
     ----------
     wavepacket : Wavepacket[ _NS0Inv, _NS1Inv, BasisConfig[PositionBasis[_L0Inv], PositionBasis[_L1Inv], _BX2Inv]]
         the wavepacket to calculate the phase of
-    idx : int | tuple[int, int, int], optional
+    idx : SingleIndexLike, optional
         the index in real space, by default 0
 
     Returns
@@ -132,7 +133,7 @@ def _get_bloch_phases(
 @timed
 def normalize_wavepacket(
     wavepacket: Wavepacket[_NS0Inv, _NS1Inv, _BC0Inv],
-    idx: int | tuple[int, int, int] = 0,
+    idx: SingleIndexLike = 0,
     angle: float = 0,
 ) -> Wavepacket[_NS0Inv, _NS1Inv, _BC0Inv]:
     """
@@ -141,7 +142,7 @@ def normalize_wavepacket(
     Parameters
     ----------
     wavepacket : Wavepacket[ _NS0Inv, _NS1Inv, BasisConfig[ TruncatedBasis[_L0Inv, MomentumBasis[_LF0Inv]], TruncatedBasis[_L1Inv, MomentumBasis[_LF1Inv]], ExplicitBasis[_L2Inv, PositionBasis[_LF2Inv]], ], ]
-    idx : int | tuple[int, int, int], optional
+    idx : SingleIndexLike , optional
         Index of the eigenstate to normalize, by default 0
         This index is taken in the irreducible unit cell
     angle: float, optional
@@ -187,9 +188,37 @@ def _wrap_phases(
     return (phases + half_width) % (2 * half_width) - half_width  # type: ignore[no-any-return]
 
 
+def get_wavepacket_two_points(
+    wavepacket: Wavepacket[_NS0Inv, _NS1Inv, _BC0Inv], offset: tuple[int, int] = (0, 0)
+) -> tuple[SingleStackedIndexLike, SingleStackedIndexLike]:
+    """
+    Get the index of the maximum, and the index mirrored in x01 for the wavepacket, wrapped about the given offset.
+
+    Parameters
+    ----------
+    wavepacket : Wavepacket[_NS0Inv, _NS1Inv, _BC0Inv]
+    offset : tuple[int, int], optional
+        offset of the point to use as an origin, by default (0, 0)
+
+    Returns
+    -------
+    tuple[SingleStackedIndexLike, SingleStackedIndexLike]
+    """
+    util = BasisConfigUtil(wavepacket["basis"])
+    origin = (util.shape[0] * offset[0], util.shape[1] * offset[1], 0)
+
+    converted = convert_eigenstate_to_position_basis(get_eigenstate(wavepacket, 0))
+    idx_0: SingleStackedIndexLike = np.argmax(np.abs(converted["vector"]), axis=-1)
+    idx_0 = wrap_index_around_origin_x01(converted["basis"], idx_0, origin)
+    idx_1 = get_x01_mirrored_index(converted["basis"], idx_0)
+    idx_1 = wrap_index_around_origin_x01(converted["basis"], idx_1, origin)
+    return (idx_0, idx_1)
+
+
 @timed
 def normalize_wavepacket_two_point(
     wavepacket: Wavepacket[_NS0Inv, _NS1Inv, _BC0Inv],
+    offset: tuple[int, int] = (0, 0),
     angle: float = 0,
 ) -> Wavepacket[_NS0Inv, _NS1Inv, _BC0Inv]:
     """
@@ -206,6 +235,8 @@ def normalize_wavepacket_two_point(
     ----------
     wavepacket : Wavepacket[_NS0Inv, _NS1Inv, _BC0Inv]
         Initial wavepacket
+    offset: tuple[int, int], optional
+        offset of the point to normalize, by default (0,0)
     angle : float, optional
         angle at the origin, by default 0
 
@@ -214,19 +245,15 @@ def normalize_wavepacket_two_point(
     Wavepacket[_NS0Inv, _NS1Inv, _BC0Inv]
         Normalized wavepacket
     """
-    converted = convert_eigenstate_to_position_basis(get_eigenstate(wavepacket, 0))
-    max_idx = np.argmax(np.abs(converted["vector"]), axis=-1)
-    max_idx = wrap_index_around_origin_x01(converted["basis"], max_idx)
-    mirror_idx = get_x01_mirrored_index(converted["basis"], max_idx)
+    idx_0, idx_1 = get_wavepacket_two_points(wavepacket, offset)
 
-    bloch_phases_max = _get_bloch_phases(wavepacket, max_idx)
-    global_phases_max = _get_global_phases(wavepacket, max_idx)
+    bloch_phases_0 = _get_bloch_phases(wavepacket, idx_0)
+    global_phases_0 = _get_global_phases(wavepacket, idx_0)
+    phi_0 = bloch_phases_0 + global_phases_0
 
-    bloch_phases_mirror = _get_bloch_phases(wavepacket, mirror_idx)
-    global_phases_mirror = _get_global_phases(wavepacket, mirror_idx)
-
-    phi_0 = bloch_phases_max + global_phases_max
-    phi_1 = bloch_phases_mirror + global_phases_mirror
+    bloch_phases_1 = _get_bloch_phases(wavepacket, idx_1)
+    global_phases_1 = _get_global_phases(wavepacket, idx_1)
+    phi_1 = bloch_phases_1 + global_phases_1
 
     # Normalize such that the average distance phi_0, phi_1 is zero
     averaged_fix = (

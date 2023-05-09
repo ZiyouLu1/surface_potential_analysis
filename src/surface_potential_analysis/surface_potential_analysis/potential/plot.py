@@ -29,6 +29,8 @@ if TYPE_CHECKING:
     from matplotlib.figure import Figure
     from matplotlib.lines import Line2D
 
+    from surface_potential_analysis._types import SingleFlatIndexLike
+
     from .potential import Potential
 
 _L0Inv = TypeVar("_L0Inv", bound=int)
@@ -177,7 +179,7 @@ def plot_potential_1d_x2_comparison_100(
 
 def plot_potential_2d_x(
     potential: Potential[_L0Inv, _L1Inv, _L2Inv],
-    idx: int,
+    idx: SingleFlatIndexLike,
     z_axis: Literal[0, 1, 2, -1, -2, -3],
     *,
     ax: Axes | None = None,
@@ -189,7 +191,7 @@ def plot_potential_2d_x(
     Parameters
     ----------
     potential : Potential[_L0Inv, _L1Inv, _L2Inv]
-    idx : int
+    idx : SingleFlatIndexLike
         index along z_axis
     z_axis : Literal[0, 1, 2, -1, -2, -3]
         axis perpendicular to direction of plot
@@ -222,7 +224,7 @@ def plot_potential_2d_x(
 
 def plot_potential_x0x1(
     potential: Potential[_L0Inv, _L1Inv, _L2Inv],
-    x3_idx: int,
+    x3_idx: SingleFlatIndexLike,
     *,
     ax: Axes | None = None,
     scale: Literal["symlog", "linear"] = "linear",
@@ -233,7 +235,7 @@ def plot_potential_x0x1(
     Parameters
     ----------
     potential : Potential[_L0Inv, _L1Inv, _L2Inv]
-    x3_idx : int
+    x3_idx : SingleFlatIndexLike
         index along x3_axis
     ax : Axes | None, optional
         plot axis, by default None
@@ -249,7 +251,7 @@ def plot_potential_x0x1(
 
 def plot_potential_x1x2(
     potential: Potential[_L0Inv, _L1Inv, _L2Inv],
-    x0_idx: int,
+    x0_idx: SingleFlatIndexLike,
     *,
     ax: Axes | None = None,
     scale: Literal["symlog", "linear"] = "linear",
@@ -260,7 +262,7 @@ def plot_potential_x1x2(
     Parameters
     ----------
     potential : Potential[_L0Inv, _L1Inv, _L2Inv]
-    x2_idx : int
+    x2_idx : SingleFlatIndexLike
         index along x2_axis
     ax : Axes | None, optional
         plot axis, by default None
@@ -276,7 +278,7 @@ def plot_potential_x1x2(
 
 def plot_potential_x2x0(
     potential: Potential[_L0Inv, _L1Inv, _L2Inv],
-    x1_idx: int,
+    x1_idx: SingleFlatIndexLike,
     *,
     ax: Axes | None = None,
     scale: Literal["symlog", "linear"] = "linear",
@@ -287,7 +289,7 @@ def plot_potential_x2x0(
     Parameters
     ----------
     potential : Potential[_L0Inv, _L1Inv, _L2Inv]
-    x1_idx : int
+    x1_idx : SingleFlatIndexLike
         index along x1_axis
     ax : Axes | None, optional
         plot axis, by default None
@@ -304,7 +306,7 @@ def plot_potential_x2x0(
 def plot_potential_difference_2d_x(
     potential0: Potential[_L0Inv, _L1Inv, _L2Inv],
     potential1: Potential[_L0Inv, _L1Inv, _L2Inv],
-    idx: int,
+    idx: SingleFlatIndexLike,
     z_axis: Literal[0, 1, 2, -1, -2, -3],
     *,
     ax: Axes | None = None,
@@ -317,7 +319,7 @@ def plot_potential_difference_2d_x(
     ----------
     potential0 : Potential[_L0Inv, _L1Inv, _L2Inv]
     potential1 : Potential[_L0Inv, _L1Inv, _L2Inv]
-    idx : int
+    idx : SingleFlatIndexLike
         index along z_axis
     z_axis : Literal[0, 1, 2,
         axis perpendicular to which to plot the data
