@@ -94,22 +94,22 @@
   // "python.linting.flake8Args": [
   //   "--ignore=E501,W503,E203,E301,E302"
   // ],
-  // "python.testing.cwd": "${workspaceFolder}/src/surface_dynamics_simulation/",
-  // "python.testing.unittestArgs": [
-  //   "-v",
-  //   "-s",
-  //   "./_test_surface_dynamics_simulation",
-  //   "-p",
-  //   "test*.py"
-  // ],
-  "python.testing.cwd": "${workspaceFolder}/src/surface_potential_analysis/",
+  "python.testing.cwd": "${workspaceFolder}/src/surface_dynamics_simulation/",
   "python.testing.unittestArgs": [
     "-v",
     "-s",
-    "./_test_surface_potential_analysis",
+    "./_test_surface_dynamics_simulation",
     "-p",
-    "*test.py"
+    "test*.py"
   ],
+  // "python.testing.cwd": "${workspaceFolder}/src/surface_potential_analysis/",
+  // "python.testing.unittestArgs": [
+  //   "-v",
+  //   "-s",
+  //   "./_test_surface_potential_analysis",
+  //   "-p",
+  //   "*test.py"
+  // ],
   "python.testing.pytestEnabled": false,
   "python.testing.unittestEnabled": true,
   // "mypy.targets": [

@@ -955,3 +955,45 @@ def get_x01_mirrored_index(basis: _BC0Inv, idx: IndexLike) -> IndexLike:
     idx = idx if isinstance(idx, tuple) else util.get_stacked_index(idx)
     mirrored: StackedIndexLike = (idx[1], idx[0], idx[2])  # type: ignore[assignment]
     return mirrored if isinstance(idx, tuple) else util.get_flat_index(mirrored)
+
+
+_SMB = MomentumBasisConfig[Literal[1], Literal[1], Literal[1]]
+_SPB = PositionBasisConfig[Literal[1], Literal[1], Literal[1]]
+
+
+@overload
+def get_single_point_basis_in(basis: _BC0Inv, _type: Literal["momentum"]) -> _SMB:
+    ...
+
+
+@overload
+def get_single_point_basis_in(
+    basis: _BC0Inv, _type: Literal["position"] = "position"
+) -> _SPB:
+    ...
+
+
+def get_single_point_basis_in(
+    basis: _BC0Inv, _type: Literal["position", "momentum"] = "position"
+) -> _SPB | _SMB:
+    """
+    Get the basis with a single point in position or momentum space.
+
+    Parameters
+    ----------
+    basis : _BC0Inv
+        initial basis
+    _type : Literal[&quot;position&quot;, &quot;momentum&quot;]
+        type of the final basis
+
+    Returns
+    -------
+    _SPB|_SMB
+        the single point basis in either position or momentum basis
+    """
+    util = BasisConfigUtil(basis)
+    return (  # type: ignore[return-value]
+        {"_type": _type, "delta_x": util.delta_x0, "n": 1},
+        {"_type": _type, "delta_x": util.delta_x1, "n": 1},
+        {"_type": _type, "delta_x": util.delta_x2, "n": 1},
+    )

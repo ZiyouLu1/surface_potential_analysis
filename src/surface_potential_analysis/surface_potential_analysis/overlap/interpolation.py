@@ -118,15 +118,13 @@ def get_overlap_momentum_interpolator_flat(
     Callable[[np.ndarray[tuple[Literal[2], Unpack[_S0Inv]], np.dtype[np.float_]]], np.ndarray[_S0Inv, np.dtype[np.complex_]], ]
         Interpolator, which takes a coordinate list in momentum basis ignoring k2 axis
     """
-    basis = (*overlap["basis"][0:2], {**overlap["basis"][2], "n": 1})
+    basis = (*overlap["basis"][0:2], {**overlap["basis"][2], "n": 1})  # type: ignore[arg-type]
     util = BasisConfigUtil(basis)
     nx_points = util.nx_points
     nx_points_wrapped = wrap_index_around_origin_x01(overlap["basis"], nx_points)
-    # TODO: x_points should not include z direction??
     x_points = util.get_x_points_at_index(nx_points_wrapped)[:2, :, np.newaxis]
 
     vector = overlap["vector"].reshape(BasisConfigUtil(overlap["basis"]).shape)
-    # TODO: needs to be flat??
     vector_transformed = np.fft.ifft(vector, axis=2, norm="forward")[:, :, 0].ravel()
 
     def _interpolator(

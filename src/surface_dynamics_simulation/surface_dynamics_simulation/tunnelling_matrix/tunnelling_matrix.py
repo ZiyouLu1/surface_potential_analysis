@@ -29,3 +29,14 @@ class TunnellingMatrix(TypedDict, Generic[_S0Inv]):
     of occupation at site [i1,j1,n1]
     """
     shape: _S0Inv
+
+
+class TunnellingVector(TypedDict, Generic[_S0Inv]):
+    """Represents the state of a tunnelling simulation at a given time."""
+
+    vector: np.ndarray[tuple[int], np.dtype[np.float_]]
+    """
+    Vector represented such that vector.reshape(shape)[i,j,n]
+    gives the relevant occupancy of the i,jth site in the nth band
+    """
+    shape: _S0Inv

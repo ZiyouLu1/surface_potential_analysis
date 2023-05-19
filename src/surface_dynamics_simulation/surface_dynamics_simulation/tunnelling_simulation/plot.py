@@ -1,14 +1,14 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Literal, TypeVar
+from typing import TYPE_CHECKING, Any, TypeVar
 
 import numpy as np
 from matplotlib import pyplot as plt
 from surface_potential_analysis.basis_config.basis_config import (
     BasisConfig,
-    BasisConfigUtil,
     PositionBasisConfigUtil,
     get_fundamental_projected_x_points,
+    get_single_point_basis_in,
 )
 from surface_potential_analysis.util.plot import (
     Scale,
@@ -22,11 +22,13 @@ if TYPE_CHECKING:
     from matplotlib.animation import ArtistAnimation
     from matplotlib.axes import Axes
     from matplotlib.figure import Figure
-    from surface_potential_analysis.basis.basis import PositionBasis
 
     from surface_dynamics_simulation.tunnelling_simulation.tunnelling_simulation_state import (
         TunnellingSimulationState,
     )
+
+    _BC0Inv = TypeVar("_BC0Inv", bound=BasisConfig[Any, Any, Any])
+
 
 _L0Inv = TypeVar("_L0Inv", bound=int)
 _S0Inv = TypeVar("_S0Inv", bound=tuple[int, int, int])
@@ -92,21 +94,6 @@ def plot_occupation_per_site(
     return fig, ax
 
 
-if TYPE_CHECKING:
-    _BC0Inv = TypeVar("_BC0Inv", bound=BasisConfig[Any, Any, Any])
-    _PBS = PositionBasis[Literal[1]]
-    _SPB = BasisConfig[_PBS, _PBS, _PBS]
-
-
-def _get_single_point_basis(basis: _BC0Inv) -> _SPB:
-    fundamental = BasisConfigUtil(basis).get_fundamental_basis_in("position")
-    return (
-        {"_type": "position", "delta_x": fundamental[0]["delta_x"], "n": 1},
-        {"_type": "position", "delta_x": fundamental[1]["delta_x"], "n": 1},
-        {"_type": "position", "delta_x": fundamental[2]["delta_x"], "n": 1},
-    )
-
-
 def animate_occupation_per_site_2d(
     state: TunnellingSimulationState[_L0Inv, _S0Inv],
     basis: _BC0Inv | None = None,
@@ -129,7 +116,7 @@ def animate_occupation_per_site_2d(
     """
     shape = state["shape"]
     unfurled_basis = get_unfurled_basis(
-        _get_single_point_basis(basis)
+        get_single_point_basis_in(basis, "position")
         if basis is not None
         else PositionBasisConfigUtil.from_resolution((1, 1, 1)),
         (shape[0], shape[1]),
@@ -171,14 +158,4 @@ def plot_occupation_per_state(
     ax.set_title("Plot of occupation of each state against time")
     ax.set_xlabel("time /s")
     ax.set_ylabel("occupation probability")
-    return fig, ax
-
-
-def plot_flux_from_site(
-    state: TunnellingSimulationState[_L0Inv, _S0Inv], *, ax: Axes | None = None
-) -> tuple[Figure, Axes]:
-    fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
-
-    ax.set_xlabel("time /s")
-    ax.set_ylabel("flux from site")
     return fig, ax

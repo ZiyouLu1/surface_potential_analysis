@@ -54,7 +54,7 @@ from .surface_data import get_data_path, save_figure
 
 if TYPE_CHECKING:
     from surface_dynamics_simulation.hopping_matrix.hopping_matrix import HoppingMatrix
-    from surface_dynamics_simulation.tunnelling_simulation.tunnelling_simulation_state import (
+    from surface_dynamics_simulation.tunnelling_matrix.tunnelling_matrix import (
         TunnellingVector,
     )
     from surface_potential_analysis._types import SingleIndexLike
