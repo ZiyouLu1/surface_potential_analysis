@@ -7,7 +7,7 @@ import numpy as np
 if TYPE_CHECKING:
     from .tunnelling_matrix import (
         TunnellingMatrix,
-        TunnellingVector,
+        TunnellingState,
     )
 
     _L0Inv = TypeVar("_L0Inv", bound=int)
@@ -36,10 +36,10 @@ def get_single_site_tunnelling_matrix(
 
 
 def get_all_single_site_tunnelling_vectors(
-    matrix: TunnellingMatrix[_S0Inv],
-) -> list[TunnellingVector[_S0Inv]]:
+    shape: _S0Inv,
+) -> list[TunnellingState[_S0Inv]]:
     """
-    Given a tunnelling matrix, get all tunnelling vectors located at the (0,0) site.
+    Given the shape of the tunnelling state, get all tunnelling states located at the (0,0) site.
 
     Parameters
     ----------
@@ -47,11 +47,45 @@ def get_all_single_site_tunnelling_vectors(
 
     Returns
     -------
-    TunnellingMatrix[_S0Inv]
+    TunnellingState[_S0Inv]
     """
-    vectors: list[TunnellingVector[_S0Inv]] = []
-    for n in range(matrix["shape"][2]):
-        vector = np.zeros(matrix["shape"])
+    states: list[TunnellingState[_S0Inv]] = []
+    for n in range(shape[2]):
+        vector = np.zeros(shape)
         vector[0, 0, n] = 1
-        vectors.append({"shape": matrix["shape"], "vector": vector.flatten()})
-    return vectors
+        states.append({"shape": shape, "vector": vector.flatten()})
+    return states
+
+
+def get_occupation_per_state(
+    state: TunnellingState[tuple[_L0Inv, _L1Inv, _L2Inv]]
+) -> np.ndarray[tuple[_L2Inv], np.dtype[np.float_]]:
+    """
+    Get the total occupation probability of each state in a given TunnellingState.
+
+    Parameters
+    ----------
+    state : TunnellingState[tuple[_L0Inv, _L1Inv, _L2Inv]]
+
+    Returns
+    -------
+    np.ndarray[tuple[_L2Inv], np.dtype[np.float_]]
+    """
+    return np.sum(state["vector"].reshape(*state["shape"]), axis=(0, 1))  # type: ignore[no-any-return]
+
+
+def get_occupation_per_site(
+    state: TunnellingState[tuple[_L0Inv, _L1Inv, _L2Inv]]
+) -> np.ndarray[tuple[_L0Inv, _L1Inv], np.dtype[np.float_]]:
+    """
+    Get the total occupation probability of each site in a given TunnellingState.
+
+    Parameters
+    ----------
+    state : TunnellingState[tuple[_L0Inv, _L1Inv, _L2Inv]]
+
+    Returns
+    -------
+    np.ndarray[tuple[_L0Inv, _L1Inv], np.dtype[np.float_]]
+    """
+    return np.sum(state["vector"].reshape(*state["shape"]), axis=(2))  # type: ignore[no-any-return]

@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING, Any, TypeVar
 
 import numpy as np
 from matplotlib import pyplot as plt
+from matplotlib.lines import Line2D
 from surface_potential_analysis.basis_config.basis_config import (
     BasisConfig,
     PositionBasisConfigUtil,
@@ -18,6 +19,8 @@ from surface_potential_analysis.wavepacket.eigenstate_conversion import (
     get_unfurled_basis,
 )
 
+from surface_dynamics_simulation.tunnelling_simulation.isf import ISF
+
 if TYPE_CHECKING:
     from matplotlib.animation import ArtistAnimation
     from matplotlib.axes import Axes
@@ -29,9 +32,9 @@ if TYPE_CHECKING:
 
     _BC0Inv = TypeVar("_BC0Inv", bound=BasisConfig[Any, Any, Any])
 
-
-_L0Inv = TypeVar("_L0Inv", bound=int)
-_S0Inv = TypeVar("_S0Inv", bound=tuple[int, int, int])
+    _L0Inv = TypeVar("_L0Inv", bound=int)
+    _N0Inv = TypeVar("_N0Inv", bound=int)
+    _S0Inv = TypeVar("_S0Inv", bound=tuple[int, int, int])
 
 
 def plot_occupation_per_band(
@@ -159,3 +162,28 @@ def plot_occupation_per_state(
     ax.set_xlabel("time /s")
     ax.set_ylabel("occupation probability")
     return fig, ax
+
+
+def plot_isf(
+    isf: ISF[_N0Inv], *, ax: Axes | None = None
+) -> tuple[Figure, Axes, Line2D]:
+    """
+    Plot the ISF against time.
+
+    Parameters
+    ----------
+    isf : ISF[_N0Inv]
+    ax : Axes | None, optional
+        plot axis, by default None
+
+    Returns
+    -------
+    tuple[Figure, Axes, Line2D]
+    """
+    fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
+
+    (line,) = ax.plot(isf["times"], isf["vector"])
+    ax.set_xlabel("Time /s")
+    ax.set_ylabel("Normalized ISF")
+    ax.set_title("Plot of the ISF against time")
+    return fig, ax, line

@@ -14,15 +14,17 @@ from surface_dynamics_simulation.hopping_matrix.plot import plot_electron_integr
 from surface_dynamics_simulation.tunnelling_matrix.build import (
     build_from_hopping_matrix,
 )
+from surface_dynamics_simulation.tunnelling_simulation.isf import calculate_isf
 from surface_dynamics_simulation.tunnelling_simulation.plot import (
     animate_occupation_per_site_2d,
+    plot_isf,
     plot_occupation_per_band,
     plot_occupation_per_site,
     plot_occupation_per_state,
 )
 from surface_dynamics_simulation.tunnelling_simulation.simulation import (
     calculate_hopping_rate,
-    simulate_tunnelling,
+    simulate_tunnelling_from_matrix,
 )
 from surface_potential_analysis.basis_config.basis_config import (
     BasisConfigUtil,
@@ -55,7 +57,7 @@ from .surface_data import get_data_path, save_figure
 if TYPE_CHECKING:
     from surface_dynamics_simulation.hopping_matrix.hopping_matrix import HoppingMatrix
     from surface_dynamics_simulation.tunnelling_matrix.tunnelling_matrix import (
-        TunnellingVector,
+        TunnellingState,
     )
     from surface_potential_analysis._types import SingleIndexLike
 
@@ -401,12 +403,12 @@ def simulate_hydrogen_system() -> None:
     matrix = build_from_hopping_matrix(coefficients, grid_shape)
 
     times = np.linspace(0, 1e-10, 100)
-    start: TunnellingVector[Any] = {
+    initial_state: TunnellingState[Any] = {
         "vector": np.zeros(np.prod(grid_shape) * n_states),
         "shape": (*grid_shape, n_states),
     }
-    start["vector"][0] = 1
-    out = simulate_tunnelling(matrix, start, times)
+    initial_state["vector"][0] = 1
+    out = simulate_tunnelling_from_matrix(matrix, initial_state, times)
 
     vectors = out["vectors"]
 
@@ -438,3 +440,61 @@ def plot_electron_integral_nickel() -> None:
     print(calculate_approximate_electron_integral(fermi_k, energy_jump))  # noqa: T201
     print(calculate_electron_integral(fermi_k, energy_jump))  # noqa: T201
     plot_electron_integral(fermi_k, energy_jump)
+
+
+def plot_nickel_isf_slow() -> None:
+    fig, ax = plt.subplots()
+    times = np.linspace(0, 1e-10, 100)
+    grid_shape = (10, 10)
+    basis = load_nickel_wavepacket(0)["basis"]
+
+    util = BasisConfigUtil(basis)
+    dk = util.delta_x0 + util.delta_x1
+    dk /= np.linalg.norm(dk)
+    dk *= 0.8 * 10**10
+
+    for t in [125, 150, 175, 200, 225]:
+        coefficients: HoppingMatrix[Literal[6]] = build_incoherent_matrix(6, t)  # type: ignore[assignment]
+
+        matrix = build_from_hopping_matrix(coefficients, grid_shape)
+
+        isf = calculate_isf(matrix, basis, dk, times)
+        _, _, line = plot_isf(isf, ax=ax)
+        line.set_label(f"{t}K")
+    ax.legend()
+    ax.set_title(
+        "Plot of the Nickel ISF along the $110$ azimuth\n"
+        "at $\\Delta K = 0.8 \\AA^{-1}$"
+    )
+    fig.show()
+    save_figure(fig, "nickel_isf_slow.png")
+    input()
+
+
+def plot_nickel_isf_fast() -> None:
+    fig, ax = plt.subplots()
+    times = np.linspace(0, 1e-10, 100)
+    grid_shape = (10, 10)
+    basis = load_nickel_wavepacket(0)["basis"]
+
+    util = BasisConfigUtil(basis)
+    dk = util.delta_x0 - util.delta_x1
+    dk /= np.linalg.norm(dk)
+    dk *= 0.8 * 10**10
+
+    for t in [125, 150, 175, 200, 225]:
+        coefficients: HoppingMatrix[Literal[6]] = build_incoherent_matrix(6, t)  # type: ignore[assignment]
+
+        matrix = build_from_hopping_matrix(coefficients, grid_shape)
+
+        isf = calculate_isf(matrix, basis, dk, times)
+        _, _, line = plot_isf(isf, ax=ax)
+        line.set_label(f"{t}K")
+    ax.legend()
+    ax.set_title(
+        "Plot of the Nickel ISF along the $11\\bar{2}$ azimuth\n"
+        "at $\\Delta K = 0.8 \\AA^{-1}$"
+    )
+    fig.show()
+    save_figure(fig, "nickel_isf.png")
+    input()

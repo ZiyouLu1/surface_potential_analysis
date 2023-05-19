@@ -8,7 +8,7 @@ import scipy
 if TYPE_CHECKING:
     from surface_dynamics_simulation.tunnelling_matrix.tunnelling_matrix import (
         TunnellingMatrix,
-        TunnellingVector,
+        TunnellingState,
     )
     from surface_dynamics_simulation.tunnelling_simulation.tunnelling_simulation_state import (
         TunnellingSimulationState,
@@ -46,11 +46,32 @@ def calculate_tunnelling_eigenstates(
     return {"energies": energies, "vectors": vectors, "shape": matrix["shape"]}
 
 
+def get_equilibrium_state(
+    eigenstates: TunnellingEigenstates[_S0Inv],
+) -> TunnellingState[_S0Inv]:
+    """
+    Select the equilibrium tunnelling state from a list of eigenstates.
+
+    Since all of the eigenstates have E < 0 except for the equilibrium
+    this corresponds to the single "zero energy" state
+
+    Parameters
+    ----------
+    eigenstates : TunnellingEigenstates[_S0Inv]
+
+    Returns
+    -------
+    TunnellingVector[_S0Inv]
+    """
+    vector = eigenstates["vectors"][:, np.argmax(eigenstates["energies"])]
+    return {"shape": eigenstates["shape"], "vector": vector}
+
+
 def calculate_equilibrium_state(
     matrix: TunnellingMatrix[_S0Inv],
-) -> TunnellingVector[_S0Inv]:
+) -> TunnellingState[_S0Inv]:
     """
-    Get the vector corresponding to the equilibrium tunnellign state.
+    Calculate the equilibrium tunnelling state for a given matrix.
 
     Since all of the eigenstates have E < 0 except for the equilibrium
     this corresponds to the single "zero energy" state
@@ -64,20 +85,19 @@ def calculate_equilibrium_state(
     TunnellingVector[_S0Inv]
     """
     eigenstates = calculate_tunnelling_eigenstates(matrix)
-    vector = eigenstates["vectors"][:, np.argmax(eigenstates["energies"])]
-    return {"shape": eigenstates["shape"], "vector": vector}
+    return get_equilibrium_state(eigenstates)
 
 
 def get_vector_eigenstate_decomposition(
-    vector: TunnellingVector[_S0Inv], eigenstates: TunnellingEigenstates[_S0Inv]
+    state: TunnellingState[_S0Inv], eigenstates: TunnellingEigenstates[_S0Inv]
 ) -> np.ndarray[tuple[int], np.dtype[np.float_]]:
     """
-    Given a vector and a set of TunnellingEigenstates decompose the vector into the eigenstates.
+    Given a state and a set of TunnellingEigenstates decompose the state into the eigenstates.
 
     Parameters
     ----------
-    vector : TunnellingVector[_S0Inv]
-        vector to decompose
+    state : TunnellingVector[_S0Inv]
+        state to decompose
     eigenstates : TunnellingEigenstates[_S0Inv]
         set of eigenstates to decompose into
 
@@ -91,12 +111,12 @@ def get_vector_eigenstate_decomposition(
     # linalg.solve(a, b) = x where np.dot(a, x) == b, which is the sum
     # of the product over the last axis of x, so a[i] x[:, i] = b[:]
     # ie solved is the decomposition of b into the eigenvectors
-    return scipy.linalg.solve(eigenstates["vectors"], vector["vector"])  # type: ignore[no-any-return]
+    return scipy.linalg.solve(eigenstates["vectors"], state["vector"])  # type: ignore[no-any-return]
 
 
-def simulate_tunnelling_with_eigenstates(
+def get_tunnelling_simulation_state(
     eigenstates: TunnellingEigenstates[_S0Inv],
-    initial_vector: TunnellingVector[_S0Inv],
+    initial_state: TunnellingState[_S0Inv],
     times: np.ndarray[tuple[_L1Inv], np.dtype[np.float_]],
 ) -> TunnellingSimulationState[_L1Inv, _S0Inv]:
     """
@@ -115,7 +135,7 @@ def simulate_tunnelling_with_eigenstates(
     -------
     TunnellingSimulationState[_L1Inv, _S0Inv]
     """
-    coefficients = get_vector_eigenstate_decomposition(initial_vector, eigenstates)
+    coefficients = get_vector_eigenstate_decomposition(initial_state, eigenstates)
 
     constants = coefficients[:, np.newaxis] * np.exp(
         eigenstates["energies"][:, np.newaxis] * times[np.newaxis, :]
@@ -124,12 +144,12 @@ def simulate_tunnelling_with_eigenstates(
     vectors = np.sum(
         eigenstates["vectors"][:, :, np.newaxis] * constants[np.newaxis], axis=1
     )
-    return {"shape": initial_vector["shape"], "times": times, "vectors": vectors}
+    return {"shape": initial_state["shape"], "times": times, "vectors": vectors}
 
 
-def simulate_tunnelling(
+def simulate_tunnelling_from_matrix(
     matrix: TunnellingMatrix[_S0Inv],
-    initial_vector: TunnellingVector[_S0Inv],
+    initial_state: TunnellingState[_S0Inv],
     times: np.ndarray[tuple[_L1Inv], np.dtype[np.float_]],
 ) -> TunnellingSimulationState[_L1Inv, _S0Inv]:
     """
@@ -149,7 +169,7 @@ def simulate_tunnelling(
     TunnellingSimulationState[_L1Inv, _S0Inv]
     """
     eigenstates = calculate_tunnelling_eigenstates(matrix)
-    return simulate_tunnelling_with_eigenstates(eigenstates, initial_vector, times)
+    return get_tunnelling_simulation_state(eigenstates, initial_state, times)
 
 
 def calculate_hopping_rate(matrix: TunnellingMatrix[_S0Inv]) -> float:

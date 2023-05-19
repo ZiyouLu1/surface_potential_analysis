@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Literal
 
 import numpy as np
 
-from surface_dynamics_simulation.tunnelling_simulation.isf_calculation import (
+from surface_dynamics_simulation.tunnelling_simulation.isf import (
     _calculate_mean_locations,
 )
 

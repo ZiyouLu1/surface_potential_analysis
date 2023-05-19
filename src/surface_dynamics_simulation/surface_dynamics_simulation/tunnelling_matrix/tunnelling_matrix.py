@@ -31,7 +31,7 @@ class TunnellingMatrix(TypedDict, Generic[_S0Inv]):
     shape: _S0Inv
 
 
-class TunnellingVector(TypedDict, Generic[_S0Inv]):
+class TunnellingState(TypedDict, Generic[_S0Inv]):
     """Represents the state of a tunnelling simulation at a given time."""
 
     vector: np.ndarray[tuple[int], np.dtype[np.float_]]
