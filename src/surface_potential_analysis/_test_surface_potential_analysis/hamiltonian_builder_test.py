@@ -30,7 +30,7 @@ from surface_potential_analysis.hamiltonian_builder import (
 from surface_potential_analysis.hamiltonian_builder.sho_subtracted_basis import (
     _SurfaceHamiltonianUtil,
 )
-from surface_potential_analysis.interpolation import interpolate_points_rfftn
+from surface_potential_analysis.util.interpolation import interpolate_points_rfftn
 
 from .utils import convert_explicit_basis_x2
 

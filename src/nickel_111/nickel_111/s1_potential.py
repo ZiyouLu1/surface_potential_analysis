@@ -7,9 +7,6 @@ from surface_potential_analysis.basis_config.basis_config import (
     PositionBasisConfig,
     PositionBasisConfigUtil,
 )
-from surface_potential_analysis.interpolation import (
-    interpolate_points_along_axis_spline,
-)
 from surface_potential_analysis.potential import (
     PointPotential,
     Potential,
@@ -23,6 +20,9 @@ from surface_potential_analysis.potential import (
     save_uneven_potential,
     truncate_potential,
     undo_truncate_potential,
+)
+from surface_potential_analysis.util.interpolation import (
+    interpolate_points_along_axis_spline,
 )
 
 from .surface_data import get_data_path
@@ -177,7 +177,7 @@ def interpolate_points_fourier_nickel(  # noqa: PLR0913
         resolution=(*points.shape, 1)  # type: ignore[arg-type]
     )
     old_basis_util = PositionBasisConfigUtil(old_basis_config)
-    nk_points_stacked = old_basis_util.fundamental_nk_points.reshape(
+    nk_points_stacked = np.array(old_basis_util.fundamental_nk_points).reshape(
         3, *old_basis_util.shape
     )[0:2, :, :, 0]
     ft_phases = 2 * np.pi * np.moveaxis(nk_points_stacked, 0, -1)

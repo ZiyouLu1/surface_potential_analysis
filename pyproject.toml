@@ -31,6 +31,7 @@ ruff = "*"
 [tool.mypy]
 strict = true
 follow_imports = "error"
+# enable_incomplete_feature = "Unpack"
 
 [[tool.mypy.overrides]]
 module = "matplotlib.*"

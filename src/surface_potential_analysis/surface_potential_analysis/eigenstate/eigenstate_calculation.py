@@ -6,7 +6,7 @@ import numpy as np
 import scipy.linalg
 
 from surface_potential_analysis.basis_config.basis_config import BasisConfig
-from surface_potential_analysis.util import timed
+from surface_potential_analysis.util.decorators import timed
 
 if TYPE_CHECKING:
     from surface_potential_analysis.hamiltonian import Hamiltonian

@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
-from .overlap import Overlap, OverlapTransform, load_overlap, save_overlap
+from .overlap import Overlap, OverlapMomentum, load_overlap, save_overlap
 
 __all__ = [
     "Overlap",
-    "OverlapTransform",
+    "OverlapMomentum",
     "save_overlap",
     "load_overlap",
 ]

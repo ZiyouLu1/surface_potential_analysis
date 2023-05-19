@@ -10,7 +10,7 @@ from surface_potential_analysis.basis_config.basis_config import (
     _wrap_distance,
     calculate_cumulative_x_distances_along_path,
 )
-from surface_potential_analysis.util import slice_along_axis
+from surface_potential_analysis.util.util import slice_along_axis
 
 rng = np.random.default_rng()
 

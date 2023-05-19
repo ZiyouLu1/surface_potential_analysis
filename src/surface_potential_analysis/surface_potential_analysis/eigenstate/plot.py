@@ -4,8 +4,6 @@ from typing import TYPE_CHECKING, Any, Literal, TypeVar
 
 import numpy as np
 from matplotlib import pyplot as plt
-from matplotlib.animation import ArtistAnimation
-from matplotlib.colors import Normalize, SymLogNorm
 
 from surface_potential_analysis.basis.basis import BasisUtil
 from surface_potential_analysis.basis_config.basis_config import (
@@ -19,19 +17,22 @@ from surface_potential_analysis.eigenstate.conversion import (
     convert_eigenstate_to_momentum_basis,
     convert_eigenstate_to_position_basis,
 )
-from surface_potential_analysis.util import (
+from surface_potential_analysis.util.plot import animate_through_surface
+from surface_potential_analysis.util.util import (
     Measure,
     get_measured_data,
     slice_along_axis,
 )
 
 if TYPE_CHECKING:
+    from matplotlib.animation import ArtistAnimation
     from matplotlib.axes import Axes
     from matplotlib.collections import QuadMesh
     from matplotlib.figure import Figure
     from matplotlib.lines import Line2D
 
     from surface_potential_analysis._types import SingleFlatIndexLike
+    from surface_potential_analysis.util.plot import Scale
 
     from .eigenstate import Eigenstate, PositionBasisEigenstate
 
@@ -49,7 +50,7 @@ def plot_eigenstate_1d_x(
     *,
     ax: Axes | None = None,
     measure: Measure = "abs",
-    scale: Literal["symlog", "linear"] = "linear",
+    scale: Scale = "linear",
 ) -> tuple[Figure, Axes, Line2D]:
     """
     Plot an eigenstate in 1d along the given axis.
@@ -97,7 +98,7 @@ def plot_eigenstate_2d_k(
     *,
     ax: Axes | None = None,
     measure: Measure = "abs",
-    scale: Literal["symlog", "linear"] = "linear",
+    scale: Scale = "linear",
 ) -> tuple[Figure, Axes, QuadMesh]:
     """
     Plot an eigenstate in 2d, perpendicular to kz_axis in momentum basis.
@@ -147,7 +148,7 @@ def plot_eigenstate_k0k1(
     *,
     ax: Axes | None = None,
     measure: Measure = "abs",
-    scale: Literal["symlog", "linear"] = "linear",
+    scale: Scale = "linear",
 ) -> tuple[Figure, Axes, QuadMesh]:
     """
     Plot an eigenstate in 2d perpendicular to the k2 axis.
@@ -179,7 +180,7 @@ def plot_eigenstate_k1k2(
     *,
     ax: Axes | None = None,
     measure: Measure = "abs",
-    scale: Literal["symlog", "linear"] = "linear",
+    scale: Scale = "linear",
 ) -> tuple[Figure, Axes, QuadMesh]:
     """
     Plot an eigenstate in 2d perpendicular to the k0 axis.
@@ -211,7 +212,7 @@ def plot_eigenstate_k2k0(
     *,
     ax: Axes | None = None,
     measure: Measure = "abs",
-    scale: Literal["symlog", "linear"] = "linear",
+    scale: Scale = "linear",
 ) -> tuple[Figure, Axes, QuadMesh]:
     """
     Plot an eigenstate in 2d perpendicular to the k1 axis.
@@ -244,7 +245,7 @@ def plot_eigenstate_2d_x(
     *,
     ax: Axes | None = None,
     measure: Measure = "abs",
-    scale: Literal["symlog", "linear"] = "linear",
+    scale: Scale = "linear",
 ) -> tuple[Figure, Axes, QuadMesh]:
     """
     Plot an eigenstate in 2d, perpendicular to z_axis.
@@ -294,7 +295,7 @@ def plot_eigenstate_x0x1(
     *,
     ax: Axes | None = None,
     measure: Measure = "abs",
-    scale: Literal["symlog", "linear"] = "linear",
+    scale: Scale = "linear",
 ) -> tuple[Figure, Axes, QuadMesh]:
     """
     Plot an eigenstate in 2d perpendicular to the x2 axis.
@@ -326,7 +327,7 @@ def plot_eigenstate_x1x2(
     *,
     ax: Axes | None = None,
     measure: Measure = "abs",
-    scale: Literal["symlog", "linear"] = "linear",
+    scale: Scale = "linear",
 ) -> tuple[Figure, Axes, QuadMesh]:
     """
     Plot an eigenstate in 2d perpendicular to the x0 axis.
@@ -358,7 +359,7 @@ def plot_eigenstate_x2x0(
     *,
     ax: Axes | None = None,
     measure: Measure = "abs",
-    scale: Literal["symlog", "linear"] = "linear",
+    scale: Scale = "linear",
 ) -> tuple[Figure, Axes, QuadMesh]:
     """
     Plot an eigenstate in 2d perpendicular to the x1 axis.
@@ -392,7 +393,7 @@ def plot_eigenstate_difference_2d_x(
     *,
     ax: Axes | None = None,
     measure: Measure = "abs",
-    scale: Literal["symlog", "linear"] = "linear",
+    scale: Scale = "linear",
 ) -> tuple[Figure, Axes, QuadMesh]:
     """
     Plot the difference between two eigenstates in 2d, perpendicular to z_axis.
@@ -425,28 +426,14 @@ def plot_eigenstate_difference_2d_x(
     )
 
 
-def _get_norm(
-    scale: Literal["symlog", "linear"],
-    clim: tuple[float | None, float | None] = (None, None),
-) -> Normalize:
-    match scale:
-        case "linear":
-            return Normalize(vmin=clim[0], vmax=clim[1])
-        case "symlog":
-            return SymLogNorm(
-                vmin=clim[0],
-                vmax=clim[1],
-                linthresh=None if clim[1] is None else 1e-4 * clim[1],
-            )
-
-
 def animate_eigenstate_3d_x(
     eigenstate: Eigenstate[_BC0Inv],
     z_axis: Literal[0, 1, 2, -1, -2, -3],
     *,
     ax: Axes | None = None,
     measure: Measure = "abs",
-    scale: Literal["symlog", "linear"] = "linear",
+    scale: Scale = "linear",
+    clim: tuple[float | None, float | None] = (None, None),
 ) -> tuple[Figure, Axes, ArtistAnimation]:
     """
     Animate an eigenstate in 3d, perpendicular to z_axis.
@@ -467,7 +454,6 @@ def animate_eigenstate_3d_x(
     -------
     tuple[Figure, Axes, ArtistAnimation]
     """
-    fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
     converted = convert_eigenstate_to_position_basis(eigenstate)
 
     coordinates = get_fundamental_projected_x_points(converted["basis"], z_axis)
@@ -475,42 +461,10 @@ def animate_eigenstate_3d_x(
     points = converted["vector"].reshape(*util.shape)
     data = get_measured_data(points, measure)
 
-    mesh0 = ax.pcolormesh(
-        *coordinates[slice_along_axis(0, (z_axis % 3) + 1)],
-        data[slice_along_axis(0, (z_axis % 3))],
-        shading="nearest",
+    c_min = 0 if clim[0] is None and measure == "abs" else clim[0]
+    return animate_through_surface(
+        coordinates, data, z_axis, ax=ax, scale=scale, clim=(c_min, clim[1])
     )
-
-    frames: list[list[QuadMesh]] = []
-    for i in range(data.shape[z_axis]):
-        mesh = ax.pcolormesh(
-            *coordinates[slice_along_axis(i, (z_axis % 3) + 1)],
-            data[slice_along_axis(i, (z_axis % 3))],
-            shading="nearest",
-        )
-        frames.append([mesh])
-
-    max_clim: float = np.max([i[0].get_clim()[1] for i in frames])
-    min_clim: float = (
-        0 if measure == "abs" else np.min([i[0].get_clim()[0] for i in frames])
-    )
-    clim = (min_clim, max_clim)
-    norm = _get_norm(scale, clim)
-    for (mesh,) in frames:
-        mesh.set_norm(norm)
-        mesh.set_clim(*clim)
-
-    mesh0.set_norm(norm)
-    mesh0.set_clim(*clim)
-
-    ani = ArtistAnimation(fig, frames)
-    ax.set_aspect("equal", adjustable="box")
-    fig.colorbar(mesh, ax=ax, format="%4.1e")
-
-    ax.set_xlabel(f"x{0 if (z_axis % 3) != 0 else 1} axis")
-    ax.set_ylabel(f"x{2 if (z_axis % 3) != 2 else 1} axis")  # noqa: PLR2004
-
-    return fig, ax, ani
 
 
 def animate_eigenstate_x0x1(
@@ -518,7 +472,7 @@ def animate_eigenstate_x0x1(
     *,
     ax: Axes | None = None,
     measure: Measure = "abs",
-    scale: Literal["symlog", "linear"] = "linear",
+    scale: Scale = "linear",
 ) -> tuple[Figure, Axes, ArtistAnimation]:
     """
     plot an eigenstate in 3d perpendicular to the x2 axis.
@@ -545,7 +499,7 @@ def animate_eigenstate_x1x2(
     *,
     ax: Axes | None = None,
     measure: Measure = "abs",
-    scale: Literal["symlog", "linear"] = "linear",
+    scale: Scale = "linear",
 ) -> tuple[Figure, Axes, ArtistAnimation]:
     """
     plot an eigenstate in 3d perpendicular to the x0 axis.
@@ -572,7 +526,7 @@ def animate_eigenstate_x2x0(
     *,
     ax: Axes | None = None,
     measure: Measure = "abs",
-    scale: Literal["symlog", "linear"] = "linear",
+    scale: Scale = "linear",
 ) -> tuple[Figure, Axes, ArtistAnimation]:
     """
     plot an eigenstate in 3d perpendicular to the x1 axis.
@@ -601,7 +555,7 @@ def plot_eigenstate_along_path(
     wrap_distances: bool = False,
     ax: Axes | None = None,
     measure: Measure = "abs",
-    scale: Literal["symlog", "linear"] = "linear",
+    scale: Scale = "linear",
 ) -> tuple[Figure, Axes, Line2D]:
     """
     Plot an eigenstate in 1d along the given path in position basis.

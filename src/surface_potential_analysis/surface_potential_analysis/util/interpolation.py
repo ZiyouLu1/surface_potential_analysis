@@ -7,7 +7,7 @@ import numpy as np
 import scipy.fft
 import scipy.interpolate
 
-from surface_potential_analysis.util import slice_along_axis
+from .util import slice_along_axis
 
 if TYPE_CHECKING:
     from collections.abc import Sequence

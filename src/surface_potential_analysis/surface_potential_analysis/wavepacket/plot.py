@@ -23,7 +23,7 @@ from surface_potential_analysis.eigenstate.plot import (
     plot_eigenstate_along_path,
     plot_eigenstate_difference_2d_x,
 )
-from surface_potential_analysis.util import Measure, get_measured_data
+from surface_potential_analysis.util.util import Measure, get_measured_data
 from surface_potential_analysis.wavepacket.eigenstate_conversion import (
     unfurl_wavepacket,
 )
@@ -42,6 +42,7 @@ if TYPE_CHECKING:
     from matplotlib.lines import Line2D
 
     from surface_potential_analysis._types import SingleFlatIndexLike
+    from surface_potential_analysis.util.plot import Scale
 
 
 _NS0Inv = TypeVar("_NS0Inv", bound=int)
@@ -133,7 +134,7 @@ def plot_wavepacket_energies_momentum(
     wavepacket: Wavepacket[_NS0Inv, _NS1Inv, BasisConfig[_BX0Inv, _BX1Inv, _BX2Inv]],
     *,
     ax: Axes | None = None,
-    scale: Literal["symlog", "linear"] = "linear",
+    scale: Scale = "linear",
 ) -> tuple[Figure, Axes, QuadMesh]:
     """
     Plot the energy of the eigenstates in a wavepacket.
@@ -175,7 +176,7 @@ def plot_wavepacket_energies_position(
     *,
     ax: Axes | None = None,
     measure: Measure = "abs",
-    scale: Literal["symlog", "linear"] = "linear",
+    scale: Scale = "linear",
 ) -> tuple[Figure, Axes, QuadMesh]:
     """
     Plot the fourier transform of energy of the eigenstates in a wavepacket.
@@ -222,7 +223,7 @@ def plot_wavepacket_1d_x(
     *,
     ax: Axes | None = None,
     measure: Measure = "abs",
-    scale: Literal["symlog", "linear"] = "linear",
+    scale: Scale = "linear",
 ) -> tuple[Figure, Axes, Line2D]:
     """
     Plot a wavepacket in 2d along the given axis.
@@ -257,7 +258,7 @@ def plot_wavepacket_x0(
     *,
     ax: Axes | None = None,
     measure: Measure = "abs",
-    scale: Literal["symlog", "linear"] = "linear",
+    scale: Scale = "linear",
 ) -> tuple[Figure, Axes, Line2D]:
     """
     Plot a wavepacket in 2d along the x0 axis.
@@ -288,7 +289,7 @@ def plot_wavepacket_x1(
     *,
     ax: Axes | None = None,
     measure: Measure = "abs",
-    scale: Literal["symlog", "linear"] = "linear",
+    scale: Scale = "linear",
 ) -> tuple[Figure, Axes, Line2D]:
     """
     Plot a wavepacket in 2d along the x1 axis.
@@ -319,7 +320,7 @@ def plot_wavepacket_x2(
     *,
     ax: Axes | None = None,
     measure: Measure = "abs",
-    scale: Literal["symlog", "linear"] = "linear",
+    scale: Scale = "linear",
 ) -> tuple[Figure, Axes, Line2D]:
     """
     Plot a wavepacket in 2d along the x2 axis.
@@ -351,7 +352,7 @@ def plot_wavepacket_2d_k(
     *,
     ax: Axes | None = None,
     measure: Measure = "abs",
-    scale: Literal["symlog", "linear"] = "linear",
+    scale: Scale = "linear",
 ) -> tuple[Figure, Axes, QuadMesh]:
     """
     Plot wavepacket in 2D at idx along the given axis in momentum.
@@ -387,7 +388,7 @@ def plot_wavepacket_k0k1(
     *,
     ax: Axes | None = None,
     measure: Measure = "abs",
-    scale: Literal["symlog", "linear"] = "linear",
+    scale: Scale = "linear",
 ) -> tuple[Figure, Axes, QuadMesh]:
     """
     Plot wavepacket perpendicular to the k2 axis.
@@ -420,7 +421,7 @@ def plot_wavepacket_k1k2(
     *,
     ax: Axes | None = None,
     measure: Measure = "abs",
-    scale: Literal["symlog", "linear"] = "linear",
+    scale: Scale = "linear",
 ) -> tuple[Figure, Axes, QuadMesh]:
     """
     Plot wavepacket perpendicular to the k0 axis.
@@ -453,7 +454,7 @@ def plot_wavepacket_k2k0(
     *,
     ax: Axes | None = None,
     measure: Measure = "abs",
-    scale: Literal["symlog", "linear"] = "linear",
+    scale: Scale = "linear",
 ) -> tuple[Figure, Axes, QuadMesh]:
     """
     Plot wavepacket perpendicular to the k1 axis.
@@ -487,7 +488,7 @@ def plot_wavepacket_2d_x(
     *,
     ax: Axes | None = None,
     measure: Measure = "abs",
-    scale: Literal["symlog", "linear"] = "linear",
+    scale: Scale = "linear",
 ) -> tuple[Figure, Axes, QuadMesh]:
     """
     Plot wavepacket in 2D at idx along the given axis.
@@ -523,7 +524,7 @@ def plot_wavepacket_x0x1(
     *,
     ax: Axes | None = None,
     measure: Measure = "abs",
-    scale: Literal["symlog", "linear"] = "linear",
+    scale: Scale = "linear",
 ) -> tuple[Figure, Axes, QuadMesh]:
     """
     Plot wavepacket perpendicular to the x2 axis.
@@ -556,7 +557,7 @@ def plot_wavepacket_x1x2(
     *,
     ax: Axes | None = None,
     measure: Measure = "abs",
-    scale: Literal["symlog", "linear"] = "linear",
+    scale: Scale = "linear",
 ) -> tuple[Figure, Axes, QuadMesh]:
     """
     Plot wavepacket perpendicular to the x0 axis.
@@ -589,7 +590,7 @@ def plot_wavepacket_x2x0(
     *,
     ax: Axes | None = None,
     measure: Measure = "abs",
-    scale: Literal["symlog", "linear"] = "linear",
+    scale: Scale = "linear",
 ) -> tuple[Figure, Axes, QuadMesh]:
     """
     Plot wavepacket perpendicular to the x1 axis.
@@ -624,7 +625,7 @@ def plot_wavepacket_difference_2d_x(
     *,
     ax: Axes | None = None,
     measure: Measure = "abs",
-    scale: Literal["symlog", "linear"] = "linear",
+    scale: Scale = "linear",
 ) -> tuple[Figure, Axes, QuadMesh]:
     """
     Plot the difference between two wavepackets in 2D.
@@ -669,7 +670,7 @@ def animate_wavepacket_3d_x(
     *,
     ax: Axes | None = None,
     measure: Measure = "abs",
-    scale: Literal["symlog", "linear"] = "linear",
+    scale: Scale = "linear",
 ) -> tuple[Figure, Axes, ArtistAnimation]:
     """
     Animate the wavepacket in 3D, perpendicular to z_axis.
@@ -704,7 +705,7 @@ def animate_wavepacket_x0x1(
     *,
     ax: Axes | None = None,
     measure: Measure = "abs",
-    scale: Literal["symlog", "linear"] = "linear",
+    scale: Scale = "linear",
 ) -> tuple[Figure, Axes, ArtistAnimation]:
     """
     Animate the wavepacket in 3D, perpendicular to x2.
@@ -731,7 +732,7 @@ def animate_wavepacket_x1x2(
     *,
     ax: Axes | None = None,
     measure: Measure = "abs",
-    scale: Literal["symlog", "linear"] = "linear",
+    scale: Scale = "linear",
 ) -> tuple[Figure, Axes, ArtistAnimation]:
     """
     Animate the wavepacket in 3D, perpendicular to x0.
@@ -758,7 +759,7 @@ def animate_wavepacket_x2x0(
     *,
     ax: Axes | None = None,
     measure: Measure = "abs",
-    scale: Literal["symlog", "linear"] = "linear",
+    scale: Scale = "linear",
 ) -> tuple[Figure, Axes, ArtistAnimation]:
     """
     Animate the wavepacket in 3D, perpendicular to x1.
@@ -786,7 +787,7 @@ def plot_wavepacket_along_path(
     *,
     ax: Axes | None = None,
     measure: Measure = "abs",
-    scale: Literal["symlog", "linear"] = "linear",
+    scale: Scale = "linear",
 ) -> tuple[Figure, Axes, Line2D]:
     """
     Plot the wavepacket along the given path.

@@ -5,8 +5,6 @@ from typing import TYPE_CHECKING, Generic, Literal, TypedDict, TypeVar
 import numpy as np
 import scipy
 import scipy.linalg
-from matplotlib import pyplot as plt
-from scipy.integrate import solve_ivp
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -126,6 +124,7 @@ def simulate_tunnelling(  # noqa: D103
 ) -> np.ndarray[tuple[_L0Inv, _L1Inv], np.dtype[np.float_]]:
     energies, vectors = scipy.linalg.eig(matrix)
     print(energies.shape, vectors.shape)  # noqa: T201
+    print(np.min(np.abs(energies)), np.max(np.abs(energies)))
 
     solved = scipy.linalg.solve(vectors, initial_state)
     print(solved.shape)  # noqa: T201
@@ -135,36 +134,3 @@ def simulate_tunnelling(  # noqa: D103
     )
 
     return np.sum(vectors[:, :, np.newaxis] * constants[np.newaxis], axis=1)  # type: ignore[no-any-return]
-
-
-if __name__ == "__main__":
-    config: SimulationConfig[Literal[1]] = {
-        "coherent_coefficients": np.array([[[1e-8, 0, 0], [0, 0, 0], [0, 0, 0]]]),
-        "incoherent_coefficients": np.array([[0]]),
-        "shape": (1, 1),
-    }
-    y0 = np.zeros(
-        (*config["shape"], config["coherent_coefficients"].shape[0]), dtype=complex
-    )
-    y0[0, 0, 0] = 1
-
-    out = solve_ivp(
-        _get_solver_function(config),
-        t_span=(0, 1),
-        method="RK45",
-        y0=y0.flatten(),
-    )
-
-    out = solve_ivp(
-        lambda _t, _y: 0.000001j,
-        t_span=(0, 1),
-        method="RK45",
-        y0=[0 + 1j],
-    )
-
-    fig, ax = plt.subplots()
-    (line,) = ax.plot(np.real(out.y[0, :]), np.imag(out.y[0, :]))
-    (line,) = ax.twinx().twiny().plot(out.t, np.abs(out.y[0, :]))
-    line.set_marker("x")
-    fig.show()
-    input()

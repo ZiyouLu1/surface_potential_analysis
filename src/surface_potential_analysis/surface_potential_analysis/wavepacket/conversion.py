@@ -7,7 +7,7 @@ from surface_potential_analysis.basis_config.basis_config import (
     BasisConfigUtil,
 )
 from surface_potential_analysis.basis_config.conversion import convert_vector
-from surface_potential_analysis.util import timed
+from surface_potential_analysis.util.decorators import timed
 
 if TYPE_CHECKING:
     from surface_potential_analysis.basis.basis import (

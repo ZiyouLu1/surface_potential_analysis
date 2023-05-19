@@ -27,7 +27,7 @@ if TYPE_CHECKING:
     from matplotlib.figure import Figure
     from matplotlib.lines import Line2D
     from surface_potential_analysis.eigenstate.eigenstate import Eigenstate
-    from surface_potential_analysis.util import Measure
+    from surface_potential_analysis.util.util import Measure
 
 
 def analyze_eigenvalue_convergence() -> None:

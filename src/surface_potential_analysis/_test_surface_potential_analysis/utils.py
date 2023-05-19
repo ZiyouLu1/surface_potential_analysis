@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Literal, TypeVar, overload
 import numpy as np
 from scipy.stats import special_ortho_group
 
-from surface_potential_analysis.util import slice_along_axis
+from surface_potential_analysis.util.util import slice_along_axis
 
 if TYPE_CHECKING:
     from surface_potential_analysis.basis.basis import (

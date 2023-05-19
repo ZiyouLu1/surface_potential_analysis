@@ -17,8 +17,8 @@ from surface_potential_analysis.basis_config.basis_config import (
     BasisConfigUtil,
 )
 from surface_potential_analysis.basis_config.conversion import convert_vector
-from surface_potential_analysis.interpolation import pad_ft_points
-from surface_potential_analysis.util import slice_along_axis
+from surface_potential_analysis.util.interpolation import pad_ft_points
+from surface_potential_analysis.util.util import slice_along_axis
 
 if TYPE_CHECKING:
     from surface_potential_analysis._types import SingleIndexLike

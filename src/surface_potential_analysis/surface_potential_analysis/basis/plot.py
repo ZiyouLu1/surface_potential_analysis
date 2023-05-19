@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, TypeVar
 import numpy as np
 from matplotlib import pyplot as plt
 
-from surface_potential_analysis.util import Measure, get_measured_data
+from surface_potential_analysis.util.util import Measure, get_measured_data
 
 from .basis import (
     BasisUtil,

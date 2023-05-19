@@ -11,12 +11,6 @@ from surface_potential_analysis.basis_config.plot import plot_projected_x_points
 from surface_potential_analysis.basis_config.sho_basis import (
     infinate_sho_basis_from_config,
 )
-from surface_potential_analysis.interpolation import (
-    interpolate_points_fftn,
-    interpolate_points_rfft,
-    interpolate_points_rfftn,
-    pad_ft_points,
-)
 from surface_potential_analysis.potential import (
     Potential,
     UnevenPotential,
@@ -40,6 +34,12 @@ from surface_potential_analysis.potential.plot_uneven_potential import (
     plot_uneven_potential_z_comparison_111,
 )
 from surface_potential_analysis.potential.potential import mock_even_potential
+from surface_potential_analysis.util.interpolation import (
+    interpolate_points_fftn,
+    interpolate_points_rfft,
+    interpolate_points_rfftn,
+    pad_ft_points,
+)
 
 from .s1_potential import (
     get_interpolated_nickel_potential,

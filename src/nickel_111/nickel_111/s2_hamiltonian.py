@@ -8,7 +8,7 @@ from surface_potential_analysis.basis_config.sho_basis import (
     sho_basis_from_config,
 )
 from surface_potential_analysis.hamiltonian_builder import sho_subtracted_basis
-from surface_potential_analysis.util import timed
+from surface_potential_analysis.util.decorators import timed
 
 from .s1_potential import get_interpolated_nickel_potential
 

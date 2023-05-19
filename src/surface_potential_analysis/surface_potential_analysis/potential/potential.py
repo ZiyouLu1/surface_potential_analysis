@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Any, Generic, TypedDict, TypeVar, overload
 
 import numpy as np
 
-from surface_potential_analysis.interpolation import (
+from surface_potential_analysis.util.interpolation import (
     interpolate_points_along_axis_spline,
     interpolate_points_rfftn,
 )

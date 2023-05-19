@@ -8,7 +8,7 @@ from surface_potential_analysis.eigenstate.conversion import (
     convert_eigenstate_to_position_basis,
     convert_momentum_basis_eigenstate_to_position_basis,
 )
-from surface_potential_analysis.util import timed
+from surface_potential_analysis.util.decorators import timed
 from surface_potential_analysis.wavepacket.eigenstate_conversion import (
     unfurl_wavepacket,
 )

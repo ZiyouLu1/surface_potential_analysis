@@ -4,7 +4,6 @@ from typing import TYPE_CHECKING, Literal, TypeVar
 
 import numpy as np
 from matplotlib import pyplot as plt
-from matplotlib.animation import ArtistAnimation
 
 from surface_potential_analysis.basis.basis import BasisUtil
 from surface_potential_analysis.basis_config.basis_config import (
@@ -12,7 +11,10 @@ from surface_potential_analysis.basis_config.basis_config import (
     calculate_cumulative_x_distances_along_path,
     get_fundamental_projected_x_points,
 )
-from surface_potential_analysis.util import (
+from surface_potential_analysis.util.plot import (
+    animate_through_surface,
+)
+from surface_potential_analysis.util.util import (
     slice_along_axis,
 )
 
@@ -24,14 +26,17 @@ from ._comparison_points import (
 if TYPE_CHECKING:
     from collections.abc import Mapping
 
+    from matplotlib.animation import ArtistAnimation
     from matplotlib.axes import Axes
     from matplotlib.collections import QuadMesh
     from matplotlib.figure import Figure
     from matplotlib.lines import Line2D
 
     from surface_potential_analysis._types import SingleFlatIndexLike
+    from surface_potential_analysis.util.plot import Scale
 
     from .potential import Potential
+
 
 _L0Inv = TypeVar("_L0Inv", bound=int)
 _L1Inv = TypeVar("_L1Inv", bound=int)
@@ -44,7 +49,7 @@ def plot_potential_1d(
     axis: Literal[0, 1, 2, -1, -2, -3],
     *,
     ax: Axes | None = None,
-    scale: Literal["symlog", "linear"] = "linear",
+    scale: Scale = "linear",
 ) -> tuple[Figure, Axes, Line2D]:
     """
     Plot the potential along the given axis.
@@ -86,7 +91,7 @@ def plot_potential_1d_comparison(
     ],
     *,
     ax: Axes | None = None,
-    scale: Literal["symlog", "linear"] = "linear",
+    scale: Scale = "linear",
 ) -> tuple[Figure, Axes]:
     """
     Plot the potential in 1d at the given comparison points.
@@ -118,7 +123,7 @@ def plot_potential_1d_x2_comparison_111(
     offset: tuple[int, int] = (0, 0),
     *,
     ax: Axes | None = None,
-    scale: Literal["symlog", "linear"] = "linear",
+    scale: Scale = "linear",
 ) -> tuple[Figure, Axes]:
     """
     Plot the potential along the x2 at the relevant 111 sites.
@@ -150,7 +155,7 @@ def plot_potential_1d_x2_comparison_100(
     offset: tuple[int, int] = (0, 0),
     *,
     ax: Axes | None = None,
-    scale: Literal["symlog", "linear"] = "linear",
+    scale: Scale = "linear",
 ) -> tuple[Figure, Axes]:
     """
     Plot the potential along the x2 at the relevant 100 sites.
@@ -183,7 +188,7 @@ def plot_potential_2d_x(
     z_axis: Literal[0, 1, 2, -1, -2, -3],
     *,
     ax: Axes | None = None,
-    scale: Literal["symlog", "linear"] = "linear",
+    scale: Scale = "linear",
 ) -> tuple[Figure, Axes, QuadMesh]:
     """
     Plot the potential in 2d, perpendicular to z_axis at idx along z_axis.
@@ -227,7 +232,7 @@ def plot_potential_x0x1(
     x3_idx: SingleFlatIndexLike,
     *,
     ax: Axes | None = None,
-    scale: Literal["symlog", "linear"] = "linear",
+    scale: Scale = "linear",
 ) -> tuple[Figure, Axes, QuadMesh]:
     """
     Plot the potential in 2d, perpendicular to x3 at x3_idx.
@@ -254,7 +259,7 @@ def plot_potential_x1x2(
     x0_idx: SingleFlatIndexLike,
     *,
     ax: Axes | None = None,
-    scale: Literal["symlog", "linear"] = "linear",
+    scale: Scale = "linear",
 ) -> tuple[Figure, Axes, QuadMesh]:
     """
     Plot the potential in 2d, perpendicular to x2 at x2_idx.
@@ -281,7 +286,7 @@ def plot_potential_x2x0(
     x1_idx: SingleFlatIndexLike,
     *,
     ax: Axes | None = None,
-    scale: Literal["symlog", "linear"] = "linear",
+    scale: Scale = "linear",
 ) -> tuple[Figure, Axes, QuadMesh]:
     """
     Plot the potential in 2d, perpendicular to x1 at x1_idx.
@@ -310,7 +315,7 @@ def plot_potential_difference_2d_x(
     z_axis: Literal[0, 1, 2, -1, -2, -3],
     *,
     ax: Axes | None = None,
-    scale: Literal["symlog", "linear"] = "linear",
+    scale: Scale = "linear",
 ) -> tuple[Figure, Axes, QuadMesh]:
     """
     Plot the difference between two potentials in 2d, perpendicular to z_axis.
@@ -344,7 +349,7 @@ def animate_potential_3d_x(
     z_axis: Literal[0, 1, 2, -1, -2, -3],
     *,
     ax: Axes | None = None,
-    scale: Literal["symlog", "linear"] = "linear",
+    scale: Scale = "linear",
     clim: tuple[float | None, float | None] = (None, None),
 ) -> tuple[Figure, Axes, ArtistAnimation]:
     """
@@ -366,44 +371,11 @@ def animate_potential_3d_x(
     -------
     tuple[Figure, Axes, ArtistAnimation]
     """
-    fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
-
     coordinates = get_fundamental_projected_x_points(potential["basis"], z_axis)
-    data = potential["points"]
 
-    mesh0 = ax.pcolormesh(
-        *coordinates[slice_along_axis(0, (z_axis % 3) + 1)],
-        data[slice_along_axis(0, (z_axis % 3))],
-        shading="nearest",
+    fig, ax, ani = animate_through_surface(
+        coordinates, potential["points"], z_axis, ax=ax, scale=scale, clim=clim
     )
-
-    frames: list[list[QuadMesh]] = []
-    for i in range(data.shape[z_axis]):
-        mesh = ax.pcolormesh(
-            *coordinates[slice_along_axis(i, (z_axis % 3) + 1)],
-            data[slice_along_axis(i, (z_axis % 3))],
-            shading="nearest",
-        )
-        frames.append([mesh])
-
-    max_clim: float = (
-        np.max([i[0].get_clim()[1] for i in frames]) if clim[1] is None else clim[1]
-    )
-    min_clim: float = (
-        np.min([i[0].get_clim()[0] for i in frames]) if clim[0] is None else clim[0]
-    )
-    for (mesh,) in frames:
-        mesh.set_norm(scale)
-        mesh.set_clim(min_clim, max_clim)
-    mesh0.set_norm(scale)
-    mesh0.set_clim(min_clim, max_clim)
-
-    ani = ArtistAnimation(fig, frames)
-    ax.set_aspect("equal", adjustable="box")
-    fig.colorbar(mesh, ax=ax, format="%4.1e")
-
-    ax.set_xlabel(f"x{0 if (z_axis % 3) != 0 else 1} axis")
-    ax.set_ylabel(f"x{2 if (z_axis % 3) != 2 else 1} axis")  # noqa: PLR2004
     ax.set_title(f"Animation of the potential perpendicular to the x{z_axis % 3} axis")
 
     return fig, ax, ani
@@ -413,7 +385,7 @@ def animate_potential_x0x1(
     potential: Potential[_L0Inv, _L1Inv, _L2Inv],
     *,
     ax: Axes | None = None,
-    scale: Literal["symlog", "linear"] = "linear",
+    scale: Scale = "linear",
     clim: tuple[float | None, float | None] = (None, None),
 ) -> tuple[Figure, Axes, ArtistAnimation]:
     """
@@ -440,7 +412,7 @@ def animate_potential_x1x2(
     potential: Potential[_L0Inv, _L1Inv, _L2Inv],
     *,
     ax: Axes | None = None,
-    scale: Literal["symlog", "linear"] = "linear",
+    scale: Scale = "linear",
     clim: tuple[float | None, float | None] = (None, None),
 ) -> tuple[Figure, Axes, ArtistAnimation]:
     """
@@ -467,7 +439,7 @@ def animate_potential_x2x0(
     potential: Potential[_L0Inv, _L1Inv, _L2Inv],
     *,
     ax: Axes | None = None,
-    scale: Literal["symlog", "linear"] = "linear",
+    scale: Scale = "linear",
     clim: tuple[float | None, float | None] = (None, None),
 ) -> tuple[Figure, Axes, ArtistAnimation]:
     """
@@ -496,7 +468,7 @@ def animate_potential_difference_2d_x(
     z_axis: Literal[0, 1, 2, -1, -2, -3],
     *,
     ax: Axes | None = None,
-    scale: Literal["symlog", "linear"] = "linear",
+    scale: Scale = "linear",
     clim: tuple[float | None, float | None] = (None, None),
 ) -> tuple[Figure, Axes, QuadMesh]:
     """
@@ -534,7 +506,7 @@ def plot_potential_along_path(
     *,
     wrap_distances: bool = False,
     ax: Axes | None = None,
-    scale: Literal["symlog", "linear"] = "linear",
+    scale: Scale = "linear",
 ) -> tuple[Figure, Axes, Line2D]:
     """
     Plot the potential along the given path.
@@ -602,7 +574,7 @@ def plot_potential_minimum_along_path(
     axis: Literal[0, 1, 2, -1, -2, -3] = -1,
     *,
     ax: Axes | None = None,
-    scale: Literal["symlog", "linear"] = "linear",
+    scale: Scale = "linear",
 ) -> tuple[Figure, Axes, Line2D]:
     """
     Plot the potentail along the path, taking the minimum in the axis direction.

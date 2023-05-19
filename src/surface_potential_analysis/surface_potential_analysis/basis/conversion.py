@@ -12,7 +12,7 @@ from surface_potential_analysis.basis.basis import (
     TruncatedBasis,
     is_basis_type,
 )
-from surface_potential_analysis.interpolation import pad_ft_points
+from surface_potential_analysis.util.interpolation import pad_ft_points
 
 _L0Inv = TypeVar("_L0Inv", bound=int)
 _L1Inv = TypeVar("_L1Inv", bound=int)

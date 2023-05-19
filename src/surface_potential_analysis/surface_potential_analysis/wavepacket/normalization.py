@@ -13,7 +13,7 @@ from surface_potential_analysis.basis_config.basis_config import (
 from surface_potential_analysis.eigenstate.conversion import (
     convert_eigenstate_to_position_basis,
 )
-from surface_potential_analysis.util import timed
+from surface_potential_analysis.util.decorators import timed
 from surface_potential_analysis.wavepacket.conversion import (
     convert_wavepacket_to_position_basis,
 )

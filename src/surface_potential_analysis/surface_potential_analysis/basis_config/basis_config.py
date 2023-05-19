@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from functools import cached_property
-from typing import TYPE_CHECKING, Any, Generic, Literal, TypeVar, overload
+from typing import TYPE_CHECKING, Any, Generic, Literal, TypeVar, Unpack, overload
 
 import numpy as np
 
@@ -17,6 +17,7 @@ from surface_potential_analysis.basis import (
 if TYPE_CHECKING:
     from surface_potential_analysis._types import (
         ArrayFlatIndexLike,
+        ArrayIndexLike,
         ArrayStackedIndexLike,
         FlatIndexLike,
         IndexLike,
@@ -85,46 +86,90 @@ class BasisConfigUtil(Generic[_BC0Cov]):
         return out  # type: ignore[no-any-return]
 
     @property
-    def fundamental_nk_points(
-        self,
-    ) -> np.ndarray[tuple[Literal[3], int], np.dtype[np.int_]]:
+    def nk_points(self) -> ArrayStackedIndexLike[tuple[int]]:
+        x0t, x1t, x2t = np.meshgrid(
+            self.x0_basis.nk_points,
+            self.x1_basis.nk_points,
+            self.x2_basis.nk_points,
+            indexing="ij",
+        )
+        return (x0t.ravel(), x1t.ravel(), x2t.ravel())
+
+    @property
+    def fundamental_nk_points(self) -> ArrayStackedIndexLike[tuple[int]]:
         x0t, x1t, x2t = np.meshgrid(
             self.x0_basis.fundamental_nk_points,
             self.x1_basis.fundamental_nk_points,
             self.x2_basis.fundamental_nk_points,
             indexing="ij",
         )
-        return np.array(  # type: ignore[no-any-return]
-            [x0t.ravel(), x1t.ravel(), x2t.ravel()]
-        )
+        return (x0t.ravel(), x1t.ravel(), x2t.ravel())
+
+    def get_k_points_at_index(
+        self, idx: ArrayIndexLike[_S0Inv]
+    ) -> np.ndarray[tuple[Literal[3], Unpack[_S0Inv]], np.dtype[np.float_]]:
+        idx = idx if isinstance(idx, tuple) else self.get_stacked_index(idx)
+
+        nk_points = np.asarray(idx)[:, np.newaxis, :]
+        basis_vectors = np.array([self.dk0, self.dk1, self.dk2])[:, :, np.newaxis]
+        return np.sum(basis_vectors * nk_points, axis=0)  # type: ignore[no-any-return]
+
+    @property
+    def k_points(
+        self,
+    ) -> np.ndarray[tuple[Literal[3], int], np.dtype[np.float_]]:
+        return self.get_k_points_at_index(self.nk_points)
 
     @property
     def fundamental_k_points(
         self,
     ) -> np.ndarray[tuple[Literal[3], int], np.dtype[np.float_]]:
-        nk_points = self.fundamental_nk_points[:, np.newaxis, :]
-        basis_vectors = np.array([self.dk0, self.dk1, self.dk2])[:, :, np.newaxis]
+        nk_points = np.asarray(self.fundamental_nk_points)[:, np.newaxis, :]
+        basis_vectors = np.array(
+            [self.fundamental_dk0, self.fundamental_dk1, self.fundamental_dk2]
+        )[:, :, np.newaxis]
         return np.sum(basis_vectors * nk_points, axis=0)  # type: ignore[no-any-return]
 
     @property
-    def fundamental_nx_points(
-        self,
-    ) -> np.ndarray[tuple[Literal[3], int], np.dtype[np.int_]]:
+    def nx_points(self) -> ArrayStackedIndexLike[tuple[int]]:
+        x0t, x1t, x2t = np.meshgrid(
+            self.x0_basis.nx_points,  # type: ignore[misc]
+            self.x1_basis.nx_points,  # type: ignore[misc]
+            self.x2_basis.nx_points,  # type: ignore[misc]
+            indexing="ij",
+        )
+        return (x0t.ravel(), x1t.ravel(), x2t.ravel())
+
+    @property
+    def fundamental_nx_points(self) -> ArrayStackedIndexLike[tuple[int]]:
         x0t, x1t, x2t = np.meshgrid(
             self.x0_basis.fundamental_nx_points,  # type: ignore[misc]
             self.x1_basis.fundamental_nx_points,  # type: ignore[misc]
             self.x2_basis.fundamental_nx_points,  # type: ignore[misc]
             indexing="ij",
         )
-        return np.array(  # type: ignore[no-any-return]
-            [x0t.ravel(), x1t.ravel(), x2t.ravel()]
-        )
+        return (x0t.ravel(), x1t.ravel(), x2t.ravel())
+
+    def get_x_points_at_index(
+        self, idx: ArrayIndexLike[_S0Inv]
+    ) -> np.ndarray[tuple[Literal[3], Unpack[_S0Inv]], np.dtype[np.float_]]:
+        idx = idx if isinstance(idx, tuple) else self.get_stacked_index(idx)
+
+        nk_points = np.asarray(idx)[:, np.newaxis, :]
+        basis_vectors = np.array([self.dx0, self.dx1, self.dx2])[:, :, np.newaxis]
+        return np.sum(basis_vectors * nk_points, axis=0)  # type: ignore[no-any-return]
+
+    @property
+    def x_points(
+        self,
+    ) -> np.ndarray[tuple[Literal[3], int], np.dtype[np.float_]]:
+        return self.get_x_points_at_index(self.nx_points)
 
     @property
     def fundamental_x_points(
         self,
     ) -> np.ndarray[tuple[Literal[3], int], np.dtype[np.float_]]:
-        nx_points = self.fundamental_nx_points[:, np.newaxis, :]
+        nx_points = np.asarray(self.fundamental_nx_points)[:, np.newaxis, :]
         basis_vectors = np.array(
             [self.fundamental_dx0, self.fundamental_dx1, self.fundamental_dx2]
         )[:, :, np.newaxis]
@@ -146,9 +191,23 @@ class BasisConfigUtil(Generic[_BC0Cov]):
     def delta_x0(self) -> np.ndarray[tuple[Literal[3]], np.dtype[np.float_]]:
         return self.x0_basis.delta_x
 
+    @property
+    def fundamental_delta_x0(
+        self,
+    ) -> np.ndarray[tuple[Literal[3]], np.dtype[np.float_]]:
+        return self.delta_x0
+
+    @cached_property
+    def dx0(self) -> np.ndarray[tuple[Literal[3]], np.dtype[np.float_]]:
+        return self.delta_x0 / self.n0  # type: ignore[no-any-return]
+
     @cached_property
     def fundamental_dx0(self) -> BasisVector:
         return self.delta_x0 / self.fundamental_n0  # type: ignore[no-any-return]
+
+    @property
+    def delta_k0(self) -> np.ndarray[tuple[Literal[3]], np.dtype[np.float_]]:
+        return self.n0 * self.dk0  # type: ignore[no-any-return]
 
     @cached_property
     def fundamental_delta_k0(self) -> BasisVector:
@@ -160,6 +219,10 @@ class BasisConfigUtil(Generic[_BC0Cov]):
         return (  # type: ignore[no-any-return]
             2 * np.pi * np.cross(self.delta_x1, self.delta_x2) / self.volume
         )
+
+    @property
+    def fundamental_dk0(self) -> np.ndarray[tuple[Literal[3]], np.dtype[np.float_]]:
+        return self.dk0
 
     @cached_property
     def x1_basis(self) -> BasisUtil[Any]:
@@ -177,9 +240,23 @@ class BasisConfigUtil(Generic[_BC0Cov]):
     def delta_x1(self) -> np.ndarray[tuple[Literal[3]], np.dtype[np.float_]]:
         return self.x1_basis.delta_x
 
+    @property
+    def fundamental_delta_x1(
+        self,
+    ) -> np.ndarray[tuple[Literal[3]], np.dtype[np.float_]]:
+        return self.delta_x1
+
+    @cached_property
+    def dx1(self) -> np.ndarray[tuple[Literal[3]], np.dtype[np.float_]]:
+        return self.delta_x1 / self.n1  # type: ignore[no-any-return]
+
     @cached_property
     def fundamental_dx1(self) -> BasisVector:
         return self.delta_x1 / self.fundamental_n1  # type: ignore[no-any-return]
+
+    @property
+    def delta_k1(self) -> np.ndarray[tuple[Literal[3]], np.dtype[np.float_]]:
+        return self.n1 * self.dk1  # type: ignore[no-any-return]
 
     @cached_property
     def fundamental_delta_k1(self) -> BasisVector:
@@ -190,6 +267,10 @@ class BasisConfigUtil(Generic[_BC0Cov]):
         # See https://physics.stackexchange.com/questions/340860/reciprocal-lattice-in-2d
         out = 2 * np.pi * np.cross(self.delta_x2, self.delta_x0) / self.volume
         return out  # type: ignore[no-any-return]  # noqa: RET504
+
+    @property
+    def fundamental_dk1(self) -> np.ndarray[tuple[Literal[3]], np.dtype[np.float_]]:
+        return self.dk1
 
     @cached_property
     def x2_basis(self) -> BasisUtil[Any]:
@@ -207,9 +288,23 @@ class BasisConfigUtil(Generic[_BC0Cov]):
     def delta_x2(self) -> np.ndarray[tuple[Literal[3]], np.dtype[np.float_]]:
         return self.x2_basis.delta_x
 
+    @property
+    def fundamental_delta_x2(
+        self,
+    ) -> np.ndarray[tuple[Literal[3]], np.dtype[np.float_]]:
+        return self.delta_x2
+
+    @cached_property
+    def dx2(self) -> np.ndarray[tuple[Literal[3]], np.dtype[np.float_]]:
+        return self.delta_x2 / self.n2  # type: ignore[no-any-return]
+
     @cached_property
     def fundamental_dx2(self) -> BasisVector:
         return self.delta_x2 / self.fundamental_n2  # type: ignore[no-any-return]
+
+    @property
+    def delta_k2(self) -> np.ndarray[tuple[Literal[3]], np.dtype[np.float_]]:
+        return self.n2 * self.dk2  # type: ignore[no-any-return]
 
     @cached_property
     def fundamental_delta_k2(self) -> BasisVector:
@@ -221,6 +316,10 @@ class BasisConfigUtil(Generic[_BC0Cov]):
         return (  # type: ignore[no-any-return]
             2 * np.pi * np.cross(self.delta_x0, self.delta_x1) / self.volume
         )
+
+    @property
+    def fundamental_dk2(self) -> np.ndarray[tuple[Literal[3]], np.dtype[np.float_]]:
+        return self.dk2
 
     @cached_property
     def shape(self) -> tuple[int, int, int]:
@@ -388,13 +487,13 @@ class BasisConfigUtil(Generic[_BC0Cov]):
             {
                 **self._config[1],
                 **(
-                    {"delta_x": np.dot(matrix, self._config[1]["delta_x"])}  # type: ignore[typeddict-item]
+                    {"delta_x": np.dot(matrix, self._config[1]["delta_x"])}
                     if self._config[1].get("parent", None) is None
                     else {
                         "parent": {
-                            **self._config[1]["parent"],  # type: ignore[typeddict-item]
+                            **self._config[1]["parent"],
                             "delta_x": np.dot(
-                                matrix, self._config[1]["parent"]["delta_x"]  # type: ignore[typeddict-item]
+                                matrix, self._config[1]["parent"]["delta_x"]
                             ),
                         }
                     }
@@ -403,13 +502,13 @@ class BasisConfigUtil(Generic[_BC0Cov]):
             {
                 **self._config[2],
                 **(
-                    {"delta_x": np.dot(matrix, self._config[2]["delta_x"])}  # type: ignore[typeddict-item]
+                    {"delta_x": np.dot(matrix, self._config[2]["delta_x"])}
                     if self._config[2].get("parent", None) is None
                     else {
                         "parent": {
-                            **self._config[2]["parent"],  # type: ignore[typeddict-item]
+                            **self._config[2]["parent"],
                             "delta_x": np.dot(
-                                matrix, self._config[2]["parent"]["delta_x"]  # type: ignore[typeddict-item]
+                                matrix, self._config[2]["parent"]["delta_x"]
                             ),
                         }
                     }

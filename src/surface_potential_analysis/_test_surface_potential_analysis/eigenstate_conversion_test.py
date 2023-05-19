@@ -28,7 +28,7 @@ from surface_potential_analysis.basis_config.sho_basis import (
 from surface_potential_analysis.eigenstate.conversion import (
     convert_eigenstate_to_basis,
 )
-from surface_potential_analysis.interpolation import pad_ft_points
+from surface_potential_analysis.util.interpolation import pad_ft_points
 
 from .utils import get_random_explicit_basis
 

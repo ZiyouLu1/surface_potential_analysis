@@ -5,7 +5,7 @@ from typing import Any
 
 import numpy as np
 
-from surface_potential_analysis.interpolation import (
+from surface_potential_analysis.util.interpolation import (
     interpolate_points_fftn,
     interpolate_points_rfft,
     interpolate_points_rfftn,

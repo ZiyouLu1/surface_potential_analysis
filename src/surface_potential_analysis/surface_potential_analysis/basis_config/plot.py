@@ -10,7 +10,7 @@ from surface_potential_analysis.basis_config.basis_config import (
     BasisConfigUtil,
     get_fundamental_projected_x_points,
 )
-from surface_potential_analysis.util import slice_along_axis
+from surface_potential_analysis.util.util import slice_along_axis
 
 if TYPE_CHECKING:
     from matplotlib.axes import Axes

@@ -18,7 +18,7 @@ from surface_potential_analysis.hamiltonian.hamiltonian import (
     add_hamiltonian,
     flatten_hamiltonian,
 )
-from surface_potential_analysis.util import timed
+from surface_potential_analysis.util.decorators import timed
 
 if TYPE_CHECKING:
     from surface_potential_analysis.potential import Potential

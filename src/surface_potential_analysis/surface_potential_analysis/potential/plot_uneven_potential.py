@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Literal, TypeVar
+from typing import TYPE_CHECKING, TypeVar
 
 from matplotlib import pyplot as plt
 
@@ -15,6 +15,7 @@ if TYPE_CHECKING:
     from matplotlib.lines import Line2D
 
     from surface_potential_analysis.potential.potential import UnevenPotential
+    from surface_potential_analysis.util.plot import Scale
 
 _L0Inv = TypeVar("_L0Inv", bound=int)
 _L1Inv = TypeVar("_L1Inv", bound=int)
@@ -26,7 +27,7 @@ def plot_uneven_potential_z(
     idx: tuple[int, int],
     *,
     ax: Axes | None = None,
-    scale: Literal["symlog", "linear"] = "linear",
+    scale: Scale = "linear",
 ) -> tuple[Figure, Axes, Line2D]:
     """
     Plot an uneven potential in 1d, in the x2 direction.
@@ -62,7 +63,7 @@ def plot_uneven_potential_z_comparison(
     comparison_points: dict[str, tuple[int, int]],
     *,
     ax: Axes | None = None,
-    scale: Literal["symlog", "linear"] = "linear",
+    scale: Scale = "linear",
 ) -> tuple[Figure, Axes]:
     """
     Plot a nuneven potential in 1d along the x2 direction.
@@ -94,7 +95,7 @@ def plot_uneven_potential_z_comparison_111(
     offset: tuple[int, int] = (0, 0),
     *,
     ax: Axes | None = None,
-    scale: Literal["symlog", "linear"] = "linear",
+    scale: Scale = "linear",
 ) -> tuple[Figure, Axes]:
     """
     Plot the potential along the x2 at the relevant 111 sites.
@@ -123,7 +124,7 @@ def plot_uneven_potential_z_comparison_100(
     offset: tuple[int, int] = (0, 0),
     *,
     ax: Axes | None = None,
-    scale: Literal["symlog", "linear"] = "linear",
+    scale: Scale = "linear",
 ) -> tuple[Figure, Axes]:
     """
     Plot the potential along the x2 at the relevant 100 sites.
