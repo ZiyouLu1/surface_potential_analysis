@@ -13,11 +13,9 @@ from surface_potential_analysis.util.decorators import timed
 from .s1_potential import get_interpolated_nickel_potential
 
 if TYPE_CHECKING:
-    from surface_potential_analysis.basis import (
+    from surface_potential_analysis.basis.basis import (
         ExplicitBasis,
         MomentumBasis,
-        PositionBasis,
-        TruncatedBasis,
     )
     from surface_potential_analysis.basis_config.sho_basis import SHOBasisConfig
     from surface_potential_analysis.hamiltonian import HamiltonianWithBasis
@@ -36,9 +34,9 @@ def generate_hamiltonian_sho(
     bloch_phase: np.ndarray[tuple[Literal[3]], np.dtype[np.float_]],
     resolution: tuple[_L3, _L4, _L5],
 ) -> HamiltonianWithBasis[
-    TruncatedBasis[_L3, MomentumBasis[_L0]],
-    TruncatedBasis[_L4, MomentumBasis[_L1]],
-    ExplicitBasis[_L5, PositionBasis[_L2]],
+    MomentumBasis[_L0, _L3],
+    MomentumBasis[_L1, _L4],
+    ExplicitBasis[_L2, _L5],
 ]:
     """
     Generate a Hamiltonian using an infinate SHO basis.
@@ -73,10 +71,7 @@ def generate_hamiltonian_sho(
 
 def generate_sho_basis(
     n: int,
-) -> tuple[
-    ExplicitBasis[int, PositionBasis[int]],
-    ExplicitBasis[int, PositionBasis[int]],
-]:
+) -> tuple[ExplicitBasis[int, int], ExplicitBasis[int, int]]:
     """Get the SHO basis used for the Nickel surface."""
     config: SHOBasisConfig = {
         "sho_omega": 195636899474736.66,

@@ -5,8 +5,7 @@ from typing import TYPE_CHECKING, Any, Literal, TypeVar
 import numpy as np
 from matplotlib import pyplot as plt
 
-from surface_potential_analysis.basis_config.basis_config import (
-    BasisConfig,
+from surface_potential_analysis.basis_config.util import (
     BasisConfigUtil,
     get_fundamental_projected_x_points,
 )
@@ -18,11 +17,14 @@ if TYPE_CHECKING:
     from matplotlib.lines import Line2D
 
     from surface_potential_analysis._types import IndexLike, SingleFlatIndexLike
-    from surface_potential_analysis.basis.basis import Basis
+    from surface_potential_analysis.basis import BasisLike
+    from surface_potential_analysis.basis_config.basis_config import (
+        BasisConfig,
+    )
 
-    _BX0Inv = TypeVar("_BX0Inv", bound=Basis[Any, Any])
-    _BX1Inv = TypeVar("_BX1Inv", bound=Basis[Any, Any])
-    _BX2Inv = TypeVar("_BX2Inv", bound=Basis[Any, Any])
+    _BX0Inv = TypeVar("_BX0Inv", bound=BasisLike[Any, Any])
+    _BX1Inv = TypeVar("_BX1Inv", bound=BasisLike[Any, Any])
+    _BX2Inv = TypeVar("_BX2Inv", bound=BasisLike[Any, Any])
 
 
 def plot_projected_x_points_2d(

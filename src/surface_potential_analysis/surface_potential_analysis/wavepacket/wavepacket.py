@@ -4,13 +4,13 @@ from typing import TYPE_CHECKING, Any, Generic, Literal, TypedDict, TypeVar
 
 import numpy as np
 
-from surface_potential_analysis.basis import Basis
+from surface_potential_analysis.basis import BasisLike
 from surface_potential_analysis.basis_config.basis_config import (
     BasisConfig,
-    BasisConfigUtil,
-    MomentumBasisConfig,
-    PositionBasisConfig,
+    FundamentalMomentumBasisConfig,
+    FundamentalPositionBasisConfig,
 )
+from surface_potential_analysis.basis_config.util import BasisConfigUtil
 from surface_potential_analysis.eigenstate.eigenstate_calculation import (
     calculate_eigenstates,
 )
@@ -31,45 +31,46 @@ _L0Inv = TypeVar("_L0Inv", bound=int)
 _L1Inv = TypeVar("_L1Inv", bound=int)
 _L2Inv = TypeVar("_L2Inv", bound=int)
 
-_BC0Cov = TypeVar("_BC0Cov", bound=BasisConfig[Any, Any, Any], covariant=True)
-_BC0Inv = TypeVar("_BC0Inv", bound=BasisConfig[Any, Any, Any])
 
-_BX0Inv = TypeVar("_BX0Inv", bound=Basis[Any, Any])
-_BX1Inv = TypeVar("_BX1Inv", bound=Basis[Any, Any])
-_BX2Inv = TypeVar("_BX2Inv", bound=Basis[Any, Any])
+_BC0Inv = TypeVar(
+    "_BC0Inv",
+    bound=BasisConfig[BasisLike[Any, Any], BasisLike[Any, Any], BasisLike[Any, Any]],
+)
 
-_NS0Cov = TypeVar("_NS0Cov", bound=int, covariant=True)
-_NS1Cov = TypeVar("_NS1Cov", bound=int, covariant=True)
 
 _NS0Inv = TypeVar("_NS0Inv", bound=int)
 _NS1Inv = TypeVar("_NS1Inv", bound=int)
 
 
-class Wavepacket(TypedDict, Generic[_NS0Cov, _NS1Cov, _BC0Cov]):
+class Wavepacket(TypedDict, Generic[_NS0Inv, _NS1Inv, _BC0Inv]):
     """represents an approximation of a Wannier function."""
 
-    basis: _BC0Cov
-    vectors: np.ndarray[tuple[_NS0Cov, _NS1Cov, int], np.dtype[np.complex_]]
-    energies: np.ndarray[tuple[_NS0Cov, _NS1Cov], np.dtype[np.float_]]
+    basis: _BC0Inv
+    vectors: np.ndarray[tuple[_NS0Inv, _NS1Inv, int], np.dtype[np.complex_]]
+    energies: np.ndarray[tuple[_NS0Inv, _NS1Inv], np.dtype[np.float_]]
 
+
+_BX0Inv = TypeVar("_BX0Inv", bound=BasisLike[Any, Any])
+_BX1Inv = TypeVar("_BX1Inv", bound=BasisLike[Any, Any])
+_BX2Inv = TypeVar("_BX2Inv", bound=BasisLike[Any, Any])
 
 WavepacketWithBasis = Wavepacket[
-    _NS0Cov,
-    _NS1Cov,
+    _NS0Inv,
+    _NS1Inv,
     BasisConfig[_BX0Inv, _BX1Inv, _BX2Inv],
 ]
 
 
 PositionBasisWavepacket = Wavepacket[
-    _NS0Cov,
-    _NS1Cov,
-    PositionBasisConfig[_L0Inv, _L1Inv, _L2Inv],
+    _NS0Inv,
+    _NS1Inv,
+    FundamentalPositionBasisConfig[_L0Inv, _L1Inv, _L2Inv],
 ]
 
 MomentumBasisWavepacket = Wavepacket[
-    _NS0Cov,
-    _NS1Cov,
-    MomentumBasisConfig[_L0Inv, _L1Inv, _L2Inv],
+    _NS0Inv,
+    _NS1Inv,
+    FundamentalMomentumBasisConfig[_L0Inv, _L1Inv, _L2Inv],
 ]
 
 

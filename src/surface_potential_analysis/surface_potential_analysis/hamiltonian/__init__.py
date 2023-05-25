@@ -3,15 +3,15 @@
 from __future__ import annotations
 
 from .hamiltonian import (
+    FundamentalMomentumBasisHamiltonian,
+    FundamentalPositionBasisHamiltonian,
     Hamiltonian,
     HamiltonianWithBasis,
-    MomentumBasisHamiltonian,
-    PositionBasisHamiltonian,
 )
 
 __all__ = [
     "Hamiltonian",
     "HamiltonianWithBasis",
-    "MomentumBasisHamiltonian",
-    "PositionBasisHamiltonian",
+    "FundamentalMomentumBasisHamiltonian",
+    "FundamentalPositionBasisHamiltonian",
 ]

@@ -6,8 +6,8 @@ import numpy as np
 
 from surface_potential_analysis.basis_config.basis_config import (
     BasisConfig,
-    BasisConfigUtil,
 )
+from surface_potential_analysis.basis_config.util import BasisConfigUtil
 
 from .eigenstate_calculation import calculate_eigenstates
 

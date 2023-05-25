@@ -4,13 +4,14 @@ from typing import TYPE_CHECKING, Any, TypeVar
 
 import numpy as np
 
-from surface_potential_analysis.basis_config.basis_config import (
-    BasisConfig,
-    BasisConfigUtil,
-)
+from surface_potential_analysis.basis.basis import FundamentalMomentumBasis
+from surface_potential_analysis.basis_config.util import BasisConfigUtil
 
 if TYPE_CHECKING:
-    from surface_potential_analysis.basis.basis import Basis, MomentumBasis
+    from surface_potential_analysis.basis.basis_like import BasisLike
+    from surface_potential_analysis.basis_config.basis_config import (
+        BasisConfig,
+    )
     from surface_potential_analysis.eigenstate.eigenstate import EigenstateWithBasis
 
     from .wavepacket import WavepacketWithBasis
@@ -18,9 +19,9 @@ if TYPE_CHECKING:
     _NS0Inv = TypeVar("_NS0Inv", bound=int)
     _NS1Inv = TypeVar("_NS1Inv", bound=int)
 
-    _BX0Inv = TypeVar("_BX0Inv", bound=Basis[Any, Any])
-    _BX1Inv = TypeVar("_BX1Inv", bound=Basis[Any, Any])
-    _BX2Inv = TypeVar("_BX2Inv", bound=Basis[Any, Any])
+    _BX0Inv = TypeVar("_BX0Inv", bound=BasisLike[Any, Any])
+    _BX1Inv = TypeVar("_BX1Inv", bound=BasisLike[Any, Any])
+    _BX2Inv = TypeVar("_BX2Inv", bound=BasisLike[Any, Any])
 
     _L0Inv = TypeVar("_L0Inv", bound=int)
     _L1Inv = TypeVar("_L1Inv", bound=int)
@@ -29,7 +30,7 @@ if TYPE_CHECKING:
 def get_furled_basis(
     basis: BasisConfig[_BX0Inv, _BX1Inv, _BX2Inv],
     samples: tuple[_NS0Inv, _NS1Inv],
-) -> BasisConfig[MomentumBasis[int], MomentumBasis[int], _BX2Inv]:
+) -> BasisConfig[FundamentalMomentumBasis[int], FundamentalMomentumBasis[int], _BX2Inv]:
     """
     Given an basis and a sample size get the basis of the furled wavepacket.
 
@@ -43,21 +44,24 @@ def get_furled_basis(
     BasisConfig[MomentumBasis[int], MomentumBasis[int], _BX2Inv]
     """
     (ns0, ns1) = samples
-    util = BasisConfigUtil(basis)
     return (
-        {"_type": "momentum", "delta_x": util.delta_x0 / ns0, "n": util.n0 // ns0},
-        {"_type": "momentum", "delta_x": util.delta_x1 / ns1, "n": util.n1 // ns1},
+        FundamentalMomentumBasis(basis[0].delta_x / ns0, basis[0].n // ns0),
+        FundamentalMomentumBasis(basis[1].delta_x / ns1, basis[1].n // ns1),
         basis[2],
     )
 
 
 def furl_eigenstate(
     eigenstate: EigenstateWithBasis[
-        MomentumBasis[_L0Inv], MomentumBasis[_L1Inv], _BX2Inv
+        FundamentalMomentumBasis[_L0Inv], FundamentalMomentumBasis[_L1Inv], _BX2Inv
     ],
     samples: tuple[_NS0Inv, _NS1Inv],
 ) -> WavepacketWithBasis[
-    _NS0Inv, _NS1Inv, MomentumBasis[int], MomentumBasis[int], _BX2Inv
+    _NS0Inv,
+    _NS1Inv,
+    FundamentalMomentumBasis[int],
+    FundamentalMomentumBasis[int],
+    _BX2Inv,
 ]:
     """
     Convert an eigenstate into a wavepacket of a smaller unit cell.
@@ -97,7 +101,7 @@ def furl_eigenstate(
 def get_unfurled_basis(
     basis: BasisConfig[_BX0Inv, _BX1Inv, _BX2Inv],
     samples: tuple[_NS0Inv, _NS1Inv],
-) -> BasisConfig[MomentumBasis[int], MomentumBasis[int], _BX2Inv]:
+) -> BasisConfig[FundamentalMomentumBasis[int], FundamentalMomentumBasis[int], _BX2Inv]:
     """
     Given an basis and a sample size get the basis of the unfurled eigenstate.
 
@@ -111,19 +115,22 @@ def get_unfurled_basis(
     BasisConfig[MomentumBasis[int], MomentumBasis[int], _BX2Inv]
     """
     (ns0, ns1) = samples
-    util = BasisConfigUtil(basis)
     return (
-        {"_type": "momentum", "delta_x": util.delta_x0 * ns0, "n": util.n0 * ns0},
-        {"_type": "momentum", "delta_x": util.delta_x1 * ns1, "n": util.n1 * ns1},
+        FundamentalMomentumBasis(basis[0].delta_x / ns0, basis[0].n // ns0),
+        FundamentalMomentumBasis(basis[1].delta_x * ns1, basis[1].n * ns1),
         basis[2],
     )
 
 
 def get_wavepacket_unfurled_basis(
     wavepacket: WavepacketWithBasis[
-        _NS0Inv, _NS1Inv, MomentumBasis[_L0Inv], MomentumBasis[_L1Inv], _BX2Inv
+        _NS0Inv,
+        _NS1Inv,
+        FundamentalMomentumBasis[_L0Inv],
+        FundamentalMomentumBasis[_L1Inv],
+        _BX2Inv,
     ]
-) -> BasisConfig[MomentumBasis[int], MomentumBasis[int], _BX2Inv]:
+) -> BasisConfig[FundamentalMomentumBasis[int], FundamentalMomentumBasis[int], _BX2Inv]:
     """
     Given a wavepacket get the basis of the unfurled eigenstate.
 
@@ -140,9 +147,15 @@ def get_wavepacket_unfurled_basis(
 
 def unfurl_wavepacket(
     wavepacket: WavepacketWithBasis[
-        _NS0Inv, _NS1Inv, MomentumBasis[_L0Inv], MomentumBasis[_L1Inv], _BX2Inv
+        _NS0Inv,
+        _NS1Inv,
+        FundamentalMomentumBasis[_L0Inv],
+        FundamentalMomentumBasis[_L1Inv],
+        _BX2Inv,
     ]
-) -> EigenstateWithBasis[MomentumBasis[int], MomentumBasis[int], _BX2Inv]:
+) -> EigenstateWithBasis[
+    FundamentalMomentumBasis[int], FundamentalMomentumBasis[int], _BX2Inv
+]:
     """
     Convert a wavepacket into an eigenstate of the irreducible unit cell.
 

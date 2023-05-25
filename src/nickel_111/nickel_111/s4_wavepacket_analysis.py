@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import numpy as np
-from surface_potential_analysis.basis_config.basis_config import BasisConfigUtil
+from surface_potential_analysis.basis_config.util import BasisConfigUtil
 from surface_potential_analysis.eigenstate.conversion import (
     convert_eigenstate_to_position_basis,
 )
@@ -16,7 +16,7 @@ def calculate_wavepacket_maximums() -> None:
         wavepacket = load_nickel_wavepacket(band)
 
         eigenstate = get_eigenstate(wavepacket, 0)
-        converted = convert_eigenstate_to_position_basis(eigenstate)
+        converted = convert_eigenstate_to_position_basis(eigenstate)  # type: ignore[arg-type] # ive done variance wrong somewhere
         util = BasisConfigUtil(converted["basis"])
 
         print(f"Band {band}")  # noqa: T201

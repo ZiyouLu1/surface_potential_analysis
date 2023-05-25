@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import TypeVar
 
 import numpy as np
+from surface_potential_analysis.basis.basis import FundamentalPositionBasis
 from surface_potential_analysis.potential.point_potential import (
     PointPotential,
     load_point_potential_json,
@@ -171,8 +172,8 @@ def map_irreducible_points_into_unit_cell(
         )
     return {
         "basis": (
-            {"_type": "position", "delta_x": delta_x0, "n": final_grid.shape[0]},
-            {"_type": "position", "delta_x": delta_x1, "n": final_grid.shape[1]},
+            FundamentalPositionBasis(delta_x0, final_grid.shape[0]),
+            FundamentalPositionBasis(delta_x1, final_grid.shape[1]),
             z_points,
         ),
         "points": final_grid,

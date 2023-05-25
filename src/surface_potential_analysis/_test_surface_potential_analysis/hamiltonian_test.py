@@ -4,8 +4,9 @@ import unittest
 
 import numpy as np
 
+from surface_potential_analysis.basis.basis import FundamentalMomentumBasis
 from surface_potential_analysis.hamiltonian.hamiltonian import (
-    MomentumBasisStackedHamiltonian,
+    FundamentalMomentumBasisStackedHamiltonian,
     flatten_hamiltonian,
     stack_hamiltonian,
 )
@@ -18,24 +19,12 @@ rng = np.random.default_rng()
 class HamiltonianTest(unittest.TestCase):
     def test_flatten_hamiltonian(self) -> None:
         shape = rng.integers(1, 10, size=3)
-        hamiltonian: MomentumBasisStackedHamiltonian[int, int, int] = {
+        hamiltonian: FundamentalMomentumBasisStackedHamiltonian[int, int, int] = {
             "array": rng.random((*shape, *shape)),
             "basis": (
-                {
-                    "n": shape.item(0),
-                    "_type": "momentum",
-                    "delta_x": np.array([1.0, 0, 0]),
-                },
-                {
-                    "n": shape.item(1),
-                    "_type": "momentum",
-                    "delta_x": np.array([0, 1.0, 0]),
-                },
-                {
-                    "n": shape.item(2),
-                    "_type": "momentum",
-                    "delta_x": np.array([0, 0, 1.0]),
-                },
+                FundamentalMomentumBasis(np.array([1.0, 0, 0]), shape.item(0)),
+                FundamentalMomentumBasis(np.array([0, 1.0, 0]), shape.item(1)),
+                FundamentalMomentumBasis(np.array([0, 0, 1.0]), shape.item(2)),
             ),
         }
         actual = flatten_hamiltonian(hamiltonian)
@@ -52,24 +41,12 @@ class HamiltonianTest(unittest.TestCase):
 
     def test_stack_hamiltonian(self) -> None:
         shape = rng.integers(1, 10, size=3)
-        hamiltonian: MomentumBasisStackedHamiltonian[int, int, int] = {
+        hamiltonian: FundamentalMomentumBasisStackedHamiltonian[int, int, int] = {
             "array": rng.random((*shape, *shape)),
             "basis": (
-                {
-                    "n": shape.item(0),
-                    "_type": "momentum",
-                    "delta_x": np.array([1.0, 0, 0]),
-                },
-                {
-                    "n": shape.item(1),
-                    "_type": "momentum",
-                    "delta_x": np.array([0, 0, 0]),
-                },
-                {
-                    "n": shape.item(2),
-                    "_type": "momentum",
-                    "delta_x": np.array([0, 1.0, 0]),
-                },
+                FundamentalMomentumBasis(np.array([1.0, 0, 0]), shape.item(0)),
+                FundamentalMomentumBasis(np.array([0, 1.0, 0]), shape.item(1)),
+                FundamentalMomentumBasis(np.array([0, 0, 1.0]), shape.item(2)),
             ),
         }
 

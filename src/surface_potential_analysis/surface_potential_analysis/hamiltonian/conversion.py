@@ -6,17 +6,19 @@ import numpy as np
 
 from surface_potential_analysis.basis_config.basis_config import (
     BasisConfig,
-    MomentumBasisConfigUtil,
-    PositionBasisConfigUtil,
 )
-from surface_potential_analysis.basis_config.conversion import convert_matrix
+from surface_potential_analysis.basis_config.conversion import (
+    basis_config_as_fundamental_momentum_basis_config,
+    basis_config_as_fundamental_position_basis_config,
+    convert_matrix,
+)
 
 from .hamiltonian import (
+    FundamentalMomentumBasisHamiltonian,
+    FundamentalMomentumBasisStackedHamiltonian,
+    FundamentalPositionBasisHamiltonian,
+    FundamentalPositionBasisStackedHamiltonian,
     Hamiltonian,
-    MomentumBasisHamiltonian,
-    MomentumBasisStackedHamiltonian,
-    PositionBasisHamiltonian,
-    PositionBasisStackedHamiltonian,
     flatten_hamiltonian,
     stack_hamiltonian,
 )
@@ -51,23 +53,20 @@ def convert_hamiltonian_to_basis(
 
 
 def _convert_stacked_hamiltonian_to_momentum_basis(
-    hamiltonian: PositionBasisStackedHamiltonian[_L0Inv, _L1Inv, _L2Inv]
-) -> MomentumBasisStackedHamiltonian[_L0Inv, _L1Inv, _L2Inv]:
+    hamiltonian: FundamentalPositionBasisStackedHamiltonian[_L0Inv, _L1Inv, _L2Inv]
+) -> FundamentalMomentumBasisStackedHamiltonian[_L0Inv, _L1Inv, _L2Inv]:
     transformed = np.fft.ifftn(
         np.fft.fftn(hamiltonian["array"], axes=(0, 1, 2), norm="ortho"),
         axes=(3, 4, 5),
         norm="ortho",
     )
-    util = PositionBasisConfigUtil(hamiltonian["basis"])
-    return {
-        "basis": util.get_reciprocal_basis(),
-        "array": transformed,
-    }
+    basis = basis_config_as_fundamental_momentum_basis_config(hamiltonian["basis"])
+    return {"basis": basis, "array": transformed}
 
 
 def convert_hamiltonian_to_momentum_basis(
-    hamiltonian: PositionBasisHamiltonian[_L0Inv, _L1Inv, _L2Inv]
-) -> MomentumBasisHamiltonian[_L0Inv, _L1Inv, _L2Inv]:
+    hamiltonian: FundamentalPositionBasisHamiltonian[_L0Inv, _L1Inv, _L2Inv]
+) -> FundamentalMomentumBasisHamiltonian[_L0Inv, _L1Inv, _L2Inv]:
     """
     Convert a hamiltonian from position to momentum basis.
 
@@ -85,24 +84,21 @@ def convert_hamiltonian_to_momentum_basis(
 
 
 def _convert_stacked_hamiltonian_to_position_basis(
-    hamiltonian: MomentumBasisStackedHamiltonian[_L0Inv, _L1Inv, _L2Inv]
-) -> PositionBasisStackedHamiltonian[_L0Inv, _L1Inv, _L2Inv]:
+    hamiltonian: FundamentalMomentumBasisStackedHamiltonian[_L0Inv, _L1Inv, _L2Inv]
+) -> FundamentalPositionBasisStackedHamiltonian[_L0Inv, _L1Inv, _L2Inv]:
     # TODO: which way round
     transformed = np.fft.fftn(
         np.fft.ifftn(hamiltonian["array"], axes=(0, 1, 2), norm="ortho"),
         axes=(3, 4, 5),
         norm="ortho",
     )
-    util = MomentumBasisConfigUtil(hamiltonian["basis"])
-    return {
-        "basis": util.get_reciprocal_basis(),
-        "array": transformed,
-    }
+    basis = basis_config_as_fundamental_position_basis_config(hamiltonian["basis"])
+    return {"basis": basis, "array": transformed}
 
 
 def convert_hamiltonian_to_position_basis(
-    hamiltonian: MomentumBasisHamiltonian[_L0Inv, _L1Inv, _L2Inv]
-) -> PositionBasisHamiltonian[_L0Inv, _L1Inv, _L2Inv]:
+    hamiltonian: FundamentalMomentumBasisHamiltonian[_L0Inv, _L1Inv, _L2Inv]
+) -> FundamentalPositionBasisHamiltonian[_L0Inv, _L1Inv, _L2Inv]:
     """
     Convert a hamiltonian from momentum to position basis.
 

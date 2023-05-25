@@ -1,188 +1,151 @@
 from __future__ import annotations
 
-from typing import Any, TypeVar, overload
+from functools import cached_property
+from typing import Any, Generic, Literal, TypeVar
 
 import numpy as np
 
 from surface_potential_analysis.basis.basis import (
-    Basis,
     ExplicitBasis,
-    MomentumBasis,
-    PositionBasis,
-    TruncatedBasis,
-    is_basis_type,
+    FundamentalMomentumBasis,
+    FundamentalPositionBasis,
 )
-from surface_potential_analysis.util.interpolation import pad_ft_points
 
-_L0Inv = TypeVar("_L0Inv", bound=int)
-_L1Inv = TypeVar("_L1Inv", bound=int)
+from .basis_like import BasisLike, BasisVector
 
-_BX0Inv = TypeVar("_BX0Inv", bound=Basis[Any, Any])
-_BX1Inv = TypeVar("_BX1Inv", bound=Basis[Any, Any])
+_BX0Inv = TypeVar("_BX0Inv", bound=BasisLike[Any, Any])
 
 
-@overload
-def as_explicit_position_basis(
-    basis: MomentumBasis[_L0Inv],
-) -> ExplicitBasis[_L0Inv, PositionBasis[_L0Inv]]:
-    ...
+_N0Inv = TypeVar("_N0Inv", bound=int)
+_N1Inv = TypeVar("_N1Inv", bound=int)
+
+_NF0Inv = TypeVar("_NF0Inv", bound=int)
+_NF1Inv = TypeVar("_NF1Inv", bound=int)
 
 
-@overload
-def as_explicit_position_basis(
-    basis: PositionBasis[_L0Inv],
-) -> ExplicitBasis[_L0Inv, PositionBasis[_L0Inv]]:
-    ...
+class _RotatedBasis(Generic[_NF0Inv, _N0Inv]):
+    def __init__(
+        self,
+        basis: BasisLike[_NF0Inv, _N0Inv],
+        matrix: np.ndarray[tuple[Literal[3], Literal[3]], np.dtype[np.float_]],
+    ) -> None:
+        self._basis = basis
+        self._matrix = matrix
+
+        self.__annotations__ = self._basis.__annotations__
+        ##TODO: dunder methods
+
+    def __getattr__(self, *args, **kwargs):  # type: ignore[no-untyped-def] # noqa: ANN204, ANN002, ANN003
+        return getattr(self._basis, *args, **kwargs)
+
+    @cached_property
+    def delta_x(self) -> BasisVector:
+        return np.dot(self._matrix, self._basis.delta_x)  # type: ignore[no-any-return]
 
 
-@overload
-def as_explicit_position_basis(
-    basis: PositionBasis[_L0Inv] | MomentumBasis[_L0Inv],
-) -> ExplicitBasis[_L0Inv, PositionBasis[_L0Inv]]:
-    ...
-
-
-@overload
-def as_explicit_position_basis(
-    basis: TruncatedBasis[_L0Inv, MomentumBasis[_L1Inv]]
-) -> ExplicitBasis[_L0Inv, PositionBasis[_L1Inv]]:
-    ...
-
-
-@overload
-def as_explicit_position_basis(
-    basis: TruncatedBasis[_L0Inv, PositionBasis[_L1Inv]]
-) -> ExplicitBasis[_L0Inv, PositionBasis[_L1Inv]]:
-    ...
-
-
-@overload
-def as_explicit_position_basis(
-    basis: TruncatedBasis[_L0Inv, PositionBasis[_L1Inv]]
-    | TruncatedBasis[_L0Inv, MomentumBasis[_L1Inv]]
-) -> ExplicitBasis[_L0Inv, PositionBasis[_L1Inv]]:
-    ...
-
-
-@overload
-def as_explicit_position_basis(
-    basis: ExplicitBasis[_L0Inv, MomentumBasis[_L1Inv]]
-) -> ExplicitBasis[_L0Inv, PositionBasis[_L1Inv]]:
-    ...
-
-
-@overload
-def as_explicit_position_basis(
-    basis: ExplicitBasis[_L0Inv, PositionBasis[_L1Inv]]
-) -> ExplicitBasis[_L0Inv, PositionBasis[_L1Inv]]:
-    ...
-
-
-@overload
-def as_explicit_position_basis(
-    basis: TruncatedBasis[_L0Inv, MomentumBasis[_L1Inv]]
-    | MomentumBasis[_L0Inv]
-    | TruncatedBasis[_L0Inv, PositionBasis[_L1Inv]]
-    | PositionBasis[_L0Inv]
-    | ExplicitBasis[_L0Inv, MomentumBasis[_L1Inv]]
-    | ExplicitBasis[_L0Inv, PositionBasis[_L1Inv]]
-) -> ExplicitBasis[_L0Inv, PositionBasis[_L1Inv]]:
-    ...
-
-
-def as_explicit_position_basis(
-    basis: TruncatedBasis[_L0Inv, MomentumBasis[_L1Inv]]
-    | MomentumBasis[_L0Inv]
-    | TruncatedBasis[_L0Inv, PositionBasis[_L1Inv]]
-    | PositionBasis[_L0Inv]
-    | ExplicitBasis[_L0Inv, MomentumBasis[_L1Inv]]
-    | ExplicitBasis[_L0Inv, PositionBasis[_L1Inv]]
-) -> ExplicitBasis[_L0Inv, PositionBasis[_L1Inv]]:
+def get_rotated_basis(
+    basis: _BX0Inv,
+    matrix: np.ndarray[tuple[Literal[3], Literal[3]], np.dtype[np.float_]],
+) -> _BX0Inv:
     """
-    Convert a basis into an explicit position basis.
+    Get the basis rotated by the given matrix.
 
     Parameters
     ----------
-    basis : TruncatedBasis[_L1Inv, MomentumBasis[_L2Inv]] | MomentumBasis[_L1Inv] | TruncatedBasis[_L1Inv, PositionBasis[_L2Inv]] | PositionBasis[_L1Inv] | ExplicitBasis[_L1Inv, MomentumBasis[_L2Inv]] | ExplicitBasis[_L1Inv, PositionBasis[_L2Inv]]
-        original basis
+    basis : _BX0Inv
+    matrix : np.ndarray[tuple[Literal[3], Literal[3]], np.dtype[np.float_]]
 
     Returns
     -------
-    ExplicitBasis[_L1Inv, PositionBasis[_L2Inv]]
-        explicit position basis
+    _BX0Inv
+        The rotated basis
     """
-    if is_basis_type(basis, "position"):
-        return {
-            "_type": "explicit",
-            "parent": {
-                "_type": "position",
-                "delta_x": basis["delta_x"],
-                "n": basis["n"],  # type: ignore[typeddict-item]
-            },
-            "vectors": np.eye(basis["n"], basis["n"]),
-        }
-    if is_basis_type(basis, "momentum"):
-        return {
-            "_type": "explicit",
-            "parent": {
-                "_type": "position",
-                "delta_x": basis["delta_x"],
-                "n": basis["n"],  # type: ignore[typeddict-item]
-            },
-            "vectors": np.fft.ifft(
-                np.eye(basis["n"], basis["n"]), axis=1, norm="ortho"
-            ),
-        }
-    if is_basis_type(basis, "truncated"):
-        # TODO: position - what does this mean??
-        return {
-            "_type": "explicit",
-            "parent": {
-                "_type": "position",
-                "delta_x": basis["parent"]["delta_x"],
-                "n": basis["parent"]["n"],
-            },  # pad_ft_points selects the relevant states in the truncated momentum basis
-            "vectors": pad_ft_points(  # type: ignore[typeddict-item]
-                np.fft.ifft(
-                    np.eye(basis["parent"]["n"], basis["parent"]["n"]),
-                    axis=1,
-                    norm="ortho",
-                ),
-                s=(basis["n"],),
-                axes=(0,),
-            ),
-        }
-    if is_basis_type(basis, "explicit") and basis["parent"]["_type"] == "momentum":
-        return {
-            "_type": "explicit",
-            "parent": {
-                "_type": "position",
-                "delta_x": basis["parent"]["delta_x"],
-                "n": basis["parent"]["n"],
-            },
-            "vectors": np.fft.ifft(basis["vectors"], axis=1, norm="ortho"),
-        }
-
-    return basis  # type: ignore[return-value]
+    return _RotatedBasis(basis, matrix)  # type: ignore[return-value]
 
 
 def get_basis_conversion_matrix(
-    basis0: _BX0Inv, basis1: _BX1Inv
-) -> np.ndarray[tuple[int, int], np.dtype[np.complex_]]:
+    basis_0: BasisLike[_N0Inv, _NF0Inv], basis_1: BasisLike[_N1Inv, _NF1Inv]
+) -> np.ndarray[tuple[_NF0Inv, _NF1Inv], np.dtype[np.complex_]]:
     """
-    Given two basis states, get the matrix to convert between the two states.
+    Get the matrix to convert one set of basis vectors into another.
 
     Parameters
     ----------
-    basis0 : _BC0Inv
-        basis to convert from
-    basis1 : _BC1Inv
-        basis to convert to
+    basis_0 : BasisLike[_N0Inv, _NF0Inv]
+    basis_1 : BasisLike[_N1Inv, _NF1Inv]
 
     Returns
     -------
-    np.ndarray[tuple[_L0Inv, _L0Inv], np.dtype[np.complex_]]
+    np.ndarray[tuple[_NF0Inv, _NF1Inv], np.dtype[np.complex_]]
     """
-    vectors0: np.ndarray[Any, Any] = as_explicit_position_basis(basis0)["vectors"]
-    vectors1: np.ndarray[Any, Any] = as_explicit_position_basis(basis1)["vectors"]
-    return np.dot(vectors0, np.conj(vectors1).T)  # type: ignore[no-any-return]
+    vectors_0 = basis_0.vectors
+    vectors_1 = basis_1.vectors
+    return np.dot(vectors_0, np.conj(vectors_1).T)  # type: ignore[no-any-return]
+
+
+def basis_as_fundamental_position_basis(
+    basis: BasisLike[_NF0Inv, _N0Inv]
+) -> FundamentalPositionBasis[_NF0Inv]:
+    """
+    Get the fundamental position basis for a given basis.
+
+    Parameters
+    ----------
+    basis : BasisLike[_NF0Inv, _N0Inv]
+
+    Returns
+    -------
+    FundamentalPositionBasis[_NF0Inv]
+    """
+    return FundamentalPositionBasis(basis.delta_x, basis.fundamental_n)
+
+
+def basis_as_fundamental_momentum_basis(
+    basis: BasisLike[_NF0Inv, _N0Inv]
+) -> FundamentalMomentumBasis[_NF0Inv]:
+    """
+    Get the fundamental momentum basis for a given basis.
+
+    Parameters
+    ----------
+    basis : BasisLike[_NF0Inv, _N0Inv]
+
+    Returns
+    -------
+    FundamentalMomentumBasis[_NF0Inv]
+    """
+    return FundamentalMomentumBasis(basis.delta_x, basis.fundamental_n)
+
+
+def basis_as_explicit_position_basis(
+    basis: BasisLike[_NF0Inv, _N0Inv]
+) -> ExplicitBasis[_NF0Inv, _N0Inv]:
+    """
+    Convert the basis into an explicit position basis.
+
+    Parameters
+    ----------
+    basis : BasisLike[_NF0Inv, _N0Inv]
+
+    Returns
+    -------
+    ExplicitBasis[_NF0Inv, _N0Inv]
+    """
+    return ExplicitBasis(basis.delta_x, basis.vectors)
+
+
+def basis_as_single_point_basis(
+    basis: BasisLike[_NF0Inv, _N0Inv]
+) -> BasisLike[Literal[1], Literal[1]]:
+    """
+    Get the corresponding single point basis for a given basis.
+
+    Parameters
+    ----------
+    basis : BasisLike[_NF0Inv, _N0Inv]
+
+    Returns
+    -------
+    BasisLike[Literal[1], Literal[1]]
+    """
+    return FundamentalPositionBasis(basis.delta_x, 1)

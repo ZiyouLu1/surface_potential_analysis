@@ -4,12 +4,14 @@ from typing import TYPE_CHECKING, Any, TypeVar
 
 import numpy as np
 from matplotlib import pyplot as plt
-from matplotlib.lines import Line2D
-from surface_potential_analysis.basis_config.basis_config import (
-    BasisConfig,
-    PositionBasisConfigUtil,
+from surface_potential_analysis.basis_config.build import (
+    build_position_basis_config_from_resolution,
+)
+from surface_potential_analysis.basis_config.conversion import (
+    basis_config_as_single_point_basis_config,
+)
+from surface_potential_analysis.basis_config.util import (
     get_fundamental_projected_x_points,
-    get_single_point_basis_in,
 )
 from surface_potential_analysis.util.plot import (
     Scale,
@@ -19,13 +21,16 @@ from surface_potential_analysis.wavepacket.eigenstate_conversion import (
     get_unfurled_basis,
 )
 
-from surface_dynamics_simulation.tunnelling_simulation.isf import ISF
-
 if TYPE_CHECKING:
     from matplotlib.animation import ArtistAnimation
     from matplotlib.axes import Axes
     from matplotlib.figure import Figure
+    from matplotlib.lines import Line2D
+    from surface_potential_analysis.basis_config.basis_config import (
+        BasisConfig,
+    )
 
+    from surface_dynamics_simulation.tunnelling_simulation.isf import ISF
     from surface_dynamics_simulation.tunnelling_simulation.tunnelling_simulation_state import (
         TunnellingSimulationState,
     )
@@ -119,9 +124,9 @@ def animate_occupation_per_site_2d(
     """
     shape = state["shape"]
     unfurled_basis = get_unfurled_basis(
-        get_single_point_basis_in(basis, "position")
+        basis_config_as_single_point_basis_config(basis)
         if basis is not None
-        else PositionBasisConfigUtil.from_resolution((1, 1, 1)),
+        else build_position_basis_config_from_resolution((1, 1, 1)),
         (shape[0], shape[1]),
     )
 

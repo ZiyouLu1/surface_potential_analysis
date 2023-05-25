@@ -18,7 +18,7 @@ from surface_dynamics_simulation.tunnelling_matrix.util import (
     get_all_single_site_tunnelling_vectors,
     get_occupation_per_state,
 )
-from surface_dynamics_simulation.tunnelling_simulation.simulation import (
+from surface_dynamics_simulation.tunnelling_simulation.simulation2 import (
     TunnellingEigenstates,
     calculate_tunnelling_eigenstates,
     get_equilibrium_state,
@@ -31,11 +31,11 @@ if TYPE_CHECKING:
     )
 
     from surface_dynamics_simulation.tunnelling_matrix.tunnelling_matrix import (
-        TunnellingMatrix,
+        TunnellingMatrix2,
     )
 
     from .tunnelling_simulation_state import (
-        TunnellingSimulationState,
+        TunnellingSimulationState2,
     )
 
     _S0Inv = TypeVar("_S0Inv", bound=tuple[int, int, Literal[6]])
@@ -58,11 +58,10 @@ class ISF(TypedDict, Generic[_N0Inv]):
 
 
 def _calculate_mean_locations(
-    shape: tuple[_L0Inv, _L1Inv, Literal[6]], basis: _BC0Inv
+    basis: _BC0Inv,
 ) -> np.ndarray[tuple[Literal[3], _L0Inv, _L1Inv, Literal[6]], np.dtype[np.float_]]:
     hopping_basis = get_unfurled_basis(
-        basis_config_as_single_point_basis_config(basis),
-        (shape[0], shape[1]),
+        basis_config_as_single_point_basis_config(basis), (shape[0], shape[1])
     )
     util = BasisConfigUtil(basis)
 
@@ -77,7 +76,7 @@ def _calculate_mean_locations(
 
 
 def _calculate_isf_from_simulation_state(
-    state: TunnellingSimulationState[_N0Inv, _S0Inv],
+    state: TunnellingSimulationState2[_N0Inv, _S0Inv],
     basis: _BC0Inv,
     dk: np.ndarray[tuple[Literal[3]], np.dtype[np.float_]],
 ) -> ISF[_N0Inv]:
@@ -116,7 +115,7 @@ def _get_occupation_per_state_at_equilibrium(
 
 
 def get_isf(
-    eigenstates: TunnellingEigenstates[tuple[_L0Inv, _L1Inv, Literal[6]]],
+    eigenstates: TunnellingEigenstates2[tuple[_L0Inv, _L1Inv, Literal[6]]],
     basis: _BC0Inv,
     dk: np.ndarray[tuple[Literal[3]], np.dtype[np.float_]],
     times: np.ndarray[tuple[_N0Inv], np.dtype[np.float_]],
@@ -148,7 +147,7 @@ def get_isf(
 
 
 def calculate_isf(
-    matrix: TunnellingMatrix[tuple[_L0Inv, _L1Inv, Literal[6]]],
+    matrix: TunnellingMatrix2[tuple[_L0Inv, _L1Inv, Literal[6]]],
     basis: _BC0Inv,
     dk: np.ndarray[tuple[Literal[3]], np.dtype[np.float_]],
     times: np.ndarray[tuple[_N0Inv], np.dtype[np.float_]],

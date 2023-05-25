@@ -119,10 +119,10 @@ def plot_interpolated_energy_grid_points() -> None:
     x0_min = xy_min[0] / (1 + z_energies.shape[0])
     x1_min = xy_min[1] / (1 + z_energies.shape[1])
     (line,) = ax.plot(
-        x0_min * potential["basis"][0]["delta_x"][0]
-        + x1_min * potential["basis"][1]["delta_x"][0],
-        x0_min * potential["basis"][0]["delta_x"][1]
-        + x1_min * potential["basis"][1]["delta_x"][1],
+        x0_min * potential["basis"][0].delta_x[0]
+        + x1_min * potential["basis"][1].delta_x[0],
+        x0_min * potential["basis"][0].delta_x[1]
+        + x1_min * potential["basis"][1].delta_x[1],
     )
     line.set_marker("x")
 
@@ -131,8 +131,8 @@ def plot_interpolated_energy_grid_points() -> None:
     x0_min = xy_min[0] / (1 + z_energies.shape[0])
     x1_min = xy_min[1] / (1 + z_energies.shape[1])
     (line,) = ax.plot(
-        x0_min * raw["basis"][0]["delta_x"][0] + x1_min * raw["basis"][1]["delta_x"][0],
-        x0_min * raw["basis"][0]["delta_x"][1] + x1_min * raw["basis"][1]["delta_x"][1],
+        x0_min * raw["basis"][0].delta_x[0] + x1_min * raw["basis"][1].delta_x[0],
+        x0_min * raw["basis"][0].delta_x[1] + x1_min * raw["basis"][1].delta_x[1],
     )
     line.set_marker("x")
 

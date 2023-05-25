@@ -2,11 +2,18 @@
 
 from __future__ import annotations
 
-from .overlap import Overlap, OverlapMomentum, load_overlap, save_overlap
+from .overlap import (
+    FundamentalMomentumOverlap,
+    FundamentalPositionOverlap,
+    Overlap,
+    load_overlap,
+    save_overlap,
+)
 
 __all__ = [
     "Overlap",
-    "OverlapMomentum",
+    "FundamentalPositionOverlap",
+    "FundamentalMomentumOverlap",
     "save_overlap",
     "load_overlap",
 ]

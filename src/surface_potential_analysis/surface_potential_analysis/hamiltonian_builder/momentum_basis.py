@@ -5,22 +5,24 @@ from typing import TYPE_CHECKING, Literal, TypeVar
 import numpy as np
 from scipy.constants import hbar
 
-from surface_potential_analysis.basis_config.basis_config import (
+from surface_potential_analysis.basis_config.util import (
     BasisConfigUtil,
-    MomentumBasisConfig,
 )
 from surface_potential_analysis.hamiltonian.conversion import (
     convert_hamiltonian_to_momentum_basis,
 )
 from surface_potential_analysis.hamiltonian.hamiltonian import (
-    MomentumBasisHamiltonian,
-    PositionBasisStackedHamiltonian,
+    FundamentalMomentumBasisHamiltonian,
+    FundamentalPositionBasisStackedHamiltonian,
     add_hamiltonian,
     flatten_hamiltonian,
 )
 from surface_potential_analysis.util.decorators import timed
 
 if TYPE_CHECKING:
+    from surface_potential_analysis.basis_config.basis_config import (
+        FundamentalMomentumBasisConfig,
+    )
     from surface_potential_analysis.potential import Potential
 
 _L0 = TypeVar("_L0", bound=int)
@@ -30,7 +32,7 @@ _L2 = TypeVar("_L2", bound=int)
 
 def hamiltonian_from_potential(
     potential: Potential[_L0, _L1, _L2],
-) -> PositionBasisStackedHamiltonian[_L0, _L1, _L2]:
+) -> FundamentalPositionBasisStackedHamiltonian[_L0, _L1, _L2]:
     """Given a potential in position basis [ix0, ix1, ix2], get the hamiltonian in stacked form.
 
     This is just a matrix with the potential along the diagonals
@@ -51,10 +53,10 @@ def hamiltonian_from_potential(
 
 
 def hamiltonian_from_mass(
-    basis: MomentumBasisConfig[_L0, _L1, _L2],
+    basis: FundamentalMomentumBasisConfig[_L0, _L1, _L2],
     mass: float,
     bloch_phase: np.ndarray[tuple[Literal[3]], np.dtype[np.float_]] | None = None,
-) -> MomentumBasisHamiltonian[_L0, _L1, _L2]:
+) -> FundamentalMomentumBasisHamiltonian[_L0, _L1, _L2]:
     """
     Calculate the kinetic hamiltonain for a particle with given mass.
 
@@ -100,7 +102,7 @@ def total_surface_hamiltonian(
     potential: Potential[_L0, _L1, _L2],
     mass: float,
     bloch_phase: np.ndarray[tuple[Literal[3]], np.dtype[np.float_]],
-) -> MomentumBasisHamiltonian[_L0, _L1, _L2]:
+) -> FundamentalMomentumBasisHamiltonian[_L0, _L1, _L2]:
     """
     Calculate the total hamiltonian in momentum basis for a given potential and mass.
 

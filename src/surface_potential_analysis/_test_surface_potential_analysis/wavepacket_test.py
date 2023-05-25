@@ -5,9 +5,9 @@ from typing import TYPE_CHECKING, Any
 
 import numpy as np
 
-from surface_potential_analysis.basis_config.basis_config import (
-    MomentumBasisConfigUtil,
-    PositionBasisConfigUtil,
+from surface_potential_analysis.basis_config.build import (
+    build_momentum_basis_config_from_resolution,
+    build_position_basis_config_from_resolution,
 )
 from surface_potential_analysis.wavepacket.eigenstate_conversion import (
     furl_eigenstate,
@@ -34,7 +34,7 @@ class WavepacketTest(unittest.TestCase):
             rng.integers(1, 10),
         )
         wavepacket: PositionBasisWavepacket[Any, Any, Any, Any, Any] = {
-            "basis": PositionBasisConfigUtil.from_resolution(resolution),
+            "basis": build_position_basis_config_from_resolution(resolution),
             "vectors": np.zeros((ns0, ns1, np.prod(resolution))),
             "energies": np.zeros((ns0, ns1)),
         }
@@ -56,7 +56,7 @@ class WavepacketTest(unittest.TestCase):
 
     def test_unfurl_wavepacket(self) -> None:
         wavepacket: MomentumBasisWavepacket[int, int, int, int, int] = {
-            "basis": MomentumBasisConfigUtil.from_resolution((3, 3, 3)),
+            "basis": build_momentum_basis_config_from_resolution((3, 3, 3)),
             "vectors": np.zeros((3, 2, 27)),
             "energies": np.zeros((3, 2)),
         }
@@ -80,7 +80,7 @@ class WavepacketTest(unittest.TestCase):
 
     def test_furl_eigenstate(self) -> None:
         wavepacket: MomentumBasisWavepacket[int, int, int, int, int] = {
-            "basis": MomentumBasisConfigUtil.from_resolution((3, 3, 3)),
+            "basis": build_momentum_basis_config_from_resolution((3, 3, 3)),
             "vectors": np.array(rng.random((3, 2, 27)), dtype=complex),
             "energies": np.zeros((3, 2)),
         }
@@ -90,11 +90,11 @@ class WavepacketTest(unittest.TestCase):
         np.testing.assert_array_almost_equal(wavepacket["vectors"], actual["vectors"])
 
         np.testing.assert_array_almost_equal(
-            wavepacket["basis"][0]["delta_x"], actual["basis"][0]["delta_x"]
+            wavepacket["basis"][0].delta_x, actual["basis"][0].delta_x
         )
         np.testing.assert_array_almost_equal(
-            wavepacket["basis"][1]["delta_x"], actual["basis"][1]["delta_x"]
+            wavepacket["basis"][1].delta_x, actual["basis"][1].delta_x
         )
         np.testing.assert_array_almost_equal(
-            wavepacket["basis"][2]["delta_x"], actual["basis"][2]["delta_x"]
+            wavepacket["basis"][2].delta_x, actual["basis"][2].delta_x
         )

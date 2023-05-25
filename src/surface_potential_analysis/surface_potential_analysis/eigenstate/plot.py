@@ -5,9 +5,11 @@ from typing import TYPE_CHECKING, Any, Literal, TypeVar
 import numpy as np
 from matplotlib import pyplot as plt
 
-from surface_potential_analysis.basis.basis import BasisUtil
+from surface_potential_analysis.basis.util import BasisUtil
 from surface_potential_analysis.basis_config.basis_config import (
     BasisConfig,
+)
+from surface_potential_analysis.basis_config.util import (
     BasisConfigUtil,
     calculate_cumulative_x_distances_along_path,
     get_fundamental_projected_k_points,
@@ -34,7 +36,7 @@ if TYPE_CHECKING:
     from surface_potential_analysis._types import SingleFlatIndexLike
     from surface_potential_analysis.util.plot import Scale
 
-    from .eigenstate import Eigenstate, PositionBasisEigenstate
+    from .eigenstate import Eigenstate, FundamentalPositionBasisEigenstate
 
 _BC0Inv = TypeVar("_BC0Inv", bound=BasisConfig[Any, Any, Any])
 
@@ -80,7 +82,7 @@ def plot_eigenstate_1d_x(
     data_slice: list[slice | int] = [slice(None), slice(None), slice(None)]
     data_slice[1 if (axis % 3) == 0 else 0] = idx[0]
     data_slice[1 if (axis % 3) == 2 else 2] = idx[1]  # noqa: PLR2004
-    converted = convert_eigenstate_to_position_basis(eigenstate)
+    converted = convert_eigenstate_to_position_basis(eigenstate)  # type: ignore[var-annotated,arg-type]
     points = converted["vector"][tuple(data_slice)]
     data = get_measured_data(points, measure)
 
@@ -122,7 +124,7 @@ def plot_eigenstate_2d_k(
     tuple[Figure, Axes, QuadMesh]
     """
     fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
-    converted = convert_eigenstate_to_momentum_basis(eigenstate)
+    converted = convert_eigenstate_to_momentum_basis(eigenstate)  # type: ignore[var-annotated,arg-type]
 
     coordinates = get_fundamental_projected_k_points(converted["basis"], kz_axis)[
         slice_along_axis(idx, (kz_axis % 3) + 1)
@@ -269,7 +271,7 @@ def plot_eigenstate_2d_x(
     tuple[Figure, Axes, QuadMesh]
     """
     fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
-    converted = convert_eigenstate_to_position_basis(eigenstate)
+    converted = convert_eigenstate_to_position_basis(eigenstate)  # type: ignore[var-annotated,arg-type]
 
     coordinates = get_fundamental_projected_x_points(converted["basis"], z_axis)[
         slice_along_axis(idx, (z_axis % 3) + 1)
@@ -386,8 +388,8 @@ def plot_eigenstate_x2x0(
 
 
 def plot_eigenstate_difference_2d_x(
-    eigenstate_0: PositionBasisEigenstate[_L0Inv, _L1Inv, _L2Inv],
-    eigenstate_1: PositionBasisEigenstate[_L0Inv, _L1Inv, _L2Inv],
+    eigenstate_0: FundamentalPositionBasisEigenstate[_L0Inv, _L1Inv, _L2Inv],
+    eigenstate_1: FundamentalPositionBasisEigenstate[_L0Inv, _L1Inv, _L2Inv],
     idx: SingleFlatIndexLike,
     z_axis: Literal[0, 1, 2, -1, -2, -3],
     *,
@@ -417,7 +419,7 @@ def plot_eigenstate_difference_2d_x(
     -------
     tuple[Figure, Axes, QuadMesh]
     """
-    eigenstate: PositionBasisEigenstate[_L0Inv, _L1Inv, _L2Inv] = {
+    eigenstate: FundamentalPositionBasisEigenstate[_L0Inv, _L1Inv, _L2Inv] = {
         "basis": eigenstate_0["basis"],
         "vector": eigenstate_0["vector"] - eigenstate_1["vector"],
     }
@@ -454,7 +456,7 @@ def animate_eigenstate_3d_x(
     -------
     tuple[Figure, Axes, ArtistAnimation]
     """
-    converted = convert_eigenstate_to_position_basis(eigenstate)
+    converted = convert_eigenstate_to_position_basis(eigenstate)  # type: ignore[var-annotated,arg-type]
 
     coordinates = get_fundamental_projected_x_points(converted["basis"], z_axis)
     util = BasisConfigUtil(converted["basis"])
@@ -579,7 +581,7 @@ def plot_eigenstate_along_path(
     tuple[Figure, Axes, Line2D]
     """
     fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
-    converted = convert_eigenstate_to_position_basis(eigenstate)
+    converted = convert_eigenstate_to_position_basis(eigenstate)  # type: ignore[var-annotated,arg-type]
 
     util = BasisConfigUtil(converted["basis"])
     points = converted["vector"].reshape(*util.shape)[*path]

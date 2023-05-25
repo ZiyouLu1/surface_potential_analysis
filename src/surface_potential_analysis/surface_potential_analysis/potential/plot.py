@@ -1,12 +1,12 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Literal, TypeVar
+from typing import TYPE_CHECKING, Any, Literal, TypeVar
 
 import numpy as np
 from matplotlib import pyplot as plt
 
-from surface_potential_analysis.basis.basis import BasisUtil
-from surface_potential_analysis.basis_config.basis_config import (
+from surface_potential_analysis.basis.util import BasisUtil
+from surface_potential_analysis.basis_config.util import (
     BasisConfigUtil,
     calculate_cumulative_x_distances_along_path,
     get_fundamental_projected_x_points,
@@ -70,7 +70,7 @@ def plot_potential_1d(
     """
     fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
 
-    util = BasisUtil(potential["basis"][axis])
+    util = BasisUtil[Any, Any](potential["basis"][axis])
     coordinates = np.linalg.norm(util.fundamental_x_points, axis=0)
     data_slice: list[slice | int] = [slice(None), slice(None), slice(None)]
     data_slice[1 if (axis % 3) == 0 else 0] = idx[0]
@@ -373,7 +373,7 @@ def animate_potential_3d_x(
     """
     coordinates = get_fundamental_projected_x_points(potential["basis"], z_axis)
 
-    fig, ax, ani = animate_through_surface(
+    fig, ax, ani = animate_through_surface(  # type: ignore[misc]
         coordinates, potential["points"], z_axis, ax=ax, scale=scale, clim=clim
     )
     ax.set_title(f"Animation of the potential perpendicular to the x{z_axis % 3} axis")

@@ -3,10 +3,11 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, TypeVar
 
 import numpy as np
-from surface_potential_analysis.basis_config.basis_config import (
-    PositionBasisConfig,
-    PositionBasisConfigUtil,
+from surface_potential_analysis.basis.basis import FundamentalPositionBasis
+from surface_potential_analysis.basis_config.build import (
+    build_position_basis_config_from_resolution,
 )
+from surface_potential_analysis.basis_config.util import BasisConfigUtil
 from surface_potential_analysis.potential import (
     PointPotential,
     Potential,
@@ -29,6 +30,9 @@ from .surface_data import get_data_path
 
 if TYPE_CHECKING:
     from surface_potential_analysis.basis import BasisVector
+    from surface_potential_analysis.basis_config.basis_config import (
+        FundamentalPositionBasisConfig,
+    )
 
 
 def load_raw_data() -> PointPotential[Any]:
@@ -113,18 +117,13 @@ def generate_raw_unit_cell_data() -> None:
     length = np.max(y_points) - np.min(y_points)  # type: ignore[operator]
     grid: UnevenPotential[Any, Any, Any] = {
         "basis": (
-            {
-                "_type": "position",
-                "delta_x": np.array(
-                    [3 * length * (np.sqrt(3) / 2), 3 * length * (1 / 2), 0]
-                ),
-                "n": reciprocal_points.shape[0],
-            },
-            {
-                "_type": "position",
-                "delta_x": np.array([0, 3 * length, 0]),
-                "n": reciprocal_points.shape[1],
-            },
+            FundamentalPositionBasis(
+                np.array([3 * length * (np.sqrt(3) / 2), 3 * length * (1 / 2), 0]),
+                reciprocal_points.shape[0],
+            ),
+            FundamentalPositionBasis(
+                np.array([0, 3 * length, 0]), reciprocal_points.shape[1]
+            ),
             z_c,
         ),
         "points": reciprocal_points,
@@ -171,31 +170,28 @@ def interpolate_points_fourier_nickel(  # noqa: PLR0913
     a grid of points with the given shape into the real spacing using the fourier transform.
     """
     ft_potential = np.fft.fft2(points, axes=(0, 1), norm="forward")
-    old_basis_config: PositionBasisConfig[
+    old_basis_config: FundamentalPositionBasisConfig[
         int, int, int
-    ] = PositionBasisConfigUtil.from_resolution(
+    ] = build_position_basis_config_from_resolution(
         resolution=(*points.shape, 1)  # type: ignore[arg-type]
     )
-    old_basis_util = PositionBasisConfigUtil(old_basis_config)
+    old_basis_util = BasisConfigUtil(old_basis_config)
     nk_points_stacked = np.array(old_basis_util.fundamental_nk_points).reshape(
         3, *old_basis_util.shape
     )[0:2, :, :, 0]
     ft_phases = 2 * np.pi * np.moveaxis(nk_points_stacked, 0, -1)
     # List of [x1_frac, x2_frac] for the interpolated grid
-    basis: PositionBasisConfig[Any, Any, Any] = (
-        {
-            "_type": "position",
-            "delta_x": np.array([delta_x0_real[0], delta_x0_real[1], 1]),
-            "n": shape[0],
-        },
-        {
-            "_type": "position",
-            "delta_x": np.array([delta_x1_real[0], delta_x1_real[1], 1]),
-            "n": shape[1],
-        },
-        {"_type": "position", "delta_x": np.array([0, 0, 1]), "n": 1},
+    basis: FundamentalPositionBasisConfig[Any, Any, Any] = (
+        FundamentalPositionBasis(
+            np.array([delta_x0_real[0], delta_x0_real[1], 1]), shape[0]
+        ),
+        FundamentalPositionBasis(
+            np.array([delta_x1_real[0], delta_x1_real[1], 1]),
+            shape[1],
+        ),
+        FundamentalPositionBasis(np.array([0, 0, 1]), 1),
     )
-    util = PositionBasisConfigUtil(basis)
+    util = BasisConfigUtil(basis)
     coordinates = util.fundamental_x_points[0:2].T
 
     fractions = get_coordinate_fractions(
@@ -235,24 +231,20 @@ def interpolate_energy_grid_xy_fourier_nickel(
     for iz in range(old_points.shape[2]):
         points[:, :, iz] = interpolate_points_fourier_nickel(
             old_points[:, :, iz],
-            data["basis"][0]["delta_x"],
-            data["basis"][1]["delta_x"],
+            data["basis"][0].delta_x,
+            data["basis"][1].delta_x,
             delta_x0_real,
             delta_x1_real,
             shape,
         )
     return {
         "basis": (
-            {
-                "_type": "position",
-                "delta_x": np.array([delta_x0_real[0], delta_x0_real[1], 0]),
-                "n": shape[0],
-            },
-            {
-                "_type": "position",
-                "delta_x": np.array([delta_x1_real[0], delta_x1_real[1], 0]),
-                "n": shape[1],
-            },
+            FundamentalPositionBasis(
+                np.array([delta_x0_real[0], delta_x0_real[1], 0]), shape[0]
+            ),
+            FundamentalPositionBasis(
+                np.array([delta_x1_real[0], delta_x1_real[1], 0]), shape[1]
+            ),
             data["basis"][2],
         ),
         "points": points,
@@ -281,11 +273,10 @@ def interpolate_energy_grid_fourier_nickel(
         "basis": (
             xy_interpolation["basis"][0],
             xy_interpolation["basis"][1],
-            {
-                "_type": "position",
-                "delta_x": np.array([0, 0, data["basis"][2][-1] - data["basis"][2][0]]),
-                "n": shape[2],
-            },
+            FundamentalPositionBasis(
+                np.array([0, 0, data["basis"][2][-1] - data["basis"][2][0]]),
+                shape[2],
+            ),
         ),
         "points": interpolated,  # type: ignore[typeddict-item]
     }

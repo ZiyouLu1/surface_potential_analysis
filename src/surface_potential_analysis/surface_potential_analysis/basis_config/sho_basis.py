@@ -10,22 +10,24 @@ import scipy.special
 from scipy.constants import hbar
 
 from surface_potential_analysis.basis.basis import (
-    BasisUtil,
-    BasisWithLength,
     ExplicitBasis,
-    FundamentalBasis,
-    PositionBasis,
+    FundamentalPositionBasis,
 )
+from surface_potential_analysis.basis.conversion import (
+    basis_as_fundamental_position_basis,
+)
+from surface_potential_analysis.basis.util import BasisUtil
 from surface_potential_analysis.basis_config.potential_basis import (
     PotentialBasisConfig,
     get_potential_basis_config_basis,
 )
 
 if TYPE_CHECKING:
-    from surface_potential_analysis.basis_config.basis_config import PositionBasisConfig
+    from surface_potential_analysis.basis.basis_like import BasisLike
 
 _L0Inv = TypeVar("_L0Inv", bound=int)
 _L1Inv = TypeVar("_L1Inv", bound=int)
+_LF0Inv = TypeVar("_LF0Inv", bound=int)
 
 
 def calculate_sho_wavefunction(
@@ -63,7 +65,7 @@ def calculate_sho_wavefunction(
 
 
 def calculate_x_distances(
-    parent: BasisWithLength[_L0Inv, Any],
+    parent: BasisLike[_L0Inv, Any],
     x_origin: np.ndarray[tuple[Literal[3]], np.dtype[np.float_]],
 ) -> np.ndarray[tuple[_L0Inv], np.dtype[np.float_]]:
     """Given a basis, calculate x distances with a projected value of zero at x_origin."""
@@ -84,7 +86,7 @@ class SHOBasisConfig(TypedDict):
 
 
 def get_sho_potential_basis_config(
-    parent: FundamentalBasis[_L0Inv], config: SHOBasisConfig, n: _L1Inv
+    parent: BasisLike[_L0Inv, _LF0Inv], config: SHOBasisConfig, n: _L1Inv
 ) -> PotentialBasisConfig[_L0Inv, _L1Inv]:
     """
     Get a potential basis config assuming a SHO oscillator.
@@ -99,26 +101,24 @@ def get_sho_potential_basis_config(
     -------
     PotentialBasisConfig[_L0Inv, _L1Inv]
     """
-    util = BasisUtil(parent)
-
     delta_x1 = (
         np.array([0, 1, 0])
-        if np.allclose([1, 0, 0], parent["delta_x"])
+        if np.allclose([1, 0, 0], parent.delta_x)
         else np.array([1, 0, 0])
     )
-    delta_x2 = np.cross(parent["delta_x"], delta_x1)
+    delta_x2 = np.cross(parent.delta_x, delta_x1)
     delta_x2 /= np.linalg.norm(delta_x2)
 
-    potential_basis: PositionBasisConfig[_L0Inv, Literal[1], Literal[1]] = (
-        util.get_fundamental_basis_in("position"),
-        {"_type": "position", "delta_x": delta_x1, "n": 1},
-        {"_type": "position", "delta_x": delta_x2, "n": 1},
+    basis = (
+        basis_as_fundamental_position_basis(parent),
+        FundamentalPositionBasis[Literal[1]](delta_x1, 1),
+        FundamentalPositionBasis[Literal[1]](delta_x2, 1),
     )
     x_distances = calculate_x_distances(parent, config["x_origin"])
 
     return {
         "potential": {
-            "basis": potential_basis,
+            "basis": basis,
             "points": 0.5
             * config["mass"]
             * config["sho_omega"] ** 2
@@ -130,8 +130,8 @@ def get_sho_potential_basis_config(
 
 
 def sho_basis_from_config(
-    parent: FundamentalBasis[_L1Inv], config: SHOBasisConfig, n: _L0Inv
-) -> ExplicitBasis[_L0Inv, PositionBasis[_L1Inv]]:
+    parent: BasisLike[_LF0Inv, _L0Inv], config: SHOBasisConfig, n: _L0Inv
+) -> ExplicitBasis[_LF0Inv, _LF0Inv]:
     """
     Calculate the exact sho basis for a given basis, by directly diagonalizing the sho wavefunction in this basis.
 
@@ -153,8 +153,8 @@ def sho_basis_from_config(
 
 
 def infinate_sho_basis_from_config(
-    parent: PositionBasis[_L1Inv], config: SHOBasisConfig, n: _L0Inv
-) -> ExplicitBasis[_L0Inv, PositionBasis[_L1Inv]]:
+    parent: BasisLike[_LF0Inv, _L1Inv], config: SHOBasisConfig, n: _L0Inv
+) -> ExplicitBasis[_LF0Inv, _L0Inv]:
     """
     Generate an explicit sho basis assuming an infinate extent in the z direction.
 
@@ -179,5 +179,5 @@ def infinate_sho_basis_from_config(
         ]
     )
     util = BasisUtil(parent)
-    normalized = vectors * np.sqrt(np.linalg.norm(util.fundamental_dx))
-    return {"_type": "explicit", "parent": parent, "vectors": normalized}
+    vectors * np.sqrt(np.linalg.norm(util.fundamental_dx))
+    return ExplicitBasis(parent.delta_x, vectors)

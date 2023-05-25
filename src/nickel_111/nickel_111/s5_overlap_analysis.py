@@ -26,10 +26,8 @@ from surface_dynamics_simulation.tunnelling_simulation.simulation import (
     calculate_hopping_rate,
     simulate_tunnelling_from_matrix,
 )
-from surface_potential_analysis.basis_config.basis_config import (
+from surface_potential_analysis.basis_config.util import (
     BasisConfigUtil,
-    MomentumBasisConfig,
-    PositionBasisConfig,
 )
 from surface_potential_analysis.overlap.conversion import (
     convert_overlap_to_momentum_basis,
@@ -38,8 +36,8 @@ from surface_potential_analysis.overlap.interpolation import (
     get_overlap_momentum_interpolator_flat,
 )
 from surface_potential_analysis.overlap.overlap import (
+    FundamentalMomentumOverlap,
     Overlap,
-    OverlapMomentum,
     load_overlap,
 )
 from surface_potential_analysis.overlap.plot import (
@@ -60,6 +58,10 @@ if TYPE_CHECKING:
         TunnellingState,
     )
     from surface_potential_analysis._types import SingleIndexLike
+    from surface_potential_analysis.basis_config.basis_config import (
+    FundamentalMomentumBasisConfig,
+    FundamentalPositionBasisConfig,
+)
 
 _L0Inv = TypeVar("_L0Inv", bound=int)
 _L1Inv = TypeVar("_L1Inv", bound=int)
@@ -68,7 +70,7 @@ _L2Inv = TypeVar("_L2Inv", bound=int)
 
 def load_overlap_nickel(
     i: int, j: int, offset: tuple[int, int] = (0, 0)
-) -> Overlap[PositionBasisConfig[int, int, int]]:
+) -> Overlap[FundamentalPositionBasisConfig[int, int, int]]:
     dx0, dx1 = offset
     i, j = (i, j) if i < j else (j, i)
     dx0, dx1 = (dx0 % 3, dx1 % 3) if i < j else ((-dx0) % 3, (-dx1) % 3)
@@ -81,7 +83,7 @@ def load_overlap_nickel(
 
 
 def get_max_point(
-    overlap: OverlapMomentum[_L0Inv, _L1Inv, _L2Inv]
+    overlap: FundamentalMomentumOverlap[_L0Inv, _L1Inv, _L2Inv]
 ) -> tuple[int, int, int]:
     points = overlap["vector"]
     (ik0, ik1, inz) = np.unravel_index(np.argmax(np.abs(points)), shape=points.shape)
@@ -89,9 +91,9 @@ def get_max_point(
 
 
 def make_overlap_real_at(
-    overlap: OverlapMomentum[_L0Inv, _L1Inv, _L2Inv],
+    overlap: FundamentalMomentumOverlap[_L0Inv, _L1Inv, _L2Inv],
     idx: SingleIndexLike | None = None,
-) -> OverlapMomentum[_L0Inv, _L1Inv, _L2Inv]:
+) -> FundamentalMomentumOverlap[_L0Inv, _L1Inv, _L2Inv]:
     """
     Shift the phase of the overlap transform such that is it real at point.
 
@@ -263,7 +265,7 @@ def plot_fcc_hcp_overlap() -> None:
 
 
 def calculate_max_overlap(
-    overlap: Overlap[PositionBasisConfig[_L0Inv, _L1Inv, _L2Inv]],
+    overlap: Overlap[FundamentalPositionBasisConfig[_L0Inv, _L1Inv, _L2Inv]],
 ) -> tuple[complex, np.ndarray[tuple[Literal[3]], np.dtype[np.float_]]]:
     points = overlap["vector"]
     util = BasisConfigUtil(overlap["basis"])
@@ -274,7 +276,7 @@ def calculate_max_overlap(
 
 
 def calculate_max_overlap_momentum(
-    overlap: Overlap[MomentumBasisConfig[_L0Inv, _L1Inv, _L2Inv]],
+    overlap: Overlap[FundamentalMomentumBasisConfig[_L0Inv, _L1Inv, _L2Inv]],
 ) -> tuple[complex, np.ndarray[tuple[Literal[3]], np.dtype[np.float_]]]:
     points = overlap["vector"]
     util = BasisConfigUtil(overlap["basis"])

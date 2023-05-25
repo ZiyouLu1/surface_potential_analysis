@@ -6,6 +6,11 @@ import numpy as np
 
 from surface_potential_analysis.basis_config.basis_config import (
     BasisConfig,
+)
+from surface_potential_analysis.basis_config.conversion import (
+    basis_config_as_fundamental_position_basis_config,
+)
+from surface_potential_analysis.basis_config.util import (
     BasisConfigUtil,
     get_x01_mirrored_index,
     wrap_index_around_origin_x01,
@@ -76,7 +81,7 @@ def _get_global_phases(
     np.ndarray[tuple[_NS0Inv, _NS1Inv], np.dtype[np.float_]]
         list of list of phases for each is0, is1 sampled in the wavepacket
     """
-    basis = BasisConfigUtil(wavepacket["basis"]).get_fundamental_basis_in("position")
+    basis = basis_config_as_fundamental_position_basis_config(wavepacket["basis"])  # type: ignore[arg-type,var-annotated]
     util = BasisConfigUtil(basis)
     idx = idx if isinstance(idx, tuple) else util.get_stacked_index(idx)
     # Total phase given by k.x = dk * j/Nj * i * delta_x / Ni
@@ -86,8 +91,8 @@ def _get_global_phases(
         np.array(wavepacket["vectors"].shape[0:2])
     )
     # i / Ni
-    x0_fractions = np.asarray(idx[0] / util.n0)
-    x1_fractions = np.asarray(idx[1] / util.n1)
+    x0_fractions = np.asarray(idx[0] / util.n0)  # type: ignore[misc]
+    x1_fractions = np.asarray(idx[1] / util.n1)  # type: ignore[misc]
 
     # Slices required to cast to [_NS0Inv, _NS1Inv, ..shape]
     k_slice = (
@@ -122,7 +127,7 @@ def _get_bloch_phases(
     np.ndarray[tuple[_NS0Inv, _NS1Inv], np.dtype[np.float_]]
         the angle for each point in the wavepacket
     """
-    converted = convert_wavepacket_to_position_basis(wavepacket)
+    converted = convert_wavepacket_to_position_basis(wavepacket)  # type: ignore[arg-type,var-annotated]
     util = BasisConfigUtil(converted["basis"])
     idx = util.get_flat_index(idx, mode="wrap") if isinstance(idx, tuple) else idx
 
@@ -185,7 +190,7 @@ def get_wavepacket_two_points(
     util = BasisConfigUtil(wavepacket["basis"])
     origin = (util.shape[0] * offset[0], util.shape[1] * offset[1], 0)
 
-    converted = convert_eigenstate_to_position_basis(get_eigenstate(wavepacket, 0))
+    converted = convert_eigenstate_to_position_basis(get_eigenstate(wavepacket, 0))  # type: ignore[arg-type,var-annotated]
     idx_0: SingleStackedIndexLike = np.argmax(np.abs(converted["vector"]), axis=-1)
     idx_0 = wrap_index_around_origin_x01(converted["basis"], idx_0, origin)
     idx_1 = get_x01_mirrored_index(converted["basis"], idx_0)
@@ -308,7 +313,7 @@ def normalize_wavepacket_single_point(
     Wavepacket[_NS0Inv, _NS1Inv, _BC0Inv]
         Normalized wavepacket
     """
-    converted = convert_eigenstate_to_position_basis(get_eigenstate(wavepacket, 0))
+    converted = convert_eigenstate_to_position_basis(get_eigenstate(wavepacket, 0))  # type: ignore[arg-type,var-annotated]
     max_idx = np.argmax(np.abs(converted["vector"]), axis=-1)
     max_idx = wrap_index_around_origin_x01(converted["basis"], max_idx)
 

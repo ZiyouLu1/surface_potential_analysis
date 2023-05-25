@@ -5,10 +5,12 @@ from typing import TYPE_CHECKING, Any, Literal, TypeVar
 import numpy as np
 from matplotlib import pyplot as plt
 
-from surface_potential_analysis.basis.basis import Basis, MomentumBasis
+from surface_potential_analysis.basis.basis import FundamentalMomentumBasis
+from surface_potential_analysis.basis.basis_like import BasisLike
 from surface_potential_analysis.basis_config.basis_config import (
     BasisConfig,
-    BasisConfigUtil,
+)
+from surface_potential_analysis.basis_config.util import (
     get_fundamental_projected_k_points,
     get_fundamental_projected_x_points,
 )
@@ -54,9 +56,9 @@ _L2Inv = TypeVar("_L2Inv", bound=int)
 
 _BC0Inv = TypeVar("_BC0Inv", bound=BasisConfig[Any, Any, Any])
 
-_BX0Inv = TypeVar("_BX0Inv", bound=Basis[Any, Any])
-_BX1Inv = TypeVar("_BX1Inv", bound=Basis[Any, Any])
-_BX2Inv = TypeVar("_BX2Inv", bound=Basis[Any, Any])
+_BX0Inv = TypeVar("_BX0Inv", bound=BasisLike[Any, Any])
+_BX1Inv = TypeVar("_BX1Inv", bound=BasisLike[Any, Any])
+_BX2Inv = TypeVar("_BX2Inv", bound=BasisLike[Any, Any])
 
 
 def plot_wavepacket_sample_frequencies(
@@ -96,7 +98,9 @@ def plot_wavepacket_sample_frequencies(
 def get_wavepacket_sample_basis(
     wavepacket: Wavepacket[_NS0Inv, _NS1Inv, BasisConfig[_BX0Inv, _BX1Inv, _BX2Inv]]
 ) -> BasisConfig[
-    MomentumBasis[_NS0Inv], MomentumBasis[_NS1Inv], MomentumBasis[Literal[1]]
+    FundamentalMomentumBasis[_NS0Inv],
+    FundamentalMomentumBasis[_NS1Inv],
+    FundamentalMomentumBasis[Literal[1]],
 ]:
     """
     Get the basis used to sample the brillouin zone.
@@ -110,23 +114,10 @@ def get_wavepacket_sample_basis(
     BasisConfig[MomentumBasis[_NS0Inv], MomentumBasis[_NS1Inv], MomentumBasis[Literal[1]]]
     """
     (ns0, ns1) = wavepacket["energies"].shape
-    util = BasisConfigUtil(wavepacket["basis"])
     return (
-        {
-            "_type": "momentum",
-            "delta_x": util.delta_x0 * ns0,
-            "n": ns0,  # type: ignore[typeddict-item]
-        },
-        {
-            "_type": "momentum",
-            "delta_x": util.delta_x1 * ns1,
-            "n": ns1,  # type: ignore[typeddict-item]
-        },
-        {
-            "_type": "momentum",
-            "delta_x": util.delta_x2,
-            "n": 1,
-        },
+        FundamentalMomentumBasis(wavepacket["basis"][0].delta_x * ns0, ns0),
+        FundamentalMomentumBasis(wavepacket["basis"][1].delta_x * ns1, ns1),
+        FundamentalMomentumBasis(wavepacket["basis"][2].delta_x, 1),
     )
 
 

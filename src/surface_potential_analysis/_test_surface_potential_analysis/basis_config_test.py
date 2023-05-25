@@ -4,9 +4,17 @@ import unittest
 
 import numpy as np
 
-from surface_potential_analysis.basis_config.basis_config import (
-    MomentumBasisConfigUtil,
-    PositionBasisConfigUtil,
+from surface_potential_analysis.basis_config.build import (
+    build_momentum_basis_config_from_resolution,
+    build_position_basis_config_from_resolution,
+)
+from surface_potential_analysis.basis_config.conversion import (
+    basis_config_as_fundamental_momentum_basis_config,
+    basis_config_as_fundamental_position_basis_config,
+    get_rotated_basis_config,
+)
+from surface_potential_analysis.basis_config.util import (
+    BasisConfigUtil,
     _wrap_distance,
     calculate_cumulative_x_distances_along_path,
 )
@@ -18,7 +26,7 @@ rng = np.random.default_rng()
 class TestBasisConfig(unittest.TestCase):
     def test_surface_volume_100(self) -> None:
         points = rng.random(3)
-        basis = PositionBasisConfigUtil.from_resolution(
+        basis = build_position_basis_config_from_resolution(
             (1, 1, 1),
             (
                 np.array([points[0], 0, 0]),
@@ -26,7 +34,7 @@ class TestBasisConfig(unittest.TestCase):
                 np.array([0, 0, points[2]]),
             ),
         )
-        util = PositionBasisConfigUtil(basis)
+        util = BasisConfigUtil(basis)
 
         np.testing.assert_almost_equal(util.volume, np.prod(points))
         np.testing.assert_almost_equal(
@@ -39,8 +47,8 @@ class TestBasisConfig(unittest.TestCase):
             np.array([0, 2, 0]),
             np.array([0, 0, 1]),
         )
-        basis = PositionBasisConfigUtil.from_resolution((1, 1, 1), delta_x)
-        util = PositionBasisConfigUtil(basis)
+        basis = build_position_basis_config_from_resolution((1, 1, 1), delta_x)
+        util = BasisConfigUtil(basis)
 
         np.testing.assert_array_equal(delta_x[0], util.delta_x0)
         np.testing.assert_array_equal(delta_x[1], util.delta_x1)
@@ -57,8 +65,8 @@ class TestBasisConfig(unittest.TestCase):
             np.array([0.5, np.sqrt(3) / 2, 0]),
             np.array([0, 0, 1]),
         )
-        basis = PositionBasisConfigUtil.from_resolution((1, 1, 1), delta_x)
-        util = PositionBasisConfigUtil(basis)
+        basis = build_position_basis_config_from_resolution((1, 1, 1), delta_x)
+        util = BasisConfigUtil(basis)
 
         np.testing.assert_array_equal(delta_x[0], util.delta_x0)
         np.testing.assert_array_equal(delta_x[1], util.delta_x1)
@@ -75,15 +83,15 @@ class TestBasisConfig(unittest.TestCase):
             rng.random(3),
             rng.random(3),
         )
-        basis = PositionBasisConfigUtil.from_resolution((1, 1, 1), delta_x)
-        util = PositionBasisConfigUtil(basis)
+        basis = build_position_basis_config_from_resolution((1, 1, 1), delta_x)
+        util = BasisConfigUtil(basis)
 
         np.testing.assert_array_almost_equal(delta_x[0], util.delta_x0)
         np.testing.assert_array_almost_equal(delta_x[1], util.delta_x1)
         np.testing.assert_array_almost_equal(delta_x[2], util.delta_x2)
 
-        reciprocal = util.get_reciprocal_basis()
-        reciprocal_util = MomentumBasisConfigUtil(reciprocal)
+        reciprocal = basis_config_as_fundamental_momentum_basis_config(basis)
+        reciprocal_util = BasisConfigUtil(reciprocal)
 
         np.testing.assert_array_almost_equal(reciprocal_util.delta_x0, util.delta_x0)
         np.testing.assert_array_almost_equal(reciprocal_util.delta_x1, util.delta_x1)
@@ -98,8 +106,8 @@ class TestBasisConfig(unittest.TestCase):
             reciprocal_util.reciprocal_volume, util.reciprocal_volume
         )
 
-        reciprocal_2 = reciprocal_util.get_reciprocal_basis()
-        reciprocal_2_util = PositionBasisConfigUtil(reciprocal_2)
+        reciprocal_2 = basis_config_as_fundamental_position_basis_config(reciprocal)
+        reciprocal_2_util = BasisConfigUtil(reciprocal_2)
 
         np.testing.assert_array_almost_equal(reciprocal_2_util.delta_x0, util.delta_x0)
         np.testing.assert_array_almost_equal(reciprocal_2_util.delta_x1, util.delta_x1)
@@ -120,8 +128,8 @@ class TestBasisConfig(unittest.TestCase):
             rng.integers(1, 10),
             rng.integers(1, 10),
         )
-        basis = PositionBasisConfigUtil.from_resolution(resolution, delta_x)
-        util = PositionBasisConfigUtil(basis)
+        basis = build_position_basis_config_from_resolution(resolution, delta_x)
+        util = BasisConfigUtil(basis)
         for i in range(np.prod(resolution)):
             self.assertEqual(i, util.get_flat_index(util.get_stacked_index(i)))
 
@@ -131,23 +139,22 @@ class TestBasisConfig(unittest.TestCase):
             np.array([0, 1, 0], dtype=float),
             np.array([0, 0, 1], dtype=float),
         )
-        basis = PositionBasisConfigUtil.from_resolution((1, 1, 1), delta_x)
-        util = PositionBasisConfigUtil(basis)
+        basis = build_position_basis_config_from_resolution((1, 1, 1), delta_x)
 
-        rotated_0 = util.get_rotated_basis(0, delta_x[0])
-        np.testing.assert_array_almost_equal(rotated_0[0]["delta_x"], [1, 0, 0])
-        np.testing.assert_array_almost_equal(rotated_0[1]["delta_x"], [0, 1, 0])
-        np.testing.assert_array_almost_equal(rotated_0[2]["delta_x"], [0, 0, 1])
+        rotated_0 = get_rotated_basis_config(basis, 0, delta_x[0])  # type: ignore[arg-type,var-annotated]
+        np.testing.assert_array_almost_equal(rotated_0[0].delta_x, [1, 0, 0])
+        np.testing.assert_array_almost_equal(rotated_0[1].delta_x, [0, 1, 0])
+        np.testing.assert_array_almost_equal(rotated_0[2].delta_x, [0, 0, 1])
 
-        rotated_1 = util.get_rotated_basis(0, delta_x[1])
-        np.testing.assert_array_almost_equal(rotated_1[0]["delta_x"], [0, 1, 0])
-        np.testing.assert_array_almost_equal(rotated_1[1]["delta_x"], [-1, 0, 0])
-        np.testing.assert_array_almost_equal(rotated_1[2]["delta_x"], [0, 0, 1])
+        rotated_1 = get_rotated_basis_config(basis, 0, delta_x[1])  # type: ignore[arg-type,var-annotated]
+        np.testing.assert_array_almost_equal(rotated_1[0].delta_x, [0, 1, 0])
+        np.testing.assert_array_almost_equal(rotated_1[1].delta_x, [-1, 0, 0])
+        np.testing.assert_array_almost_equal(rotated_1[2].delta_x, [0, 0, 1])
 
-        rotated_2 = util.get_rotated_basis(0, delta_x[2])
-        np.testing.assert_array_almost_equal(rotated_2[0]["delta_x"], [0, 0, 1])
-        np.testing.assert_array_almost_equal(rotated_2[1]["delta_x"], [0, 1, 0])
-        np.testing.assert_array_almost_equal(rotated_2[2]["delta_x"], [-1, 0, 0])
+        rotated_2 = get_rotated_basis_config(basis, 0, delta_x[2])  # type: ignore[arg-type,var-annotated]
+        np.testing.assert_array_almost_equal(rotated_2[0].delta_x, [0, 0, 1])
+        np.testing.assert_array_almost_equal(rotated_2[1].delta_x, [0, 1, 0])
+        np.testing.assert_array_almost_equal(rotated_2[2].delta_x, [-1, 0, 0])
 
     def test_rotated_basis(self) -> None:
         delta_x = (
@@ -155,30 +162,29 @@ class TestBasisConfig(unittest.TestCase):
             rng.random(3),
             rng.random(3),
         )
-        basis = PositionBasisConfigUtil.from_resolution((1, 1, 1), delta_x)
-        util = PositionBasisConfigUtil(basis)
+        basis = build_position_basis_config_from_resolution((1, 1, 1), delta_x)
 
         for i in (0, 1, 2):
-            rotated = util.get_rotated_basis(i)  # type: ignore[arg-type]
+            rotated = get_rotated_basis_config(basis, i)  # type: ignore[arg-type,var-annotated]
             np.testing.assert_array_almost_equal(
-                rotated[i]["delta_x"], [0, 0, np.linalg.norm(delta_x[i])]
+                rotated[i].delta_x, [0, 0, np.linalg.norm(delta_x[i])]
             )
             for j in (0, 1, 2):
                 np.testing.assert_almost_equal(
-                    np.linalg.norm(rotated[j]["delta_x"]),
-                    np.linalg.norm(basis[j]["delta_x"]),
+                    np.linalg.norm(rotated[j].delta_x),
+                    np.linalg.norm(basis[j].delta_x),
                 )
 
             direction = rng.random(3)
-            rotated = util.get_rotated_basis(i, direction)  # type: ignore[arg-type]
+            rotated = get_rotated_basis_config(basis, i, direction)  # type: ignore[arg-type]
             np.testing.assert_almost_equal(
-                np.dot(rotated[i]["delta_x"], direction),
-                np.linalg.norm(direction) * np.linalg.norm(rotated[i]["delta_x"]),
+                np.dot(rotated[i].delta_x, direction),
+                np.linalg.norm(direction) * np.linalg.norm(rotated[i].delta_x),
             )
             for j in (0, 1, 2):
                 np.testing.assert_almost_equal(
-                    np.linalg.norm(rotated[j]["delta_x"]),
-                    np.linalg.norm(basis[j]["delta_x"]),
+                    np.linalg.norm(rotated[j].delta_x),
+                    np.linalg.norm(basis[j].delta_x),
                 )
 
     def test_nx_points_simple(self) -> None:
@@ -187,8 +193,8 @@ class TestBasisConfig(unittest.TestCase):
             rng.random(3),
             rng.random(3),
         )
-        basis = PositionBasisConfigUtil.from_resolution((2, 2, 2), delta_x)
-        util = PositionBasisConfigUtil(basis)
+        basis = build_position_basis_config_from_resolution((2, 2, 2), delta_x)
+        util = BasisConfigUtil(basis)
 
         actual = util.fundamental_nx_points
         expected = [
@@ -203,8 +209,8 @@ class TestBasisConfig(unittest.TestCase):
             rng.integers(1, 20),
             rng.integers(1, 20),
         )
-        basis = PositionBasisConfigUtil.from_resolution(resolution, delta_x)
-        util = PositionBasisConfigUtil(basis)
+        basis = build_position_basis_config_from_resolution(resolution, delta_x)
+        util = BasisConfigUtil(basis)
         actual = util.fundamental_nx_points
 
         for axis in range(3):
@@ -219,8 +225,8 @@ class TestBasisConfig(unittest.TestCase):
             rng.random(3),
             rng.random(3),
         )
-        basis = PositionBasisConfigUtil.from_resolution((2, 2, 2), delta_x)
-        util = PositionBasisConfigUtil(basis)
+        basis = build_position_basis_config_from_resolution((2, 2, 2), delta_x)
+        util = BasisConfigUtil(basis)
 
         actual = util.fundamental_nk_points
         expected = [
@@ -235,8 +241,8 @@ class TestBasisConfig(unittest.TestCase):
             rng.integers(1, 20),
             rng.integers(1, 20),
         )
-        basis = PositionBasisConfigUtil.from_resolution(resolution, delta_x)
-        util = PositionBasisConfigUtil(basis)
+        basis = build_position_basis_config_from_resolution(resolution, delta_x)
+        util = BasisConfigUtil(basis)
         actual = util.fundamental_nk_points
 
         for axis in range(3):
@@ -253,8 +259,8 @@ class TestBasisConfig(unittest.TestCase):
             np.array([0, 1, 0], dtype=float),
             np.array([0, 0, 1], dtype=float),
         )
-        basis = PositionBasisConfigUtil.from_resolution((3, 3, 3), delta_x)
-        util = PositionBasisConfigUtil(basis)
+        basis = build_position_basis_config_from_resolution((3, 3, 3), delta_x)
+        util = BasisConfigUtil(basis)
 
         actual = util.fundamental_x_points
         # fmt: off
@@ -272,8 +278,8 @@ class TestBasisConfig(unittest.TestCase):
             np.array([3, 0, 0], dtype=float),
             np.array([0, 0, 5], dtype=float),
         )
-        basis = PositionBasisConfigUtil.from_resolution((3, 3, 3), delta_x)
-        util = PositionBasisConfigUtil(basis)
+        basis = build_position_basis_config_from_resolution((3, 3, 3), delta_x)
+        util = BasisConfigUtil(basis)
         actual = util.fundamental_x_points
 
         # fmt: off
@@ -292,8 +298,8 @@ class TestBasisConfig(unittest.TestCase):
             np.array([0, 1, 0], dtype=float),
             np.array([0, 0, 1], dtype=float),
         )
-        basis = MomentumBasisConfigUtil.from_resolution((3, 3, 3), dx)
-        util = MomentumBasisConfigUtil(basis)
+        basis = build_momentum_basis_config_from_resolution((3, 3, 3), dx)
+        util = BasisConfigUtil(basis)
 
         actual = util.fundamental_nk_points
         # fmt: off
@@ -311,8 +317,8 @@ class TestBasisConfig(unittest.TestCase):
             np.array([3, 0, 0], dtype=float),
             np.array([0, 0, 5], dtype=float),
         )
-        basis = MomentumBasisConfigUtil.from_resolution((3, 3, 3), delta_x)
-        util = MomentumBasisConfigUtil(basis)
+        basis = build_momentum_basis_config_from_resolution((3, 3, 3), delta_x)
+        util = BasisConfigUtil(basis)
         actual = util.fundamental_nk_points
 
         np.testing.assert_array_equal(expected_x, actual[0])
@@ -347,7 +353,7 @@ class TestBasisConfig(unittest.TestCase):
             np.array([0, 1, 0], dtype=float),
             np.array([0, 0, 1], dtype=float),
         )
-        basis = PositionBasisConfigUtil.from_resolution((3, 3, 3), dx)
+        basis = build_position_basis_config_from_resolution((3, 3, 3), dx)
 
         distances = calculate_cumulative_x_distances_along_path(
             basis, np.array([[0, 1], [0, 0], [0, 0]])

@@ -2,26 +2,11 @@
 
 from __future__ import annotations
 
-from .basis import (
-    Basis,
-    BasisUtil,
-    BasisVector,
-    ExplicitBasis,
-    FundamentalBasis,
-    InheritedBasis,
-    MomentumBasis,
-    PositionBasis,
-    TruncatedBasis,
-)
+from .basis_like import BasisLike, BasisVector
+from .util import BasisUtil
 
 __all__ = [
-    "Basis",
-    "BasisUtil",
+    "BasisLike",
     "BasisVector",
-    "ExplicitBasis",
-    "FundamentalBasis",
-    "InheritedBasis",
-    "MomentumBasis",
-    "PositionBasis",
-    "TruncatedBasis",
+    "BasisUtil",
 ]

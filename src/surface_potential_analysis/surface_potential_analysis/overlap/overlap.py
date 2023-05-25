@@ -6,8 +6,8 @@ import numpy as np
 
 from surface_potential_analysis.basis_config.basis_config import (
     BasisConfig,
-    MomentumBasisConfig,
-    PositionBasisConfig,
+    FundamentalMomentumBasisConfig,
+    FundamentalPositionBasisConfig,
 )
 
 if TYPE_CHECKING:
@@ -54,5 +54,9 @@ _L0Inv = TypeVar("_L0Inv", bound=int)
 _L1Inv = TypeVar("_L1Inv", bound=int)
 _L2Inv = TypeVar("_L2Inv", bound=int)
 
-OverlapMomentum = Overlap[MomentumBasisConfig[_L0Inv, _L1Inv, _L2Inv]]
-OverlapPosition = Overlap[PositionBasisConfig[_L0Inv, _L1Inv, _L2Inv]]
+FundamentalMomentumOverlap = Overlap[
+    FundamentalMomentumBasisConfig[_L0Inv, _L1Inv, _L2Inv]
+]
+FundamentalPositionOverlap = Overlap[
+    FundamentalPositionBasisConfig[_L0Inv, _L1Inv, _L2Inv]
+]

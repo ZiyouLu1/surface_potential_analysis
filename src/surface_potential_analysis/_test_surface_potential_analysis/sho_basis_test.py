@@ -9,8 +9,7 @@ from scipy.constants import hbar
 
 from surface_potential_analysis.basis.basis import (
     ExplicitBasis,
-    PositionBasis,
-    explicit_position_basis_in_momentum,
+    FundamentalPositionBasis,
 )
 from surface_potential_analysis.basis_config.sho_basis import (
     SHOBasisConfig,
@@ -22,18 +21,14 @@ from surface_potential_analysis.basis_config.sho_basis import (
 rng = np.random.default_rng()
 
 
-def _normalize_sho_basis(
-    basis: ExplicitBasis[int, PositionBasis[int]]
-) -> ExplicitBasis[int, PositionBasis[int]]:
-    turning_point = basis["vectors"][
-        np.arange(basis["vectors"].shape[0]),
-        np.argmax(
-            np.abs(basis["vectors"][:, : basis["vectors"].shape[1] // 2]), axis=1
-        ),
+def _normalize_sho_basis(basis: ExplicitBasis[int, int]) -> ExplicitBasis[int, int]:
+    turning_point = basis.vectors[
+        np.arange(basis.vectors.shape[0]),
+        np.argmax(np.abs(basis.vectors[:, : basis.vectors.shape[1] // 2]), axis=1),
     ]
 
-    normalized = np.exp(-1j * np.angle(turning_point))[:, np.newaxis] * basis["vectors"]
-    return {"_type": "explicit", "parent": basis["parent"], "vectors": normalized}
+    normalized = np.exp(-1j * np.angle(turning_point))[:, np.newaxis] * basis.vectors
+    return ExplicitBasis(basis.delta_x, normalized)
 
 
 class SHOBasisTest(unittest.TestCase):
@@ -110,14 +105,12 @@ class SHOBasisTest(unittest.TestCase):
             "sho_omega": 1 / hbar,
             "x_origin": np.array([0, 0, -10]),
         }
-        parent: PositionBasis[Literal[1001]] = {
-            "_type": "position",
-            "delta_x": np.array([0, 0, 20]),
-            "n": 1001,
-        }
+        parent: FundamentalPositionBasis[Literal[1001]] = FundamentalPositionBasis(
+            np.array([0, 0, 20]), 1001
+        )
         basis = infinate_sho_basis_from_config(parent, config, 12)
         np.testing.assert_almost_equal(
-            np.ones((nz,)), np.sum(basis["vectors"] * np.conj(basis["vectors"]), axis=1)
+            np.ones((nz,)), np.sum(basis.vectors * np.conj(basis.vectors), axis=1)
         )
 
     def test_sho_config_basis_normalization(self) -> None:
@@ -126,18 +119,14 @@ class SHOBasisTest(unittest.TestCase):
             "sho_omega": 1 / hbar,
             "x_origin": np.array([0, 0, -5 * np.pi]),
         }
-        parent: PositionBasis[Literal[1001]] = {
-            "_type": "position",
-            "delta_x": np.array([0, 0, 10 * np.pi]),
-            "n": 1001,
-        }
+        parent = FundamentalPositionBasis(np.array([0, 0, 10 * np.pi]), 1001)
+
         basis = sho_basis_from_config(parent, config, 12)
 
-        norm = np.linalg.norm(basis["vectors"], axis=1)
+        norm = np.linalg.norm(basis.vectors, axis=1)
         np.testing.assert_array_almost_equal(norm, np.ones_like(norm))
 
-        transformed = explicit_position_basis_in_momentum(basis)
-        norm = np.linalg.norm(transformed["vectors"], axis=1)
+        norm = np.linalg.norm(basis.vectors, axis=1)
         np.testing.assert_array_almost_equal(norm, np.ones_like(norm))
 
     def test_infinate_sho_normal_sho_config(self) -> None:
@@ -146,13 +135,10 @@ class SHOBasisTest(unittest.TestCase):
             "sho_omega": 1 / hbar,
             "x_origin": np.array([0, 0, -5 * np.pi]),
         }
-        parent: PositionBasis[int] = {
-            "_type": "position",
-            "delta_x": np.array([0, 0, 10 * np.pi]),
-            "n": 1001,
-        }
+        parent = FundamentalPositionBasis(np.array([0, 0, 10 * np.pi]), 1001)
+
         basis1 = _normalize_sho_basis(
             infinate_sho_basis_from_config(parent, config, 16)
         )
         basis2 = _normalize_sho_basis(sho_basis_from_config(parent, config, 16))
-        np.testing.assert_array_almost_equal(basis1["vectors"], basis2["vectors"])
+        np.testing.assert_array_almost_equal(basis1.vectors, basis2.vectors)

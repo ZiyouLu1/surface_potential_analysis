@@ -4,7 +4,7 @@ from typing import Literal
 
 import numpy as np
 from surface_potential_analysis.basis_config.basis_config import (
-    MomentumBasisConfig,
+    FundamentalMomentumBasisConfig,
 )
 from surface_potential_analysis.overlap.calculation import calculate_wavepacket_overlap
 from surface_potential_analysis.overlap.overlap import save_overlap
@@ -24,7 +24,7 @@ from .surface_data import get_data_path
 _NickelWavepacket = Wavepacket[
     Literal[12],
     Literal[12],
-    MomentumBasisConfig[Literal[24], Literal[24], Literal[250]],
+    FundamentalMomentumBasisConfig[Literal[24], Literal[24], Literal[250]],
 ]
 
 

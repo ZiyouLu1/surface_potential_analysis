@@ -3,9 +3,13 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, Literal
 
 import numpy as np
-from surface_potential_analysis.basis_config.basis_config import (
+from surface_potential_analysis.basis.basis import (
+    ExplicitBasis,
+    FundamentalMomentumBasis,
+    MomentumBasis,
+)
+from surface_potential_analysis.basis_config.util import (
     BasisConfigUtil,
-    MomentumBasisConfig,
 )
 from surface_potential_analysis.wavepacket.conversion import convert_wavepacket_to_basis
 from surface_potential_analysis.wavepacket.normalization import normalize_wavepacket
@@ -24,13 +28,10 @@ from .surface_data import get_data_path
 
 if TYPE_CHECKING:
     from surface_potential_analysis._types import SingleIndexLike
-    from surface_potential_analysis.basis.basis import (
-        ExplicitBasis,
-        MomentumBasis,
-        PositionBasis,
-        TruncatedBasis,
+    from surface_potential_analysis.basis_config.basis_config import (
+        BasisConfig,
+        FundamentalMomentumBasisConfig,
     )
-    from surface_potential_analysis.basis_config.basis_config import BasisConfig
     from surface_potential_analysis.hamiltonian.hamiltonian import Hamiltonian
 
 
@@ -40,9 +41,9 @@ def load_copper_wavepacket(
     Literal[12],
     Literal[12],
     BasisConfig[
-        TruncatedBasis[Literal[24], MomentumBasis[Literal[24]]],
-        TruncatedBasis[Literal[24], MomentumBasis[Literal[24]]],
-        ExplicitBasis[Literal[18], PositionBasis[Literal[250]]],
+        MomentumBasis[Literal[24], Literal[24]],
+        MomentumBasis[Literal[24], Literal[24]],
+        ExplicitBasis[Literal[250], Literal[18]],
     ],
 ]:
     path = get_data_path(f"wavepacket_{band}.npy")
@@ -57,14 +58,14 @@ def load_normalized_copper_wavepacket_momentum(
 ) -> Wavepacket[
     Literal[12],
     Literal[12],
-    MomentumBasisConfig[Literal[24], Literal[24], Literal[250]],
+    FundamentalMomentumBasisConfig[Literal[24], Literal[24], Literal[250]],
 ]:
     wavepacket = load_copper_wavepacket(band)
     util = BasisConfigUtil(wavepacket["basis"])
-    basis: MomentumBasisConfig[Literal[24], Literal[24], Literal[250]] = (
-        {"_type": "momentum", "delta_x": util.delta_x0, "n": 24},
-        {"_type": "momentum", "delta_x": util.delta_x1, "n": 24},
-        {"_type": "momentum", "delta_x": util.delta_x2, "n": 250},
+    basis: FundamentalMomentumBasisConfig[Literal[24], Literal[24], Literal[250]] = (
+        FundamentalMomentumBasis(util.delta_x0, 24),
+        FundamentalMomentumBasis(util.delta_x1, 24),
+        FundamentalMomentumBasis(util.delta_x2, 250),
     )
     normalized = normalize_wavepacket(wavepacket, idx, angle)
     return convert_wavepacket_to_basis(normalized, basis)

@@ -7,25 +7,26 @@ from scipy.constants import hbar
 
 from surface_potential_analysis.basis import (
     BasisUtil,
-    ExplicitBasis,
-    MomentumBasis,
-    TruncatedBasis,
 )
-from surface_potential_analysis.basis_config.basis_config import (
-    BasisConfig,
-    BasisConfigUtil,
-)
+from surface_potential_analysis.basis_config.util import BasisConfigUtil
 
 if TYPE_CHECKING:
+    from surface_potential_analysis.basis.basis import (
+        ExplicitBasis,
+        MomentumBasis,
+    )
+    from surface_potential_analysis.basis_config.basis_config import (
+        BasisConfig,
+    )
     from surface_potential_analysis.hamiltonian import HamiltonianWithBasis
     from surface_potential_analysis.potential import Potential
 
-_L0 = TypeVar("_L0", bound=int)
-_L1 = TypeVar("_L1", bound=int)
-_L2 = TypeVar("_L2", bound=int)
-_L3 = TypeVar("_L3", bound=int)
-_L4 = TypeVar("_L4", bound=int)
-_L5 = TypeVar("_L5", bound=int)
+_N0Inv = TypeVar("_N0Inv", bound=int)
+_N1Inv = TypeVar("_N1Inv", bound=int)
+_N2Inv = TypeVar("_N2Inv", bound=int)
+_NF0Inv = TypeVar("_NF0Inv", bound=int)
+_NF1Inv = TypeVar("_NF1Inv", bound=int)
+_NF2Inv = TypeVar("_NF2Inv", bound=int)
 
 
 class PotentialSizeError(Exception):
@@ -38,41 +39,45 @@ class PotentialSizeError(Exception):
         )
 
 
-class _SurfaceHamiltonianUtil(Generic[_L0, _L1, _L2, _L3, _L4, _L5]):
-    _potential: Potential[_L0, _L1, _L2]
+class _SurfaceHamiltonianUtil(
+    Generic[_N0Inv, _N1Inv, _N2Inv, _NF0Inv, _NF1Inv, _NF2Inv]
+):
+    _potential: Potential[_NF0Inv, _NF1Inv, _NF2Inv]
 
     _basis: BasisConfig[
-        TruncatedBasis[_L3, MomentumBasis[_L0]],
-        TruncatedBasis[_L4, MomentumBasis[_L1]],
-        ExplicitBasis[_L5, MomentumBasis[_L2]],
+        MomentumBasis[_NF0Inv, _N0Inv],
+        MomentumBasis[_NF1Inv, _N1Inv],
+        ExplicitBasis[_NF2Inv, _N2Inv],
     ]
     _mass: float
 
     def __init__(
         self,
-        potential: Potential[_L0, _L1, _L2],
+        potential: Potential[_NF0Inv, _NF1Inv, _NF2Inv],
         basis: BasisConfig[
-            TruncatedBasis[_L3, MomentumBasis[_L0]],
-            TruncatedBasis[_L4, MomentumBasis[_L1]],
-            ExplicitBasis[_L5, MomentumBasis[_L2]],
+            MomentumBasis[_NF0Inv, _N0Inv],
+            MomentumBasis[_NF1Inv, _N1Inv],
+            ExplicitBasis[_NF2Inv, _N2Inv],
         ],
         mass: float,
     ) -> None:
         self._potential = potential
         self._basis = basis
         self._mass = mass
-        if 2 * (self._basis[0]["n"] - 1) > self._potential["basis"][0]["n"]:
+        if 2 * (self._basis[0].n - 1) > self._potential["basis"][0].n:
             raise PotentialSizeError(
-                0, 2 * (self._basis[0]["n"] - 1), self._potential["basis"][0]["n"]
+                0, 2 * (self._basis[0].n - 1), self._potential["basis"][0].n
             )
 
-        if 2 * (self._basis[1]["n"] - 1) > self._potential["basis"][1]["n"]:
+        if 2 * (self._basis[1].n - 1) > self._potential["basis"][1].n:
             raise PotentialSizeError(
-                1, 2 * (self._basis[1]["n"] - 1), self._potential["basis"][1]["n"]
+                1, 2 * (self._basis[1].n - 1), self._potential["basis"][1].n
             )
 
     @property
-    def points(self) -> np.ndarray[tuple[_L0, _L1, _L2], np.dtype[np.float_]]:
+    def points(
+        self,
+    ) -> np.ndarray[tuple[_NF0Inv, _NF1Inv, _NF2Inv], np.dtype[np.float_]]:
         return self._potential["points"]
 
     @property
@@ -95,9 +100,9 @@ class _SurfaceHamiltonianUtil(Generic[_L0, _L1, _L2, _L3, _L4, _L5]):
     def hamiltonian(
         self, _bloch_phase: np.ndarray[tuple[Literal[3]], np.dtype[np.float_]]
     ) -> HamiltonianWithBasis[
-        TruncatedBasis[_L3, MomentumBasis[_L0]],
-        TruncatedBasis[_L4, MomentumBasis[_L1]],
-        ExplicitBasis[_L5, MomentumBasis[_L2]],
+        MomentumBasis[_NF0Inv, _N0Inv],
+        MomentumBasis[_NF1Inv, _N1Inv],
+        ExplicitBasis[_NF2Inv, _N2Inv],
     ]:
         raise NotImplementedError
 
@@ -132,18 +137,18 @@ class _SurfaceHamiltonianUtil(Generic[_L0, _L1, _L2, _L3, _L4, _L5]):
 
 
 def total_surface_hamiltonian(
-    potential: Potential[_L0, _L1, _L2],
+    potential: Potential[_NF0Inv, _NF1Inv, _NF2Inv],
     bloch_phase: np.ndarray[tuple[Literal[3]], np.dtype[np.float_]],
     basis: BasisConfig[
-        TruncatedBasis[_L3, MomentumBasis[_L0]],
-        TruncatedBasis[_L4, MomentumBasis[_L1]],
-        ExplicitBasis[_L5, MomentumBasis[_L2]],
+        MomentumBasis[_NF0Inv, _N0Inv],
+        MomentumBasis[_NF1Inv, _N1Inv],
+        ExplicitBasis[_NF2Inv, _N2Inv],
     ],
     mass: float,
 ) -> HamiltonianWithBasis[
-    TruncatedBasis[_L3, MomentumBasis[_L0]],
-    TruncatedBasis[_L4, MomentumBasis[_L1]],
-    ExplicitBasis[_L5, MomentumBasis[_L2]],
+    MomentumBasis[_NF0Inv, _N0Inv],
+    MomentumBasis[_NF1Inv, _N1Inv],
+    ExplicitBasis[_NF2Inv, _N2Inv],
 ]:
     """
     Calculate a hamiltonian using the given basis.

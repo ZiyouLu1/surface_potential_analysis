@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING, Any, Literal, TypeVar
 import numpy as np
 from matplotlib import pyplot as plt
 from scipy.constants import electron_volt
+from surface_potential_analysis.basis.basis import FundamentalPositionBasis
 from surface_potential_analysis.basis.plot import plot_explicit_basis_states_x
 from surface_potential_analysis.basis_config.plot import plot_projected_x_points_2d
 from surface_potential_analysis.basis_config.sho_basis import (
@@ -422,13 +423,11 @@ def test_potential_fourier_transform() -> None:
 
     print(ftt_origin_me, np.min(np.abs(interpolation["basis"][2])))  # noqa: T201
 
-    x0_norm = np.linalg.norm(interpolation["basis"][0]["delta_x"])
-    x1_norm = np.linalg.norm(interpolation["basis"][1]["delta_x"])
+    x0_norm = np.linalg.norm(interpolation["basis"][0].delta_x)
+    x1_norm = np.linalg.norm(interpolation["basis"][1].delta_x)
     denom = (
-        interpolation["basis"][0]["delta_x"][0]
-        * interpolation["basis"][1]["delta_x"][1]
-        - interpolation["basis"][0]["delta_x"][1]
-        * interpolation["basis"][1]["delta_x"][0]
+        interpolation["basis"][0].delta_x[0] * interpolation["basis"][1].delta_x[1]
+        - interpolation["basis"][0].delta_x[1] * interpolation["basis"][1].delta_x[0]
     )
     fix_factor = x0_norm * x1_norm / (denom)
     print(ftt_origin_me / fix_factor)  # noqa: T201
@@ -464,10 +463,10 @@ def test_symmetry_point_interpolation() -> None:
 
     delta_x = 2 * (np.max(raw_points["x_points"]) - np.min(raw_points["x_points"]))  # type: ignore[operator]
     # These are calculated assuming no symmetry point!
-    delta_x_john = interpolation["basis"][0]["delta_x"]
+    delta_x_john = interpolation["basis"][0].delta_x
 
     delta_y = 2 * (np.max(raw_points["y_points"]) - np.min(raw_points["y_points"]))  # type: ignore[operator]
-    delta_y_john = interpolation["basis"][1]["delta_x"]
+    delta_y_john = interpolation["basis"][1].delta_x
     # True - we have excluded the symmetry points properly!
     print(np.allclose([delta_y, delta_x], [delta_x_john, delta_y_john]))  # noqa: T201
 
@@ -654,8 +653,8 @@ def plot_potential_difference_very_large_resolution() -> None:
     p1 = get_interpolated_nickel_potential((250, 250, 250))
     potential0: Potential[int, int, int] = {
         "basis": (
-            {"_type": "position", "delta_x": p0["basis"][0]["delta_x"], "n": 50},
-            {"_type": "position", "delta_x": p0["basis"][1]["delta_x"], "n": 50},
+            FundamentalPositionBasis(p0["basis"][0].delta_x, 50),
+            FundamentalPositionBasis(p0["basis"][1].delta_x, 50),
             p0["basis"][2],
         ),
         "points": p0["points"][::2, ::2, :],

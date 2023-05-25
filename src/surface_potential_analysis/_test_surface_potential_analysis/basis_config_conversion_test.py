@@ -5,9 +5,8 @@ import unittest
 import numpy as np
 from scipy.stats import special_ortho_group
 
-from surface_potential_analysis.basis.basis import explicit_position_basis_in_momentum
-from surface_potential_analysis.basis_config.basis_config import BasisConfigUtil
 from surface_potential_analysis.basis_config.conversion import convert_vector
+from surface_potential_analysis.basis_config.util import BasisConfigUtil
 
 from .utils import get_random_explicit_basis
 
@@ -19,20 +18,20 @@ class BasisConfigConversionTest(unittest.TestCase):
         fundamental_shape = (rng.integers(2, 5), rng.integers(2, 5), rng.integers(2, 5))
 
         _config0 = (
-            get_random_explicit_basis("position", fundamental_n=fundamental_shape[0]),
-            get_random_explicit_basis("position", fundamental_n=fundamental_shape[1]),
-            get_random_explicit_basis("position", fundamental_n=fundamental_shape[2]),
+            get_random_explicit_basis(fundamental_n=fundamental_shape[0]),
+            get_random_explicit_basis(fundamental_n=fundamental_shape[1]),
+            get_random_explicit_basis(fundamental_n=fundamental_shape[2]),
         )
         # Note this only holds if the space spanned by _config1 contains the space of _config0
         _config1 = (
             get_random_explicit_basis(
-                "position", fundamental_n=fundamental_shape[0], n=fundamental_shape[0]
+                fundamental_n=fundamental_shape[0], n=fundamental_shape[0]
             ),
             get_random_explicit_basis(
-                "position", fundamental_n=fundamental_shape[1], n=fundamental_shape[1]
+                fundamental_n=fundamental_shape[1], n=fundamental_shape[1]
             ),
             get_random_explicit_basis(
-                "position", fundamental_n=fundamental_shape[2], n=fundamental_shape[2]
+                fundamental_n=fundamental_shape[2], n=fundamental_shape[2]
             ),
         )
 
@@ -52,15 +51,11 @@ class BasisConfigConversionTest(unittest.TestCase):
         fundamental_shape = (rng.integers(2, 5), rng.integers(2, 5), rng.integers(2, 5))
 
         _config0 = (
-            get_random_explicit_basis("position", fundamental_n=fundamental_shape[0]),
-            get_random_explicit_basis("position", fundamental_n=fundamental_shape[1]),
-            get_random_explicit_basis("position", fundamental_n=fundamental_shape[2]),
+            get_random_explicit_basis(fundamental_n=fundamental_shape[0]),
+            get_random_explicit_basis(fundamental_n=fundamental_shape[1]),
+            get_random_explicit_basis(fundamental_n=fundamental_shape[2]),
         )
-        _config1 = (
-            explicit_position_basis_in_momentum(_config0[0]),
-            explicit_position_basis_in_momentum(_config0[1]),
-            explicit_position_basis_in_momentum(_config0[2]),
-        )
+        _config1 = _config0
 
         util = BasisConfigUtil(_config0)
         vector = special_ortho_group.rvs(util.size)[0]

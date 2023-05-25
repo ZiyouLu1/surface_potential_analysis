@@ -14,11 +14,10 @@ from surface_potential_analysis.wavepacket.eigenstate_conversion import (
 )
 
 if TYPE_CHECKING:
-    from surface_potential_analysis.basis.basis import MomentumBasis, PositionBasis
     from surface_potential_analysis.basis_config.basis_config import (
         BasisConfig,
-        MomentumBasisConfig,
-        PositionBasisConfig,
+        FundamentalMomentumBasisConfig,
+        FundamentalPositionBasisConfig,
     )
     from surface_potential_analysis.eigenstate.eigenstate import Eigenstate
     from surface_potential_analysis.overlap.overlap import Overlap
@@ -35,9 +34,9 @@ _NS1Inv = TypeVar("_NS1Inv", bound=int)
 
 
 def calculate_overlap_momentum_eigenstate(
-    eigenstate_0: Eigenstate[MomentumBasisConfig[_L0Inv, _L1Inv, _L2Inv]],
-    eigenstate_1: Eigenstate[MomentumBasisConfig[_L0Inv, _L1Inv, _L2Inv]],
-) -> Overlap[PositionBasisConfig[_L0Inv, _L1Inv, _L2Inv]]:
+    eigenstate_0: Eigenstate[FundamentalMomentumBasisConfig[_L0Inv, _L1Inv, _L2Inv]],
+    eigenstate_1: Eigenstate[FundamentalMomentumBasisConfig[_L0Inv, _L1Inv, _L2Inv]],
+) -> Overlap[FundamentalPositionBasisConfig[_L0Inv, _L1Inv, _L2Inv]]:
     """
     Calculate the overlap between two eigenstates in position basis.
 
@@ -62,20 +61,14 @@ def calculate_wavepacket_overlap(
     wavepacket_0: Wavepacket[
         _NS0Inv,
         _NS1Inv,
-        BasisConfig[
-            MomentumBasis[_L0Inv], MomentumBasis[_L1Inv], MomentumBasis[_L2Inv]
-        ],
+        FundamentalMomentumBasisConfig[_L0Inv, _L1Inv, _L2Inv],
     ],
     wavepacket_1: Wavepacket[
         _NS0Inv,
         _NS1Inv,
-        BasisConfig[
-            MomentumBasis[_L0Inv], MomentumBasis[_L1Inv], MomentumBasis[_L2Inv]
-        ],
+        FundamentalMomentumBasisConfig[_L0Inv, _L1Inv, _L2Inv],
     ],
-) -> Overlap[
-    BasisConfig[PositionBasis[int], PositionBasis[int], PositionBasis[_L2Inv]]
-]:
+) -> Overlap[FundamentalPositionBasisConfig[int, int, _L2Inv]]:
     """
     Given two wavepackets in (the same) momentum basis calculate the overlap factor.
 
@@ -102,7 +95,7 @@ def calculate_wavepacket_overlap(
 def calculate_overlap_eigenstate(
     eigenstate_0: Eigenstate[_BC0Inv],
     eigenstate_1: Eigenstate[_BC0Inv],
-) -> Overlap[PositionBasisConfig[int, int, int]]:
+) -> Overlap[FundamentalPositionBasisConfig[int, int, int]]:
     """
     Calculate the overlap between two eigenstates in position basis.
 
@@ -115,8 +108,8 @@ def calculate_overlap_eigenstate(
     -------
     Overlap[PositionBasisConfig[int, int, int]]
     """
-    converted_0 = convert_eigenstate_to_position_basis(eigenstate_0)
-    converted_1 = convert_eigenstate_to_position_basis(eigenstate_1)
+    converted_0 = convert_eigenstate_to_position_basis(eigenstate_0)  # type: ignore[arg-type,var-annotated]
+    converted_1 = convert_eigenstate_to_position_basis(eigenstate_1)  # type: ignore[arg-type,var-annotated]
 
     vector = np.conj(converted_0["vector"]) * (converted_1["vector"])
     return {"basis": converted_0["basis"], "vector": vector}

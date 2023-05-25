@@ -12,11 +12,9 @@ from copper_100.s1_potential import (
 )
 
 if TYPE_CHECKING:
-    from surface_potential_analysis.basis import (
+    from surface_potential_analysis.basis.basis import (
         ExplicitBasis,
         MomentumBasis,
-        PositionBasis,
-        TruncatedBasis,
     )
     from surface_potential_analysis.basis_config.sho_basis import SHOBasisConfig
     from surface_potential_analysis.hamiltonian import HamiltonianWithBasis
@@ -35,9 +33,7 @@ def generate_hamiltonian_sho(
     bloch_phase: np.ndarray[tuple[Literal[3]], np.dtype[np.float_]],
     resolution: tuple[_L3, _L4, _L5],
 ) -> HamiltonianWithBasis[
-    TruncatedBasis[_L3, MomentumBasis[_L0]],
-    TruncatedBasis[_L4, MomentumBasis[_L1]],
-    ExplicitBasis[_L5, PositionBasis[_L2]],
+    MomentumBasis[_L0, _L3], MomentumBasis[_L1, _L4], ExplicitBasis[_L2, _L5]
 ]:
     """
     Generate a Hamiltonian using an infinate SHO basis.
@@ -76,9 +72,7 @@ def generate_hamiltonian_sho_relaxed(
     bloch_phase: np.ndarray[tuple[Literal[3]], np.dtype[np.float_]],
     resolution: tuple[_L3, _L4, _L5],
 ) -> HamiltonianWithBasis[
-    TruncatedBasis[_L3, MomentumBasis[_L0]],
-    TruncatedBasis[_L4, MomentumBasis[_L1]],
-    ExplicitBasis[_L5, PositionBasis[_L2]],
+    MomentumBasis[_L0, _L3], MomentumBasis[_L1, _L4], ExplicitBasis[_L2, _L5]
 ]:
     """
     Generate a Hamiltonian using an infinate SHO basis.

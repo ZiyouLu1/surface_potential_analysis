@@ -7,13 +7,7 @@ from matplotlib import pyplot as plt
 
 from surface_potential_analysis.util.util import Measure, get_measured_data
 
-from .basis import (
-    BasisUtil,
-    ExplicitBasis,
-    MomentumBasis,
-    PositionBasis,
-    explicit_momentum_basis_in_position,
-)
+from .util import BasisUtil
 
 if TYPE_CHECKING:
     from matplotlib.axes import Axes
@@ -22,11 +16,9 @@ if TYPE_CHECKING:
 
     from surface_potential_analysis._types import SingleFlatIndexLike
 
-_BX0Inv = TypeVar(
-    "_BX0Inv",
-    bound=ExplicitBasis[int, PositionBasis[int]]
-    | ExplicitBasis[int, MomentumBasis[int]],
-)
+    from .basis_like import BasisLike
+
+    _BX0Inv = TypeVar("_BX0Inv", bound=BasisLike[int, int])
 
 
 def plot_explicit_basis_states_x(
@@ -37,16 +29,11 @@ def plot_explicit_basis_states_x(
 ) -> tuple[Figure, Axes, list[Line2D]]:
     """Plot basis states against position."""
     fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
-    basis_in_position: ExplicitBasis[int, PositionBasis[int]] = (
-        basis  # type: ignore[assignment]
-        if basis["parent"]["_type"] == "position"
-        else explicit_momentum_basis_in_position(basis)  # type: ignore[arg-type]
-    )
-    util = BasisUtil(basis_in_position)
+    util = BasisUtil(basis)
 
     x_points = np.linalg.norm(util.fundamental_x_points, axis=0)
     lines: list[Line2D] = []
-    for i, vector in enumerate(basis_in_position["vectors"]):
+    for i, vector in enumerate(util.vectors):
         data = get_measured_data(vector, measure)
         (line,) = ax.plot(x_points, data)
         line.set_label(f"State {i}")
@@ -67,14 +54,9 @@ def plot_explicit_basis_state_x(
 ) -> tuple[Figure, Axes, Line2D]:
     """Plot basis states against position."""
     fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
-    basis_in_position: ExplicitBasis[int, PositionBasis[int]] = (
-        basis  # type: ignore[assignment]
-        if basis["parent"]["_type"] == "position"
-        else explicit_momentum_basis_in_position(basis)  # type: ignore[arg-type]
-    )
-    util = BasisUtil(basis_in_position)
+    util = BasisUtil(basis)
 
     x_points = np.linalg.norm(util.fundamental_x_points, axis=0)
-    data = get_measured_data(basis_in_position["vectors"][idx], measure)
+    data = get_measured_data(basis.vectors[idx], measure)
     (line,) = ax.plot(x_points, data)
     return fig, ax, line

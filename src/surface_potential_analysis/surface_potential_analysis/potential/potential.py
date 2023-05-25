@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING, Any, Generic, TypedDict, TypeVar, overload
 
 import numpy as np
 
+from surface_potential_analysis.basis.basis import FundamentalPositionBasis
 from surface_potential_analysis.util.interpolation import (
     interpolate_points_along_axis_spline,
     interpolate_points_rfftn,
@@ -13,8 +14,9 @@ from surface_potential_analysis.util.interpolation import (
 if TYPE_CHECKING:
     from pathlib import Path
 
-    from surface_potential_analysis.basis import PositionBasis
-    from surface_potential_analysis.basis_config.basis_config import PositionBasisConfig
+    from surface_potential_analysis.basis_config.basis_config import (
+        FundamentalPositionBasisConfig,
+    )
 
 _L0Cov = TypeVar("_L0Cov", bound=int, covariant=True)
 _L1Cov = TypeVar("_L1Cov", bound=int, covariant=True)
@@ -30,7 +32,7 @@ PotentialPoints = np.ndarray[tuple[_L0Inv, _L1Inv, _L2Inv], np.dtype[np.float_]]
 class Potential(TypedDict, Generic[_L0Cov, _L1Cov, _L2Cov]):
     """Represents a potential in an evenly spaced grid of points."""
 
-    basis: PositionBasisConfig[_L0Cov, _L1Cov, _L2Cov]
+    basis: FundamentalPositionBasisConfig[_L0Cov, _L1Cov, _L2Cov]
     points: PotentialPoints[_L0Cov, _L1Cov, _L2Cov]
 
 
@@ -86,21 +88,9 @@ def load_potential_grid_json(path: Path) -> Potential[Any, Any, Any]:
         points = np.array(out["points"])
         return {
             "basis": (
-                {
-                    "_type": "position",
-                    "n": points.shape[0],
-                    "delta_x": np.array(out["delta_x0"]),
-                },
-                {
-                    "_type": "position",
-                    "n": points.shape[1],
-                    "delta_x": np.array(out["delta_x1"]),
-                },
-                {
-                    "_type": "position",
-                    "n": points.shape[2],
-                    "delta_x": np.array(out["delta_x2"]),
-                },
+                FundamentalPositionBasis(np.array(out["delta_x0"]), points.shape[0]),
+                FundamentalPositionBasis(np.array(out["delta_x1"]), points.shape[1]),
+                FundamentalPositionBasis(np.array(out["delta_x2"]), points.shape[2]),
             ),
             "points": np.array(out["points"]),
         }
@@ -110,8 +100,8 @@ class UnevenPotential(TypedDict, Generic[_L0Cov, _L1Cov, _L2Cov]):
     """Represents a potential unevenly spaced in the z direction."""
 
     basis: tuple[
-        PositionBasis[_L0Cov],
-        PositionBasis[_L1Cov],
+        FundamentalPositionBasis[_L0Cov],
+        FundamentalPositionBasis[_L1Cov],
         np.ndarray[tuple[_L2Cov], np.dtype[np.float_]],
     ]
     points: PotentialPoints[_L0Cov, _L1Cov, _L2Cov]
@@ -173,16 +163,8 @@ def load_uneven_potential_json(
 
         return {
             "basis": (
-                {
-                    "_type": "position",
-                    "n": points.shape[0],
-                    "delta_x": np.array(out["delta_x0"]),
-                },
-                {
-                    "_type": "position",
-                    "n": points.shape[1],
-                    "delta_x": np.array(out["delta_x1"]),
-                },
+                FundamentalPositionBasis(np.array(out["delta_x0"]), points.shape[0]),
+                FundamentalPositionBasis(np.array(out["delta_x1"]), points.shape[1]),
                 np.array(out["z_points"]),
             ),
             "points": points,
@@ -300,21 +282,11 @@ def interpolate_uneven_potential(
     )
     return {
         "basis": (
-            {
-                "_type": "position",
-                "n": shape[0],
-                "delta_x": data["basis"][0]["delta_x"],
-            },
-            {
-                "_type": "position",
-                "n": shape[1],
-                "delta_x": data["basis"][1]["delta_x"],
-            },
-            {
-                "_type": "position",
-                "n": shape[2],
-                "delta_x": np.array([0, 0, data["basis"][2][-1] - data["basis"][2][0]]),
-            },
+            FundamentalPositionBasis(data["basis"][0].delta_x, shape[0]),
+            FundamentalPositionBasis(data["basis"][1].delta_x, shape[1]),
+            FundamentalPositionBasis(
+                np.array([0, 0, data["basis"][2][-1] - data["basis"][2][0]]), shape[2]
+            ),
         ),
         "points": interpolated,  # type: ignore[typeddict-item]
     }

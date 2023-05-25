@@ -5,13 +5,12 @@ from typing import TYPE_CHECKING, Literal, TypeVar
 import numpy as np
 from matplotlib import pyplot as plt
 
-from surface_potential_analysis.basis_config.basis_config import (
+from surface_potential_analysis.basis_config.util import (
     BasisConfigUtil,
     calculate_cumulative_k_distances_along_path,
     get_fundamental_projected_k_points,
     get_fundamental_projected_x_points,
 )
-from surface_potential_analysis.overlap.overlap import OverlapPosition
 from surface_potential_analysis.util.util import (
     Measure,
     get_measured_data,
@@ -27,7 +26,7 @@ if TYPE_CHECKING:
     from surface_potential_analysis._types import SingleFlatIndexLike
     from surface_potential_analysis.util.plot import Scale
 
-    from .overlap import OverlapMomentum
+    from .overlap import FundamentalMomentumOverlap, FundamentalPositionOverlap
 
 _L0Inv = TypeVar("_L0Inv", bound=int)
 _L1Inv = TypeVar("_L1Inv", bound=int)
@@ -35,7 +34,7 @@ _L2Inv = TypeVar("_L2Inv", bound=int)
 
 
 def plot_overlap_2d_x(
-    overlap: OverlapPosition[_L0Inv, _L1Inv, _L2Inv],
+    overlap: FundamentalPositionOverlap[_L0Inv, _L1Inv, _L2Inv],
     idx: SingleFlatIndexLike,
     z_axis: Literal[0, 1, 2, -1, -2, -3],
     *,
@@ -85,7 +84,7 @@ def plot_overlap_2d_x(
 
 
 def plot_overlap_2d_k(
-    overlap: OverlapMomentum[_L0Inv, _L1Inv, _L2Inv],
+    overlap: FundamentalMomentumOverlap[_L0Inv, _L1Inv, _L2Inv],
     idx: SingleFlatIndexLike,
     z_axis: Literal[0, 1, 2, -1, -2, -3],
     *,
@@ -137,7 +136,7 @@ def plot_overlap_2d_k(
 
 
 def plot_overlap_k0k1(
-    overlap: OverlapMomentum[_L0Inv, _L1Inv, _L2Inv],
+    overlap: FundamentalMomentumOverlap[_L0Inv, _L1Inv, _L2Inv],
     idx: SingleFlatIndexLike,
     *,
     ax: Axes | None = None,
@@ -167,7 +166,7 @@ def plot_overlap_k0k1(
 
 
 def plot_overlap_k1k2(
-    overlap: OverlapMomentum[_L0Inv, _L1Inv, _L2Inv],
+    overlap: FundamentalMomentumOverlap[_L0Inv, _L1Inv, _L2Inv],
     idx: SingleFlatIndexLike,
     *,
     ax: Axes | None = None,
@@ -197,7 +196,7 @@ def plot_overlap_k1k2(
 
 
 def plot_overlap_k2k0(
-    overlap: OverlapMomentum[_L0Inv, _L1Inv, _L2Inv],
+    overlap: FundamentalMomentumOverlap[_L0Inv, _L1Inv, _L2Inv],
     idx: SingleFlatIndexLike,
     *,
     ax: Axes | None = None,
@@ -227,7 +226,7 @@ def plot_overlap_k2k0(
 
 
 def plot_overlap_along_path_k(
-    overlap: OverlapMomentum[_L0Inv, _L1Inv, _L2Inv],
+    overlap: FundamentalMomentumOverlap[_L0Inv, _L1Inv, _L2Inv],
     path: np.ndarray[tuple[Literal[3], int], np.dtype[np.int_]],
     *,
     wrap_distances: bool = False,
@@ -269,7 +268,7 @@ def plot_overlap_along_path_k(
 
 
 def plot_overlap_along_k_diagonal(
-    overlap: OverlapMomentum[_L0Inv, _L1Inv, _L2Inv],
+    overlap: FundamentalMomentumOverlap[_L0Inv, _L1Inv, _L2Inv],
     k2_ind: int = 0,
     *,
     measure: Measure = "abs",
@@ -300,7 +299,7 @@ def plot_overlap_along_k_diagonal(
 
 
 def plot_overlap_along_k0(
-    overlap: OverlapMomentum[_L0Inv, _L1Inv, _L2Inv],
+    overlap: FundamentalMomentumOverlap[_L0Inv, _L1Inv, _L2Inv],
     k1_ind: int = 0,
     k2_ind: int = 0,
     *,

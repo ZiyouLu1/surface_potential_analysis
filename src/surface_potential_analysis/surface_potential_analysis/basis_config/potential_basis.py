@@ -4,6 +4,9 @@ from typing import TYPE_CHECKING, Generic, Literal, TypedDict, TypeVar
 
 import numpy as np
 
+from surface_potential_analysis.basis.basis import (
+    ExplicitBasis,
+)
 from surface_potential_analysis.eigenstate.eigenstate_calculation import (
     calculate_eigenstates,
 )
@@ -15,11 +18,9 @@ from surface_potential_analysis.hamiltonian_builder.momentum_basis import (
 )
 
 if TYPE_CHECKING:
-    from surface_potential_analysis.basis.basis import (
-        ExplicitBasis,
-        PositionBasis,
+    from surface_potential_analysis.basis_config.basis_config import (
+        FundamentalPositionBasisConfig,
     )
-    from surface_potential_analysis.basis_config.basis_config import PositionBasisConfig
     from surface_potential_analysis.eigenstate.eigenstate import EigenstateList
     from surface_potential_analysis.potential.potential import Potential
 
@@ -35,13 +36,13 @@ class PotentialBasisConfig(TypedDict, Generic[_L0Cov, _L1Cov]):
     n: _L1Cov
 
 
-_L0Inv = TypeVar("_L0Inv", bound=int)
-_L1Inv = TypeVar("_L1Inv", bound=int)
+_N0Inv = TypeVar("_N0Inv", bound=int)
+_NF0Inv = TypeVar("_NF0Inv", bound=int)
 
 
 def get_potential_basis_config_eigenstates(
-    config: PotentialBasisConfig[_L0Inv, _L1Inv],
-) -> EigenstateList[PositionBasisConfig[_L0Inv, Literal[1], Literal[1]]]:
+    config: PotentialBasisConfig[_NF0Inv, _N0Inv],
+) -> EigenstateList[FundamentalPositionBasisConfig[_NF0Inv, Literal[1], Literal[1]]]:
     """
     Get the eigenstates of the potential, as used in the final basis.
 
@@ -61,8 +62,8 @@ def get_potential_basis_config_eigenstates(
 
 
 def get_potential_basis_config_basis(
-    config: PotentialBasisConfig[_L0Inv, _L1Inv],
-) -> ExplicitBasis[_L1Inv, PositionBasis[_L0Inv]]:
+    config: PotentialBasisConfig[_NF0Inv, _N0Inv],
+) -> ExplicitBasis[_NF0Inv, _NF0Inv]:
     """
     Get the explicit basis for the potential basis config.
 
@@ -75,8 +76,6 @@ def get_potential_basis_config_basis(
     ExplicitBasis[_L1Inv, PositionBasis[_L0Inv]]
     """
     eigenstates = get_potential_basis_config_eigenstates(config)
-    return {
-        "_type": "explicit",
-        "parent": eigenstates["basis"][0],
-        "vectors": eigenstates["vectors"],  # type: ignore[typeddict-item]
-    }
+    return ExplicitBasis(
+        eigenstates["basis"][0].delta_x, eigenstates["vectors"]  # type: ignore[arg-type]
+    )
