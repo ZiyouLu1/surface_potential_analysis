@@ -5,12 +5,8 @@ from typing import TYPE_CHECKING, Any, Literal, TypeVar
 import numpy as np
 from matplotlib import pyplot as plt
 
-from surface_potential_analysis.basis.basis import FundamentalMomentumBasis
-from surface_potential_analysis.basis.basis_like import BasisLike
-from surface_potential_analysis.basis_config.basis_config import (
-    BasisConfig,
-)
-from surface_potential_analysis.basis_config.util import (
+from surface_potential_analysis.axis.axis import FundamentalMomentumAxis3d
+from surface_potential_analysis.basis.util import (
     get_fundamental_projected_k_points,
     get_fundamental_projected_x_points,
 )
@@ -31,8 +27,9 @@ from surface_potential_analysis.wavepacket.eigenstate_conversion import (
 )
 
 from .wavepacket import (
-    MomentumBasisWavepacket,
+    MomentumBasisWavepacket3d,
     Wavepacket,
+    Wavepacket3dWith2dSamples,
     get_wavepacket_sample_frequencies,
 )
 
@@ -44,25 +41,31 @@ if TYPE_CHECKING:
     from matplotlib.lines import Line2D
 
     from surface_potential_analysis._types import SingleFlatIndexLike
+    from surface_potential_analysis.axis.axis_like import AxisLike3d
+    from surface_potential_analysis.basis.basis import (
+        Basis,
+        Basis3d,
+    )
     from surface_potential_analysis.util.plot import Scale
 
+    _NS0Inv = TypeVar("_NS0Inv", bound=int)
+    _NS1Inv = TypeVar("_NS1Inv", bound=int)
 
-_NS0Inv = TypeVar("_NS0Inv", bound=int)
-_NS1Inv = TypeVar("_NS1Inv", bound=int)
+    _L0Inv = TypeVar("_L0Inv", bound=int)
+    _L1Inv = TypeVar("_L1Inv", bound=int)
+    _L2Inv = TypeVar("_L2Inv", bound=int)
 
-_L0Inv = TypeVar("_L0Inv", bound=int)
-_L1Inv = TypeVar("_L1Inv", bound=int)
-_L2Inv = TypeVar("_L2Inv", bound=int)
+    _B3d0Inv = TypeVar("_B3d0Inv", bound=Basis3d[Any, Any, Any])
 
-_BC0Inv = TypeVar("_BC0Inv", bound=BasisConfig[Any, Any, Any])
-
-_BX0Inv = TypeVar("_BX0Inv", bound=BasisLike[Any, Any])
-_BX1Inv = TypeVar("_BX1Inv", bound=BasisLike[Any, Any])
-_BX2Inv = TypeVar("_BX2Inv", bound=BasisLike[Any, Any])
+    _A3d0Inv = TypeVar("_A3d0Inv", bound=AxisLike3d[Any, Any])
+    _A3d1Inv = TypeVar("_A3d1Inv", bound=AxisLike3d[Any, Any])
+    _A3d2Inv = TypeVar("_A3d2Inv", bound=AxisLike3d[Any, Any])
+    _S0Inv = TypeVar("_S0Inv", bound=tuple[int, ...])
+    _B0Inv = TypeVar("_B0Inv", bound=Basis[Any])
 
 
 def plot_wavepacket_sample_frequencies(
-    wavepacket: Wavepacket[_NS0Inv, _NS1Inv, _BC0Inv],
+    wavepacket: Wavepacket3dWith2dSamples[_NS0Inv, _NS1Inv, _B3d0Inv],
     *,
     ax: Axes | None = None,
 ) -> tuple[Figure, Axes, Line2D]:
@@ -71,7 +74,7 @@ def plot_wavepacket_sample_frequencies(
 
     Parameters
     ----------
-    wavepacket : Wavepacket[_NS0Inv, _NS1Inv, _BC0Inv]
+    wavepacket : Wavepacket[_NS0Inv, _NS1Inv, _B3d0Inv]
     ax : Axes | None, optional
         plot axis, by default None
 
@@ -96,33 +99,37 @@ def plot_wavepacket_sample_frequencies(
 
 
 def get_wavepacket_sample_basis(
-    wavepacket: Wavepacket[_NS0Inv, _NS1Inv, BasisConfig[_BX0Inv, _BX1Inv, _BX2Inv]]
-) -> BasisConfig[
-    FundamentalMomentumBasis[_NS0Inv],
-    FundamentalMomentumBasis[_NS1Inv],
-    FundamentalMomentumBasis[Literal[1]],
+    wavepacket: Wavepacket3dWith2dSamples[
+        _NS0Inv, _NS1Inv, Basis3d[_A3d0Inv, _A3d1Inv, _A3d2Inv]
+    ]
+) -> Basis3d[
+    FundamentalMomentumAxis3d[_NS0Inv],
+    FundamentalMomentumAxis3d[_NS1Inv],
+    FundamentalMomentumAxis3d[Literal[1]],
 ]:
     """
     Get the basis used to sample the brillouin zone.
 
     Parameters
     ----------
-    wavepacket : Wavepacket[_NS0Inv, _NS1, BasisConfig[_BX0Inv, _BX1Inv, _BX2Inv]]
+    wavepacket : Wavepacket[_NS0Inv, _NS1, Basis3d[_A3d0Inv, _A3d1Inv, _A3d2Inv]]
 
     Returns
     -------
-    BasisConfig[MomentumBasis[_NS0Inv], MomentumBasis[_NS1Inv], MomentumBasis[Literal[1]]]
+    Basis3d[MomentumBasis[_NS0Inv], MomentumBasis[_NS1Inv], MomentumBasis[Literal[1]]]
     """
     (ns0, ns1) = wavepacket["energies"].shape
     return (
-        FundamentalMomentumBasis(wavepacket["basis"][0].delta_x * ns0, ns0),
-        FundamentalMomentumBasis(wavepacket["basis"][1].delta_x * ns1, ns1),
-        FundamentalMomentumBasis(wavepacket["basis"][2].delta_x, 1),
+        FundamentalMomentumAxis3d(wavepacket["basis"][0].delta_x * ns0, ns0),
+        FundamentalMomentumAxis3d(wavepacket["basis"][1].delta_x * ns1, ns1),
+        FundamentalMomentumAxis3d(wavepacket["basis"][2].delta_x, 1),
     )
 
 
 def plot_wavepacket_energies_momentum(
-    wavepacket: Wavepacket[_NS0Inv, _NS1Inv, BasisConfig[_BX0Inv, _BX1Inv, _BX2Inv]],
+    wavepacket: Wavepacket3dWith2dSamples[
+        _NS0Inv, _NS1Inv, Basis3d[_A3d0Inv, _A3d1Inv, _A3d2Inv]
+    ],
     *,
     ax: Axes | None = None,
     scale: Scale = "linear",
@@ -132,7 +139,7 @@ def plot_wavepacket_energies_momentum(
 
     Parameters
     ----------
-    wavepacket : Wavepacket[_NS0Inv, _NS1Inv, BasisConfig[_BX0Inv, _BX1Inv, _BX2Inv]]
+    wavepacket : Wavepacket[_NS0Inv, _NS1Inv, Basis3d[_A3d0Inv, _A3d1Inv, _A3d2Inv]]
     ax : Axes | None, optional
         plot axis, by default None
     scale : Literal[&quot;symlog&quot;, &quot;linear&quot;], optional
@@ -163,7 +170,9 @@ def plot_wavepacket_energies_momentum(
 
 
 def plot_wavepacket_energies_position(
-    wavepacket: Wavepacket[_NS0Inv, _NS1Inv, BasisConfig[_BX0Inv, _BX1Inv, _BX2Inv]],
+    wavepacket: Wavepacket3dWith2dSamples[
+        _NS0Inv, _NS1Inv, Basis3d[_A3d0Inv, _A3d1Inv, _A3d2Inv]
+    ],
     *,
     ax: Axes | None = None,
     measure: Measure = "abs",
@@ -174,7 +183,7 @@ def plot_wavepacket_energies_position(
 
     Parameters
     ----------
-    wavepacket : Wavepacket[_NS0Inv, _NS1Inv, BasisConfig[_BX0Inv, _BX1Inv, _BX2Inv]]
+    wavepacket : Wavepacket[_NS0Inv, _NS1Inv, Basis3d[_A3d0Inv, _A3d1Inv, _A3d2Inv]]
     ax : Axes | None, optional
         plot axis, by default None
     measure : Literal[&quot;real&quot;, &quot;imag&quot;, &quot;abs&quot;], optional
@@ -208,9 +217,9 @@ def plot_wavepacket_energies_position(
 
 
 def plot_wavepacket_1d_x(
-    wavepacket: MomentumBasisWavepacket[_NS0Inv, _NS1Inv, _L0Inv, _L1Inv, _L2Inv],
-    idx: tuple[int, int] = (0, 0),
-    axis: Literal[0, 1, 2, -1, -2, -3] = 2,
+    wavepacket: Wavepacket[_S0Inv, _B0Inv],
+    idx: tuple[int, ...] | None = None,
+    axis: Literal[0, 1, 2, -1, -2, -3] = 0,
     *,
     ax: Axes | None = None,
     measure: Measure = "abs",
@@ -244,7 +253,7 @@ def plot_wavepacket_1d_x(
 
 
 def plot_wavepacket_x0(
-    wavepacket: MomentumBasisWavepacket[_NS0Inv, _NS1Inv, _L0Inv, _L1Inv, _L2Inv],
+    wavepacket: MomentumBasisWavepacket3d[_NS0Inv, _NS1Inv, _L0Inv, _L1Inv, _L2Inv],
     idx: tuple[int, int] = (0, 0),
     *,
     ax: Axes | None = None,
@@ -275,7 +284,7 @@ def plot_wavepacket_x0(
 
 
 def plot_wavepacket_x1(
-    wavepacket: MomentumBasisWavepacket[_NS0Inv, _NS1Inv, _L0Inv, _L1Inv, _L2Inv],
+    wavepacket: MomentumBasisWavepacket3d[_NS0Inv, _NS1Inv, _L0Inv, _L1Inv, _L2Inv],
     idx: tuple[int, int] = (0, 0),
     *,
     ax: Axes | None = None,
@@ -306,7 +315,7 @@ def plot_wavepacket_x1(
 
 
 def plot_wavepacket_x2(
-    wavepacket: MomentumBasisWavepacket[_NS0Inv, _NS1Inv, _L0Inv, _L1Inv, _L2Inv],
+    wavepacket: MomentumBasisWavepacket3d[_NS0Inv, _NS1Inv, _L0Inv, _L1Inv, _L2Inv],
     idx: tuple[int, int] = (0, 0),
     *,
     ax: Axes | None = None,
@@ -337,7 +346,7 @@ def plot_wavepacket_x2(
 
 
 def plot_wavepacket_2d_k(
-    wavepacket: MomentumBasisWavepacket[_NS0Inv, _NS1Inv, _L0Inv, _L1Inv, _L2Inv],
+    wavepacket: MomentumBasisWavepacket3d[_NS0Inv, _NS1Inv, _L0Inv, _L1Inv, _L2Inv],
     idx: SingleFlatIndexLike,
     kz_axis: Literal[0, 1, 2, -1, -2, -3],
     *,
@@ -374,7 +383,7 @@ def plot_wavepacket_2d_k(
 
 
 def plot_wavepacket_k0k1(
-    wavepacket: MomentumBasisWavepacket[_NS0Inv, _NS1Inv, _L0Inv, _L1Inv, _L2Inv],
+    wavepacket: MomentumBasisWavepacket3d[_NS0Inv, _NS1Inv, _L0Inv, _L1Inv, _L2Inv],
     k2_idx: SingleFlatIndexLike,
     *,
     ax: Axes | None = None,
@@ -407,7 +416,7 @@ def plot_wavepacket_k0k1(
 
 
 def plot_wavepacket_k1k2(
-    wavepacket: MomentumBasisWavepacket[_NS0Inv, _NS1Inv, _L0Inv, _L1Inv, _L2Inv],
+    wavepacket: MomentumBasisWavepacket3d[_NS0Inv, _NS1Inv, _L0Inv, _L1Inv, _L2Inv],
     k0_idx: SingleFlatIndexLike,
     *,
     ax: Axes | None = None,
@@ -440,7 +449,7 @@ def plot_wavepacket_k1k2(
 
 
 def plot_wavepacket_k2k0(
-    wavepacket: MomentumBasisWavepacket[_NS0Inv, _NS1Inv, _L0Inv, _L1Inv, _L2Inv],
+    wavepacket: MomentumBasisWavepacket3d[_NS0Inv, _NS1Inv, _L0Inv, _L1Inv, _L2Inv],
     k1_idx: SingleFlatIndexLike,
     *,
     ax: Axes | None = None,
@@ -473,7 +482,7 @@ def plot_wavepacket_k2k0(
 
 
 def plot_wavepacket_2d_x(
-    wavepacket: MomentumBasisWavepacket[_NS0Inv, _NS1Inv, _L0Inv, _L1Inv, _L2Inv],
+    wavepacket: MomentumBasisWavepacket3d[_NS0Inv, _NS1Inv, _L0Inv, _L1Inv, _L2Inv],
     idx: SingleFlatIndexLike,
     z_axis: Literal[0, 1, 2, -1, -2, -3],
     *,
@@ -510,7 +519,7 @@ def plot_wavepacket_2d_x(
 
 
 def plot_wavepacket_x0x1(
-    wavepacket: MomentumBasisWavepacket[_NS0Inv, _NS1Inv, _L0Inv, _L1Inv, _L2Inv],
+    wavepacket: MomentumBasisWavepacket3d[_NS0Inv, _NS1Inv, _L0Inv, _L1Inv, _L2Inv],
     x2_idx: SingleFlatIndexLike,
     *,
     ax: Axes | None = None,
@@ -543,7 +552,7 @@ def plot_wavepacket_x0x1(
 
 
 def plot_wavepacket_x1x2(
-    wavepacket: MomentumBasisWavepacket[_NS0Inv, _NS1Inv, _L0Inv, _L1Inv, _L2Inv],
+    wavepacket: MomentumBasisWavepacket3d[_NS0Inv, _NS1Inv, _L0Inv, _L1Inv, _L2Inv],
     x0_idx: SingleFlatIndexLike,
     *,
     ax: Axes | None = None,
@@ -576,7 +585,7 @@ def plot_wavepacket_x1x2(
 
 
 def plot_wavepacket_x2x0(
-    wavepacket: MomentumBasisWavepacket[_NS0Inv, _NS1Inv, _L0Inv, _L1Inv, _L2Inv],
+    wavepacket: MomentumBasisWavepacket3d[_NS0Inv, _NS1Inv, _L0Inv, _L1Inv, _L2Inv],
     x1_idx: SingleFlatIndexLike,
     *,
     ax: Axes | None = None,
@@ -609,8 +618,8 @@ def plot_wavepacket_x2x0(
 
 
 def plot_wavepacket_difference_2d_x(
-    wavepacket_0: MomentumBasisWavepacket[_NS0Inv, _NS1Inv, _L0Inv, _L1Inv, _L2Inv],
-    wavepacket_1: MomentumBasisWavepacket[_NS0Inv, _NS1Inv, _L0Inv, _L1Inv, _L2Inv],
+    wavepacket_0: MomentumBasisWavepacket3d[_NS0Inv, _NS1Inv, _L0Inv, _L1Inv, _L2Inv],
+    wavepacket_1: MomentumBasisWavepacket3d[_NS0Inv, _NS1Inv, _L0Inv, _L1Inv, _L2Inv],
     idx: SingleFlatIndexLike,
     z_axis: Literal[0, 1, 2, -1, -2, -3],
     *,
@@ -656,7 +665,7 @@ def plot_wavepacket_difference_2d_x(
 
 
 def animate_wavepacket_3d_x(
-    wavepacket: MomentumBasisWavepacket[_NS0Inv, _NS1Inv, _L0Inv, _L1Inv, _L2Inv],
+    wavepacket: MomentumBasisWavepacket3d[_NS0Inv, _NS1Inv, _L0Inv, _L1Inv, _L2Inv],
     z_axis: Literal[0, 1, 2, -1, -2, -3],
     *,
     ax: Axes | None = None,
@@ -692,7 +701,7 @@ def animate_wavepacket_3d_x(
 
 
 def animate_wavepacket_x0x1(
-    wavepacket: MomentumBasisWavepacket[_NS0Inv, _NS1Inv, _L0Inv, _L1Inv, _L2Inv],
+    wavepacket: MomentumBasisWavepacket3d[_NS0Inv, _NS1Inv, _L0Inv, _L1Inv, _L2Inv],
     *,
     ax: Axes | None = None,
     measure: Measure = "abs",
@@ -719,7 +728,7 @@ def animate_wavepacket_x0x1(
 
 
 def animate_wavepacket_x1x2(
-    wavepacket: MomentumBasisWavepacket[_NS0Inv, _NS1Inv, _L0Inv, _L1Inv, _L2Inv],
+    wavepacket: MomentumBasisWavepacket3d[_NS0Inv, _NS1Inv, _L0Inv, _L1Inv, _L2Inv],
     *,
     ax: Axes | None = None,
     measure: Measure = "abs",
@@ -746,7 +755,7 @@ def animate_wavepacket_x1x2(
 
 
 def animate_wavepacket_x2x0(
-    wavepacket: MomentumBasisWavepacket[_NS0Inv, _NS1Inv, _L0Inv, _L1Inv, _L2Inv],
+    wavepacket: MomentumBasisWavepacket3d[_NS0Inv, _NS1Inv, _L0Inv, _L1Inv, _L2Inv],
     *,
     ax: Axes | None = None,
     measure: Measure = "abs",
@@ -773,7 +782,7 @@ def animate_wavepacket_x2x0(
 
 
 def plot_wavepacket_along_path(
-    wavepacket: MomentumBasisWavepacket[_NS0Inv, _NS1Inv, _L0Inv, _L1Inv, _L2Inv],
+    wavepacket: MomentumBasisWavepacket3d[_NS0Inv, _NS1Inv, _L0Inv, _L1Inv, _L2Inv],
     path: np.ndarray[tuple[Literal[3], int], np.dtype[np.int_]],
     *,
     ax: Axes | None = None,

@@ -2,22 +2,22 @@ from __future__ import annotations
 
 import numpy as np
 from matplotlib import pyplot as plt
-from surface_potential_analysis.basis.basis import ExplicitBasis
-from surface_potential_analysis.basis.plot import plot_explicit_basis_states_x
+from surface_potential_analysis.axis.axis import ExplicitAxis3d
+from surface_potential_analysis.axis.plot import plot_explicit_basis_states_x
 from surface_potential_analysis.hamiltonian.hamiltonian import stack_hamiltonian
 from surface_potential_analysis.util.interpolation import pad_ft_points
 
 from .s2_hamiltonian import generate_hamiltonian_sho, generate_sho_basis
 
 
-def _normalize_sho_basis(basis: ExplicitBasis[int, int]) -> ExplicitBasis[int, int]:
+def _normalize_sho_basis(basis: ExplicitAxis3d[int, int]) -> ExplicitAxis3d[int, int]:
     turning_point = basis.vectors[
         np.arange(basis.vectors.shape[0]),
         np.argmax(np.abs(basis.vectors[:, : basis.vectors.shape[1] // 2]), axis=1),
     ]
 
     normalized = np.exp(-1j * np.angle(turning_point))[:, np.newaxis] * basis.vectors
-    return ExplicitBasis(basis.delta_x, normalized)
+    return ExplicitAxis3d(basis.delta_x, normalized)
 
 
 def plot_sho_basis() -> None:

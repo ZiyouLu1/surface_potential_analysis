@@ -4,13 +4,15 @@ from typing import TYPE_CHECKING, Any, Generic, Literal, TypedDict, TypeVar
 
 import numpy as np
 
-from surface_potential_analysis.basis import BasisLike
-from surface_potential_analysis.basis_config.basis_config import (
-    BasisConfig,
-    FundamentalMomentumBasisConfig,
-    FundamentalPositionBasisConfig,
+from surface_potential_analysis.axis import AxisLike3d
+from surface_potential_analysis.axis.axis import FundamentalPositionAxis
+from surface_potential_analysis.basis.basis import (
+    Basis,
+    Basis3d,
+    FundamentalMomentumBasis3d,
+    FundamentalPositionBasis3d,
 )
-from surface_potential_analysis.basis_config.util import BasisConfigUtil
+from surface_potential_analysis.basis.util import BasisUtil
 from surface_potential_analysis.eigenstate.eigenstate_calculation import (
     calculate_eigenstates,
 )
@@ -19,74 +21,94 @@ if TYPE_CHECKING:
     from collections.abc import Callable
     from pathlib import Path
 
-    from surface_potential_analysis.eigenstate.eigenstate import (
-        Eigenstate,
-    )
+    from surface_potential_analysis._types import SingleIndexLike
+    from surface_potential_analysis.eigenstate.eigenstate import Eigenstate
     from surface_potential_analysis.eigenstate.eigenstate_collection import (
-        EigenstateColllection,
+        EigenstateColllection3d,
     )
-    from surface_potential_analysis.hamiltonian import Hamiltonian
+    from surface_potential_analysis.hamiltonian.hamiltonian import Hamiltonian
 
 _L0Inv = TypeVar("_L0Inv", bound=int)
 _L1Inv = TypeVar("_L1Inv", bound=int)
 _L2Inv = TypeVar("_L2Inv", bound=int)
+_ND0Inv = TypeVar("_ND0Inv", bound=int)
+
+_B0Inv = TypeVar("_B0Inv", bound=Basis[Any])
 
 
-_BC0Inv = TypeVar(
-    "_BC0Inv",
-    bound=BasisConfig[BasisLike[Any, Any], BasisLike[Any, Any], BasisLike[Any, Any]],
+_B3d0Inv = TypeVar(
+    "_B3d0Inv",
+    bound=Basis3d[AxisLike3d[Any, Any], AxisLike3d[Any, Any], AxisLike3d[Any, Any]],
 )
 
-
+_S0Inv = TypeVar("_S0Inv", bound=tuple[int, ...])
 _NS0Inv = TypeVar("_NS0Inv", bound=int)
 _NS1Inv = TypeVar("_NS1Inv", bound=int)
 
 
-class Wavepacket(TypedDict, Generic[_NS0Inv, _NS1Inv, _BC0Inv]):
+class Wavepacket(TypedDict, Generic[_S0Inv, _B0Inv]):
     """represents an approximation of a Wannier function."""
 
-    basis: _BC0Inv
-    vectors: np.ndarray[tuple[_NS0Inv, _NS1Inv, int], np.dtype[np.complex_]]
-    energies: np.ndarray[tuple[_NS0Inv, _NS1Inv], np.dtype[np.float_]]
+    basis: _B0Inv
+    shape: _S0Inv
+    # Vectors such that vectors.reshape(*shape, -1)[is0,is1, ..., :]
+    # gives the eigenstate for the sample is0, is1, ...
+    vectors: np.ndarray[tuple[int, int], np.dtype[np.complex_]]
+    # Energies such that energies.reshape(*shape)[is0,is1, ..., isn]
+    # gives the energies for the sample is0, is1, ...
+    energies: np.ndarray[tuple[int], np.dtype[np.float_]]
 
 
-_BX0Inv = TypeVar("_BX0Inv", bound=BasisLike[Any, Any])
-_BX1Inv = TypeVar("_BX1Inv", bound=BasisLike[Any, Any])
-_BX2Inv = TypeVar("_BX2Inv", bound=BasisLike[Any, Any])
+_S03dInv = TypeVar("_S03dInv", bound=tuple[int, int, int])
 
-WavepacketWithBasis = Wavepacket[
-    _NS0Inv,
-    _NS1Inv,
-    BasisConfig[_BX0Inv, _BX1Inv, _BX2Inv],
+
+class Wavepacket3d(Wavepacket[_S03dInv, _B3d0Inv]):
+    """represents an approximation of a Wannier function."""
+
+
+_A3d0Inv = TypeVar("_A3d0Inv", bound=AxisLike3d[Any, Any])
+_A3d1Inv = TypeVar("_A3d1Inv", bound=AxisLike3d[Any, Any])
+_A3d2Inv = TypeVar("_A3d2Inv", bound=AxisLike3d[Any, Any])
+
+Wavepacket3dWith2dSamples = Wavepacket3d[
+    tuple[_NS0Inv, _NS1Inv, Literal[1]],
+    _B3d0Inv,
+]
+
+WavepacketWithBasis3d = Wavepacket3d[
+    tuple[_NS0Inv, _NS1Inv, Literal[1]],
+    Basis3d[_A3d0Inv, _A3d1Inv, _A3d2Inv],
 ]
 
 
-PositionBasisWavepacket = Wavepacket[
+PositionBasisWavepacket3d = Wavepacket3dWith2dSamples[
     _NS0Inv,
     _NS1Inv,
-    FundamentalPositionBasisConfig[_L0Inv, _L1Inv, _L2Inv],
+    FundamentalPositionBasis3d[_L0Inv, _L1Inv, _L2Inv],
 ]
 
-MomentumBasisWavepacket = Wavepacket[
+MomentumBasisWavepacket3d = [
     _NS0Inv,
     _NS1Inv,
-    FundamentalMomentumBasisConfig[_L0Inv, _L1Inv, _L2Inv],
+    FundamentalMomentumBasis3d[_L0Inv, _L1Inv, _L2Inv],
 ]
 
 
-def save_wavepacket(path: Path, wavepacket: Wavepacket[Any, Any, Any]) -> None:
+def save_wavepacket(path: Path, wavepacket: Wavepacket[Any, Any]) -> None:
     """
     Save a wavepacket in the npy format.
 
     Parameters
     ----------
     path : Path
-    wavepacket : Wavepacket[Any, Any, Any]
+    wavepacket :  Wavepacket[Any, Any]
     """
     np.save(path, wavepacket)
 
 
-def load_wavepacket(path: Path) -> Wavepacket[Any, Any, Any]:
+def load_wavepacket(
+    path: Path,
+) -> Wavepacket[Any, Any]:
     """
     Load a wavepacket from the npy format.
 
@@ -101,23 +123,66 @@ def load_wavepacket(path: Path) -> Wavepacket[Any, Any, Any]:
     return np.load(path, allow_pickle=True)[()]  # type: ignore[no-any-return]
 
 
-def _get_wavepacket_sample_index(
-    shape: np.ndarray[tuple[Literal[2]], np.dtype[np.int_]]
-) -> np.ndarray[tuple[Literal[2], int, int], np.dtype[np.int_]]:
-    n_x0 = np.fft.ifftshift(
-        np.arange((-shape.item(0) + 1) // 2, (shape.item(0) - 1) // 2)
-    )
-    n_x1 = np.fft.ifftshift(
-        np.arange((-shape.item(1) + 1) // 2, (shape.item(1) - 1) // 2)
+def get_sample_basis(basis: Basis[_ND0Inv], shape: _S0Inv) -> Basis[_ND0Inv]:
+    """
+    Given the basis for a wavepacket, get the basis used to sample the packet.
+
+    Parameters
+    ----------
+    basis : Basis[_ND0Inv]
+    shape : _S0Inv
+
+    Returns
+    -------
+    Basis[_ND0Inv]
+    """
+    return tuple(
+        FundamentalPositionAxis(ax.delta_x * n, n)
+        for (ax, n) in zip(basis, shape, strict=True)
     )
 
-    x0v, x1v = np.meshgrid(n_x0, n_x1)
-    return np.array([x0v, x1v])  # type: ignore[no-any-return]
+
+def get_unfurled_basis(basis: Basis[_ND0Inv], shape: _S0Inv) -> Basis[_ND0Inv]:
+    """
+    Given the basis for a wavepacket, get the basis for the unfurled wavepacket.
+
+    Parameters
+    ----------
+    basis : Basis[_ND0Inv]
+    shape : _S0Inv
+
+    Returns
+    -------
+    Basis[_ND0Inv]
+    """
+    return tuple(
+        FundamentalPositionAxis(ax.delta_x * n, ax.n * n)
+        for (ax, n) in zip(basis, shape, strict=True)
+    )
+
+
+def get_furled_basis(basis: Basis[_ND0Inv], shape: _S0Inv) -> Basis[_ND0Inv]:
+    """
+    Given the basis for an eigenstate, get the basis used for the furled wavepacket.
+
+    Parameters
+    ----------
+    basis : Basis[_ND0Inv]
+    shape : _S0Inv
+
+    Returns
+    -------
+    Basis[_ND0Inv]
+    """
+    return tuple(
+        FundamentalPositionAxis(ax.delta_x // n, ax.n // n)
+        for (ax, n) in zip(basis, shape, strict=True)
+    )
 
 
 def get_wavepacket_sample_fractions(
-    shape: np.ndarray[tuple[Literal[2]], np.dtype[np.int_]]
-) -> np.ndarray[tuple[Literal[2], int, int], np.dtype[np.float_]]:
+    shape: _S0Inv,
+) -> np.ndarray[tuple[int, int], np.dtype[np.float_]]:
     """
     Get the frequencies of the samples in a wavepacket, as a fraction of dk.
 
@@ -130,56 +195,51 @@ def get_wavepacket_sample_fractions(
     np.ndarray[tuple[Literal[2], int, int], np.dtype[np.float_]]
     """
     # TODO: what should be the convention here
-    x0v, x1v = np.meshgrid(
-        np.fft.fftfreq(shape.item(0), 1),
-        np.fft.fftfreq(shape.item(1), 1),
+    meshgrid = np.meshgrid(
+        *[np.fft.fftfreq(s, 1) for s in shape],
         indexing="ij",
     )
-    return np.array([x0v, x1v])  # type: ignore[no-any-return]
+    return np.array([x.ravel() for x in meshgrid])  # type: ignore[no-any-return]
 
 
 def get_wavepacket_sample_frequencies(
-    basis: BasisConfig[Any, Any, Any],
-    shape: np.ndarray[tuple[Literal[2]], np.dtype[np.int_]],
-) -> np.ndarray[tuple[Literal[3], int, int], np.dtype[np.float_]]:
+    basis: Basis[_ND0Inv], shape: _S0Inv
+) -> np.ndarray[tuple[_ND0Inv, int], np.dtype[np.float_]]:
     """
     Get the frequencies used in a given wavepacket.
 
     Parameters
     ----------
-    basis : BasisConfig[Any, Any, Any]
-    shape : np.ndarray[tuple[Literal[2]], np.dtype[np.int_]]
+    basis : Basis[_ND0Inv]
+    shape : tuple length _ND0Inv
 
     Returns
     -------
-    np.ndarray[tuple[Literal[3], int, int], np.dtype[np.float_]]
+    np.ndarray[tuple[_ND0Inv, int], np.dtype[np.float_]]
     """
-    util = BasisConfigUtil(basis)
-    fractions = get_wavepacket_sample_fractions(shape)
-    return (  # type: ignore[no-any-return]
-        util.dk0[:, np.newaxis, np.newaxis] * fractions[np.newaxis, 0]
-        + util.dk1[:, np.newaxis, np.newaxis] * fractions[np.newaxis, 1]
-    )
+    sample_basis = get_sample_basis(basis, shape)
+    util = BasisUtil(sample_basis)
+    return util.fundamental_k_points  # type: ignore[return-value]
 
 
 def as_eigenstate_collection(
-    wavepacket: Wavepacket[_NS0Inv, _NS1Inv, _BC0Inv]
-) -> EigenstateColllection[_BC0Inv]:
+    wavepacket: Wavepacket3dWith2dSamples[_NS0Inv, _NS1Inv, _B3d0Inv]
+) -> EigenstateColllection3d[_B3d0Inv, int]:
     """
     Convert a wavepacket into an eigenstate collection.
 
     Parameters
     ----------
-    wavepacket : Wavepacket[_NS0Inv, _NS1Inv, _BC0Inv]
+    wavepacket : Wavepacket[_NS0Inv, _NS1Inv, _B3d0Inv]
 
     Returns
     -------
-    EigenstateColllection[_BC0Inv]
+    EigenstateColllection[_B3d0Inv]
     """
     return {
         "basis": wavepacket["basis"],
         "bloch_phases": get_wavepacket_sample_frequencies(
-            wavepacket["basis"], wavepacket["energies"].shape
+            wavepacket["basis"], wavepacket["shape"]
         ).reshape(3, -1),
         "energies": wavepacket["energies"].reshape(-1),
         "vectors": wavepacket["vectors"].reshape(wavepacket["energies"].size, -1),
@@ -187,85 +247,91 @@ def as_eigenstate_collection(
 
 
 def _from_eigenstate_collection(
-    collection: EigenstateColllection[_BC0Inv], shape: tuple[_NS0Inv, _NS1Inv]
-) -> Wavepacket[Any, Any, _BC0Inv]:
+    collection: EigenstateColllection3d[_B3d0Inv, _L0Inv],
+    shape: _S0Inv,
+) -> Wavepacket[_S0Inv, _B3d0Inv]:
     return {
         "basis": collection["basis"],
-        "energies": collection["energies"].reshape(shape),
-        "vectors": collection["vectors"].reshape(*shape, -1),
+        "shape": shape,
+        "energies": collection["energies"].reshape(np.prod(shape)),
+        "vectors": collection["vectors"].reshape(np.prod(shape), -1),
     }
 
 
 def generate_wavepacket(
     hamiltonian_generator: Callable[
-        [np.ndarray[tuple[Literal[3]], np.dtype[np.float_]]],
-        Hamiltonian[_BC0Inv],
+        [np.ndarray[tuple[_ND0Inv], np.dtype[np.float_]]],
+        Hamiltonian[_B0Inv],
     ],
-    samples: tuple[_NS0Inv, _NS1Inv],
+    shape: _S0Inv,
     *,
     save_bands: np.ndarray[tuple[int], np.dtype[np.int_]] | None = None,
-) -> list[Wavepacket[_NS0Inv, _NS1Inv, _BC0Inv]]:
+) -> list[Wavepacket[_S0Inv, _B0Inv]]:
     """
     Generate a wavepacket with the given number of samples.
 
     Parameters
     ----------
-    hamiltonian_generator : Callable[[np.ndarray[tuple[Literal[3]], np.dtype[np.float_]]], Hamiltonian[_BC0Inv]]
+    hamiltonian_generator : Callable[[np.ndarray[tuple[Literal[3]], np.dtype[np.float_]]], Hamiltonian[_B3d0Inv]]
     samples : tuple[_NS0Inv, _NS1Inv]
     save_bands : np.ndarray[tuple[int], np.dtype[np.int_]] | None, optional
 
     Returns
     -------
-    np.ndarray[tuple[int], np.dtype[Wavepacket[_NS0Inv, _NS1Inv, _BC0Inv]]]
+    np.ndarray[tuple[int], np.dtype[Wavepacket[_NS0Inv, _NS1Inv, _B3d0Inv]]]
     """
     h = hamiltonian_generator(np.array([0, 0, 0]))
-    basis_length = len(BasisConfigUtil(h["basis"]))
+    basis_size = BasisUtil(h["basis"]).size
     save_bands = np.array([0]) if save_bands is None else save_bands
     subset_by_index: tuple[int, int] = (np.min(save_bands), np.max(save_bands))
 
-    vectors = np.empty((*samples, basis_length), dtype=np.complex128)
-    energies = np.empty(samples, dtype=np.float_)
-    out: list[Wavepacket[_NS0Inv, _NS1Inv, _BC0Inv]] = [
-        {"basis": h["basis"], "vectors": vectors.copy(), "energies": energies.copy()}
+    n_samples = np.prod(shape)
+    vectors = np.empty((n_samples, basis_size), dtype=np.complex128)
+    energies = np.empty(n_samples, dtype=np.float_)
+    out: list[Wavepacket[_S0Inv, _B0Inv]] = [
+        {
+            "basis": h["basis"],
+            "vectors": vectors.copy(),
+            "energies": energies.copy(),
+            "shape": shape,
+        }
         for _ in save_bands
     ]
 
-    frequencies = get_wavepacket_sample_frequencies(h["basis"], np.array(samples))
-    for i in range(np.prod(samples)):
-        (is0, is1) = np.unravel_index(i, samples)
-        h = hamiltonian_generator(frequencies[:, is0, is1])
+    frequencies = get_wavepacket_sample_frequencies(h["basis"], np.array(shape))
+    for i in range(np.prod(shape)):
+        h = hamiltonian_generator(frequencies[:, i])
         eigenstates = calculate_eigenstates(h, subset_by_index)
 
         for b, band in enumerate(save_bands):
             band_idx = band - subset_by_index[0]
-            out[b]["vectors"][is0, is1] = eigenstates["vectors"][band_idx]
-            out[b]["energies"][is0, is1] = eigenstates["energies"][band_idx]
+            out[b]["vectors"][i] = eigenstates["vectors"][band_idx]
+            out[b]["energies"][i] = eigenstates["energies"][band_idx]
     return out
 
 
 def get_eigenstate(
     wavepacket: Wavepacket[
-        _NS0Inv,
-        _NS1Inv,
-        _BC0Inv,
+        _S0Inv,
+        _B0Inv,
     ],
-    idx: tuple[int, int] | int,
-) -> Eigenstate[_BC0Inv]:
+    idx: SingleIndexLike,
+) -> Eigenstate[_B0Inv]:
     """
     Get the eigenstate of a given wavepacket at a specific index.
 
     Parameters
     ----------
-    wavepacket : Wavepacket[ _NS0Inv, _NS1Inv, _BC0Inv, ]
+    wavepacket : Wavepacket[ _NS0Inv, _NS1Inv, _B3d0Inv, ]
     idx : tuple[int, int]
 
     Returns
     -------
-    Eigenstate[_BC0Inv]
+    Eigenstate[_B3d0Inv]
     """
-    shape = wavepacket["energies"].shape
-    stacked_idx = idx if isinstance(idx, tuple) else (np.unravel_index(idx, shape))
+    shape = wavepacket["shape"]
+    idx = np.ravel_multi_index(idx, shape) if isinstance(idx, tuple) else idx
     return {
         "basis": wavepacket["basis"],
-        "vector": wavepacket["vectors"][stacked_idx],
+        "vector": wavepacket["vectors"][idx],
     }

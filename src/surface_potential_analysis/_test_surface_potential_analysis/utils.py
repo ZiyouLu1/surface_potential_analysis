@@ -5,8 +5,8 @@ from typing import TYPE_CHECKING, TypeVar
 import numpy as np
 from scipy.stats import special_ortho_group
 
-from surface_potential_analysis.basis.basis import (
-    ExplicitBasis,
+from surface_potential_analysis.axis.axis import (
+    ExplicitAxis3d,
 )
 from surface_potential_analysis.util.util import slice_along_axis
 
@@ -43,7 +43,7 @@ def convert_explicit_basis_x2(
 def get_random_explicit_basis(
     fundamental_n: int | None = None,
     n: int | None = None,
-) -> ExplicitBasis[int, int]:
+) -> ExplicitAxis3d[int, int]:
     fundamental_n = (
         rng.integers(2 if n is None else n, 5)
         if fundamental_n is None
@@ -51,4 +51,4 @@ def get_random_explicit_basis(
     )
     n = rng.integers(1, fundamental_n) if n is None else n
     vectors = special_ortho_group.rvs(fundamental_n)[:n]
-    return ExplicitBasis(np.array([1, 0, 0]), vectors)
+    return ExplicitAxis3d(np.array([1, 0, 0]), vectors)

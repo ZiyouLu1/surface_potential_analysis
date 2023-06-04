@@ -11,7 +11,7 @@ if TYPE_CHECKING:
 _L0Cov = TypeVar("_L0Cov", bound=int, covariant=True)
 
 
-class PointPotential(TypedDict, Generic[_L0Cov]):
+class PointPotential3d(TypedDict, Generic[_L0Cov]):
     """Represents an uneven potential, given at a series of points in the unit cell."""
 
     x_points: np.ndarray[tuple[_L0Cov], np.dtype[np.float_]]
@@ -22,7 +22,7 @@ class PointPotential(TypedDict, Generic[_L0Cov]):
 
 def load_point_potential_json(
     path: Path,
-) -> PointPotential[Any]:
+) -> PointPotential3d[Any]:
     """
     Load a point potential from a JSON format.
 

@@ -4,13 +4,13 @@ from typing import TYPE_CHECKING, Any, TypeVar
 
 import numpy as np
 from matplotlib import pyplot as plt
-from surface_potential_analysis.basis_config.build import (
-    build_position_basis_config_from_resolution,
+from surface_potential_analysis.basis.build import (
+    position_basis_3d_from_resolution,
 )
-from surface_potential_analysis.basis_config.conversion import (
-    basis_config_as_single_point_basis_config,
+from surface_potential_analysis.basis.conversion import (
+    basis3d_as_single_point_basis,
 )
-from surface_potential_analysis.basis_config.util import (
+from surface_potential_analysis.basis.util import (
     get_fundamental_projected_x_points,
 )
 from surface_potential_analysis.util.plot import (
@@ -26,8 +26,8 @@ if TYPE_CHECKING:
     from matplotlib.axes import Axes
     from matplotlib.figure import Figure
     from matplotlib.lines import Line2D
-    from surface_potential_analysis.basis_config.basis_config import (
-        BasisConfig,
+    from surface_potential_analysis.basis.basis import (
+        Basis3d,
     )
 
     from surface_dynamics_simulation.tunnelling_simulation.isf import ISF
@@ -35,7 +35,7 @@ if TYPE_CHECKING:
         TunnellingSimulationState,
     )
 
-    _BC0Inv = TypeVar("_BC0Inv", bound=BasisConfig[Any, Any, Any])
+    _B3d0Inv = TypeVar("_B3d0Inv", bound=Basis3d[Any, Any, Any])
 
     _L0Inv = TypeVar("_L0Inv", bound=int)
     _N0Inv = TypeVar("_N0Inv", bound=int)
@@ -104,7 +104,7 @@ def plot_occupation_per_site(
 
 def animate_occupation_per_site_2d(
     state: TunnellingSimulationState[_L0Inv, _S0Inv],
-    basis: _BC0Inv | None = None,
+    basis: _B3d0Inv | None = None,
     *,
     ax: Axes | None = None,
     scale: Scale = "linear",
@@ -124,9 +124,9 @@ def animate_occupation_per_site_2d(
     """
     shape = state["shape"]
     unfurled_basis = get_unfurled_basis(
-        basis_config_as_single_point_basis_config(basis)
+        basis3d_as_single_point_basis(basis)
         if basis is not None
-        else build_position_basis_config_from_resolution((1, 1, 1)),
+        else position_basis_3d_from_resolution((1, 1, 1)),
         (shape[0], shape[1]),
     )
 

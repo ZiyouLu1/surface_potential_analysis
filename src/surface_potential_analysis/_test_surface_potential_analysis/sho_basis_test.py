@@ -7,11 +7,11 @@ import hamiltonian_generator
 import numpy as np
 from scipy.constants import hbar
 
-from surface_potential_analysis.basis.basis import (
-    ExplicitBasis,
-    FundamentalPositionBasis,
+from surface_potential_analysis.axis.axis import (
+    ExplicitAxis3d,
+    FundamentalPositionAxis3d,
 )
-from surface_potential_analysis.basis_config.sho_basis import (
+from surface_potential_analysis.basis.sho_basis import (
     SHOBasisConfig,
     calculate_sho_wavefunction,
     infinate_sho_basis_from_config,
@@ -21,14 +21,14 @@ from surface_potential_analysis.basis_config.sho_basis import (
 rng = np.random.default_rng()
 
 
-def _normalize_sho_basis(basis: ExplicitBasis[int, int]) -> ExplicitBasis[int, int]:
+def _normalize_sho_basis(basis: ExplicitAxis3d[int, int]) -> ExplicitAxis3d[int, int]:
     turning_point = basis.vectors[
         np.arange(basis.vectors.shape[0]),
         np.argmax(np.abs(basis.vectors[:, : basis.vectors.shape[1] // 2]), axis=1),
     ]
 
     normalized = np.exp(-1j * np.angle(turning_point))[:, np.newaxis] * basis.vectors
-    return ExplicitBasis(basis.delta_x, normalized)
+    return ExplicitAxis3d(basis.delta_x, normalized)
 
 
 class SHOBasisTest(unittest.TestCase):
@@ -105,7 +105,7 @@ class SHOBasisTest(unittest.TestCase):
             "sho_omega": 1 / hbar,
             "x_origin": np.array([0, 0, -10]),
         }
-        parent: FundamentalPositionBasis[Literal[1001]] = FundamentalPositionBasis(
+        parent: FundamentalPositionAxis3d[Literal[1001]] = FundamentalPositionAxis3d(
             np.array([0, 0, 20]), 1001
         )
         basis = infinate_sho_basis_from_config(parent, config, 12)
@@ -119,7 +119,7 @@ class SHOBasisTest(unittest.TestCase):
             "sho_omega": 1 / hbar,
             "x_origin": np.array([0, 0, -5 * np.pi]),
         }
-        parent = FundamentalPositionBasis(np.array([0, 0, 10 * np.pi]), 1001)
+        parent = FundamentalPositionAxis3d(np.array([0, 0, 10 * np.pi]), 1001)
 
         basis = sho_basis_from_config(parent, config, 12)
 
@@ -135,7 +135,7 @@ class SHOBasisTest(unittest.TestCase):
             "sho_omega": 1 / hbar,
             "x_origin": np.array([0, 0, -5 * np.pi]),
         }
-        parent = FundamentalPositionBasis(np.array([0, 0, 10 * np.pi]), 1001)
+        parent = FundamentalPositionAxis3d(np.array([0, 0, 10 * np.pi]), 1001)
 
         basis1 = _normalize_sho_basis(
             infinate_sho_basis_from_config(parent, config, 16)

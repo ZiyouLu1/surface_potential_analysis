@@ -1,50 +1,88 @@
 from __future__ import annotations
 
-from typing import Any, TypeVar
+from typing import Any, TypeVar, overload
 
 import numpy as np
 
-from surface_potential_analysis.basis_config.basis_config import (
-    BasisConfig,
+from surface_potential_analysis.basis.basis import (
+    Basis,
+    Basis1d,
+    Basis2d,
+    Basis3d,
 )
-from surface_potential_analysis.basis_config.conversion import (
-    basis_config_as_fundamental_momentum_basis_config,
-    basis_config_as_fundamental_position_basis_config,
+from surface_potential_analysis.basis.conversion import (
+    basis_as_fundamental_momentum_basis,
+    basis_as_fundamental_position_basis,
     convert_matrix,
 )
 
 from .hamiltonian import (
-    FundamentalMomentumBasisHamiltonian,
-    FundamentalMomentumBasisStackedHamiltonian,
-    FundamentalPositionBasisHamiltonian,
-    FundamentalPositionBasisStackedHamiltonian,
+    FundamentalMomentumBasisHamiltonian3d,
+    FundamentalMomentumBasisStackedHamiltonian3d,
+    FundamentalPositionBasisHamiltonian3d,
+    FundamentalPositionBasisStackedHamiltonian3d,
     Hamiltonian,
     flatten_hamiltonian,
     stack_hamiltonian,
 )
 
-_BC0Inv = TypeVar("_BC0Inv", bound=BasisConfig[Any, Any, Any])
-_BC1Inv = TypeVar("_BC1Inv", bound=BasisConfig[Any, Any, Any])
+_B0Inv = TypeVar("_B0Inv", bound=Basis[Any])
+_B1Inv = TypeVar("_B1Inv", bound=Basis[Any])
+
+_B1d0Inv = TypeVar("_B1d0Inv", bound=Basis1d[Any])
+_B1d1Inv = TypeVar("_B1d1Inv", bound=Basis1d[Any])
+_B2d0Inv = TypeVar("_B2d0Inv", bound=Basis2d[Any, Any])
+_B2d1Inv = TypeVar("_B2d1Inv", bound=Basis2d[Any, Any])
+_B3d0Inv = TypeVar("_B3d0Inv", bound=Basis3d[Any, Any, Any])
+_B3d1Inv = TypeVar("_B3d1Inv", bound=Basis3d[Any, Any, Any])
 
 _L0Inv = TypeVar("_L0Inv", bound=int)
 _L1Inv = TypeVar("_L1Inv", bound=int)
 _L2Inv = TypeVar("_L2Inv", bound=int)
 
 
+@overload
 def convert_hamiltonian_to_basis(
-    hamiltonian: Hamiltonian[_BC0Inv], basis: _BC1Inv
-) -> Hamiltonian[_BC1Inv]:
+    hamiltonian: Hamiltonian[_B1d0Inv], basis: _B1d1Inv
+) -> Hamiltonian[_B1d1Inv]:
+    ...
+
+
+@overload
+def convert_hamiltonian_to_basis(
+    hamiltonian: Hamiltonian[_B2d0Inv], basis: _B2d1Inv
+) -> Hamiltonian[_B2d1Inv]:
+    ...
+
+
+@overload
+def convert_hamiltonian_to_basis(
+    hamiltonian: Hamiltonian[_B3d0Inv], basis: _B3d1Inv
+) -> Hamiltonian[_B3d1Inv]:
+    ...
+
+
+@overload
+def convert_hamiltonian_to_basis(
+    hamiltonian: Hamiltonian[_B0Inv], basis: _B1Inv
+) -> Hamiltonian[_B1Inv]:
+    ...
+
+
+def convert_hamiltonian_to_basis(
+    hamiltonian: Hamiltonian[_B0Inv], basis: _B1Inv
+) -> Hamiltonian[_B1Inv]:
     """
-    Given an eigenstate, calculate the vector in the given basis.
+    Given a hamiltonian, convert it to the given basis.
 
     Parameters
     ----------
-    eigenstate : Eigenstate[_BC0Inv]
-    basis : _BC1Inv
+    eigenstate : Eigenstate[_B3d0Inv]
+    basis : _B3d1Inv
 
     Returns
     -------
-    Eigenstate[_BC1Inv]
+    Eigenstate[_B3d1Inv]
     """
     converted = convert_matrix(
         hamiltonian["array"].astype(np.complex_), hamiltonian["basis"], basis
@@ -53,20 +91,20 @@ def convert_hamiltonian_to_basis(
 
 
 def _convert_stacked_hamiltonian_to_momentum_basis(
-    hamiltonian: FundamentalPositionBasisStackedHamiltonian[_L0Inv, _L1Inv, _L2Inv]
-) -> FundamentalMomentumBasisStackedHamiltonian[_L0Inv, _L1Inv, _L2Inv]:
+    hamiltonian: FundamentalPositionBasisStackedHamiltonian3d[_L0Inv, _L1Inv, _L2Inv]
+) -> FundamentalMomentumBasisStackedHamiltonian3d[_L0Inv, _L1Inv, _L2Inv]:
     transformed = np.fft.ifftn(
         np.fft.fftn(hamiltonian["array"], axes=(0, 1, 2), norm="ortho"),
         axes=(3, 4, 5),
         norm="ortho",
     )
-    basis = basis_config_as_fundamental_momentum_basis_config(hamiltonian["basis"])
+    basis = basis_as_fundamental_momentum_basis(hamiltonian["basis"])
     return {"basis": basis, "array": transformed}
 
 
 def convert_hamiltonian_to_momentum_basis(
-    hamiltonian: FundamentalPositionBasisHamiltonian[_L0Inv, _L1Inv, _L2Inv]
-) -> FundamentalMomentumBasisHamiltonian[_L0Inv, _L1Inv, _L2Inv]:
+    hamiltonian: FundamentalPositionBasisHamiltonian3d[_L0Inv, _L1Inv, _L2Inv]
+) -> FundamentalMomentumBasisHamiltonian3d[_L0Inv, _L1Inv, _L2Inv]:
     """
     Convert a hamiltonian from position to momentum basis.
 
@@ -84,21 +122,21 @@ def convert_hamiltonian_to_momentum_basis(
 
 
 def _convert_stacked_hamiltonian_to_position_basis(
-    hamiltonian: FundamentalMomentumBasisStackedHamiltonian[_L0Inv, _L1Inv, _L2Inv]
-) -> FundamentalPositionBasisStackedHamiltonian[_L0Inv, _L1Inv, _L2Inv]:
+    hamiltonian: FundamentalMomentumBasisStackedHamiltonian3d[_L0Inv, _L1Inv, _L2Inv]
+) -> FundamentalPositionBasisStackedHamiltonian3d[_L0Inv, _L1Inv, _L2Inv]:
     # TODO: which way round
     transformed = np.fft.fftn(
         np.fft.ifftn(hamiltonian["array"], axes=(0, 1, 2), norm="ortho"),
         axes=(3, 4, 5),
         norm="ortho",
     )
-    basis = basis_config_as_fundamental_position_basis_config(hamiltonian["basis"])
+    basis = basis_as_fundamental_position_basis(hamiltonian["basis"])
     return {"basis": basis, "array": transformed}
 
 
 def convert_hamiltonian_to_position_basis(
-    hamiltonian: FundamentalMomentumBasisHamiltonian[_L0Inv, _L1Inv, _L2Inv]
-) -> FundamentalPositionBasisHamiltonian[_L0Inv, _L1Inv, _L2Inv]:
+    hamiltonian: FundamentalMomentumBasisHamiltonian3d[_L0Inv, _L1Inv, _L2Inv]
+) -> FundamentalPositionBasisHamiltonian3d[_L0Inv, _L1Inv, _L2Inv]:
     """
     Convert a hamiltonian from momentum to position basis.
 

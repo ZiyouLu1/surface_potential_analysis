@@ -3,11 +3,11 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, Literal
 
 import numpy as np
-from surface_potential_analysis.basis.basis import (
-    FundamentalMomentumBasis,
-    MomentumBasis,
+from surface_potential_analysis.axis.axis import (
+    FundamentalMomentumAxis3d,
+    MomentumAxis3d,
 )
-from surface_potential_analysis.basis_config.util import BasisConfigUtil
+from surface_potential_analysis.basis.util import Basis3dUtil
 from surface_potential_analysis.wavepacket import save_wavepacket
 from surface_potential_analysis.wavepacket.conversion import convert_wavepacket_to_basis
 from surface_potential_analysis.wavepacket.normalization import (
@@ -15,7 +15,7 @@ from surface_potential_analysis.wavepacket.normalization import (
     normalize_wavepacket_two_point,
 )
 from surface_potential_analysis.wavepacket.wavepacket import (
-    Wavepacket,
+    Wavepacket3dWith2dSamples,
     generate_wavepacket,
     load_wavepacket,
 )
@@ -24,15 +24,15 @@ from .s2_hamiltonian import generate_hamiltonian_sho
 from .surface_data import get_data_path
 
 if TYPE_CHECKING:
-    from surface_potential_analysis._types import SingleIndexLike
+    from surface_potential_analysis._types import SingleIndexLike3d
+    from surface_potential_analysis.axis.axis import (
+        ExplicitAxis3d,
+    )
     from surface_potential_analysis.basis.basis import (
-        ExplicitBasis,
+        Basis3d,
+        FundamentalMomentumBasis3d,
     )
-    from surface_potential_analysis.basis_config.basis_config import (
-        BasisConfig,
-        FundamentalMomentumBasisConfig,
-    )
-    from surface_potential_analysis.hamiltonian import Hamiltonian
+    from surface_potential_analysis.hamiltonian import Hamiltonian3d
 
 MAXIMUM_POINTS: list[tuple[int, int, int]] = [
     (0, 0, 117),
@@ -60,35 +60,38 @@ MAXIMUM_POINTS: list[tuple[int, int, int]] = [
 
 def load_nickel_wavepacket(
     band: int,
-) -> Wavepacket[
+) -> Wavepacket3dWith2dSamples[
     Literal[12],
     Literal[12],
-    BasisConfig[
-        MomentumBasis[Literal[24], Literal[24]],
-        MomentumBasis[Literal[24], Literal[24]],
-        ExplicitBasis[Literal[250], Literal[12]],
+    Basis3d[
+        MomentumAxis3d[Literal[24], Literal[24]],
+        MomentumAxis3d[Literal[24], Literal[24]],
+        ExplicitAxis3d[Literal[250], Literal[12]],
     ],
 ]:
     path = get_data_path(f"wavepacket_{band}.npy")
     wavepacket = load_wavepacket(path)
-    wavepacket["basis"][0]["parent"]["n"] = 24
-    wavepacket["basis"][1]["parent"]["n"] = 24
-    return wavepacket
+    wavepacket["basis"] = (
+        MomentumAxis3d(wavepacket["basis"][0].delta_x, 24, 24),
+        MomentumAxis3d(wavepacket["basis"][1].delta_x, 24, 24),
+        wavepacket["basis"][2],
+    )
+    return wavepacket  # type: ignore[return-value]
 
 
 def load_normalized_nickel_wavepacket_momentum(
-    band: int, idx: SingleIndexLike = 0, angle: float = 0
-) -> Wavepacket[
+    band: int, idx: SingleIndexLike3d = 0, angle: float = 0
+) -> Wavepacket3dWith2dSamples[
     Literal[12],
     Literal[12],
-    FundamentalMomentumBasisConfig[Literal[24], Literal[24], Literal[250]],
+    FundamentalMomentumBasis3d[Literal[24], Literal[24], Literal[250]],
 ]:
     wavepacket = load_nickel_wavepacket(band)
-    util = BasisConfigUtil(wavepacket["basis"])
-    basis: FundamentalMomentumBasisConfig[Literal[24], Literal[24], Literal[250]] = (
-        FundamentalMomentumBasis(util.delta_x0, 24),
-        FundamentalMomentumBasis(util.delta_x1, 24),
-        FundamentalMomentumBasis(util.delta_x2, 250),
+    util = Basis3dUtil(wavepacket["basis"])
+    basis: FundamentalMomentumBasis3d[Literal[24], Literal[24], Literal[250]] = (
+        FundamentalMomentumAxis3d(util.delta_x0, 24),
+        FundamentalMomentumAxis3d(util.delta_x1, 24),
+        FundamentalMomentumAxis3d(util.delta_x2, 250),
     )
     normalized = normalize_wavepacket(wavepacket, idx, angle)
     return convert_wavepacket_to_basis(normalized, basis)
@@ -96,17 +99,17 @@ def load_normalized_nickel_wavepacket_momentum(
 
 def load_two_point_normalized_nickel_wavepacket_momentum(
     band: int, offset: tuple[int, int] = (0, 0), angle: float = 0
-) -> Wavepacket[
+) -> Wavepacket3dWith2dSamples[
     Literal[12],
     Literal[12],
-    FundamentalMomentumBasisConfig[Literal[24], Literal[24], Literal[250]],
+    FundamentalMomentumBasis3d[Literal[24], Literal[24], Literal[250]],
 ]:
     wavepacket = load_nickel_wavepacket(band)
-    util = BasisConfigUtil(wavepacket["basis"])
-    basis: FundamentalMomentumBasisConfig[Literal[24], Literal[24], Literal[250]] = (
-        FundamentalMomentumBasis(util.delta_x0, 24),
-        FundamentalMomentumBasis(util.delta_x1, 24),
-        FundamentalMomentumBasis(util.delta_x2, 250),
+    util = Basis3dUtil(wavepacket["basis"])
+    basis: FundamentalMomentumBasis3d[Literal[24], Literal[24], Literal[250]] = (
+        FundamentalMomentumAxis3d(util.delta_x0, 24),
+        FundamentalMomentumAxis3d(util.delta_x1, 24),
+        FundamentalMomentumAxis3d(util.delta_x2, 250),
     )
     normalized = normalize_wavepacket_two_point(wavepacket, offset, angle)
     return convert_wavepacket_to_basis(normalized, basis)
@@ -115,7 +118,7 @@ def load_two_point_normalized_nickel_wavepacket_momentum(
 def generate_nickel_wavepacket_sho() -> None:
     def hamiltonian_generator(
         x: np.ndarray[tuple[Literal[3]], np.dtype[np.float_]]
-    ) -> Hamiltonian[Any]:
+    ) -> Hamiltonian3d[Any]:
         return generate_hamiltonian_sho(
             shape=(250, 250, 250),
             bloch_phase=x,
@@ -126,7 +129,7 @@ def generate_nickel_wavepacket_sho() -> None:
 
     wavepackets = generate_wavepacket(
         hamiltonian_generator,
-        samples=(12, 12),
+        shape=(12, 12),
         save_bands=save_bands,
     )
     for k, wavepacket in zip(save_bands, wavepackets, strict=True):

@@ -7,27 +7,29 @@ import hamiltonian_generator
 import numpy as np
 from scipy.constants import hbar
 
-from surface_potential_analysis.basis import (
-    BasisUtil,
+from surface_potential_analysis.axis import (
+    Axis3dUtil,
 )
-from surface_potential_analysis.basis.basis import (
-    ExplicitBasis,
-    FundamentalPositionBasis,
-    MomentumBasis,
+from surface_potential_analysis.axis.axis import (
+    ExplicitAxis3d,
+    FundamentalPositionAxis3d,
+    MomentumAxis3d,
 )
-from surface_potential_analysis.basis_config.sho_basis import (
+from surface_potential_analysis.basis.sho_basis import (
     SHOBasisConfig,
     calculate_x_distances,
     infinate_sho_basis_from_config,
 )
-from surface_potential_analysis.basis_config.util import BasisConfigUtil
+from surface_potential_analysis.basis.util import Basis3dUtil
 
 if TYPE_CHECKING:
-    from surface_potential_analysis.basis_config.basis_config import (
-        BasisConfig,
+    from surface_potential_analysis.basis.basis import (
+        Basis3d,
     )
-    from surface_potential_analysis.hamiltonian import HamiltonianWithBasis
-    from surface_potential_analysis.potential import Potential
+    from surface_potential_analysis.hamiltonian import HamiltonianWith3dBasis
+    from surface_potential_analysis.potential import (
+        FundamentalPositionBasisPotential3d,
+    )
 
 _N0Inv = TypeVar("_N0Inv", bound=int)
 _N1Inv = TypeVar("_N1Inv", bound=int)
@@ -40,7 +42,7 @@ _NF2Inv = TypeVar("_NF2Inv", bound=int)
 class _SurfaceHamiltonianUtil(
     Generic[_N0Inv, _N1Inv, _N2Inv, _NF0Inv, _NF1Inv, _NF2Inv]
 ):
-    _potential: Potential[_NF0Inv, _NF1Inv, _NF2Inv]
+    _potential: FundamentalPositionBasisPotential3d[_NF0Inv, _NF1Inv, _NF2Inv]
 
     _config: SHOBasisConfig
 
@@ -48,7 +50,7 @@ class _SurfaceHamiltonianUtil(
 
     def __init__(
         self,
-        potential: Potential[_NF0Inv, _NF1Inv, _NF2Inv],
+        potential: FundamentalPositionBasisPotential3d[_NF0Inv, _NF1Inv, _NF2Inv],
         config: SHOBasisConfig,
         resolution: tuple[_N0Inv, _N1Inv, _N2Inv],
     ) -> None:
@@ -69,7 +71,9 @@ class _SurfaceHamiltonianUtil(
     def points(
         self,
     ) -> np.ndarray[tuple[_NF0Inv, _NF1Inv, _NF2Inv], np.dtype[np.float_]]:
-        return self._potential["points"]
+        return self._potential["points"].reshape(
+            Basis3dUtil(self._potential["basis"]).shape
+        )
 
     @property
     def z_offset(self) -> float:
@@ -89,7 +93,7 @@ class _SurfaceHamiltonianUtil(
 
     @property
     def dz(self) -> float:
-        util = BasisUtil(self._potential["basis"][2])
+        util = Axis3dUtil(self._potential["basis"][2])
         return np.linalg.norm(util.fundamental_dx)  # type: ignore[return-value]
 
     @property
@@ -101,24 +105,24 @@ class _SurfaceHamiltonianUtil(
     @property
     def basis(
         self,
-    ) -> BasisConfig[
-        MomentumBasis[_NF0Inv, _N0Inv],
-        MomentumBasis[_NF1Inv, _N1Inv],
-        ExplicitBasis[_NF2Inv, _N2Inv],
+    ) -> Basis3d[
+        MomentumAxis3d[_NF0Inv, _N0Inv],
+        MomentumAxis3d[_NF1Inv, _N1Inv],
+        ExplicitAxis3d[_NF2Inv, _N2Inv],
     ]:
         return (
-            MomentumBasis(
+            MomentumAxis3d(
                 self._potential["basis"][0].delta_x,
                 self._resolution[0],
                 self._potential["basis"][0].n,
             ),
-            MomentumBasis(
+            MomentumAxis3d(
                 self._potential["basis"][1].delta_x,
                 self._resolution[1],
                 self._potential["basis"][1].n,
             ),
             infinate_sho_basis_from_config(
-                FundamentalPositionBasis(
+                FundamentalPositionAxis3d(
                     self._potential["basis"][2].delta_x,
                     self._potential["basis"][2].n,
                 ),
@@ -129,10 +133,10 @@ class _SurfaceHamiltonianUtil(
 
     def hamiltonian(
         self, bloch_phase: np.ndarray[tuple[Literal[3]], np.dtype[np.float_]]
-    ) -> HamiltonianWithBasis[
-        MomentumBasis[_NF0Inv, _N0Inv],
-        MomentumBasis[_NF1Inv, _N1Inv],
-        ExplicitBasis[_NF2Inv, _N2Inv],
+    ) -> HamiltonianWith3dBasis[
+        MomentumAxis3d[_NF0Inv, _N0Inv],
+        MomentumAxis3d[_NF1Inv, _N1Inv],
+        ExplicitAxis3d[_NF2Inv, _N2Inv],
     ]:
         diagonal_energies = np.diag(self._calculate_diagonal_energy(bloch_phase))
         other_energies = self._calculate_off_diagonal_energies_fast()
@@ -145,7 +149,7 @@ class _SurfaceHamiltonianUtil(
     def eigenstate_indexes(
         self,
     ) -> np.ndarray[tuple[Literal[3], int], np.dtype[np.int_]]:
-        util = BasisConfigUtil(self.basis)
+        util = Basis3dUtil(self.basis)
 
         x0t, x1t, zt = np.meshgrid(
             util.x0_basis.nk_points,  # type: ignore[misc]
@@ -160,7 +164,7 @@ class _SurfaceHamiltonianUtil(
     ) -> np.ndarray[tuple[int], np.dtype[np.float_]]:
         k0_coords, k1_coords, nkz_coords = self.eigenstate_indexes
 
-        util = BasisConfigUtil(self.basis)
+        util = Basis3dUtil(self.basis)
 
         dk0 = util.dk0
         dk1 = util.dk1
@@ -245,14 +249,14 @@ class _SurfaceHamiltonianUtil(
 
 
 def total_surface_hamiltonian(
-    potential: Potential[_NF0Inv, _NF1Inv, _NF2Inv],
+    potential: FundamentalPositionBasisPotential3d[_NF0Inv, _NF1Inv, _NF2Inv],
     config: SHOBasisConfig,
     bloch_phase: np.ndarray[tuple[Literal[3]], np.dtype[np.float_]],
     resolution: tuple[_N0Inv, _N1Inv, _N2Inv],
-) -> HamiltonianWithBasis[
-    MomentumBasis[_NF0Inv, _N0Inv],
-    MomentumBasis[_NF1Inv, _N1Inv],
-    ExplicitBasis[_NF2Inv, _N2Inv],
+) -> HamiltonianWith3dBasis[
+    MomentumAxis3d[_NF0Inv, _N0Inv],
+    MomentumAxis3d[_NF1Inv, _N1Inv],
+    ExplicitAxis3d[_NF2Inv, _N2Inv],
 ]:
     """
     Calculate a hamiltonian using the infinite sho basis.

@@ -4,12 +4,12 @@ from typing import TYPE_CHECKING, TypeVar
 
 import numpy as np
 
-from surface_potential_analysis.basis_config.conversion import (
-    basis_config_as_fundamental_momentum_basis_config,
-    basis_config_as_fundamental_position_basis_config,
+from surface_potential_analysis.basis.conversion import (
+    basis_as_fundamental_momentum_basis,
+    basis_as_fundamental_position_basis,
 )
-from surface_potential_analysis.basis_config.util import (
-    BasisConfigUtil,
+from surface_potential_analysis.basis.util import (
+    Basis3dUtil,
 )
 from surface_potential_analysis.util.interpolation import pad_ft_points
 
@@ -30,13 +30,13 @@ def convert_overlap_to_momentum_basis(
 
     Parameters
     ----------
-    overlap : Overlap[PositionBasisConfig[_L0Inv, _L1Inv, _L2Inv]]
+    overlap : Overlap[PositionBasis3d[_L0Inv, _L1Inv, _L2Inv]]
 
     Returns
     -------
     OverlapMomentum[_L0Inv, _L1Inv, _L2Inv]
     """
-    util = BasisConfigUtil(overlap["basis"])
+    util = Basis3dUtil(overlap["basis"])
     transformed = np.fft.ifftn(
         overlap["vector"].reshape(util.shape),
         axes=(0, 1, 2),
@@ -46,7 +46,7 @@ def convert_overlap_to_momentum_basis(
     flattened = transformed.reshape(-1)
 
     return {
-        "basis": basis_config_as_fundamental_momentum_basis_config(overlap["basis"]),
+        "basis": basis_as_fundamental_momentum_basis(overlap["basis"]),
         "vector": flattened,
     }
 
@@ -63,9 +63,9 @@ def convert_overlap_to_position_basis(
 
     Returns
     -------
-    Overlap[PositionBasisConfig[_L0Inv, _L1Inv, _L2Inv]]
+    Overlap[PositionBasis3d[_L0Inv, _L1Inv, _L2Inv]]
     """
-    util = BasisConfigUtil(overlap["basis"])
+    util = Basis3dUtil(overlap["basis"])
     padded = pad_ft_points(
         overlap["vector"].reshape(util.shape),
         s=util.fundamental_shape,
@@ -75,6 +75,6 @@ def convert_overlap_to_position_basis(
     flattened = transformed.reshape(-1)
 
     return {
-        "basis": basis_config_as_fundamental_position_basis_config(overlap["basis"]),
+        "basis": basis_as_fundamental_position_basis(overlap["basis"]),
         "vector": flattened,
     }

@@ -1,151 +1,358 @@
 from __future__ import annotations
 
-from functools import cached_property
-from typing import Any, Generic, Literal, TypeVar
+from typing import TYPE_CHECKING, Any, Literal, TypeVar, overload
 
 import numpy as np
 
-from surface_potential_analysis.basis.basis import (
-    ExplicitBasis,
-    FundamentalMomentumBasis,
-    FundamentalPositionBasis,
+from surface_potential_analysis.axis.conversion import (
+    axis_as_fundamental_momentum_axis,
+    axis_as_fundamental_position_axis,
+    axis_as_n_point_axis,
+    axis_as_single_point_axis,
+    get_axis_conversion_matrix,
 )
 
-from .basis_like import BasisLike, BasisVector
+from .util import BasisUtil
 
-_BX0Inv = TypeVar("_BX0Inv", bound=BasisLike[Any, Any])
+if TYPE_CHECKING:
+    from surface_potential_analysis.axis.axis import (
+        FundamentalMomentumAxis,
+        FundamentalMomentumAxis1d,
+        FundamentalMomentumAxis2d,
+        FundamentalMomentumAxis3d,
+        FundamentalPositionAxis,
+        FundamentalPositionAxis1d,
+        FundamentalPositionAxis2d,
+        FundamentalPositionAxis3d,
+    )
+    from surface_potential_analysis.axis.axis_like import (
+        AxisLike1d,
+        AxisLike2d,
+        AxisLike3d,
+    )
+    from surface_potential_analysis.basis.basis import Basis, Basis1d, Basis2d
+
+    from .basis import Basis3d
+
+    _B0Inv = TypeVar("_B0Inv", bound=Basis[Any])
+    _B1Inv = TypeVar("_B1Inv", bound=Basis[Any])
+    _B1d0Inv = TypeVar("_B1d0Inv", bound=Basis1d[Any])
+    _B1d1Inv = TypeVar("_B1d1Inv", bound=Basis1d[Any])
+    _B2d0Inv = TypeVar("_B2d0Inv", bound=Basis2d[Any, Any])
+    _B2d1Inv = TypeVar("_B2d1Inv", bound=Basis2d[Any, Any])
+    _B3d0Inv = TypeVar("_B3d0Inv", bound=Basis3d[Any, Any, Any])
+    _B3d1Inv = TypeVar("_B3d1Inv", bound=Basis3d[Any, Any, Any])
+    _S0Inv = TypeVar("_S0Inv", bound=tuple[int, ...])
+    _NDInv = TypeVar("_NDInv", bound=int)
 
 
-_N0Inv = TypeVar("_N0Inv", bound=int)
-_N1Inv = TypeVar("_N1Inv", bound=int)
-
-_NF0Inv = TypeVar("_NF0Inv", bound=int)
-_NF1Inv = TypeVar("_NF1Inv", bound=int)
-
-
-class _RotatedBasis(Generic[_NF0Inv, _N0Inv]):
-    def __init__(
-        self,
-        basis: BasisLike[_NF0Inv, _N0Inv],
-        matrix: np.ndarray[tuple[Literal[3], Literal[3]], np.dtype[np.float_]],
-    ) -> None:
-        self._basis = basis
-        self._matrix = matrix
-
-        self.__annotations__ = self._basis.__annotations__
-        ##TODO: dunder methods
-
-    def __getattr__(self, *args, **kwargs):  # type: ignore[no-untyped-def] # noqa: ANN204, ANN002, ANN003
-        return getattr(self._basis, *args, **kwargs)
-
-    @cached_property
-    def delta_x(self) -> BasisVector:
-        return np.dot(self._matrix, self._basis.delta_x)  # type: ignore[no-any-return]
+@overload
+def convert_vector(
+    vector: np.ndarray[_S0Inv, np.dtype[np.complex_]],
+    initial_basis: _B1d0Inv,
+    final_basis: _B1d1Inv,
+    axis: int = -1,
+) -> np.ndarray[tuple[int, ...], np.dtype[np.complex_]]:
+    ...
 
 
-def get_rotated_basis(
-    basis: _BX0Inv,
-    matrix: np.ndarray[tuple[Literal[3], Literal[3]], np.dtype[np.float_]],
-) -> _BX0Inv:
+@overload
+def convert_vector(
+    vector: np.ndarray[_S0Inv, np.dtype[np.complex_]],
+    initial_basis: _B2d0Inv,
+    final_basis: _B2d1Inv,
+    axis: int = -1,
+) -> np.ndarray[tuple[int, ...], np.dtype[np.complex_]]:
+    ...
+
+
+@overload
+def convert_vector(
+    vector: np.ndarray[_S0Inv, np.dtype[np.complex_]],
+    initial_basis: _B3d0Inv,
+    final_basis: _B3d1Inv,
+    axis: int = -1,
+) -> np.ndarray[tuple[int, ...], np.dtype[np.complex_]]:
+    ...
+
+
+@overload
+def convert_vector(
+    vector: np.ndarray[_S0Inv, np.dtype[np.complex_]],
+    initial_basis: _B0Inv,
+    final_basis: _B1Inv,
+    axis: int = -1,
+) -> np.ndarray[tuple[int, ...], np.dtype[np.complex_]]:
+    ...
+
+
+def convert_vector(
+    vector: np.ndarray[_S0Inv, np.dtype[np.complex_]],
+    initial_basis: _B0Inv,
+    final_basis: _B1Inv,
+    axis: int = -1,
+) -> np.ndarray[tuple[int, ...], np.dtype[np.complex_]]:
     """
-    Get the basis rotated by the given matrix.
+    Convert a vector, expressed in terms of the given basis from_config in the basis to_config.
 
     Parameters
     ----------
-    basis : _BX0Inv
-    matrix : np.ndarray[tuple[Literal[3], Literal[3]], np.dtype[np.float_]]
+    vector : np.ndarray[tuple[int], np.dtype[np.complex_]]
+        the vector to convert
+    from_config : _B3d0Inv
+    to_config : _B3d1Inv
+    axis : int, optional
+        axis along which to convert, by default -1
 
     Returns
     -------
-    _BX0Inv
-        The rotated basis
+    np.ndarray[tuple[int], np.dtype[np.complex_]]
     """
-    return _RotatedBasis(basis, matrix)  # type: ignore[return-value]
+    util = BasisUtil(initial_basis)
+    swapped = vector.swapaxes(axis, -1)
+    stacked = swapped.reshape(*swapped.shape[:-1], *util.shape)
+    last_axis = swapped.ndim - 1
+    for i in range(len(initial_basis)):
+        matrix = get_axis_conversion_matrix(initial_basis[i], final_basis[i])
+        # Each product gets moved to the end,
+        # so "last_axis" of stacked always corresponds to the ith axis
+        stacked = np.tensordot(stacked, matrix, axes=([last_axis], [0]))
+
+    return stacked.reshape(*swapped.shape[:-1], -1).swapaxes(axis, -1)
 
 
-def get_basis_conversion_matrix(
-    basis_0: BasisLike[_N0Inv, _NF0Inv], basis_1: BasisLike[_N1Inv, _NF1Inv]
-) -> np.ndarray[tuple[_NF0Inv, _NF1Inv], np.dtype[np.complex_]]:
+@overload
+def convert_matrix(
+    matrix: np.ndarray[tuple[int, int], np.dtype[np.complex_]],
+    initial_basis: _B1d0Inv,
+    final_basis: _B1d1Inv,
+) -> np.ndarray[tuple[int, int], np.dtype[np.complex_]]:
+    ...
+
+
+@overload
+def convert_matrix(
+    matrix: np.ndarray[tuple[int, int], np.dtype[np.complex_]],
+    initial_basis: _B2d0Inv,
+    final_basis: _B2d1Inv,
+) -> np.ndarray[tuple[int, int], np.dtype[np.complex_]]:
+    ...
+
+
+@overload
+def convert_matrix(
+    matrix: np.ndarray[tuple[int, int], np.dtype[np.complex_]],
+    initial_basis: _B3d0Inv,
+    final_basis: _B3d1Inv,
+) -> np.ndarray[tuple[int, int], np.dtype[np.complex_]]:
+    ...
+
+
+@overload
+def convert_matrix(
+    matrix: np.ndarray[tuple[int, int], np.dtype[np.complex_]],
+    initial_basis: _B0Inv,
+    final_basis: _B1Inv,
+) -> np.ndarray[tuple[int, int], np.dtype[np.complex_]]:
+    ...
+
+
+def convert_matrix(
+    matrix: np.ndarray[tuple[int, int], np.dtype[np.complex_]],
+    initial_basis: _B0Inv,
+    final_basis: _B1Inv,
+) -> np.ndarray[tuple[int, int], np.dtype[np.complex_]]:
     """
-    Get the matrix to convert one set of basis vectors into another.
+    Convert a matrix from initial_basis to final_basis.
 
     Parameters
     ----------
-    basis_0 : BasisLike[_N0Inv, _NF0Inv]
-    basis_1 : BasisLike[_N1Inv, _NF1Inv]
+    matrix : np.ndarray[tuple[int, int], np.dtype[np.complex_]]
+    initial_basis : _B3d0Inv
+    final_basis : _B3d1Inv
 
     Returns
     -------
-    np.ndarray[tuple[_NF0Inv, _NF1Inv], np.dtype[np.complex_]]
+    np.ndarray[tuple[int, int], np.dtype[np.complex_]]
     """
-    vectors_0 = basis_0.vectors
-    vectors_1 = basis_1.vectors
-    return np.dot(vectors_0, np.conj(vectors_1).T)  # type: ignore[no-any-return]
+    util = BasisUtil(initial_basis)
+    stacked = matrix.reshape(*util.shape, *util.shape)
+    for i in range(len(initial_basis)):
+        matrix = get_axis_conversion_matrix(initial_basis[i], final_basis[i])
+        # Each product gets moved to the end,
+        # so the 0th index of stacked corresponds to the ith axis
+        stacked = np.tensordot(stacked, matrix, axes=([0], [0]))
+
+    for i in range(len(initial_basis)):
+        matrix = get_axis_conversion_matrix(initial_basis[i], final_basis[i])
+        matrix_conj = np.conj(matrix)
+        # Each product gets moved to the end,
+        # so the 0th index of stacked corresponds to the ith axis
+        stacked = np.tensordot(stacked, matrix_conj, axes=([0], [0]))
+    final_size = BasisUtil(final_basis).size
+    return stacked.reshape(final_size, final_size)
 
 
-def basis_as_fundamental_position_basis(
-    basis: BasisLike[_NF0Inv, _N0Inv]
-) -> FundamentalPositionBasis[_NF0Inv]:
-    """
-    Get the fundamental position basis for a given basis.
+_L0Inv = TypeVar("_L0Inv", bound=int)
+_L1Inv = TypeVar("_L1Inv", bound=int)
+_L2Inv = TypeVar("_L2Inv", bound=int)
 
-    Parameters
-    ----------
-    basis : BasisLike[_NF0Inv, _N0Inv]
+_LF0Inv = TypeVar("_LF0Inv", bound=int)
+_LF1Inv = TypeVar("_LF1Inv", bound=int)
+_LF2Inv = TypeVar("_LF2Inv", bound=int)
 
-    Returns
-    -------
-    FundamentalPositionBasis[_NF0Inv]
-    """
-    return FundamentalPositionBasis(basis.delta_x, basis.fundamental_n)
+
+@overload
+def basis_as_fundamental_momentum_basis(
+    basis: Basis1d[AxisLike1d[_LF0Inv, _L0Inv]]
+) -> Basis1d[FundamentalMomentumAxis1d[_LF0Inv]]:
+    ...
+
+
+@overload
+def basis_as_fundamental_momentum_basis(
+    basis: Basis2d[AxisLike2d[_LF0Inv, _L0Inv], AxisLike2d[_LF1Inv, _L1Inv]]
+) -> Basis2d[FundamentalMomentumAxis2d[_LF0Inv], FundamentalMomentumAxis2d[_LF1Inv]]:
+    ...
+
+
+@overload
+def basis_as_fundamental_momentum_basis(
+    basis: Basis3d[
+        AxisLike3d[_LF0Inv, _L0Inv],
+        AxisLike3d[_LF1Inv, _L1Inv],
+        AxisLike3d[_LF2Inv, _L2Inv],
+    ]
+) -> Basis3d[
+    FundamentalMomentumAxis3d[_LF0Inv],
+    FundamentalMomentumAxis3d[_LF1Inv],
+    FundamentalMomentumAxis3d[_LF2Inv],
+]:
+    ...
+
+
+@overload
+def basis_as_fundamental_momentum_basis(
+    basis: _B0Inv,
+) -> tuple[FundamentalMomentumAxis[Any, Any], ...]:
+    ...
 
 
 def basis_as_fundamental_momentum_basis(
-    basis: BasisLike[_NF0Inv, _N0Inv]
-) -> FundamentalMomentumBasis[_NF0Inv]:
+    basis: _B0Inv,
+) -> tuple[FundamentalMomentumAxis[Any, Any], ...]:
     """
     Get the fundamental momentum basis for a given basis.
 
     Parameters
     ----------
-    basis : BasisLike[_NF0Inv, _N0Inv]
+    basis : _B0Inv
 
     Returns
     -------
-    FundamentalMomentumBasis[_NF0Inv]
+    tuple[FundamentalMomentumAxis[Any, Any], ...]
     """
-    return FundamentalMomentumBasis(basis.delta_x, basis.fundamental_n)
+    return tuple(axis_as_fundamental_momentum_axis(axis) for axis in basis)
 
 
-def basis_as_explicit_position_basis(
-    basis: BasisLike[_NF0Inv, _N0Inv]
-) -> ExplicitBasis[_NF0Inv, _N0Inv]:
+@overload
+def basis_as_fundamental_position_basis(
+    basis: Basis1d[AxisLike1d[_LF0Inv, _L0Inv]]
+) -> Basis1d[FundamentalPositionAxis1d[_LF0Inv]]:
+    ...
+
+
+@overload
+def basis_as_fundamental_position_basis(
+    basis: Basis2d[AxisLike2d[_LF0Inv, _L0Inv], AxisLike2d[_LF1Inv, _L1Inv]]
+) -> Basis2d[FundamentalPositionAxis2d[_LF0Inv], FundamentalPositionAxis2d[_LF1Inv]]:
+    ...
+
+
+@overload
+def basis_as_fundamental_position_basis(
+    basis: Basis3d[
+        AxisLike3d[_LF0Inv, _L0Inv],
+        AxisLike3d[_LF1Inv, _L1Inv],
+        AxisLike3d[_LF2Inv, _L2Inv],
+    ]
+) -> Basis3d[
+    FundamentalPositionAxis3d[_LF0Inv],
+    FundamentalPositionAxis3d[_LF1Inv],
+    FundamentalPositionAxis3d[_LF2Inv],
+]:
+    ...
+
+
+@overload
+def basis_as_fundamental_position_basis(
+    basis: _B0Inv,
+) -> tuple[FundamentalPositionAxis[Any, Any], ...]:
+    ...
+
+
+def basis_as_fundamental_position_basis(
+    basis: _B0Inv,
+) -> tuple[FundamentalPositionAxis[Any, Any], ...]:
     """
-    Convert the basis into an explicit position basis.
+    Get the fundamental position basis for a given basis.
 
     Parameters
     ----------
-    basis : BasisLike[_NF0Inv, _N0Inv]
+    self : BasisConfigUtil[tuple[BasisLike[_LF0Inv, _L0Inv], BasisLike[_LF1Inv, _L1Inv], BasisLike[_LF2Inv, _L2Inv]]]
 
     Returns
     -------
-    ExplicitBasis[_NF0Inv, _N0Inv]
+    Basis3d[FundamentalPositionBasis[_LF0Inv], FundamentalPositionBasis[_LF1Inv], FundamentalPositionBasis[_LF2Inv]]
     """
-    return ExplicitBasis(basis.delta_x, basis.vectors)
+    return tuple(axis_as_fundamental_position_axis(axis) for axis in basis)
 
 
-def basis_as_single_point_basis(
-    basis: BasisLike[_NF0Inv, _N0Inv]
-) -> BasisLike[Literal[1], Literal[1]]:
+def basis_as_fundamental_with_shape(
+    basis: Basis[_NDInv],
+    shape: tuple[int, ...],
+) -> Basis[_NDInv]:
     """
-    Get the corresponding single point basis for a given basis.
+    Given a basis get a fundamental position basis with the given shape.
 
     Parameters
     ----------
-    basis : BasisLike[_NF0Inv, _N0Inv]
+    basis : Basis[_NDInv]
+    shape : tuple[int, ...]
 
     Returns
     -------
-    BasisLike[Literal[1], Literal[1]]
+    Basis[_NDInv]
     """
-    return FundamentalPositionBasis(basis.delta_x, 1)
+    return tuple(
+        axis_as_n_point_axis(ax, n=n) for (ax, n) in zip(basis, shape, strict=True)
+    )
+
+
+def basis3d_as_single_point_basis(
+    basis: Basis3d[
+        AxisLike3d[_LF0Inv, _L0Inv],
+        AxisLike3d[_LF1Inv, _L1Inv],
+        AxisLike3d[_LF2Inv, _L2Inv],
+    ]
+) -> Basis3d[
+    AxisLike3d[Literal[1], Literal[1]],
+    AxisLike3d[Literal[1], Literal[1]],
+    AxisLike3d[Literal[1], Literal[1]],
+]:
+    """
+    Get the fundamental single point basis for a given basis.
+
+    Parameters
+    ----------
+    self : BasisConfigUtil[tuple[BasisLike[_LF0Inv, _L0Inv], BasisLike[_LF1Inv, _L1Inv], BasisLike[_LF2Inv, _L2Inv]]]
+
+    Returns
+    -------
+    Basis3d[FundamentalPositionBasis[_LF0Inv], FundamentalPositionBasis[_LF1Inv], FundamentalPositionBasis[_LF2Inv]]
+    """
+    return (
+        axis_as_single_point_axis(basis[0]),
+        axis_as_single_point_axis(basis[1]),
+        axis_as_single_point_axis(basis[2]),
+    )

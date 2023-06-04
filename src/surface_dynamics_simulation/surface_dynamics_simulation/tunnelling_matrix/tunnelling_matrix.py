@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, Generic, TypedDict, TypeVar
 
-from surface_potential_analysis.basis_config.basis_config import BasisConfig
+from surface_potential_analysis.basis.basis import Basis3d
 
 if TYPE_CHECKING:
     import numpy as np
@@ -44,10 +44,10 @@ class TunnellingState(TypedDict, Generic[_S0Inv]):
     shape: _S0Inv
 
 
-_BC0Inv = TypeVar("_BC0Inv", bound=BasisConfig[Any, Any, Any])
+_B3d0Inv = TypeVar("_B3d0Inv", bound=Basis3d[Any, Any, Any])
 
 
-class TunnellingMatrix2(TypedDict, Generic[_BC0Inv]):
+class TunnellingMatrix2(TypedDict, Generic[_B3d0Inv]):
     """
     Represents the tunnelling coefficients between states on a grid given by basis.
 
@@ -66,14 +66,14 @@ class TunnellingMatrix2(TypedDict, Generic[_BC0Inv]):
     gives the total change in the occupation probability at state [i0,j0,n0] per the probability
     of occupation at site [i1,j1,n1]
     """
-    basis: _BC0Inv
+    basis: _B3d0Inv
     """
     Basis used to represent the states in Tunnelling matrix
     NOTE: the delta_x for this basis spans the region of the whole simulation
     """
 
 
-class TunnellingState2(TypedDict, Generic[_BC0Inv]):
+class TunnellingState2(TypedDict, Generic[_B3d0Inv]):
     """Represents the state of a tunnelling simulation at a given time."""
 
     vector: np.ndarray[tuple[int], np.dtype[np.float_]]
@@ -81,7 +81,7 @@ class TunnellingState2(TypedDict, Generic[_BC0Inv]):
     Vector represented such that vector.reshape(shape)[i,j,n]
     gives the relevant occupancy of the i,jth site in the nth band
     """
-    basis: _BC0Inv
+    basis: _B3d0Inv
     """
     Basis used to represent the states in Tunnelling matrix
     NOTE: the delta_x for this basis spans the region of the whole simulation

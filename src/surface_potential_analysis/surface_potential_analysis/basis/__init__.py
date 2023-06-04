@@ -1,12 +1,10 @@
-"""Representation of a surface basis vector."""
-
+"""Representation of a concrete basis for a 3D quantum system."""
 from __future__ import annotations
 
-from .basis_like import BasisLike, BasisVector
-from .util import BasisUtil
+from .basis import Basis3d
+from .util import Basis3dUtil
 
 __all__ = [
-    "BasisLike",
-    "BasisVector",
-    "BasisUtil",
+    "Basis3d",
+    "Basis3dUtil",
 ]

@@ -5,9 +5,9 @@ from typing import TYPE_CHECKING, Any
 
 import numpy as np
 
-from surface_potential_analysis.basis_config.build import (
-    build_momentum_basis_config_from_resolution,
-    build_position_basis_config_from_resolution,
+from surface_potential_analysis.basis.build import (
+    momentum_basis_3d_from_resolution,
+    position_basis_3d_from_resolution,
 )
 from surface_potential_analysis.wavepacket.eigenstate_conversion import (
     furl_eigenstate,
@@ -17,8 +17,8 @@ from surface_potential_analysis.wavepacket.normalization import _get_global_phas
 
 if TYPE_CHECKING:
     from surface_potential_analysis.wavepacket.wavepacket import (
-        MomentumBasisWavepacket,
-        PositionBasisWavepacket,
+        MomentumBasisWavepacket3d,
+        PositionBasisWavepacket3d,
     )
 
 rng = np.random.default_rng()
@@ -33,16 +33,17 @@ class WavepacketTest(unittest.TestCase):
             rng.integers(1, 10),
             rng.integers(1, 10),
         )
-        wavepacket: PositionBasisWavepacket[Any, Any, Any, Any, Any] = {
-            "basis": build_position_basis_config_from_resolution(resolution),
-            "vectors": np.zeros((ns0, ns1, np.prod(resolution))),
-            "energies": np.zeros((ns0, ns1)),
+        wavepacket: PositionBasisWavepacket3d[Any, Any, Any, Any, Any] = {
+            "basis": position_basis_3d_from_resolution(resolution),
+            "vectors": np.zeros((ns0 * ns1, np.prod(resolution))),
+            "energies": np.zeros(ns0 * ns1),
+            "shape": (ns0, ns1, 1),
         }
 
         idx = rng.integers(0, np.product(resolution).item())
         actual = _get_global_phases(wavepacket, idx)
-        np.testing.assert_array_equal(actual.shape, (ns0, ns1))
-        np.testing.assert_equal(actual[0, 0], 0)
+        np.testing.assert_array_equal(actual.shape, (ns0 * ns1,))
+        np.testing.assert_equal(actual[0], 0)
 
         idx = 0
         actual = _get_global_phases(wavepacket, idx)
@@ -50,13 +51,13 @@ class WavepacketTest(unittest.TestCase):
 
         idx_array = rng.integers(0, np.product(resolution).item(), size=(10, 10, 11))
         actual_large = _get_global_phases(wavepacket, idx_array)
-        np.testing.assert_array_equal(actual_large.shape, (ns0, ns1, *idx_array.shape))
-        np.testing.assert_equal(actual_large[0, 0], 0)
-        np.testing.assert_equal(actual_large[:, :, idx_array == 0], 0)
+        np.testing.assert_array_equal(actual_large.shape, (ns0 * ns1, *idx_array.shape))
+        np.testing.assert_equal(actual_large[0], 0)
+        np.testing.assert_equal(actual_large[:, idx_array == 0], 0)
 
     def test_unfurl_wavepacket(self) -> None:
-        wavepacket: MomentumBasisWavepacket[int, int, int, int, int] = {
-            "basis": build_momentum_basis_config_from_resolution((3, 3, 3)),
+        wavepacket: MomentumBasisWavepacket3d[int, int, int, int, int] = {
+            "basis": momentum_basis_3d_from_resolution((3, 3, 3)),
             "vectors": np.zeros((3, 2, 27)),
             "energies": np.zeros((3, 2)),
         }
@@ -79,13 +80,13 @@ class WavepacketTest(unittest.TestCase):
         np.testing.assert_array_equal(eigenstate["vector"], expected / np.sqrt(2 * 3))
 
     def test_furl_eigenstate(self) -> None:
-        wavepacket: MomentumBasisWavepacket[int, int, int, int, int] = {
-            "basis": build_momentum_basis_config_from_resolution((3, 3, 3)),
+        wavepacket: MomentumBasisWavepacket3d[int, int, int, int, int] = {
+            "basis": momentum_basis_3d_from_resolution((3, 3, 3)),
             "vectors": np.array(rng.random((3, 2, 27)), dtype=complex),
             "energies": np.zeros((3, 2)),
         }
         eigenstate = unfurl_wavepacket(wavepacket)
-        actual = furl_eigenstate(eigenstate, (3, 2))
+        actual = furl_eigenstate(eigenstate, (3, 2, 1))
 
         np.testing.assert_array_almost_equal(wavepacket["vectors"], actual["vectors"])
 

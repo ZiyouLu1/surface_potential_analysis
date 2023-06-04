@@ -3,14 +3,14 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, Generic, Literal, TypedDict, TypeVar
 
 import numpy as np
-from surface_potential_analysis.basis_config.conversion import (
-    basis_config_as_single_point_basis_config,
+from surface_potential_analysis.basis.conversion import (
+    basis3d_as_single_point_basis,
 )
-from surface_potential_analysis.basis_config.util import (
-    BasisConfigUtil,
+from surface_potential_analysis.basis.util import (
+    Basis3dUtil,
     wrap_index_around_origin_x01,
 )
-from surface_potential_analysis.wavepacket.eigenstate_conversion import (
+from surface_potential_analysis.wavepacket.wavepacket import (
     get_unfurled_basis,
 )
 
@@ -26,8 +26,8 @@ from surface_dynamics_simulation.tunnelling_simulation.simulation import (
 )
 
 if TYPE_CHECKING:
-    from surface_potential_analysis.basis_config.basis_config import (
-        BasisConfig,
+    from surface_potential_analysis.basis.basis import (
+        Basis3d,
     )
 
     from surface_dynamics_simulation.tunnelling_matrix.tunnelling_matrix import (
@@ -42,7 +42,7 @@ if TYPE_CHECKING:
     _L0Inv = TypeVar("_L0Inv", bound=int)
     _L1Inv = TypeVar("_L1Inv", bound=int)
     _L2Inv = TypeVar("_L2Inv", bound=int)
-    _BC0Inv = TypeVar("_BC0Inv", bound=BasisConfig[Any, Any, Any])
+    _B3d0Inv = TypeVar("_B3d0Inv", bound=Basis3d[Any, Any, Any])
 
 _N0Inv = TypeVar("_N0Inv", bound=int)
 
@@ -58,15 +58,15 @@ class ISF(TypedDict, Generic[_N0Inv]):
 
 
 def _calculate_mean_locations(
-    shape: tuple[_L0Inv, _L1Inv, Literal[6]], basis: _BC0Inv
+    shape: tuple[_L0Inv, _L1Inv, Literal[6]], basis: _B3d0Inv
 ) -> np.ndarray[tuple[Literal[3], _L0Inv, _L1Inv, Literal[6]], np.dtype[np.float_]]:
     hopping_basis = get_unfurled_basis(
-        basis_config_as_single_point_basis_config(basis),
+        basis3d_as_single_point_basis(basis),
         (shape[0], shape[1]),
     )
-    util = BasisConfigUtil(basis)
+    util = Basis3dUtil(basis)
 
-    nx_points = BasisConfigUtil(hopping_basis).nx_points
+    nx_points = Basis3dUtil(hopping_basis).nx_points
     nx_points_wrapped = wrap_index_around_origin_x01(hopping_basis, nx_points)
     ffc_locations = util.get_x_points_at_index(nx_points_wrapped)
 
@@ -78,7 +78,7 @@ def _calculate_mean_locations(
 
 def _calculate_isf_from_simulation_state(
     state: TunnellingSimulationState[_N0Inv, _S0Inv],
-    basis: _BC0Inv,
+    basis: _B3d0Inv,
     dk: np.ndarray[tuple[Literal[3]], np.dtype[np.float_]],
 ) -> ISF[_N0Inv]:
     """
@@ -88,7 +88,7 @@ def _calculate_isf_from_simulation_state(
     ----------
     state : TunnellingSimulationState[_N0Inv, _S0Inv]
         intital simulation state
-    basis : _BC0Inv
+    basis : _B3d0Inv
     dk : np.ndarray[tuple[Literal[3]], np.dtype[np.float_]]
 
     Returns
@@ -117,7 +117,7 @@ def _get_occupation_per_state_at_equilibrium(
 
 def get_isf(
     eigenstates: TunnellingEigenstates[tuple[_L0Inv, _L1Inv, Literal[6]]],
-    basis: _BC0Inv,
+    basis: _B3d0Inv,
     dk: np.ndarray[tuple[Literal[3]], np.dtype[np.float_]],
     times: np.ndarray[tuple[_N0Inv], np.dtype[np.float_]],
 ) -> ISF[_N0Inv]:
@@ -127,7 +127,7 @@ def get_isf(
     Parameters
     ----------
     matrix : TunnellingMatrix[_S0Inv]
-    basis : _BC0Inv
+    basis : _B3d0Inv
     dk : np.ndarray[tuple[Literal[3]], np.dtype[np.float_]]
 
     Returns
@@ -149,7 +149,7 @@ def get_isf(
 
 def calculate_isf(
     matrix: TunnellingMatrix[tuple[_L0Inv, _L1Inv, Literal[6]]],
-    basis: _BC0Inv,
+    basis: _B3d0Inv,
     dk: np.ndarray[tuple[Literal[3]], np.dtype[np.float_]],
     times: np.ndarray[tuple[_N0Inv], np.dtype[np.float_]],
 ) -> ISF[_N0Inv]:
@@ -159,7 +159,7 @@ def calculate_isf(
     Parameters
     ----------
     matrix : TunnellingMatrix[_S0Inv]
-    basis : _BC0Inv
+    basis : _B3d0Inv
     dk : np.ndarray[tuple[Literal[3]], np.dtype[np.float_]]
 
     Returns

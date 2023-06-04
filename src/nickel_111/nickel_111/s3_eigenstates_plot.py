@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import matplotlib.pyplot as plt
 import numpy as np
-from surface_potential_analysis.basis.plot import plot_explicit_basis_states_x
+from surface_potential_analysis.axis.plot import plot_explicit_basis_states_x
 from surface_potential_analysis.eigenstate.eigenstate_collection import (
     load_eigenstate_collection,
     select_eigenstate,

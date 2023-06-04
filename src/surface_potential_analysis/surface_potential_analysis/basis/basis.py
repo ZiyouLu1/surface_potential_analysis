@@ -1,102 +1,46 @@
 from __future__ import annotations
 
-from typing import TypeVar
+from typing import Any, TypeVar
 
-import numpy as np
+from surface_potential_analysis.axis.axis import (
+    FundamentalMomentumAxis3d,
+    FundamentalPositionAxis3d,
+)
+from surface_potential_analysis.axis.axis_like import (
+    AxisLike,
+    AxisLike1d,
+    AxisLike2d,
+    AxisLike3d,
+)
 
-from surface_potential_analysis.basis.basis_like import BasisLike, BasisVector
+_ND0Inv = TypeVar("_ND0Inv", bound=int)
+Basis = tuple[AxisLike[Any, Any, _ND0Inv], ...]
 
-_N0Inv = TypeVar("_N0Inv", bound=int)
+_A1d0Cov = TypeVar("_A1d0Cov", bound=AxisLike1d[Any, Any], covariant=True)
+Basis1d = tuple[_A1d0Cov]
+
+_A2d0Cov = TypeVar("_A2d0Cov", bound=AxisLike2d[Any, Any], covariant=True)
+_A2d1Cov = TypeVar("_A2d1Cov", bound=AxisLike2d[Any, Any], covariant=True)
+Basis2d = tuple[_A2d0Cov, _A2d1Cov]
+
+_A3d0Cov = TypeVar("_A3d0Cov", bound=AxisLike3d[Any, Any], covariant=True)
+_A3d1Cov = TypeVar("_A3d1Cov", bound=AxisLike3d[Any, Any], covariant=True)
+_A3d2Cov = TypeVar("_A3d2Cov", bound=AxisLike3d[Any, Any], covariant=True)
+Basis3d = tuple[_A3d0Cov, _A3d1Cov, _A3d2Cov]
+
 
 _NF0Inv = TypeVar("_NF0Inv", bound=int)
+_NF1Inv = TypeVar("_NF1Inv", bound=int)
+_NF2Inv = TypeVar("_NF2Inv", bound=int)
 
-# ruff: noqa: D102
+FundamentalPositionBasis3d = tuple[
+    FundamentalPositionAxis3d[_NF0Inv],
+    FundamentalPositionAxis3d[_NF1Inv],
+    FundamentalPositionAxis3d[_NF2Inv],
+]
 
-
-class ExplicitBasis(BasisLike[_NF0Inv, _N0Inv]):
-    """A basis which stores it's vectors explicitly as states in position space."""
-
-    def __init__(
-        self,
-        delta_x: BasisVector,
-        vectors: np.ndarray[tuple[_N0Inv, _NF0Inv], np.dtype[np.complex_]],
-    ) -> None:
-        self._delta_x = delta_x
-        self._vectors = vectors
-        super().__init__()
-
-    @property
-    def delta_x(self) -> BasisVector:
-        return self._delta_x
-
-    @property
-    def n(self) -> _N0Inv:
-        return self.vectors.shape[0]  # type: ignore[no-any-return]
-
-    @property
-    def fundamental_n(self) -> _NF0Inv:
-        return self.vectors.shape[1]  # type: ignore[no-any-return]
-
-    @property
-    def vectors(self) -> np.ndarray[tuple[_N0Inv, _NF0Inv], np.dtype[np.complex_]]:
-        return self._vectors
-
-
-class FundamentalPositionBasis(BasisLike[_NF0Inv, _NF0Inv]):
-    """A basis whos eigenstates are the fundamental position states."""
-
-    def __init__(self, delta_x: BasisVector, n: _NF0Inv) -> None:
-        self._delta_x = delta_x
-        self._n = n
-        super().__init__()
-
-    @property
-    def delta_x(self) -> BasisVector:
-        return self._delta_x
-
-    @property
-    def n(self) -> _NF0Inv:
-        return self._n
-
-    @property
-    def fundamental_n(self) -> _NF0Inv:
-        return self._n
-
-    @property
-    def vectors(self) -> np.ndarray[tuple[_NF0Inv, _NF0Inv], np.dtype[np.complex_]]:
-        return np.eye(self.n, self.n)  # type: ignore[no-any-return]
-
-
-class MomentumBasis(BasisLike[_NF0Inv, _N0Inv]):
-    """A basis with the n lowest frequency momentum states."""
-
-    def __init__(self, delta_x: BasisVector, n: _N0Inv, fundamental_n: _NF0Inv) -> None:
-        self._delta_x = delta_x
-        self._n = n
-        self._fundamental_n = fundamental_n
-        super().__init__()
-
-    @property
-    def delta_x(self) -> BasisVector:
-        return self._delta_x
-
-    @property
-    def n(self) -> _N0Inv:
-        return self._n
-
-    @property
-    def fundamental_n(self) -> _NF0Inv:
-        return self._fundamental_n
-
-    @property
-    def vectors(self) -> np.ndarray[tuple[_N0Inv, _NF0Inv], np.dtype[np.complex_]]:
-        return np.fft.ifft(  # type: ignore[no-any-return]
-            np.eye(self.n, self._fundamental_n), axis=1, norm="ortho"
-        )
-
-
-class FundamentalMomentumBasis(MomentumBasis[_NF0Inv, _NF0Inv]):
-    """A basis who's eigenstates are the fundamental momentum states."""
-
-    def __init__(self, delta_x: BasisVector, n: _NF0Inv) -> None:
-        super().__init__(delta_x, n, n)
+FundamentalMomentumBasis3d = tuple[
+    FundamentalMomentumAxis3d[_NF0Inv],
+    FundamentalMomentumAxis3d[_NF1Inv],
+    FundamentalMomentumAxis3d[_NF2Inv],
+]

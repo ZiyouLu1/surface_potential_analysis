@@ -14,7 +14,7 @@ if TYPE_CHECKING:
     from matplotlib.figure import Figure
     from matplotlib.lines import Line2D
 
-    from surface_potential_analysis.potential.potential import UnevenPotential
+    from surface_potential_analysis.potential.potential import UnevenPotential3d
     from surface_potential_analysis.util.plot import Scale
 
 _L0Inv = TypeVar("_L0Inv", bound=int)
@@ -23,7 +23,7 @@ _L2Inv = TypeVar("_L2Inv", bound=int)
 
 
 def plot_uneven_potential_z(
-    potential: UnevenPotential[_L0Inv, _L1Inv, _L2Inv],
+    potential: UnevenPotential3d[_L0Inv, _L1Inv, _L2Inv],
     idx: tuple[int, int],
     *,
     ax: Axes | None = None,
@@ -59,7 +59,7 @@ def plot_uneven_potential_z(
 
 
 def plot_uneven_potential_z_comparison(
-    potential: UnevenPotential[_L0Inv, _L1Inv, _L2Inv],
+    potential: UnevenPotential3d[_L0Inv, _L1Inv, _L2Inv],
     comparison_points: dict[str, tuple[int, int]],
     *,
     ax: Axes | None = None,
@@ -91,7 +91,7 @@ def plot_uneven_potential_z_comparison(
 
 
 def plot_uneven_potential_z_comparison_111(
-    potential: UnevenPotential[_L0Inv, _L1Inv, _L2Inv],
+    potential: UnevenPotential3d[_L0Inv, _L1Inv, _L2Inv],
     offset: tuple[int, int] = (0, 0),
     *,
     ax: Axes | None = None,
@@ -120,7 +120,7 @@ def plot_uneven_potential_z_comparison_111(
 
 
 def plot_uneven_potential_z_comparison_100(
-    potential: UnevenPotential[_L0Inv, _L1Inv, _L2Inv],
+    potential: UnevenPotential3d[_L0Inv, _L1Inv, _L2Inv],
     offset: tuple[int, int] = (0, 0),
     *,
     ax: Axes | None = None,

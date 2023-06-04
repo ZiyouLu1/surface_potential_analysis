@@ -8,7 +8,7 @@ import scipy
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
-    from surface_potential_analysis.basis_config.basis_config import BasisConfig
+    from surface_potential_analysis.basis.basis import Basis3d
 
     from surface_dynamics_simulation.tunnelling_matrix.tunnelling_matrix import (
         TunnellingMatrix2,
@@ -18,41 +18,41 @@ if TYPE_CHECKING:
         TunnellingSimulationState2,
     )
 
-    _BC0Inv = TypeVar("_BC0Inv", bound=BasisConfig[Any, Any, Any])
+    _B3d0Inv = TypeVar("_B3d0Inv", bound=Basis3d[Any, Any, Any])
 
 _L1Inv = TypeVar("_L1Inv", bound=int)
 
 
-class TunnellingEigenstates(TypedDict, Generic[_BC0Inv]):
+class TunnellingEigenstates(TypedDict, Generic[_B3d0Inv]):
     """Represents the eigenstates of a given tunnelling matrix."""
 
     energies: np.ndarray[tuple[int], np.dtype[np.float_]]
     vectors: np.ndarray[tuple[int, int], np.dtype[np.float_]]
     """Eigenvectors, indexed such that the ith state has a vector vectors[:,i]"""
-    basis: _BC0Inv
+    basis: _B3d0Inv
 
 
 def calculate_tunnelling_eigenstates(
-    matrix: TunnellingMatrix2[_BC0Inv],
-) -> TunnellingEigenstates[_BC0Inv]:
+    matrix: TunnellingMatrix2[_B3d0Inv],
+) -> TunnellingEigenstates[_B3d0Inv]:
     """
     Given a tunnelling matrix, find the eigenstates.
 
     Parameters
     ----------
-    matrix : TunnellingMatrix[_BC0Inv]
+    matrix : TunnellingMatrix[_B3d0Inv]
 
     Returns
     -------
-    TunnellingEigenstates[_BC0Inv]
+    TunnellingEigenstates[_B3d0Inv]
     """
     energies, vectors = scipy.linalg.eig(matrix["array"])
     return {"basis": matrix["basis"], "energies": energies, "vectors": vectors}
 
 
 def get_equilibrium_state(
-    eigenstates: TunnellingEigenstates[_BC0Inv],
-) -> TunnellingState2[_BC0Inv]:
+    eigenstates: TunnellingEigenstates[_B3d0Inv],
+) -> TunnellingState2[_B3d0Inv]:
     """
     Select the equilibrium tunnelling state from a list of eigenstates.
 
@@ -61,19 +61,19 @@ def get_equilibrium_state(
 
     Parameters
     ----------
-    eigenstates : TunnellingEigenstates[_BC0Inv]
+    eigenstates : TunnellingEigenstates[_B3d0Inv]
 
     Returns
     -------
-    TunnellingVector[_BC0Inv]
+    TunnellingVector[_B3d0Inv]
     """
     vector = eigenstates["vectors"][:, np.argmax(eigenstates["energies"])]
     return {"basis": eigenstates["basis"], "vector": vector}
 
 
 def calculate_equilibrium_state(
-    matrix: TunnellingMatrix2[_BC0Inv],
-) -> TunnellingState2[_BC0Inv]:
+    matrix: TunnellingMatrix2[_B3d0Inv],
+) -> TunnellingState2[_B3d0Inv]:
     """
     Calculate the equilibrium tunnelling state for a given matrix.
 
@@ -82,27 +82,27 @@ def calculate_equilibrium_state(
 
     Parameters
     ----------
-    matrix : TunnellingMatrix[_BC0Inv]
+    matrix : TunnellingMatrix[_B3d0Inv]
 
     Returns
     -------
-    TunnellingVector[_BC0Inv]
+    TunnellingVector[_B3d0Inv]
     """
     eigenstates = calculate_tunnelling_eigenstates(matrix)
     return get_equilibrium_state(eigenstates)
 
 
 def get_vector_eigenstate_decomposition(
-    state: TunnellingState2[_BC0Inv], eigenstates: TunnellingEigenstates[_BC0Inv]
+    state: TunnellingState2[_B3d0Inv], eigenstates: TunnellingEigenstates[_B3d0Inv]
 ) -> np.ndarray[tuple[int], np.dtype[np.float_]]:
     """
     Given a state and a set of TunnellingEigenstates decompose the state into the eigenstates.
 
     Parameters
     ----------
-    state : TunnellingVector[_BC0Inv]
+    state : TunnellingVector[_B3d0Inv]
         state to decompose
-    eigenstates : TunnellingEigenstates[_BC0Inv]
+    eigenstates : TunnellingEigenstates[_B3d0Inv]
         set of eigenstates to decompose into
 
     Returns
@@ -119,25 +119,25 @@ def get_vector_eigenstate_decomposition(
 
 
 def get_tunnelling_simulation_state(
-    eigenstates: TunnellingEigenstates[_BC0Inv],
-    initial_state: TunnellingState2[_BC0Inv],
+    eigenstates: TunnellingEigenstates[_B3d0Inv],
+    initial_state: TunnellingState2[_B3d0Inv],
     times: np.ndarray[tuple[_L1Inv], np.dtype[np.float_]],
-) -> TunnellingSimulationState2[_L1Inv, _BC0Inv]:
+) -> TunnellingSimulationState2[_L1Inv, _B3d0Inv]:
     """
     Get the TunnellingSimulationState given TunnellingEigenstates and initial TunnellingVector.
 
     Parameters
     ----------
-    eigenstates : TunnellingEigenstates[_BC0Inv]
+    eigenstates : TunnellingEigenstates[_B3d0Inv]
         The eigenstates of the system
-    initial_state : TunnellingVector[_BC0Inv]
+    initial_state : TunnellingVector[_B3d0Inv]
         The initial tunnelling state
     times : np.ndarray[tuple[_L1Inv], np.dtype[np.float_]]
         Times to calculate the occupation
 
     Returns
     -------
-    TunnellingSimulationState[_L1Inv, _BC0Inv]
+    TunnellingSimulationState[_L1Inv, _B3d0Inv]
     """
     coefficients = get_vector_eigenstate_decomposition(initial_state, eigenstates)
 
@@ -152,10 +152,10 @@ def get_tunnelling_simulation_state(
 
 
 def simulate_tunnelling_from_matrix(
-    matrix: TunnellingMatrix2[_BC0Inv],
-    initial_state: TunnellingState2[_BC0Inv],
+    matrix: TunnellingMatrix2[_B3d0Inv],
+    initial_state: TunnellingState2[_B3d0Inv],
     times: np.ndarray[tuple[_L1Inv], np.dtype[np.float_]],
-) -> TunnellingSimulationState2[_L1Inv, _BC0Inv]:
+) -> TunnellingSimulationState2[_L1Inv, _B3d0Inv]:
     """
     Get the TunnellingSimulationState given a tunnelling matrix and initial TunnellingVector.
 
@@ -177,14 +177,14 @@ def simulate_tunnelling_from_matrix(
 
 
 def calculate_hopping_rate(
-    matrix: TunnellingMatrix2[_BC0Inv], internal_sites: Sequence[int]
+    matrix: TunnellingMatrix2[_B3d0Inv], internal_sites: Sequence[int]
 ) -> float:
     """
     Given the tunnelling matrix, calculate the hopping rate between sites at equilibrium.
 
     Parameters
     ----------
-    matrix : TunnellingMatrix[_BC0Inv]
+    matrix : TunnellingMatrix[_B3d0Inv]
 
     Returns
     -------

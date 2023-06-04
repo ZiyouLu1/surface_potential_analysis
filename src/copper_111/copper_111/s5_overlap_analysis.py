@@ -4,12 +4,12 @@ from typing import TYPE_CHECKING
 
 import numpy as np
 from matplotlib import pyplot as plt
-from surface_potential_analysis.basis_config.util import BasisConfigUtil
+from surface_potential_analysis.basis.util import Basis3dUtil
 from surface_potential_analysis.overlap.conversion import (
     convert_overlap_to_momentum_basis,
 )
 from surface_potential_analysis.overlap.overlap import (
-    Overlap,
+    Overlap3d,
     load_overlap,
 )
 from surface_potential_analysis.overlap.plot import (
@@ -20,12 +20,12 @@ from surface_potential_analysis.overlap.plot import (
 from .surface_data import get_data_path, save_figure
 
 if TYPE_CHECKING:
-    from surface_potential_analysis.basis_config.basis_config import (
-        FundamentalPositionBasisConfig,
+    from surface_potential_analysis.basis.basis import (
+        FundamentalPositionBasis3d,
     )
 
 
-def load_overlap_fcc_hcp() -> Overlap[FundamentalPositionBasisConfig[int, int, int]]:
+def load_overlap_fcc_hcp() -> Overlap3d[FundamentalPositionBasis3d[int, int, int]]:
     path = get_data_path("overlap_hcp_fcc.npy")
     return load_overlap(path)
 
@@ -80,7 +80,7 @@ def plot_overlap() -> None:
 def print_max_overlap_momentum() -> None:
     overlap = load_overlap_fcc_hcp()
     overlap_momentum = convert_overlap_to_momentum_basis(overlap)
-    util = BasisConfigUtil(overlap["basis"])
+    util = Basis3dUtil(overlap["basis"])
 
     print(overlap_momentum["vector"][0])  # noqa: T201
     print(  # noqa: T201

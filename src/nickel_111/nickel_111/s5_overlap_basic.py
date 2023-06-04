@@ -3,8 +3,8 @@ from __future__ import annotations
 from typing import Literal
 
 import numpy as np
-from surface_potential_analysis.basis_config.basis_config import (
-    FundamentalMomentumBasisConfig,
+from surface_potential_analysis.basis.basis import (
+    FundamentalMomentumBasis3d,
 )
 from surface_potential_analysis.overlap.calculation import calculate_wavepacket_overlap
 from surface_potential_analysis.overlap.overlap import save_overlap
@@ -12,7 +12,7 @@ from surface_potential_analysis.wavepacket.normalization import (
     calculate_normalisation,
 )
 from surface_potential_analysis.wavepacket.wavepacket import (
-    Wavepacket,
+    Wavepacket3dWith2dSamples,
 )
 
 from nickel_111.s4_wavepacket import (
@@ -21,10 +21,10 @@ from nickel_111.s4_wavepacket import (
 
 from .surface_data import get_data_path
 
-_NickelWavepacket = Wavepacket[
+_NickelWavepacket = Wavepacket3dWith2dSamples[
     Literal[12],
     Literal[12],
-    FundamentalMomentumBasisConfig[Literal[24], Literal[24], Literal[250]],
+    FundamentalMomentumBasis3d[Literal[24], Literal[24], Literal[250]],
 ]
 
 

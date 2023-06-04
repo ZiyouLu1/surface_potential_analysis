@@ -3,13 +3,13 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, Literal
 
 import numpy as np
-from surface_potential_analysis.basis.basis import FundamentalMomentumBasis
-from surface_potential_analysis.basis_config.util import BasisConfigUtil
+from surface_potential_analysis.axis.axis import FundamentalMomentumAxis3d
+from surface_potential_analysis.basis.util import Basis3dUtil
 from surface_potential_analysis.wavepacket import save_wavepacket
 from surface_potential_analysis.wavepacket.conversion import convert_wavepacket_to_basis
 from surface_potential_analysis.wavepacket.normalization import normalize_wavepacket
 from surface_potential_analysis.wavepacket.wavepacket import (
-    Wavepacket,
+    Wavepacket3dWith2dSamples,
     generate_wavepacket,
     load_wavepacket,
 )
@@ -18,16 +18,16 @@ from .s2_hamiltonian import generate_hamiltonian_sho
 from .surface_data import get_data_path
 
 if TYPE_CHECKING:
-    from surface_potential_analysis._types import SingleIndexLike
+    from surface_potential_analysis._types import SingleIndexLike3d
+    from surface_potential_analysis.axis.axis import (
+        ExplicitAxis3d,
+        MomentumAxis3d,
+    )
     from surface_potential_analysis.basis.basis import (
-        ExplicitBasis,
-        MomentumBasis,
+        Basis3d,
+        FundamentalMomentumBasis3d,
     )
-    from surface_potential_analysis.basis_config.basis_config import (
-        BasisConfig,
-        FundamentalMomentumBasisConfig,
-    )
-    from surface_potential_analysis.hamiltonian import Hamiltonian
+    from surface_potential_analysis.hamiltonian import Hamiltonian3d
 
 
 MAXIMUM_POINTS: list[tuple[int, int, int]] = [
@@ -56,13 +56,13 @@ MAXIMUM_POINTS: list[tuple[int, int, int]] = [
 
 def load_copper_wavepacket(
     band: int,
-) -> Wavepacket[
+) -> Wavepacket3dWith2dSamples[
     Literal[12],
     Literal[12],
-    BasisConfig[
-        MomentumBasis[Literal[24], Literal[24]],
-        MomentumBasis[Literal[24], Literal[24]],
-        ExplicitBasis[Literal[250], Literal[12]],
+    Basis3d[
+        MomentumAxis3d[Literal[24], Literal[24]],
+        MomentumAxis3d[Literal[24], Literal[24]],
+        ExplicitAxis3d[Literal[250], Literal[12]],
     ],
 ]:
     path = get_data_path(f"wavepacket_{band}.npy")
@@ -73,18 +73,18 @@ def load_copper_wavepacket(
 
 
 def load_normalized_copper_wavepacket_momentum(
-    band: int, idx: SingleIndexLike = 0, angle: float = 0
-) -> Wavepacket[
+    band: int, idx: SingleIndexLike3d = 0, angle: float = 0
+) -> Wavepacket3dWith2dSamples[
     Literal[12],
     Literal[12],
-    FundamentalMomentumBasisConfig[Literal[24], Literal[24], Literal[250]],
+    FundamentalMomentumBasis3d[Literal[24], Literal[24], Literal[250]],
 ]:
     wavepacket = load_copper_wavepacket(band)
-    util = BasisConfigUtil(wavepacket["basis"])
-    basis: FundamentalMomentumBasisConfig[Literal[24], Literal[24], Literal[250]] = (
-        FundamentalMomentumBasis(util.delta_x0, 24),
-        FundamentalMomentumBasis(util.delta_x1, 24),
-        FundamentalMomentumBasis(util.delta_x2, 250),
+    util = Basis3dUtil(wavepacket["basis"])
+    basis: FundamentalMomentumBasis3d[Literal[24], Literal[24], Literal[250]] = (
+        FundamentalMomentumAxis3d(util.delta_x0, 24),
+        FundamentalMomentumAxis3d(util.delta_x1, 24),
+        FundamentalMomentumAxis3d(util.delta_x2, 250),
     )
     normalized = normalize_wavepacket(wavepacket, idx, angle)
     return convert_wavepacket_to_basis(normalized, basis)
@@ -93,7 +93,7 @@ def load_normalized_copper_wavepacket_momentum(
 def generate_wavepacket_sho() -> None:
     def hamiltonian_generator(
         x: np.ndarray[tuple[Literal[3]], np.dtype[np.float_]]
-    ) -> Hamiltonian[Any]:
+    ) -> Hamiltonian3d[Any]:
         return generate_hamiltonian_sho(
             shape=(48, 48, 250),
             bloch_phase=x,
@@ -103,7 +103,7 @@ def generate_wavepacket_sho() -> None:
     save_bands = np.arange(20)
 
     wavepackets = generate_wavepacket(
-        hamiltonian_generator, samples=(12, 12), save_bands=save_bands
+        hamiltonian_generator, shape=(12, 12), save_bands=save_bands
     )
     for k, wavepacket in zip(save_bands, wavepackets, strict=True):
         path = get_data_path(f"wavepacket_{k}.npy")

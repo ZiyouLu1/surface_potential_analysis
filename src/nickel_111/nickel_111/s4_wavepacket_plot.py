@@ -4,16 +4,15 @@ from typing import TYPE_CHECKING, Any, Literal
 
 import numpy as np
 from matplotlib import pyplot as plt
-from surface_potential_analysis.basis.basis import FundamentalMomentumBasis
-from surface_potential_analysis.basis.conversion import (
-    basis_as_fundamental_position_basis,
-    basis_as_single_point_basis,
+from surface_potential_analysis.axis.axis import FundamentalMomentumAxis3d
+from surface_potential_analysis.axis.conversion import (
+    axis_as_fundamental_position_axis,
+    axis_as_single_point_axis,
 )
-from surface_potential_analysis.basis_config.plot import (
-    plot_fundamental_projected_x_at_index,
-    plot_fundamental_projected_x_at_points,
+from surface_potential_analysis.basis.plot import (
+    plot_fundamental_x_at_index_projected_2d,
 )
-from surface_potential_analysis.basis_config.util import BasisConfigUtil
+from surface_potential_analysis.basis.util import Basis3dUtil
 from surface_potential_analysis.eigenstate.conversion import convert_eigenstate_to_basis
 from surface_potential_analysis.eigenstate.plot import (
     animate_eigenstate_x1x2,
@@ -22,7 +21,7 @@ from surface_potential_analysis.eigenstate.plot import (
 )
 from surface_potential_analysis.util.util import slice_along_axis
 from surface_potential_analysis.wavepacket.eigenstate_conversion import (
-    get_wavepacket_unfurled_basis,
+    get_unfurled_basis,
 )
 from surface_potential_analysis.wavepacket.normalization import (
     get_wavepacket_two_points,
@@ -50,23 +49,21 @@ from nickel_111.s4_wavepacket import (
 from .surface_data import get_data_path, save_figure
 
 if TYPE_CHECKING:
-    from surface_potential_analysis._types import SingleIndexLike
-    from surface_potential_analysis.eigenstate.eigenstate import Eigenstate
-
-
+    from surface_potential_analysis._types import SingleIndexLike3d
+    from surface_potential_analysis.eigenstate.eigenstate import Eigenstate3d
 
 
 def flaten_eigenstate_x(
-    eigenstate: Eigenstate[Any],
-    idx: SingleIndexLike,
+    eigenstate: Eigenstate3d[Any],
+    idx: SingleIndexLike3d,
     z_axis: Literal[0, 1, 2, -1, -2, -3],
-) -> Eigenstate[Any]:
+) -> Eigenstate3d[Any]:
     """
     Flatten the eigenstate in the z direction, at the given index in position basis.
 
     Parameters
     ----------
-    eigenstate : EigenstateWithBasis[_BX0Inv, _BX1Inv, _BX2Inv]
+    eigenstate : EigenstateWithBasis[_A3d0Inv, _A3d1Inv, _A3d2Inv]
     idx : int
         index in position basis to flatten
     z_axis : Literal[0, 1, 2, -1, -2, -3]
@@ -80,9 +77,9 @@ def flaten_eigenstate_x(
     position_basis = (
         eigenstate["basis"][0],
         eigenstate["basis"][1],
-        basis_as_fundamental_position_basis(eigenstate["basis"][2]),
+        axis_as_fundamental_position_axis(eigenstate["basis"][2]),
     )
-    util = BasisConfigUtil(position_basis)
+    util = Basis3dUtil(position_basis)
     idx = util.get_flat_index(idx) if isinstance(idx, tuple) else idx
     converted = convert_eigenstate_to_basis(eigenstate, position_basis)
     flattened = (
@@ -93,7 +90,7 @@ def flaten_eigenstate_x(
     basis = (
         eigenstate["basis"][0],
         eigenstate["basis"][1],
-        basis_as_single_point_basis(eigenstate["basis"][2]),
+        axis_as_single_point_axis(eigenstate["basis"][2]),
     )
     return {"basis": basis, "vector": flattened}
 
@@ -123,10 +120,10 @@ def animate_wavepacket_eigenstates_x1x2() -> None:
 
     eigenstate = get_eigenstate(wavepacket, (0, 0))
     eigenstate["basis"] = (
-        FundamentalMomentumBasis(
+        FundamentalMomentumAxis3d(
             eigenstate["basis"][0].delta_x, eigenstate["basis"][0].n
         ),
-        FundamentalMomentumBasis(
+        FundamentalMomentumAxis3d(
             eigenstate["basis"][1].delta_x, eigenstate["basis"][1].n
         ),
         eigenstate["basis"][2],
@@ -139,10 +136,10 @@ def animate_wavepacket_eigenstates_x1x2() -> None:
 
     eigenstate = get_eigenstate(wavepacket, (0, 0))
     eigenstate["basis"] = (
-        FundamentalMomentumBasis(
+        FundamentalMomentumAxis3d(
             eigenstate["basis"][0].delta_x, eigenstate["basis"][0].n
         ),
-        FundamentalMomentumBasis(
+        FundamentalMomentumAxis3d(
             eigenstate["basis"][1].delta_x, eigenstate["basis"][1].n
         ),
         eigenstate["basis"][2],
@@ -155,10 +152,10 @@ def animate_wavepacket_eigenstates_x1x2() -> None:
 
     eigenstate = get_eigenstate(wavepacket, (0, 0))
     eigenstate["basis"] = (
-        FundamentalMomentumBasis(
+        FundamentalMomentumAxis3d(
             eigenstate["basis"][0].delta_x, eigenstate["basis"][0].n
         ),
-        FundamentalMomentumBasis(
+        FundamentalMomentumAxis3d(
             eigenstate["basis"][1].delta_x, eigenstate["basis"][1].n
         ),
         eigenstate["basis"][2],
@@ -215,7 +212,7 @@ def plot_wavepacket_points_john() -> None:
 def plot_wavepacket_points_me() -> None:
     fractions = get_wavepacket_sample_fractions(np.array([10, 10]))
     fig, ax = plt.subplots()
-    (line,) = ax.plot(*fractions.reshape(2, -1))
+    (line,) = ax.plot(*fractions[0:2])
     line.set_linestyle("")
     line.set_marker("x")
     ax.set_title("Plot of points as chosen by Me")
@@ -263,9 +260,9 @@ def plot_two_point_wavepacket_with_idx() -> None:
         fig, ax = plt.subplots()
 
         idx0, idx1 = get_wavepacket_two_points(normalized, offset)
-        unfurled_basis = get_wavepacket_unfurled_basis(normalized)
-        plot_fundamental_projected_x_at_index(unfurled_basis, idx0, ax=ax)
-        plot_fundamental_projected_x_at_index(unfurled_basis, idx1, ax=ax)
+        unfurled_basis = get_unfurled_basis(normalized["basis"], normalized["shape"])
+        plot_fundamental_x_at_index_projected_2d(unfurled_basis, idx0, ax=ax)
+        plot_fundamental_x_at_index_projected_2d(unfurled_basis, idx1, ax=ax)
 
         plot_wavepacket_x0x1(normalized, idx0[2], measure="abs", ax=ax)
 
@@ -303,13 +300,13 @@ def plot_phase_around_origin() -> None:
             [0, 0, 0, 0, 0, 0, 0, 0],
         ]
     )
-
+    idx = (path[0], path[1], path[2])
     fig, ax, _ = plot_eigenstate_x0x1(flat, 0)
-    plot_fundamental_projected_x_at_points(flat["basis"], path, z_axis=2, ax=ax)
+    plot_fundamental_x_at_index_projected_2d(flat["basis"], idx, z_axis=2, ax=ax)
     fig.show()
 
     fig, ax, _ = plot_eigenstate_x0x1(flat, 0, measure="real")
-    plot_fundamental_projected_x_at_points(flat["basis"], path, z_axis=2, ax=ax)
+    plot_fundamental_x_at_index_projected_2d(flat["basis"], idx, z_axis=2, ax=ax)
     fig.show()
 
     fig, ax, _ = plot_eigenstate_along_path(flat, path, wrap_distances=True)

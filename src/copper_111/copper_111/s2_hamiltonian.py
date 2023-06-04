@@ -9,12 +9,12 @@ from surface_potential_analysis.util.decorators import timed
 from .s1_potential import get_interpolated_potential
 
 if TYPE_CHECKING:
-    from surface_potential_analysis.basis.basis import (
-        ExplicitBasis,
-        MomentumBasis,
+    from surface_potential_analysis.axis.axis import (
+        ExplicitAxis3d,
+        MomentumAxis3d,
     )
-    from surface_potential_analysis.basis_config.sho_basis import SHOBasisConfig
-    from surface_potential_analysis.hamiltonian import HamiltonianWithBasis
+    from surface_potential_analysis.basis.sho_basis import SHOBasisConfig
+    from surface_potential_analysis.hamiltonian import HamiltonianWith3dBasis
 
 _L0 = TypeVar("_L0", bound=int)
 _L1 = TypeVar("_L1", bound=int)
@@ -29,8 +29,8 @@ def generate_hamiltonian_sho(
     shape: tuple[_L0, _L1, _L2],
     bloch_phase: np.ndarray[tuple[Literal[3]], np.dtype[np.float_]],
     resolution: tuple[_L3, _L4, _L5],
-) -> HamiltonianWithBasis[
-    MomentumBasis[_L0, _L3], MomentumBasis[_L1, _L4], ExplicitBasis[_L2, _L5]
+) -> HamiltonianWith3dBasis[
+    MomentumAxis3d[_L0, _L3], MomentumAxis3d[_L1, _L4], ExplicitAxis3d[_L2, _L5]
 ]:
     """
     Generate a Hamiltonian using an infinate SHO basis.

@@ -1,12 +1,13 @@
 from __future__ import annotations
 
-import nickel_111
+import sodium_copper_111
 from surface_potential_analysis.util.decorators import timed
 
 
 @timed
 def main() -> None:
-    nickel_111.s5_overlap_analysis.plot_nickel_isf_slow()
+    sodium_copper_111.s1_potential_plot.plot_sodium_potential()
+    sodium_copper_111.s4_wavepacket_plot.plot_wavepacket()
 
 
 if __name__ == "__main__":

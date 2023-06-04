@@ -4,14 +4,13 @@ import unittest
 
 import numpy as np
 
-from surface_potential_analysis.basis.basis import (
-    FundamentalMomentumBasis,
+from _test_surface_potential_analysis.utils import get_random_explicit_basis
+from surface_potential_analysis.axis.axis import (
+    FundamentalMomentumAxis3d,
 )
-from surface_potential_analysis.basis.conversion import (
-    get_basis_conversion_matrix,
+from surface_potential_analysis.axis.conversion import (
+    get_axis_conversion_matrix,
 )
-
-from .utils import get_random_explicit_basis
 
 rng = np.random.default_rng()
 
@@ -30,7 +29,7 @@ class BasisConversionTest(unittest.TestCase):
     def test_as_explicit_position_basis_momentum(self) -> None:
         n = rng.integers(2, 5)
 
-        basis = FundamentalMomentumBasis(np.array([1, 0, 0]), n)
+        basis = FundamentalMomentumAxis3d(np.array([1, 0, 0]), n)
 
         np.testing.assert_array_almost_equal(
             np.linalg.norm(basis.vectors, axis=1), np.ones(n)
@@ -52,12 +51,12 @@ class BasisConversionTest(unittest.TestCase):
         basis_0 = get_random_explicit_basis(fundamental_n=fundamental_n, n=n)
         np.testing.assert_array_equal(basis_0.vectors.shape, (n, fundamental_n))
 
-        matrix = get_basis_conversion_matrix(basis_0, basis_0)
+        matrix = get_axis_conversion_matrix(basis_0, basis_0)
         np.testing.assert_array_almost_equal(matrix, np.eye(n, n))
 
         basis_1 = get_random_explicit_basis(fundamental_n=fundamental_n, n=n)
 
-        matrix = get_basis_conversion_matrix(basis_1, basis_1)
+        matrix = get_axis_conversion_matrix(basis_1, basis_1)
         np.testing.assert_array_almost_equal(matrix, np.eye(n, n))
 
     def test_basis_conversion_matrix_position(self) -> None:
@@ -65,12 +64,12 @@ class BasisConversionTest(unittest.TestCase):
         n = rng.integers(1, fundamental_n)
         basis_0 = get_random_explicit_basis(fundamental_n=fundamental_n, n=n)
 
-        matrix = get_basis_conversion_matrix(basis_0, basis_0)
+        matrix = get_axis_conversion_matrix(basis_0, basis_0)
 
         np.testing.assert_array_almost_equal(matrix, np.eye(n, n))
 
         basis_1 = get_random_explicit_basis(fundamental_n=fundamental_n, n=n)
 
-        matrix = get_basis_conversion_matrix(basis_1, basis_1)
+        matrix = get_axis_conversion_matrix(basis_1, basis_1)
 
         np.testing.assert_array_almost_equal(matrix, np.eye(n, n))

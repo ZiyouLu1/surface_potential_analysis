@@ -4,32 +4,52 @@ from typing import TYPE_CHECKING, Any, Generic, TypedDict, TypeVar
 
 import numpy as np
 
-from surface_potential_analysis.basis.basis_like import BasisLike
-from surface_potential_analysis.basis_config.basis_config import (
-    BasisConfig,
-    FundamentalMomentumBasisConfig,
-    FundamentalPositionBasisConfig,
+from surface_potential_analysis.axis.axis_like import AxisLike3d
+from surface_potential_analysis.basis.basis import (
+    Basis,
+    Basis1d,
+    Basis2d,
+    Basis3d,
+    FundamentalMomentumBasis3d,
+    FundamentalPositionBasis3d,
 )
 
 if TYPE_CHECKING:
     from pathlib import Path
 
-
-_BC0Inv = TypeVar("_BC0Inv", bound=BasisConfig[Any, Any, Any])
-
-_BX0Inv = TypeVar("_BX0Inv", bound=BasisLike[Any, Any])
-_BX1Inv = TypeVar("_BX1Inv", bound=BasisLike[Any, Any])
-_BX2Inv = TypeVar("_BX2Inv", bound=BasisLike[Any, Any])
+_B0Inv = TypeVar("_B0Inv", bound=Basis[Any])
 
 
-class Eigenstate(TypedDict, Generic[_BC0Inv]):
-    """represents an eigenstate in an explicit basis."""
+_A3d0Inv = TypeVar("_A3d0Inv", bound=AxisLike3d[Any, Any])
+_A3d1Inv = TypeVar("_A3d1Inv", bound=AxisLike3d[Any, Any])
+_A3d2Inv = TypeVar("_A3d2Inv", bound=AxisLike3d[Any, Any])
 
-    basis: _BC0Inv
+
+class Eigenstate(TypedDict, Generic[_B0Inv]):
+    """represents an eigenstate in a basis."""
+
+    basis: _B0Inv
     vector: np.ndarray[tuple[int], np.dtype[np.complex_]]
 
 
-EigenstateWithBasis = Eigenstate[BasisConfig[_BX0Inv, _BX1Inv, _BX2Inv]]
+_B1d0Inv = TypeVar("_B1d0Inv", bound=Basis1d[Any])
+_B2d0Inv = TypeVar("_B2d0Inv", bound=Basis2d[Any, Any])
+_B3d0Inv = TypeVar("_B3d0Inv", bound=Basis3d[Any, Any, Any])
+
+
+class Eigenstate1d(Eigenstate[_B1d0Inv]):
+    """represents an eigenstate in a 1d basis."""
+
+
+class Eigenstate2d(Eigenstate[_B2d0Inv]):
+    """represents an eigenstate in a 2d basis."""
+
+
+class Eigenstate3d(Eigenstate[_B3d0Inv]):
+    """represents an eigenstate in a 3d basis."""
+
+
+Eigenstate3dWithBasis = Eigenstate3d[Basis3d[_A3d0Inv, _A3d1Inv, _A3d2Inv]]
 
 
 def save_eigenstate(path: Path, eigenstates: Eigenstate[Any]) -> None:
@@ -64,21 +84,25 @@ _NF1Inv = TypeVar("_NF1Inv", bound=int)
 _NF2Inv = TypeVar("_NF2Inv", bound=int)
 
 
-FundamentalPositionBasisEigenstate = Eigenstate[
-    FundamentalPositionBasisConfig[_NF0Inv, _NF1Inv, _NF2Inv]
+FundamentalPositionBasisEigenstate3d = Eigenstate3d[
+    FundamentalPositionBasis3d[_NF0Inv, _NF1Inv, _NF2Inv]
 ]
 
-FundamentalMomentumBasisEigenstate = Eigenstate[
-    FundamentalMomentumBasisConfig[_NF0Inv, _NF1Inv, _NF2Inv]
+FundamentalMomentumBasisEigenstate3d = Eigenstate3d[
+    FundamentalMomentumBasis3d[_NF0Inv, _NF1Inv, _NF2Inv]
 ]
 
 
-class EigenstateList(TypedDict, Generic[_BC0Inv]):
+class EigenstateList(TypedDict, Generic[_B0Inv]):
     """Represents a list of eigenstates, each with the same basis and bloch wavevector."""
 
-    basis: _BC0Inv
+    basis: _B0Inv
     vectors: np.ndarray[tuple[int, int], np.dtype[np.complex_]]
     energies: np.ndarray[tuple[int], np.dtype[np.float_]]
+
+
+class EigenstateList3d(EigenstateList[_B3d0Inv]):
+    """Represents a list of eigenstates, each with the same basis and bloch wavevector."""
 
 
 def save_eigenstate_list(path: Path, eigenstates: EigenstateList[Any]) -> None:
@@ -108,7 +132,7 @@ def load_eigenstate_list(path: Path) -> EigenstateList[Any]:
     return np.load(path, allow_pickle=True)[()]  # type: ignore[no-any-return]
 
 
-def calculate_normalisation(eigenstate: Eigenstate[Any]) -> float:
+def calculate_normalisation(eigenstate: Eigenstate3d[Any]) -> float:
     """
     calculate the normalization of an eigenstate.
 

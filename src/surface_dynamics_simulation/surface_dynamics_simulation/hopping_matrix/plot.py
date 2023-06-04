@@ -4,7 +4,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 from scipy.constants import Boltzmann, electron_mass, hbar
 
-from .calculation import _actual_integrand, _approximate_integrand
+from .old_electron_integral import _actual_integrand, _approximate_integrand
 
 
 def plot_electron_integral(

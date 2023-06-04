@@ -3,9 +3,11 @@ from __future__ import annotations
 import matplotlib.pyplot as plt
 import numpy as np
 import scipy.constants
-from surface_potential_analysis.basis.plot import plot_explicit_basis_states_x
-from surface_potential_analysis.basis_config.plot import plot_projected_x_points_2d
-from surface_potential_analysis.basis_config.sho_basis import (
+from surface_potential_analysis.axis.plot import plot_explicit_basis_states_x
+from surface_potential_analysis.basis.plot import (
+    plot_fundamental_x_in_plane_projected_2d,
+)
+from surface_potential_analysis.basis.sho_basis import (
     infinate_sho_basis_from_config,
 )
 from surface_potential_analysis.potential.plot import (
@@ -105,13 +107,17 @@ def plot_copper_relaxed_interpolated_data() -> None:
     save_figure(fig, "relaxed_interpolated_data_xy.png")
 
     fig, ax, _ani0 = animate_potential_x0x1(data)
-    plot_projected_x_points_2d(mock_even_potential(raw_data)["basis"], 0, 2, ax=ax)
+    plot_fundamental_x_in_plane_projected_2d(
+        mock_even_potential(raw_data)["basis"], 0, 2, ax=ax
+    )
     fig.show()
 
     raw_data = normalize_potential(load_relaxed_copper_potential())
 
     fig, ax, _ani1 = animate_potential_x0x1(data)
-    plot_projected_x_points_2d(mock_even_potential(raw_data)["basis"], 0, 2, ax=ax)
+    plot_fundamental_x_in_plane_projected_2d(
+        mock_even_potential(raw_data)["basis"], 0, 2, ax=ax
+    )
     fig.show()
 
     input()
@@ -168,7 +174,7 @@ def compare_bridge_hollow_energy() -> None:
     print("--------------------------------------")  # noqa: T201
     print("Non-relaxed")  # noqa: T201
     data = get_interpolated_potential((50, 50, 100))
-    points = np.array(data["points"])
+    points = np.array(data["vector"])
     print(points.shape)  # noqa: T201
 
     print("Bridge ", np.min(points[points.shape[0] // 2, 0, :]))  # noqa: T201
@@ -211,7 +217,7 @@ def compare_bridge_hollow_energy() -> None:
     print("--------------------------------------")  # noqa: T201
     print("Relaxed")  # noqa: T201
     data = get_interpolated_potential_relaxed((50, 50, 100))
-    points = np.array(data["points"])
+    points = np.array(data["vector"])
     print(points.shape)  # noqa: T201
 
     print("Bridge ", np.min(points[points.shape[0] // 2, 0, :]))  # noqa: T201

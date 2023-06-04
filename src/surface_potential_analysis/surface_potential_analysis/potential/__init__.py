@@ -7,11 +7,11 @@ rather than l**2 points
 
 from __future__ import annotations
 
-from .point_potential import PointPotential, load_point_potential_json
+from .point_potential import PointPotential3d, load_point_potential_json
 from .potential import (
-    Potential,
+    FundamentalPositionBasisPotential3d,
     PotentialPoints,
-    UnevenPotential,
+    UnevenPotential3d,
     interpolate_uneven_potential,
     load_potential,
     load_uneven_potential,
@@ -24,12 +24,12 @@ from .potential import (
 
 __all__ = [
     # point potential
-    "PointPotential",
+    "PointPotential3d",
     "load_point_potential_json",
     # potential
-    "Potential",
+    "FundamentalPositionBasisPotential3d",
     "PotentialPoints",
-    "UnevenPotential",
+    "UnevenPotential3d",
     "interpolate_uneven_potential",
     "load_potential",
     "load_uneven_potential",

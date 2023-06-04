@@ -5,21 +5,23 @@ from typing import TYPE_CHECKING, Generic, Literal, TypeVar
 import numpy as np
 from scipy.constants import hbar
 
-from surface_potential_analysis.basis import (
-    BasisUtil,
+from surface_potential_analysis.axis import (
+    Axis3dUtil,
 )
-from surface_potential_analysis.basis_config.util import BasisConfigUtil
+from surface_potential_analysis.basis.util import Basis3dUtil
 
 if TYPE_CHECKING:
+    from surface_potential_analysis.axis.axis import (
+        ExplicitAxis3d,
+        MomentumAxis3d,
+    )
     from surface_potential_analysis.basis.basis import (
-        ExplicitBasis,
-        MomentumBasis,
+        Basis3d,
     )
-    from surface_potential_analysis.basis_config.basis_config import (
-        BasisConfig,
+    from surface_potential_analysis.hamiltonian import HamiltonianWith3dBasis
+    from surface_potential_analysis.potential import (
+        FundamentalPositionBasisPotential3d,
     )
-    from surface_potential_analysis.hamiltonian import HamiltonianWithBasis
-    from surface_potential_analysis.potential import Potential
 
 _N0Inv = TypeVar("_N0Inv", bound=int)
 _N1Inv = TypeVar("_N1Inv", bound=int)
@@ -42,22 +44,22 @@ class PotentialSizeError(Exception):
 class _SurfaceHamiltonianUtil(
     Generic[_N0Inv, _N1Inv, _N2Inv, _NF0Inv, _NF1Inv, _NF2Inv]
 ):
-    _potential: Potential[_NF0Inv, _NF1Inv, _NF2Inv]
+    _potential: FundamentalPositionBasisPotential3d[_NF0Inv, _NF1Inv, _NF2Inv]
 
-    _basis: BasisConfig[
-        MomentumBasis[_NF0Inv, _N0Inv],
-        MomentumBasis[_NF1Inv, _N1Inv],
-        ExplicitBasis[_NF2Inv, _N2Inv],
+    _basis: Basis3d[
+        MomentumAxis3d[_NF0Inv, _N0Inv],
+        MomentumAxis3d[_NF1Inv, _N1Inv],
+        ExplicitAxis3d[_NF2Inv, _N2Inv],
     ]
     _mass: float
 
     def __init__(
         self,
-        potential: Potential[_NF0Inv, _NF1Inv, _NF2Inv],
-        basis: BasisConfig[
-            MomentumBasis[_NF0Inv, _N0Inv],
-            MomentumBasis[_NF1Inv, _N1Inv],
-            ExplicitBasis[_NF2Inv, _N2Inv],
+        potential: FundamentalPositionBasisPotential3d[_NF0Inv, _NF1Inv, _NF2Inv],
+        basis: Basis3d[
+            MomentumAxis3d[_NF0Inv, _N0Inv],
+            MomentumAxis3d[_NF1Inv, _N1Inv],
+            ExplicitAxis3d[_NF2Inv, _N2Inv],
         ],
         mass: float,
     ) -> None:
@@ -78,7 +80,9 @@ class _SurfaceHamiltonianUtil(
     def points(
         self,
     ) -> np.ndarray[tuple[_NF0Inv, _NF1Inv, _NF2Inv], np.dtype[np.float_]]:
-        return self._potential["points"]
+        return self._potential["points"].reshape(  # type: ignore[no-any-return]
+            Basis3dUtil(self._potential["basis"]).shape
+        )
 
     @property
     def nx(self) -> int:
@@ -94,22 +98,22 @@ class _SurfaceHamiltonianUtil(
 
     @property
     def dz(self) -> float:
-        util = BasisUtil(self._potential["basis"][2])
+        util = Axis3dUtil(self._potential["basis"][2])
         return np.linalg.norm(util.fundamental_dx)  # type: ignore[return-value]
 
     def hamiltonian(
         self, _bloch_phase: np.ndarray[tuple[Literal[3]], np.dtype[np.float_]]
-    ) -> HamiltonianWithBasis[
-        MomentumBasis[_NF0Inv, _N0Inv],
-        MomentumBasis[_NF1Inv, _N1Inv],
-        ExplicitBasis[_NF2Inv, _N2Inv],
+    ) -> HamiltonianWith3dBasis[
+        MomentumAxis3d[_NF0Inv, _N0Inv],
+        MomentumAxis3d[_NF1Inv, _N1Inv],
+        ExplicitAxis3d[_NF2Inv, _N2Inv],
     ]:
         raise NotImplementedError
 
     def _calculate_diagonal_energy_fundamental_x2(
         self, bloch_phase: np.ndarray[tuple[Literal[3]], np.dtype[np.float_]]
     ) -> np.ndarray[tuple[int], np.dtype[np.float_]]:
-        util = BasisConfigUtil(self._basis)
+        util = Basis3dUtil(self._basis)
 
         k0_coords, k1_coords, k2_fundamental = np.meshgrid(
             util.x0_basis.nk_points,  # type: ignore[misc]
@@ -137,18 +141,18 @@ class _SurfaceHamiltonianUtil(
 
 
 def total_surface_hamiltonian(
-    potential: Potential[_NF0Inv, _NF1Inv, _NF2Inv],
+    potential: FundamentalPositionBasisPotential3d[_NF0Inv, _NF1Inv, _NF2Inv],
     bloch_phase: np.ndarray[tuple[Literal[3]], np.dtype[np.float_]],
-    basis: BasisConfig[
-        MomentumBasis[_NF0Inv, _N0Inv],
-        MomentumBasis[_NF1Inv, _N1Inv],
-        ExplicitBasis[_NF2Inv, _N2Inv],
+    basis: Basis3d[
+        MomentumAxis3d[_NF0Inv, _N0Inv],
+        MomentumAxis3d[_NF1Inv, _N1Inv],
+        ExplicitAxis3d[_NF2Inv, _N2Inv],
     ],
     mass: float,
-) -> HamiltonianWithBasis[
-    MomentumBasis[_NF0Inv, _N0Inv],
-    MomentumBasis[_NF1Inv, _N1Inv],
-    ExplicitBasis[_NF2Inv, _N2Inv],
+) -> HamiltonianWith3dBasis[
+    MomentumAxis3d[_NF0Inv, _N0Inv],
+    MomentumAxis3d[_NF1Inv, _N1Inv],
+    ExplicitAxis3d[_NF2Inv, _N2Inv],
 ]:
     """
     Calculate a hamiltonian using the given basis.
@@ -157,7 +161,7 @@ def total_surface_hamiltonian(
     ----------
     potential : Potential[_L0, _L1, _L2]
     bloch_phase : np.ndarray[tuple[Literal[3]], np.dtype[np.float_]]
-    basis : BasisConfig[TruncatedBasis[_L3, MomentumBasis[_L0]], TruncatedBasis[_L4, MomentumBasis[_L1]], ExplicitBasis[_L5, MomentumBasis[_L2]]]
+    basis : Basis3d[TruncatedBasis[_L3, MomentumBasis[_L0]], TruncatedBasis[_L4, MomentumBasis[_L1]], ExplicitBasis[_L5, MomentumBasis[_L2]]]
     mass : float
 
     Returns

@@ -3,9 +3,9 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, Literal
 
 import numpy as np
-from surface_potential_analysis.basis_config.util import BasisConfigUtil
+from surface_potential_analysis.basis.util import Basis3dUtil
 from surface_potential_analysis.eigenstate.eigenstate_collection import (
-    EigenstateColllection,
+    EigenstateColllection3d,
     calculate_eigenstate_collection,
     save_eigenstate_collection,
 )
@@ -16,16 +16,16 @@ from .s2_hamiltonian import generate_hamiltonian_sho, generate_hamiltonian_sho_r
 from .surface_data import get_data_path
 
 if TYPE_CHECKING:
-    from surface_potential_analysis.hamiltonian.hamiltonian import Hamiltonian
+    from surface_potential_analysis.hamiltonian.hamiltonian import Hamiltonian3d
 
 
 def _calculate_eigenstate_collection_sho(
     bloch_phases: np.ndarray[tuple[int, Literal[3]], np.dtype[np.float_]],
     resolution: tuple[int, int, int],
-) -> EigenstateColllection[Any]:
+) -> EigenstateColllection3d[Any, Any]:
     def hamiltonian_generator(
         x: np.ndarray[tuple[Literal[3]], np.dtype[np.float_]]
-    ) -> Hamiltonian[Any]:
+    ) -> Hamiltonian3d[Any]:
         return generate_hamiltonian_sho(
             shape=(200, 200, 501),
             bloch_phase=x,
@@ -33,7 +33,7 @@ def _calculate_eigenstate_collection_sho(
         )
 
     return calculate_eigenstate_collection(
-        hamiltonian_generator, bloch_phases, subset_by_index=(0, 10)
+        hamiltonian_generator, bloch_phases, subset_by_index=(0, 10)  # type: ignore[arg-type]
     )
 
 
@@ -50,7 +50,7 @@ def _generate_eigenstate_collection_sho(
 def generate_eigenstates_data() -> None:
     """Generate data on the eigenstates and eigenvalues for a range of resolutions."""
     potential = get_interpolated_potential(shape=(1, 1, 1))
-    util = BasisConfigUtil(potential["basis"])
+    util = Basis3dUtil(potential["basis"])
 
     kx_points = np.linspace(0, (np.abs(util.dk0[0]) + np.abs(util.dk1[0])) / 2, 5)
     ky_points = np.linspace(0, (np.abs(util.dk0[1]) + np.abs(util.dk1[1])) / 2, 5)
@@ -69,10 +69,10 @@ def generate_eigenstates_data() -> None:
 def _calculate_eigenstate_collection_sho_relaxed(
     bloch_phases: np.ndarray[tuple[int, Literal[3]], np.dtype[np.float_]],
     resolution: tuple[int, int, int],
-) -> EigenstateColllection[Any]:
+) -> EigenstateColllection3d[Any, Any]:
     def hamiltonian_generator(
         x: np.ndarray[tuple[Literal[3]], np.dtype[np.float_]]
-    ) -> Hamiltonian[Any]:
+    ) -> Hamiltonian3d[Any]:
         return generate_hamiltonian_sho_relaxed(
             shape=(200, 200, 501),
             bloch_phase=x,
@@ -80,7 +80,7 @@ def _calculate_eigenstate_collection_sho_relaxed(
         )
 
     return calculate_eigenstate_collection(
-        hamiltonian_generator, bloch_phases, subset_by_index=(0, 10)
+        hamiltonian_generator, bloch_phases, subset_by_index=(0, 10)  # type: ignore[arg-type]
     )
 
 
@@ -99,7 +99,7 @@ def _generate_eigenstate_collection_sho_relaxed(
 def generate_eigenstates_data_relaxed() -> None:
     """Generate data on the eigenstates and eigenvalues for a range of resolutions."""
     potential = get_interpolated_potential(shape=(1, 1, 1))
-    util = BasisConfigUtil(potential["basis"])
+    util = Basis3dUtil(potential["basis"])
 
     kx_points = np.linspace(0, (np.abs(util.dk0[0]) + np.abs(util.dk1[0])) / 2, 5)
     ky_points = np.linspace(0, (np.abs(util.dk0[1]) + np.abs(util.dk1[1])) / 2, 5)

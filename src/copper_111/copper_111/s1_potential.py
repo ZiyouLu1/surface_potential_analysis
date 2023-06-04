@@ -3,14 +3,14 @@ from __future__ import annotations
 from typing import TypeVar
 
 import numpy as np
-from surface_potential_analysis.basis.basis import FundamentalPositionBasis
+from surface_potential_analysis.axis.axis import FundamentalPositionAxis3d
 from surface_potential_analysis.potential.point_potential import (
-    PointPotential,
+    PointPotential3d,
     load_point_potential_json,
 )
 from surface_potential_analysis.potential.potential import (
-    Potential,
-    UnevenPotential,
+    FundamentalPositionBasisPotential3d,
+    UnevenPotential3d,
     interpolate_uneven_potential,
     load_potential,
     load_uneven_potential,
@@ -28,24 +28,24 @@ _L1Inv = TypeVar("_L1Inv", bound=int)
 _L2Inv = TypeVar("_L2Inv", bound=int)
 
 
-def load_raw_data() -> PointPotential[int]:
+def load_raw_data() -> PointPotential3d[int]:
     path = get_data_path("raw_data.json")
     return load_point_potential_json(path)
 
 
-def load_raw_data_potential() -> UnevenPotential[int, int, int]:
+def load_raw_data_potential() -> UnevenPotential3d[int, int, int]:
     path = get_data_path("raw_data_reflected.npy")
     return load_uneven_potential(path)
 
 
-def load_interpolated_potential() -> Potential[int, int, int]:
+def load_interpolated_potential() -> FundamentalPositionBasisPotential3d[int, int, int]:
     path = get_data_path("interpolated_data.npy")
     return load_potential(path)
 
 
 def map_irreducible_points_into_unit_cell(
-    irreducible_points: PointPotential[int],
-) -> UnevenPotential[int, int, int]:
+    irreducible_points: PointPotential3d[int],
+) -> UnevenPotential3d[int, int, int]:
     z_points = np.sort(np.unique(irreducible_points["z_points"]))
     xy_points = np.unique(
         np.array([irreducible_points["x_points"], irreducible_points["y_points"]]).T,
@@ -172,8 +172,8 @@ def map_irreducible_points_into_unit_cell(
         )
     return {
         "basis": (
-            FundamentalPositionBasis(delta_x0, final_grid.shape[0]),
-            FundamentalPositionBasis(delta_x1, final_grid.shape[1]),
+            FundamentalPositionAxis3d(delta_x0, final_grid.shape[0]),
+            FundamentalPositionAxis3d(delta_x1, final_grid.shape[1]),
             z_points,
         ),
         "points": final_grid,
@@ -189,7 +189,7 @@ def generate_reflected_data() -> None:
 
 def get_interpolated_potential(
     shape: tuple[_L0Inv, _L1Inv, _L2Inv]
-) -> Potential[_L0Inv, _L1Inv, _L2Inv]:
+) -> FundamentalPositionBasisPotential3d[_L0Inv, _L1Inv, _L2Inv]:
     grid = load_raw_data_potential()
     normalized = normalize_potential(grid)
 

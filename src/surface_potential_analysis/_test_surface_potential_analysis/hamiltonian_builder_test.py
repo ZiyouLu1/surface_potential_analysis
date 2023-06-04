@@ -9,19 +9,20 @@ import scipy.linalg
 import scipy.special
 from scipy.constants import hbar
 
-from surface_potential_analysis.basis.basis import FundamentalPositionBasis
-from surface_potential_analysis.basis_config.build import (
-    build_position_basis_config_from_resolution,
+from _test_surface_potential_analysis.utils import convert_explicit_basis_x2
+from surface_potential_analysis.axis.axis import FundamentalPositionAxis3d
+from surface_potential_analysis.basis.build import (
+    position_basis_3d_from_resolution,
 )
-from surface_potential_analysis.basis_config.sho_basis import (
+from surface_potential_analysis.basis.sho_basis import (
     SHOBasisConfig,
     calculate_x_distances,
 )
-from surface_potential_analysis.basis_config.util import (
-    BasisConfigUtil,
+from surface_potential_analysis.basis.util import (
+    Basis3dUtil,
 )
 from surface_potential_analysis.hamiltonian.hamiltonian import (
-    HamiltonianWithBasis,
+    HamiltonianWith3dBasis,
     flatten_hamiltonian,
     stack_hamiltonian,
 )
@@ -34,21 +35,21 @@ from surface_potential_analysis.hamiltonian_builder.sho_subtracted_basis import 
 )
 from surface_potential_analysis.util.interpolation import interpolate_points_rfftn
 
-from .utils import convert_explicit_basis_x2
-
 if TYPE_CHECKING:
+    from surface_potential_analysis.axis.axis import (
+        ExplicitAxis3d,
+        FundamentalMomentumAxis3d,
+    )
+    from surface_potential_analysis.axis.axis_like import AxisLike3d
     from surface_potential_analysis.basis.basis import (
-        ExplicitBasis,
-        FundamentalMomentumBasis,
+        FundamentalPositionBasis3d,
     )
-    from surface_potential_analysis.basis.basis_like import BasisLike
-    from surface_potential_analysis.basis_config.basis_config import (
-        FundamentalPositionBasisConfig,
+    from surface_potential_analysis.potential.potential import (
+        FundamentalPositionBasisPotential3d,
     )
-    from surface_potential_analysis.potential.potential import Potential
 
-    _BX0Inv = TypeVar("_BX0Inv", bound=BasisLike[Any, Any])
-    _BX1Inv = TypeVar("_BX1Inv", bound=BasisLike[Any, Any])
+    _A3d0Inv = TypeVar("_A3d0Inv", bound=AxisLike3d[Any, Any])
+    _A3d1Inv = TypeVar("_A3d1Inv", bound=AxisLike3d[Any, Any])
 
     _L0Inv = TypeVar("_L0Inv", bound=int)
     _L1Inv = TypeVar("_L1Inv", bound=int)
@@ -57,11 +58,11 @@ rng = np.random.default_rng()
 
 
 def _convert_x2_to_explicit_basis(
-    hamiltonian: HamiltonianWithBasis[
-        _BX0Inv, _BX1Inv, FundamentalMomentumBasis[_L0Inv]
+    hamiltonian: HamiltonianWith3dBasis[
+        _A3d0Inv, _A3d1Inv, FundamentalMomentumAxis3d[_L0Inv]
     ],
-    basis: ExplicitBasis[_L0Inv, _L1Inv],
-) -> HamiltonianWithBasis[_BX0Inv, _BX1Inv, ExplicitBasis[_L0Inv, _L1Inv]]:
+    basis: ExplicitAxis3d[_L0Inv, _L1Inv],
+) -> HamiltonianWith3dBasis[_A3d0Inv, _A3d1Inv, ExplicitAxis3d[_L0Inv, _L1Inv]]:
     stacked = stack_hamiltonian(hamiltonian)
 
     x2_position = np.fft.fftn(
@@ -98,8 +99,8 @@ def _generate_random_potential(
 
 def _generate_symmetrical_points(
     height: int, width: int = 5
-) -> np.ndarray[tuple[int, int, int], np.dtype[np.float_]]:
-    return np.swapaxes([_generate_random_potential(width) for _ in range(height)], 0, -1)  # type: ignore[no-any-return]
+) -> np.ndarray[tuple[int], np.dtype[np.complex_]]:
+    return np.swapaxes([_generate_random_potential(width) for _ in range(height)], 0, -1).ravel()  # type: ignore[no-any-return]
 
 
 def _generate_random_diagonal_hamiltonian() -> (
@@ -117,9 +118,9 @@ def _generate_random_diagonal_hamiltonian() -> (
         "sho_omega": 1,
         "x_origin": np.array([0, 0, -z_offset]),
     }
-    potentail: Potential[Any, Any, Any] = {
-        "points": np.zeros((2 * nkx, 2 * nky, nz)),
-        "basis": build_position_basis_config_from_resolution(
+    potential: FundamentalPositionBasisPotential3d[Any, Any, Any] = {
+        "vector": np.zeros((2 * nkx, 2 * nky, nz)).reshape(-1),
+        "basis": position_basis_3d_from_resolution(
             (2 * nkx, 2 * nky, nz),
             (
                 np.array([2 * np.pi * hbar, 0, 0]),
@@ -128,13 +129,15 @@ def _generate_random_diagonal_hamiltonian() -> (
             ),
         ),
     }
-    hamiltonian = _SurfaceHamiltonianUtil(potentail, config, resolution)
+    hamiltonian = _SurfaceHamiltonianUtil(potential, config, resolution)
 
-    potentail2: Potential[Any, Any, Any] = {
-        "points": np.tile(hamiltonian.get_sho_potential(), (2 * nkx, 2 * nky, 1)),
-        "basis": potentail["basis"],
+    potential2: FundamentalPositionBasisPotential3d[Any, Any, Any] = {
+        "vector": np.tile(
+            hamiltonian.get_sho_potential(), (2 * nkx, 2 * nky, 1)
+        ).ravel(),
+        "basis": potential["basis"],
     }
-    return _SurfaceHamiltonianUtil(potentail2, config, resolution)
+    return _SurfaceHamiltonianUtil(potential2, config, resolution)
 
 
 class HamiltonianBuilderTest(unittest.TestCase):
@@ -145,9 +148,9 @@ class HamiltonianBuilderTest(unittest.TestCase):
             "sho_omega": 1 / hbar,
             "x_origin": np.array([0, 0, -1]),
         }
-        potentail: Potential[Any, Any, Any] = {
-            "points": np.zeros((4, 4, 3)),
-            "basis": build_position_basis_config_from_resolution(
+        potential: FundamentalPositionBasisPotential3d[Any, Any, Any] = {
+            "vector": np.zeros(4 * 4 * 3),
+            "basis": position_basis_3d_from_resolution(
                 (4, 4, 3),
                 (
                     np.array([2 * np.pi * hbar, 0, 0]),
@@ -156,7 +159,7 @@ class HamiltonianBuilderTest(unittest.TestCase):
                 ),
             ),
         }
-        hamiltonian = _SurfaceHamiltonianUtil(potentail, config, resolution)
+        hamiltonian = _SurfaceHamiltonianUtil(potential, config, resolution)
 
         expected = np.array([0.5, 1.5, 1.0, 2.0, 1.0, 2.0, 1.5, 2.5])
         diagonal_energy = hamiltonian._calculate_diagonal_energy(  # noqa: SLF001
@@ -172,9 +175,9 @@ class HamiltonianBuilderTest(unittest.TestCase):
             "sho_omega": 1,
             "x_origin": np.array([0, 0, -2]),
         }
-        potentail: Potential[Any, Any, Any] = {
-            "points": np.zeros((4, 4, 5)),
-            "basis": build_position_basis_config_from_resolution(
+        potential: FundamentalPositionBasisPotential3d[Any, Any, Any] = {
+            "vector": np.zeros((4, 4, 5)).ravel(),
+            "basis": position_basis_3d_from_resolution(
                 (4, 4, 5),
                 (
                     np.array([2 * np.pi * hbar, 0, 0]),
@@ -183,7 +186,7 @@ class HamiltonianBuilderTest(unittest.TestCase):
                 ),
             ),
         }
-        hamiltonian = _SurfaceHamiltonianUtil(potentail, config, resolution)
+        hamiltonian = _SurfaceHamiltonianUtil(potential, config, resolution)
         expected = [2.0, 0.5, 0.0, 0.5, 2.0]
         np.testing.assert_equal(expected, hamiltonian.get_sho_potential())
 
@@ -198,9 +201,9 @@ class HamiltonianBuilderTest(unittest.TestCase):
             "sho_omega": 1,
             "x_origin": np.array([0, 0, -20]),
         }
-        potentail: Potential[Any, Any, Any] = {
-            "points": np.zeros((2 * nx, 2 * ny, nz)),
-            "basis": build_position_basis_config_from_resolution(
+        potential: FundamentalPositionBasisPotential3d[Any, Any, Any] = {
+            "vector": np.zeros((2 * nx, 2 * ny, nz)).ravel(),
+            "basis": position_basis_3d_from_resolution(
                 (2 * nx, 2 * ny, nz),
                 (
                     np.array([2 * np.pi * hbar, 0, 0]),
@@ -209,11 +212,13 @@ class HamiltonianBuilderTest(unittest.TestCase):
                 ),
             ),
         }
-        hamiltonian = _SurfaceHamiltonianUtil(potentail, config, resolution)
+        hamiltonian = _SurfaceHamiltonianUtil(potential, config, resolution)
 
-        potentail2: Potential[Any, Any, Any] = {
-            "points": np.tile(hamiltonian.get_sho_potential(), (2 * nx, 2 * ny, 1)),
-            "basis": build_position_basis_config_from_resolution(
+        potential2: FundamentalPositionBasisPotential3d[Any, Any, Any] = {
+            "vector": np.tile(
+                hamiltonian.get_sho_potential(), (2 * nx, 2 * ny, 1)
+            ).ravel(),
+            "basis": position_basis_3d_from_resolution(
                 (2 * nx, 2 * ny, nz),
                 (
                     np.array([2 * np.pi * hbar, 0, 0]),
@@ -223,7 +228,7 @@ class HamiltonianBuilderTest(unittest.TestCase):
             ),
         }
 
-        hamiltonian = _SurfaceHamiltonianUtil(potentail2, config, resolution)
+        hamiltonian = _SurfaceHamiltonianUtil(potential2, config, resolution)
         actual = hamiltonian.get_sho_subtracted_points()
         expected = np.zeros(shape=(2 * nx, 2 * ny, nz))
 
@@ -234,15 +239,15 @@ class HamiltonianBuilderTest(unittest.TestCase):
         nz = rng.integers(2, 100)
 
         points = _generate_symmetrical_points(nz, width)
-        resolution = (points.shape[0] // 2, points.shape[1] // 2, 2)
+        resolution = (width // 2, width // 2, 2)
         config: SHOBasisConfig = {
             "mass": 1,
             "sho_omega": 1,
             "x_origin": np.array([0, 0, -20]),
         }
-        potentail: Potential[Any, Any, Any] = {
-            "points": points,
-            "basis": build_position_basis_config_from_resolution(
+        potential: FundamentalPositionBasisPotential3d[Any, Any, Any] = {
+            "vector": points,
+            "basis": position_basis_3d_from_resolution(
                 (points.shape[0], points.shape[1], nz),
                 (
                     np.array([2 * np.pi * hbar, 0, 0]),
@@ -252,7 +257,7 @@ class HamiltonianBuilderTest(unittest.TestCase):
             ),
         }
 
-        hamiltonian = _SurfaceHamiltonianUtil(potentail, config, resolution)
+        hamiltonian = _SurfaceHamiltonianUtil(potential, config, resolution)
         ft_potential = hamiltonian.get_ft_potential()
         np.testing.assert_almost_equal(
             np.imag(ft_potential), np.zeros_like(ft_potential)
@@ -282,7 +287,7 @@ class HamiltonianBuilderTest(unittest.TestCase):
         hamiltonian = _generate_random_diagonal_hamiltonian()
 
         actual = hamiltonian._calculate_off_diagonal_energies()  # noqa: SLF001
-        util = BasisConfigUtil(hamiltonian.basis)
+        util = Basis3dUtil(hamiltonian.basis)
         n_points = util.n0 * util.n1 * util.n2  # type: ignore[misc]
         expected_shape = (n_points, n_points)
         np.testing.assert_equal(actual, np.zeros(shape=expected_shape))
@@ -299,9 +304,9 @@ class HamiltonianBuilderTest(unittest.TestCase):
             "sho_omega": 1,
             "x_origin": np.array([0, 0, -2]),
         }
-        potentail: Potential[Any, Any, Any] = {
-            "points": points,
-            "basis": build_position_basis_config_from_resolution(
+        potential: FundamentalPositionBasisPotential3d[Any, Any, Any] = {
+            "vector": points,
+            "basis": position_basis_3d_from_resolution(
                 (points.shape[0], points.shape[1], nz),
                 (
                     np.array([2 * np.pi * hbar, 0, 0]),
@@ -311,7 +316,7 @@ class HamiltonianBuilderTest(unittest.TestCase):
             ),
         }
 
-        hamiltonian = _SurfaceHamiltonianUtil(potentail, config, resolution)
+        hamiltonian = _SurfaceHamiltonianUtil(potential, config, resolution)
 
         np.testing.assert_allclose(
             hamiltonian.hamiltonian(np.array([0, 0, 0]))["array"],
@@ -338,9 +343,9 @@ class HamiltonianBuilderTest(unittest.TestCase):
             "sho_omega": 1 / hbar,
             "x_origin": np.array([0, 0, 0]),
         }
-        potentail: Potential[Any, Any, Any] = {
-            "points": np.zeros(shape=(nx, ny, nz)),
-            "basis": build_position_basis_config_from_resolution(
+        potential: FundamentalPositionBasisPotential3d[Any, Any, Any] = {
+            "vector": np.zeros(shape=(nx, ny, nz)).ravel(),
+            "basis": position_basis_3d_from_resolution(
                 (nx, ny, nz),
                 (
                     np.array([2 * np.pi * hbar, 0, 0]),
@@ -350,7 +355,7 @@ class HamiltonianBuilderTest(unittest.TestCase):
             ),
         }
 
-        hamiltonian = _SurfaceHamiltonianUtil(potentail, config, resolution)
+        hamiltonian = _SurfaceHamiltonianUtil(potential, config, resolution)
 
         np.testing.assert_allclose(
             hamiltonian._calculate_off_diagonal_energies_fast(),  # noqa: SLF001
@@ -359,27 +364,31 @@ class HamiltonianBuilderTest(unittest.TestCase):
 
     def test_hamiltonian_from_potential(self) -> None:
         shape = rng.integers(1, 10, size=3)
-        points = rng.random(shape)
+        points = rng.random(shape).ravel()
 
-        expected_basis = build_position_basis_config_from_resolution(tuple(shape))  # type: ignore[var-annotated,arg-type]
+        expected_basis = position_basis_3d_from_resolution(tuple(shape))  # type: ignore[var-annotated,arg-type]
 
-        potential: Potential[Any, Any, Any] = {
+        potential: FundamentalPositionBasisPotential3d[Any, Any, Any] = {
             "basis": expected_basis,
-            "points": points,
+            "vector": np.array(points, dtype=complex),
         }
 
-        hamiltonian = momentum_basis.hamiltonian_from_potential(potential)
+        hamiltonian = (
+            momentum_basis.hamiltonian_from_position_basis_potential_3d_stacked(
+                potential
+            )
+        )
 
         for ix0 in range(shape[0]):
             for ix1 in range(shape[1]):
                 for ix2 in range(shape[2]):
                     np.testing.assert_equal(
                         hamiltonian["array"][ix0, ix1, ix2, ix0, ix1, ix2],
-                        potential["points"][ix0, ix1, ix2],
+                        potential["vector"].reshape(shape)[ix0, ix1, ix2],
                     )
         np.testing.assert_equal(
             np.count_nonzero(hamiltonian["array"]),
-            np.count_nonzero(potential["points"]),
+            np.count_nonzero(potential["vector"]),
         )
 
         for expected, actual in zip(expected_basis, hamiltonian["basis"], strict=True):
@@ -391,10 +400,10 @@ class HamiltonianBuilderTest(unittest.TestCase):
         shape = np.array([3, 3, 200])  # np.random.randint(1, 2, size=3, dtype=int)
         nz = 6
 
-        expected_basis: FundamentalPositionBasisConfig[Any, Any, Any] = (
-            FundamentalPositionBasis(np.array([2 * np.pi, 0, 0]), shape.item(0)),
-            FundamentalPositionBasis(np.array([0, 2 * np.pi, 0]), shape.item(1)),
-            FundamentalPositionBasis(np.array([0, 0, 5 * np.pi]), shape.item(2)),
+        expected_basis: FundamentalPositionBasis3d[Any, Any, Any] = (
+            FundamentalPositionAxis3d(np.array([2 * np.pi, 0, 0]), shape.item(0)),
+            FundamentalPositionAxis3d(np.array([0, 2 * np.pi, 0]), shape.item(1)),
+            FundamentalPositionAxis3d(np.array([0, 0, 5 * np.pi]), shape.item(2)),
         )
         config: SHOBasisConfig = {
             "mass": hbar**2,
@@ -415,9 +424,9 @@ class HamiltonianBuilderTest(unittest.TestCase):
             (shape.item(0), shape.item(1), 1),
         )
 
-        potential: Potential[Any, Any, Any] = {
+        potential: FundamentalPositionBasisPotential3d[Any, Any, Any] = {
             "basis": expected_basis,
-            "points": points,
+            "vector": points.ravel(),
         }
 
         momentum_builder_result = momentum_basis.total_surface_hamiltonian(
@@ -428,15 +437,15 @@ class HamiltonianBuilderTest(unittest.TestCase):
             points, s=(2 * points.shape[0], 2 * points.shape[1]), axes=(0, 1)
         )
 
-        interpolated_potential: Potential[int, int, int] = {
+        interpolated_potential: FundamentalPositionBasisPotential3d[int, int, int] = {
             "basis": (
-                FundamentalPositionBasis(
+                FundamentalPositionAxis3d(
                     potential["basis"][0].delta_x, interpolated_points.shape[0]
                 ),
-                FundamentalPositionBasis(
+                FundamentalPositionAxis3d(
                     potential["basis"][1].delta_x, interpolated_points.shape[1]
                 ),
-                FundamentalPositionBasis(
+                FundamentalPositionAxis3d(
                     potential["basis"][2].delta_x, interpolated_points.shape[2]
                 ),
             ),
@@ -460,10 +469,10 @@ class HamiltonianBuilderTest(unittest.TestCase):
         shape = np.array([3, 3, 200])
         nz = 6
 
-        expected_basis: FundamentalPositionBasisConfig[Any, Any, Any] = (
-            FundamentalPositionBasis(np.array([2 * np.pi, 0, 0]), shape.item(0)),
-            FundamentalPositionBasis(np.array([0, 2 * np.pi, 0]), shape.item(1)),
-            FundamentalPositionBasis(np.array([0, 0, 5 * np.pi]), shape.item(2)),
+        expected_basis: FundamentalPositionBasis3d[Any, Any, Any] = (
+            FundamentalPositionAxis3d(np.array([2 * np.pi, 0, 0]), shape.item(0)),
+            FundamentalPositionAxis3d(np.array([0, 2 * np.pi, 0]), shape.item(1)),
+            FundamentalPositionAxis3d(np.array([0, 0, 5 * np.pi]), shape.item(2)),
         )
         config: SHOBasisConfig = {
             "mass": hbar**2,
@@ -474,9 +483,9 @@ class HamiltonianBuilderTest(unittest.TestCase):
 
         points = rng.random(*shape)
 
-        potential: Potential[Any, Any, Any] = {
+        potential: FundamentalPositionBasisPotential3d[Any, Any, Any] = {
             "basis": expected_basis,
-            "points": points,
+            "vector": points.ravel(),
         }
 
         momentum_builder_result = momentum_basis.total_surface_hamiltonian(
@@ -487,15 +496,15 @@ class HamiltonianBuilderTest(unittest.TestCase):
             points, s=(2 * points.shape[0], 2 * points.shape[1]), axes=(0, 1)
         )
 
-        interpolated_potential: Potential[int, int, int] = {
+        interpolated_potential: FundamentalPositionBasisPotential3d[int, int, int] = {
             "basis": (
-                FundamentalPositionBasis(
+                FundamentalPositionAxis3d(
                     potential["basis"][0].delta_x, interpolated_points.shape[0]
                 ),
-                FundamentalPositionBasis(
+                FundamentalPositionAxis3d(
                     potential["basis"][1].delta_x, interpolated_points.shape[1]
                 ),
-                FundamentalPositionBasis(
+                FundamentalPositionAxis3d(
                     potential["basis"][2].delta_x, interpolated_points.shape[2]
                 ),
             ),

@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, Any, Literal, TypeVar
 import numpy as np
 from matplotlib import pyplot as plt
 from scipy.constants import Boltzmann
-from surface_dynamics_simulation.hopping_matrix.calculation import (
+from surface_dynamics_simulation.hopping_matrix.old_electron_integral import (
     calculate_approximate_electron_integral,
     calculate_electron_integral,
 )
@@ -26,8 +26,8 @@ from surface_dynamics_simulation.tunnelling_simulation.simulation import (
     calculate_hopping_rate,
     simulate_tunnelling_from_matrix,
 )
-from surface_potential_analysis.basis_config.util import (
-    BasisConfigUtil,
+from surface_potential_analysis.basis.util import (
+    Basis3dUtil,
 )
 from surface_potential_analysis.overlap.conversion import (
     convert_overlap_to_momentum_basis,
@@ -37,7 +37,7 @@ from surface_potential_analysis.overlap.interpolation import (
 )
 from surface_potential_analysis.overlap.overlap import (
     FundamentalMomentumOverlap,
-    Overlap,
+    Overlap3d,
     load_overlap,
 )
 from surface_potential_analysis.overlap.plot import (
@@ -57,11 +57,11 @@ if TYPE_CHECKING:
     from surface_dynamics_simulation.tunnelling_matrix.tunnelling_matrix import (
         TunnellingState,
     )
-    from surface_potential_analysis._types import SingleIndexLike
-    from surface_potential_analysis.basis_config.basis_config import (
-    FundamentalMomentumBasisConfig,
-    FundamentalPositionBasisConfig,
-)
+    from surface_potential_analysis._types import SingleIndexLike3d
+    from surface_potential_analysis.basis.basis import (
+        FundamentalMomentumBasis3d,
+        FundamentalPositionBasis3d,
+    )
 
 _L0Inv = TypeVar("_L0Inv", bound=int)
 _L1Inv = TypeVar("_L1Inv", bound=int)
@@ -70,7 +70,7 @@ _L2Inv = TypeVar("_L2Inv", bound=int)
 
 def load_overlap_nickel(
     i: int, j: int, offset: tuple[int, int] = (0, 0)
-) -> Overlap[FundamentalPositionBasisConfig[int, int, int]]:
+) -> Overlap3d[FundamentalPositionBasis3d[int, int, int]]:
     dx0, dx1 = offset
     i, j = (i, j) if i < j else (j, i)
     dx0, dx1 = (dx0 % 3, dx1 % 3) if i < j else ((-dx0) % 3, (-dx1) % 3)
@@ -92,7 +92,7 @@ def get_max_point(
 
 def make_overlap_real_at(
     overlap: FundamentalMomentumOverlap[_L0Inv, _L1Inv, _L2Inv],
-    idx: SingleIndexLike | None = None,
+    idx: SingleIndexLike3d | None = None,
 ) -> FundamentalMomentumOverlap[_L0Inv, _L1Inv, _L2Inv]:
     """
     Shift the phase of the overlap transform such that is it real at point.
@@ -111,7 +111,7 @@ def make_overlap_real_at(
     OverlapMomentum
         A new overlap, which is real at the given point
     """
-    util = BasisConfigUtil(overlap["basis"])
+    util = Basis3dUtil(overlap["basis"])
     idx = int(np.argmax(np.abs(overlap["vector"]))) if idx is None else idx
     idx = util.get_flat_index(idx) if isinstance(idx, tuple) else idx
 
@@ -265,10 +265,10 @@ def plot_fcc_hcp_overlap() -> None:
 
 
 def calculate_max_overlap(
-    overlap: Overlap[FundamentalPositionBasisConfig[_L0Inv, _L1Inv, _L2Inv]],
+    overlap: Overlap3d[FundamentalPositionBasis3d[_L0Inv, _L1Inv, _L2Inv]],
 ) -> tuple[complex, np.ndarray[tuple[Literal[3]], np.dtype[np.float_]]]:
     points = overlap["vector"]
-    util = BasisConfigUtil(overlap["basis"])
+    util = Basis3dUtil(overlap["basis"])
     arg_max = np.argmax(np.abs(points))
     x_point = util.fundamental_x_points[:, arg_max]
 
@@ -276,10 +276,10 @@ def calculate_max_overlap(
 
 
 def calculate_max_overlap_momentum(
-    overlap: Overlap[FundamentalMomentumBasisConfig[_L0Inv, _L1Inv, _L2Inv]],
+    overlap: Overlap3d[FundamentalMomentumBasis3d[_L0Inv, _L1Inv, _L2Inv]],
 ) -> tuple[complex, np.ndarray[tuple[Literal[3]], np.dtype[np.float_]]]:
     points = overlap["vector"]
-    util = BasisConfigUtil(overlap["basis"])
+    util = Basis3dUtil(overlap["basis"])
     arg_max = np.argmax(np.abs(points))
     k_point = util.fundamental_k_points[:, arg_max]
 
@@ -450,7 +450,7 @@ def plot_nickel_isf_slow() -> None:
     grid_shape = (10, 10)
     basis = load_nickel_wavepacket(0)["basis"]
 
-    util = BasisConfigUtil(basis)
+    util = Basis3dUtil(basis)
     dk = util.delta_x0 + util.delta_x1
     dk /= np.linalg.norm(dk)
     dk *= 0.8 * 10**10
@@ -479,7 +479,7 @@ def plot_nickel_isf_fast() -> None:
     grid_shape = (10, 10)
     basis = load_nickel_wavepacket(0)["basis"]
 
-    util = BasisConfigUtil(basis)
+    util = Basis3dUtil(basis)
     dk = util.delta_x0 - util.delta_x1
     dk /= np.linalg.norm(dk)
     dk *= 0.8 * 10**10

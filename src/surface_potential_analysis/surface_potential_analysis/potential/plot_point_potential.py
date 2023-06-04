@@ -10,13 +10,13 @@ if TYPE_CHECKING:
     from matplotlib.figure import Figure
     from matplotlib.lines import Line2D
 
-    from .point_potential import PointPotential
+    from .point_potential import PointPotential3d
 
 _L0Inv = TypeVar("_L0Inv", bound=int)
 
 
 def get_point_potential_xy_locations(
-    potential: PointPotential[_L0Inv],
+    potential: PointPotential3d[_L0Inv],
 ) -> np.ndarray[tuple[Literal[2], int], np.dtype[np.float_]]:
     """
     Get xy locations in a point potential.
@@ -41,7 +41,7 @@ def get_point_potential_xy_locations(
 
 
 def plot_point_potential_location_xy(
-    potential: PointPotential[Any], *, ax: Axes | None = None
+    potential: PointPotential3d[Any], *, ax: Axes | None = None
 ) -> tuple[Figure, Axes, Line2D]:
     """
     Plot the xy locations of a point potential.
@@ -70,7 +70,7 @@ def plot_point_potential_location_xy(
 
 
 def plot_point_potential_all_z(
-    potential: PointPotential[Any], *, ax: Axes | None = None
+    potential: PointPotential3d[Any], *, ax: Axes | None = None
 ) -> tuple[Figure, Axes]:
     """
     Plot the z dependance of all xy locations in the point potential.

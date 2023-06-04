@@ -1,20 +1,23 @@
 from __future__ import annotations
 
 import math
-from typing import TYPE_CHECKING, Any, Literal, TypeVar
+from typing import TYPE_CHECKING, Any, Literal
 
 import numpy as np
 from matplotlib import pyplot as plt
 from scipy.constants import electron_volt
-from surface_potential_analysis.basis.basis import FundamentalPositionBasis
-from surface_potential_analysis.basis.plot import plot_explicit_basis_states_x
-from surface_potential_analysis.basis_config.plot import plot_projected_x_points_2d
-from surface_potential_analysis.basis_config.sho_basis import (
+from surface_potential_analysis.axis.axis import FundamentalPositionAxis3d
+from surface_potential_analysis.axis.plot import plot_explicit_basis_states_x
+from surface_potential_analysis.basis.plot import (
+    plot_fundamental_x_in_plane_projected_2d,
+)
+from surface_potential_analysis.basis.sho_basis import (
     infinate_sho_basis_from_config,
 )
+from surface_potential_analysis.basis.util import BasisUtil
 from surface_potential_analysis.potential import (
-    Potential,
-    UnevenPotential,
+    FundamentalPositionBasisPotential3d,
+    UnevenPotential3d,
     normalize_potential,
 )
 from surface_potential_analysis.potential.plot import (
@@ -43,14 +46,12 @@ from surface_potential_analysis.util.interpolation import (
 )
 
 from .s1_potential import (
-    get_interpolated_nickel_potential,
-    load_cleaned_energy_grid,
-    load_interpolated_john_grid,
-    load_interpolated_potential,
-    load_interpolated_reciprocal_grid,
+    get_interpolated_potential,
+    get_interpolated_potential_john_grid,
+    get_raw_potential_reciprocal_grid,
+    get_truncated_potential,
     load_john_interpolation,
     load_raw_data,
-    load_raw_data_reciprocal_grid,
 )
 from .surface_data import save_figure
 
@@ -60,13 +61,13 @@ if TYPE_CHECKING:
 
 
 def get_nickel_reciprocal_comparison_points_x0x1(
-    potential: Potential[Any, Any, Any]
+    potential: FundamentalPositionBasisPotential3d[Any, Any, Any]
 ) -> dict[str, tuple[tuple[int, int], Literal[2]]]:
-    points = potential["points"]
+    shape = BasisUtil(potential["basis"]).shape
     return {
-        "HCP Site": ((math.floor(points.shape[0] / 3), 0), 2),
-        "Bridge Site": ((math.floor(points.shape[0] / 6), 0), 2),
-        "Top Site": ((0, math.floor(points.shape[0] / 3)), 2),
+        "HCP Site": ((math.floor(shape[0] / 3), 0), 2),
+        "Bridge Site": ((math.floor(shape[0] / 6), 0), 2),
+        "Top Site": ((0, math.floor(shape[0] / 3)), 2),
         "FCC Site": ((0, 0), 2),
     }
 
@@ -88,7 +89,7 @@ def plot_raw_data_points() -> None:
 
 
 def plot_z_direction_energy_data_nickel_reciprocal_points(
-    potential: UnevenPotential[Any, Any, Any], *, ax: Axes | None = None
+    potential: UnevenPotential3d[Any, Any, Any], *, ax: Axes | None = None
 ) -> tuple[Figure, Axes]:
     fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
 
@@ -100,16 +101,13 @@ def plot_z_direction_energy_data_nickel_reciprocal_points(
     return fig, ax
 
 
-_L0Inv = TypeVar("_L0Inv", bound=int)
-_L1Inv = TypeVar("_L1Inv", bound=int)
-_L2Inv = TypeVar("_L2Inv", bound=int)
-
-
 def plot_raw_energy_grid_points() -> None:
-    potential = normalize_potential(load_raw_data_reciprocal_grid())
+    potential = normalize_potential(get_raw_potential_reciprocal_grid())
     mocked_potential = mock_even_potential(potential)
 
-    fig, _, _ = plot_projected_x_points_2d(mocked_potential["basis"], 0, 2)
+    fig, _, _ = plot_fundamental_x_in_plane_projected_2d(
+        mocked_potential["basis"], 0, 2
+    )
     fig.show()
 
     fig, ax = plot_z_direction_energy_data_nickel_reciprocal_points(potential)
@@ -119,7 +117,7 @@ def plot_raw_energy_grid_points() -> None:
     fig, ax, _ani = animate_potential_x0x1(mocked_potential, clim=(0, 0.2e-18))
     fig.show()
 
-    cleaned = load_cleaned_energy_grid()
+    cleaned = get_truncated_potential()
 
     fig, ax = plot_uneven_potential_z_comparison_111(cleaned)
     for ln in ax.lines:
@@ -134,19 +132,19 @@ def plot_raw_energy_grid_points() -> None:
 
 
 def plot_interpolated_energy_grid_points() -> None:
-    potential = load_interpolated_potential()
+    potential = get_interpolated_potential((209, 209, 501))
 
-    fig, ax, _ = plot_projected_x_points_2d(potential["basis"], 0, 2)
+    fig, ax, _ = plot_fundamental_x_in_plane_projected_2d(potential["basis"], 0, 2)
     fig.show()
 
     fig, ax, _ani = animate_potential_x0x1(potential, clim=(0, 2e-19))
 
-    raw_potential = load_raw_data_reciprocal_grid()
+    raw_potential = get_raw_potential_reciprocal_grid()
     mocked_raw_potential = mock_even_potential(raw_potential)
-    plot_projected_x_points_2d(mocked_raw_potential["basis"], 0, 2, ax=ax)
+    plot_fundamental_x_in_plane_projected_2d(mocked_raw_potential["basis"], 0, 2, ax=ax)
     fig.show()
 
-    raw_grid = normalize_potential(load_raw_data_reciprocal_grid())
+    raw_grid = normalize_potential(get_raw_potential_reciprocal_grid())
     raw_grid["basis"] = (
         raw_grid["basis"][0],
         raw_grid["basis"][1],
@@ -165,11 +163,11 @@ def plot_interpolated_energy_grid_points() -> None:
 
 
 def plot_nickel_energy_grid_symmetry() -> None:
-    potential = load_interpolated_potential()
-
-    reflected_potential: Potential[Any, Any, Any] = {
+    potential = get_interpolated_potential((209, 209, 501))
+    shape = BasisUtil(potential["basis"]).shape
+    reflected_potential: FundamentalPositionBasisPotential3d[Any, Any, Any] = {
         "basis": potential["basis"],
-        "points": potential["points"].swapaxes(0, 1),
+        "vector": potential["vector"].reshape(shape).swapaxes(0, 1).reshape(-1),
     }
     fig, _, _ani0 = animate_potential_x0x1(reflected_potential, clim=(0, 2e-19))
     fig.show()
@@ -180,19 +178,19 @@ def plot_nickel_energy_grid_symmetry() -> None:
 
 
 def plot_interpolated_energy_grid_reciprocal() -> None:
-    potential = load_interpolated_reciprocal_grid()
-    points = potential["points"]
+    potential = get_interpolated_potential((209, 209, 501))
+    points = potential["vector"]
     points[points < 0] = np.max(points)
-    potential["points"] = points
+    potential["vector"] = points
 
-    fig, ax, _ = plot_projected_x_points_2d(potential["basis"], 0, 2)
+    fig, ax, _ = plot_fundamental_x_in_plane_projected_2d(potential["basis"], 0, 2)
     fig.show()
 
     fig, ax, _ani = animate_potential_x0x1(potential)
 
-    raw_grid = load_raw_data_reciprocal_grid()
+    raw_grid = get_raw_potential_reciprocal_grid()
     mocked_raw_grid = mock_even_potential(raw_grid)
-    plot_projected_x_points_2d(mocked_raw_grid["basis"], 0, 2, ax=ax)
+    plot_fundamental_x_in_plane_projected_2d(mocked_raw_grid["basis"], 0, 2, ax=ax)
     fig.show()
 
     fig, ax = plot_potential_1d_x2_comparison_111(potential)
@@ -204,7 +202,7 @@ def plot_interpolated_energy_grid_reciprocal() -> None:
 
 
 def get_john_point_locations(
-    grid: UnevenPotential[Any, Any, Any]
+    grid: UnevenPotential3d[Any, Any, Any]
 ) -> dict[str, tuple[int, int]]:
     points = np.array(grid["points"], dtype=float)
     return {
@@ -216,7 +214,7 @@ def get_john_point_locations(
 
 
 def plot_z_direction_energy_data_john(
-    grid: UnevenPotential[Any, Any, Any], *, ax: Axes | None = None
+    grid: UnevenPotential3d[Any, Any, Any], *, ax: Axes | None = None
 ) -> tuple[Figure, Axes]:
     fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
 
@@ -265,7 +263,7 @@ def compare_john_interpolation() -> None:
     save_figure(fig, "raw_interpolation_comparison.png")
 
     fig, ax = plot_z_direction_energy_data_john(john_interpolation)
-    my_interpolation = load_interpolated_potential()
+    my_interpolation = get_interpolated_potential((209, 209, 501))
     fig, ax = plot_potential_1d_x2_comparison_111(my_interpolation)
     ax.set_ylim(0, 0.5e-18)
     fig.show()
@@ -283,7 +281,7 @@ def plot_interpolation_with_sho_wavefunctions() -> None:
     Plotting them alongside the interpolation in the hZ direction will allow us to
     diagnose these issues
     """
-    potential = load_interpolated_potential()
+    potential = get_interpolated_potential((209, 209, 501))
     fig, ax = plt.subplots()
     plot_potential_1d_x2_comparison_111(potential, ax=ax)
     plot_explicit_basis_states_x(
@@ -308,13 +306,14 @@ def plot_interpolation_with_sho_wavefunctions() -> None:
 def plot_potential_minimum_along_diagonal() -> None:
     fig, ax = plt.subplots()
 
-    interpolation = load_interpolated_potential()
-    path = np.array([(x, x) for x in range(np.shape(interpolation["points"])[0])])
+    interpolation = get_interpolated_potential((209, 209, 501))
+    shape = BasisUtil(interpolation["basis"]).shape
+    path = np.array([(x, x) for x in range(shape[0])])
     _, _, line = plot_potential_minimum_along_path(interpolation, path, ax=ax)
     line.set_label("My Interpolation")
 
     john_interpolation = mock_even_potential(load_john_interpolation())
-    path = np.array([(0, y) for y in range(np.shape(john_interpolation["points"])[1])])
+    path = np.array([(0, y) for y in range(shape[1])])
     _, _, line = plot_potential_minimum_along_path(john_interpolation, path, ax=ax)
     line.set_label("John Interpolation")
 
@@ -330,26 +329,22 @@ def plot_potential_minimum_along_diagonal() -> None:
 
 
 def plot_potential_minimum_along_edge() -> None:
-    interpolation = load_interpolated_potential()
+    interpolation = get_interpolated_potential((209, 209, 501))
     fig, ax = plt.subplots()
 
+    shape = BasisUtil(interpolation["basis"]).shape
     # Note we are 'missing' two points here!
-    path = np.array(
-        [
-            (np.shape(interpolation["points"])[0] - (x), x)
-            for x in range(np.shape(interpolation["points"])[0])
-        ]
-    ).T
+    path = np.array([(shape[0] - (x), x) for x in range(shape[0])]).T
     # Add a fake point here so they line up. path[0] is not included in the unit cell
     path[0] = path[2]
     _, _, line = plot_potential_minimum_along_path(interpolation, path, ax=ax)
     line.set_label("diagonal")
 
-    path = np.array([(x, 0) for x in range(np.shape(interpolation["points"])[0])]).T
+    path = np.array([(x, 0) for x in range(shape[0])]).T
     _, _, line = plot_potential_minimum_along_path(interpolation, path, ax=ax)
     line.set_label("x1=0")
 
-    path = np.array([(0, y) for y in range(np.shape(interpolation["points"])[1])]).T
+    path = np.array([(0, y) for y in range(shape[1])]).T
     _, _, line = plot_potential_minimum_along_path(interpolation, path, ax=ax)
     line.set_label("x0=0")
 
@@ -369,36 +364,27 @@ def plot_potential_minimum_along_edge_reciprocal() -> None:
     or is it a problem with the interpolation procedure?.
 
     """
-    potentail = load_raw_data_reciprocal_grid()
-    potentail_mock = mock_even_potential(potentail)
+    potential = get_raw_potential_reciprocal_grid()
+    potential_mock = mock_even_potential(potential)
+    shape = BasisUtil(potential_mock["basis"]).shape
 
-    fig, _, _ = plot_potential_x0x1(potentail_mock, x3_idx=0)
+    fig, _, _ = plot_potential_x0x1(potential_mock, x3_idx=0)
     fig.show()
 
     fig, ax = plt.subplots()
 
-    path = np.array([(x, x) for x in range(potentail_mock["points"].shape[0])]).T
-    _, _, line = plot_potential_minimum_along_path(potentail_mock, path, ax=ax)
+    path = np.array([(x, x) for x in range(shape[0])]).T
+    _, _, line = plot_potential_minimum_along_path(potential_mock, path, ax=ax)
     line.set_label("x0=0")
 
-    path = np.array(
-        [
-            ((np.shape(potentail_mock["points"])[1] - x) // 2, x)
-            for x in range(np.shape(potentail_mock["points"])[0])
-            if x % 2 == 0
-        ]
-    ).T
-    _, _, line = plot_potential_minimum_along_path(potentail_mock, path, ax=ax)
+    path = np.array([((shape[1] - x) // 2, x) for x in range(shape[0]) if x % 2 == 0]).T
+    _, _, line = plot_potential_minimum_along_path(potential_mock, path, ax=ax)
     line.set_label("x1=0")
 
     path = np.array(
-        [
-            (y // 2, (np.shape(potentail_mock["points"])[1] - y))
-            for y in range(np.shape(potentail_mock["points"])[1] + 1)
-            if y % 2 == 0
-        ][1:]
+        [(y // 2, (shape[1] - y)) for y in range(shape[1] + 1) if y % 2 == 0][1:]
     ).T
-    _, _, line = plot_potential_minimum_along_path(potentail_mock, path, ax=ax)
+    _, _, line = plot_potential_minimum_along_path(potential_mock, path, ax=ax)
     line.set_label("diagonal")
 
     ax.legend()
@@ -417,8 +403,9 @@ def test_potential_fourier_transform() -> None:
     # We also expect the off center to be equal,
     # but the irrational unit vectors prevent us from testing this
 
-    interpolation = load_interpolated_potential()
-    fft_me = np.fft.ifft2(interpolation["points"], axes=(0, 1))
+    interpolation = get_interpolated_potential((209, 209, 501))
+    shape = BasisUtil(interpolation["basis"]).shape
+    fft_me = np.fft.ifft2(interpolation["vector"].reshape(shape), axes=(0, 1))
     ftt_origin_me = fft_me[0, 0, np.argmin(np.abs(interpolation["basis"][2]))]
 
     print(ftt_origin_me, np.min(np.abs(interpolation["basis"][2])))  # noqa: T201
@@ -432,8 +419,11 @@ def test_potential_fourier_transform() -> None:
     fix_factor = x0_norm * x1_norm / (denom)
     print(ftt_origin_me / fix_factor)  # noqa: T201
 
-    john_grid_interpolation = load_interpolated_john_grid()
-    fft_john = np.fft.ifft2(john_grid_interpolation["points"], axes=(0, 1))
+    john_grid_interpolation = get_interpolated_potential_john_grid()
+    shape = BasisUtil(john_grid_interpolation["basis"]).shape
+    fft_john = np.fft.ifft2(
+        john_grid_interpolation["vector"].reshape(shape), axes=(0, 1)
+    )
     ftt_origin_john = fft_john[
         0, 0, np.argmin(np.abs(john_grid_interpolation["basis"][2]))
     ]
@@ -472,11 +462,13 @@ def test_symmetry_point_interpolation() -> None:
 
 
 def plot_interpolated_potential_difference() -> None:
-    potential0 = get_interpolated_nickel_potential((2 * 23, 2 * 23, 500))
-    potential1 = get_interpolated_nickel_potential((10 * 23, 10 * 23, 500))
-    potential1_0_basis: Potential[int, int, int] = {
+    shape_0 = (2 * 23, 2 * 23, 500)
+    shape_1 = (10 * 23, 10 * 23, 500)
+    potential0 = get_interpolated_potential(shape_0)
+    potential1 = get_interpolated_potential(shape_1)
+    potential1_0_basis: FundamentalPositionBasisPotential3d[int, int, int] = {
         "basis": potential0["basis"],
-        "points": potential1["points"][::5, ::5, :],
+        "vector": potential1["vector"].reshape(shape_1)[::5, ::5, :].ravel(),
     }
 
     fig, _, _ = plot_potential_difference_2d_x(
@@ -484,22 +476,22 @@ def plot_interpolated_potential_difference() -> None:
     )
     fig.show()
     np.testing.assert_array_almost_equal(
-        potential0["points"], potential1_0_basis["points"]
+        potential0["vector"], potential1_0_basis["vector"]
     )
     # Max absolute difference: 5.42341872e-31
     # Max relative difference: 6.79388726e-14
     # i.e. we see no difference in the potential (as expected)
 
-    potential0_1_basis: Potential[int, int, int] = {
+    potential0_1_basis: FundamentalPositionBasisPotential3d[int, int, int] = {
         "basis": potential0["basis"],
-        "points": interpolate_points_rfftn(  # type: ignore[typeddict-item]
-            potential0["points"],  # type: ignore[arg-type]
-            s=(potential1["points"].shape[0], potential1["points"].shape[1]),
+        "vector": interpolate_points_rfftn(  # type: ignore[typeddict-item]
+            potential0["vector"].reshape(shape_0),  # type: ignore[arg-type]
+            s=(shape_1[0], shape_1[1]),
             axes=(0, 1),
         ),
     }
     np.testing.assert_array_almost_equal(
-        potential1["points"], potential0_1_basis["points"]
+        potential1["vector"], potential0_1_basis["vector"]
     )
     # Max absolute difference: 4.17565566e-21
     # Max relative difference: 1.33803642
@@ -507,7 +499,8 @@ def plot_interpolated_potential_difference() -> None:
     # (as expected, since the larger potential is more 'smooth')
 
     np.testing.assert_array_almost_equal(
-        potential0["points"], potential0_1_basis["points"][::5, ::5, :]
+        potential0["vector"],
+        potential0_1_basis["vector"].reshape(shape_1)[::5, ::5, :].ravel(),
     )
     # Max absolute difference: 6.24892436e-23
     # Max relative difference: 0.23842189
@@ -516,8 +509,8 @@ def plot_interpolated_potential_difference() -> None:
 
 
 def plot_interpolated_potential_difference_rfft() -> None:
-    potential0 = get_interpolated_nickel_potential((2 * 23, 2 * 23, 500))
-    potential0_1_basis: Potential[int, int, int] = {
+    potential0 = get_interpolated_potential((2 * 23, 2 * 23, 500))
+    potential0_1_basis: FundamentalPositionBasisPotential3d[int, int, int] = {
         "basis": potential0["basis"],
         "points": interpolate_points_rfftn(  # type: ignore[typeddict-item]
             potential0["points"],  # type: ignore[arg-type]
@@ -530,7 +523,7 @@ def plot_interpolated_potential_difference_rfft() -> None:
     )
     fig.show()
 
-    potential0_1_basis1: Potential[int, int, int] = {
+    potential0_1_basis1: FundamentalPositionBasisPotential3d[int, int, int] = {
         "basis": potential0["basis"],
         "points": np.real(
             interpolate_points_fftn(  # type: ignore[typeddict-item]
@@ -554,63 +547,68 @@ def plot_interpolated_potential_difference_rfft() -> None:
 
 
 def compare_potential_rfft() -> None:
-    potential0 = get_interpolated_nickel_potential((2 * 23, 2 * 23, 500))
-    potential1 = get_interpolated_nickel_potential((10 * 23, 10 * 23, 500))
+    shape_0 = (2 * 23, 2 * 23, 500)
+    shape_1 = (10 * 23, 10 * 23, 500)
 
-    potential0_1_basis: Potential[int, int, int] = {
+    potential0 = get_interpolated_potential(shape_0)
+    potential1 = get_interpolated_potential(shape_1)
+
+    potential0_1_basis: FundamentalPositionBasisPotential3d[int, int, int] = {
         "basis": potential0["basis"],
-        "points": interpolate_points_rfft(  # type: ignore[typeddict-item]
+        "vector": interpolate_points_rfft(  # type: ignore[typeddict-item]
             interpolate_points_rfft(
-                potential0["points"],  # type: ignore[arg-type]
-                potential1["points"].shape[0],
+                potential0["vector"].reshape(shape_1),  # type: ignore[arg-type]
+                shape_1[0],
                 axis=0,
             ),
-            potential1["points"].shape[1],
+            shape_1[1],
             axis=1,
         ),
     }
     np.testing.assert_array_almost_equal(
-        potential1["points"], potential0_1_basis["points"]
+        potential1["vector"], potential0_1_basis["vector"]
     )
     # Max absolute difference: 4.17415007e-21
     # Max relative difference: 1.44881035
 
     np.testing.assert_array_almost_equal(
-        potential0["points"], potential0_1_basis["points"][::5, ::5, :]
+        potential0["vector"], potential0_1_basis["vector"].reshape(shape_1)[::5, ::5, :]
     )
     # Max absolute difference: 1.04279313e-22
     # Max relative difference: 0.39221331
 
-    potential0_1_basis2: Potential[int, int, int] = {
+    potential0_1_basis2: FundamentalPositionBasisPotential3d[int, int, int] = {
         "basis": potential0["basis"],
-        "points": interpolate_points_rfft(
+        "vector": interpolate_points_rfft(
             interpolate_points_rfft(
-                potential0["points"] / electron_volt,
-                potential1["points"].shape[0],
+                potential0["vector"].reshape(shape_0) / electron_volt,
+                shape_1[0],
                 axis=0,
             ),
-            potential1["points"].shape[1],
+            shape_1[1],
             axis=1,
         )
         * electron_volt,
     }
 
     np.testing.assert_array_almost_equal(
-        potential0["points"], potential0_1_basis2["points"][::5, ::5, :]
+        potential0["vector"],
+        potential0_1_basis2["vector"].reshape(shape_1)[::5, ::5, :],
     )
     # Max absolute difference: 1.04279313e-22
     # Max relative difference: 0.39221331
 
-    potential0_1_basis3: Potential[int, int, int] = {
+    potential0_1_basis3: FundamentalPositionBasisPotential3d[int, int, int] = {
         "basis": potential0["basis"],
         "points": interpolate_points_fftn(  # type: ignore[typeddict-item]
             potential0["points"],  # type: ignore[arg-type]
-            s=(potential1["points"].shape[0], potential1["points"].shape[1]),
+            s=(shape_1[0], shape_1[1]),
             axes=(0, 1),
         ),
     }
     np.testing.assert_array_almost_equal(
-        potential0["points"], potential0_1_basis3["points"][::5, ::5, :]
+        potential0["vector"],
+        potential0_1_basis3["vector"].reshape(shape_1)[::5, ::5, :],
     )
     # Max absolute difference: 7.48043224e-32
     # Max relative difference: 4.33468487e-13
@@ -618,21 +616,28 @@ def compare_potential_rfft() -> None:
 
 
 def analyze_interpolated_potential_difference_momentum() -> None:
-    potential0 = get_interpolated_nickel_potential((2 * 23, 2 * 23, 100))
-    potential1 = get_interpolated_nickel_potential((10 * 23, 10 * 23, 100))
-    potential1_0_basis: Potential[int, int, int] = {
+    shape_0 = (2 * 23, 2 * 23, 100)
+    shape_1 = (10 * 23, 10 * 23, 100)
+
+    potential0 = get_interpolated_potential(shape_0)
+    potential1 = get_interpolated_potential(shape_1)
+    potential1_0_basis: FundamentalPositionBasisPotential3d[int, int, int] = {
         "basis": potential0["basis"],
-        "points": potential1["points"][::5, ::5, :],
+        "vector": potential1["vector"].reshape(shape_1)[::5, ::5, :].ravel(),
     }
 
-    ft_points0 = np.fft.fft2(potential0["points"], axes=(0, 1), norm="forward")
-    ft_points1 = np.fft.fft2(potential1_0_basis["points"], axes=(0, 1), norm="forward")
+    ft_points0 = np.fft.fft2(
+        potential0["vector"].reshape(shape_0), axes=(0, 1), norm="forward"
+    )
+    ft_points1 = np.fft.fft2(
+        potential1_0_basis["vector"].reshape(shape_0), axes=(0, 1), norm="forward"
+    )
     np.testing.assert_array_almost_equal(ft_points0, ft_points1)
     # Max absolute difference: 6.31088724e-30
     # Max relative difference: 4.83872206e-05
 
     ft_points1_original = pad_ft_points(
-        np.fft.fft2(potential1["points"], axes=(0, 1), norm="forward"),
+        np.fft.fft2(potential1["vector"].reshape(shape_1), axes=(0, 1), norm="forward"),
         s=(ft_points0.shape[0], ft_points0.shape[1]),
         axes=(0, 1),
     )
@@ -649,23 +654,25 @@ def analyze_interpolated_potential_difference_momentum() -> None:
 
 
 def plot_potential_difference_very_large_resolution() -> None:
-    p0 = get_interpolated_nickel_potential((100, 100, 250))
-    p1 = get_interpolated_nickel_potential((250, 250, 250))
-    potential0: Potential[int, int, int] = {
+    shape_0 = (100, 100, 250)
+    shape_1 = (250, 250, 250)
+    p0 = get_interpolated_potential(shape_0)
+    p1 = get_interpolated_potential(shape_1)
+    potential0: FundamentalPositionBasisPotential3d[int, int, int] = {
         "basis": (
-            FundamentalPositionBasis(p0["basis"][0].delta_x, 50),
-            FundamentalPositionBasis(p0["basis"][1].delta_x, 50),
+            FundamentalPositionAxis3d(p0["basis"][0].delta_x, 50),
+            FundamentalPositionAxis3d(p0["basis"][1].delta_x, 50),
             p0["basis"][2],
         ),
-        "points": p0["points"][::2, ::2, :],
+        "vector": p0["vector"].reshape(shape_0)[::2, ::2, :].ravel(),
     }
-    potential1: Potential[int, int, int] = {
+    potential1: FundamentalPositionBasisPotential3d[int, int, int] = {
         "basis": potential0["basis"],
-        "points": p1["points"][::5, ::5, :],
+        "vector": p1["vector"].reshape(shape_1)[::5, ::5, :].ravel(),
     }
     a_max = np.unravel_index(
-        np.argmax(np.abs(potential1["points"] - potential0["points"])),
-        potential0["points"].shape,
+        np.argmax(np.abs(potential1["vector"] - potential0["vector"])),
+        (50, 50, 250),
     )
     fig, _, _ = plot_potential_difference_2d_x(potential0, potential1, int(a_max[2]), 2)
     fig.show()

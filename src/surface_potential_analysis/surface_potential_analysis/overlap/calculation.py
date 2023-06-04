@@ -14,16 +14,16 @@ from surface_potential_analysis.wavepacket.eigenstate_conversion import (
 )
 
 if TYPE_CHECKING:
-    from surface_potential_analysis.basis_config.basis_config import (
-        BasisConfig,
-        FundamentalMomentumBasisConfig,
-        FundamentalPositionBasisConfig,
+    from surface_potential_analysis.basis.basis import (
+        Basis3d,
+        FundamentalMomentumBasis3d,
+        FundamentalPositionBasis3d,
     )
-    from surface_potential_analysis.eigenstate.eigenstate import Eigenstate
-    from surface_potential_analysis.overlap.overlap import Overlap
-    from surface_potential_analysis.wavepacket import Wavepacket
+    from surface_potential_analysis.eigenstate.eigenstate import Eigenstate3d
+    from surface_potential_analysis.overlap.overlap import Overlap3d
+    from surface_potential_analysis.wavepacket import Wavepacket3dWith2dSamples
 
-    _BC0Inv = TypeVar("_BC0Inv", bound=BasisConfig[Any, Any, Any])
+    _B3d0Inv = TypeVar("_B3d0Inv", bound=Basis3d[Any, Any, Any])
 
 _L0Inv = TypeVar("_L0Inv", bound=int)
 _L1Inv = TypeVar("_L1Inv", bound=int)
@@ -34,20 +34,20 @@ _NS1Inv = TypeVar("_NS1Inv", bound=int)
 
 
 def calculate_overlap_momentum_eigenstate(
-    eigenstate_0: Eigenstate[FundamentalMomentumBasisConfig[_L0Inv, _L1Inv, _L2Inv]],
-    eigenstate_1: Eigenstate[FundamentalMomentumBasisConfig[_L0Inv, _L1Inv, _L2Inv]],
-) -> Overlap[FundamentalPositionBasisConfig[_L0Inv, _L1Inv, _L2Inv]]:
+    eigenstate_0: Eigenstate3d[FundamentalMomentumBasis3d[_L0Inv, _L1Inv, _L2Inv]],
+    eigenstate_1: Eigenstate3d[FundamentalMomentumBasis3d[_L0Inv, _L1Inv, _L2Inv]],
+) -> Overlap3d[FundamentalPositionBasis3d[_L0Inv, _L1Inv, _L2Inv]]:
     """
     Calculate the overlap between two eigenstates in position basis.
 
     Parameters
     ----------
-    eigenstate_0 : Eigenstate[MomentumBasisConfig[_L0Inv,_L1Inv, _L2Inv]]
-    eigenstate_1 : Eigenstate[MomentumBasisConfig[_L0Inv,_L1Inv, _L2Inv]]
+    eigenstate_0 : Eigenstate[MomentumBasis3d[_L0Inv,_L1Inv, _L2Inv]]
+    eigenstate_1 : Eigenstate[MomentumBasis3d[_L0Inv,_L1Inv, _L2Inv]]
 
     Returns
     -------
-    Overlap[PositionBasisConfig[_L0Inv,_L1Inv, _L2Inv]]
+    Overlap[PositionBasis3d[_L0Inv,_L1Inv, _L2Inv]]
     """
     converted_1 = convert_momentum_basis_eigenstate_to_position_basis(eigenstate_0)
     converted_2 = convert_momentum_basis_eigenstate_to_position_basis(eigenstate_1)
@@ -58,28 +58,28 @@ def calculate_overlap_momentum_eigenstate(
 
 @timed
 def calculate_wavepacket_overlap(
-    wavepacket_0: Wavepacket[
+    wavepacket_0: Wavepacket3dWith2dSamples[
         _NS0Inv,
         _NS1Inv,
-        FundamentalMomentumBasisConfig[_L0Inv, _L1Inv, _L2Inv],
+        FundamentalMomentumBasis3d[_L0Inv, _L1Inv, _L2Inv],
     ],
-    wavepacket_1: Wavepacket[
+    wavepacket_1: Wavepacket3dWith2dSamples[
         _NS0Inv,
         _NS1Inv,
-        FundamentalMomentumBasisConfig[_L0Inv, _L1Inv, _L2Inv],
+        FundamentalMomentumBasis3d[_L0Inv, _L1Inv, _L2Inv],
     ],
-) -> Overlap[FundamentalPositionBasisConfig[int, int, _L2Inv]]:
+) -> Overlap3d[FundamentalPositionBasis3d[int, int, _L2Inv]]:
     """
     Given two wavepackets in (the same) momentum basis calculate the overlap factor.
 
     Parameters
     ----------
-    wavepacket_0 : Wavepacket[_NS0Inv, _NS1Inv, BasisConfig[MomentumBasis[_L0Inv], MomentumBasis[_L1Inv], _BX0Inv]]
-    wavepacket_1 : Wavepacket[_NS0Inv, _NS1Inv, BasisConfig[MomentumBasis[_L0Inv], MomentumBasis[_L1Inv], _BX0Inv]]
+    wavepacket_0 : Wavepacket[_NS0Inv, _NS1Inv, Basis3d[MomentumBasis[_L0Inv], MomentumBasis[_L1Inv], _A3d0Inv]]
+    wavepacket_1 : Wavepacket[_NS0Inv, _NS1Inv, Basis3d[MomentumBasis[_L0Inv], MomentumBasis[_L1Inv], _A3d0Inv]]
 
     Returns
     -------
-    Overlap[BasisConfig[PositionBasis[int], PositionBasis[int], _BX0Inv]]
+    Overlap[Basis3d[PositionBasis[int], PositionBasis[int], _A3d0Inv]]
     """
     eigenstate_0 = convert_momentum_basis_eigenstate_to_position_basis(
         unfurl_wavepacket(wavepacket_0)
@@ -93,20 +93,20 @@ def calculate_wavepacket_overlap(
 
 
 def calculate_overlap_eigenstate(
-    eigenstate_0: Eigenstate[_BC0Inv],
-    eigenstate_1: Eigenstate[_BC0Inv],
-) -> Overlap[FundamentalPositionBasisConfig[int, int, int]]:
+    eigenstate_0: Eigenstate3d[_B3d0Inv],
+    eigenstate_1: Eigenstate3d[_B3d0Inv],
+) -> Overlap3d[FundamentalPositionBasis3d[int, int, int]]:
     """
     Calculate the overlap between two eigenstates in position basis.
 
     Parameters
     ----------
-    eigenstate_0 : Eigenstate[_BC0Inv]
-    eigenstate_1 : Eigenstate[_BC0Inv]
+    eigenstate_0 : Eigenstate[_B3d0Inv]
+    eigenstate_1 : Eigenstate[_B3d0Inv]
 
     Returns
     -------
-    Overlap[PositionBasisConfig[int, int, int]]
+    Overlap[PositionBasis3d[int, int, int]]
     """
     converted_0 = convert_eigenstate_to_position_basis(eigenstate_0)  # type: ignore[arg-type,var-annotated]
     converted_1 = convert_eigenstate_to_position_basis(eigenstate_1)  # type: ignore[arg-type,var-annotated]

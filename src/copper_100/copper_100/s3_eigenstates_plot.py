@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, Any
 
 import matplotlib.pyplot as plt
 import numpy as np
-from surface_potential_analysis.basis_config.util import BasisConfigUtil
+from surface_potential_analysis.basis.util import Basis3dUtil
 from surface_potential_analysis.eigenstate.eigenstate_collection import (
     load_eigenstate_collection,
     select_eigenstate,
@@ -26,7 +26,7 @@ if TYPE_CHECKING:
     from matplotlib.axes import Axes
     from matplotlib.figure import Figure
     from matplotlib.lines import Line2D
-    from surface_potential_analysis.eigenstate.eigenstate import Eigenstate
+    from surface_potential_analysis.eigenstate.eigenstate import Eigenstate3d
     from surface_potential_analysis.util.util import Measure
 
 
@@ -159,12 +159,12 @@ def plot_lowest_eigenstate_3d_xy() -> None:
 
 
 def plot_eigenstate_z_hollow_site(
-    eigenstate: Eigenstate[Any],
+    eigenstate: Eigenstate3d[Any],
     *,
     ax: Axes | None = None,
     measure: Measure = "abs",
 ) -> tuple[Figure, Axes, Line2D]:
-    util = BasisConfigUtil(eigenstate["basis"])
+    util = Basis3dUtil(eigenstate["basis"])
     x2_points = np.arange(util.n2)
     points = np.array([(util.n0 // 2, util.n1 // 2, z) for z in x2_points]).T
 
@@ -193,12 +193,12 @@ def analyze_eigenvector_convergence_z() -> None:
 
 
 def plot_eigenstate_through_bridge(
-    eigenstate: Eigenstate[Any],
+    eigenstate: Eigenstate3d[Any],
     *,
     ax: Axes | None = None,
     measure: Measure = "abs",
 ) -> tuple[Figure, Axes, Line2D]:
-    util = BasisConfigUtil(eigenstate["basis"])
+    util = Basis3dUtil(eigenstate["basis"])
     x0_points = np.arange(util.n0)
     points = np.array([(x, util.n1 // 2, 0) for x in x0_points]).T
 

@@ -5,11 +5,11 @@ from typing import TYPE_CHECKING, Any
 
 import numpy as np
 
-from surface_potential_analysis.basis_config.build import (
-    build_position_basis_config_from_resolution,
+from surface_potential_analysis.basis.build import (
+    position_basis_3d_from_resolution,
 )
-from surface_potential_analysis.basis_config.util import (
-    BasisConfigUtil,
+from surface_potential_analysis.basis.util import (
+    Basis3dUtil,
 )
 from surface_potential_analysis.overlap.conversion import (
     convert_overlap_to_momentum_basis,
@@ -29,11 +29,11 @@ class OverlapTest(unittest.TestCase):
     def test_overlap_interpolation(self) -> None:
         shape = (10, 10, 10)
         overlap: FundamentalPositionOverlap[Any, Any, Any] = {
-            "basis": build_position_basis_config_from_resolution(shape),
+            "basis": position_basis_3d_from_resolution(shape),
             "vector": np.array(rng.random(np.prod(shape)), dtype=complex),
         }
 
-        util = BasisConfigUtil(overlap["basis"])
+        util = Basis3dUtil(overlap["basis"])
         overlap_momentum = convert_overlap_to_momentum_basis(overlap)
         expected = overlap_momentum["vector"]
         actual = get_overlap_momentum_interpolator(overlap)(util.k_points)  # type: ignore[var-annotated]
@@ -43,11 +43,11 @@ class OverlapTest(unittest.TestCase):
     def test_overlap_interpolation_fractions(self) -> None:
         shape = (10, 10, 10)
         overlap: FundamentalPositionOverlap[Any, Any, Any] = {
-            "basis": build_position_basis_config_from_resolution(shape),
+            "basis": position_basis_3d_from_resolution(shape),
             "vector": np.array(rng.random(np.prod(shape)), dtype=complex),
         }
 
-        util = BasisConfigUtil(overlap["basis"])
+        util = Basis3dUtil(overlap["basis"])
         overlap_momentum = convert_overlap_to_momentum_basis(overlap)
         expected = overlap_momentum["vector"]
         actual = get_overlap_momentum_interpolator_k_fractions(overlap)(util.nk_points)

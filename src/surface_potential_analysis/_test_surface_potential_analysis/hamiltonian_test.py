@@ -4,14 +4,13 @@ import unittest
 
 import numpy as np
 
-from surface_potential_analysis.basis.basis import FundamentalMomentumBasis
+from _test_surface_potential_analysis.utils import convert_explicit_basis_x2
+from surface_potential_analysis.axis.axis import FundamentalMomentumAxis3d
 from surface_potential_analysis.hamiltonian.hamiltonian import (
-    FundamentalMomentumBasisStackedHamiltonian,
+    FundamentalMomentumBasisStackedHamiltonian3d,
     flatten_hamiltonian,
     stack_hamiltonian,
 )
-
-from .utils import convert_explicit_basis_x2
 
 rng = np.random.default_rng()
 
@@ -19,12 +18,12 @@ rng = np.random.default_rng()
 class HamiltonianTest(unittest.TestCase):
     def test_flatten_hamiltonian(self) -> None:
         shape = rng.integers(1, 10, size=3)
-        hamiltonian: FundamentalMomentumBasisStackedHamiltonian[int, int, int] = {
+        hamiltonian: FundamentalMomentumBasisStackedHamiltonian3d[int, int, int] = {
             "array": rng.random((*shape, *shape)),
             "basis": (
-                FundamentalMomentumBasis(np.array([1.0, 0, 0]), shape.item(0)),
-                FundamentalMomentumBasis(np.array([0, 1.0, 0]), shape.item(1)),
-                FundamentalMomentumBasis(np.array([0, 0, 1.0]), shape.item(2)),
+                FundamentalMomentumAxis3d(np.array([1.0, 0, 0]), shape.item(0)),
+                FundamentalMomentumAxis3d(np.array([0, 1.0, 0]), shape.item(1)),
+                FundamentalMomentumAxis3d(np.array([0, 0, 1.0]), shape.item(2)),
             ),
         }
         actual = flatten_hamiltonian(hamiltonian)
@@ -41,12 +40,12 @@ class HamiltonianTest(unittest.TestCase):
 
     def test_stack_hamiltonian(self) -> None:
         shape = rng.integers(1, 10, size=3)
-        hamiltonian: FundamentalMomentumBasisStackedHamiltonian[int, int, int] = {
+        hamiltonian: FundamentalMomentumBasisStackedHamiltonian3d[int, int, int] = {
             "array": rng.random((*shape, *shape)),
             "basis": (
-                FundamentalMomentumBasis(np.array([1.0, 0, 0]), shape.item(0)),
-                FundamentalMomentumBasis(np.array([0, 1.0, 0]), shape.item(1)),
-                FundamentalMomentumBasis(np.array([0, 0, 1.0]), shape.item(2)),
+                FundamentalMomentumAxis3d(np.array([1.0, 0, 0]), shape.item(0)),
+                FundamentalMomentumAxis3d(np.array([0, 1.0, 0]), shape.item(1)),
+                FundamentalMomentumAxis3d(np.array([0, 0, 1.0]), shape.item(2)),
             ),
         }
 
