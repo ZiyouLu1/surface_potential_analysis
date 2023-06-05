@@ -30,6 +30,7 @@ class Eigenstate(TypedDict, Generic[_B0Inv]):
 
     basis: _B0Inv
     vector: np.ndarray[tuple[int], np.dtype[np.complex_]]
+    bloch_phase: np.ndarray[tuple[int], np.dtype[np.float_]]
 
 
 _B1d0Inv = TypeVar("_B1d0Inv", bound=Basis1d[Any])
@@ -37,12 +38,9 @@ _B2d0Inv = TypeVar("_B2d0Inv", bound=Basis2d[Any, Any])
 _B3d0Inv = TypeVar("_B3d0Inv", bound=Basis3d[Any, Any, Any])
 
 
-class Eigenstate1d(Eigenstate[_B1d0Inv]):
-    """represents an eigenstate in a 1d basis."""
+Eigenstate1d = Eigenstate[_B1d0Inv]
 
-
-class Eigenstate2d(Eigenstate[_B2d0Inv]):
-    """represents an eigenstate in a 2d basis."""
+Eigenstate2d = Eigenstate[_B2d0Inv]
 
 
 Eigenstate3d = Eigenstate[_B3d0Inv]

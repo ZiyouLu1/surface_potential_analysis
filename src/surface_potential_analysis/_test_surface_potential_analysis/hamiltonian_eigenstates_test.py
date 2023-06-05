@@ -43,7 +43,14 @@ class HamiltonianEigenstates(unittest.TestCase):
             vector[i] = np.exp(1j * 2 * np.pi * rng.random())
 
             actual.append(
-                calculate_energy(hamiltonian, {"basis": basis, "vector": vector})
+                calculate_energy(
+                    hamiltonian,
+                    {
+                        "basis": basis,
+                        "vector": vector,
+                        "bloch_phase": np.array([0, 0, 0]),
+                    },
+                )
             )
 
         np.testing.assert_allclose(energies, actual)

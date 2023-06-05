@@ -10,7 +10,7 @@ from surface_potential_analysis.basis.util import (
     Basis3dUtil,
     wrap_index_around_origin_x01,
 )
-from surface_potential_analysis.wavepacket.eigenstate_conversion import (
+from surface_potential_analysis.wavepacket.wavepacket import (
     get_unfurled_basis,
 )
 

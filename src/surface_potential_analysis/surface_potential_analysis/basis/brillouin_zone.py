@@ -267,26 +267,12 @@ def decrement_brillouin_zone_3d(
         new_distances = get_bragg_plane_distance(bragg_point, coordinate_points)  # type: ignore[arg-type,var-annotated]
         is_closer = np.logical_and(new_distances > tolerance, new_distances < distances)
         closest_points[is_closer] = i + 1
-        if np.sometrue(is_closer):
-            print(bragg_point)
-            print(is_closer.shape, closest_points.shape)
-            print(tuple(out[:, is_closer]))
-            print(new_distances[is_closer])
         distances[is_closer] = new_distances[is_closer]
 
     bragg_point_index = get_all_brag_point_index(basis, n_bands=1)
     for i, bragg_point in enumerate(np.array(bragg_point_index).T):
         should_fold = closest_points == i
         folded = fold_point_in_bragg_plane(bragg_point, tuple(out[:, should_fold]))  # type: ignore[arg-type,var-annotated]
-        if np.sometrue(should_fold):
-            print(
-                i,
-                bragg_point,
-                tuple(out[:, should_fold]),
-                (out[0, should_fold], out[1, should_fold], out[2, should_fold]),
-                folded,
-                out.shape,
-            )
         out[:, should_fold] = folded
 
     if isinstance(coordinate[0], np.ndarray):

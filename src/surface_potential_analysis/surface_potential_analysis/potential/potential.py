@@ -188,7 +188,7 @@ def load_uneven_potential_json(
         delta_x0: list[int]
         delta_x1: list[int]
         z_points: list[int]
-        points: list[list[list[float]]]
+        points: list[float]
 
     with path.open("r") as f:
         out: SurfacePotentialRaw = json.load(f)
@@ -200,7 +200,7 @@ def load_uneven_potential_json(
                 FundamentalPositionAxis3d(np.array(out["delta_x1"]), points.shape[1]),
                 np.array(out["z_points"]),
             ),
-            "points": points,
+            "vector": points,
         }
 
 

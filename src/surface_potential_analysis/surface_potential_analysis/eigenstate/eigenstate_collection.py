@@ -150,4 +150,5 @@ def select_eigenstate(
     return {
         "basis": collection["basis"],
         "vector": collection["vectors"][bloch_idx, band_idx],
+        "bloch_phase": collection["bloch_phases"][bloch_idx],
     }

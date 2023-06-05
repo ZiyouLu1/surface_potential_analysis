@@ -156,9 +156,24 @@ class BasisUtil(Generic[_B0Inv]):
         )
         return tuple(nki.ravel() for nki in nk_mesh)
 
+    @overload
+    def get_k_points_at_index(
+        self, idx: SingleIndexLike
+    ) -> np.ndarray[tuple[int], np.dtype[np.float_]]:
+        ...
+
+    @overload
     def get_k_points_at_index(
         self, idx: ArrayIndexLike[_S0Inv]
     ) -> np.ndarray[tuple[int, Unpack[_S0Inv]], np.dtype[np.float_]]:
+        ...
+
+    def get_k_points_at_index(
+        self, idx: ArrayIndexLike[_S0Inv] | SingleIndexLike
+    ) -> (
+        np.ndarray[tuple[int, Unpack[_S0Inv]], np.dtype[np.float_]]
+        | np.ndarray[tuple[int], np.dtype[np.float_]]
+    ):
         nk_points = idx if isinstance(idx, tuple) else self.get_stacked_index(idx)
         return np.tensordot(self.dk, nk_points, axes=(0, 0))  # type: ignore[no-any-return]
 
@@ -363,11 +378,26 @@ class Basis3dUtil(BasisUtil[_B3d0Inv]):
     def fundamental_nk_points(self) -> ArrayStackedIndexLike3d[tuple[int]]:
         return super().fundamental_nk_points  # type: ignore[return-value]
 
-    # Liskov substitution principle invalidated as we are not able to specify
-    # that this is only a supertype of the BasisUtil in 3d
-    def get_k_points_at_index(  # type: ignore[override]
+    @overload  # type: ignore[override]
+    def get_k_points_at_index(
+        self, idx: SingleIndexLike3d
+    ) -> np.ndarray[tuple[Literal[3]], np.dtype[np.float_]]:
+        ...
+
+    @overload
+    def get_k_points_at_index(
         self, idx: ArrayIndexLike3d[_S0Inv]
     ) -> np.ndarray[tuple[Literal[3], Unpack[_S0Inv]], np.dtype[np.float_]]:
+        ...
+
+    # Liskov substitution principle invalidated as we are not able to specify
+    # that this is only a supertype of the BasisUtil in 3d
+    def get_k_points_at_index(
+        self, idx: SingleIndexLike3d | ArrayIndexLike3d[_S0Inv]
+    ) -> (
+        np.ndarray[tuple[Literal[3], Unpack[_S0Inv]], np.dtype[np.float_]]
+        | np.ndarray[tuple[Literal[3]], np.dtype[np.float_]]
+    ):
         return super().get_k_points_at_index(idx)  # type: ignore[return-value]
 
     @property

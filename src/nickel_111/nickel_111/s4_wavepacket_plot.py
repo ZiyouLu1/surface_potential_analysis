@@ -20,9 +20,6 @@ from surface_potential_analysis.eigenstate.plot import (
     plot_eigenstate_x0x1,
 )
 from surface_potential_analysis.util.util import slice_along_axis
-from surface_potential_analysis.wavepacket.eigenstate_conversion import (
-    get_unfurled_basis,
-)
 from surface_potential_analysis.wavepacket.normalization import (
     get_wavepacket_two_points,
 )
@@ -35,6 +32,7 @@ from surface_potential_analysis.wavepacket.plot import (
 )
 from surface_potential_analysis.wavepacket.wavepacket import (
     get_eigenstate,
+    get_unfurled_basis,
     get_wavepacket_sample_fractions,
     load_wavepacket,
 )
@@ -92,7 +90,7 @@ def flaten_eigenstate_x(
         eigenstate["basis"][1],
         axis_as_single_point_axis(eigenstate["basis"][2]),
     )
-    return {"basis": basis, "vector": flattened}
+    return {"basis": basis, "vector": flattened, "bloch_phase": np.array([0, 0, 0])}
 
 
 def plot_nickel_wavepacket_points() -> None:

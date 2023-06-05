@@ -57,6 +57,7 @@ def _get_random_sho_eigenstate(
             x2_basis,
         ),
         "vector": vector,
+        "bloch_phase": np.array([0, 0, 0]),
     }
 
 

@@ -127,6 +127,7 @@ def _unfurl_momentum_basis_wavepacket(
     return {
         "basis": basis_as_fundamental_momentum_basis(basis),
         "vector": flattened / np.sqrt(np.prod(sample_shape)),
+        "bloch_phase": np.zeros(len(final_shape)),
     }
 
 

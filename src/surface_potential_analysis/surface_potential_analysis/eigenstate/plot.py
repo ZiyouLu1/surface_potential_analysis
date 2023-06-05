@@ -429,6 +429,7 @@ def plot_eigenstate_difference_2d_x(
     eigenstate: FundamentalPositionBasisEigenstate3d[_L0Inv, _L1Inv, _L2Inv] = {
         "basis": eigenstate_0["basis"],
         "vector": eigenstate_0["vector"] - eigenstate_1["vector"],
+        "bloch_phase": np.array([0, 0, 0]),
     }
     return plot_eigenstate_2d_x(
         eigenstate, idx, z_axis, ax=ax, measure=measure, scale=scale

@@ -176,7 +176,7 @@ def map_irreducible_points_into_unit_cell(
             FundamentalPositionAxis3d(delta_x1, final_grid.shape[1]),
             z_points,
         ),
-        "points": final_grid,
+        "vector": final_grid.ravel(),
     }
 
 

@@ -348,15 +348,16 @@ def get_eigenstate(
     Parameters
     ----------
     wavepacket : Wavepacket[ _NS0Inv, _NS1Inv, _B3d0Inv, ]
-    idx : tuple[int, int]
+    idx : SingleIndexLike
 
     Returns
     -------
     Eigenstate[_B3d0Inv]
     """
-    shape = wavepacket["shape"]
-    idx = np.ravel_multi_index(idx, shape) if isinstance(idx, tuple) else idx
+    util = BasisUtil(get_sample_basis(wavepacket["basis"], wavepacket["shape"]))
+    idx = util.get_flat_index(idx) if isinstance(idx, tuple) else idx
     return {
         "basis": wavepacket["basis"],
         "vector": wavepacket["vectors"][idx],
+        "bloch_phase": util.get_k_points_at_index(idx),
     }
