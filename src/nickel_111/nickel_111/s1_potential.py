@@ -7,7 +7,7 @@ from surface_potential_analysis.axis.axis import FundamentalPositionAxis3d
 from surface_potential_analysis.basis.build import (
     position_basis_3d_from_resolution,
 )
-from surface_potential_analysis.basis.util import Basis3dUtil
+from surface_potential_analysis.basis.util import Basis3dUtil, BasisUtil
 from surface_potential_analysis.potential import (
     FundamentalPositionBasisPotential3d,
     PointPotential3d,
@@ -107,7 +107,7 @@ def get_raw_potential_reciprocal_grid() -> UnevenPotential3d[Any, Any, Any]:
             ),
             z_c,
         ),
-        "points": reciprocal_points,
+        "vector": reciprocal_points.reshape(-1),
     }
 
 
@@ -204,7 +204,9 @@ def interpolate_energy_grid_xy_fourier_nickel(
     shape: tuple[_L0Inv, _L1Inv] = (40, 40),  # type: ignore[assignment]
 ) -> UnevenPotential3d[_L0Inv, _L1Inv, Any]:
     """Make use of a fourier transform to increase the number of points in the xy plane of the energy grid."""
-    old_points = np.array(data["points"])
+    old_points = np.array(data["vector"]).reshape(
+        *BasisUtil(data["basis"][0:2]).shape, -1
+    )
     points = np.empty((shape[0], shape[1], old_points.shape[2]))
 
     for iz in range(old_points.shape[2]):
@@ -226,7 +228,7 @@ def interpolate_energy_grid_xy_fourier_nickel(
             ),
             data["basis"][2],
         ),
-        "points": points,
+        "vector": points.reshape(-1),
     }
 
 

@@ -58,6 +58,7 @@ class WavepacketTest(unittest.TestCase):
     def test_unfurl_wavepacket(self) -> None:
         wavepacket: MomentumBasisWavepacket3d[int, int, int, int, int] = {
             "basis": momentum_basis_3d_from_resolution((3, 3, 3)),
+            "shape": (3, 2, 1),
             "vectors": np.zeros((3, 2, 27)),
             "energies": np.zeros((3, 2)),
         }
@@ -83,6 +84,7 @@ class WavepacketTest(unittest.TestCase):
         wavepacket: MomentumBasisWavepacket3d[int, int, int, int, int] = {
             "basis": momentum_basis_3d_from_resolution((3, 3, 3)),
             "vectors": np.array(rng.random((3, 2, 27)), dtype=complex),
+            "shape": (3, 2, 1),
             "energies": np.zeros((3, 2)),
         }
         eigenstate = unfurl_wavepacket(wavepacket)

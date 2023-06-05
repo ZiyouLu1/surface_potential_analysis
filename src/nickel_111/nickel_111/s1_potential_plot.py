@@ -204,12 +204,12 @@ def plot_interpolated_energy_grid_reciprocal() -> None:
 def get_john_point_locations(
     grid: UnevenPotential3d[Any, Any, Any]
 ) -> dict[str, tuple[int, int]]:
-    points = np.array(grid["points"], dtype=float)
+    shape = BasisUtil(grid["basis"][0:2]).shape
     return {
         "Top Site": (0, 0),
-        "Bridge Site": (0, math.floor(points.shape[1] / 2)),
-        "FCC Site": (0, math.floor(points.shape[1] / 3)),
-        "HCP Site": (0, math.floor(2 * points.shape[1] / 3)),
+        "Bridge Site": (0, math.floor(shape[1] / 2)),
+        "FCC Site": (0, math.floor(shape[1] / 3)),
+        "HCP Site": (0, math.floor(2 * shape[1] / 3)),
     }
 
 
@@ -442,7 +442,9 @@ def test_symmetry_point_interpolation() -> None:
     """Check if the interpolation contain the same points at x=0 and x=L."""
     raw_points = load_raw_data()
     interpolation = load_john_interpolation()
-    points = np.array(interpolation["points"])
+    points = interpolation["vector"].reshape(
+        *BasisUtil(interpolation["basis"][0:2]).shape, -1
+    )
 
     try:
         np.testing.assert_array_equal(points[0, :, :], points[-1, :, :])

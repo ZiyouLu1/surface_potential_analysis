@@ -8,7 +8,7 @@ from scipy.constants import hbar
 from surface_potential_analysis.axis import (
     Axis3dUtil,
 )
-from surface_potential_analysis.basis.util import Basis3dUtil
+from surface_potential_analysis.basis.util import Basis3dUtil, BasisUtil
 
 if TYPE_CHECKING:
     from surface_potential_analysis.axis.axis import (
@@ -79,9 +79,9 @@ class _SurfaceHamiltonianUtil(
     @property
     def points(
         self,
-    ) -> np.ndarray[tuple[_NF0Inv, _NF1Inv, _NF2Inv], np.dtype[np.float_]]:
-        return self._potential["points"].reshape(  # type: ignore[no-any-return]
-            Basis3dUtil(self._potential["basis"]).shape
+    ) -> np.ndarray[tuple[_NF0Inv, _NF1Inv, _NF2Inv], np.dtype[np.complex_]]:
+        return self._potential["vector"].reshape(  # type: ignore[no-any-return]
+            BasisUtil(self._potential["basis"]).shape
         )
 
     @property
@@ -137,7 +137,7 @@ class _SurfaceHamiltonianUtil(
     def get_ft_potential(
         self,
     ) -> np.ndarray[tuple[int, int, int], np.dtype[np.complex128]]:
-        return np.fft.ifft2(self._potential["points"], axes=(0, 1, 2), norm="ortho")  # type: ignore[no-any-return]
+        return np.fft.ifft2(self.points, axes=(0, 1, 2), norm="ortho")  # type: ignore[no-any-return]
 
 
 def total_surface_hamiltonian(

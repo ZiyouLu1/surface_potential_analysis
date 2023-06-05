@@ -8,6 +8,7 @@ from surface_potential_analysis.basis.conversion import (
 )
 from surface_potential_analysis.basis.util import (
     Basis3dUtil,
+    BasisUtil,
     wrap_index_around_origin_x01,
 )
 from surface_potential_analysis.wavepacket.wavepacket import (
@@ -66,7 +67,7 @@ def _calculate_mean_locations(
     )
     util = Basis3dUtil(basis)
 
-    nx_points = Basis3dUtil(hopping_basis).nx_points
+    nx_points = BasisUtil(hopping_basis).nx_points
     nx_points_wrapped = wrap_index_around_origin_x01(hopping_basis, nx_points)
     ffc_locations = util.get_x_points_at_index(nx_points_wrapped)
 

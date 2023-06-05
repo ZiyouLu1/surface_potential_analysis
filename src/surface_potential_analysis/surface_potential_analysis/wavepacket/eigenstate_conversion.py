@@ -1,13 +1,9 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Literal, TypeVar
+from typing import TYPE_CHECKING, Any, Literal, TypeVar, overload
 
 import numpy as np
 
-from surface_potential_analysis.basis.brillouin_zone import (
-    decrement_brillouin_zone_3d,
-)
-from surface_potential_analysis.basis.build import position_basis_3d_from_resolution
 from surface_potential_analysis.basis.conversion import (
     basis_as_fundamental_momentum_basis,
 )
@@ -15,7 +11,7 @@ from surface_potential_analysis.basis.util import Basis3dUtil, BasisUtil
 from surface_potential_analysis.wavepacket.conversion import convert_wavepacket_to_basis
 from surface_potential_analysis.wavepacket.wavepacket import (
     Wavepacket,
-    get_furled_basis,
+    Wavepacket3d,
     get_unfurled_basis,
 )
 
@@ -25,7 +21,7 @@ if TYPE_CHECKING:
         FundamentalMomentumAxis3d,
     )
     from surface_potential_analysis.axis.axis_like import AxisLike3d
-    from surface_potential_analysis.basis.basis import Basis
+    from surface_potential_analysis.basis.basis import Basis, Basis3d
     from surface_potential_analysis.eigenstate.eigenstate import (
         Eigenstate,
         Eigenstate3dWithBasis,
@@ -43,6 +39,9 @@ if TYPE_CHECKING:
     _B0Inv = TypeVar("_B0Inv", bound=Basis[Any])
     _BM0Inv = TypeVar("_BM0Inv", bound=tuple[FundamentalMomentumAxis[Any, Any], ...])
     _S0Inv = TypeVar("_S0Inv", bound=tuple[int, ...])
+
+    _S3d0Inv = TypeVar("_S3d0Inv", bound=tuple[int, int, int])
+    _B3d0Inv = TypeVar("_B3d0Inv", bound=Basis3d[Any, Any, Any])
 
     _L0Inv = TypeVar("_L0Inv", bound=int)
     _L1Inv = TypeVar("_L1Inv", bound=int)
@@ -88,8 +87,9 @@ def furl_eigenstate(
     unshifted = np.fft.ifftshift(swapped, axes=(0, 1, 2, 3))
     flattened = unshifted.reshape(ns0, ns1, -1)
 
+    basis = get_unfurled_basis(eigenstate["basis"], shape)
     return {
-        "basis": get_furled_basis(eigenstate["basis"], shape),  # type: ignore[typeddict-item]
+        "basis": basis_as_fundamental_momentum_basis(basis),  # type: ignore[typeddict-item]
         "shape": shape,
         "vectors": flattened * np.sqrt(ns0 * ns1),
         "energies": np.zeros(flattened.shape[0:2]),
@@ -123,15 +123,43 @@ def _unfurl_momentum_basis_wavepacket(
     unshifted = np.fft.ifftshift(ravelled)
     flattened = unshifted.reshape(-1)
 
+    basis = get_unfurled_basis(wavepacket["basis"], wavepacket["shape"])
     return {
-        "basis": get_unfurled_basis(wavepacket["basis"], wavepacket["shape"]),  # type: ignore[typeddict-item]
+        "basis": basis_as_fundamental_momentum_basis(basis),
         "vector": flattened / np.sqrt(np.prod(sample_shape)),
     }
 
 
+@overload
+def unfurl_wavepacket(
+    wavepacket: Wavepacket3d[_S3d0Inv, _B3d0Inv]
+) -> Eigenstate[
+    tuple[
+        FundamentalMomentumAxis3d[Any],
+        FundamentalMomentumAxis3d[Any],
+        FundamentalMomentumAxis3d[Any],
+    ]
+]:
+    ...
+
+
+@overload
 def unfurl_wavepacket(
     wavepacket: Wavepacket[_S0Inv, _B0Inv]
-) -> Eigenstate[tuple[FundamentalMomentumAxis[Any, Any], ...]]:
+) -> (
+    Eigenstate[tuple[FundamentalMomentumAxis[Any, Any], ...]]
+    | Eigenstate[
+        tuple[
+            FundamentalMomentumAxis3d[Any],
+            FundamentalMomentumAxis3d[Any],
+            FundamentalMomentumAxis3d[Any],
+        ]
+    ]
+):
+    ...
+
+
+def unfurl_wavepacket(wavepacket: Wavepacket[_S0Inv, _B0Inv]) -> Eigenstate[Any]:
     """
     Convert a wavepacket into an eigenstate of the irreducible unit cell.
 
@@ -149,25 +177,3 @@ def unfurl_wavepacket(
     converted_basis = basis_as_fundamental_momentum_basis(wavepacket["basis"])
     converted = convert_wavepacket_to_basis(wavepacket, converted_basis)
     return _unfurl_momentum_basis_wavepacket(converted)
-
-
-def get_wavepacket_sample_fractions_first_bz(
-    samples: np.ndarray[tuple[Literal[2]], np.dtype[np.int_]]
-) -> np.ndarray[tuple[Literal[2], int, int], np.dtype[np.float_]]:
-    """
-    Get the frequencies of the samples in a wavepacket, as a fraction of dk wrapped in the first bz.
-
-    Parameters
-    ----------
-    shape : np.ndarray[tuple[Literal[2]], np.dtype[np.int_]]
-
-    Returns
-    -------
-    np.ndarray[tuple[Literal[2], int, int], np.dtype[np.float_]]
-    """
-    basis = get_unfurled_basis(
-        position_basis_3d_from_resolution((*samples, 1)), samples
-    )
-    util = Basis3dUtil(basis)
-    decrement_brillouin_zone_3d(basis, util.nk_points)
-    return np.array([x0v, x1v])  # type: ignore[no-any-return]

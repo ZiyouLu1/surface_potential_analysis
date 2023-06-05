@@ -71,8 +71,10 @@ class _SurfaceHamiltonianUtil(
     def points(
         self,
     ) -> np.ndarray[tuple[_NF0Inv, _NF1Inv, _NF2Inv], np.dtype[np.float_]]:
-        return self._potential["points"].reshape(
-            Basis3dUtil(self._potential["basis"]).shape
+        return np.real(  # type: ignore[no-any-return]
+            self._potential["vector"].reshape(
+                Basis3dUtil(self._potential["basis"]).shape
+            )
         )
 
     @property
@@ -213,7 +215,7 @@ class _SurfaceHamiltonianUtil(
     def _calculate_off_diagonal_entry(
         self, nz1: int, nz2: int, ndk0: int, ndk1: int
     ) -> float:
-        """Calculate the off diagonal energy using the 'folded' points ndkx, ndky."""
+        """Calculate the off diagonal energy using the 'folded' points ndk0, ndk1."""
         ft_pot_points = self.get_ft_potential()[ndk0, ndk1]
         hermite1 = self.basis[2].vectors[nz1]
         hermite2 = self.basis[2].vectors[nz2]

@@ -267,10 +267,10 @@ class HamiltonianBuilderTest(unittest.TestCase):
     def test_get_fft_normalization(self) -> None:
         hamiltonian = _generate_random_diagonal_hamiltonian()
         z_points = rng.random(hamiltonian.nz)
-        hamiltonian._potential["points"][0][0] = [  # noqa: SLF001
+        hamiltonian.points[0][0] = [
             x + o
             for (x, o) in zip(
-                hamiltonian._potential["points"][0][0],  # noqa: SLF001
+                hamiltonian.points[0][0],
                 z_points,
                 strict=True,
             )

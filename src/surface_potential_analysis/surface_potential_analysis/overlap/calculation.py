@@ -112,4 +112,4 @@ def calculate_overlap_eigenstate(
     converted_1 = convert_eigenstate_to_position_basis(eigenstate_1)  # type: ignore[arg-type,var-annotated]
 
     vector = np.conj(converted_0["vector"]) * (converted_1["vector"])
-    return {"basis": converted_0["basis"], "vector": vector}
+    return {"basis": converted_0["basis"], "vector": vector}  # type: ignore[typeddict-item]

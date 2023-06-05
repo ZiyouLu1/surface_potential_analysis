@@ -17,7 +17,7 @@ from surface_potential_analysis.util.plot import (
     Scale,
     animate_through_surface,
 )
-from surface_potential_analysis.wavepacket.eigenstate_conversion import (
+from surface_potential_analysis.wavepacket.wavepacket import (
     get_unfurled_basis,
 )
 

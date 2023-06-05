@@ -45,8 +45,7 @@ class Eigenstate2d(Eigenstate[_B2d0Inv]):
     """represents an eigenstate in a 2d basis."""
 
 
-class Eigenstate3d(Eigenstate[_B3d0Inv]):
-    """represents an eigenstate in a 3d basis."""
+Eigenstate3d = Eigenstate[_B3d0Inv]
 
 
 Eigenstate3dWithBasis = Eigenstate3d[Basis3d[_A3d0Inv, _A3d1Inv, _A3d2Inv]]

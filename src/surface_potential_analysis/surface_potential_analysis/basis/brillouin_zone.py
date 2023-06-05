@@ -11,21 +11,21 @@ from surface_potential_analysis.basis.util import Basis3dUtil, BasisUtil
 
 if TYPE_CHECKING:
     from surface_potential_analysis._types import (
-        ArrayStackedIndexLike2d,
+        ArrayStackedIndexLike,
         ArrayStackedIndexLike3d,
-        SingleStackedIndexLike2d,
+        SingleStackedIndexLike,
         SingleStackedIndexLike3d,
-        StackedIndexLike2d,
+        StackedIndexLike,
         StackedIndexLike3d,
     )
     from surface_potential_analysis.basis.basis import (
-        Basis2d,
+        Basis,
         Basis3d,
         FundamentalPositionBasis3d,
     )
 
     _B3d0Inv = TypeVar("_B3d0Inv", bound=Basis3d[Any, Any, Any])
-    _B2d0Inv = TypeVar("_B2d0Inv", bound=Basis2d[Any, Any])
+    _B0Inv = TypeVar("_B0Inv", bound=Basis[Any])
 _S0Inv = TypeVar("_S0Inv", bound=tuple[int, ...])
 
 
@@ -301,22 +301,22 @@ def decrement_brillouin_zone_3d(
 
 
 @overload
-def decrement_brillouin_zone_2d(
-    basis: _B2d0Inv, coordinate: ArrayStackedIndexLike2d[_S0Inv]
-) -> ArrayStackedIndexLike2d[_S0Inv]:
+def decrement_brillouin_zone(
+    basis: _B0Inv, coordinate: ArrayStackedIndexLike[_S0Inv]
+) -> ArrayStackedIndexLike[_S0Inv]:
     ...
 
 
 @overload
-def decrement_brillouin_zone_2d(
-    basis: _B2d0Inv, coordinate: SingleStackedIndexLike2d
-) -> SingleStackedIndexLike2d:
+def decrement_brillouin_zone(
+    basis: _B0Inv, coordinate: SingleStackedIndexLike
+) -> SingleStackedIndexLike:
     ...
 
 
-def decrement_brillouin_zone_2d(
-    basis: _B2d0Inv, coordinate: StackedIndexLike2d
-) -> StackedIndexLike2d:
+def decrement_brillouin_zone(
+    basis: _B0Inv, coordinate: StackedIndexLike
+) -> StackedIndexLike:
     """
     Given a basis, and a set of coordinates, decrement the brillouin zone of each coordinate.
 

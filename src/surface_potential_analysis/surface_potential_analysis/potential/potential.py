@@ -15,6 +15,7 @@ from surface_potential_analysis.basis.basis import (
     Basis3d,
     FundamentalPositionBasis3d,
 )
+from surface_potential_analysis.basis.util import BasisUtil
 from surface_potential_analysis.util.interpolation import (
     interpolate_points_along_axis_spline,
     interpolate_points_rfftn,
@@ -136,7 +137,7 @@ class UnevenPotential3d(TypedDict, Generic[_L0Cov, _L1Cov, _L2Cov]):
         FundamentalPositionAxis3d[_L1Cov],
         np.ndarray[tuple[_L2Cov], np.dtype[np.float_]],
     ]
-    points: PotentialPoints
+    vector: PotentialPoints
 
 
 def save_uneven_potential(
@@ -301,9 +302,12 @@ def interpolate_uneven_potential(
     Makes use of a fourier transform to increase the number of points
     in the xy plane of the energy grid, and a cubic spline to interpolate in the z direction
     """
+    util = BasisUtil((data["basis"][0], data["basis"][1]))
     # TODO: maybe along axis
     xy_interpolated = interpolate_points_rfftn(
-        data["points"], s=(shape[0], shape[1]), axes=(0, 1)
+        data["vector"].reshape(*util.shape, len(data["basis"][2])),
+        s=(shape[0], shape[1]),
+        axes=(0, 1),
     )
     interpolated = interpolate_points_along_axis_spline(
         xy_interpolated, data["basis"][2], shape[2], axis=2
@@ -316,7 +320,7 @@ def interpolate_uneven_potential(
                 np.array([0, 0, data["basis"][2][-1] - data["basis"][2][0]]), shape[2]
             ),
         ),
-        "points": interpolated,  # type: ignore[typeddict-item]
+        "vector": interpolated.reshape(-1),  # type: ignore[typeddict-item]
     }
 
 
@@ -344,5 +348,5 @@ def mock_even_potential(
                 "n": len(uneven["basis"][2]),  # type: ignore[typeddict-item]
             },
         ),
-        "vector": uneven["points"].reshape(-1),
+        "vector": uneven["vector"].reshape(-1),
     }

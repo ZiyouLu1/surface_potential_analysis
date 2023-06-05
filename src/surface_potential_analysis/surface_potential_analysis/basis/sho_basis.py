@@ -11,7 +11,7 @@ from scipy.constants import hbar
 
 from surface_potential_analysis.axis.axis import (
     ExplicitAxis3d,
-    FundamentalPositionAxis3d,
+    FundamentalPositionAxis,
 )
 from surface_potential_analysis.axis.conversion import (
     axis_as_fundamental_position_axis,
@@ -111,15 +111,15 @@ def get_sho_potential_basis_config(
 
     basis = (
         axis_as_fundamental_position_axis(parent),
-        FundamentalPositionAxis3d[Literal[1]](delta_x1, 1),
-        FundamentalPositionAxis3d[Literal[1]](delta_x2, 1),
+        FundamentalPositionAxis[Literal[1], Literal[3]](delta_x1, 1),
+        FundamentalPositionAxis[Literal[1], Literal[3]](delta_x2, 1),
     )
     x_distances = calculate_x_distances(parent, config["x_origin"])
 
     return {
         "potential": {
             "basis": basis,
-            "points": 0.5
+            "vector": 0.5
             * config["mass"]
             * config["sho_omega"] ** 2
             * np.array([[x_distances]]) ** 2,

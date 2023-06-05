@@ -12,6 +12,7 @@ from surface_potential_analysis.basis.basis import (
     FundamentalMomentumBasis3d,
     FundamentalPositionBasis3d,
 )
+from surface_potential_analysis.basis.brillouin_zone import decrement_brillouin_zone
 from surface_potential_analysis.basis.util import BasisUtil
 from surface_potential_analysis.eigenstate.eigenstate_calculation import (
     calculate_eigenstates,
@@ -87,7 +88,7 @@ PositionBasisWavepacket3d = Wavepacket3dWith2dSamples[
     FundamentalPositionBasis3d[_L0Inv, _L1Inv, _L2Inv],
 ]
 
-MomentumBasisWavepacket3d = [
+MomentumBasisWavepacket3d = Wavepacket3dWith2dSamples[
     _NS0Inv,
     _NS1Inv,
     FundamentalMomentumBasis3d[_L0Inv, _L1Inv, _L2Inv],
@@ -220,6 +221,30 @@ def get_wavepacket_sample_frequencies(
     sample_basis = get_sample_basis(basis, shape)
     util = BasisUtil(sample_basis)
     return util.fundamental_k_points  # type: ignore[return-value]
+
+
+def get_wavepacket_sample_frequencies_first_brillouin_zone(
+    basis: Basis[_ND0Inv], shape: _S0Inv
+) -> np.ndarray[tuple[_ND0Inv, int], np.dtype[np.float_]]:
+    """
+    Get the frequencies used in the wavepacket wrapped to the first brillouin zone.
+
+    Parameters
+    ----------
+    basis : Basis[_ND0Inv]
+    shape : _S0Inv
+
+    Returns
+    -------
+    np.ndarray[tuple[_ND0Inv, int], np.dtype[np.float_]]
+    """
+    sample_basis = get_sample_basis(basis, shape)
+    util = BasisUtil(sample_basis)
+    nk_points = util.nk_points
+    for _ in util.shape:
+        # TODO: which basis here??
+        nk_points = decrement_brillouin_zone(basis, nk_points)
+    return util.get_k_points_at_index(nk_points)  # type: ignore[return-value]
 
 
 def as_eigenstate_collection(

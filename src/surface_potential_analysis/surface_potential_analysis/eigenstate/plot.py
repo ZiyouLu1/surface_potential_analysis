@@ -87,6 +87,7 @@ def plot_eigenstate_1d_x(
     idx = tuple(0 for _ in range(len(eigenstate["basis"]) - 1)) if idx is None else idx
     data_slice: list[slice | int] = list(idx)
     data_slice.insert(axis, slice(None))
+
     converted = convert_eigenstate_to_position_basis(eigenstate)  # type: ignore[var-annotated,arg-type]
     util = BasisUtil(converted["basis"])
     points = converted["vector"].reshape(util.shape)[tuple(data_slice)]
