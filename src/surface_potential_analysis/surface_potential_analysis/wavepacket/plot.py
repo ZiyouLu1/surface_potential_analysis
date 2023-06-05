@@ -5,7 +5,6 @@ from typing import TYPE_CHECKING, Any, Literal, TypeVar
 import numpy as np
 from matplotlib import pyplot as plt
 
-from surface_potential_analysis.axis.axis import FundamentalMomentumAxis3d
 from surface_potential_analysis.basis.util import (
     get_fundamental_projected_k_points,
     get_fundamental_projected_x_points,
@@ -30,6 +29,7 @@ from .wavepacket import (
     MomentumBasisWavepacket3d,
     Wavepacket,
     Wavepacket3dWith2dSamples,
+    get_sample_basis,
     get_wavepacket_sample_frequencies,
 )
 
@@ -98,34 +98,6 @@ def plot_wavepacket_sample_frequencies(
     return fig, ax, line
 
 
-def get_wavepacket_sample_basis(
-    wavepacket: Wavepacket3dWith2dSamples[
-        _NS0Inv, _NS1Inv, Basis3d[_A3d0Inv, _A3d1Inv, _A3d2Inv]
-    ]
-) -> Basis3d[
-    FundamentalMomentumAxis3d[_NS0Inv],
-    FundamentalMomentumAxis3d[_NS1Inv],
-    FundamentalMomentumAxis3d[Literal[1]],
-]:
-    """
-    Get the basis used to sample the brillouin zone.
-
-    Parameters
-    ----------
-    wavepacket : Wavepacket[_NS0Inv, _NS1, Basis3d[_A3d0Inv, _A3d1Inv, _A3d2Inv]]
-
-    Returns
-    -------
-    Basis3d[MomentumBasis[_NS0Inv], MomentumBasis[_NS1Inv], MomentumBasis[Literal[1]]]
-    """
-    (ns0, ns1) = wavepacket["energies"].shape
-    return (
-        FundamentalMomentumAxis3d(wavepacket["basis"][0].delta_x * ns0, ns0),
-        FundamentalMomentumAxis3d(wavepacket["basis"][1].delta_x * ns1, ns1),
-        FundamentalMomentumAxis3d(wavepacket["basis"][2].delta_x, 1),
-    )
-
-
 def plot_wavepacket_energies_momentum(
     wavepacket: Wavepacket3dWith2dSamples[
         _NS0Inv, _NS1Inv, Basis3d[_A3d0Inv, _A3d1Inv, _A3d2Inv]
@@ -151,7 +123,7 @@ def plot_wavepacket_energies_momentum(
     """
     fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
 
-    basis = get_wavepacket_sample_basis(wavepacket)
+    basis = get_sample_basis(wavepacket["basis"], wavepacket["shape"])
     coordinates = get_fundamental_projected_k_points(basis, 2)[:, :, :, 0]
     points = np.fft.ifftshift(wavepacket["energies"])
 
@@ -197,7 +169,7 @@ def plot_wavepacket_energies_position(
     """
     fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
 
-    basis = get_wavepacket_sample_basis(wavepacket)
+    basis = get_sample_basis(wavepacket["basis"], wavepacket["shape"])
     coordinates = get_fundamental_projected_x_points(basis, 2)[:, :, :, 0]
 
     data = np.fft.ifft2(wavepacket["energies"])

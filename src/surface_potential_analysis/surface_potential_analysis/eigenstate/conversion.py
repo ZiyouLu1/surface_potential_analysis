@@ -10,6 +10,7 @@ from surface_potential_analysis.basis.conversion import (
     convert_vector,
 )
 from surface_potential_analysis.basis.util import Basis3dUtil
+from surface_potential_analysis.util.decorators import timed
 from surface_potential_analysis.util.interpolation import pad_ft_points
 
 if TYPE_CHECKING:
@@ -41,6 +42,7 @@ if TYPE_CHECKING:
     _NF2Inv = TypeVar("_NF2Inv", bound=int)
 
 
+@timed
 def convert_eigenstate_to_basis(
     eigenstate: Eigenstate[_B0Inv], basis: _B1Inv
 ) -> Eigenstate[_B1Inv]:
@@ -49,12 +51,12 @@ def convert_eigenstate_to_basis(
 
     Parameters
     ----------
-    eigenstate : Eigenstate[_B3d0Inv]
-    basis : _B3d1Inv
+    eigenstate : Eigenstate[_B0Inv]
+    basis : _B1Inv
 
     Returns
     -------
-    Eigenstate[_B3d1Inv]
+    Eigenstate[_B1Inv]
     """
     converted = convert_vector(eigenstate["vector"], eigenstate["basis"], basis)
     return {"basis": basis, "vector": converted}  # type: ignore[typeddict-item]
@@ -64,16 +66,15 @@ def convert_eigenstate_to_position_basis(
     eigenstate: Eigenstate[_B0Inv],
 ) -> Eigenstate[tuple[FundamentalPositionAxis[Any, Any], ...]]:
     """
-    Given an eigenstate, calculate the vector in the given basis.
+    Given an eigenstate, calculate the vector in position basis.
 
     Parameters
     ----------
-    eigenstate : Eigenstate[_B3d0Inv]
-    basis : _B3d1Inv
+    eigenstate : Eigenstate[_B0Inv]
 
     Returns
     -------
-    Eigenstate[_B3d1Inv]
+    Eigenstate[_B0Inv]
     """
     return convert_eigenstate_to_basis(
         eigenstate,

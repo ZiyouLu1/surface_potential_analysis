@@ -25,7 +25,7 @@ from .wavepacket import (
     Wavepacket,
     Wavepacket3dWith2dSamples,
     get_eigenstate,
-    get_wavepacket_sample_frequencies,
+    get_wavepacket_sample_fractions,
 )
 
 if TYPE_CHECKING:
@@ -92,11 +92,11 @@ def _get_global_phases(
     basis = basis_as_fundamental_position_basis(wavepacket["basis"])  # type: ignore[arg-type,var-annotated]
     util = BasisUtil(basis)
 
-    x_points = util.get_x_points_at_index(idx)
-    k_points = get_wavepacket_sample_frequencies(
-        wavepacket["basis"], wavepacket["shape"]
-    )
-    return 2 * np.pi * np.tensordot(k_points, x_points, axes=(0, 0))  # type: ignore[no-any-return]
+    nx_points = idx if isinstance(idx, tuple) else util.get_stacked_index(idx)
+    nx_fractions = tuple(a / ni for (a, ni) in zip(nx_points, util.shape, strict=True))
+
+    nk_fractions = get_wavepacket_sample_fractions(wavepacket["shape"])
+    return 2 * np.pi * np.tensordot(nk_fractions, nx_fractions, axes=(0, 0))  # type: ignore[no-any-return]
 
 
 def _get_bloch_phases(
@@ -118,7 +118,7 @@ def _get_bloch_phases(
     np.ndarray[tuple[_NS0Inv, _NS1Inv], np.dtype[np.float_]]
         the angle for each point in the wavepacket
     """
-    converted = convert_wavepacket_to_position_basis(wavepacket)  # type: ignore[arg-type,var-annotated]
+    converted = convert_wavepacket_to_position_basis(wavepacket)
     util = BasisUtil(converted["basis"])
     idx = util.get_flat_index(idx, mode="wrap") if isinstance(idx, tuple) else idx
 

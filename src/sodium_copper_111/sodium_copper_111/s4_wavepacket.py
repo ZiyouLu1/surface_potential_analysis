@@ -17,7 +17,7 @@ if TYPE_CHECKING:
     from surface_potential_analysis.hamiltonian.hamiltonian import Hamiltonian
 
     _SodiumWavepacket = Wavepacket[
-        tuple[Literal[12]], tuple[FundamentalMomentumAxis1d[Literal[200]]]
+        tuple[Literal[12]], tuple[FundamentalMomentumAxis1d[Literal[2000]]]
     ]
 
 
@@ -25,8 +25,8 @@ if TYPE_CHECKING:
 def get_all_wavepackets() -> list[_SodiumWavepacket]:
     def hamiltonian_generator(
         bloch_phase: np.ndarray[tuple[Literal[1]], np.dtype[np.float_]]
-    ) -> Hamiltonian[tuple[FundamentalMomentumAxis1d[Literal[200]]]]:
-        return get_hamiltonian(shape=(200,), bloch_phase=bloch_phase)
+    ) -> Hamiltonian[tuple[FundamentalMomentumAxis1d[Literal[2000]]]]:
+        return get_hamiltonian(shape=(1000,), bloch_phase=bloch_phase)
 
     save_bands = np.arange(20)
 

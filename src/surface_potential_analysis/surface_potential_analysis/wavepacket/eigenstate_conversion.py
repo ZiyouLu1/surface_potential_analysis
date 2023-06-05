@@ -135,9 +135,9 @@ def unfurl_wavepacket(
     wavepacket: Wavepacket3d[_S3d0Inv, _B3d0Inv]
 ) -> Eigenstate[
     tuple[
-        FundamentalMomentumAxis3d[Any],
-        FundamentalMomentumAxis3d[Any],
-        FundamentalMomentumAxis3d[Any],
+        FundamentalMomentumAxis[Any, Literal[3]],
+        FundamentalMomentumAxis[Any, Literal[3]],
+        FundamentalMomentumAxis[Any, Literal[3]],
     ]
 ]:
     ...
@@ -150,9 +150,9 @@ def unfurl_wavepacket(
     Eigenstate[tuple[FundamentalMomentumAxis[Any, Any], ...]]
     | Eigenstate[
         tuple[
-            FundamentalMomentumAxis3d[Any],
-            FundamentalMomentumAxis3d[Any],
-            FundamentalMomentumAxis3d[Any],
+            FundamentalMomentumAxis[Any, Literal[3]],
+            FundamentalMomentumAxis[Any, Literal[3]],
+            FundamentalMomentumAxis[Any, Literal[3]],
         ]
     ]
 ):
