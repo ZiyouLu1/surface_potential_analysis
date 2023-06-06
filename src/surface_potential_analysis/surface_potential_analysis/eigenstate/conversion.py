@@ -59,7 +59,7 @@ def convert_eigenstate_to_basis(
     Eigenstate[_B1Inv]
     """
     converted = convert_vector(eigenstate["vector"], eigenstate["basis"], basis)
-    return {"basis": basis, "vector": converted, "bloch_phase": eigenstate["bloch_phase"]}  # type: ignore[typeddict-item]
+    return {"basis": basis, "vector": converted, "bloch_fraction": eigenstate["bloch_fraction"]}  # type: ignore[typeddict-item]
 
 
 def convert_eigenstate_to_position_basis(
@@ -133,7 +133,7 @@ def convert_position_basis_eigenstate_to_momentum_basis(
     return {
         "basis": basis_as_fundamental_momentum_basis(eigenstate["basis"]),
         "vector": transformed.reshape(-1),
-        "bloch_phase": eigenstate["bloch_phase"],
+        "bloch_fraction": eigenstate["bloch_fraction"],
     }
 
 
@@ -166,5 +166,5 @@ def convert_momentum_basis_eigenstate_to_position_basis(
     return {
         "basis": basis_as_fundamental_position_basis(eigenstate["basis"]),
         "vector": transformed.reshape(-1),
-        "bloch_phase": eigenstate["bloch_phase"],
+        "bloch_fraction": eigenstate["bloch_fraction"],
     }

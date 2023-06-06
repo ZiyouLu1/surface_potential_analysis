@@ -84,10 +84,10 @@ def plot_wavepacket_sample_frequencies(
     """
     fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
 
-    fractions = get_wavepacket_sample_frequencies(
+    frequencies = get_wavepacket_sample_frequencies(
         wavepacket["basis"], np.array(wavepacket["vectors"].shape)[0:2]
     )[:2, :]
-    (line,) = ax.plot(*fractions.reshape(2, -1))
+    (line,) = ax.plot(*frequencies.reshape(2, -1))
     line.set_marker("x")
     line.set_linestyle("")
 

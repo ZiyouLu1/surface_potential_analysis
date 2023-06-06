@@ -20,7 +20,7 @@ if TYPE_CHECKING:
 
 
 def _calculate_eigenstate_collection_sho(
-    bloch_phases: np.ndarray[tuple[int, Literal[3]], np.dtype[np.float_]],
+    bloch_fractions: np.ndarray[tuple[int, Literal[3]], np.dtype[np.float_]],
     resolution: tuple[int, int, int],
 ) -> EigenstateColllection3d[Any, Any]:
     def hamiltonian_generator(
@@ -28,20 +28,20 @@ def _calculate_eigenstate_collection_sho(
     ) -> Hamiltonian3d[Any]:
         return generate_hamiltonian_sho(
             shape=(200, 200, 501),
-            bloch_phase=x,
+            bloch_fraction=x,
             resolution=resolution,
         )
 
     return calculate_eigenstate_collection(
-        hamiltonian_generator, bloch_phases, subset_by_index=(0, 10)  # type: ignore[arg-type]
+        hamiltonian_generator, bloch_fractions, subset_by_index=(0, 10)  # type: ignore[arg-type]
     )
 
 
 def _generate_eigenstate_collection_sho(
-    bloch_phases: np.ndarray[tuple[int, Literal[3]], np.dtype[np.float_]],
+    bloch_fractions: np.ndarray[tuple[int, Literal[3]], np.dtype[np.float_]],
     resolution: tuple[int, int, int],
 ) -> None:
-    collection = _calculate_eigenstate_collection_sho(bloch_phases, resolution)
+    collection = _calculate_eigenstate_collection_sho(bloch_fractions, resolution)
     filename = f"eigenstates_{resolution[0]}_{resolution[1]}_{resolution[2]}.npy"
     path = get_data_path(filename)
     save_eigenstate_collection(path, collection)
@@ -50,24 +50,24 @@ def _generate_eigenstate_collection_sho(
 def generate_eigenstates_data() -> None:
     """Generate data on the eigenstates and eigenvalues for a range of resolutions."""
     potential = get_interpolated_potential(shape=(1, 1, 1))
-    util = Basis3dUtil(potential["basis"])
+    Basis3dUtil(potential["basis"])
 
-    kx_points = np.linspace(0, (np.abs(util.dk0[0]) + np.abs(util.dk1[0])) / 2, 5)
-    ky_points = np.linspace(0, (np.abs(util.dk0[1]) + np.abs(util.dk1[1])) / 2, 5)
+    kx_points = np.linspace(0, 0.5, 5)
+    ky_points = np.linspace(0, 0.5, 5)
     kz_points = np.zeros_like(kx_points)
-    bloch_phases = np.array([kx_points, ky_points, kz_points]).T
+    bloch_fractions = np.array([kx_points, ky_points, kz_points]).T
 
-    # _generate_eigenstate_collection_sho(bloch_phases, (25, 25, 14))  # noqa: ERA001
+    # _generate_eigenstate_collection_sho(bloch_fractions, (25, 25, 14))  # noqa: ERA001
 
-    _generate_eigenstate_collection_sho(bloch_phases, (23, 23, 14))
+    _generate_eigenstate_collection_sho(bloch_fractions, (23, 23, 14))
 
-    # _generate_eigenstate_collection_sho(bloch_phases, (23, 23, 15)) # noqa: ERA001
+    # _generate_eigenstate_collection_sho(bloch_fractions, (23, 23, 15)) # noqa: ERA001
 
-    # _generate_eigenstate_collection_sho(bloch_phases, (25, 25, 16)) # noqa: ERA001
+    # _generate_eigenstate_collection_sho(bloch_fractions, (25, 25, 16)) # noqa: ERA001
 
 
 def _calculate_eigenstate_collection_sho_relaxed(
-    bloch_phases: np.ndarray[tuple[int, Literal[3]], np.dtype[np.float_]],
+    bloch_fractions: np.ndarray[tuple[int, Literal[3]], np.dtype[np.float_]],
     resolution: tuple[int, int, int],
 ) -> EigenstateColllection3d[Any, Any]:
     def hamiltonian_generator(
@@ -75,20 +75,20 @@ def _calculate_eigenstate_collection_sho_relaxed(
     ) -> Hamiltonian3d[Any]:
         return generate_hamiltonian_sho_relaxed(
             shape=(200, 200, 501),
-            bloch_phase=x,
+            bloch_fraction=x,
             resolution=resolution,
         )
 
     return calculate_eigenstate_collection(
-        hamiltonian_generator, bloch_phases, subset_by_index=(0, 10)  # type: ignore[arg-type]
+        hamiltonian_generator, bloch_fractions, subset_by_index=(0, 10)  # type: ignore[arg-type]
     )
 
 
 def _generate_eigenstate_collection_sho_relaxed(
-    bloch_phases: np.ndarray[tuple[int, Literal[3]], np.dtype[np.float_]],
+    bloch_fractions: np.ndarray[tuple[int, Literal[3]], np.dtype[np.float_]],
     resolution: tuple[int, int, int],
 ) -> None:
-    collection = _calculate_eigenstate_collection_sho(bloch_phases, resolution)
+    collection = _calculate_eigenstate_collection_sho(bloch_fractions, resolution)
     filename = (
         f"eigenstates_relaxed_{resolution[0]}_{resolution[1]}_{resolution[2]}.npy"
     )
@@ -98,18 +98,15 @@ def _generate_eigenstate_collection_sho_relaxed(
 
 def generate_eigenstates_data_relaxed() -> None:
     """Generate data on the eigenstates and eigenvalues for a range of resolutions."""
-    potential = get_interpolated_potential(shape=(1, 1, 1))
-    util = Basis3dUtil(potential["basis"])
-
-    kx_points = np.linspace(0, (np.abs(util.dk0[0]) + np.abs(util.dk1[0])) / 2, 5)
-    ky_points = np.linspace(0, (np.abs(util.dk0[1]) + np.abs(util.dk1[1])) / 2, 5)
+    kx_points = np.linspace(0, 0.5, 5)
+    ky_points = np.linspace(0, 0.5, 5)
     kz_points = np.zeros_like(kx_points)
-    bloch_phases = np.array([kx_points, ky_points, kz_points]).T
+    bloch_fractions = np.array([kx_points, ky_points, kz_points]).T
 
-    # _generate_eigenstate_collection_sho(bloch_phases, (17, 17, 13))  # noqa: ERA001
+    # _generate_eigenstate_collection_sho(bloch_fractions, (17, 17, 13))  # noqa: ERA001
 
-    _generate_eigenstate_collection_sho(bloch_phases, (17, 17, 15))
+    _generate_eigenstate_collection_sho(bloch_fractions, (17, 17, 15))
 
-    # _generate_eigenstate_collection_sho(bloch_phases, (21, 21, 14)) # noqa: ERA001
+    # _generate_eigenstate_collection_sho(bloch_fractions, (21, 21, 14)) # noqa: ERA001
 
-    # _generate_eigenstate_collection_sho(bloch_phases, (21, 21, 15)) # noqa: ERA001
+    # _generate_eigenstate_collection_sho(bloch_fractions, (21, 21, 15)) # noqa: ERA001

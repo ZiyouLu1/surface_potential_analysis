@@ -96,7 +96,7 @@ def generate_wavepacket_sho() -> None:
     ) -> Hamiltonian3d[Any]:
         return generate_hamiltonian_sho(
             shape=(48, 48, 250),
-            bloch_phase=x,
+            bloch_fraction=x,
             resolution=(24, 24, 16),
         )
 

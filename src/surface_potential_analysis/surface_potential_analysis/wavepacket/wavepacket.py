@@ -263,9 +263,9 @@ def as_eigenstate_collection(
     """
     return {
         "basis": wavepacket["basis"],
-        "bloch_phases": get_wavepacket_sample_frequencies(
-            wavepacket["basis"], wavepacket["shape"]
-        ).reshape(3, -1),
+        "bloch_fractions": get_wavepacket_sample_fractions(wavepacket["shape"]).reshape(
+            3, -1
+        ),
         "energies": wavepacket["energies"].reshape(-1),
         "vectors": wavepacket["vectors"].reshape(wavepacket["energies"].size, -1),
     }
@@ -305,7 +305,8 @@ def generate_wavepacket(
     -------
     np.ndarray[tuple[int], np.dtype[Wavepacket[_NS0Inv, _NS1Inv, _B3d0Inv]]]
     """
-    h = hamiltonian_generator(np.array([0, 0, 0]))
+    bloch_fractions = get_wavepacket_sample_fractions(shape)
+    h = hamiltonian_generator(bloch_fractions[:, 0])
     basis_size = BasisUtil(h["basis"]).size
     save_bands = np.array([0]) if save_bands is None else save_bands
     subset_by_index: tuple[int, int] = (np.min(save_bands), np.max(save_bands))
@@ -323,9 +324,8 @@ def generate_wavepacket(
         for _ in save_bands
     ]
 
-    frequencies = get_wavepacket_sample_frequencies(h["basis"], np.array(shape))
     for i in range(np.prod(shape)):
-        h = hamiltonian_generator(frequencies[:, i])
+        h = hamiltonian_generator(bloch_fractions[:, i])
         eigenstates = calculate_eigenstates(h, subset_by_index)
 
         for b, band in enumerate(save_bands):
@@ -359,5 +359,5 @@ def get_eigenstate(
     return {
         "basis": wavepacket["basis"],
         "vector": wavepacket["vectors"][idx],
-        "bloch_phase": util.get_k_points_at_index(idx),
+        "bloch_fraction": get_wavepacket_sample_fractions(wavepacket["shape"])[:, idx],
     }

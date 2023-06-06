@@ -264,6 +264,7 @@ class BasisUtil(Generic[_B0Inv]):
 
     @cached_property
     def dk(self) -> np.ndarray[tuple[int, int], np.dtype[np.float_]]:
+        """Get dk as a list of dk for each axis."""
         return 2 * np.pi * np.linalg.inv(self.delta_x).T  # type: ignore[no-any-return]
 
     @property

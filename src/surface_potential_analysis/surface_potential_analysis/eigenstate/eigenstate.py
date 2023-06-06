@@ -30,7 +30,7 @@ class Eigenstate(TypedDict, Generic[_B0Inv]):
 
     basis: _B0Inv
     vector: np.ndarray[tuple[int], np.dtype[np.complex_]]
-    bloch_phase: np.ndarray[tuple[int], np.dtype[np.float_]]
+    bloch_fraction: np.ndarray[tuple[int], np.dtype[np.float_]]
 
 
 _B1d0Inv = TypeVar("_B1d0Inv", bound=Basis1d[Any])

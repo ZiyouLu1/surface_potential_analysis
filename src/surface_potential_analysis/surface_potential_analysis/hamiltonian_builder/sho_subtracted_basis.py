@@ -20,7 +20,7 @@ from surface_potential_analysis.basis.sho_basis import (
     calculate_x_distances,
     infinate_sho_basis_from_config,
 )
-from surface_potential_analysis.basis.util import Basis3dUtil
+from surface_potential_analysis.basis.util import Basis3dUtil, BasisUtil
 
 if TYPE_CHECKING:
     from surface_potential_analysis.basis.basis import (
@@ -253,7 +253,7 @@ class _SurfaceHamiltonianUtil(
 def total_surface_hamiltonian(
     potential: FundamentalPositionBasisPotential3d[_NF0Inv, _NF1Inv, _NF2Inv],
     config: SHOBasisConfig,
-    bloch_phase: np.ndarray[tuple[Literal[3]], np.dtype[np.float_]],
+    bloch_fraction: np.ndarray[tuple[Literal[3]], np.dtype[np.float_]],
     resolution: tuple[_N0Inv, _N1Inv, _N2Inv],
 ) -> HamiltonianWith3dBasis[
     MomentumAxis3d[_NF0Inv, _N0Inv],
@@ -267,7 +267,7 @@ def total_surface_hamiltonian(
     ----------
     potential : Potential[_L0, _L1, _L2]
     config : SHOBasisConfig
-    bloch_phase : np.ndarray[tuple[Literal[3]], np.dtype[np.float_]]
+    bloch_fraction : np.ndarray[tuple[Literal[3]], np.dtype[np.float_]]
     resolution : tuple[_L3, _L4, _L5]
 
     Returns
@@ -275,4 +275,9 @@ def total_surface_hamiltonian(
     HamiltonianWithBasis[TruncatedBasis[_L3, MomentumBasis[_L0]], TruncatedBasis[_L4, MomentumBasis[_L1]], ExplicitBasis[_L5, PositionBasis[_L2]]]
     """
     util = _SurfaceHamiltonianUtil(potential, config, resolution)
+    bloch_phase = np.tensordot(
+        BasisUtil(util.basis).fundamental_dk,
+        bloch_fraction,
+        axes=(0, 0),
+    )
     return util.hamiltonian(bloch_phase)

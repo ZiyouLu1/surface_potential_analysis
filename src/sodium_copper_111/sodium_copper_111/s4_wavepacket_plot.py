@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import numpy as np
 from matplotlib import pyplot as plt
+from surface_potential_analysis.basis.util import BasisUtil
 from surface_potential_analysis.eigenstate.conversion import (
     convert_eigenstate_to_position_basis,
 )
@@ -13,60 +15,47 @@ from surface_potential_analysis.wavepacket.plot import plot_wavepacket_1d_x
 from sodium_copper_111.s4_wavepacket import get_wavepacket
 
 
-def plot_wavepacket() -> None:
+def plot_first_six_wavepackets() -> None:
     fig, ax = plt.subplots()
 
-    wavepacket = get_wavepacket(0)
-    wavepacket = normalize_wavepacket(wavepacket, idx=(0,))
-    plot_wavepacket_1d_x(wavepacket, ax=ax)
+    for i in range(6):
+        wavepacket = get_wavepacket(i)
+        wavepacket = normalize_wavepacket(wavepacket, idx=(2,))
+        _, _, ln = plot_wavepacket_1d_x(wavepacket, ax=ax)
+        ln.set_label(f"n={i}")
 
-    wavepacket = get_wavepacket(1)
-    wavepacket = normalize_wavepacket(wavepacket, idx=(0,))
-    plot_wavepacket_1d_x(wavepacket, ax=ax)
-
-    wavepacket = get_wavepacket(2)
-    wavepacket = normalize_wavepacket(wavepacket, idx=(0,))
-    plot_wavepacket_1d_x(wavepacket, ax=ax)
-
-    wavepacket = get_wavepacket(3)
-    wavepacket = normalize_wavepacket(wavepacket, idx=(0,))
-    plot_wavepacket_1d_x(wavepacket, ax=ax)
-
+    ax.legend()
     fig.show()
     input()
 
 
 def test_wavepacket_normalization() -> None:
     # Does the wavepacket remain normalized no matter which index we choose
-    # to normalize onto.
+    # to normalize onto. The answer is yes, as long as we dont choose
+    # to sit on a node exactly!
     fig, ax = plt.subplots()
 
-    wavepacket = get_wavepacket(0)
-    normalized = normalize_wavepacket(wavepacket, idx=(0,))
-    _, _, ln_0 = plot_wavepacket_1d_x(normalized, ax=ax)
-    ln_0.set_label("0")
-
-    normalized = normalize_wavepacket(wavepacket, idx=(500,))
-    _, _, ln_0 = plot_wavepacket_1d_x(normalized, ax=ax)
-    ln_0.set_label("50")
-
-    normalized = normalize_wavepacket(wavepacket, idx=(1500,))
-    _, _, ln_0 = plot_wavepacket_1d_x(normalized, ax=ax)
-    ln_0.set_label("150")
-
-    normalized = normalize_wavepacket(wavepacket, idx=(2000,))
-    _, _, ln_0 = plot_wavepacket_1d_x(normalized, ax=ax)
-    ln_0.set_label("200")
+    for idx in [0, 250, 500, 750, 1000]:
+        wavepacket = get_wavepacket(0)
+        normalized = normalize_wavepacket(wavepacket, idx=(idx,))
+        _, _, ln = plot_wavepacket_1d_x(normalized, ax=ax)
+        ln.set_label(f"{idx}")
 
     ax.legend()
-    ax.set_title("Plot of wavepackets of Na, showing proper localization")
+    ax.set_title("Plot of wavepackets of Na, showing incorrect localization")
     fig.show()
     input()
 
 
 def test_wavepacket_zero_at_next_unit_cell() -> None:
     wavepacket = get_wavepacket(0)
-    normalized = normalize_wavepacket(wavepacket, idx=(0,))
+    offset = 50
+    size = BasisUtil(wavepacket["basis"]).size
+
+    normalized = normalize_wavepacket(wavepacket, idx=(offset,))
     unfurled = unfurl_wavepacket(normalized)
     unfurled_position = convert_eigenstate_to_position_basis(unfurled)  # type: ignore[arg-type]
-    print(unfurled_position["vector"][::2000])  # noqa: T201
+    np.testing.assert_array_almost_equal(
+        unfurled_position["vector"][offset + size :: size],
+        np.zeros_like(np.prod(wavepacket["shape"]) - 1),
+    )

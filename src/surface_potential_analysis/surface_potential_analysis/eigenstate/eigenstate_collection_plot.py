@@ -6,6 +6,8 @@ import numpy as np
 from matplotlib import pyplot as plt
 from scipy.constants import Boltzmann
 
+from surface_potential_analysis.basis.util import BasisUtil
+
 if TYPE_CHECKING:
     from matplotlib.axes import Axes
     from matplotlib.figure import Figure
@@ -21,12 +23,16 @@ if TYPE_CHECKING:
     _L1Inv = TypeVar("_L1Inv", bound=int)
 
 
-def _get_projected_phases(
-    phases: np.ndarray[tuple[_L0Inv, _L1Inv], np.dtype[np.float_]],
+def _get_projected_bloch_phases(
+    collection: EigenstateColllection[_B0Inv, _L0Inv],
     direction: np.ndarray[tuple[_L1Inv], np.dtype[np.float_]],
 ) -> np.ndarray[tuple[_L0Inv], np.dtype[np.float_]]:
+    util = BasisUtil(collection["basis"])
+    bloch_phases = np.tensordot(
+        collection["bloch_fractions"], util.fundamental_dk, axes=(1, 0)
+    )
     normalized_direction = direction / np.linalg.norm(direction)
-    return np.dot(phases, normalized_direction)  # type: ignore[no-any-return]
+    return np.dot(bloch_phases, normalized_direction)  # type: ignore[no-any-return]
 
 
 def plot_energies_against_bloch_phase_1d(
@@ -54,7 +60,7 @@ def plot_energies_against_bloch_phase_1d(
     """
     fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
 
-    projected = _get_projected_phases(collection["bloch_phases"], direction)
+    projected = _get_projected_bloch_phases(collection, direction)
     (line,) = ax.plot(projected, collection["energies"][:, band])
     ax.set_xlabel("Bloch Phase")
     ax.set_ylabel("Energy / J")
@@ -87,7 +93,7 @@ def plot_occupation_against_bloch_phase_1d(
     """
     fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
 
-    projected = _get_projected_phases(collection["bloch_phases"], direction)
+    projected = _get_projected_bloch_phases(collection, direction)
     energies = collection["energies"][:, band]
     occupations = np.exp(-energies / (temperature * Boltzmann))
     (line,) = ax.plot(projected, occupations)

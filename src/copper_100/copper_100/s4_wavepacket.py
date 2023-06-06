@@ -77,7 +77,7 @@ def generate_wavepacket_sho_relaxed() -> None:
     ) -> Hamiltonian3d[Any]:
         return generate_hamiltonian_sho_relaxed(
             shape=(46, 46, 250),
-            bloch_phase=x,
+            bloch_fraction=x,
             resolution=(23, 23, 18),
         )
 
@@ -99,7 +99,7 @@ def generate_wavepacket_sho() -> None:
     ) -> Hamiltonian3d[Any]:
         return generate_hamiltonian_sho(
             shape=(46, 46, 250),
-            bloch_phase=x,
+            bloch_fraction=x,
             resolution=(23, 23, 18),
         )
 

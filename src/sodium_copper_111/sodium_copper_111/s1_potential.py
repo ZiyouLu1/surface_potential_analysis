@@ -6,8 +6,9 @@ import numpy as np
 from scipy.constants import electron_volt
 from surface_potential_analysis.axis.axis import (
     FundamentalMomentumAxis1d,
+    MomentumAxis1d,
 )
-from surface_potential_analysis.util.interpolation import pad_ft_points
+from surface_potential_analysis.potential.conversion import convert_potential_to_basis
 
 if TYPE_CHECKING:
     from surface_potential_analysis.potential.potential import Potential1d
@@ -21,7 +22,7 @@ BARRIER_ENERGY = 55 * 10**-3 * electron_volt
 def get_potential() -> Potential1d[tuple[FundamentalMomentumAxis1d[Literal[3]]]]:
     delta_x = np.sqrt(3) * LATTICE_CONSTANT / 2
     axis = FundamentalMomentumAxis1d[Literal[3]](np.array([delta_x]), 3)
-    vector = 0.25 * BARRIER_ENERGY * np.array([2, -1, -1]) / np.sqrt(3)
+    vector = 0.25 * BARRIER_ENERGY * np.array([2, -1, -1]) * np.sqrt(3)
     return {"basis": (axis,), "vector": vector}
 
 
@@ -29,7 +30,11 @@ def get_interpolated_potential(
     shape: tuple[_L0Inv],
 ) -> Potential1d[tuple[FundamentalMomentumAxis1d[_L0Inv]]]:
     potential = get_potential()
-    axis = FundamentalMomentumAxis1d[_L0Inv](potential["basis"][0].delta_x, shape[0])
-    interpolated = pad_ft_points(potential["vector"], s=shape, axes=(0,))
-    vector = interpolated * np.sqrt(3) / np.sqrt(shape[0])
-    return {"basis": (axis,), "vector": vector}  # type: ignore[typeddict-item]
+    old_axis = potential["basis"][0]
+    truncated_axis = MomentumAxis1d[_L0Inv, Literal[3]](
+        old_axis.delta_x, old_axis.n, shape[0]
+    )
+    final_axis = FundamentalMomentumAxis1d[_L0Inv](old_axis.delta_x, shape[0])
+    return convert_potential_to_basis(
+        {"basis": (truncated_axis,), "vector": potential["vector"]}, (final_axis,)
+    )

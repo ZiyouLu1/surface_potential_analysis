@@ -48,7 +48,7 @@ class HamiltonianEigenstates(unittest.TestCase):
                     {
                         "basis": basis,
                         "vector": vector,
-                        "bloch_phase": np.array([0, 0, 0]),
+                        "bloch_fraction": np.array([0, 0, 0]),
                     },
                 )
             )

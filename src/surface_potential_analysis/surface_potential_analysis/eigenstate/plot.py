@@ -90,7 +90,9 @@ def plot_eigenstate_1d_x(
 
     converted = convert_eigenstate_to_position_basis(eigenstate)  # type: ignore[var-annotated,arg-type]
     util = BasisUtil(converted["basis"])
-    points = converted["vector"].reshape(util.shape)[tuple(data_slice)]
+    phases = np.tensordot(eigenstate["bloch_fraction"], util.nx_points, axes=(0, 0))
+    vector = converted["vector"] * np.exp(1j * phases)
+    points = vector.reshape(util.shape)[tuple(data_slice)]
     data = get_measured_data(points, measure)
 
     (line,) = ax.plot(coordinates, data)
@@ -429,7 +431,7 @@ def plot_eigenstate_difference_2d_x(
     eigenstate: FundamentalPositionBasisEigenstate3d[_L0Inv, _L1Inv, _L2Inv] = {
         "basis": eigenstate_0["basis"],
         "vector": eigenstate_0["vector"] - eigenstate_1["vector"],
-        "bloch_phase": np.array([0, 0, 0]),
+        "bloch_fraction": np.array([0, 0, 0]),
     }
     return plot_eigenstate_2d_x(
         eigenstate, idx, z_axis, ax=ax, measure=measure, scale=scale

@@ -99,7 +99,7 @@ def _get_global_phases(
     return 2 * np.pi * np.tensordot(nk_fractions, nx_fractions, axes=(0, 0))  # type: ignore[no-any-return]
 
 
-def _get_bloch_phases(
+def _get_bloch_wavefunction_phases(
     wavepacket: Wavepacket[_S0Inv, _B0Inv],
     idx: SingleIndexLike = 0,
 ) -> np.ndarray[tuple[int], np.dtype[np.float_]]:
@@ -149,7 +149,7 @@ def normalize_wavepacket(
     -------
     Wavepacket[ _NS0Inv, _NS1Inv, Basis3d[ TruncatedBasis[_L0Inv, MomentumBasis[_LF0Inv]], TruncatedBasis[_L1Inv, MomentumBasis[_LF1Inv]], ExplicitBasis[_L2Inv, PositionBasis[_LF2Inv]], ], ]
     """
-    bloch_angles = _get_bloch_phases(wavepacket, idx)
+    bloch_angles = _get_bloch_wavefunction_phases(wavepacket, idx)
     global_phases = _get_global_phases(wavepacket, idx)
 
     phases = np.exp(-1j * (bloch_angles + global_phases - angle))
@@ -229,11 +229,11 @@ def normalize_wavepacket_two_point(
     """
     idx_0, idx_1 = get_wavepacket_two_points(wavepacket, offset)
 
-    bloch_phases_0 = _get_bloch_phases(wavepacket, idx_0)
+    bloch_phases_0 = _get_bloch_wavefunction_phases(wavepacket, idx_0)
     global_phases_0 = _get_global_phases(wavepacket, idx_0)
     phi_0 = bloch_phases_0 + global_phases_0
 
-    bloch_phases_1 = _get_bloch_phases(wavepacket, idx_1)
+    bloch_phases_1 = _get_bloch_wavefunction_phases(wavepacket, idx_1)
     global_phases_1 = _get_global_phases(wavepacket, idx_1)
     phi_1 = bloch_phases_1 + global_phases_1
 
@@ -311,7 +311,7 @@ def normalize_wavepacket_single_point(
     max_idx = np.argmax(np.abs(converted["vector"]), axis=-1)
     max_idx = wrap_index_around_origin_x01(converted["basis"], max_idx)
 
-    bloch_phases = _get_bloch_phases(wavepacket, max_idx)
+    bloch_phases = _get_bloch_wavefunction_phases(wavepacket, max_idx)
     global_phases = _get_global_phases(wavepacket, max_idx)
 
     phases = np.exp(-1j * (bloch_phases + global_phases - angle))

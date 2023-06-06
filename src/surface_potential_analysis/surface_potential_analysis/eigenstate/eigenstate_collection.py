@@ -39,7 +39,7 @@ class EigenstateColllection(TypedDict, Generic[_B0Cov, _L0Inv]):
     """Represents a collection of eigenstates, each with the same basis but with _L0Inv different bloch phases."""
 
     basis: _B0Cov
-    bloch_phases: np.ndarray[tuple[_L0Inv, int], np.dtype[np.float_]]
+    bloch_fractions: np.ndarray[tuple[_L0Inv, int], np.dtype[np.float_]]
     vectors: np.ndarray[tuple[_L0Inv, int, int], np.dtype[np.complex_]]
     energies: np.ndarray[tuple[_L0Inv, int], np.dtype[np.float_]]
 
@@ -48,7 +48,7 @@ class EigenstateColllection1d(EigenstateColllection[_B1d0Cov, _L0Inv]):
     """
     Represents a collection of eigenstates, each with the same basis but a variety of different bloch phases.
 
-    NOTE: bloch_phases: np.ndarray[tuple[_L0Inv, Literal[1]], np.dtype[np.float_]].
+    NOTE: bloch_fractions: np.ndarray[tuple[_L0Inv, Literal[1]], np.dtype[np.float_]].
     """
 
 
@@ -56,7 +56,7 @@ class EigenstateColllection2d(EigenstateColllection[_B2d0Cov, _L0Inv]):
     """
     Represents a collection of eigenstates, each with the same basis but a variety of different bloch phases.
 
-    NOTE: bloch_phases: np.ndarray[tuple[_L0Inv, Literal[2]], np.dtype[np.float_]]
+    NOTE: bloch_fractions: np.ndarray[tuple[_L0Inv, Literal[2]], np.dtype[np.float_]]
     """
 
 
@@ -64,7 +64,7 @@ class EigenstateColllection3d(EigenstateColllection[_B3d0Cov, _L0Inv]):
     """
     Represents a collection of eigenstates, each with the same basis but a variety of different bloch phases.
 
-    NOTE: bloch_phases: np.ndarray[tuple[_L0Inv, Literal[3]], np.dtype[np.float_]]
+    NOTE: bloch_fractions: np.ndarray[tuple[_L0Inv, Literal[3]], np.dtype[np.float_]]
     """
 
 
@@ -85,7 +85,7 @@ def calculate_eigenstate_collection(
         [np.ndarray[tuple[int], np.dtype[np.float_]]],
         Hamiltonian[_B0Inv],
     ],
-    bloch_phases: np.ndarray[tuple[_L0Inv, int], np.dtype[np.float_]],
+    bloch_fractions: np.ndarray[tuple[_L0Inv, int], np.dtype[np.float_]],
     *,
     subset_by_index: tuple[int, int] | None = None,
 ) -> EigenstateColllection[_B0Inv, _L0Inv]:
@@ -96,7 +96,7 @@ def calculate_eigenstate_collection(
     ----------
     hamiltonian_generator : Callable[[np.ndarray[tuple[Literal[3]], np.dtype[np.float_]]], Hamiltonian[_B3d0Inv]]
         Function used to generate the hamiltonian
-    bloch_phases : np.ndarray[tuple[int, Literal[3]], np.dtype[np.float_]]
+    bloch_fractions : np.ndarray[tuple[int, Literal[3]], np.dtype[np.float_]]
         List of bloch phases
     subset_by_index : tuple[int, int] | None, optional
         subset_by_index, by default (0,0)
@@ -108,19 +108,19 @@ def calculate_eigenstate_collection(
     subset_by_index = (0, 0) if subset_by_index is None else subset_by_index
     n_states = 1 + subset_by_index[1] - subset_by_index[0]
 
-    basis = hamiltonian_generator(bloch_phases[0])["basis"]
+    basis = hamiltonian_generator(bloch_fractions[0])["basis"]
     util = BasisUtil(basis)
     out: EigenstateColllection[_B0Inv, _L0Inv] = {
         "basis": basis,
         "vectors": np.zeros(
-            (bloch_phases.shape[0], n_states, util.size), dtype=np.complex_
+            (bloch_fractions.shape[0], n_states, util.size), dtype=np.complex_
         ),
-        "energies": np.zeros((bloch_phases.shape[0], n_states), dtype=np.float_),
-        "bloch_phases": bloch_phases,
+        "energies": np.zeros((bloch_fractions.shape[0], n_states), dtype=np.float_),
+        "bloch_fractions": bloch_fractions,
     }
 
-    for idx, bloch_phase in enumerate(bloch_phases):
-        h = hamiltonian_generator(bloch_phase)
+    for idx, bloch_fraction in enumerate(bloch_fractions):
+        h = hamiltonian_generator(bloch_fraction)
         eigenstates = calculate_eigenstates(h, subset_by_index=subset_by_index)
 
         out["vectors"][idx] = eigenstates["vectors"]
@@ -150,5 +150,5 @@ def select_eigenstate(
     return {
         "basis": collection["basis"],
         "vector": collection["vectors"][bloch_idx, band_idx],
-        "bloch_phase": collection["bloch_phases"][bloch_idx],
+        "bloch_fraction": collection["bloch_fractions"][bloch_idx],
     }

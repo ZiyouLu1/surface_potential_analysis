@@ -65,6 +65,5 @@ def convert_wavepacket_to_position_basis(
     Wavepacket[_NS0Inv, _NS1Inv, Basis3d[PositionBasis[int], PositionBasis[int], PositionBasis[int]]]
     """
     return convert_wavepacket_to_basis(
-        wavepacket,
-        basis_as_fundamental_position_basis(wavepacket["basis"]),
+        wavepacket, basis_as_fundamental_position_basis(wavepacket["basis"])
     )

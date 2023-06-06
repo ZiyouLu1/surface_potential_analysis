@@ -117,11 +117,11 @@ def load_two_point_normalized_nickel_wavepacket_momentum(
 
 def generate_nickel_wavepacket_sho() -> None:
     def hamiltonian_generator(
-        x: np.ndarray[tuple[Literal[3]], np.dtype[np.float_]]
+        bloch_fraction: np.ndarray[tuple[Literal[3]], np.dtype[np.float_]]
     ) -> Hamiltonian3d[Any]:
         return generate_hamiltonian_sho(
             shape=(250, 250, 250),
-            bloch_phase=x,
+            bloch_fraction=bloch_fraction,
             resolution=(24, 24, 12),
         )
 

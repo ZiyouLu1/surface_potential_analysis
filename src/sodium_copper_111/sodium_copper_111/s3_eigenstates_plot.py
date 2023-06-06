@@ -41,52 +41,32 @@ def plot_lowest_band_energies() -> None:
     input()
 
 
-def plot_first_6_band_energies() -> None:
+def plot_first_six_band_energies() -> None:
     fig, ax = plt.subplots()
 
-    collection = get_eigenstate_collection((15,))
+    collection = get_eigenstate_collection((200,))
     direction = np.array([1])
 
-    _, _, ln = plot_energies_against_bloch_phase_1d(collection, direction, 0, ax=ax)
-    ln.set_label("n=0")
-    _, _, ln = plot_energies_against_bloch_phase_1d(collection, direction, 1, ax=ax)
-    ln.set_label("n=1")
-    _, _, ln = plot_energies_against_bloch_phase_1d(collection, direction, 2, ax=ax)
-    ln.set_label("n=2")
-    _, _, ln = plot_energies_against_bloch_phase_1d(collection, direction, 3, ax=ax)
-    ln.set_label("n=3")
-    _, _, ln = plot_energies_against_bloch_phase_1d(collection, direction, 4, ax=ax)
-    ln.set_label("n=4")
-    _, _, ln = plot_energies_against_bloch_phase_1d(collection, direction, 5, ax=ax)
-    ln.set_label("n=5")
+    for i in range(6):
+        _, _, ln = plot_energies_against_bloch_phase_1d(collection, direction, i, ax=ax)
+        ln.set_label(f"n={i}")
 
     ax.legend()
-    ax.set_title("Plot of 4 lowest band energies")
+    ax.set_title("Plot of 6 lowest band energies")
 
     fig.show()
     input()
 
 
-def plot_first_six_band_eigenstates() -> None:
+def plot_first_band_eigenstates() -> None:
     fig, ax = plt.subplots()
 
     collection = get_eigenstate_collection((200,))
 
-    eigenstate = select_eigenstate(collection, 0, 0)
-    _, _, ln = plot_eigenstate_1d_x(eigenstate, ax=ax)
-    ln.set_label("n=0")
-
-    eigenstate = select_eigenstate(collection, -1, 0)
-    _, _, ln = plot_eigenstate_1d_x(eigenstate, ax=ax)
-    ln.set_label("n=0")
-
-    eigenstate = select_eigenstate(collection, 0, 1)
-    _, _, ln = plot_eigenstate_1d_x(eigenstate, ax=ax)
-    ln.set_label("n=1")
-
-    eigenstate = select_eigenstate(collection, 0, 2)
-    _, _, ln = plot_eigenstate_1d_x(eigenstate, ax=ax)
-    ln.set_label("n=2")
+    for i, _ in enumerate(collection["bloch_phases"]):
+        eigenstate = select_eigenstate(collection, i, 0)
+        _, _, ln = plot_eigenstate_1d_x(eigenstate, ax=ax, measure="real")
+        ln.set_label(f"{eigenstate['bloch_phase']}")
 
     ax2 = ax.twinx()
     potential = get_interpolated_potential((100,))
@@ -104,37 +84,43 @@ def plot_first_six_band_eigenstates() -> None:
     input()
 
 
-def plot_boltzmann_occupation() -> None:
+def plot_first_six_band_eigenstates() -> None:
+    fig, ax = plt.subplots()
+
+    collection = get_eigenstate_collection((200,))
+
+    for i in range(6):
+        eigenstate = select_eigenstate(collection, 0, i)
+        _, _, ln = plot_eigenstate_1d_x(eigenstate, ax=ax, measure="abs")
+        ln.set_label(f"n={i}")
+
+    ax2 = ax.twinx()
+    potential = get_interpolated_potential((100,))
+    plot_basis = basis_as_fundamental_position_basis(potential["basis"])
+    converted = convert_potential_to_basis(potential, plot_basis)
+    path = np.arange(100).reshape(1, -1)
+    _, _, ln = plot_potential_along_path(converted, path, ax=ax2)
+    ln.set_linestyle("--")
+    ln.set_label("potential")
+
+    ax.legend()
+    ax.set_title("Plot of 4 lowest band energies")
+
+    fig.show()
+    input()
+
+
+def plot_first_six_band_boltzmann_occupation() -> None:
     fig, ax = plt.subplots()
 
     collection = get_eigenstate_collection((15,))
     direction = np.array([1])
     temperature = 155
-
-    _, _, ln = plot_occupation_against_bloch_phase_1d(
-        collection, direction, temperature, 0, ax=ax
-    )
-    ln.set_label("n=0")
-    _, _, ln = plot_occupation_against_bloch_phase_1d(
-        collection, direction, temperature, 1, ax=ax
-    )
-    ln.set_label("n=1")
-    _, _, ln = plot_occupation_against_bloch_phase_1d(
-        collection, direction, temperature, 2, ax=ax
-    )
-    ln.set_label("n=2")
-    _, _, ln = plot_occupation_against_bloch_phase_1d(
-        collection, direction, temperature, 3, ax=ax
-    )
-    ln.set_label("n=3")
-    _, _, ln = plot_occupation_against_bloch_phase_1d(
-        collection, direction, temperature, 4, ax=ax
-    )
-    ln.set_label("n=4")
-    _, _, ln = plot_occupation_against_bloch_phase_1d(
-        collection, direction, temperature, 5, ax=ax
-    )
-    ln.set_label("n=5")
+    for i in range(6):
+        _, _, ln = plot_occupation_against_bloch_phase_1d(
+            collection, direction, temperature, i, ax=ax
+        )
+        ln.set_label(f"n={i}")
 
     ax.legend()
     ax.set_title(

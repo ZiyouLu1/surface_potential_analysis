@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import unittest
-from typing import TYPE_CHECKING, Any, TypeVar
+from typing import TYPE_CHECKING, Any, Literal, TypeVar
 
 import hamiltonian_generator
 import numpy as np
@@ -10,9 +10,15 @@ import scipy.special
 from scipy.constants import hbar
 
 from _test_surface_potential_analysis.utils import convert_explicit_basis_x2
-from surface_potential_analysis.axis.axis import FundamentalPositionAxis3d
+from surface_potential_analysis.axis.axis import (
+    FundamentalMomentumAxis1d,
+    FundamentalPositionAxis3d,
+)
 from surface_potential_analysis.basis.build import (
     position_basis_3d_from_resolution,
+)
+from surface_potential_analysis.basis.conversion import (
+    basis_as_fundamental_position_basis,
 )
 from surface_potential_analysis.basis.sho_basis import (
     SHOBasisConfig,
@@ -20,6 +26,9 @@ from surface_potential_analysis.basis.sho_basis import (
 )
 from surface_potential_analysis.basis.util import (
     Basis3dUtil,
+)
+from surface_potential_analysis.hamiltonian.conversion import (
+    convert_hamiltonian_to_basis,
 )
 from surface_potential_analysis.hamiltonian.hamiltonian import (
     HamiltonianWith3dBasis,
@@ -33,6 +42,7 @@ from surface_potential_analysis.hamiltonian_builder import (
 from surface_potential_analysis.hamiltonian_builder.sho_subtracted_basis import (
     _SurfaceHamiltonianUtil,
 )
+from surface_potential_analysis.potential.conversion import convert_potential_to_basis
 from surface_potential_analysis.util.interpolation import interpolate_points_rfftn
 
 if TYPE_CHECKING:
@@ -46,6 +56,7 @@ if TYPE_CHECKING:
     )
     from surface_potential_analysis.potential.potential import (
         FundamentalPositionBasisPotential3d,
+        Potential,
     )
 
     _A3d0Inv = TypeVar("_A3d0Inv", bound=AxisLike3d[Any, Any])
@@ -141,6 +152,22 @@ def _generate_random_diagonal_hamiltonian() -> (
 
 
 class HamiltonianBuilderTest(unittest.TestCase):
+    def test_hamiltonian_from_potential_momentum(self) -> None:
+        potential: Potential[tuple[FundamentalMomentumAxis1d[Literal[100]]]] = {
+            "basis": (FundamentalMomentumAxis1d(np.array([1]), 100),),
+            "vector": np.array(rng.random(100), dtype=complex),
+        }
+        actual = momentum_basis.hamiltonian_from_potential(potential)
+
+        converted = convert_potential_to_basis(
+            potential, basis_as_fundamental_position_basis(potential["basis"])
+        )
+        expected = convert_hamiltonian_to_basis(
+            {"basis": converted["basis"], "array": np.diag(converted["vector"])},
+            potential["basis"],
+        )
+        np.testing.assert_array_almost_equal(expected["array"], actual["array"])
+
     def test_diagonal_energies(self) -> None:
         resolution = (2, 2, 2)
         config: SHOBasisConfig = {
@@ -410,7 +437,7 @@ class HamiltonianBuilderTest(unittest.TestCase):
             "sho_omega": 1 / hbar,
             "x_origin": np.array([0, 0, -2.5 * np.pi]),
         }
-        bloch_phase = np.array([0, 0, 0])
+        bloch_fraction = np.array([0, 0, 0])
 
         points = np.tile(
             (
@@ -430,7 +457,7 @@ class HamiltonianBuilderTest(unittest.TestCase):
         }
 
         momentum_builder_result = momentum_basis.total_surface_hamiltonian(
-            potential, config["mass"], bloch_phase
+            potential, config["mass"], bloch_fraction
         )
 
         interpolated_points = interpolate_points_rfftn(
@@ -455,7 +482,7 @@ class HamiltonianBuilderTest(unittest.TestCase):
         actual = sho_subtracted_basis.total_surface_hamiltonian(
             interpolated_potential,
             config,
-            bloch_phase,
+            bloch_fraction,
             (points.shape[0], points.shape[1], nz),
         )
 
@@ -479,7 +506,7 @@ class HamiltonianBuilderTest(unittest.TestCase):
             "sho_omega": 1 / hbar,
             "x_origin": np.array([0, 0, -2.5 * np.pi]),
         }
-        bloch_phase = np.array([0, 0, 0])
+        bloch_fraction = np.array([0, 0, 0])
 
         points = rng.random(*shape)
 
@@ -489,7 +516,7 @@ class HamiltonianBuilderTest(unittest.TestCase):
         }
 
         momentum_builder_result = momentum_basis.total_surface_hamiltonian(
-            potential, config["mass"], bloch_phase
+            potential, config["mass"], bloch_fraction
         )
 
         interpolated_points = interpolate_points_rfftn(
@@ -514,7 +541,7 @@ class HamiltonianBuilderTest(unittest.TestCase):
         actual = sho_subtracted_basis.total_surface_hamiltonian(
             interpolated_potential,
             config,
-            bloch_phase,
+            bloch_fraction,
             (points.shape[0], points.shape[1], nz),
         )
 

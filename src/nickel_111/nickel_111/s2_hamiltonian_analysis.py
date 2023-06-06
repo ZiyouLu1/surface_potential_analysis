@@ -49,14 +49,14 @@ def test_hamiltonian_large_resolution() -> None:
     resolution0 = (23, 23, 12)
     h0 = generate_hamiltonian_sho(
         shape=(2 * resolution0[0], 2 * resolution0[1], 500),
-        bloch_phase=np.array([0, 0, 0]),
+        bloch_fraction=np.array([0, 0, 0]),
         resolution=resolution0,
     )
     h0_stacked = stack_hamiltonian(h0)
 
     h0_large = generate_hamiltonian_sho(
         shape=(10 * resolution0[0], 10 * resolution0[1], 500),
-        bloch_phase=np.array([0, 0, 0]),
+        bloch_fraction=np.array([0, 0, 0]),
         resolution=resolution0,
     )
     np.testing.assert_array_almost_equal(h0_large["array"], h0["array"])
@@ -67,7 +67,7 @@ def test_hamiltonian_large_resolution() -> None:
     resolution1 = (25, 25, 16)
     h1 = generate_hamiltonian_sho(
         shape=(2 * resolution1[0], 2 * resolution1[1], 500),
-        bloch_phase=np.array([0, 0, 0]),
+        bloch_fraction=np.array([0, 0, 0]),
         resolution=resolution1,
     )
     h1_stacked = stack_hamiltonian(h1)
@@ -91,13 +91,13 @@ def test_hamiltonian_very_large_resolution() -> None:
     resolution = (23, 23, 12)
     h0 = generate_hamiltonian_sho(
         shape=(2 * resolution[0], 2 * resolution[1], 250),
-        bloch_phase=np.array([0, 0, 0]),
+        bloch_fraction=np.array([0, 0, 0]),
         resolution=resolution,
     )
 
     h1 = generate_hamiltonian_sho(
         shape=(200, 200, 250),
-        bloch_phase=np.array([0, 0, 0]),
+        bloch_fraction=np.array([0, 0, 0]),
         resolution=resolution,
     )
     np.testing.assert_array_almost_equal(h1["array"], h0["array"])
@@ -107,7 +107,7 @@ def test_hamiltonian_very_large_resolution() -> None:
 
     h2 = generate_hamiltonian_sho(
         shape=(100, 100, 250),
-        bloch_phase=np.array([0, 0, 0]),
+        bloch_fraction=np.array([0, 0, 0]),
         resolution=resolution,
     )
     np.testing.assert_array_almost_equal(h1["array"], h2["array"])
@@ -116,7 +116,7 @@ def test_hamiltonian_very_large_resolution() -> None:
 
     h3 = generate_hamiltonian_sho(
         shape=(250, 250, 250),
-        bloch_phase=np.array([0, 0, 0]),
+        bloch_fraction=np.array([0, 0, 0]),
         resolution=resolution,
     )
     np.testing.assert_array_almost_equal(h1["array"], h3["array"])

@@ -90,7 +90,7 @@ def flaten_eigenstate_x(
         eigenstate["basis"][1],
         axis_as_single_point_axis(eigenstate["basis"][2]),
     )
-    return {"basis": basis, "vector": flattened, "bloch_phase": np.array([0, 0, 0])}
+    return {"basis": basis, "vector": flattened, "bloch_fraction": np.array([0, 0, 0])}
 
 
 def plot_nickel_wavepacket_points() -> None:

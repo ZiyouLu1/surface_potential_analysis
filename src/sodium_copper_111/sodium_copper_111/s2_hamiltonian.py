@@ -24,8 +24,8 @@ SODIUM_MASS = 3.8175458e-26
 
 def get_hamiltonian(
     shape: tuple[_L0Inv],
-    bloch_phase: np.ndarray[tuple[Literal[1]], np.dtype[np.float_]] | None = None,
+    bloch_fraction: np.ndarray[tuple[Literal[1]], np.dtype[np.float_]] | None = None,
 ) -> Hamiltonian1d[tuple[FundamentalMomentumAxis1d[_L0Inv]]]:
     potential = hamiltonian_from_potential(get_interpolated_potential(shape))
-    momentum = hamiltonian_from_mass(potential["basis"], SODIUM_MASS, bloch_phase)
+    momentum = hamiltonian_from_mass(potential["basis"], SODIUM_MASS, bloch_fraction)
     return add_hamiltonian(potential, momentum)

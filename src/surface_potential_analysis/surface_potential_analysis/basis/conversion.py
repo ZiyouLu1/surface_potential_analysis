@@ -13,6 +13,7 @@ from surface_potential_analysis.axis.axis import (
     FundamentalPositionAxis1d,
     FundamentalPositionAxis2d,
     FundamentalPositionAxis3d,
+    MomentumAxis,
 )
 from surface_potential_analysis.axis.conversion import (
     axis_as_fundamental_momentum_axis,
@@ -21,6 +22,7 @@ from surface_potential_analysis.axis.conversion import (
     axis_as_single_point_axis,
     get_axis_conversion_matrix,
 )
+from surface_potential_analysis.util.interpolation import pad_ft_points
 
 from .util import BasisUtil
 
@@ -112,33 +114,35 @@ def convert_vector(
     swapped = vector.swapaxes(axis, -1)
     stacked = swapped.reshape(*swapped.shape[:-1], *util.shape)
     last_axis = swapped.ndim - 1
-    for i in range(len(initial_basis)):
-        if isinstance(initial_basis[i], FundamentalMomentumAxis) and isinstance(
-            final_basis[i], FundamentalPositionAxis
+    for initial, final in zip(initial_basis, final_basis, strict=True):
+        if isinstance(initial, MomentumAxis) and isinstance(
+            final, FundamentalPositionAxis
         ):
-            transformed = np.fft.ifft(stacked, axis=last_axis, norm="ortho")
+            padded = pad_ft_points(stacked, s=(final.n,), axes=(last_axis,))
+            scaled = padded * np.sqrt(final.n / initial.n)
+            transformed = np.fft.ifft(scaled, axis=last_axis, norm="ortho")
             stacked = np.moveaxis(transformed, last_axis, -1)
             continue
 
-        if isinstance(initial_basis[i], FundamentalPositionAxis) and isinstance(
-            final_basis[i], FundamentalMomentumAxis
+        if isinstance(initial, FundamentalPositionAxis) and isinstance(
+            final, FundamentalMomentumAxis
         ):
             transformed = np.fft.fft(stacked, axis=last_axis, norm="ortho")
             stacked = np.moveaxis(transformed, last_axis, -1)
             continue
 
-        if isinstance(initial_basis[i], FundamentalPositionAxis) and isinstance(
-            final_basis[i], FundamentalPositionAxis
+        if isinstance(initial, FundamentalPositionAxis) and isinstance(
+            final, FundamentalPositionAxis
         ):
             stacked = np.moveaxis(stacked, last_axis, -1)
             continue
 
-        if isinstance(initial_basis[i], FundamentalMomentumAxis) and isinstance(
-            final_basis[i], FundamentalMomentumAxis
-        ):
-            stacked = np.moveaxis(stacked, last_axis, -1)
+        if isinstance(initial, MomentumAxis) and isinstance(final, MomentumAxis):
+            padded = pad_ft_points(stacked, s=(final.n,), axes=(last_axis,))
+            scaled = padded * np.sqrt(final.n / initial.n)
+            stacked = np.moveaxis(scaled, last_axis, -1)
             continue
-        matrix = get_axis_conversion_matrix(initial_basis[i], final_basis[i])
+        matrix = get_axis_conversion_matrix(initial, final)
         # Each product gets moved to the end,
         # so "last_axis" of stacked always corresponds to the ith axis
         stacked = np.tensordot(stacked, matrix, axes=([last_axis], [0]))
@@ -202,64 +206,64 @@ def convert_matrix(
     """
     util = BasisUtil(initial_basis)
     stacked = matrix.reshape(*util.shape, *util.shape)
-    for i in range(len(initial_basis)):
-        if isinstance(initial_basis[i], FundamentalMomentumAxis) and isinstance(
-            final_basis[i], FundamentalPositionAxis
+    for initial, final in zip(initial_basis, final_basis, strict=True):
+        if isinstance(initial, FundamentalMomentumAxis) and isinstance(
+            final, FundamentalPositionAxis
         ):
             transformed = np.fft.ifft(stacked, axis=0, norm="ortho")
             stacked = np.moveaxis(transformed, 0, -1)
             continue
 
-        if isinstance(initial_basis[i], FundamentalPositionAxis) and isinstance(
-            final_basis[i], FundamentalMomentumAxis
+        if isinstance(initial, FundamentalPositionAxis) and isinstance(
+            final, FundamentalMomentumAxis
         ):
             transformed = np.fft.fft(stacked, axis=0, norm="ortho")
             stacked = np.moveaxis(transformed, 0, -1)
             continue
 
-        if isinstance(initial_basis[i], FundamentalPositionAxis) and isinstance(
-            final_basis[i], FundamentalPositionAxis
+        if isinstance(initial, FundamentalPositionAxis) and isinstance(
+            final, FundamentalPositionAxis
         ):
             stacked = np.moveaxis(stacked, 0, -1)
             continue
-
-        if isinstance(initial_basis[i], FundamentalMomentumAxis) and isinstance(
-            final_basis[i], FundamentalMomentumAxis
-        ):
-            stacked = np.moveaxis(stacked, 0, -1)
+        if isinstance(initial, MomentumAxis) and isinstance(final, MomentumAxis):
+            padded = pad_ft_points(stacked, s=(final.n,), axes=(0,))
+            scaled = padded * np.sqrt(final.n / initial.n)
+            stacked = np.moveaxis(scaled, 0, -1)
             continue
-        matrix = get_axis_conversion_matrix(initial_basis[i], final_basis[i])
+        matrix = get_axis_conversion_matrix(initial, final)
         # Each product gets moved to the end,
         # so the 0th index of stacked corresponds to the ith axis
         stacked = np.tensordot(stacked, matrix, axes=([0], [0]))
 
-    for i in range(len(initial_basis)):
-        if isinstance(initial_basis[i], FundamentalPositionAxis) and isinstance(
-            final_basis[i], FundamentalMomentumAxis
+    for initial, final in zip(initial_basis, final_basis, strict=True):
+        if isinstance(initial, FundamentalPositionAxis) and isinstance(
+            final, FundamentalMomentumAxis
         ):
             transformed = np.fft.ifft(stacked, axis=0, norm="ortho")
             stacked = np.moveaxis(transformed, 0, -1)
             continue
 
-        if isinstance(initial_basis[i], FundamentalMomentumAxis) and isinstance(
-            final_basis[i], FundamentalPositionAxis
+        if isinstance(initial, FundamentalMomentumAxis) and isinstance(
+            final, FundamentalPositionAxis
         ):
             transformed = np.fft.fft(stacked, axis=0, norm="ortho")
             stacked = np.moveaxis(transformed, 0, -1)
             continue
 
-        if isinstance(initial_basis[i], FundamentalPositionAxis) and isinstance(
-            final_basis[i], FundamentalPositionAxis
+        if isinstance(initial, FundamentalPositionAxis) and isinstance(
+            final, FundamentalPositionAxis
         ):
             stacked = np.moveaxis(stacked, 0, -1)
             continue
 
-        if isinstance(initial_basis[i], FundamentalMomentumAxis) and isinstance(
-            final_basis[i], FundamentalMomentumAxis
-        ):
-            stacked = np.moveaxis(stacked, 0, -1)
+        if isinstance(initial, MomentumAxis) and isinstance(final, MomentumAxis):
+            # TODO: is this correct - also need to scale opposite way most likely??
+            padded = pad_ft_points(stacked, s=(final.n,), axes=(0,))
+            scaled = padded * np.sqrt(final.n / initial.n)
+            stacked = np.moveaxis(scaled, 0, -1)
             continue
-        matrix = get_axis_conversion_matrix(initial_basis[i], final_basis[i])
+        matrix = get_axis_conversion_matrix(initial, final)
         matrix_conj = np.conj(matrix)
         # Each product gets moved to the end,
         # so the 0th index of stacked corresponds to the ith axis

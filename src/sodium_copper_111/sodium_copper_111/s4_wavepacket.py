@@ -17,16 +17,16 @@ if TYPE_CHECKING:
     from surface_potential_analysis.hamiltonian.hamiltonian import Hamiltonian
 
     _SodiumWavepacket = Wavepacket[
-        tuple[Literal[12]], tuple[FundamentalMomentumAxis1d[Literal[2000]]]
+        tuple[Literal[12]], tuple[FundamentalMomentumAxis1d[Literal[1000]]]
     ]
 
 
 @npy_cached(get_data_path("wavepacket.npy"), allow_pickle=True)
 def get_all_wavepackets() -> list[_SodiumWavepacket]:
     def hamiltonian_generator(
-        bloch_phase: np.ndarray[tuple[Literal[1]], np.dtype[np.float_]]
-    ) -> Hamiltonian[tuple[FundamentalMomentumAxis1d[Literal[2000]]]]:
-        return get_hamiltonian(shape=(1000,), bloch_phase=bloch_phase)
+        bloch_fraction: np.ndarray[tuple[Literal[1]], np.dtype[np.float_]]
+    ) -> Hamiltonian[tuple[FundamentalMomentumAxis1d[Literal[1000]]]]:
+        return get_hamiltonian(shape=(1000,), bloch_fraction=bloch_fraction)
 
     save_bands = np.arange(20)
 
@@ -39,3 +39,29 @@ def get_all_wavepackets() -> list[_SodiumWavepacket]:
 
 def get_wavepacket(band: int = 0) -> _SodiumWavepacket:
     return get_all_wavepackets()[band]
+
+
+def get_two_band_wavepacket_eigenstate() -> (
+    Wavepacket[tuple[Literal[24]], tuple[FundamentalMomentumAxis1d[Literal[1000]]]]
+):
+    wavepacket_0 = get_wavepacket(0)
+    wavepacket_1 = get_wavepacket(1)
+
+    energies = np.zeros(
+        2 * wavepacket_0["energies"].shape[0], wavepacket_0["energies"].shape[1]
+    )
+    energies[:] = wavepacket_0["energies"]
+    energies[:] = wavepacket_1["energies"]
+    combined: Wavepacket[
+        tuple[Literal[24]], tuple[FundamentalMomentumAxis1d[Literal[1000]]]
+    ] = {
+        "basis": (
+            FundamentalMomentumAxis1d(
+                wavepacket_0["basis"][0].delta_x * 2, wavepacket_0["basis"][0].n
+            ),
+        ),
+        "energies": energies,
+        "shape": (wavepacket_0["shape"][0] * 2,),
+        "vectors": wavepacket_0["vectors"],
+    }
+    return combined

@@ -12,6 +12,9 @@ from surface_potential_analysis.basis.util import (
     calculate_cumulative_x_distances_along_path,
     get_fundamental_projected_x_points,
 )
+from surface_potential_analysis.potential.conversion import (
+    convert_potential_to_position_basis,
+)
 from surface_potential_analysis.util.plot import (
     animate_through_surface,
 )
@@ -36,13 +39,13 @@ if TYPE_CHECKING:
     from matplotlib.lines import Line2D
 
     from surface_potential_analysis._types import SingleFlatIndexLike
-    from surface_potential_analysis.axis.axis import FundamentalPositionAxis
+    from surface_potential_analysis.basis.basis import Basis
     from surface_potential_analysis.potential.potential import Potential
     from surface_potential_analysis.util.plot import Scale
 
     from .potential import FundamentalPositionBasisPotential3d
 
-    _B0Inv = TypeVar("_B0Inv", bound=tuple[FundamentalPositionAxis[Any, Any], ...])
+    _B0Inv = TypeVar("_B0Inv", bound=Basis[Any])
 
 
 _L0Inv = TypeVar("_L0Inv", bound=int)
@@ -541,11 +544,15 @@ def plot_potential_along_path(
     tuple[Figure, Axes, Line2D]
     """
     fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
-    util = BasisUtil(potential["basis"])
-    data = get_measured_data(potential["vector"].reshape(util.shape)[*path], measure)
+
+    converted = convert_potential_to_position_basis(potential)
+    util = BasisUtil(converted["basis"])
+
+    data = get_measured_data(converted["vector"].reshape(util.shape)[*path], measure)
     distances = calculate_cumulative_x_distances_along_path(
-        potential["basis"], path, wrap_distances=wrap_distances
+        converted["basis"], path, wrap_distances=wrap_distances
     )
+
     (line,) = ax.plot(distances, data)
     ax.set_yscale(scale)
     return fig, ax, line

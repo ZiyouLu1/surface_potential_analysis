@@ -31,7 +31,7 @@ _L5 = TypeVar("_L5", bound=int)
 @timed
 def generate_hamiltonian_sho(
     shape: tuple[_L0, _L1, _L2],
-    bloch_phase: np.ndarray[tuple[Literal[3]], np.dtype[np.float_]],
+    bloch_fraction: np.ndarray[tuple[Literal[3]], np.dtype[np.float_]],
     resolution: tuple[_L3, _L4, _L5],
 ) -> HamiltonianWith3dBasis[
     MomentumAxis3d[_L0, _L3],
@@ -45,7 +45,7 @@ def generate_hamiltonian_sho(
     ----------
     shape : tuple[_L0, _L1, _L2]
         Shape of the initial potential
-    bloch_phase : np.ndarray[tuple[Literal[3]], np.dtype[np.float_]]
+    bloch_fraction : np.ndarray[tuple[Literal[3]], np.dtype[np.float_]]
         Bloch phase
     resolution : tuple[_L3, _L4, _L5]
         Resolution of the truncated basis in x,y
@@ -65,7 +65,7 @@ def generate_hamiltonian_sho(
         "x_origin": np.array([0, 0, -1.0000000000000004e-10]),
     }
     return sho_subtracted_basis.total_surface_hamiltonian(
-        potential, config, bloch_phase, resolution
+        potential, config, bloch_fraction, resolution
     )
 
 

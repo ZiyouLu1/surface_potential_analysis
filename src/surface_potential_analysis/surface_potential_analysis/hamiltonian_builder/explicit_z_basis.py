@@ -142,7 +142,7 @@ class _SurfaceHamiltonianUtil(
 
 def total_surface_hamiltonian(
     potential: FundamentalPositionBasisPotential3d[_NF0Inv, _NF1Inv, _NF2Inv],
-    bloch_phase: np.ndarray[tuple[Literal[3]], np.dtype[np.float_]],
+    bloch_fraction: np.ndarray[tuple[Literal[3]], np.dtype[np.float_]],
     basis: Basis3d[
         MomentumAxis3d[_NF0Inv, _N0Inv],
         MomentumAxis3d[_NF1Inv, _N1Inv],
@@ -160,7 +160,7 @@ def total_surface_hamiltonian(
     Parameters
     ----------
     potential : Potential[_L0, _L1, _L2]
-    bloch_phase : np.ndarray[tuple[Literal[3]], np.dtype[np.float_]]
+    bloch_fraction : np.ndarray[tuple[Literal[3]], np.dtype[np.float_]]
     basis : Basis3d[TruncatedBasis[_L3, MomentumBasis[_L0]], TruncatedBasis[_L4, MomentumBasis[_L1]], ExplicitBasis[_L5, MomentumBasis[_L2]]]
     mass : float
 
@@ -169,4 +169,9 @@ def total_surface_hamiltonian(
     HamiltonianWithBasis[TruncatedBasis[_L3, MomentumBasis[_L0]], TruncatedBasis[_L4, MomentumBasis[_L1]], ExplicitBasis[_L5, MomentumBasis[_L2]]]
     """
     util = _SurfaceHamiltonianUtil(potential, basis, mass)
+    bloch_phase = np.tensordot(
+        BasisUtil(util._basis).fundamental_dk,  # noqa: SLF001
+        bloch_fraction,
+        axes=(0, 0),
+    )
     return util.hamiltonian(bloch_phase)
