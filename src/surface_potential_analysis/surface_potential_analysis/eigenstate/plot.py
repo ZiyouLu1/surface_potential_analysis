@@ -17,6 +17,9 @@ from surface_potential_analysis.eigenstate.conversion import (
     convert_eigenstate_to_momentum_basis,
     convert_eigenstate_to_position_basis,
 )
+from surface_potential_analysis.eigenstate.eigenstate_calculation import (
+    calculate_eigenstate_at_index_position,
+)
 from surface_potential_analysis.util.plot import animate_through_surface
 from surface_potential_analysis.util.util import (
     Measure,
@@ -88,10 +91,10 @@ def plot_eigenstate_1d_x(
     data_slice: list[slice | int] = list(idx)
     data_slice.insert(axis, slice(None))
 
-    converted = convert_eigenstate_to_position_basis(eigenstate)  # type: ignore[var-annotated,arg-type]
-    util = BasisUtil(converted["basis"])
-    phases = np.tensordot(eigenstate["bloch_fraction"], util.nx_points, axes=(0, 0))
-    vector = converted["vector"] * np.exp(1j * phases)
+    util = BasisUtil(eigenstate["basis"])
+    vector = calculate_eigenstate_at_index_position(
+        eigenstate, util.fundamental_nx_points
+    )
     points = vector.reshape(util.shape)[tuple(data_slice)]
     data = get_measured_data(points, measure)
 

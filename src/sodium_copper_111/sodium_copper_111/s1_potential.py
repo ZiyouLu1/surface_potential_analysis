@@ -8,6 +8,9 @@ from surface_potential_analysis.axis.axis import (
     FundamentalMomentumAxis1d,
     MomentumAxis1d,
 )
+from surface_potential_analysis.basis.conversion import (
+    basis_as_fundamental_momentum_basis,
+)
 from surface_potential_analysis.potential.conversion import convert_potential_to_basis
 
 if TYPE_CHECKING:
@@ -30,11 +33,10 @@ def get_interpolated_potential(
     shape: tuple[_L0Inv],
 ) -> Potential1d[tuple[FundamentalMomentumAxis1d[_L0Inv]]]:
     potential = get_potential()
-    old_axis = potential["basis"][0]
-    truncated_axis = MomentumAxis1d[_L0Inv, Literal[3]](
-        old_axis.delta_x, old_axis.n, shape[0]
-    )
-    final_axis = FundamentalMomentumAxis1d[_L0Inv](old_axis.delta_x, shape[0])
+    old = potential["basis"][0]
+    basis = (MomentumAxis1d[_L0Inv, Literal[3]](old.delta_x, old.n, shape[0]),)
+    scaled_potential = potential["vector"] * np.sqrt(shape[0] / old.n)
     return convert_potential_to_basis(
-        {"basis": (truncated_axis,), "vector": potential["vector"]}, (final_axis,)
+        {"basis": basis, "vector": scaled_potential},
+        basis_as_fundamental_momentum_basis(basis),
     )

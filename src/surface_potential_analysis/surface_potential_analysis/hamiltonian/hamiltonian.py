@@ -13,7 +13,6 @@ from surface_potential_analysis.basis.basis import (
     FundamentalMomentumBasis3d,
     FundamentalPositionBasis3d,
 )
-from surface_potential_analysis.basis.util import Basis3dUtil
 
 _A3d0Cov = TypeVar("_A3d0Cov", bound=AxisLike3d[Any, Any], covariant=True)
 _A3d1Cov = TypeVar("_A3d1Cov", bound=AxisLike3d[Any, Any], covariant=True)
@@ -44,16 +43,11 @@ class Hamiltonian(TypedDict, Generic[_B0Cov]):
     array: HamiltonianPoints[int, int]
 
 
-class Hamiltonian1d(Hamiltonian[_B1d0Cov]):
-    """Represents an operator in the given basis."""
+Hamiltonian1d = Hamiltonian[_B1d0Cov]
 
+Hamiltonian2d = Hamiltonian[_B2d0Cov]
 
-class Hamiltonian2d(Hamiltonian[_B2d0Cov]):
-    """Represents an operator in the given basis."""
-
-
-class Hamiltonian3d(Hamiltonian[_B3d0Cov]):
-    """Represents an operator in the given basis."""
+Hamiltonian3d = Hamiltonian[_B3d0Cov]
 
 
 HamiltonianWith3dBasis = Hamiltonian3d[Basis3d[_A3d0Cov, _A3d1Cov, _A3d2Cov]]
@@ -64,72 +58,6 @@ FundamentalMomentumBasisHamiltonian3d = Hamiltonian3d[
 FundamentalPositionBasisHamiltonian3d = Hamiltonian3d[
     FundamentalPositionBasis3d[_L0Cov, _L1Cov, _L2Cov]
 ]
-
-_StackedHamiltonianPoints = np.ndarray[
-    tuple[_L0Cov, _L1Cov, _L2Cov, _L0Cov, _L1Cov, _L2Cov],
-    np.dtype[np.complex_] | np.dtype[np.float_],
-]
-
-
-class StackedHamiltonian3d(TypedDict, Generic[_B3d0Cov]):
-    """Represents an operator with it's array of points 'stacked'."""
-
-    basis: _B3d0Cov
-    # We need higher kinded types to do this properly
-    array: _StackedHamiltonianPoints[int, int, int]
-
-
-StackedHamiltonianWith3dBasis = StackedHamiltonian3d[
-    Basis3d[_A3d0Cov, _A3d1Cov, _A3d2Cov]
-]
-FundamentalMomentumBasisStackedHamiltonian3d = StackedHamiltonian3d[
-    FundamentalMomentumBasis3d[_L0Cov, _L1Cov, _L2Cov]
-]
-FundamentalPositionBasisStackedHamiltonian3d = StackedHamiltonian3d[
-    FundamentalPositionBasis3d[_L0Cov, _L1Cov, _L2Cov]
-]
-
-
-def flatten_hamiltonian(
-    hamiltonian: StackedHamiltonian3d[_B3d0Inv],
-) -> Hamiltonian3d[_B3d0Inv]:
-    """
-    Convert a stacked hamiltonian to a hamiltonian.
-
-    Parameters
-    ----------
-    hamiltonian : StackedHamiltonian[_B3d0Inv]
-
-    Returns
-    -------
-    Hamiltonian[_B3d0Inv]
-    """
-    n_states = np.prod(hamiltonian["array"].shape[:3])
-    return {
-        "basis": hamiltonian["basis"],
-        "array": hamiltonian["array"].reshape(n_states, n_states),
-    }
-
-
-def stack_hamiltonian(
-    hamiltonian: Hamiltonian3d[_B3d0Inv],
-) -> StackedHamiltonian3d[_B3d0Inv]:
-    """
-    Convert a hamiltonian to a stacked hamiltonian.
-
-    Parameters
-    ----------
-    hamiltonian : Hamiltonian[_B3d0Inv]
-
-    Returns
-    -------
-    StackedHamiltonian[_B3d0Inv]
-    """
-    basis = Basis3dUtil(hamiltonian["basis"])
-    return {
-        "basis": hamiltonian["basis"],
-        "array": hamiltonian["array"].reshape(*basis.shape, *basis.shape),
-    }
 
 
 def add_hamiltonian(

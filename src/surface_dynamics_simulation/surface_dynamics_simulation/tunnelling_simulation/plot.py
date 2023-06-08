@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Any, TypeVar
 import numpy as np
 from matplotlib import pyplot as plt
 from surface_potential_analysis.basis.build import (
-    position_basis_3d_from_resolution,
+    position_basis_3d_from_shape,
 )
 from surface_potential_analysis.basis.conversion import (
     basis3d_as_single_point_basis,
@@ -126,7 +126,7 @@ def animate_occupation_per_site_2d(
     unfurled_basis = get_unfurled_basis(
         basis3d_as_single_point_basis(basis)
         if basis is not None
-        else position_basis_3d_from_resolution((1, 1, 1)),
+        else position_basis_3d_from_shape((1, 1, 1)),
         (shape[0], shape[1]),
     )
 

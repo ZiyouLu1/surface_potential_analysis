@@ -112,6 +112,7 @@ class MomentumAxis(AxisLike[_NF0Inv, _N0Inv, _ND0Inv]):
         self._delta_x = delta_x
         self._n = n
         self._fundamental_n = fundamental_n
+        assert self._fundamental_n >= self.n
         super().__init__()
 
     @property

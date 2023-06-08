@@ -7,7 +7,7 @@ import numpy as np
 
 from surface_potential_analysis.axis.axis import (
     ExplicitAxis3d,
-    FundamentalMomentumAxis3d,
+    FundamentalMomentumAxis,
     FundamentalPositionAxis,
 )
 
@@ -75,7 +75,7 @@ def get_rotated_axis(
 
 
 def get_axis_conversion_matrix(
-    axis_0: AxisLike3d[_N0Inv, _NF0Inv], axis_1: AxisLike3d[_N1Inv, _NF1Inv]
+    axis_0: AxisLike[_N0Inv, _NF0Inv, _NDInv], axis_1: AxisLike[_N1Inv, _NF1Inv, _NDInv]
 ) -> np.ndarray[tuple[_NF0Inv, _NF1Inv], np.dtype[np.complex_]]:
     """
     Get the matrix to convert one set of axis axes into another.
@@ -112,20 +112,20 @@ def axis_as_fundamental_position_axis(
 
 
 def axis_as_fundamental_momentum_axis(
-    axis: AxisLike3d[_NF0Inv, _N0Inv]
-) -> FundamentalMomentumAxis3d[_NF0Inv]:
+    axis: AxisLike[_NF0Inv, _N0Inv, _NDInv]
+) -> FundamentalMomentumAxis[_NF0Inv, _NDInv]:
     """
     Get the fundamental momentum axis for a given axis.
 
     Parameters
     ----------
-    axis : AxisLike[_NF0Inv, _N0Inv]
+    axis : AxisLike[_NF0Inv, _N0Inv, _NDInv]
 
     Returns
     -------
-    FundamentalMomentumAxis[_NF0Inv]
+    FundamentalMomentumAxis[_NF0Inv, _NDInv]
     """
-    return FundamentalMomentumAxis3d(axis.delta_x, axis.fundamental_n)
+    return FundamentalMomentumAxis(axis.delta_x, axis.fundamental_n)
 
 
 def axis_as_explicit_position_axis(

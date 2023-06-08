@@ -2,6 +2,6 @@
 
 from __future__ import annotations
 
-from .eigenstate import Eigenstate3d, EigenstateList3d
+from .eigenstate import Eigenstate, EigenstateList
 
-__all__ = ["Eigenstate3d", "EigenstateList3d"]
+__all__ = ["Eigenstate", "EigenstateList"]

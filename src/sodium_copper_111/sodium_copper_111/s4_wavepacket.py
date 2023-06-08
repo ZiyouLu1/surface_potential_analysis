@@ -6,6 +6,7 @@ import numpy as np
 from surface_potential_analysis.util.decorators import npy_cached
 from surface_potential_analysis.wavepacket.wavepacket import (
     Wavepacket,
+    generate_n_band_wavepacket,
     generate_wavepacket,
 )
 
@@ -21,17 +22,17 @@ if TYPE_CHECKING:
     ]
 
 
+def _hamiltonian_generator(
+    bloch_fraction: np.ndarray[tuple[Literal[1]], np.dtype[np.float_]]
+) -> Hamiltonian[tuple[FundamentalMomentumAxis1d[Literal[1000]]]]:
+    return get_hamiltonian(shape=(1000,), bloch_fraction=bloch_fraction)
+
+
 @npy_cached(get_data_path("wavepacket.npy"), allow_pickle=True)
 def get_all_wavepackets() -> list[_SodiumWavepacket]:
-    def hamiltonian_generator(
-        bloch_fraction: np.ndarray[tuple[Literal[1]], np.dtype[np.float_]]
-    ) -> Hamiltonian[tuple[FundamentalMomentumAxis1d[Literal[1000]]]]:
-        return get_hamiltonian(shape=(1000,), bloch_fraction=bloch_fraction)
-
-    save_bands = np.arange(20)
-
+    save_bands = np.arange(99)
     return generate_wavepacket(
-        hamiltonian_generator,
+        _hamiltonian_generator,
         shape=(12,),
         save_bands=save_bands,
     )
@@ -41,27 +42,8 @@ def get_wavepacket(band: int = 0) -> _SodiumWavepacket:
     return get_all_wavepackets()[band]
 
 
-def get_two_band_wavepacket_eigenstate() -> (
+@npy_cached(get_data_path("2_wavepacket.npy"), allow_pickle=True)
+def get_n_band_wavepacket() -> (
     Wavepacket[tuple[Literal[24]], tuple[FundamentalMomentumAxis1d[Literal[1000]]]]
 ):
-    wavepacket_0 = get_wavepacket(0)
-    wavepacket_1 = get_wavepacket(1)
-
-    energies = np.zeros(
-        2 * wavepacket_0["energies"].shape[0], wavepacket_0["energies"].shape[1]
-    )
-    energies[:] = wavepacket_0["energies"]
-    energies[:] = wavepacket_1["energies"]
-    combined: Wavepacket[
-        tuple[Literal[24]], tuple[FundamentalMomentumAxis1d[Literal[1000]]]
-    ] = {
-        "basis": (
-            FundamentalMomentumAxis1d(
-                wavepacket_0["basis"][0].delta_x * 2, wavepacket_0["basis"][0].n
-            ),
-        ),
-        "energies": energies,
-        "shape": (wavepacket_0["shape"][0] * 2,),
-        "vectors": wavepacket_0["vectors"],
-    }
-    return combined
+    return generate_n_band_wavepacket(_hamiltonian_generator, (12,), 4)

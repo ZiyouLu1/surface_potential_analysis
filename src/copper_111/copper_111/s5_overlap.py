@@ -9,7 +9,7 @@ from surface_potential_analysis.basis.basis import (
 from surface_potential_analysis.overlap.calculation import calculate_wavepacket_overlap
 from surface_potential_analysis.overlap.overlap import save_overlap
 from surface_potential_analysis.wavepacket.normalization import (
-    calculate_normalisation,
+    calculate_normalization,
 )
 from surface_potential_analysis.wavepacket.wavepacket import (
     Wavepacket3dWith2dSamples,
@@ -67,11 +67,11 @@ def generate_next_hcp_wavepacket() -> _CopperWavepacket:
 def calculate_overlap_copper() -> None:
     wavepacket_fcc = generate_fcc_wavepacket()
     # 0.9999999999996321
-    print(calculate_normalisation(wavepacket_fcc))  # noqa: T201
+    print(calculate_normalization(wavepacket_fcc))  # noqa: T201
 
     wavepacket_hcp = generate_hcp_wavepacket()
     # 0.9999999999997532
-    print(calculate_normalisation(wavepacket_hcp))  # noqa: T201
+    print(calculate_normalization(wavepacket_hcp))  # noqa: T201
 
     overlap_hcp_fcc = calculate_wavepacket_overlap(wavepacket_fcc, wavepacket_hcp)
     # -3.6208117396279577e-17 (should be 0)

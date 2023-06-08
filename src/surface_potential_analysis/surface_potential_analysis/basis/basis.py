@@ -1,10 +1,10 @@
 from __future__ import annotations
 
-from typing import Any, TypeVar
+from typing import Any, Literal, TypeVar
 
 from surface_potential_analysis.axis.axis import (
-    FundamentalMomentumAxis3d,
-    FundamentalPositionAxis3d,
+    FundamentalMomentumAxis,
+    FundamentalPositionAxis,
 )
 from surface_potential_analysis.axis.axis_like import (
     AxisLike,
@@ -34,13 +34,13 @@ _NF1Inv = TypeVar("_NF1Inv", bound=int)
 _NF2Inv = TypeVar("_NF2Inv", bound=int)
 
 FundamentalPositionBasis3d = tuple[
-    FundamentalPositionAxis3d[_NF0Inv],
-    FundamentalPositionAxis3d[_NF1Inv],
-    FundamentalPositionAxis3d[_NF2Inv],
+    FundamentalPositionAxis[_NF0Inv, Literal[3]],
+    FundamentalPositionAxis[_NF1Inv, Literal[3]],
+    FundamentalPositionAxis[_NF2Inv, Literal[3]],
 ]
 
 FundamentalMomentumBasis3d = tuple[
-    FundamentalMomentumAxis3d[_NF0Inv],
-    FundamentalMomentumAxis3d[_NF1Inv],
-    FundamentalMomentumAxis3d[_NF2Inv],
+    FundamentalMomentumAxis[_NF0Inv, Literal[3]],
+    FundamentalMomentumAxis[_NF1Inv, Literal[3]],
+    FundamentalMomentumAxis[_NF2Inv, Literal[3]],
 ]

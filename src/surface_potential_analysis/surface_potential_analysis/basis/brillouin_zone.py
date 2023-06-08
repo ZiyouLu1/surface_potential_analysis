@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Any, Literal, TypeVar, Unpack, overload
 import numpy as np
 
 from surface_potential_analysis.basis.build import (
-    position_basis_3d_from_resolution,
+    position_basis_from_shape,
 )
 from surface_potential_analysis.basis.util import Basis3dUtil, BasisUtil
 
@@ -18,10 +18,10 @@ if TYPE_CHECKING:
         StackedIndexLike,
         StackedIndexLike3d,
     )
+    from surface_potential_analysis.axis.axis import FundamentalPositionAxis
     from surface_potential_analysis.basis.basis import (
         Basis,
         Basis3d,
-        FundamentalPositionBasis3d,
     )
 
     _B3d0Inv = TypeVar("_B3d0Inv", bound=Basis3d[Any, Any, Any])
@@ -80,14 +80,14 @@ def fold_point_in_bragg_plane(
 
 
 def get_bragg_point_basis(
-    basis: _B3d0Inv, *, n_bands: int = 1
-) -> FundamentalPositionBasis3d[int, int, int]:
+    basis: _B0Inv, *, n_bands: int = 1
+) -> tuple[FundamentalPositionAxis[int, int], ...]:
     """
     Get the basis for the bragg points, where the k_points are the bragg points of the given basis.
 
     Parameters
     ----------
-    basis : _B3d0Inv
+    basis : _B0Inv
         parent basis
     n_bands : int, optional
         number of bands, by default 1
@@ -97,18 +97,18 @@ def get_bragg_point_basis(
     FundamentalPositionBasis3d[int, int, int]
     """
     width = 2 * n_bands + 1
-    util = Basis3dUtil(basis)
-    delta_x = (util.dx0, util.dx1, util.dx2)
+    util = BasisUtil(basis)
+    shape: tuple[int, ...] = (width,) * len(util.shape)
     # we want a basis where dk_1 = delta_k_original
     # Since dk = 2 * pi / delta_x we need to decrease delta_x by a factor of util.ni
     # as this will increase dk to the intended value.
-    # This is equivalent to delta_x = (util.dx0, util.dx1, util.dx2)
-    return position_basis_3d_from_resolution((width, width, width), delta_x)
+    # This is equivalent to delta_x = util.dx
+    return position_basis_from_shape(shape, util.dx)  # type: ignore[call-overload,no-any-return]
 
 
 def get_all_brag_point_index(
-    basis: _B3d0Inv, n_bands: int = 1
-) -> ArrayStackedIndexLike3d[tuple[int]]:
+    basis: _B0Inv, n_bands: int = 1
+) -> ArrayStackedIndexLike[tuple[int]]:
     """
     Given a basis in 3D, get the stacked index of the brag points in the first n_bands.
 
@@ -123,20 +123,17 @@ def get_all_brag_point_index(
     ArrayStackedIndexLike[tuple[int]]
         Index of each of the brag points, using the nk_points convention for the ArrayStackedIndexLike
     """
-    mock_basis = position_basis_3d_from_resolution(
-        (2 * n_bands + 1, 2 * n_bands + 1, 2 * n_bands + 1)
-    )
-    nk_points = Basis3dUtil(mock_basis).fundamental_nk_points
-    return (
-        nk_points[0] * basis[0].n,
-        nk_points[1] * basis[1].n,
-        nk_points[2] * basis[2].n,
+    bragg_point_basis = get_bragg_point_basis(basis, n_bands=n_bands)
+    nk_points = BasisUtil(bragg_point_basis).fundamental_nk_points
+    shape = BasisUtil(basis).shape
+    return tuple(
+        ni * nki_points for (ni, nki_points) in zip(shape, nk_points, strict=True)
     )
 
 
 def get_all_brag_point(
-    basis: _B3d0Inv, *, n_bands: int = 1
-) -> np.ndarray[tuple[Literal[3], int], np.dtype[np.float_]]:
+    basis: _B0Inv, *, n_bands: int = 1
+) -> np.ndarray[tuple[int, int], np.dtype[np.float_]]:
     """
     Given a basis in 3D, get the coordinates of the brag points in the first n_bands.
 
@@ -152,7 +149,7 @@ def get_all_brag_point(
         Array of each of the brag points, using the nk_points convention
     """
     bragg_point_basis = get_bragg_point_basis(basis, n_bands=n_bands)
-    return Basis3dUtil(bragg_point_basis).fundamental_k_points
+    return BasisUtil(bragg_point_basis).fundamental_k_points
 
 
 @overload
@@ -203,17 +200,19 @@ def get_closest_interior_bragg_plane(
     np.zeros_like(coordinate[0])
 
 
-def increment_brillouin_zone(basis: _B3d0Inv, coordinate: SingleStackedIndexLike3d):
+def increment_brillouin_zone(
+    basis: _B3d0Inv, coordinate: SingleStackedIndexLike3d
+) -> None:
     raise NotImplementedError
     # To fold a point into the next brillouin zone we reflect it
     # in the closest bragg plane outside the point and then reflect it about
     # a plane parallel to this at the origin.
 
 
-def _get_decrement_tolerance(basis: _B3d0Inv) -> float:
+def _get_decrement_tolerance(basis: _B0Inv) -> float:
     r_tol = 1e-5
-    util = Basis3dUtil(basis)
-    return np.min(np.linalg.norm([util.dk0, util.dk1, util.dk2], axis=1)) * r_tol
+    util = BasisUtil(basis)
+    return np.min(np.linalg.norm(util.dk, axis=1)) * r_tol
 
 
 _NInv = TypeVar("_NInv", bound=int)
@@ -333,34 +332,16 @@ def decrement_brillouin_zone(
         new_distances = get_bragg_plane_distance(bragg_point, coordinate_points)  # type: ignore[arg-type,var-annotated]
         is_closer = np.logical_and(new_distances > tolerance, new_distances < distances)
         closest_points[is_closer] = i + 1
-        if np.sometrue(is_closer):
-            print(bragg_point)
-            print(is_closer.shape, closest_points.shape)
-            print(tuple(out[:, is_closer]))
-            print(new_distances[is_closer])
         distances[is_closer] = new_distances[is_closer]
 
     bragg_point_index = get_all_brag_point_index(basis, n_bands=1)
     for i, bragg_point in enumerate(np.array(bragg_point_index).T):
         should_fold = closest_points == i
         folded = fold_point_in_bragg_plane(bragg_point, tuple(out[:, should_fold]))  # type: ignore[arg-type,var-annotated]
-        if np.sometrue(should_fold):
-            print(
-                i,
-                bragg_point,
-                tuple(out[:, should_fold]),
-                (out[0, should_fold], out[1, should_fold], out[2, should_fold]),
-                folded,
-                out.shape,
-            )
         out[:, should_fold] = folded
 
     if isinstance(coordinate[0], np.ndarray):
         # For 0D arrays we need to drop the additional axis here
         old_shape = coordinate[0].shape
-        return (
-            out[0].reshape(old_shape),
-            out[1].reshape(old_shape),
-            out[2].reshape(old_shape),
-        )
-    return (out.item(0), out.item(1), out.item(2))
+        return tuple(o.reshape(old_shape) for o in out)
+    return tuple(o for o in out.flat)

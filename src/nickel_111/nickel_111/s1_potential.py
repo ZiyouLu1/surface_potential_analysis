@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Any, TypeVar
 import numpy as np
 from surface_potential_analysis.axis.axis import FundamentalPositionAxis3d
 from surface_potential_analysis.basis.build import (
-    position_basis_3d_from_resolution,
+    position_basis_3d_from_shape,
 )
 from surface_potential_analysis.basis.util import Basis3dUtil, BasisUtil
 from surface_potential_analysis.potential import (
@@ -149,10 +149,8 @@ def interpolate_points_fourier_nickel(  # noqa: PLR0913
     a grid of points with the given shape into the real spacing using the fourier transform.
     """
     ft_potential = np.fft.fft2(points, axes=(0, 1), norm="forward")
-    old_basis: FundamentalPositionBasis3d[
-        int, int, int
-    ] = position_basis_3d_from_resolution(
-        resolution=(*points.shape, 1)  # type: ignore[arg-type]
+    old_basis: FundamentalPositionBasis3d[int, int, int] = position_basis_3d_from_shape(
+        shape=(*points.shape, 1)  # type: ignore[arg-type]
     )
     old_basis_util = Basis3dUtil(old_basis)
     nk_points_stacked = np.array(old_basis_util.fundamental_nk_points).reshape(

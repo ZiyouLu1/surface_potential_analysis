@@ -12,6 +12,7 @@ from surface_potential_analysis.wavepacket.conversion import convert_wavepacket_
 from surface_potential_analysis.wavepacket.wavepacket import (
     Wavepacket,
     Wavepacket3d,
+    get_furled_basis,
     get_unfurled_basis,
 )
 
@@ -49,7 +50,9 @@ if TYPE_CHECKING:
 
 def furl_eigenstate(
     eigenstate: Eigenstate3dWithBasis[
-        FundamentalMomentumAxis3d[_L0Inv], FundamentalMomentumAxis3d[_L1Inv], _A3d2Inv
+        FundamentalMomentumAxis[_L0Inv, Literal[3]],
+        FundamentalMomentumAxis[_L1Inv, Literal[3]],
+        _A3d2Inv,
     ],
     shape: tuple[_NS0Inv, _NS1Inv, Literal[1]],
 ) -> WavepacketWithBasis3d[
@@ -87,7 +90,7 @@ def furl_eigenstate(
     unshifted = np.fft.ifftshift(swapped, axes=(0, 1, 2, 3))
     flattened = unshifted.reshape(ns0, ns1, -1)
 
-    basis = get_unfurled_basis(eigenstate["basis"], shape)
+    basis = get_furled_basis(eigenstate["basis"], shape)
     return {
         "basis": basis_as_fundamental_momentum_basis(basis),  # type: ignore[typeddict-item]
         "shape": shape,

@@ -17,6 +17,8 @@ from surface_potential_analysis.basis.basis import (
 if TYPE_CHECKING:
     from pathlib import Path
 
+    from surface_potential_analysis._types import SingleFlatIndexLike
+
 _B0Inv = TypeVar("_B0Inv", bound=Basis[Any])
 
 
@@ -98,8 +100,26 @@ class EigenstateList(TypedDict, Generic[_B0Inv]):
     energies: np.ndarray[tuple[int], np.dtype[np.float_]]
 
 
-class EigenstateList3d(EigenstateList[_B3d0Inv]):
-    """Represents a list of eigenstates, each with the same basis and bloch wavevector."""
+def get_eigenstate(
+    eigenstates: EigenstateList[_B0Inv], idx: SingleFlatIndexLike
+) -> Eigenstate[_B0Inv]:
+    """
+    Get a single eigenstate from a list of eigenstates.
+
+    Parameters
+    ----------
+    eigenstates : EigenstateList[_B0Inv]
+    idx : SingleFlatIndexLike
+
+    Returns
+    -------
+    Eigenstate[_B0Inv]
+    """
+    return {
+        "basis": eigenstates["basis"],
+        "bloch_fraction": np.zeros(len(eigenstates["basis"])),
+        "vector": eigenstates["vectors"][idx],
+    }
 
 
 def save_eigenstate_list(path: Path, eigenstates: EigenstateList[Any]) -> None:
@@ -129,7 +149,7 @@ def load_eigenstate_list(path: Path) -> EigenstateList[Any]:
     return np.load(path, allow_pickle=True)[()]  # type: ignore[no-any-return]
 
 
-def calculate_normalisation(eigenstate: Eigenstate3d[Any]) -> float:
+def calculate_normalization(eigenstate: Eigenstate3d[Any]) -> float:
     """
     calculate the normalization of an eigenstate.
 

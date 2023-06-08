@@ -13,9 +13,6 @@ from surface_potential_analysis.axis.axis import (
     ExplicitAxis3d,
     FundamentalPositionAxis,
 )
-from surface_potential_analysis.axis.conversion import (
-    axis_as_fundamental_position_axis,
-)
 from surface_potential_analysis.axis.util import Axis3dUtil
 from surface_potential_analysis.basis.potential_basis import (
     PotentialBasisConfig,
@@ -87,7 +84,7 @@ class SHOBasisConfig(TypedDict):
 
 def get_sho_potential_basis_config(
     parent: AxisLike3d[_L0Inv, _LF0Inv], config: SHOBasisConfig, n: _L1Inv
-) -> PotentialBasisConfig[_L0Inv, _L1Inv]:
+) -> PotentialBasisConfig[tuple[FundamentalPositionAxis[_LF0Inv, Literal[1]]], _L1Inv]:
     """
     Get a potential basis config assuming a SHO oscillator.
 
@@ -110,9 +107,7 @@ def get_sho_potential_basis_config(
     delta_x2 /= np.linalg.norm(delta_x2)
 
     basis = (
-        axis_as_fundamental_position_axis(parent),
-        FundamentalPositionAxis[Literal[1], Literal[3]](delta_x1, 1),
-        FundamentalPositionAxis[Literal[1], Literal[3]](delta_x2, 1),
+        FundamentalPositionAxis(np.array([np.linalg.norm(parent.delta_x)]), parent.n),
     )
     x_distances = calculate_x_distances(parent, config["x_origin"])
 
@@ -122,7 +117,7 @@ def get_sho_potential_basis_config(
             "vector": 0.5
             * config["mass"]
             * config["sho_omega"] ** 2
-            * np.array([[x_distances]]) ** 2,
+            * x_distances**2,
         },
         "n": n,
         "mass": config["mass"],
@@ -131,7 +126,7 @@ def get_sho_potential_basis_config(
 
 def sho_basis_from_config(
     parent: AxisLike3d[_LF0Inv, _L0Inv], config: SHOBasisConfig, n: _L0Inv
-) -> ExplicitAxis3d[_LF0Inv, _LF0Inv]:
+) -> ExplicitAxis3d[_LF0Inv, _L0Inv]:
     """
     Calculate the exact sho basis for a given basis, by directly diagonalizing the sho wavefunction in this basis.
 
@@ -149,7 +144,8 @@ def sho_basis_from_config(
     ExplicitBasis[_L0Inv, _FBInv]
     """
     potential_basis_config = get_sho_potential_basis_config(parent, config, n)
-    return get_potential_basis_config_basis(potential_basis_config)
+    axis = get_potential_basis_config_basis(potential_basis_config)
+    return ExplicitAxis3d(parent.delta_x, axis.vectors)
 
 
 def infinate_sho_basis_from_config(
@@ -179,5 +175,5 @@ def infinate_sho_basis_from_config(
         ]
     )
     util = Axis3dUtil(parent)
-    vectors * np.sqrt(np.linalg.norm(util.fundamental_dx))
+    vectors = vectors * np.sqrt(np.linalg.norm(util.fundamental_dx))
     return ExplicitAxis3d(parent.delta_x, vectors)

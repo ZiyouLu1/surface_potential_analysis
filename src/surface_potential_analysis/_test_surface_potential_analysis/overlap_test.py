@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, Any
 import numpy as np
 
 from surface_potential_analysis.basis.build import (
-    position_basis_3d_from_resolution,
+    position_basis_3d_from_shape,
 )
 from surface_potential_analysis.basis.util import (
     Basis3dUtil,
@@ -29,7 +29,7 @@ class OverlapTest(unittest.TestCase):
     def test_overlap_interpolation(self) -> None:
         shape = (10, 10, 10)
         overlap: FundamentalPositionOverlap[Any, Any, Any] = {
-            "basis": position_basis_3d_from_resolution(shape),
+            "basis": position_basis_3d_from_shape(shape),
             "vector": np.array(rng.random(np.prod(shape)), dtype=complex),
         }
 
@@ -43,7 +43,7 @@ class OverlapTest(unittest.TestCase):
     def test_overlap_interpolation_fractions(self) -> None:
         shape = (10, 10, 10)
         overlap: FundamentalPositionOverlap[Any, Any, Any] = {
-            "basis": position_basis_3d_from_resolution(shape),
+            "basis": position_basis_3d_from_shape(shape),
             "vector": np.array(rng.random(np.prod(shape)), dtype=complex),
         }
 

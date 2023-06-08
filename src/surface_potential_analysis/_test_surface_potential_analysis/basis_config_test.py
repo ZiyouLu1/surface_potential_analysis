@@ -12,7 +12,7 @@ from surface_potential_analysis.basis.brillouin_zone import (
 )
 from surface_potential_analysis.basis.build import (
     momentum_basis_3d_from_resolution,
-    position_basis_3d_from_resolution,
+    position_basis_3d_from_shape,
 )
 from surface_potential_analysis.basis.conversion import (
     basis_as_fundamental_momentum_basis,
@@ -37,13 +37,9 @@ rng = np.random.default_rng()
 class TestBasisConfig(unittest.TestCase):
     def test_surface_volume_100(self) -> None:
         points = rng.random(3)
-        basis = position_basis_3d_from_resolution(
+        basis = position_basis_3d_from_shape(
             (1, 1, 1),
-            (
-                np.array([points[0], 0, 0]),
-                np.array([0, points[1], 0]),
-                np.array([0, 0, points[2]]),
-            ),
+            np.array([[points[0], 0, 0], [0, points[1], 0], [0, 0, points[2]]]),
         )
         util = Basis3dUtil(basis)
 
@@ -58,13 +54,9 @@ class TestBasisConfig(unittest.TestCase):
             util2.reciprocal_volume, (2 * np.pi) ** 3 / np.prod(points)
         )
 
-    def test_inverse_lattuice_points_100(self) -> None:
-        delta_x = (
-            np.array([1, 0, 0]),
-            np.array([0, 2, 0]),
-            np.array([0, 0, 1]),
-        )
-        basis = position_basis_3d_from_resolution((1, 1, 1), delta_x)
+    def test_inverse_lattice_points_100(self) -> None:
+        delta_x = np.array([[1, 0, 0], [0, 2, 0], [0, 0, 1]])
+        basis = position_basis_3d_from_shape((1, 1, 1), delta_x)
         util = Basis3dUtil(basis)
 
         np.testing.assert_array_equal(delta_x[0], util.delta_x0)
@@ -87,13 +79,9 @@ class TestBasisConfig(unittest.TestCase):
         self.assertEqual(util2.dk[1][0], 0)
         self.assertEqual(util2.dk[1][1], np.pi)
 
-    def test_inverse_lattuice_points_111(self) -> None:
-        delta_x = (
-            np.array([1, 0, 0]),
-            np.array([0.5, np.sqrt(3) / 2, 0]),
-            np.array([0, 0, 1]),
-        )
-        basis = position_basis_3d_from_resolution((1, 1, 1), delta_x)
+    def test_inverse_lattice_points_111(self) -> None:
+        delta_x = np.array([[1, 0, 0], [0.5, np.sqrt(3) / 2, 0], [0, 0, 1]])
+        basis = position_basis_3d_from_shape((1, 1, 1), delta_x)
         util = Basis3dUtil(basis)
 
         np.testing.assert_array_equal(delta_x[0], util.delta_x0)
@@ -115,13 +103,9 @@ class TestBasisConfig(unittest.TestCase):
         self.assertAlmostEqual(util2.dk[1][0], 0)
         self.assertAlmostEqual(util2.dk[1][1], 4 * np.pi / np.sqrt(3))
 
-    def test_reciprocal_lattuice(self) -> None:
-        delta_x = (
-            rng.random(3),
-            rng.random(3),
-            rng.random(3),
-        )
-        basis = position_basis_3d_from_resolution((1, 1, 1), delta_x)
+    def test_reciprocal_lattice(self) -> None:
+        delta_x = rng.random((3, 3))
+        basis = position_basis_3d_from_shape((1, 1, 1), delta_x)
         util = Basis3dUtil(basis)
 
         np.testing.assert_array_almost_equal(delta_x[0], util.delta_x0)
@@ -156,17 +140,13 @@ class TestBasisConfig(unittest.TestCase):
         np.testing.assert_array_almost_equal(reciprocal_2_util.dk2, util.dk2)
 
     def test_get_stacked_index(self) -> None:
-        delta_x = (
-            np.array([1, 0, 0]),
-            np.array([0, 2, 0]),
-            np.array([0, 0, 1]),
-        )
+        delta_x = np.array(([1, 0, 0], [0, 2, 0], [0, 0, 1]))
         resolution = (
             rng.integers(1, 10),
             rng.integers(1, 10),
             rng.integers(1, 10),
         )
-        basis = position_basis_3d_from_resolution(resolution, delta_x)
+        basis = position_basis_3d_from_shape(resolution, delta_x)
         util = Basis3dUtil(basis)
         for i in range(np.prod(resolution)):
             self.assertEqual(i, util.get_flat_index(util.get_stacked_index(i)))
@@ -176,12 +156,8 @@ class TestBasisConfig(unittest.TestCase):
             self.assertEqual(i, util2.get_flat_index(util2.get_stacked_index(i)))
 
     def test_rotated_basis_111(self) -> None:
-        delta_x = (
-            np.array([1, 0, 0], dtype=float),
-            np.array([0, 1, 0], dtype=float),
-            np.array([0, 0, 1], dtype=float),
-        )
-        basis = position_basis_3d_from_resolution((1, 1, 1), delta_x)
+        delta_x = np.array([[1, 0, 0], [0, 1, 0], [0, 0, 1]], dtype=float)
+        basis = position_basis_3d_from_shape((1, 1, 1), delta_x)
 
         rotated_0 = get_rotated_basis3d(basis, 0, delta_x[0])  # type: ignore[arg-type,var-annotated]
         np.testing.assert_array_almost_equal(rotated_0[0].delta_x, [1, 0, 0])
@@ -199,12 +175,8 @@ class TestBasisConfig(unittest.TestCase):
         np.testing.assert_array_almost_equal(rotated_2[2].delta_x, [-1, 0, 0])
 
     def test_rotated_basis(self) -> None:
-        delta_x = (
-            rng.random(3),
-            rng.random(3),
-            rng.random(3),
-        )
-        basis = position_basis_3d_from_resolution((1, 1, 1), delta_x)
+        delta_x = rng.random((3, 3))
+        basis = position_basis_3d_from_shape((1, 1, 1), delta_x)
 
         for i in (0, 1, 2):
             rotated = get_rotated_basis3d(basis, i)  # type: ignore[arg-type,var-annotated]
@@ -230,12 +202,8 @@ class TestBasisConfig(unittest.TestCase):
                 )
 
     def test_nx_points_simple(self) -> None:
-        delta_x = (
-            rng.random(3),
-            rng.random(3),
-            rng.random(3),
-        )
-        basis = position_basis_3d_from_resolution((2, 2, 2), delta_x)
+        delta_x = rng.random((3, 3))
+        basis = position_basis_3d_from_shape((2, 2, 2), delta_x)
         util = Basis3dUtil(basis)
 
         actual = util.fundamental_nx_points
@@ -251,7 +219,7 @@ class TestBasisConfig(unittest.TestCase):
             rng.integers(1, 20),
             rng.integers(1, 20),
         )
-        basis = position_basis_3d_from_resolution(resolution, delta_x)
+        basis = position_basis_3d_from_shape(resolution, delta_x)
         util = Basis3dUtil(basis)
         actual = util.fundamental_nx_points
 
@@ -262,12 +230,8 @@ class TestBasisConfig(unittest.TestCase):
                 np.testing.assert_equal(slice_j, j)
 
     def test_nk_points_simple(self) -> None:
-        delta_x = (
-            rng.random(3),
-            rng.random(3),
-            rng.random(3),
-        )
-        basis = position_basis_3d_from_resolution((2, 2, 2), delta_x)
+        delta_x = rng.random((3, 3))
+        basis = position_basis_3d_from_shape((2, 2, 2), delta_x)
         util = Basis3dUtil(basis)
 
         actual = util.fundamental_nk_points
@@ -283,7 +247,7 @@ class TestBasisConfig(unittest.TestCase):
             rng.integers(1, 20),
             rng.integers(1, 20),
         )
-        basis = position_basis_3d_from_resolution(resolution, delta_x)
+        basis = position_basis_3d_from_shape(resolution, delta_x)
         util = Basis3dUtil(basis)
         actual = util.fundamental_nk_points
 
@@ -296,12 +260,9 @@ class TestBasisConfig(unittest.TestCase):
                 np.testing.assert_equal(slice_j, expected)
 
     def test_x_points_100(self) -> None:
-        delta_x = (
-            np.array([1, 0, 0], dtype=float),
-            np.array([0, 1, 0], dtype=float),
-            np.array([0, 0, 1], dtype=float),
-        )
-        basis = position_basis_3d_from_resolution((3, 3, 3), delta_x)
+        delta_x = np.array([[1, 0, 0], [0, 1, 0], [0, 0, 1]], dtype=float)
+
+        basis = position_basis_3d_from_shape((3, 3, 3), delta_x)
         util = Basis3dUtil(basis)
 
         actual = util.fundamental_x_points
@@ -320,7 +281,7 @@ class TestBasisConfig(unittest.TestCase):
             np.array([3, 0, 0], dtype=float),
             np.array([0, 0, 5], dtype=float),
         )
-        basis = position_basis_3d_from_resolution((3, 3, 3), delta_x)
+        basis = position_basis_3d_from_shape((3, 3, 3), delta_x)
         util = Basis3dUtil(basis)
         actual = util.fundamental_x_points
 
@@ -390,12 +351,9 @@ class TestBasisConfig(unittest.TestCase):
         np.testing.assert_array_equal(_wrap_distance(distances, 4), expected)
 
     def test_calculate_cumulative_distances_along_path(self) -> None:
-        delta_x = (
-            np.array([3, 0, 0], dtype=float),
-            np.array([0, 3, 0], dtype=float),
-            np.array([0, 0, 3], dtype=float),
-        )
-        basis = position_basis_3d_from_resolution((3, 3, 3), delta_x)
+        delta_x = np.array([[3, 0, 0], [0, 3, 0], [0, 0, 3]], dtype=float)
+
+        basis = position_basis_3d_from_shape((3, 3, 3), delta_x)
 
         distances = calculate_cumulative_x_distances_along_path(
             basis, np.array([[0, 1], [0, 0], [0, 0]])
@@ -413,7 +371,7 @@ class TestBasisConfig(unittest.TestCase):
         np.testing.assert_array_equal(distances, [0, 1])
 
     def test_get_all_brag_point_index(self) -> None:
-        basis = position_basis_3d_from_resolution((1, 1, 1))
+        basis = position_basis_3d_from_shape((1, 1, 1))
         indexes = get_all_brag_point_index(basis, n_bands=1)
         # fmt: off
         expected = [
@@ -424,7 +382,7 @@ class TestBasisConfig(unittest.TestCase):
         # fmt: on
         np.testing.assert_array_equal(indexes, expected)
 
-        basis = position_basis_3d_from_resolution((2, 3, 5))
+        basis = position_basis_3d_from_shape((2, 3, 5))
         indexes = get_all_brag_point_index(basis, n_bands=1)
         # fmt: off
         expected = [
@@ -446,7 +404,7 @@ class TestBasisConfig(unittest.TestCase):
         np.testing.assert_array_almost_equal(distances, expected_distances)
 
     def test_decrement_brillouin_zone(self) -> None:
-        basis = position_basis_3d_from_resolution((1, 1, 1))
+        basis = position_basis_3d_from_shape((1, 1, 1))
 
         actual = decrement_brillouin_zone_3d(basis, (0, 0, 0))
         expected = (0, 0, 0)
@@ -465,15 +423,15 @@ class TestBasisConfig(unittest.TestCase):
         np.testing.assert_array_equal(actual_arr, expected)
 
     def test_decrement_brillouin_zone_many(self) -> None:
-        basis = position_basis_3d_from_resolution((3, 3, 3))
-        util = Basis3dUtil(position_basis_3d_from_resolution((3, 3, 3)))
+        basis = position_basis_3d_from_shape((3, 3, 3))
+        util = Basis3dUtil(position_basis_3d_from_shape((3, 3, 3)))
         actual = decrement_brillouin_zone_3d(basis, util.fundamental_nk_points)
 
         expected = util.fundamental_nk_points
         np.testing.assert_array_equal(actual, expected)
 
-        basis = position_basis_3d_from_resolution((6, 6, 6))
-        util = Basis3dUtil(position_basis_3d_from_resolution((6, 6, 1)))
+        basis = position_basis_3d_from_shape((6, 6, 6))
+        util = Basis3dUtil(position_basis_3d_from_shape((6, 6, 1)))
         actual = decrement_brillouin_zone_3d(basis, util.fundamental_nk_points)
 
         expected = util.fundamental_nk_points
@@ -484,12 +442,9 @@ class TestBasisConfig(unittest.TestCase):
         np.testing.assert_array_equal(actual, expected)
 
     def test_get_all_brag_point(self) -> None:
-        delta_x = (
-            np.array([2 * np.pi, 0, 0]),
-            np.array([0, 2 * np.pi, 0]),
-            np.array([0, 0, 2 * np.pi]),
-        )
-        basis = position_basis_3d_from_resolution((2, 2, 2), delta_x)
+        delta_x = np.array([[2 * np.pi, 0, 0], [0, 2 * np.pi, 0], [0, 0, 2 * np.pi]])
+
+        basis = position_basis_3d_from_shape((2, 2, 2), delta_x)
         actual = get_all_brag_point(basis)
         # fmt: off
         expected = np.array([
@@ -501,7 +456,7 @@ class TestBasisConfig(unittest.TestCase):
         np.testing.assert_array_equal(actual, expected)
 
     def test_project_k_points_along_axis(self) -> None:
-        basis = position_basis_3d_from_resolution((3, 3, 3))
+        basis = position_basis_3d_from_shape((3, 3, 3))
 
         points = Basis3dUtil(basis).fundamental_k_points
         actual = project_k_points_along_axis(basis, points, axis=0)
@@ -519,7 +474,7 @@ class TestBasisConfig(unittest.TestCase):
         np.testing.assert_array_equal(actual, expected)
 
     def test_project_x_points_along_axis(self) -> None:
-        basis = position_basis_3d_from_resolution((3, 3, 3))
+        basis = position_basis_3d_from_shape((3, 3, 3))
 
         points = np.array([1, 0, 0])
         actual = project_x_points_along_axis(basis, points, axis=0)

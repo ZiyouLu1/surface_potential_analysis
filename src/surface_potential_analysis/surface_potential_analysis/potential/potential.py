@@ -50,16 +50,11 @@ class Potential(TypedDict, Generic[_B0Cov]):
     vector: PotentialPoints
 
 
-class Potential1d(Potential[_B1d0Cov]):
-    """Represents a potential in an evenly spaced grid of points."""
+Potential1d = Potential[_B1d0Cov]
 
+Potential2d = Potential[_B2d0Cov]
 
-class Potential2d(Potential[_B2d0Cov]):
-    """Represents a potential in an evenly spaced grid of points."""
-
-
-class Potential3d(Potential[_B3d0Cov]):
-    """Represents a potential in an evenly spaced grid of points."""
+Potential3d = Potential[_B3d0Cov]
 
 
 FundamentalPositionBasisPotential3d = Potential3d[

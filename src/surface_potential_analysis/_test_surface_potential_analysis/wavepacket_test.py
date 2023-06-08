@@ -7,13 +7,16 @@ import numpy as np
 
 from surface_potential_analysis.basis.build import (
     momentum_basis_3d_from_resolution,
-    position_basis_3d_from_resolution,
+    position_basis_3d_from_shape,
 )
 from surface_potential_analysis.wavepacket.eigenstate_conversion import (
     furl_eigenstate,
     unfurl_wavepacket,
 )
-from surface_potential_analysis.wavepacket.normalization import _get_global_phases
+from surface_potential_analysis.wavepacket.localization import _get_global_phases
+from surface_potential_analysis.wavepacket.wavepacket import (
+    get_wavepacket_sample_fractions,
+)
 
 if TYPE_CHECKING:
     from surface_potential_analysis.wavepacket.wavepacket import (
@@ -34,7 +37,7 @@ class WavepacketTest(unittest.TestCase):
             rng.integers(1, 10),
         )
         wavepacket: PositionBasisWavepacket3d[Any, Any, Any, Any, Any] = {
-            "basis": position_basis_3d_from_resolution(resolution),
+            "basis": position_basis_3d_from_shape(resolution),
             "vectors": np.zeros((ns0 * ns1, np.prod(resolution))),
             "energies": np.zeros(ns0 * ns1),
             "shape": (ns0, ns1, 1),
@@ -101,3 +104,14 @@ class WavepacketTest(unittest.TestCase):
         np.testing.assert_array_almost_equal(
             wavepacket["basis"][2].delta_x, actual["basis"][2].delta_x
         )
+
+    def test_get_wavepacket_sample_fractions(self) -> None:
+        shape = tuple(rng.integers(1, 10, size=rng.integers(1, 5)))
+
+        actual = get_wavepacket_sample_fractions(shape)
+        meshgrid = np.meshgrid(
+            *[np.fft.fftfreq(s, 1) for s in shape],
+            indexing="ij",
+        )
+        expected = np.array([x.ravel() for x in meshgrid])
+        np.testing.assert_array_almost_equal(expected, actual)

@@ -20,7 +20,7 @@ from surface_potential_analysis.eigenstate.plot import (
     plot_eigenstate_x0x1,
 )
 from surface_potential_analysis.util.util import slice_along_axis
-from surface_potential_analysis.wavepacket.normalization import (
+from surface_potential_analysis.wavepacket.localization import (
     get_wavepacket_two_points,
 )
 from surface_potential_analysis.wavepacket.plot import (

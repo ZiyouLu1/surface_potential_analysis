@@ -28,6 +28,7 @@ from .util import BasisUtil
 
 if TYPE_CHECKING:
     from surface_potential_analysis.axis.axis_like import (
+        AxisLike,
         AxisLike1d,
         AxisLike2d,
         AxisLike3d,
@@ -35,6 +36,9 @@ if TYPE_CHECKING:
     from surface_potential_analysis.basis.basis import Basis, Basis1d, Basis2d
 
     from .basis import Basis3d
+
+    _A0Inv = TypeVar("_A0Inv", bound=AxisLike[Any, Any, Any])
+    _A1Inv = TypeVar("_A1Inv", bound=AxisLike[Any, Any, Any])
 
     _B0Inv = TypeVar("_B0Inv", bound=Basis[Any])
     _B1Inv = TypeVar("_B1Inv", bound=Basis[Any])
@@ -48,9 +52,44 @@ if TYPE_CHECKING:
     _NDInv = TypeVar("_NDInv", bound=int)
 
 
+def _convert_vector_along_axis_simple(
+    vector: np.ndarray[_S0Inv, np.dtype[np.complex_]],
+    initial_axis: _A0Inv,
+    final_axis: _A1Inv,
+    axis: int,
+) -> np.ndarray[Any, np.dtype[np.complex_]]:
+    matrix = get_axis_conversion_matrix(initial_axis, final_axis)
+    return np.moveaxis(np.tensordot(vector, matrix, axes=([axis], [0])), -1, axis)  # type: ignore[no-any-return]
+
+
+def _convert_vector_along_axis(
+    vector: np.ndarray[_S0Inv, np.dtype[np.complex_]],
+    initial_axis: _A0Inv,
+    final_axis: _A1Inv,
+    axis: int,
+) -> np.ndarray[Any, np.dtype[np.complex_]]:
+    if isinstance(initial_axis, FundamentalPositionAxis) and isinstance(
+        final_axis, FundamentalPositionAxis
+    ):
+        return vector
+    if isinstance(initial_axis, FundamentalPositionAxis) and isinstance(
+        final_axis, MomentumAxis
+    ):
+        transformed = np.fft.fft(vector, axis=axis, norm="ortho")
+        return pad_ft_points(transformed, s=(final_axis.n,), axes=(0,))
+    if isinstance(initial_axis, MomentumAxis) and isinstance(
+        final_axis, FundamentalPositionAxis
+    ):
+        padded = pad_ft_points(vector, s=(final_axis.n,), axes=(axis,))
+        return np.fft.ifft(padded, axis=axis, norm="ortho")  # type: ignore[no-any-return]
+    if isinstance(initial_axis, MomentumAxis) and isinstance(final_axis, MomentumAxis):
+        return pad_ft_points(vector, s=(final_axis.n,), axes=(axis,))
+    return _convert_vector_along_axis_simple(vector, initial_axis, final_axis, axis)
+
+
 @overload
 def convert_vector(
-    vector: np.ndarray[_S0Inv, np.dtype[np.complex_]],
+    vector: np.ndarray[_S0Inv, np.dtype[np.complex_] | np.dtype[np.float_]],
     initial_basis: _B1d0Inv,
     final_basis: _B1d1Inv,
     axis: int = -1,
@@ -60,7 +99,7 @@ def convert_vector(
 
 @overload
 def convert_vector(
-    vector: np.ndarray[_S0Inv, np.dtype[np.complex_]],
+    vector: np.ndarray[_S0Inv, np.dtype[np.complex_] | np.dtype[np.float_]],
     initial_basis: _B2d0Inv,
     final_basis: _B2d1Inv,
     axis: int = -1,
@@ -70,7 +109,7 @@ def convert_vector(
 
 @overload
 def convert_vector(
-    vector: np.ndarray[_S0Inv, np.dtype[np.complex_]],
+    vector: np.ndarray[_S0Inv, np.dtype[np.complex_] | np.dtype[np.float_]],
     initial_basis: _B3d0Inv,
     final_basis: _B3d1Inv,
     axis: int = -1,
@@ -80,7 +119,7 @@ def convert_vector(
 
 @overload
 def convert_vector(
-    vector: np.ndarray[_S0Inv, np.dtype[np.complex_]],
+    vector: np.ndarray[_S0Inv, np.dtype[np.complex_] | np.dtype[np.float_]],
     initial_basis: _B0Inv,
     final_basis: _B1Inv,
     axis: int = -1,
@@ -89,7 +128,7 @@ def convert_vector(
 
 
 def convert_vector(
-    vector: np.ndarray[_S0Inv, np.dtype[np.complex_]],
+    vector: np.ndarray[_S0Inv, np.dtype[np.complex_] | np.dtype[np.float_]],
     initial_basis: _B0Inv,
     final_basis: _B1Inv,
     axis: int = -1,
@@ -99,7 +138,7 @@ def convert_vector(
 
     Parameters
     ----------
-    vector : np.ndarray[tuple[int], np.dtype[np.complex_]]
+    vector : np.ndarray[tuple[int], np.dtype[np.complex_] | np.dtype[np.float_]]
         the vector to convert
     from_config : _B3d0Inv
     to_config : _B3d1Inv
@@ -112,47 +151,84 @@ def convert_vector(
     """
     util = BasisUtil(initial_basis)
     swapped = vector.swapaxes(axis, -1)
-    stacked = swapped.reshape(*swapped.shape[:-1], *util.shape)
+    stacked = swapped.astype(np.complex_).reshape(*swapped.shape[:-1], *util.shape)
     last_axis = swapped.ndim - 1
-    for initial, final in zip(initial_basis, final_basis, strict=True):
-        if isinstance(initial, MomentumAxis) and isinstance(
-            final, FundamentalPositionAxis
-        ):
-            padded = pad_ft_points(stacked, s=(final.n,), axes=(last_axis,))
-            scaled = padded * np.sqrt(final.n / initial.n)
-            transformed = np.fft.ifft(scaled, axis=last_axis, norm="ortho")
-            stacked = np.moveaxis(transformed, last_axis, -1)
-            continue
+    for convert_axis, initial, final in zip(
+        range(last_axis, stacked.ndim), initial_basis, final_basis, strict=True
+    ):
+        stacked = _convert_vector_along_axis(stacked, initial, final, convert_axis)
 
-        if isinstance(initial, FundamentalPositionAxis) and isinstance(
-            final, FundamentalMomentumAxis
-        ):
-            transformed = np.fft.fft(stacked, axis=last_axis, norm="ortho")
-            stacked = np.moveaxis(transformed, last_axis, -1)
-            continue
+    return stacked.reshape(*swapped.shape[:-1], -1).swapaxes(axis, -1)  # type: ignore[no-any-return]
 
-        if isinstance(initial, FundamentalPositionAxis) and isinstance(
-            final, FundamentalPositionAxis
-        ):
-            stacked = np.moveaxis(stacked, last_axis, -1)
-            continue
 
-        if isinstance(initial, MomentumAxis) and isinstance(final, MomentumAxis):
-            padded = pad_ft_points(stacked, s=(final.n,), axes=(last_axis,))
-            scaled = padded * np.sqrt(final.n / initial.n)
-            stacked = np.moveaxis(scaled, last_axis, -1)
-            continue
-        matrix = get_axis_conversion_matrix(initial, final)
-        # Each product gets moved to the end,
-        # so "last_axis" of stacked always corresponds to the ith axis
-        stacked = np.tensordot(stacked, matrix, axes=([last_axis], [0]))
+@overload
+def convert_co_vector(
+    co_vector: np.ndarray[_S0Inv, np.dtype[np.complex_] | np.dtype[np.float_]],
+    initial_basis: _B1d0Inv,
+    final_basis: _B1d1Inv,
+    axis: int = -1,
+) -> np.ndarray[tuple[int, ...], np.dtype[np.complex_]]:
+    ...
 
-    return stacked.reshape(*swapped.shape[:-1], -1).swapaxes(axis, -1)
+
+@overload
+def convert_co_vector(
+    co_vector: np.ndarray[_S0Inv, np.dtype[np.complex_] | np.dtype[np.float_]],
+    initial_basis: _B2d0Inv,
+    final_basis: _B2d1Inv,
+    axis: int = -1,
+) -> np.ndarray[tuple[int, ...], np.dtype[np.complex_]]:
+    ...
+
+
+@overload
+def convert_co_vector(
+    co_vector: np.ndarray[_S0Inv, np.dtype[np.complex_] | np.dtype[np.float_]],
+    initial_basis: _B3d0Inv,
+    final_basis: _B3d1Inv,
+    axis: int = -1,
+) -> np.ndarray[tuple[int, ...], np.dtype[np.complex_]]:
+    ...
+
+
+@overload
+def convert_co_vector(
+    co_vector: np.ndarray[_S0Inv, np.dtype[np.complex_] | np.dtype[np.float_]],
+    initial_basis: _B0Inv,
+    final_basis: _B1Inv,
+    axis: int = -1,
+) -> np.ndarray[tuple[int, ...], np.dtype[np.complex_]]:
+    ...
+
+
+def convert_co_vector(
+    co_vector: np.ndarray[_S0Inv, np.dtype[np.complex_] | np.dtype[np.float_]],
+    initial_basis: _B0Inv,
+    final_basis: _B1Inv,
+    axis: int = -1,
+) -> np.ndarray[tuple[int, ...], np.dtype[np.complex_]]:
+    """
+    Convert a co_vector, expressed in terms of the given basis from_config in the basis to_config.
+
+    Parameters
+    ----------
+    co_vector : np.ndarray[tuple[int], np.dtype[np.complex_]]
+        the vector to convert
+    from_config : _B3d0Inv
+    to_config : _B3d1Inv
+    axis : int, optional
+        axis along which to convert, by default -1
+
+    Returns
+    -------
+    np.ndarray[tuple[int], np.dtype[np.complex_]]
+    """
+    return np.conj(convert_vector(np.conj(co_vector), initial_basis, final_basis, axis))  # type: ignore[no-any-return]
 
 
 @overload
 def convert_matrix(
-    matrix: np.ndarray[tuple[int, int], np.dtype[np.complex_]],
+    matrix: np.ndarray[tuple[int, int], np.dtype[np.complex_] | np.dtype[np.float_]],
     initial_basis: _B1d0Inv,
     final_basis: _B1d1Inv,
 ) -> np.ndarray[tuple[int, int], np.dtype[np.complex_]]:
@@ -161,7 +237,7 @@ def convert_matrix(
 
 @overload
 def convert_matrix(
-    matrix: np.ndarray[tuple[int, int], np.dtype[np.complex_]],
+    matrix: np.ndarray[tuple[int, int], np.dtype[np.complex_] | np.dtype[np.float_]],
     initial_basis: _B2d0Inv,
     final_basis: _B2d1Inv,
 ) -> np.ndarray[tuple[int, int], np.dtype[np.complex_]]:
@@ -170,7 +246,7 @@ def convert_matrix(
 
 @overload
 def convert_matrix(
-    matrix: np.ndarray[tuple[int, int], np.dtype[np.complex_]],
+    matrix: np.ndarray[tuple[int, int], np.dtype[np.complex_] | np.dtype[np.float_]],
     initial_basis: _B3d0Inv,
     final_basis: _B3d1Inv,
 ) -> np.ndarray[tuple[int, int], np.dtype[np.complex_]]:
@@ -179,7 +255,7 @@ def convert_matrix(
 
 @overload
 def convert_matrix(
-    matrix: np.ndarray[tuple[int, int], np.dtype[np.complex_]],
+    matrix: np.ndarray[tuple[int, int], np.dtype[np.complex_] | np.dtype[np.float_]],
     initial_basis: _B0Inv,
     final_basis: _B1Inv,
 ) -> np.ndarray[tuple[int, int], np.dtype[np.complex_]]:
@@ -187,7 +263,7 @@ def convert_matrix(
 
 
 def convert_matrix(
-    matrix: np.ndarray[tuple[int, int], np.dtype[np.complex_]],
+    matrix: np.ndarray[tuple[int, int], np.dtype[np.complex_] | np.dtype[np.float_]],
     initial_basis: _B0Inv,
     final_basis: _B1Inv,
 ) -> np.ndarray[tuple[int, int], np.dtype[np.complex_]]:
@@ -204,72 +280,8 @@ def convert_matrix(
     -------
     np.ndarray[tuple[int, int], np.dtype[np.complex_]]
     """
-    util = BasisUtil(initial_basis)
-    stacked = matrix.reshape(*util.shape, *util.shape)
-    for initial, final in zip(initial_basis, final_basis, strict=True):
-        if isinstance(initial, FundamentalMomentumAxis) and isinstance(
-            final, FundamentalPositionAxis
-        ):
-            transformed = np.fft.ifft(stacked, axis=0, norm="ortho")
-            stacked = np.moveaxis(transformed, 0, -1)
-            continue
-
-        if isinstance(initial, FundamentalPositionAxis) and isinstance(
-            final, FundamentalMomentumAxis
-        ):
-            transformed = np.fft.fft(stacked, axis=0, norm="ortho")
-            stacked = np.moveaxis(transformed, 0, -1)
-            continue
-
-        if isinstance(initial, FundamentalPositionAxis) and isinstance(
-            final, FundamentalPositionAxis
-        ):
-            stacked = np.moveaxis(stacked, 0, -1)
-            continue
-        if isinstance(initial, MomentumAxis) and isinstance(final, MomentumAxis):
-            padded = pad_ft_points(stacked, s=(final.n,), axes=(0,))
-            scaled = padded * np.sqrt(final.n / initial.n)
-            stacked = np.moveaxis(scaled, 0, -1)
-            continue
-        matrix = get_axis_conversion_matrix(initial, final)
-        # Each product gets moved to the end,
-        # so the 0th index of stacked corresponds to the ith axis
-        stacked = np.tensordot(stacked, matrix, axes=([0], [0]))
-
-    for initial, final in zip(initial_basis, final_basis, strict=True):
-        if isinstance(initial, FundamentalPositionAxis) and isinstance(
-            final, FundamentalMomentumAxis
-        ):
-            transformed = np.fft.ifft(stacked, axis=0, norm="ortho")
-            stacked = np.moveaxis(transformed, 0, -1)
-            continue
-
-        if isinstance(initial, FundamentalMomentumAxis) and isinstance(
-            final, FundamentalPositionAxis
-        ):
-            transformed = np.fft.fft(stacked, axis=0, norm="ortho")
-            stacked = np.moveaxis(transformed, 0, -1)
-            continue
-
-        if isinstance(initial, FundamentalPositionAxis) and isinstance(
-            final, FundamentalPositionAxis
-        ):
-            stacked = np.moveaxis(stacked, 0, -1)
-            continue
-
-        if isinstance(initial, MomentumAxis) and isinstance(final, MomentumAxis):
-            # TODO: is this correct - also need to scale opposite way most likely??
-            padded = pad_ft_points(stacked, s=(final.n,), axes=(0,))
-            scaled = padded * np.sqrt(final.n / initial.n)
-            stacked = np.moveaxis(scaled, 0, -1)
-            continue
-        matrix = get_axis_conversion_matrix(initial, final)
-        matrix_conj = np.conj(matrix)
-        # Each product gets moved to the end,
-        # so the 0th index of stacked corresponds to the ith axis
-        stacked = np.tensordot(stacked, matrix_conj, axes=([0], [0]))
-    final_size = BasisUtil(final_basis).size
-    return stacked.reshape(final_size, final_size)
+    converted = convert_vector(matrix, initial_basis, final_basis, axis=0)
+    return convert_co_vector(converted, initial_basis, final_basis, axis=1)  # type: ignore[return-value]
 
 
 _L0Inv = TypeVar("_L0Inv", bound=int)

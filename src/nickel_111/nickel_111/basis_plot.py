@@ -6,7 +6,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 from surface_potential_analysis.basis.build import (
     position_basis_3d_from_parent,
-    position_basis_3d_from_resolution,
+    position_basis_3d_from_shape,
 )
 from surface_potential_analysis.basis.plot import (
     plot_bragg_points_projected_2d,
@@ -118,7 +118,7 @@ def plot_brillouin_zone_points() -> None:
     plot_bragg_points_projected_2d(basis, 2, ax=ax)
     fig.show()
 
-    basis = position_basis_3d_from_resolution((6, 6, 6))
+    basis = position_basis_3d_from_shape((6, 6, 6))
     fig, ax, _ = plot_brillouin_zone_points_projected_2d(basis, 2)
     plot_bragg_points_projected_2d(basis, 2, ax=ax)
     fig.show()

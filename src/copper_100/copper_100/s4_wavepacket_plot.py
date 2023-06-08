@@ -6,7 +6,9 @@ from surface_potential_analysis.eigenstate.plot import (
     plot_eigenstate_difference_2d_x,
     plot_eigenstate_x0x1,
 )
-from surface_potential_analysis.wavepacket.normalization import normalize_wavepacket
+from surface_potential_analysis.wavepacket.localization import (
+    localize_tightly_bound_wavepacket_idx,
+)
 from surface_potential_analysis.wavepacket.plot import (
     animate_wavepacket_x0x1,
     plot_wavepacket_k0k1,
@@ -36,7 +38,7 @@ def plot_wavepacket_points() -> None:
 def plot_wavepacket_at_z_origin() -> None:
     path = get_data_path("eigenstates_grid_0.json")
     wavepacket = load_wavepacket(path)
-    normalized = normalize_wavepacket(wavepacket)
+    normalized = localize_tightly_bound_wavepacket_idx(wavepacket)
 
     fig, ax, _ = plot_wavepacket_x0x1(normalized, 0, measure="abs")
     fig.show()
@@ -59,7 +61,7 @@ def plot_wavepacket_3d_x() -> None:
     path = get_data_path("eigenstates_grid_0.json")
     path = get_data_path("eigenstates_grid_1.json")
     eigenstates = load_wavepacket(path)
-    normalized = normalize_wavepacket(eigenstates)
+    normalized = localize_tightly_bound_wavepacket_idx(eigenstates)
 
     fig, _, _ = animate_wavepacket_x0x1(normalized)
     fig.show()
@@ -158,7 +160,7 @@ def compare_wavefunction_4_8_points() -> None:
 def compare_wavefunction_eigenstate_2d() -> None:
     path = get_data_path("eigenstates_grid_0.json")
     wavepacket = load_wavepacket(path)
-    normalized = normalize_wavepacket(wavepacket)
+    normalized = localize_tightly_bound_wavepacket_idx(wavepacket)
 
     (ns0, ns1) = wavepacket["energies"].shape
     eigenstate_0 = get_eigenstate(normalized, (ns0 // 2, ns1 // 2))
@@ -202,7 +204,7 @@ def compare_wavefunction_eigenstate_2d() -> None:
 def calculate_eigenstate_cross_product() -> None:
     path = get_data_path("eigenstates_grid_0.json")
     eigenstates = load_wavepacket(path)
-    normalized = normalize_wavepacket(eigenstates)
+    normalized = localize_tightly_bound_wavepacket_idx(eigenstates)
 
     (ns0, ns1) = normalized["energies"].shape
     eigenstate_0 = get_eigenstate(normalized, (ns0 // 2, ns1 // 2))

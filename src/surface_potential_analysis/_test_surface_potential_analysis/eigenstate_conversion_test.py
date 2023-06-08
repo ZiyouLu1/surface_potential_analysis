@@ -7,7 +7,7 @@ import hamiltonian_generator
 import numpy as np
 from scipy.constants import hbar
 
-from _test_surface_potential_analysis.utils import get_random_explicit_basis
+from _test_surface_potential_analysis.utils import get_random_explicit_axis
 from surface_potential_analysis.axis.axis import (
     ExplicitAxis3d,
     FundamentalPositionAxis3d,
@@ -42,8 +42,8 @@ def _get_random_sho_eigenstate(
 
     x2_basis = x2_basis = ExplicitAxis3d(
         np.array([0, 0, 20]),
-        get_random_explicit_basis(
-            fundamental_n=fundamental_resolution[2], n=resolution[2]
+        get_random_explicit_axis(
+            3, fundamental_n=fundamental_resolution[2], n=resolution[2]
         ).vectors,
     )
     return {
