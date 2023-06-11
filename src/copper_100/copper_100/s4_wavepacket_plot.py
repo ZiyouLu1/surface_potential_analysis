@@ -2,10 +2,11 @@ from __future__ import annotations
 
 import matplotlib.pyplot as plt
 import numpy as np
-from surface_potential_analysis.eigenstate.plot import (
+from surface_potential_analysis.state_vector.plot import (
     plot_eigenstate_difference_2d_x,
     plot_eigenstate_x0x1,
 )
+from surface_potential_analysis.wavepacket.get_eigenstate import get_eigenstate
 from surface_potential_analysis.wavepacket.localization import (
     localize_tightly_bound_wavepacket_idx,
 )
@@ -17,7 +18,6 @@ from surface_potential_analysis.wavepacket.plot import (
     plot_wavepacket_x0x1,
 )
 from surface_potential_analysis.wavepacket.wavepacket import (
-    get_eigenstate,
     load_wavepacket,
 )
 

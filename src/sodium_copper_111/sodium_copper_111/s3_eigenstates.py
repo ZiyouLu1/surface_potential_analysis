@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Literal, TypeVar
 
 import numpy as np
-from surface_potential_analysis.eigenstate.eigenstate_collection import (
+from surface_potential_analysis.state_vector.eigenstate_collection import (
     EigenstateColllection,
     calculate_eigenstate_collection,
 )
@@ -16,7 +16,7 @@ if TYPE_CHECKING:
     from pathlib import Path
 
     from surface_potential_analysis.axis.axis import FundamentalMomentumAxis1d
-    from surface_potential_analysis.hamiltonian.hamiltonian import Hamiltonian
+    from surface_potential_analysis.operator.operator import SingleBasisOperator
 
 _L0Inv = TypeVar("_L0Inv", bound=int)
 
@@ -33,7 +33,7 @@ def get_eigenstate_collection(
 
     def hamiltonian_generator(
         bloch_fraction: np.ndarray[tuple[Literal[1]], np.dtype[np.float_]]
-    ) -> Hamiltonian[tuple[FundamentalMomentumAxis1d[_L0Inv]]]:
+    ) -> SingleBasisOperator[tuple[FundamentalMomentumAxis1d[_L0Inv]]]:
         return get_hamiltonian(shape=shape, bloch_fraction=bloch_fraction)
 
     return calculate_eigenstate_collection(

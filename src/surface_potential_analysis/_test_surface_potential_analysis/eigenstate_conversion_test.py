@@ -18,24 +18,22 @@ from surface_potential_analysis.basis.sho_basis import (
     infinate_sho_basis_from_config,
 )
 from surface_potential_analysis.basis.util import Basis3dUtil
-from surface_potential_analysis.eigenstate.conversion import (
+from surface_potential_analysis.state_vector.conversion import (
     convert_eigenstate_to_basis,
 )
 
 if TYPE_CHECKING:
-    from surface_potential_analysis.eigenstate.eigenstate import (
-        Eigenstate3dWithBasis,
-    )
+    from surface_potential_analysis.state_vector.state_vector import StateVector3d
+
+    pass
 
 _rng = np.random.default_rng()
 
 
 def _get_random_sho_eigenstate(
     resolution: tuple[int, int, int], fundamental_resolution: tuple[int, int, int]
-) -> Eigenstate3dWithBasis[
-    MomentumAxis3d[Any, Any],
-    MomentumAxis3d[Any, Any],
-    ExplicitAxis3d[int, Any],
+) -> StateVector3d[
+    tuple[MomentumAxis3d[Any, Any], MomentumAxis3d[Any, Any], ExplicitAxis3d[int, Any]]
 ]:
     vector = np.array(_rng.random(np.prod(resolution)), dtype=complex)
     vector /= np.linalg.norm(vector)
@@ -57,7 +55,6 @@ def _get_random_sho_eigenstate(
             x2_basis,
         ),
         "vector": vector,
-        "bloch_fraction": np.array([0, 0, 0]),
     }
 
 

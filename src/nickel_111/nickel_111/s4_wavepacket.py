@@ -32,7 +32,7 @@ if TYPE_CHECKING:
         Basis3d,
         FundamentalMomentumBasis3d,
     )
-    from surface_potential_analysis.hamiltonian import Hamiltonian3d
+    from surface_potential_analysis.operator import SingleBasisOperator3d
 
 MAXIMUM_POINTS: list[tuple[int, int, int]] = [
     (0, 0, 117),
@@ -120,7 +120,7 @@ def load_two_point_normalized_nickel_wavepacket_momentum(
 def generate_nickel_wavepacket_sho() -> None:
     def hamiltonian_generator(
         bloch_fraction: np.ndarray[tuple[Literal[3]], np.dtype[np.float_]]
-    ) -> Hamiltonian3d[Any]:
+    ) -> SingleBasisOperator3d[Any]:
         return generate_hamiltonian_sho(
             shape=(250, 250, 250),
             bloch_fraction=bloch_fraction,

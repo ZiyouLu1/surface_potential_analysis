@@ -10,6 +10,7 @@ from surface_potential_analysis.axis.axis import (
     FundamentalMomentumAxis,
     FundamentalPositionAxis,
 )
+from surface_potential_analysis.axis.util import AxisUtil
 
 from .axis_like import AxisLike, AxisLike3d, AxisVector3d
 
@@ -21,7 +22,7 @@ _N0Inv = TypeVar("_N0Inv", bound=int)
 _N1Inv = TypeVar("_N1Inv", bound=int)
 
 _NF0Inv = TypeVar("_NF0Inv", bound=int)
-_NF1Inv = TypeVar("_NF1Inv", bound=int)
+_S0Inv = TypeVar("_S0Inv", bound=tuple[int, ...])
 
 
 class _RotatedAxis(AxisLike3d[_NF0Inv, _N0Inv]):
@@ -49,9 +50,19 @@ class _RotatedAxis(AxisLike3d[_NF0Inv, _N0Inv]):
     def fundamental_n(self) -> _NF0Inv:
         return self._axis.fundamental_n
 
-    @property
-    def vectors(self) -> np.ndarray[tuple[_N0Inv, _NF0Inv], np.dtype[np.complex_]]:
-        return self._axis.vectors
+    def __into_fundamental__(
+        self,
+        vectors: np.ndarray[_S0Inv, np.dtype[np.complex_ | np.float_]],
+        axis: int = -1,
+    ) -> np.ndarray[tuple[int, ...], np.dtype[np.complex_]]:
+        return self._axis.__into_fundamental__(vectors, axis)
+
+    def __from_fundamental__(
+        self,
+        vectors: np.ndarray[_S0Inv, np.dtype[np.complex_ | np.float_]],
+        axis: int = -1,
+    ) -> np.ndarray[tuple[int, ...], np.dtype[np.complex_]]:
+        return self._axis.__from_fundamental__(vectors, axis)
 
 
 def get_rotated_axis(
@@ -72,26 +83,6 @@ def get_rotated_axis(
         The rotated axis
     """
     return _RotatedAxis(axis, matrix)  # type: ignore[return-value]
-
-
-def get_axis_conversion_matrix(
-    axis_0: AxisLike[_N0Inv, _NF0Inv, _NDInv], axis_1: AxisLike[_N1Inv, _NF1Inv, _NDInv]
-) -> np.ndarray[tuple[_NF0Inv, _NF1Inv], np.dtype[np.complex_]]:
-    """
-    Get the matrix to convert one set of axis axes into another.
-
-    Parameters
-    ----------
-    axis_0 : AxisLike[_N0Inv, _NF0Inv]
-    axis_1 : AxisLike[_N1Inv, _NF1Inv]
-
-    Returns
-    -------
-    np.ndarray[tuple[_NF0Inv, _NF1Inv], np.dtype[np.complex_]]
-    """
-    vectors_0 = axis_0.vectors
-    vectors_1 = axis_1.vectors
-    return np.dot(vectors_0, np.conj(vectors_1).T)  # type: ignore[no-any-return]
 
 
 def axis_as_fundamental_position_axis(
@@ -142,7 +133,8 @@ def axis_as_explicit_position_axis(
     -------
     ExplicitAxis[_NF0Inv, _N0Inv]
     """
-    return ExplicitAxis3d(axis.delta_x, axis.vectors)
+    util = AxisUtil(axis)
+    return ExplicitAxis3d(axis.delta_x, util.vectors)
 
 
 def axis_as_n_point_axis(

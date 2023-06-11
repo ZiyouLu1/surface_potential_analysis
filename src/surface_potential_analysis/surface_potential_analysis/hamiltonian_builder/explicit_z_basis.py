@@ -18,7 +18,7 @@ if TYPE_CHECKING:
     from surface_potential_analysis.basis.basis import (
         Basis3d,
     )
-    from surface_potential_analysis.hamiltonian import HamiltonianWith3dBasis
+    from surface_potential_analysis.operator import HamiltonianWith3dBasis
     from surface_potential_analysis.potential import (
         FundamentalPositionBasisPotential3d,
     )

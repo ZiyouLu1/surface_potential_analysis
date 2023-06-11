@@ -13,13 +13,16 @@ from surface_potential_analysis.basis.plot import (
     plot_fundamental_x_at_index_projected_2d,
 )
 from surface_potential_analysis.basis.util import Basis3dUtil
-from surface_potential_analysis.eigenstate.conversion import convert_eigenstate_to_basis
-from surface_potential_analysis.eigenstate.plot import (
+from surface_potential_analysis.state_vector.conversion import (
+    convert_eigenstate_to_basis,
+)
+from surface_potential_analysis.state_vector.plot import (
     animate_eigenstate_x1x2,
     plot_eigenstate_along_path,
     plot_eigenstate_x0x1,
 )
 from surface_potential_analysis.util.util import slice_along_axis
+from surface_potential_analysis.wavepacket.get_eigenstate import get_eigenstate
 from surface_potential_analysis.wavepacket.localization import (
     get_wavepacket_two_points,
 )
@@ -31,7 +34,6 @@ from surface_potential_analysis.wavepacket.plot import (
     plot_wavepacket_x0x1,
 )
 from surface_potential_analysis.wavepacket.wavepacket import (
-    get_eigenstate,
     get_unfurled_basis,
     get_wavepacket_sample_fractions,
     load_wavepacket,
@@ -48,14 +50,14 @@ from .surface_data import get_data_path, save_figure
 
 if TYPE_CHECKING:
     from surface_potential_analysis._types import SingleIndexLike3d
-    from surface_potential_analysis.eigenstate.eigenstate import Eigenstate3d
+    from surface_potential_analysis.state_vector.state_vector import StateVector3d
 
 
 def flaten_eigenstate_x(
-    eigenstate: Eigenstate3d[Any],
+    eigenstate: StateVector3d[Any],
     idx: SingleIndexLike3d,
     z_axis: Literal[0, 1, 2, -1, -2, -3],
-) -> Eigenstate3d[Any]:
+) -> StateVector3d[Any]:
     """
     Flatten the eigenstate in the z direction, at the given index in position basis.
 
@@ -90,7 +92,7 @@ def flaten_eigenstate_x(
         eigenstate["basis"][1],
         axis_as_single_point_axis(eigenstate["basis"][2]),
     )
-    return {"basis": basis, "vector": flattened, "bloch_fraction": np.array([0, 0, 0])}
+    return {"basis": basis, "vector": flattened}
 
 
 def plot_nickel_wavepacket_points() -> None:
@@ -116,7 +118,7 @@ def plot_nickel_wavepacket_energies() -> None:
 def animate_wavepacket_eigenstates_x1x2() -> None:
     wavepacket = load_nickel_wavepacket(0)
 
-    eigenstate = get_eigenstate(wavepacket, (0, 0))
+    eigenstate: StateVector3d[Any] = get_eigenstate(wavepacket, (0, 0))
     eigenstate["basis"] = (
         FundamentalMomentumAxis3d(
             eigenstate["basis"][0].delta_x, eigenstate["basis"][0].n
@@ -132,33 +134,33 @@ def animate_wavepacket_eigenstates_x1x2() -> None:
     path = get_data_path("wavepacket_1.npy")
     wavepacket = load_wavepacket(path)
 
-    eigenstate = get_eigenstate(wavepacket, (0, 0))
-    eigenstate["basis"] = (
+    eigenstate2: StateVector3d[Any] = get_eigenstate(wavepacket, (0, 0))
+    eigenstate2["basis"] = (
         FundamentalMomentumAxis3d(
-            eigenstate["basis"][0].delta_x, eigenstate["basis"][0].n
+            eigenstate2["basis"][0].delta_x, eigenstate2["basis"][0].n
         ),
         FundamentalMomentumAxis3d(
-            eigenstate["basis"][1].delta_x, eigenstate["basis"][1].n
+            eigenstate2["basis"][1].delta_x, eigenstate2["basis"][1].n
         ),
-        eigenstate["basis"][2],
+        eigenstate2["basis"][2],
     )
-    fig, _, _anim1 = animate_eigenstate_x1x2(eigenstate, measure="real")
+    fig, _, _anim1 = animate_eigenstate_x1x2(eigenstate2, measure="real")
     fig.show()
 
     path = get_data_path("wavepacket_2.npy")
     wavepacket = load_wavepacket(path)
 
-    eigenstate = get_eigenstate(wavepacket, (0, 0))
-    eigenstate["basis"] = (
+    eigenstate3: StateVector3d[Any] = get_eigenstate(wavepacket, (0, 0))
+    eigenstate3["basis"] = (
         FundamentalMomentumAxis3d(
-            eigenstate["basis"][0].delta_x, eigenstate["basis"][0].n
+            eigenstate3["basis"][0].delta_x, eigenstate3["basis"][0].n
         ),
         FundamentalMomentumAxis3d(
-            eigenstate["basis"][1].delta_x, eigenstate["basis"][1].n
+            eigenstate3["basis"][1].delta_x, eigenstate3["basis"][1].n
         ),
-        eigenstate["basis"][2],
+        eigenstate3["basis"][2],
     )
-    fig, _, _anim2 = animate_eigenstate_x1x2(eigenstate, measure="real")
+    fig, _, _anim2 = animate_eigenstate_x1x2(eigenstate3, measure="real")
     fig.show()
     input()
 

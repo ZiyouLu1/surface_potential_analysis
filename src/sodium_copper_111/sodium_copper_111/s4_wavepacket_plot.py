@@ -1,20 +1,33 @@
 from __future__ import annotations
 
+from typing import TYPE_CHECKING, Any
+
 import numpy as np
 from matplotlib import pyplot as plt
 from surface_potential_analysis.basis.util import BasisUtil
-from surface_potential_analysis.eigenstate.conversion import (
+from surface_potential_analysis.state_vector.conversion import (
     convert_eigenstate_to_position_basis,
 )
+from surface_potential_analysis.state_vector.plot import plot_eigenstate_1d_x
+from surface_potential_analysis.util.decorators import npy_cached
 from surface_potential_analysis.wavepacket.eigenstate_conversion import (
     unfurl_wavepacket,
 )
 from surface_potential_analysis.wavepacket.localization import (
+    localize_position_operator,
+    localize_position_operator_many_band,
     localize_tightly_bound_wavepacket_idx,
 )
 from surface_potential_analysis.wavepacket.plot import plot_wavepacket_1d_x
 
-from sodium_copper_111.s4_wavepacket import get_n_band_wavepacket, get_wavepacket
+from sodium_copper_111.s4_wavepacket import (
+    get_all_wavepackets,
+    get_wavepacket,
+)
+from sodium_copper_111.surface_data import get_data_path
+
+if TYPE_CHECKING:
+    from surface_potential_analysis.state_vector.state_vector import StateVector
 
 
 def plot_first_six_wavepackets() -> None:
@@ -27,20 +40,42 @@ def plot_first_six_wavepackets() -> None:
         ln.set_label(f"n={i}")
 
     ax.legend()
-    ax.set_title("Plot fo the six lowest energy wavepackets")
+    ax.set_title("Plot of the six lowest energy wavepackets")
     fig.show()
     input()
 
 
-def plot_n_band_wavepacket() -> None:
-    fig, ax = plt.subplots()
+def plot_operator_localized_states_single_band() -> None:
+    wavepacket = get_wavepacket(15)
+    wavepackets = localize_position_operator(wavepacket)
 
-    wavepacket = get_n_band_wavepacket()
-    wavepacket = localize_tightly_bound_wavepacket_idx(wavepacket, idx=(1000,))
-    _, _, ln = plot_wavepacket_1d_x(wavepacket, ax=ax)
-    ln.set_label(f"n={0}")
+    fig, ax = plt.subplots()
+    for i, wavepacket in enumerate(wavepackets):
+        _, _, ln = plot_wavepacket_1d_x(wavepacket, ax=ax)
+        ln.set_label(f"n={i}")
 
     ax.legend()
+    ax.set_title("Plot of the six lowest energy wavepackets")
+    fig.show()
+    input()
+
+
+@npy_cached(get_data_path("localized_states_14_band.npy"), allow_pickle=True)
+def get_many_band_localized_states() -> list[StateVector[Any]]:
+    wavepackets = get_all_wavepackets()
+    return localize_position_operator_many_band(wavepackets[0:16])
+
+
+def plot_operator_localized_states_many_band() -> None:
+    eigenstates = get_many_band_localized_states()
+    print("plotting...")
+    fig, ax = plt.subplots()
+    for i, eigenstate in enumerate(eigenstates):
+        _, _, ln = plot_eigenstate_1d_x(eigenstate, ax=ax)
+        ln.set_label(f"n={i}")
+
+    ax.legend()
+    ax.set_title("Plot of the six lowest energy wavepackets")
     fig.show()
     input()
 

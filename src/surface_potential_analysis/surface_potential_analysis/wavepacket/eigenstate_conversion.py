@@ -23,9 +23,9 @@ if TYPE_CHECKING:
     )
     from surface_potential_analysis.axis.axis_like import AxisLike3d
     from surface_potential_analysis.basis.basis import Basis, Basis3d
-    from surface_potential_analysis.eigenstate.eigenstate import (
-        Eigenstate,
-        Eigenstate3dWithBasis,
+    from surface_potential_analysis.state_vector.state_vector import (
+        StateVector,
+        StateVector3d,
     )
 
     from .wavepacket import WavepacketWithBasis3d
@@ -49,10 +49,12 @@ if TYPE_CHECKING:
 
 
 def furl_eigenstate(
-    eigenstate: Eigenstate3dWithBasis[
-        FundamentalMomentumAxis[_L0Inv, Literal[3]],
-        FundamentalMomentumAxis[_L1Inv, Literal[3]],
-        _A3d2Inv,
+    eigenstate: StateVector3d[
+        tuple[
+            FundamentalMomentumAxis[_L0Inv, Literal[3]],
+            FundamentalMomentumAxis[_L1Inv, Literal[3]],
+            _A3d2Inv,
+        ]
     ],
     shape: tuple[_NS0Inv, _NS1Inv, Literal[1]],
 ) -> WavepacketWithBasis3d[
@@ -101,7 +103,7 @@ def furl_eigenstate(
 
 def _unfurl_momentum_basis_wavepacket(
     wavepacket: Wavepacket[_S0Inv, _BM0Inv]
-) -> Eigenstate[tuple[FundamentalMomentumAxis[Any, Any], ...]]:
+) -> StateVector[tuple[FundamentalMomentumAxis[Any, Any], ...]]:
     sample_shape = wavepacket["shape"]
     states_shape = BasisUtil(wavepacket["basis"]).shape
     final_shape = tuple(
@@ -130,14 +132,13 @@ def _unfurl_momentum_basis_wavepacket(
     return {
         "basis": basis_as_fundamental_momentum_basis(basis),
         "vector": flattened / np.sqrt(np.prod(sample_shape)),
-        "bloch_fraction": np.zeros(len(final_shape)),
     }
 
 
 @overload
 def unfurl_wavepacket(
     wavepacket: Wavepacket3d[_S3d0Inv, _B3d0Inv]
-) -> Eigenstate[
+) -> StateVector[
     tuple[
         FundamentalMomentumAxis[Any, Literal[3]],
         FundamentalMomentumAxis[Any, Literal[3]],
@@ -151,8 +152,8 @@ def unfurl_wavepacket(
 def unfurl_wavepacket(
     wavepacket: Wavepacket[_S0Inv, _B0Inv]
 ) -> (
-    Eigenstate[tuple[FundamentalMomentumAxis[Any, Any], ...]]
-    | Eigenstate[
+    StateVector[tuple[FundamentalMomentumAxis[Any, Any], ...]]
+    | StateVector[
         tuple[
             FundamentalMomentumAxis[Any, Literal[3]],
             FundamentalMomentumAxis[Any, Literal[3]],
@@ -163,7 +164,7 @@ def unfurl_wavepacket(
     ...
 
 
-def unfurl_wavepacket(wavepacket: Wavepacket[_S0Inv, _B0Inv]) -> Eigenstate[Any]:
+def unfurl_wavepacket(wavepacket: Wavepacket[_S0Inv, _B0Inv]) -> StateVector[Any]:
     """
     Convert a wavepacket into an eigenstate of the irreducible unit cell.
 

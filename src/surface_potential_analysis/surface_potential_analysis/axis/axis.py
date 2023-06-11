@@ -13,6 +13,8 @@ from surface_potential_analysis.util.interpolation import pad_ft_points
 _NF0Inv = TypeVar("_NF0Inv", bound=int)
 _N0Inv = TypeVar("_N0Inv", bound=int)
 _ND0Inv = TypeVar("_ND0Inv", bound=int)
+
+_S0Inv = TypeVar("_S0Inv", bound=tuple[int, ...])
 # ruff: noqa: D102
 
 
@@ -43,6 +45,14 @@ class ExplicitAxis(AxisLike[_NF0Inv, _N0Inv, _ND0Inv]):
     @property
     def vectors(self) -> np.ndarray[tuple[_N0Inv, _NF0Inv], np.dtype[np.complex_]]:
         return self._vectors
+
+    def __into_fundamental__(
+        self,
+        vectors: np.ndarray[_S0Inv, np.dtype[np.complex_ | np.float_]],
+        axis: int = -1,
+    ) -> np.ndarray[tuple[int, ...], np.dtype[np.complex_]]:
+        transformed = np.tensordot(vectors, self.vectors, axes=([axis], [0]))
+        return np.moveaxis(transformed, -1, axis)  # type: ignore[no-any-return]
 
     @classmethod
     def from_momentum_vectors(
@@ -86,9 +96,19 @@ class FundamentalPositionAxis(AxisLike[_NF0Inv, _NF0Inv, _ND0Inv]):
     def fundamental_n(self) -> _NF0Inv:
         return self._n
 
-    @property
-    def vectors(self) -> np.ndarray[tuple[_NF0Inv, _NF0Inv], np.dtype[np.complex_]]:
-        return np.eye(self.n, self.n)  # type: ignore[no-any-return]
+    def __into_fundamental__(  # type: ignore[override]
+        self,
+        vectors: np.ndarray[_S0Inv, np.dtype[np.complex_ | np.float_]],
+        axis: int = -1,
+    ) -> np.ndarray[_S0Inv, np.dtype[np.complex_]]:
+        return vectors.astype(np.complex_)  # type: ignore[no-any-return]
+
+    def __from_fundamental__(  # type: ignore[override]
+        self,
+        vectors: np.ndarray[_S0Inv, np.dtype[np.complex_ | np.float_]],
+        axis: int = -1,
+    ) -> np.ndarray[_S0Inv, np.dtype[np.complex_]]:
+        return vectors.astype(np.complex_)  # type: ignore[no-any-return]
 
 
 class FundamentalPositionAxis1d(FundamentalPositionAxis[_NF0Inv, Literal[1]]):
@@ -127,12 +147,21 @@ class MomentumAxis(AxisLike[_NF0Inv, _N0Inv, _ND0Inv]):
     def fundamental_n(self) -> _NF0Inv:
         return self._fundamental_n
 
-    @property
-    def vectors(self) -> np.ndarray[tuple[_N0Inv, _NF0Inv], np.dtype[np.complex_]]:
-        all_states_in_k = np.eye(self.fundamental_n, self.fundamental_n)
-        all_states_in_x = np.fft.ifft(all_states_in_k, axis=1, norm="ortho")
-        # pad_ft_points selects just the n lowest momentum states
-        return pad_ft_points(all_states_in_x, s=(self.n,), axes=(0,))  # type: ignore[return-value]
+    def __into_fundamental__(
+        self,
+        vectors: np.ndarray[_S0Inv, np.dtype[np.complex_ | np.float_]],
+        axis: int = -1,
+    ) -> np.ndarray[tuple[int, ...], np.dtype[np.complex_]]:
+        padded = pad_ft_points(vectors, s=(self.fundamental_n,), axes=(axis,))
+        return np.fft.ifft(padded, self.fundamental_n, axis=axis, norm="ortho")  # type: ignore[no-any-return]
+
+    def __from_fundamental__(
+        self,
+        vectors: np.ndarray[_S0Inv, np.dtype[np.complex_ | np.float_]],
+        axis: int = -1,
+    ) -> np.ndarray[tuple[int, ...], np.dtype[np.complex_]]:
+        transformed = np.fft.fft(vectors, self.fundamental_n, axis=axis, norm="ortho")
+        return pad_ft_points(transformed, s=(self.n,), axes=(axis,))
 
 
 class MomentumAxis1d(MomentumAxis[_NF0Inv, _N0Inv, Literal[1]]):

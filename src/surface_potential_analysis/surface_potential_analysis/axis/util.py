@@ -10,6 +10,7 @@ from .axis_like import AxisLike, AxisVector
 _NF0Inv = TypeVar("_NF0Inv", bound=int)
 _N0Inv = TypeVar("_N0Inv", bound=int)
 _ND0Inv = TypeVar("_ND0Inv", bound=int)
+_S0Inv = TypeVar("_S0Inv", bound=tuple[int, ...])
 
 
 # ruff: noqa: D102
@@ -33,7 +34,21 @@ class AxisUtil(AxisLike[_NF0Inv, _N0Inv, _ND0Inv]):
 
     @property
     def vectors(self) -> np.ndarray[tuple[_N0Inv, _NF0Inv], np.dtype[np.complex_]]:
-        return self._basis.vectors
+        return self.__into_fundamental__(np.eye(self.n, self.n))  # type: ignore[return-value]
+
+    def __into_fundamental__(
+        self,
+        vectors: np.ndarray[_S0Inv, np.dtype[np.complex_ | np.float_]],
+        axis: int = -1,
+    ) -> np.ndarray[tuple[int, ...], np.dtype[np.complex_]]:
+        return self._basis.__into_fundamental__(vectors, axis)
+
+    def __from_fundamental__(
+        self,
+        vectors: np.ndarray[_S0Inv, np.dtype[np.complex_ | np.float_]],
+        axis: int = -1,
+    ) -> np.ndarray[tuple[int, ...], np.dtype[np.complex_]]:
+        return self._basis.__from_fundamental__(vectors, axis)
 
     @property
     def nx_points(self) -> np.ndarray[tuple[_N0Inv], np.dtype[np.int_]]:

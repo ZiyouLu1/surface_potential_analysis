@@ -11,23 +11,25 @@ from surface_potential_analysis.axis.axis import (
     ExplicitAxis3d,
     FundamentalPositionAxis3d,
 )
+from surface_potential_analysis.axis.util import AxisUtil
 from surface_potential_analysis.basis.sho_basis import (
     SHOBasisConfig,
     calculate_sho_wavefunction,
     infinate_sho_basis_from_config,
-    sho_basis_from_config,
+    sho_axis_3d_from_config,
 )
 
 rng = np.random.default_rng()
 
 
 def _normalize_sho_basis(basis: ExplicitAxis3d[int, int]) -> ExplicitAxis3d[int, int]:
-    turning_point = basis.vectors[
-        np.arange(basis.vectors.shape[0]),
-        np.argmax(np.abs(basis.vectors[:, : basis.vectors.shape[1] // 2]), axis=1),
+    vectors = basis.vectors
+    turning_point = vectors[
+        np.arange(vectors.shape[0]),
+        np.argmax(np.abs(vectors[:, : vectors.shape[1] // 2]), axis=1),
     ]
 
-    normalized = np.exp(-1j * np.angle(turning_point))[:, np.newaxis] * basis.vectors
+    normalized = np.exp(-1j * np.angle(turning_point))[:, np.newaxis] * vectors
     return ExplicitAxis3d(basis.delta_x, normalized)
 
 
@@ -108,7 +110,7 @@ class SHOBasisTest(unittest.TestCase):
         parent: FundamentalPositionAxis3d[Literal[1001]] = FundamentalPositionAxis3d(
             np.array([0, 0, 20]), 1001
         )
-        basis = infinate_sho_basis_from_config(parent, config, 12)
+        basis = AxisUtil(infinate_sho_basis_from_config(parent, config, 12))
         np.testing.assert_almost_equal(
             np.ones((nz,)), np.sum(basis.vectors * np.conj(basis.vectors), axis=1)
         )
@@ -121,12 +123,12 @@ class SHOBasisTest(unittest.TestCase):
         }
         parent = FundamentalPositionAxis3d(np.array([0, 0, 10 * np.pi]), 1001)
 
-        basis = sho_basis_from_config(parent, config, 12)
+        axis = AxisUtil(sho_axis_3d_from_config(parent, config, 12))
 
-        norm = np.linalg.norm(basis.vectors, axis=1)
+        norm = np.linalg.norm(axis.vectors, axis=1)
         np.testing.assert_array_almost_equal(norm, np.ones_like(norm))
 
-        norm = np.linalg.norm(basis.vectors, axis=1)
+        norm = np.linalg.norm(axis.vectors, axis=1)
         np.testing.assert_array_almost_equal(norm, np.ones_like(norm))
 
     def test_infinate_sho_normal_sho_config(self) -> None:
@@ -140,5 +142,7 @@ class SHOBasisTest(unittest.TestCase):
         basis1 = _normalize_sho_basis(
             infinate_sho_basis_from_config(parent, config, 16)
         )
-        basis2 = _normalize_sho_basis(sho_basis_from_config(parent, config, 16))
-        np.testing.assert_array_almost_equal(basis1.vectors, basis2.vectors)
+        basis2 = _normalize_sho_basis(sho_axis_3d_from_config(parent, config, 16))
+        np.testing.assert_array_almost_equal(
+            AxisUtil(basis1).vectors, AxisUtil(basis2).vectors
+        )

@@ -14,7 +14,7 @@ if TYPE_CHECKING:
     from matplotlib.lines import Line2D
 
     from surface_potential_analysis.basis.basis import Basis
-    from surface_potential_analysis.eigenstate.eigenstate_collection import (
+    from surface_potential_analysis.state_vector.eigenstate_collection import (
         EigenstateColllection,
     )
 

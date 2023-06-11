@@ -9,10 +9,10 @@ from surface_potential_analysis.basis.util import (
     get_fundamental_projected_k_points,
     get_fundamental_projected_x_points,
 )
-from surface_potential_analysis.eigenstate.conversion import (
+from surface_potential_analysis.state_vector.conversion import (
     convert_momentum_basis_eigenstate_to_position_basis,
 )
-from surface_potential_analysis.eigenstate.plot import (
+from surface_potential_analysis.state_vector.plot import (
     animate_eigenstate_3d_x,
     plot_eigenstate_1d_x,
     plot_eigenstate_2d_k,

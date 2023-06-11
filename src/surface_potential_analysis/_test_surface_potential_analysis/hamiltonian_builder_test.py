@@ -34,12 +34,6 @@ from surface_potential_analysis.basis.util import (
     Basis3dUtil,
     BasisUtil,
 )
-from surface_potential_analysis.eigenstate.eigenstate_calculation import (
-    calculate_eigenstates,
-)
-from surface_potential_analysis.hamiltonian.conversion import (
-    convert_hamiltonian_to_basis,
-)
 from surface_potential_analysis.hamiltonian_builder import (
     momentum_basis,
     sho_subtracted_basis,
@@ -47,7 +41,13 @@ from surface_potential_analysis.hamiltonian_builder import (
 from surface_potential_analysis.hamiltonian_builder.sho_subtracted_basis import (
     _SurfaceHamiltonianUtil,
 )
+from surface_potential_analysis.operator.conversion import (
+    convert_operator_to_basis,
+)
 from surface_potential_analysis.potential.conversion import convert_potential_to_basis
+from surface_potential_analysis.state_vector.eigenstate_calculation import (
+    calculate_eigenstates_hermitian,
+)
 from surface_potential_analysis.util.interpolation import interpolate_points_rfftn
 from surface_potential_analysis.util.util import slice_along_axis
 
@@ -64,9 +64,9 @@ if TYPE_CHECKING:
         FundamentalMomentumBasis3d,
         FundamentalPositionBasis3d,
     )
-    from surface_potential_analysis.hamiltonian.hamiltonian import (
-        Hamiltonian3d,
+    from surface_potential_analysis.operator.operator import (
         HamiltonianWith3dBasis,
+        SingleBasisOperator3d,
     )
     from surface_potential_analysis.potential.potential import (
         FundamentalPositionBasisPotential3d,
@@ -145,7 +145,7 @@ def convert_explicit_basis_x2(
 
 def flatten_hamiltonian(
     hamiltonian: StackedHamiltonian3d[_B3d0Inv],
-) -> Hamiltonian3d[_B3d0Inv]:
+) -> SingleBasisOperator3d[_B3d0Inv]:
     """
     Convert a stacked hamiltonian to a hamiltonian.
 
@@ -160,12 +160,13 @@ def flatten_hamiltonian(
     n_states = np.prod(hamiltonian["array"].shape[:3])
     return {
         "basis": hamiltonian["basis"],
+        "dual_basis": hamiltonian["basis"],
         "array": hamiltonian["array"].reshape(n_states, n_states),
     }
 
 
 def stack_hamiltonian(
-    hamiltonian: Hamiltonian3d[_B3d0Inv],
+    hamiltonian: SingleBasisOperator3d[_B3d0Inv],
 ) -> StackedHamiltonian3d[_B3d0Inv]:
     """
     Convert a hamiltonian to a stacked hamiltonian.
@@ -339,8 +340,13 @@ class HamiltonianBuilderTest(unittest.TestCase):
         converted = convert_potential_to_basis(
             potential, basis_as_fundamental_position_basis(potential["basis"])
         )
-        expected = convert_hamiltonian_to_basis(
-            {"basis": converted["basis"], "array": np.diag(converted["vector"])},
+        expected = convert_operator_to_basis(
+            {
+                "basis": converted["basis"],
+                "dual_basis": converted["basis"],
+                "array": np.diag(converted["vector"]),
+            },
+            potential["basis"],
             potential["basis"],
         )
         np.testing.assert_array_almost_equal(expected["array"], actual["array"])
@@ -756,7 +762,9 @@ class HamiltonianBuilderTest(unittest.TestCase):
         hamiltonian = momentum_basis.total_surface_hamiltonian(
             potential, mass, np.array([0])
         )
-        eigenstates = calculate_eigenstates(hamiltonian, subset_by_index=(0, 50))
+        eigenstates = calculate_eigenstates_hermitian(
+            hamiltonian, subset_by_index=(0, 50)
+        )
         expected = hbar * omega * (util.nx_points[0] + 0.5)
         np.testing.assert_almost_equal(expected[:50], eigenstates["energies"][:50])
 
@@ -766,7 +774,9 @@ class HamiltonianBuilderTest(unittest.TestCase):
         hamiltonian2 = momentum_basis.total_surface_hamiltonian(
             in_basis, mass, np.array([0])
         )
-        eigenstates2 = calculate_eigenstates(hamiltonian2, subset_by_index=(0, 50))
+        eigenstates2 = calculate_eigenstates_hermitian(
+            hamiltonian2, subset_by_index=(0, 50)
+        )
         np.testing.assert_almost_equal(expected[:50], eigenstates2["energies"][:50])
 
         extended: Potential[tuple[MomentumAxis[int, int, int]]] = {
@@ -779,5 +789,7 @@ class HamiltonianBuilderTest(unittest.TestCase):
         hamiltonian3 = momentum_basis.total_surface_hamiltonian(
             converted, mass, np.array([0])
         )
-        eigenstates3 = calculate_eigenstates(hamiltonian3, subset_by_index=(0, 50))
+        eigenstates3 = calculate_eigenstates_hermitian(
+            hamiltonian3, subset_by_index=(0, 50)
+        )
         np.testing.assert_almost_equal(expected[:50], eigenstates3["energies"][:50])

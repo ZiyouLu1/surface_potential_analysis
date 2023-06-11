@@ -2,10 +2,10 @@ from __future__ import annotations
 
 import numpy as np
 from surface_potential_analysis.basis.util import BasisUtil
-from surface_potential_analysis.eigenstate.conversion import (
+from surface_potential_analysis.state_vector.conversion import (
     convert_eigenstate_to_position_basis,
 )
-from surface_potential_analysis.wavepacket.wavepacket import get_eigenstate
+from surface_potential_analysis.wavepacket.get_eigenstate import get_eigenstate
 
 from .s4_wavepacket import load_copper_wavepacket
 

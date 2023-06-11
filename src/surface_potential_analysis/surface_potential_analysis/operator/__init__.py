@@ -2,15 +2,15 @@
 
 from __future__ import annotations
 
-from .hamiltonian import (
+from .operator import (
     FundamentalMomentumBasisHamiltonian3d,
     FundamentalPositionBasisHamiltonian3d,
-    Hamiltonian3d,
     HamiltonianWith3dBasis,
+    SingleBasisOperator3d,
 )
 
 __all__ = [
-    "Hamiltonian3d",
+    "SingleBasisOperator3d",
     "HamiltonianWith3dBasis",
     "FundamentalMomentumBasisHamiltonian3d",
     "FundamentalPositionBasisHamiltonian3d",

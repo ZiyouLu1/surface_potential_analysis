@@ -29,7 +29,7 @@ if TYPE_CHECKING:
         Basis3d,
         FundamentalMomentumBasis3d,
     )
-    from surface_potential_analysis.hamiltonian import Hamiltonian3d
+    from surface_potential_analysis.operator import SingleBasisOperator3d
 
 
 MAXIMUM_POINTS: list[tuple[int, int, int]] = [
@@ -95,7 +95,7 @@ def load_normalized_copper_wavepacket_momentum(
 def generate_wavepacket_sho() -> None:
     def hamiltonian_generator(
         x: np.ndarray[tuple[Literal[3]], np.dtype[np.float_]]
-    ) -> Hamiltonian3d[Any]:
+    ) -> SingleBasisOperator3d[Any]:
         return generate_hamiltonian_sho(
             shape=(48, 48, 250),
             bloch_fraction=x,

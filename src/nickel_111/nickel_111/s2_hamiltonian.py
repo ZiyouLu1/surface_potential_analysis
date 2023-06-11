@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Literal, TypeVar
 import numpy as np
 from surface_potential_analysis.basis.sho_basis import (
     infinate_sho_basis_from_config,
-    sho_basis_from_config,
+    sho_axis_3d_from_config,
 )
 from surface_potential_analysis.hamiltonian_builder import sho_subtracted_basis
 from surface_potential_analysis.util.decorators import timed
@@ -18,7 +18,7 @@ if TYPE_CHECKING:
         MomentumAxis3d,
     )
     from surface_potential_analysis.basis.sho_basis import SHOBasisConfig
-    from surface_potential_analysis.hamiltonian import HamiltonianWith3dBasis
+    from surface_potential_analysis.operator import HamiltonianWith3dBasis
 
 _L0 = TypeVar("_L0", bound=int)
 _L1 = TypeVar("_L1", bound=int)
@@ -81,5 +81,5 @@ def generate_sho_basis(
     parent = get_interpolated_potential((1, 1, 1000))["basis"][2]
     return (
         infinate_sho_basis_from_config(parent, config, n),
-        sho_basis_from_config(parent, config, n),
+        sho_axis_3d_from_config(parent, config, n),
     )

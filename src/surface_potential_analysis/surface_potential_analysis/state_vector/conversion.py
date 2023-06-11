@@ -19,15 +19,15 @@ if TYPE_CHECKING:
     from surface_potential_analysis.basis.basis import (
         Basis,
         Basis3d,
+        FundamentalMomentumBasis3d,
     )
-    from surface_potential_analysis.eigenstate.eigenstate import (
-        Eigenstate,
-        FundamentalMomentumBasisEigenstate3d,
+    from surface_potential_analysis.state_vector.state_vector import (
         FundamentalPositionBasisEigenstate3d,
+        StateVector,
     )
 
-    from .eigenstate import (
-        Eigenstate3d,
+    from .state_vector import (
+        StateVector3d,
     )
 
     _B0Inv = TypeVar("_B0Inv", bound=Basis[Any])
@@ -41,11 +41,15 @@ if TYPE_CHECKING:
     _NF1Inv = TypeVar("_NF1Inv", bound=int)
     _NF2Inv = TypeVar("_NF2Inv", bound=int)
 
+    FundamentalMomentumBasisEigenstate3d = StateVector3d[
+        FundamentalMomentumBasis3d[_NF0Inv, _NF1Inv, _NF2Inv]
+    ]
+
 
 @timed
 def convert_eigenstate_to_basis(
-    eigenstate: Eigenstate[_B0Inv], basis: _B1Inv
-) -> Eigenstate[_B1Inv]:
+    eigenstate: StateVector[_B0Inv], basis: _B1Inv
+) -> StateVector[_B1Inv]:
     """
     Given an eigenstate, calculate the vector in the given basis.
 
@@ -59,12 +63,12 @@ def convert_eigenstate_to_basis(
     Eigenstate[_B1Inv]
     """
     converted = convert_vector(eigenstate["vector"], eigenstate["basis"], basis)
-    return {"basis": basis, "vector": converted, "bloch_fraction": eigenstate["bloch_fraction"]}  # type: ignore[typeddict-item]
+    return {"basis": basis, "vector": converted}  # type: ignore[typeddict-item]
 
 
 def convert_eigenstate_to_position_basis(
-    eigenstate: Eigenstate[_B0Inv],
-) -> Eigenstate[tuple[FundamentalPositionAxis[Any, Any], ...]]:
+    eigenstate: StateVector[_B0Inv],
+) -> StateVector[tuple[FundamentalPositionAxis[Any, Any], ...]]:
     """
     Given an eigenstate, calculate the vector in position basis.
 
@@ -83,7 +87,7 @@ def convert_eigenstate_to_position_basis(
 
 
 def convert_eigenstate_to_momentum_basis(
-    eigenstate: Eigenstate3d[
+    eigenstate: StateVector3d[
         Basis3d[
             AxisLike3d[_NF0Inv, _N0Inv],
             AxisLike3d[_NF1Inv, _N1Inv],
@@ -133,7 +137,6 @@ def convert_position_basis_eigenstate_to_momentum_basis(
     return {
         "basis": basis_as_fundamental_momentum_basis(eigenstate["basis"]),
         "vector": transformed.reshape(-1),
-        "bloch_fraction": eigenstate["bloch_fraction"],
     }
 
 
@@ -166,5 +169,4 @@ def convert_momentum_basis_eigenstate_to_position_basis(
     return {
         "basis": basis_as_fundamental_position_basis(eigenstate["basis"]),
         "vector": transformed.reshape(-1),
-        "bloch_fraction": eigenstate["bloch_fraction"],
     }

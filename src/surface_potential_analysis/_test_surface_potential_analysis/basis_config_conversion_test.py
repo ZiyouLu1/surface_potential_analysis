@@ -12,6 +12,7 @@ from surface_potential_analysis.axis.axis import (
     FundamentalPositionAxis,
     MomentumAxis1d,
 )
+from surface_potential_analysis.axis.util import AxisUtil
 from surface_potential_analysis.basis.conversion import (
     basis_as_fundamental_momentum_basis,
     basis_as_fundamental_position_basis,
@@ -28,6 +29,18 @@ rng = np.random.default_rng()
 
 
 class BasisConfigConversionTest(unittest.TestCase):
+    def test_explicit_basis_vectors(self) -> None:
+        fundamental_n = rng.integers(2, 5)
+
+        axis = get_random_explicit_axis(1, fundamental_n=fundamental_n)
+
+        expected = axis.vectors
+        actual = AxisUtil(axis).vectors
+        np.testing.assert_array_equal(expected, actual)
+
+        a = axis.__from_fundamental__(actual)
+        np.testing.assert_array_almost_equal(a, np.eye(axis.n))
+
     def test_convert_vector_normalization(self) -> None:
         fundamental_shape = (rng.integers(2, 5), rng.integers(2, 5), rng.integers(2, 5))
 
@@ -131,7 +144,9 @@ class BasisConfigConversionTest(unittest.TestCase):
         final_basis = (MomentumAxis1d(np.array([1]), fundamental_n, fundamental_n),)
         matrix = rng.random((n, n))
 
-        actual = convert_matrix(matrix, truncated_basis, final_basis)
+        actual = convert_matrix(
+            matrix, truncated_basis, final_basis, truncated_basis, final_basis
+        )
         expected = pad_ft_points(matrix, s=(fundamental_n, fundamental_n), axes=(0, 1))
         np.testing.assert_array_almost_equal(actual, expected)
 
@@ -148,10 +163,14 @@ class BasisConfigConversionTest(unittest.TestCase):
             matrix,
             basis_as_fundamental_position_basis(small_basis),
             small_basis,
+            basis_as_fundamental_position_basis(small_basis),
+            small_basis,
         )
         converted = converted * n / fundamental_n
         converted = convert_matrix(
             converted,
+            truncated_large_basis,
+            basis_as_fundamental_position_basis(truncated_large_basis),
             truncated_large_basis,
             basis_as_fundamental_position_basis(truncated_large_basis),
         )
@@ -160,10 +179,14 @@ class BasisConfigConversionTest(unittest.TestCase):
             converted,
             basis_as_fundamental_position_basis(truncated_large_basis),
             truncated_large_basis,
+            basis_as_fundamental_position_basis(truncated_large_basis),
+            truncated_large_basis,
         )
         actual = actual * fundamental_n / n
         actual = convert_matrix(
             actual,
+            small_basis,
+            basis_as_fundamental_position_basis(small_basis),
             small_basis,
             basis_as_fundamental_position_basis(small_basis),
         )
@@ -174,15 +197,21 @@ class BasisConfigConversionTest(unittest.TestCase):
             converted,
             basis_as_fundamental_position_basis(large_basis),
             large_basis,
+            basis_as_fundamental_position_basis(large_basis),
+            large_basis,
         )
         actual = convert_matrix(
             actual,
+            large_basis,
+            truncated_large_basis,
             large_basis,
             truncated_large_basis,
         )
         actual = actual * fundamental_n / n
         actual = convert_matrix(
             actual,
+            small_basis,
+            basis_as_fundamental_position_basis(small_basis),
             small_basis,
             basis_as_fundamental_position_basis(small_basis),
         )

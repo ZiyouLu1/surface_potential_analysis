@@ -8,12 +8,12 @@ import numpy as np
 from surface_potential_analysis.basis.build import (
     position_basis_3d_from_shape,
 )
-from surface_potential_analysis.eigenstate.eigenstate_collection_plot import (
+from surface_potential_analysis.state_vector.eigenstate_collection_plot import (
     _get_projected_bloch_phases,
 )
 
 if TYPE_CHECKING:
-    from surface_potential_analysis.eigenstate.eigenstate_collection import (
+    from surface_potential_analysis.state_vector.eigenstate_collection import (
         EigenstateColllection,
     )
 

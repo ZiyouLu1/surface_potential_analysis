@@ -283,6 +283,10 @@ class BasisUtil(Generic[_B0Inv]):
     def fundamental_shape(self) -> tuple[int, ...]:
         return tuple(axi.fundamental_n for axi in self._basis)
 
+    @property
+    def ndim(self) -> int:
+        return len(self.shape)
+
     @overload
     def get_flat_index(
         self,
@@ -622,6 +626,10 @@ class Basis3dUtil(BasisUtil[_B3d0Inv]):
     @cached_property
     def fundamental_shape(self) -> tuple[int, int, int]:
         return super().fundamental_shape  # type: ignore[return-value]
+
+    @property
+    def ndim(self) -> Literal[3]:
+        return 3
 
     @overload  # type: ignore[override]
     def get_flat_index(

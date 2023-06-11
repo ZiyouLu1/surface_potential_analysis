@@ -15,20 +15,18 @@ from surface_potential_analysis.basis.basis import (
 from surface_potential_analysis.basis.brillouin_zone import decrement_brillouin_zone
 from surface_potential_analysis.basis.build import position_basis_from_shape
 from surface_potential_analysis.basis.util import BasisUtil
-from surface_potential_analysis.eigenstate.eigenstate_calculation import (
-    calculate_eigenstates,
+from surface_potential_analysis.state_vector.eigenstate_calculation import (
+    calculate_eigenstates_hermitian,
 )
 
 if TYPE_CHECKING:
     from collections.abc import Callable
     from pathlib import Path
 
-    from surface_potential_analysis._types import SingleIndexLike
-    from surface_potential_analysis.eigenstate.eigenstate import Eigenstate
-    from surface_potential_analysis.eigenstate.eigenstate_collection import (
+    from surface_potential_analysis.operator.operator import SingleBasisOperator
+    from surface_potential_analysis.state_vector.eigenstate_collection import (
         EigenstateColllection3d,
     )
-    from surface_potential_analysis.hamiltonian.hamiltonian import Hamiltonian
 
 _L0Inv = TypeVar("_L0Inv", bound=int)
 _L1Inv = TypeVar("_L1Inv", bound=int)
@@ -36,7 +34,8 @@ _L2Inv = TypeVar("_L2Inv", bound=int)
 _ND0Inv = TypeVar("_ND0Inv", bound=int)
 
 _B0Inv = TypeVar("_B0Inv", bound=Basis[Any])
-
+_NF0Inv = TypeVar("_NF0Inv", bound=int)
+_N0Inv = TypeVar("_N0Inv", bound=int)
 
 _B3d0Inv = TypeVar(
     "_B3d0Inv",
@@ -283,7 +282,7 @@ def _from_eigenstate_collection(
 def generate_wavepacket(
     hamiltonian_generator: Callable[
         [np.ndarray[tuple[_ND0Inv], np.dtype[np.float_]]],
-        Hamiltonian[_B0Inv],
+        SingleBasisOperator[_B0Inv],
     ],
     shape: _S0Inv,
     *,
@@ -323,124 +322,10 @@ def generate_wavepacket(
 
     for i in range(np.prod(shape)):
         h = hamiltonian_generator(bloch_fractions[:, i])
-        eigenstates = calculate_eigenstates(h, subset_by_index)
+        eigenstates = calculate_eigenstates_hermitian(h, subset_by_index)
 
         for b, band in enumerate(save_bands):
             band_idx = band - subset_by_index[0]
             out[b]["vectors"][i] = eigenstates["vectors"][band_idx]
             out[b]["energies"][i] = eigenstates["energies"][band_idx]
     return out
-
-
-def generate_n_band_wavepacket(
-    hamiltonian_generator: Callable[
-        [np.ndarray[tuple[_ND0Inv], np.dtype[np.float_]]],
-        Hamiltonian[_B0Inv],
-    ],
-    shape: _S0Inv,
-    bands: int,
-) -> Wavepacket[tuple[int, ...], _B0Inv]:
-    """
-    Generate a wavepacket with the given number of samples.
-
-    Parameters
-    ----------
-    hamiltonian_generator : Callable[[np.ndarray[tuple[Literal[3]], np.dtype[np.float_]]], Hamiltonian[_B3d0Inv]]
-    samples : tuple[_NS0Inv, _NS1Inv]
-    bands : int
-
-    Returns
-    -------
-    np.ndarray[tuple[int], np.dtype[Wavepacket[_NS0Inv, _NS1Inv, _B3d0Inv]]]
-    """
-    sample_basis = tuple(
-        FundamentalPositionAxis(np.zeros(len(shape)), n * bands) for n in shape
-    )
-    # ruff: noqa: ERA001
-    # zone_boundaries = np.arange(-n_bz  //2 ,n_bz //2, step =0.5 )
-    # fractions = np.fft.ifftshift(  # type: ignore[no-any-return]
-    #         np.arange(-n_bz  //2 ,n_bz //2, step =0.5 / shape[0])
-    #     )
-    # zone_idx = np.count_nonzero( )
-    util = BasisUtil(sample_basis)
-    bloch_fractions = util.fundamental_nk_points / np.array(shape)[:, np.newaxis]
-
-    h = hamiltonian_generator(bloch_fractions[:, 0])
-    basis_size = BasisUtil(h["basis"]).size
-
-    n_samples = bloch_fractions.shape[-1]
-    vectors = np.empty((n_samples, basis_size), dtype=np.complex128)
-    energies = np.empty(n_samples, dtype=np.float_)
-    out: Wavepacket[tuple[int, ...], _B0Inv] = {
-        "basis": h["basis"],
-        "vectors": vectors.copy(),
-        "energies": energies.copy(),
-        "shape": util.shape,
-    }
-    band_limits = np.array(
-        [
-            ((-(n * shape[0]) + 1) // 2, ((n * shape[0]) - 1) // 2)
-            for n in range(1, bands + 1)
-        ]
-    )
-    band_idx_arr = np.count_nonzero(
-        util.fundamental_nk_points[0][:, np.newaxis] < band_limits[np.newaxis, :, 0],
-        axis=-1,
-    ) + np.count_nonzero(
-        util.fundamental_nk_points[0][:, np.newaxis] > band_limits[np.newaxis, :, 1],
-        axis=-1,
-    )
-    for i, bloch_fraction in enumerate(bloch_fractions.T):
-        h = hamiltonian_generator(bloch_fraction)
-
-        band_idx = band_idx_arr[i]
-
-        subset_by_index: tuple[int, int] = (band_idx, band_idx)
-        eigenstates = calculate_eigenstates(h, subset_by_index)
-
-        out["vectors"][i] = eigenstates["vectors"][0]
-        out["energies"][i] = eigenstates["energies"][0]
-    return out
-
-
-def get_eigenstate(
-    wavepacket: Wavepacket[_S0Inv, _B0Inv], idx: SingleIndexLike
-) -> Eigenstate[_B0Inv]:
-    """
-    Get the eigenstate of a given wavepacket at a specific index.
-
-    Parameters
-    ----------
-    wavepacket : Wavepacket[_S0Inv, _B0Inv]
-    idx : SingleIndexLike
-
-    Returns
-    -------
-    Eigenstate[_B0Inv]
-    """
-    util = BasisUtil(get_sample_basis(wavepacket["basis"], wavepacket["shape"]))
-    idx = util.get_flat_index(idx) if isinstance(idx, tuple) else idx
-    return {
-        "basis": wavepacket["basis"],
-        "vector": wavepacket["vectors"][idx],
-        "bloch_fraction": get_wavepacket_sample_fractions(wavepacket["shape"])[:, idx],
-    }
-
-
-def get_eigenstates(wavepacket: Wavepacket[_S0Inv, _B0Inv]) -> list[Eigenstate[_B0Inv]]:
-    """
-    Get the eigenstate of a given wavepacket at a specific index.
-
-    Parameters
-    ----------
-    wavepacket : Wavepacket[_S0Inv, _B0Inv]
-
-    Returns
-    -------
-    Eigenstate[_B0Inv]
-    """
-    bloch_fractions = get_wavepacket_sample_fractions(wavepacket["shape"]).T
-    return [
-        {"basis": wavepacket["basis"], "vector": v, "bloch_fraction": f}
-        for (v, f) in zip(wavepacket["vectors"], bloch_fractions, strict=True)
-    ]

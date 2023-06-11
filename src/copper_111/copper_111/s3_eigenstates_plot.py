@@ -2,15 +2,15 @@ from __future__ import annotations
 
 import numpy as np
 from matplotlib import pyplot as plt
-from surface_potential_analysis.eigenstate.eigenstate_collection import (
+from surface_potential_analysis.state_vector.eigenstate_collection import (
     load_eigenstate_collection,
     select_eigenstate,
 )
-from surface_potential_analysis.eigenstate.eigenstate_collection_plot import (
+from surface_potential_analysis.state_vector.eigenstate_collection_plot import (
     plot_energies_against_bloch_phase_1d,
     plot_lowest_band_energies_against_bloch_k,
 )
-from surface_potential_analysis.eigenstate.plot import animate_eigenstate_x0x1
+from surface_potential_analysis.state_vector.plot import animate_eigenstate_x0x1
 
 from .surface_data import get_data_path, save_figure
 

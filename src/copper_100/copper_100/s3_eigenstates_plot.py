@@ -5,15 +5,15 @@ from typing import TYPE_CHECKING, Any
 import matplotlib.pyplot as plt
 import numpy as np
 from surface_potential_analysis.basis.util import Basis3dUtil
-from surface_potential_analysis.eigenstate.eigenstate_collection import (
+from surface_potential_analysis.state_vector.eigenstate_collection import (
     load_eigenstate_collection,
     select_eigenstate,
 )
-from surface_potential_analysis.eigenstate.eigenstate_collection_plot import (
+from surface_potential_analysis.state_vector.eigenstate_collection_plot import (
     plot_energies_against_bloch_phase_1d,
     plot_lowest_band_energies_against_bloch_k,
 )
-from surface_potential_analysis.eigenstate.plot import (
+from surface_potential_analysis.state_vector.plot import (
     animate_eigenstate_x0x1,
     plot_eigenstate_along_path,
     plot_eigenstate_difference_2d_x,
@@ -26,7 +26,7 @@ if TYPE_CHECKING:
     from matplotlib.axes import Axes
     from matplotlib.figure import Figure
     from matplotlib.lines import Line2D
-    from surface_potential_analysis.eigenstate.eigenstate import Eigenstate3d
+    from surface_potential_analysis.state_vector.state_vector import StateVector3d
     from surface_potential_analysis.util.util import Measure
 
 
@@ -159,7 +159,7 @@ def plot_lowest_eigenstate_3d_xy() -> None:
 
 
 def plot_eigenstate_z_hollow_site(
-    eigenstate: Eigenstate3d[Any],
+    eigenstate: StateVector3d[Any],
     *,
     ax: Axes | None = None,
     measure: Measure = "abs",
@@ -193,7 +193,7 @@ def analyze_eigenvector_convergence_z() -> None:
 
 
 def plot_eigenstate_through_bridge(
-    eigenstate: Eigenstate3d[Any],
+    eigenstate: StateVector3d[Any],
     *,
     ax: Axes | None = None,
     measure: Measure = "abs",

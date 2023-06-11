@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, Any, TypeVar
 
 import numpy as np
 
-from surface_potential_analysis.eigenstate.conversion import (
+from surface_potential_analysis.state_vector.conversion import (
     convert_eigenstate_to_position_basis,
     convert_momentum_basis_eigenstate_to_position_basis,
 )
@@ -19,8 +19,8 @@ if TYPE_CHECKING:
         FundamentalMomentumBasis3d,
         FundamentalPositionBasis3d,
     )
-    from surface_potential_analysis.eigenstate.eigenstate import Eigenstate3d
     from surface_potential_analysis.overlap.overlap import Overlap3d
+    from surface_potential_analysis.state_vector.state_vector import StateVector3d
     from surface_potential_analysis.wavepacket import Wavepacket3dWith2dSamples
 
     _B3d0Inv = TypeVar("_B3d0Inv", bound=Basis3d[Any, Any, Any])
@@ -34,8 +34,8 @@ _NS1Inv = TypeVar("_NS1Inv", bound=int)
 
 
 def calculate_overlap_momentum_eigenstate(
-    eigenstate_0: Eigenstate3d[FundamentalMomentumBasis3d[_L0Inv, _L1Inv, _L2Inv]],
-    eigenstate_1: Eigenstate3d[FundamentalMomentumBasis3d[_L0Inv, _L1Inv, _L2Inv]],
+    eigenstate_0: StateVector3d[FundamentalMomentumBasis3d[_L0Inv, _L1Inv, _L2Inv]],
+    eigenstate_1: StateVector3d[FundamentalMomentumBasis3d[_L0Inv, _L1Inv, _L2Inv]],
 ) -> Overlap3d[FundamentalPositionBasis3d[_L0Inv, _L1Inv, _L2Inv]]:
     """
     Calculate the overlap between two eigenstates in position basis.
@@ -93,8 +93,8 @@ def calculate_wavepacket_overlap(
 
 
 def calculate_overlap_eigenstate(
-    eigenstate_0: Eigenstate3d[_B3d0Inv],
-    eigenstate_1: Eigenstate3d[_B3d0Inv],
+    eigenstate_0: StateVector3d[_B3d0Inv],
+    eigenstate_1: StateVector3d[_B3d0Inv],
 ) -> Overlap3d[FundamentalPositionBasis3d[int, int, int]]:
     """
     Calculate the overlap between two eigenstates in position basis.

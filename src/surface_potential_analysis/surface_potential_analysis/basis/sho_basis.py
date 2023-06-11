@@ -124,7 +124,7 @@ def get_sho_potential_basis_config(
     }
 
 
-def sho_basis_from_config(
+def sho_axis_3d_from_config(
     parent: AxisLike3d[_LF0Inv, _L0Inv], config: SHOBasisConfig, n: _L0Inv
 ) -> ExplicitAxis3d[_LF0Inv, _L0Inv]:
     """

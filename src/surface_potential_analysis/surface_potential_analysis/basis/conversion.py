@@ -20,7 +20,6 @@ from surface_potential_analysis.axis.conversion import (
     axis_as_fundamental_position_axis,
     axis_as_n_point_axis,
     axis_as_single_point_axis,
-    get_axis_conversion_matrix,
 )
 from surface_potential_analysis.util.interpolation import pad_ft_points
 
@@ -42,48 +41,45 @@ if TYPE_CHECKING:
 
     _B0Inv = TypeVar("_B0Inv", bound=Basis[Any])
     _B1Inv = TypeVar("_B1Inv", bound=Basis[Any])
+    _B2Inv = TypeVar("_B2Inv", bound=Basis[Any])
+    _B3Inv = TypeVar("_B3Inv", bound=Basis[Any])
     _B1d0Inv = TypeVar("_B1d0Inv", bound=Basis1d[Any])
     _B1d1Inv = TypeVar("_B1d1Inv", bound=Basis1d[Any])
-    _B2d0Inv = TypeVar("_B2d0Inv", bound=Basis2d[Any, Any])
-    _B2d1Inv = TypeVar("_B2d1Inv", bound=Basis2d[Any, Any])
+    _B1d2Inv = TypeVar("_B1d2Inv", bound=Basis1d[Any])
+    _B1d3Inv = TypeVar("_B1d3Inv", bound=Basis1d[Any])
+    _B2d0Inv = TypeVar("_B2d1Inv", bound=Basis2d[Any, Any])
+    _B2d1Inv = TypeVar("_B2d0Inv", bound=Basis2d[Any, Any])
+    _B2d2Inv = TypeVar("_B2d2Inv", bound=Basis2d[Any, Any])
+    _B2d3Inv = TypeVar("_B2d3Inv", bound=Basis2d[Any, Any])
     _B3d0Inv = TypeVar("_B3d0Inv", bound=Basis3d[Any, Any, Any])
     _B3d1Inv = TypeVar("_B3d1Inv", bound=Basis3d[Any, Any, Any])
+    _B3d2Inv = TypeVar("_B3d2Inv", bound=Basis3d[Any, Any, Any])
+    _B3d3Inv = TypeVar("_B3d3Inv", bound=Basis3d[Any, Any, Any])
     _S0Inv = TypeVar("_S0Inv", bound=tuple[int, ...])
     _NDInv = TypeVar("_NDInv", bound=int)
 
 
 def _convert_vector_along_axis_simple(
-    vector: np.ndarray[_S0Inv, np.dtype[np.complex_]],
+    vector: np.ndarray[_S0Inv, np.dtype[np.complex_ | np.float_]],
     initial_axis: _A0Inv,
     final_axis: _A1Inv,
     axis: int,
 ) -> np.ndarray[Any, np.dtype[np.complex_]]:
-    matrix = get_axis_conversion_matrix(initial_axis, final_axis)
-    return np.moveaxis(np.tensordot(vector, matrix, axes=([axis], [0])), -1, axis)  # type: ignore[no-any-return]
+    fundamental = initial_axis.__into_fundamental__(vector, axis)
+    return final_axis.__from_fundamental__(fundamental, axis)
 
 
 def _convert_vector_along_axis(
-    vector: np.ndarray[_S0Inv, np.dtype[np.complex_]],
+    vector: np.ndarray[_S0Inv, np.dtype[np.complex_ | np.float_]],
     initial_axis: _A0Inv,
     final_axis: _A1Inv,
     axis: int,
 ) -> np.ndarray[Any, np.dtype[np.complex_]]:
-    if isinstance(initial_axis, FundamentalPositionAxis) and isinstance(
-        final_axis, FundamentalPositionAxis
-    ):
-        return vector
-    if isinstance(initial_axis, FundamentalPositionAxis) and isinstance(
-        final_axis, MomentumAxis
-    ):
-        transformed = np.fft.fft(vector, axis=axis, norm="ortho")
-        return pad_ft_points(transformed, s=(final_axis.n,), axes=(0,))
-    if isinstance(initial_axis, MomentumAxis) and isinstance(
-        final_axis, FundamentalPositionAxis
-    ):
-        padded = pad_ft_points(vector, s=(final_axis.n,), axes=(axis,))
-        return np.fft.ifft(padded, axis=axis, norm="ortho")  # type: ignore[no-any-return]
+    # Small speedup here, and prevents imprecision of fft followed by ifft
+    # And two pad_ft_points
     if isinstance(initial_axis, MomentumAxis) and isinstance(final_axis, MomentumAxis):
-        return pad_ft_points(vector, s=(final_axis.n,), axes=(axis,))
+        padded = pad_ft_points(vector, s=(final_axis.n,), axes=(axis,))
+        return padded.astype(np.complex_)  # type: ignore[no-any-return]
     return _convert_vector_along_axis_simple(vector, initial_axis, final_axis, axis)
 
 
@@ -150,19 +146,15 @@ def convert_vector(
     np.ndarray[tuple[int], np.dtype[np.complex_]]
     """
     util = BasisUtil(initial_basis)
-    swapped = vector.swapaxes(axis, -1)
-    stacked = swapped.astype(np.complex_).reshape(*swapped.shape[:-1], *util.shape)
-    last_axis = swapped.ndim - 1
-    for convert_axis, initial, final in zip(
-        range(last_axis, stacked.ndim), initial_basis, final_basis, strict=True
-    ):
-        stacked = _convert_vector_along_axis(stacked, initial, final, convert_axis)
-
-    return stacked.reshape(*swapped.shape[:-1], -1).swapaxes(axis, -1)  # type: ignore[no-any-return]
+    swapped = vector.swapaxes(axis, 0)
+    stacked = swapped.reshape(*util.shape, *swapped.shape[1:])
+    for ax, (initial, final) in enumerate(zip(initial_basis, final_basis, strict=True)):
+        stacked = _convert_vector_along_axis(stacked, initial, final, ax)
+    return stacked.astype(np.complex_).reshape(-1, *swapped.shape[1:]).swapaxes(axis, 0)  # type: ignore[no-any-return]
 
 
 @overload
-def convert_co_vector(
+def convert_dual_vector(
     co_vector: np.ndarray[_S0Inv, np.dtype[np.complex_] | np.dtype[np.float_]],
     initial_basis: _B1d0Inv,
     final_basis: _B1d1Inv,
@@ -172,7 +164,7 @@ def convert_co_vector(
 
 
 @overload
-def convert_co_vector(
+def convert_dual_vector(
     co_vector: np.ndarray[_S0Inv, np.dtype[np.complex_] | np.dtype[np.float_]],
     initial_basis: _B2d0Inv,
     final_basis: _B2d1Inv,
@@ -182,7 +174,7 @@ def convert_co_vector(
 
 
 @overload
-def convert_co_vector(
+def convert_dual_vector(
     co_vector: np.ndarray[_S0Inv, np.dtype[np.complex_] | np.dtype[np.float_]],
     initial_basis: _B3d0Inv,
     final_basis: _B3d1Inv,
@@ -192,7 +184,7 @@ def convert_co_vector(
 
 
 @overload
-def convert_co_vector(
+def convert_dual_vector(
     co_vector: np.ndarray[_S0Inv, np.dtype[np.complex_] | np.dtype[np.float_]],
     initial_basis: _B0Inv,
     final_basis: _B1Inv,
@@ -201,7 +193,7 @@ def convert_co_vector(
     ...
 
 
-def convert_co_vector(
+def convert_dual_vector(
     co_vector: np.ndarray[_S0Inv, np.dtype[np.complex_] | np.dtype[np.float_]],
     initial_basis: _B0Inv,
     final_basis: _B1Inv,
@@ -231,6 +223,8 @@ def convert_matrix(
     matrix: np.ndarray[tuple[int, int], np.dtype[np.complex_] | np.dtype[np.float_]],
     initial_basis: _B1d0Inv,
     final_basis: _B1d1Inv,
+    initial_dual_basis: _B1d2Inv,
+    final_dual_basis: _B1d3Inv,
 ) -> np.ndarray[tuple[int, int], np.dtype[np.complex_]]:
     ...
 
@@ -240,6 +234,8 @@ def convert_matrix(
     matrix: np.ndarray[tuple[int, int], np.dtype[np.complex_] | np.dtype[np.float_]],
     initial_basis: _B2d0Inv,
     final_basis: _B2d1Inv,
+    initial_dual_basis: _B2d2Inv,
+    final_dual_basis: _B2d3Inv,
 ) -> np.ndarray[tuple[int, int], np.dtype[np.complex_]]:
     ...
 
@@ -249,6 +245,8 @@ def convert_matrix(
     matrix: np.ndarray[tuple[int, int], np.dtype[np.complex_] | np.dtype[np.float_]],
     initial_basis: _B3d0Inv,
     final_basis: _B3d1Inv,
+    initial_dual_basis: _B3d2Inv,
+    final_dual_basis: _B3d3Inv,
 ) -> np.ndarray[tuple[int, int], np.dtype[np.complex_]]:
     ...
 
@@ -258,6 +256,8 @@ def convert_matrix(
     matrix: np.ndarray[tuple[int, int], np.dtype[np.complex_] | np.dtype[np.float_]],
     initial_basis: _B0Inv,
     final_basis: _B1Inv,
+    initial_dual_basis: _B2Inv,
+    final_dual_basis: _B3Inv,
 ) -> np.ndarray[tuple[int, int], np.dtype[np.complex_]]:
     ...
 
@@ -266,6 +266,8 @@ def convert_matrix(
     matrix: np.ndarray[tuple[int, int], np.dtype[np.complex_] | np.dtype[np.float_]],
     initial_basis: _B0Inv,
     final_basis: _B1Inv,
+    initial_dual_basis: _B2Inv,
+    final_dual_basis: _B3Inv,
 ) -> np.ndarray[tuple[int, int], np.dtype[np.complex_]]:
     """
     Convert a matrix from initial_basis to final_basis.
@@ -281,7 +283,7 @@ def convert_matrix(
     np.ndarray[tuple[int, int], np.dtype[np.complex_]]
     """
     converted = convert_vector(matrix, initial_basis, final_basis, axis=0)
-    return convert_co_vector(converted, initial_basis, final_basis, axis=1)  # type: ignore[return-value]
+    return convert_dual_vector(converted, initial_dual_basis, final_dual_basis, axis=1)  # type: ignore[return-value]
 
 
 _L0Inv = TypeVar("_L0Inv", bound=int)

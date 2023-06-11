@@ -4,7 +4,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 from surface_potential_analysis.axis.axis import ExplicitAxis3d
 from surface_potential_analysis.axis.plot import plot_explicit_basis_states_x
-from surface_potential_analysis.hamiltonian.hamiltonian import stack_hamiltonian
+from surface_potential_analysis.operator.operator import stack_hamiltonian
 from surface_potential_analysis.util.interpolation import pad_ft_points
 
 from .s2_hamiltonian import generate_hamiltonian_sho, generate_sho_basis

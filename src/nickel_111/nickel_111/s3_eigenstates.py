@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, Literal
 
 import numpy as np
-from surface_potential_analysis.eigenstate.eigenstate_collection import (
+from surface_potential_analysis.state_vector.eigenstate_collection import (
     EigenstateColllection3d,
     calculate_eigenstate_collection,
     save_eigenstate_collection,
@@ -13,7 +13,7 @@ from .s2_hamiltonian import generate_hamiltonian_sho
 from .surface_data import get_data_path
 
 if TYPE_CHECKING:
-    from surface_potential_analysis.hamiltonian import Hamiltonian3d
+    from surface_potential_analysis.operator import SingleBasisOperator3d
 
 
 def _calculate_eigenstate_collection_sho(
@@ -22,7 +22,7 @@ def _calculate_eigenstate_collection_sho(
 ) -> EigenstateColllection3d[Any, Any]:
     def hamiltonian_generator(
         x: np.ndarray[tuple[Literal[3]], np.dtype[np.float_]]
-    ) -> Hamiltonian3d[Any]:
+    ) -> SingleBasisOperator3d[Any]:
         return generate_hamiltonian_sho(
             shape=(200, 200, 501),
             bloch_fraction=x,

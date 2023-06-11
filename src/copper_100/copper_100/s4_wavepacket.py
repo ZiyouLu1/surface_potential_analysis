@@ -34,7 +34,7 @@ if TYPE_CHECKING:
         Basis3d,
         FundamentalMomentumBasis3d,
     )
-    from surface_potential_analysis.hamiltonian.hamiltonian import Hamiltonian3d
+    from surface_potential_analysis.operator.operator import SingleBasisOperator3d
 
 
 def load_copper_wavepacket(
@@ -76,7 +76,7 @@ def load_normalized_copper_wavepacket_momentum(
 def generate_wavepacket_sho_relaxed() -> None:
     def hamiltonian_generator(
         x: np.ndarray[tuple[Literal[3]], np.dtype[np.float_]]
-    ) -> Hamiltonian3d[Any]:
+    ) -> SingleBasisOperator3d[Any]:
         return generate_hamiltonian_sho_relaxed(
             shape=(46, 46, 250),
             bloch_fraction=x,
@@ -98,7 +98,7 @@ def generate_wavepacket_sho_relaxed() -> None:
 def generate_wavepacket_sho() -> None:
     def hamiltonian_generator(
         x: np.ndarray[tuple[Literal[3]], np.dtype[np.float_]]
-    ) -> Hamiltonian3d[Any]:
+    ) -> SingleBasisOperator3d[Any]:
         return generate_hamiltonian_sho(
             shape=(46, 46, 250),
             bloch_fraction=x,

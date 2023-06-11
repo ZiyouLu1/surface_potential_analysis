@@ -5,17 +5,17 @@ from matplotlib import pyplot as plt
 from surface_potential_analysis.basis.conversion import (
     basis_as_fundamental_position_basis,
 )
-from surface_potential_analysis.eigenstate.eigenstate_collection import (
+from surface_potential_analysis.potential.conversion import convert_potential_to_basis
+from surface_potential_analysis.potential.plot import plot_potential_along_path
+from surface_potential_analysis.state_vector.eigenstate_collection import (
     select_eigenstate,
 )
-from surface_potential_analysis.eigenstate.eigenstate_collection_plot import (
+from surface_potential_analysis.state_vector.eigenstate_collection_plot import (
     plot_energies_against_bloch_phase_1d,
     plot_lowest_band_energies_against_bloch_k,
     plot_occupation_against_bloch_phase_1d,
 )
-from surface_potential_analysis.eigenstate.plot import plot_eigenstate_1d_x
-from surface_potential_analysis.potential.conversion import convert_potential_to_basis
-from surface_potential_analysis.potential.plot import plot_potential_along_path
+from surface_potential_analysis.state_vector.plot import plot_eigenstate_1d_x
 
 from sodium_copper_111.s1_potential import get_interpolated_potential
 
@@ -63,7 +63,7 @@ def plot_first_six_band_eigenstates() -> None:
 
     collection = get_eigenstate_collection((1000,))
 
-    for i in range(0, 6):
+    for i in range(15, 17):
         eigenstate = select_eigenstate(collection, 0, i)
         _, _, ln = plot_eigenstate_1d_x(eigenstate, ax=ax, measure="abs")
         ln.set_label(f"n={i}")

@@ -14,7 +14,7 @@ if TYPE_CHECKING:
         MomentumAxis3d,
     )
     from surface_potential_analysis.basis.sho_basis import SHOBasisConfig
-    from surface_potential_analysis.hamiltonian import HamiltonianWith3dBasis
+    from surface_potential_analysis.operator import HamiltonianWith3dBasis
 
 _L0 = TypeVar("_L0", bound=int)
 _L1 = TypeVar("_L1", bound=int)

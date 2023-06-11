@@ -13,12 +13,9 @@ from surface_potential_analysis.basis.util import (
     get_fundamental_projected_k_points,
     get_fundamental_projected_x_points,
 )
-from surface_potential_analysis.eigenstate.conversion import (
+from surface_potential_analysis.state_vector.conversion import (
     convert_eigenstate_to_momentum_basis,
     convert_eigenstate_to_position_basis,
-)
-from surface_potential_analysis.eigenstate.eigenstate_calculation import (
-    calculate_eigenstate_at_index_position,
 )
 from surface_potential_analysis.util.plot import animate_through_surface
 from surface_potential_analysis.util.util import (
@@ -39,10 +36,10 @@ if TYPE_CHECKING:
         Basis,
         Basis3d,
     )
-    from surface_potential_analysis.eigenstate.eigenstate import Eigenstate
+    from surface_potential_analysis.state_vector.state_vector import StateVector
     from surface_potential_analysis.util.plot import Scale
 
-    from .eigenstate import Eigenstate3d, FundamentalPositionBasisEigenstate3d
+    from .state_vector import FundamentalPositionBasisEigenstate3d, StateVector3d
 
     _B0Inv = TypeVar("_B0Inv", bound=Basis[Any])
     _B3d0Inv = TypeVar("_B3d0Inv", bound=Basis3d[Any, Any, Any])
@@ -53,7 +50,7 @@ if TYPE_CHECKING:
 
 
 def plot_eigenstate_1d_x(
-    eigenstate: Eigenstate[_B0Inv],
+    eigenstate: StateVector[_B0Inv],
     idx: tuple[int, ...] | None = None,
     axis: Literal[0, 1, 2, -1, -2, -3] = 0,
     *,
@@ -91,11 +88,9 @@ def plot_eigenstate_1d_x(
     data_slice: list[slice | int] = list(idx)
     data_slice.insert(axis, slice(None))
 
-    util = BasisUtil(eigenstate["basis"])
-    vector = calculate_eigenstate_at_index_position(
-        eigenstate, util.fundamental_nx_points
-    )
-    points = vector.reshape(util.shape)[tuple(data_slice)]
+    converted = convert_eigenstate_to_position_basis(eigenstate)
+    util = BasisUtil(converted["basis"])
+    points = converted["vector"].reshape(util.shape)[tuple(data_slice)]
     data = get_measured_data(points, measure)
 
     (line,) = ax.plot(coordinates, data)
@@ -106,7 +101,7 @@ def plot_eigenstate_1d_x(
 
 
 def plot_eigenstate_2d_k(
-    eigenstate: Eigenstate3d[_B3d0Inv],
+    eigenstate: StateVector3d[_B3d0Inv],
     idx: SingleFlatIndexLike,
     kz_axis: Literal[0, 1, 2, -1, -2, -3],
     *,
@@ -157,7 +152,7 @@ def plot_eigenstate_2d_k(
 
 
 def plot_eigenstate_k0k1(
-    eigenstate: Eigenstate3d[_B3d0Inv],
+    eigenstate: StateVector3d[_B3d0Inv],
     k2_idx: SingleFlatIndexLike,
     *,
     ax: Axes | None = None,
@@ -189,7 +184,7 @@ def plot_eigenstate_k0k1(
 
 
 def plot_eigenstate_k1k2(
-    eigenstate: Eigenstate3d[_B3d0Inv],
+    eigenstate: StateVector3d[_B3d0Inv],
     k0_idx: SingleFlatIndexLike,
     *,
     ax: Axes | None = None,
@@ -221,7 +216,7 @@ def plot_eigenstate_k1k2(
 
 
 def plot_eigenstate_k2k0(
-    eigenstate: Eigenstate3d[_B3d0Inv],
+    eigenstate: StateVector3d[_B3d0Inv],
     k1_idx: SingleFlatIndexLike,
     *,
     ax: Axes | None = None,
@@ -253,7 +248,7 @@ def plot_eigenstate_k2k0(
 
 
 def plot_eigenstate_2d_x(
-    eigenstate: Eigenstate3d[_B3d0Inv],
+    eigenstate: StateVector3d[_B3d0Inv],
     idx: SingleFlatIndexLike,
     z_axis: Literal[0, 1, 2, -1, -2, -3],
     *,
@@ -304,7 +299,7 @@ def plot_eigenstate_2d_x(
 
 
 def plot_eigenstate_x0x1(
-    eigenstate: Eigenstate3d[_B3d0Inv],
+    eigenstate: StateVector3d[_B3d0Inv],
     x2_idx: SingleFlatIndexLike,
     *,
     ax: Axes | None = None,
@@ -336,7 +331,7 @@ def plot_eigenstate_x0x1(
 
 
 def plot_eigenstate_x1x2(
-    eigenstate: Eigenstate3d[_B3d0Inv],
+    eigenstate: StateVector3d[_B3d0Inv],
     x0_idx: SingleFlatIndexLike,
     *,
     ax: Axes | None = None,
@@ -368,7 +363,7 @@ def plot_eigenstate_x1x2(
 
 
 def plot_eigenstate_x2x0(
-    eigenstate: Eigenstate3d[_B3d0Inv],
+    eigenstate: StateVector3d[_B3d0Inv],
     x1_idx: SingleFlatIndexLike,
     *,
     ax: Axes | None = None,
@@ -434,7 +429,6 @@ def plot_eigenstate_difference_2d_x(
     eigenstate: FundamentalPositionBasisEigenstate3d[_L0Inv, _L1Inv, _L2Inv] = {
         "basis": eigenstate_0["basis"],
         "vector": eigenstate_0["vector"] - eigenstate_1["vector"],
-        "bloch_fraction": np.array([0, 0, 0]),
     }
     return plot_eigenstate_2d_x(
         eigenstate, idx, z_axis, ax=ax, measure=measure, scale=scale
@@ -442,7 +436,7 @@ def plot_eigenstate_difference_2d_x(
 
 
 def animate_eigenstate_3d_x(
-    eigenstate: Eigenstate3d[_B3d0Inv],
+    eigenstate: StateVector3d[_B3d0Inv],
     z_axis: Literal[0, 1, 2, -1, -2, -3],
     *,
     ax: Axes | None = None,
@@ -483,7 +477,7 @@ def animate_eigenstate_3d_x(
 
 
 def animate_eigenstate_x0x1(
-    eigenstate: Eigenstate3d[_B3d0Inv],
+    eigenstate: StateVector3d[_B3d0Inv],
     *,
     ax: Axes | None = None,
     measure: Measure = "abs",
@@ -510,7 +504,7 @@ def animate_eigenstate_x0x1(
 
 
 def animate_eigenstate_x1x2(
-    eigenstate: Eigenstate3d[_B3d0Inv],
+    eigenstate: StateVector3d[_B3d0Inv],
     *,
     ax: Axes | None = None,
     measure: Measure = "abs",
@@ -537,7 +531,7 @@ def animate_eigenstate_x1x2(
 
 
 def animate_eigenstate_x2x0(
-    eigenstate: Eigenstate3d[_B3d0Inv],
+    eigenstate: StateVector3d[_B3d0Inv],
     *,
     ax: Axes | None = None,
     measure: Measure = "abs",
@@ -564,7 +558,7 @@ def animate_eigenstate_x2x0(
 
 
 def plot_eigenstate_along_path(
-    eigenstate: Eigenstate3d[_B3d0Inv],
+    eigenstate: StateVector3d[_B3d0Inv],
     path: np.ndarray[tuple[Literal[3], int], np.dtype[np.int_]],
     *,
     wrap_distances: bool = False,

@@ -15,6 +15,7 @@ from surface_potential_analysis.axis.axis import (
     FundamentalPositionAxis3d,
     MomentumAxis3d,
 )
+from surface_potential_analysis.axis.util import AxisUtil
 from surface_potential_analysis.basis.sho_basis import (
     SHOBasisConfig,
     calculate_x_distances,
@@ -26,7 +27,7 @@ if TYPE_CHECKING:
     from surface_potential_analysis.basis.basis import (
         Basis3d,
     )
-    from surface_potential_analysis.hamiltonian import HamiltonianWith3dBasis
+    from surface_potential_analysis.operator import HamiltonianWith3dBasis
     from surface_potential_analysis.potential import (
         FundamentalPositionBasisPotential3d,
     )
@@ -145,7 +146,7 @@ class _SurfaceHamiltonianUtil(
 
         energies = diagonal_energies + other_energies
 
-        return {"array": energies, "basis": self.basis}
+        return {"array": energies, "basis": self.basis, "dual_basis": self.basis}
 
     @cached_property
     def eigenstate_indexes(
@@ -217,8 +218,8 @@ class _SurfaceHamiltonianUtil(
     ) -> float:
         """Calculate the off diagonal energy using the 'folded' points ndk0, ndk1."""
         ft_pot_points = self.get_ft_potential()[ndk0, ndk1]
-        hermite1 = self.basis[2].vectors[nz1]
-        hermite2 = self.basis[2].vectors[nz2]
+        hermite1 = AxisUtil(self.basis[2]).vectors[nz1]
+        hermite2 = AxisUtil(self.basis[2]).vectors[nz2]
 
         fourier_transform = float(np.sum(hermite1 * hermite2 * ft_pot_points))
 

@@ -12,16 +12,16 @@ from surface_potential_analysis.basis.basis import (
 )
 from surface_potential_analysis.basis.util import BasisUtil
 
-from .eigenstate_calculation import calculate_eigenstates
+from .eigenstate_calculation import calculate_eigenstates_hermitian
 
 if TYPE_CHECKING:
     from collections.abc import Callable
     from pathlib import Path
 
-    from surface_potential_analysis.eigenstate.eigenstate import Eigenstate
-    from surface_potential_analysis.hamiltonian.hamiltonian import (
-        Hamiltonian,
+    from surface_potential_analysis.operator.operator import (
+        SingleBasisOperator,
     )
+    from surface_potential_analysis.state_vector.state_vector import StateVector
 _L0Inv = TypeVar("_L0Inv", bound=int)
 
 _B0Cov = TypeVar("_B0Cov", bound=Basis[Any], covariant=True)
@@ -83,7 +83,7 @@ def load_eigenstate_collection(path: Path) -> EigenstateColllection[Any, Any]:
 def calculate_eigenstate_collection(
     hamiltonian_generator: Callable[
         [np.ndarray[tuple[int], np.dtype[np.float_]]],
-        Hamiltonian[_B0Inv],
+        SingleBasisOperator[_B0Inv],
     ],
     bloch_fractions: np.ndarray[tuple[_L0Inv, int], np.dtype[np.float_]],
     *,
@@ -121,7 +121,9 @@ def calculate_eigenstate_collection(
 
     for idx, bloch_fraction in enumerate(bloch_fractions):
         h = hamiltonian_generator(bloch_fraction)
-        eigenstates = calculate_eigenstates(h, subset_by_index=subset_by_index)
+        eigenstates = calculate_eigenstates_hermitian(
+            h, subset_by_index=subset_by_index
+        )
 
         out["vectors"][idx] = eigenstates["vectors"]
         out["energies"][idx] = eigenstates["energies"]
@@ -133,7 +135,7 @@ def select_eigenstate(
     collection: EigenstateColllection[_B0Cov, _L0Inv],
     bloch_idx: int,
     band_idx: int,
-) -> Eigenstate[_B0Cov]:
+) -> StateVector[_B0Cov]:
     """
     Select an eigenstate from an eigenstate collection.
 
@@ -150,5 +152,4 @@ def select_eigenstate(
     return {
         "basis": collection["basis"],
         "vector": collection["vectors"][bloch_idx, band_idx],
-        "bloch_fraction": collection["bloch_fractions"][bloch_idx],
     }

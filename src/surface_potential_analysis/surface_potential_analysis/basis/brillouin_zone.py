@@ -194,21 +194,6 @@ def get_bragg_plane_distance(
     )
 
 
-def get_closest_interior_bragg_plane(
-    basis: _B3d0Inv, coordinate: ArrayStackedIndexLike3d
-) -> None:
-    np.zeros_like(coordinate[0])
-
-
-def increment_brillouin_zone(
-    basis: _B3d0Inv, coordinate: SingleStackedIndexLike3d
-) -> None:
-    raise NotImplementedError
-    # To fold a point into the next brillouin zone we reflect it
-    # in the closest bragg plane outside the point and then reflect it about
-    # a plane parallel to this at the origin.
-
-
 def _get_decrement_tolerance(basis: _B0Inv) -> float:
     r_tol = 1e-5
     util = BasisUtil(basis)

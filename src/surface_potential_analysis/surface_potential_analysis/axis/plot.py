@@ -57,6 +57,6 @@ def plot_explicit_basis_state_x(
     util = Axis3dUtil(basis)
 
     x_points = np.linalg.norm(util.fundamental_x_points, axis=0)
-    data = get_measured_data(basis.vectors[idx], measure)
+    data = get_measured_data(util.vectors[idx], measure)
     (line,) = ax.plot(x_points, data)
     return fig, ax, line
