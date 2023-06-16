@@ -3,8 +3,8 @@ from __future__ import annotations
 import matplotlib.pyplot as plt
 import numpy as np
 from surface_potential_analysis.state_vector.plot import (
-    plot_eigenstate_difference_2d_x,
     plot_eigenstate_x0x1,
+    plot_state_vector_difference_2d_x,
 )
 from surface_potential_analysis.wavepacket.get_eigenstate import get_eigenstate
 from surface_potential_analysis.wavepacket.localization import (
@@ -188,9 +188,13 @@ def compare_wavefunction_eigenstate_2d() -> None:
     fig.show()
 
     fig, axs = plt.subplots(1, 2)
-    (_, ax, _) = plot_eigenstate_difference_2d_x(eigenstate_1, eigenstate_0, 2, axs[0])
+    (_, ax, _) = plot_state_vector_difference_2d_x(
+        eigenstate_1, eigenstate_0, 2, axs[0]
+    )
     ax.set_title("(-dkx/2, -dky/2) vs (0,0)")
-    (_, ax, _) = plot_eigenstate_difference_2d_x(eigenstate_2, eigenstate_0, 2, axs[1])
+    (_, ax, _) = plot_state_vector_difference_2d_x(
+        eigenstate_2, eigenstate_0, 2, axs[1]
+    )
     ax.set_title("(-dkx/2, 0) vs (0,0)")
 
     fig.suptitle("Plot of difference in the absolute value of the Bloch wavefunctions")

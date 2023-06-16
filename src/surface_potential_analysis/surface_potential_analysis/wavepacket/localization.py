@@ -18,8 +18,8 @@ from surface_potential_analysis.operator.conversion import (
     convert_operator_to_basis,
 )
 from surface_potential_analysis.state_vector.conversion import (
-    convert_eigenstate_to_basis,
-    convert_eigenstate_to_position_basis,
+    convert_state_vector_to_basis,
+    convert_state_vector_to_position_basis,
 )
 from surface_potential_analysis.state_vector.eigenstate_calculation import (
     calculate_eigenstates_hermitian,
@@ -33,12 +33,14 @@ from surface_potential_analysis.util.decorators import timed
 from surface_potential_analysis.wavepacket.conversion import (
     convert_wavepacket_to_position_basis,
 )
+from surface_potential_analysis.wavepacket.eigenstate_conversion import (
+    unfurl_wavepacket,
+)
 
 from .get_eigenstate import get_eigenstate, get_eigenstates
 from .wavepacket import (
     Wavepacket,
     Wavepacket3dWith2dSamples,
-    get_sample_basis,
     get_unfurled_basis,
     get_wavepacket_sample_fractions,
 )
@@ -54,6 +56,7 @@ if TYPE_CHECKING:
 
     _B3d0Inv = TypeVar("_B3d0Inv", bound=Basis3d[Any, Any, Any])
     _B0Inv = TypeVar("_B0Inv", bound=Basis[Any])
+    _B1Inv = TypeVar("_B1Inv", bound=Basis[Any])
 
     _NS0Inv = TypeVar("_NS0Inv", bound=int)
     _NS1Inv = TypeVar("_NS1Inv", bound=int)
@@ -198,7 +201,7 @@ def get_wavepacket_two_points(
     util = Basis3dUtil(wavepacket["basis"])
     origin = (util.shape[0] * offset[0], util.shape[1] * offset[1], 0)
 
-    converted = convert_eigenstate_to_position_basis(get_eigenstate(wavepacket, 0))  # type: ignore[arg-type,var-annotated]
+    converted = convert_state_vector_to_position_basis(get_eigenstate(wavepacket, 0))  # type: ignore[arg-type,var-annotated]
     idx_0: SingleStackedIndexLike3d = np.argmax(np.abs(converted["vector"]), axis=-1)
     idx_0 = wrap_index_around_origin_x01(converted["basis"], idx_0, origin)
     idx_1 = get_x01_mirrored_index(converted["basis"], idx_0)
@@ -322,7 +325,7 @@ def localize_tightly_bound_wavepacket_max_point(
     Wavepacket[_NS0Inv, _NS1Inv, _B3d0Inv]
         Normalized wavepacket
     """
-    converted = convert_eigenstate_to_position_basis(get_eigenstate(wavepacket, 0))  # type: ignore[arg-type,var-annotated]
+    converted = convert_state_vector_to_position_basis(get_eigenstate(wavepacket, 0))  # type: ignore[arg-type,var-annotated]
     max_idx = np.argmax(np.abs(converted["vector"]), axis=-1)
     max_idx = wrap_index_around_origin_x01(converted["basis"], max_idx)
 
@@ -332,7 +335,7 @@ def localize_tightly_bound_wavepacket_max_point(
     phases = np.exp(-1j * (bloch_phases + global_phases - angle))
     fixed_eigenvectors = wavepacket["vectors"] * phases[:, :, np.newaxis]
 
-    return {
+    return {  # type: ignore[return-value]
         "basis": wavepacket["basis"],
         "vectors": fixed_eigenvectors,
         "energies": wavepacket["energies"],
@@ -340,56 +343,11 @@ def localize_tightly_bound_wavepacket_max_point(
     }
 
 
-def _get_zero_point_locations(basis: _B0Inv, shape: _S0Inv, idx: SingleIndexLike = 0):
+def _get_position_operator(basis: _B0Inv) -> SingleBasisOperator[_B0Inv]:
     util = BasisUtil(basis)
-    # TODO: probably on fundamental axis!!
-    idx = idx if isinstance(idx, tuple) else util.get_stacked_index(idx)
-    unfurled_basis = get_unfurled_basis(basis, shape)
-    sample_basis = get_sample_basis(basis, shape)
-    all_locations = BasisUtil(unfurled_basis).fundamental_nx_points
-    n_bands = 1
-    assert all(n % n_bands == 0 for n in util.fundamental_shape)
-    return tuple(
-        nsi * dn
-        for (dn, nsi) in zip(util.shape, BasisUtil(sample_basis).nx_points, strict=True)
-    )
-    print(a)
-    return all_locations[
-        tuple(slice(i, None, step) for (i, step) in zip(idx, util.shape, strict=True))
-    ]
+    # We only get the location in the x0 direction here
+    locations = util.x_points[0]
 
-
-def localize_zero_points(
-    wavepacket: _WInv, idx: SingleIndexLike = 0, angle: float = 0
-) -> _WInv:
-    zero_point_locations = _get_zero_point_locations(
-        wavepacket["basis"], wavepacket["shape"], idx=idx
-    )
-    # zero_point_locations:ArrayStackedIndexLike = [tuple(ni +  for (i, ni) in enumerate(idx) ) for ]
-    # list of wavefunction at each k at each location
-    eigenstates_at_location = np.array(
-        [
-            calculate_eigenstate_at_index_position(eigenstate, zero_point_locations)
-            for eigenstate in get_eigenstates(wavepacket)
-        ]
-    )
-    a = np.zeros_like(eigenstates_at_location)
-    a[:, 1:] = eigenstates_at_location[:, 1:]
-    a[0, 0] = eigenstates_at_location[0, 0]
-    b = np.ones_like(a.shape[1])
-    print(np.linalg.solve(a, b))
-    return {
-        "basis": wavepacket["basis"],
-        "vectors": fixed_eigenvectors,
-        "energies": wavepacket["energies"],
-        "shape": wavepacket["shape"],
-    }
-
-
-def get_position_operator(basis: _B0Inv) -> SingleBasisOperator[_B0Inv]:
-    a = BasisUtil(basis)
-    locations = a.x_points[0]
-    ##TODO: How do we deal with N dimensions here
     basis_position = basis_as_fundamental_position_basis(basis)
     operator: SingleBasisOperator[Any] = {
         "basis": basis_position,
@@ -400,14 +358,14 @@ def get_position_operator(basis: _B0Inv) -> SingleBasisOperator[_B0Inv]:
 
 
 @timed
-def get_operator_between_states(
+def _get_operator_between_states(
     states: list[StateVector[_B0Inv]], operator: SingleBasisOperator[_B0Inv]
 ) -> SingleBasisOperator[tuple[FundamentalPositionAxis[Any, Literal[1]]]]:
     n_states = len(states)
     array = np.zeros((n_states, n_states), dtype=np.complex_)
     for i in range(n_states):
+        dual_vector = as_dual_vector(states[i])
         for j in range(n_states):
-            dual_vector = as_dual_vector(states[i])
             vector = states[j]
             array[i, j] = calculate_inner_product(dual_vector, operator, vector)
 
@@ -415,19 +373,15 @@ def get_operator_between_states(
     return {"array": array, "basis": basis, "dual_basis": basis}
 
 
-def localize_position_operator(
-    wavepacket: Wavepacket[_S0Inv, _B0Inv]
+def _localize_operator(
+    wavepacket: Wavepacket[_S0Inv, _B0Inv], operator: SingleBasisOperator[_B1Inv]
 ) -> list[Wavepacket[_S0Inv, _B0Inv]]:
-    basis = basis_as_fundamental_position_basis(
-        get_unfurled_basis(wavepacket["basis"], wavepacket["shape"])
-    )
     states = [
-        convert_eigenstate_to_basis(state, basis)
+        convert_state_vector_to_basis(state, operator["basis"])
         for state in get_eigenstates(wavepacket)
     ]
-    operator_position = get_position_operator(basis)
-    operator = get_operator_between_states(states, operator_position)
-    eigenstates = calculate_eigenstates_hermitian(operator)
+    operator_between_states = _get_operator_between_states(states, operator)
+    eigenstates = calculate_eigenstates_hermitian(operator_between_states)
     return [
         {
             "basis": wavepacket["basis"],
@@ -439,24 +393,89 @@ def localize_position_operator(
     ]
 
 
+def localize_position_operator(
+    wavepacket: Wavepacket[_S0Inv, _B0Inv]
+) -> list[Wavepacket[_S0Inv, _B0Inv]]:
+    """
+    Given a wavepacket generate a set of normalized wavepackets using the operator method.
+
+    Parameters
+    ----------
+    wavepacket : Wavepacket[_S0Inv, _B0Inv]
+
+    Returns
+    -------
+    list[Wavepacket[_S0Inv, _B0Inv]]
+    """
+    basis = basis_as_fundamental_position_basis(
+        get_unfurled_basis(wavepacket["basis"], wavepacket["shape"])
+    )
+    operator_position = _get_position_operator(basis)
+    return _localize_operator(wavepacket, operator_position)
+
+
 def localize_position_operator_many_band(
     wavepackets: list[Wavepacket[_S0Inv, _B0Inv]]
 ) -> list[StateVector[Any]]:
+    """
+    Given a sequence of wavepackets at each band, get all possible eigenstates of position.
+
+    Parameters
+    ----------
+    wavepackets : list[Wavepacket[_S0Inv, _B0Inv]]
+
+    Returns
+    -------
+    list[StateVector[Any]]
+    """
     basis = basis_as_fundamental_position_basis(
         get_unfurled_basis(wavepackets[0]["basis"], wavepackets[0]["shape"])
     )
     states = [
-        convert_eigenstate_to_basis(state, basis)
+        convert_state_vector_to_basis(state, basis)
         for wavepacket in wavepackets
         for state in get_eigenstates(wavepacket)
     ]
-    operator_position = get_position_operator(basis)
-    operator = get_operator_between_states(states, operator_position)
+    operator_position = _get_position_operator(basis)
+    operator = _get_operator_between_states(states, operator_position)
     eigenstates = calculate_eigenstates_hermitian(operator)
     state_vectors = np.array([s["vector"] for s in states])
     return [
         {
             "basis": basis,
+            "vector": np.tensordot(vector, state_vectors, axes=(0, 0)),
+        }
+        for vector in eigenstates["vectors"]
+    ]
+
+
+def localize_position_operator_many_band_individual(
+    wavepackets: list[Wavepacket[_S0Inv, _B0Inv]]
+) -> list[StateVector[Any]]:
+    """
+    Given a wavepacket generate a set of normalized wavepackets using the operator method.
+
+    Parameters
+    ----------
+    wavepacket : Wavepacket[_S0Inv, _B0Inv]
+
+    Returns
+    -------
+    list[Wavepacket[_S0Inv, _B0Inv]]
+    """
+    states = [
+        unfurl_wavepacket(
+            localize_position_operator(wavepacket)[np.prod(wavepacket["shape"]) // 4]
+        )
+        for wavepacket in wavepackets
+    ]
+    operator_position = _get_position_operator(states[0]["basis"])
+    operator = _get_operator_between_states(states, operator_position)
+    eigenstates = calculate_eigenstates_hermitian(operator)
+    state_vectors = np.array([s["vector"] for s in states])
+    return [
+        {
+            "basis": states[0]["basis"],
             "vector": np.tensordot(vector, state_vectors, axes=(0, 0)),
         }
         for vector in eigenstates["vectors"]

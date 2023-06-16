@@ -10,15 +10,15 @@ from surface_potential_analysis.basis.util import (
     get_fundamental_projected_x_points,
 )
 from surface_potential_analysis.state_vector.conversion import (
-    convert_momentum_basis_eigenstate_to_position_basis,
+    convert_state_vector_to_position_basis,
 )
 from surface_potential_analysis.state_vector.plot import (
     animate_eigenstate_3d_x,
-    plot_eigenstate_1d_x,
     plot_eigenstate_2d_k,
     plot_eigenstate_2d_x,
-    plot_eigenstate_along_path,
-    plot_eigenstate_difference_2d_x,
+    plot_state_vector_1d_x,
+    plot_state_vector_along_path,
+    plot_state_vector_difference_2d_x,
 )
 from surface_potential_analysis.util.util import Measure, get_measured_data
 from surface_potential_analysis.wavepacket.eigenstate_conversion import (
@@ -218,10 +218,8 @@ def plot_wavepacket_1d_x(
     -------
     tuple[Figure, Axes, Line2D]
     """
-    eigenstate = unfurl_wavepacket(wavepacket)
-    return plot_eigenstate_1d_x(
-        eigenstate, idx, axis, ax=ax, measure=measure, scale=scale
-    )
+    state = unfurl_wavepacket(wavepacket)
+    return plot_state_vector_1d_x(state, idx, axis, ax=ax, measure=measure, scale=scale)
 
 
 def plot_wavepacket_x0(
@@ -251,8 +249,8 @@ def plot_wavepacket_x0(
     -------
     tuple[Figure, Axes, Line2D]
     """
-    eigenstate = unfurl_wavepacket(wavepacket)
-    return plot_eigenstate_1d_x(eigenstate, idx, 0, ax=ax, measure=measure, scale=scale)
+    state = unfurl_wavepacket(wavepacket)
+    return plot_state_vector_1d_x(state, idx, 0, ax=ax, measure=measure, scale=scale)
 
 
 def plot_wavepacket_x1(
@@ -282,8 +280,8 @@ def plot_wavepacket_x1(
     -------
     tuple[Figure, Axes, Line2D]
     """
-    eigenstate = unfurl_wavepacket(wavepacket)
-    return plot_eigenstate_1d_x(eigenstate, idx, 1, ax=ax, measure=measure, scale=scale)
+    state = unfurl_wavepacket(wavepacket)
+    return plot_state_vector_1d_x(state, idx, 1, ax=ax, measure=measure, scale=scale)
 
 
 def plot_wavepacket_x2(
@@ -314,7 +312,9 @@ def plot_wavepacket_x2(
     tuple[Figure, Axes, Line2D]
     """
     eigenstate = unfurl_wavepacket(wavepacket)
-    return plot_eigenstate_1d_x(eigenstate, idx, 2, ax=ax, measure=measure, scale=scale)
+    return plot_state_vector_1d_x(
+        eigenstate, idx, 2, ax=ax, measure=measure, scale=scale
+    )
 
 
 def plot_wavepacket_2d_k(
@@ -622,16 +622,12 @@ def plot_wavepacket_difference_2d_x(
     tuple[Figure, Axes, QuadMesh]
     """
     eigenstate_momentum_0 = unfurl_wavepacket(wavepacket_0)
-    eigenstate_0 = convert_momentum_basis_eigenstate_to_position_basis(
-        eigenstate_momentum_0
-    )
+    eigenstate_0 = convert_state_vector_to_position_basis(eigenstate_momentum_0)
 
     eigenstate_momentum_1 = unfurl_wavepacket(wavepacket_1)
-    eigenstate_1 = convert_momentum_basis_eigenstate_to_position_basis(
-        eigenstate_momentum_1
-    )
+    eigenstate_1 = convert_state_vector_to_position_basis(eigenstate_momentum_1)
 
-    return plot_eigenstate_difference_2d_x(
+    return plot_state_vector_difference_2d_x(
         eigenstate_0, eigenstate_1, idx, z_axis, ax=ax, measure=measure, scale=scale
     )
 
@@ -664,9 +660,7 @@ def animate_wavepacket_3d_x(
     tuple[Figure, Axes, ArtistAnimation]
     """
     eigenstate_momentum = unfurl_wavepacket(wavepacket)
-    eigenstate = convert_momentum_basis_eigenstate_to_position_basis(
-        eigenstate_momentum
-    )
+    eigenstate = convert_state_vector_to_position_basis(eigenstate_momentum)
     return animate_eigenstate_3d_x(
         eigenstate, z_axis, ax=ax, measure=measure, scale=scale
     )
@@ -781,9 +775,7 @@ def plot_wavepacket_along_path(
     tuple[Figure, Axes, Line2D]
     """
     eigenstate_momentum = unfurl_wavepacket(wavepacket)
-    eigenstate = convert_momentum_basis_eigenstate_to_position_basis(
-        eigenstate_momentum
-    )
-    return plot_eigenstate_along_path(
+    eigenstate = convert_state_vector_to_position_basis(eigenstate_momentum)
+    return plot_state_vector_along_path(
         eigenstate, path, ax=ax, measure=measure, scale=scale
     )

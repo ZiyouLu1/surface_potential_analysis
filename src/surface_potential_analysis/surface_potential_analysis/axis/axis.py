@@ -101,14 +101,14 @@ class FundamentalPositionAxis(AxisLike[_NF0Inv, _NF0Inv, _ND0Inv]):
         vectors: np.ndarray[_S0Inv, np.dtype[np.complex_ | np.float_]],
         axis: int = -1,
     ) -> np.ndarray[_S0Inv, np.dtype[np.complex_]]:
-        return vectors.astype(np.complex_)  # type: ignore[no-any-return]
+        return vectors.astype(np.complex_, copy=False)  # type: ignore[no-any-return]
 
     def __from_fundamental__(  # type: ignore[override]
         self,
         vectors: np.ndarray[_S0Inv, np.dtype[np.complex_ | np.float_]],
         axis: int = -1,
     ) -> np.ndarray[_S0Inv, np.dtype[np.complex_]]:
-        return vectors.astype(np.complex_)  # type: ignore[no-any-return]
+        return vectors.astype(np.complex_, copy=False)  # type: ignore[no-any-return]
 
 
 class FundamentalPositionAxis1d(FundamentalPositionAxis[_NF0Inv, Literal[1]]):

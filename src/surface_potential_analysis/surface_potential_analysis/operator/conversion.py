@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING, Any, TypeVar, overload
 from surface_potential_analysis.basis.conversion import (
     convert_matrix,
 )
+from surface_potential_analysis.util.decorators import timed
 
 if TYPE_CHECKING:
     from surface_potential_analysis.basis.basis import (
@@ -65,6 +66,7 @@ def convert_operator_to_basis(
     ...
 
 
+@timed
 def convert_operator_to_basis(
     operator: Operator[_B0Inv, _B1Inv], basis: _B2Inv, dual_basis: _B3Inv
 ) -> Operator[_B2Inv, _B3Inv]:

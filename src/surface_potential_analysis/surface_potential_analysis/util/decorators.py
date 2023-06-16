@@ -42,20 +42,29 @@ def timed(f: Callable[P, R]) -> Callable[P, R]:
 
 @overload
 def npy_cached(
-    path: Path, *, allow_pickle: bool = False
+    path: Path,
+    *,
+    load_pickle: bool = False,
+    save_pickle: bool = True,
 ) -> Callable[[Callable[P, R]], Callable[P, R]]:
     ...
 
 
 @overload
 def npy_cached(
-    path: Callable[P, Path], *, allow_pickle: bool = False
+    path: Callable[P, Path],
+    *,
+    load_pickle: bool = False,
+    save_pickle: bool = True,
 ) -> Callable[[Callable[P, R]], Callable[P, R]]:
     ...
 
 
 def npy_cached(
-    path: Path | Callable[P, Path], *, allow_pickle: bool = False
+    path: Path | Callable[P, Path],
+    *,
+    load_pickle: bool = False,
+    save_pickle: bool = True,
 ) -> Callable[[Callable[P, R]], Callable[P, R]]:
     """
     Cache the response of the function at the given path.
@@ -64,10 +73,12 @@ def npy_cached(
     ----------
     path : Path | Callable[P, Path]
         The file to read.
-    allow_pickle : bool, optional
+    load_pickle : bool, optional
         Allow loading pickled object arrays stored in npy files.
         Reasons for disallowing pickles include security, as loading pickled data can execute arbitrary code.
         If pickles are disallowed, loading object arrays will fail. default: False
+    save_pickle : bool, optional
+        Allow saving pickled objects. default: True
 
     Returns
     -------
@@ -79,10 +90,11 @@ def npy_cached(
         def wrap(*args: P.args, **kw: P.kwargs) -> R:
             cache_path = path(*args, **kw) if callable(path) else path
             try:
-                arr: R = np.load(cache_path, allow_pickle=allow_pickle)[()]
+                arr: R = np.load(cache_path, allow_pickle=load_pickle)[()]
             except FileNotFoundError:
                 arr = f(*args, **kw)
-                np.save(cache_path, arr, allow_pickle=allow_pickle)
+                # Saving pickeld
+                np.save(cache_path, arr, allow_pickle=save_pickle)
 
             return arr
 

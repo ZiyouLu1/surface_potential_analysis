@@ -91,7 +91,9 @@ def convert_vector_simple(
     """
     util = BasisUtil(initial_basis)
     swapped = vector.swapaxes(axis, -1)
-    stacked = swapped.astype(np.complex_).reshape(*swapped.shape[:-1], *util.shape)
+    stacked = swapped.astype(np.complex_, copy=False).reshape(
+        *swapped.shape[:-1], *util.shape
+    )
     last_axis = swapped.ndim - 1
     for convert_axis, initial, final in zip(
         range(last_axis, stacked.ndim), initial_basis, final_basis, strict=True

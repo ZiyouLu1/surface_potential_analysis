@@ -25,7 +25,7 @@ def _get_eigenstate_collection_cache(shape: tuple[_L0Inv]) -> Path:
     return get_data_path(f"eigenstates/eigenstates_{shape[0]}.npy")
 
 
-@npy_cached(_get_eigenstate_collection_cache, allow_pickle=True)
+@npy_cached(_get_eigenstate_collection_cache, load_pickle=True)
 def get_eigenstate_collection(
     shape: tuple[_L0Inv],
 ) -> EigenstateColllection[tuple[FundamentalMomentumAxis1d[_L0Inv]], Literal[5]]:

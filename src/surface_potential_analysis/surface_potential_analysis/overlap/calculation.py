@@ -5,8 +5,7 @@ from typing import TYPE_CHECKING, Any, TypeVar
 import numpy as np
 
 from surface_potential_analysis.state_vector.conversion import (
-    convert_eigenstate_to_position_basis,
-    convert_momentum_basis_eigenstate_to_position_basis,
+    convert_state_vector_to_position_basis,
 )
 from surface_potential_analysis.util.decorators import timed
 from surface_potential_analysis.wavepacket.eigenstate_conversion import (
@@ -49,11 +48,11 @@ def calculate_overlap_momentum_eigenstate(
     -------
     Overlap[PositionBasis3d[_L0Inv,_L1Inv, _L2Inv]]
     """
-    converted_1 = convert_momentum_basis_eigenstate_to_position_basis(eigenstate_0)
-    converted_2 = convert_momentum_basis_eigenstate_to_position_basis(eigenstate_1)
+    converted_1 = convert_state_vector_to_position_basis(eigenstate_0)
+    converted_2 = convert_state_vector_to_position_basis(eigenstate_1)
 
     vector = np.conj(converted_1["vector"]) * (converted_2["vector"])
-    return {"basis": converted_1["basis"], "vector": vector}
+    return {"basis": converted_1["basis"], "vector": vector}  # type: ignore[typeddict-item]
 
 
 @timed
@@ -81,15 +80,15 @@ def calculate_wavepacket_overlap(
     -------
     Overlap[Basis3d[PositionBasis[int], PositionBasis[int], _A3d0Inv]]
     """
-    eigenstate_0 = convert_momentum_basis_eigenstate_to_position_basis(
+    eigenstate_0 = convert_state_vector_to_position_basis(
         unfurl_wavepacket(wavepacket_0)
     )
-    eigenstate_1 = convert_momentum_basis_eigenstate_to_position_basis(
+    eigenstate_1 = convert_state_vector_to_position_basis(
         unfurl_wavepacket(wavepacket_1)
     )
 
     vector = np.conj(eigenstate_0["vector"]) * (eigenstate_1["vector"])
-    return {"basis": eigenstate_0["basis"], "vector": vector}
+    return {"basis": eigenstate_0["basis"], "vector": vector}  # type: ignore[typeddict-item]
 
 
 def calculate_overlap_eigenstate(
@@ -108,8 +107,8 @@ def calculate_overlap_eigenstate(
     -------
     Overlap[PositionBasis3d[int, int, int]]
     """
-    converted_0 = convert_eigenstate_to_position_basis(eigenstate_0)  # type: ignore[arg-type,var-annotated]
-    converted_1 = convert_eigenstate_to_position_basis(eigenstate_1)  # type: ignore[arg-type,var-annotated]
+    converted_0 = convert_state_vector_to_position_basis(eigenstate_0)  # type: ignore[arg-type,var-annotated]
+    converted_1 = convert_state_vector_to_position_basis(eigenstate_1)  # type: ignore[arg-type,var-annotated]
 
     vector = np.conj(converted_0["vector"]) * (converted_1["vector"])
     return {"basis": converted_0["basis"], "vector": vector}  # type: ignore[typeddict-item]

@@ -19,7 +19,7 @@ from surface_potential_analysis.basis.sho_basis import (
 )
 from surface_potential_analysis.basis.util import Basis3dUtil
 from surface_potential_analysis.state_vector.conversion import (
-    convert_eigenstate_to_basis,
+    convert_state_vector_to_basis,
 )
 
 if TYPE_CHECKING:
@@ -102,7 +102,7 @@ class EigenstateConversionTest(unittest.TestCase):
                 FundamentalPositionAxis3d(util.delta_x1, util.fundamental_n1),  # type: ignore[misc]
                 FundamentalPositionAxis3d(util.delta_x2, util.fundamental_n2),  # type: ignore[misc]
             )
-            expected = convert_eigenstate_to_basis(eigenstate, basis)
+            expected = convert_state_vector_to_basis(eigenstate, basis)
             np.testing.assert_allclose(
                 expected["vector"], np.array(actual) / np.linalg.norm(actual)
             )
@@ -144,7 +144,7 @@ class EigenstateConversionTest(unittest.TestCase):
             FundamentalPositionAxis3d(util.delta_x1, util.fundamental_n1),  # type: ignore[misc]
             FundamentalPositionAxis3d(util.delta_x2, util.fundamental_n2),  # type: ignore[misc]
         )
-        expected = convert_eigenstate_to_basis(eigenstate, basis)
+        expected = convert_state_vector_to_basis(eigenstate, basis)
         np.testing.assert_allclose(
             expected["vector"], np.array(actual) / np.linalg.norm(actual)
         )

@@ -44,7 +44,7 @@ def load_john_interpolation() -> UnevenPotential3d[Any, Any, Any]:
 
 
 @npy_cached(
-    get_data_path("potential/raw_potential_reciprocal_grid.npy"), allow_pickle=True
+    get_data_path("potential/raw_potential_reciprocal_grid.npy"), load_pickle=True
 )
 def get_raw_potential_reciprocal_grid() -> UnevenPotential3d[Any, Any, Any]:
     data = load_raw_data()
@@ -245,7 +245,10 @@ def interpolate_energy_grid_fourier_nickel(
         data, delta_x0_real, delta_x1_real, (shape[0], shape[1])
     )
     interpolated = interpolate_points_along_axis_spline(
-        xy_interpolation["points"], xy_interpolation["basis"][2], shape[2], -1  # type: ignore[arg-type]
+        xy_interpolation["vector"].reshape((shape[0], shape[1], -1)),  # type: ignore[arg-type]
+        xy_interpolation["basis"][2],
+        shape[2],
+        -1,
     )
 
     return {

@@ -21,6 +21,7 @@ from surface_potential_analysis.axis.conversion import (
     axis_as_n_point_axis,
     axis_as_single_point_axis,
 )
+from surface_potential_analysis.util.decorators import timed
 from surface_potential_analysis.util.interpolation import pad_ft_points
 
 from .util import BasisUtil
@@ -47,8 +48,8 @@ if TYPE_CHECKING:
     _B1d1Inv = TypeVar("_B1d1Inv", bound=Basis1d[Any])
     _B1d2Inv = TypeVar("_B1d2Inv", bound=Basis1d[Any])
     _B1d3Inv = TypeVar("_B1d3Inv", bound=Basis1d[Any])
-    _B2d0Inv = TypeVar("_B2d1Inv", bound=Basis2d[Any, Any])
-    _B2d1Inv = TypeVar("_B2d0Inv", bound=Basis2d[Any, Any])
+    _B2d0Inv = TypeVar("_B2d0Inv", bound=Basis2d[Any, Any])
+    _B2d1Inv = TypeVar("_B2d1Inv", bound=Basis2d[Any, Any])
     _B2d2Inv = TypeVar("_B2d2Inv", bound=Basis2d[Any, Any])
     _B2d3Inv = TypeVar("_B2d3Inv", bound=Basis2d[Any, Any])
     _B3d0Inv = TypeVar("_B3d0Inv", bound=Basis3d[Any, Any, Any])
@@ -79,7 +80,7 @@ def _convert_vector_along_axis(
     # And two pad_ft_points
     if isinstance(initial_axis, MomentumAxis) and isinstance(final_axis, MomentumAxis):
         padded = pad_ft_points(vector, s=(final_axis.n,), axes=(axis,))
-        return padded.astype(np.complex_)  # type: ignore[no-any-return]
+        return padded.astype(np.complex_, copy=False)  # type: ignore[no-any-return]
     return _convert_vector_along_axis_simple(vector, initial_axis, final_axis, axis)
 
 
@@ -123,6 +124,7 @@ def convert_vector(
     ...
 
 
+@timed
 def convert_vector(
     vector: np.ndarray[_S0Inv, np.dtype[np.complex_] | np.dtype[np.float_]],
     initial_basis: _B0Inv,
@@ -150,7 +152,11 @@ def convert_vector(
     stacked = swapped.reshape(*util.shape, *swapped.shape[1:])
     for ax, (initial, final) in enumerate(zip(initial_basis, final_basis, strict=True)):
         stacked = _convert_vector_along_axis(stacked, initial, final, ax)
-    return stacked.astype(np.complex_).reshape(-1, *swapped.shape[1:]).swapaxes(axis, 0)  # type: ignore[no-any-return]
+    return (  # type: ignore[no-any-return]
+        stacked.astype(np.complex_, copy=False)
+        .reshape(-1, *swapped.shape[1:])
+        .swapaxes(axis, 0)
+    )
 
 
 @overload
@@ -193,6 +199,7 @@ def convert_dual_vector(
     ...
 
 
+@timed
 def convert_dual_vector(
     co_vector: np.ndarray[_S0Inv, np.dtype[np.complex_] | np.dtype[np.float_]],
     initial_basis: _B0Inv,

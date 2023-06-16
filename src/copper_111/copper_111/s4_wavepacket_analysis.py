@@ -3,7 +3,7 @@ from __future__ import annotations
 import numpy as np
 from surface_potential_analysis.basis.util import BasisUtil
 from surface_potential_analysis.state_vector.conversion import (
-    convert_eigenstate_to_position_basis,
+    convert_state_vector_to_position_basis,
 )
 from surface_potential_analysis.wavepacket.get_eigenstate import get_eigenstate
 
@@ -16,7 +16,7 @@ def calculate_wavepacket_maximums() -> None:
         wavepacket = load_copper_wavepacket(band)
 
         eigenstate = get_eigenstate(wavepacket, 0)
-        converted = convert_eigenstate_to_position_basis(eigenstate)  # type: ignore[arg-type] # Issues with variance
+        converted = convert_state_vector_to_position_basis(eigenstate)  # type: ignore[arg-type] # Issues with variance
         util = BasisUtil(converted["basis"])
 
         print(f"Band {band}")  # noqa: T201

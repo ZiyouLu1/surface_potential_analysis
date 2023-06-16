@@ -4,169 +4,113 @@ from typing import TYPE_CHECKING, Any, TypeVar
 
 import numpy as np
 
+from surface_potential_analysis.axis.axis import MomentumAxis
 from surface_potential_analysis.basis.conversion import (
     basis_as_fundamental_momentum_basis,
     basis_as_fundamental_position_basis,
     convert_vector,
 )
-from surface_potential_analysis.basis.util import Basis3dUtil
+from surface_potential_analysis.basis.util import BasisUtil
 from surface_potential_analysis.util.decorators import timed
-from surface_potential_analysis.util.interpolation import pad_ft_points
 
 if TYPE_CHECKING:
-    from surface_potential_analysis.axis.axis import FundamentalPositionAxis
-    from surface_potential_analysis.axis.axis_like import AxisLike3d
+    from surface_potential_analysis.axis.axis import (
+        FundamentalMomentumAxis,
+        FundamentalPositionAxis,
+    )
     from surface_potential_analysis.basis.basis import (
         Basis,
-        Basis3d,
-        FundamentalMomentumBasis3d,
     )
     from surface_potential_analysis.state_vector.state_vector import (
-        FundamentalPositionBasisEigenstate3d,
         StateVector,
-    )
-
-    from .state_vector import (
-        StateVector3d,
     )
 
     _B0Inv = TypeVar("_B0Inv", bound=Basis[Any])
     _B1Inv = TypeVar("_B1Inv", bound=Basis[Any])
-
-    _N0Inv = TypeVar("_N0Inv", bound=int)
-    _N1Inv = TypeVar("_N1Inv", bound=int)
-    _N2Inv = TypeVar("_N2Inv", bound=int)
-
-    _NF0Inv = TypeVar("_NF0Inv", bound=int)
-    _NF1Inv = TypeVar("_NF1Inv", bound=int)
-    _NF2Inv = TypeVar("_NF2Inv", bound=int)
-
-    FundamentalMomentumBasisEigenstate3d = StateVector3d[
-        FundamentalMomentumBasis3d[_NF0Inv, _NF1Inv, _NF2Inv]
-    ]
+    _S0Inv = TypeVar("_S0Inv", bound=tuple[int, ...])
 
 
 @timed
-def convert_eigenstate_to_basis(
-    eigenstate: StateVector[_B0Inv], basis: _B1Inv
+def convert_state_vector_to_basis(
+    state_vector: StateVector[_B0Inv], basis: _B1Inv
 ) -> StateVector[_B1Inv]:
     """
-    Given an eigenstate, calculate the vector in the given basis.
+    Given a state vector, calculate the vector in the given basis.
 
     Parameters
     ----------
-    eigenstate : Eigenstate[_B0Inv]
+    state_vector : StateVector[_B0Inv]
     basis : _B1Inv
 
     Returns
     -------
-    Eigenstate[_B1Inv]
+    StateVector[_B1Inv]
     """
-    converted = convert_vector(eigenstate["vector"], eigenstate["basis"], basis)
+    converted = convert_vector(state_vector["vector"], state_vector["basis"], basis)
     return {"basis": basis, "vector": converted}  # type: ignore[typeddict-item]
 
 
-def convert_eigenstate_to_position_basis(
-    eigenstate: StateVector[_B0Inv],
+def convert_state_vector_to_position_basis(
+    state_vector: StateVector[_B0Inv],
 ) -> StateVector[tuple[FundamentalPositionAxis[Any, Any], ...]]:
     """
-    Given an eigenstate, calculate the vector in position basis.
+    Given an state vector, calculate the vector in position basis.
 
     Parameters
     ----------
-    eigenstate : Eigenstate[_B0Inv]
+    state_vector : StateVector[_B0Inv]
 
     Returns
     -------
-    Eigenstate[_B0Inv]
+    StateVector[tuple[FundamentalPositionAxis[Any, Any], ...]]
     """
-    return convert_eigenstate_to_basis(
-        eigenstate,
-        basis_as_fundamental_position_basis(eigenstate["basis"]),
+    return convert_state_vector_to_basis(
+        state_vector,
+        basis_as_fundamental_position_basis(state_vector["basis"]),
     )
 
 
-def convert_eigenstate_to_momentum_basis(
-    eigenstate: StateVector3d[
-        Basis3d[
-            AxisLike3d[_NF0Inv, _N0Inv],
-            AxisLike3d[_NF1Inv, _N1Inv],
-            AxisLike3d[_NF2Inv, _N2Inv],
-        ]
-    ],
-) -> FundamentalMomentumBasisEigenstate3d[_NF0Inv, _NF1Inv, _NF2Inv]:
+def convert_state_vector_to_momentum_basis(
+    state_vector: StateVector[_B0Inv],
+) -> StateVector[tuple[FundamentalMomentumAxis[Any, Any], ...]]:
     """
-    Given an eigenstate, calculate the vector in the given basis.
+    Given a state vector, calculate the vector in the given basis.
 
     Parameters
     ----------
-    eigenstate : Eigenstate[_B3d0Inv]
-    basis : _B3d1Inv
+    state_vector : StateVector[_B0Inv]
 
     Returns
     -------
-    Eigenstate[_B3d1Inv]
+    StateVector[tuple[FundamentalMomentumAxis[Any, Any], ...]]
     """
-    return convert_eigenstate_to_basis(
-        eigenstate,
-        basis_as_fundamental_momentum_basis(eigenstate["basis"]),
+    return convert_state_vector_to_basis(
+        state_vector,
+        basis_as_fundamental_momentum_basis(state_vector["basis"]),
     )
 
 
-def convert_position_basis_eigenstate_to_momentum_basis(
-    eigenstate: FundamentalPositionBasisEigenstate3d[_NF0Inv, _NF1Inv, _NF2Inv]
-) -> FundamentalMomentumBasisEigenstate3d[_NF0Inv, _NF1Inv, _NF2Inv]:
+def interpolate_state_vector_momentum(
+    state_vector: StateVector[_B0Inv], shape: _S0Inv
+) -> StateVector[tuple[MomentumAxis[Any, Any, Any], ...]]:
     """
-    convert an eigenstate from position to momentum basis.
+    Given a state vector, get the equivalent vector in as a truncated vector in a larger basis.
 
     Parameters
     ----------
-    eigenstate : PositionBasisEigenstate[_L0Inv, _L1Inv, _L2Inv]
+    state_vector : StateVector[_B0Inv]
+    shape : _S0Inv
+        Final fundamental shape of the basis
 
     Returns
     -------
-    MomentumBasisEigenstate[_L0Inv, _L1Inv, _L2Inv]
+    StateVector[tuple[MomentumAxis[Any, Any, Any], ...]]
     """
-    util = Basis3dUtil(eigenstate["basis"])
-    transformed = np.fft.fftn(
-        eigenstate["vector"].reshape(util.shape),
-        axes=(0, 1, 2),
-        s=util.fundamental_shape,
-        norm="ortho",
+    converted = convert_state_vector_to_momentum_basis(state_vector)
+    util = BasisUtil(converted["basis"])
+    final_basis = tuple(
+        MomentumAxis(parent.delta_x, parent.n, n)
+        for (parent, n) in zip(converted["basis"], shape, strict=True)
     )
-    return {
-        "basis": basis_as_fundamental_momentum_basis(eigenstate["basis"]),
-        "vector": transformed.reshape(-1),
-    }
-
-
-def convert_momentum_basis_eigenstate_to_position_basis(
-    eigenstate: FundamentalMomentumBasisEigenstate3d[_NF0Inv, _NF1Inv, _NF2Inv]
-) -> FundamentalPositionBasisEigenstate3d[_NF0Inv, _NF1Inv, _NF2Inv]:
-    """
-    Convert an eigenstate from momentum to position basis.
-
-    Parameters
-    ----------
-    eigenstate : MomentumBasisEigenstate[_L0Inv, _L1Inv, _L2Inv]
-
-    Returns
-    -------
-    PositionBasisEigenstate[_L0Inv, _L1Inv, _L2Inv]
-    """
-    util = Basis3dUtil(eigenstate["basis"])
-    padded = pad_ft_points(
-        eigenstate["vector"].reshape(util.shape),
-        s=util.fundamental_shape,
-        axes=(0, 1, 2),
-    )
-    transformed = np.fft.ifftn(
-        padded,
-        axes=(0, 1, 2),
-        s=util.fundamental_shape,
-        norm="ortho",
-    )
-    return {
-        "basis": basis_as_fundamental_position_basis(eigenstate["basis"]),
-        "vector": transformed.reshape(-1),
-    }
+    scaled = converted["vector"] * np.sqrt(np.prod(shape) / util.size)
+    return {"basis": final_basis, "vector": scaled}

@@ -14,12 +14,12 @@ from surface_potential_analysis.basis.plot import (
 )
 from surface_potential_analysis.basis.util import Basis3dUtil
 from surface_potential_analysis.state_vector.conversion import (
-    convert_eigenstate_to_basis,
+    convert_state_vector_to_basis,
 )
 from surface_potential_analysis.state_vector.plot import (
     animate_eigenstate_x1x2,
-    plot_eigenstate_along_path,
     plot_eigenstate_x0x1,
+    plot_state_vector_along_path,
 )
 from surface_potential_analysis.util.util import slice_along_axis
 from surface_potential_analysis.wavepacket.get_eigenstate import get_eigenstate
@@ -81,7 +81,7 @@ def flaten_eigenstate_x(
     )
     util = Basis3dUtil(position_basis)
     idx = util.get_flat_index(idx) if isinstance(idx, tuple) else idx
-    converted = convert_eigenstate_to_basis(eigenstate, position_basis)
+    converted = convert_state_vector_to_basis(eigenstate, position_basis)
     flattened = (
         converted["vector"]
         .reshape(*util.shape)[slice_along_axis(idx, z_axis)]
@@ -309,23 +309,23 @@ def plot_phase_around_origin() -> None:
     plot_fundamental_x_at_index_projected_2d(flat["basis"], idx, z_axis=2, ax=ax)
     fig.show()
 
-    fig, ax, _ = plot_eigenstate_along_path(flat, path, wrap_distances=True)
+    fig, ax, _ = plot_state_vector_along_path(flat, path, wrap_distances=True)
     ax.set_title("plot of abs against distance for the eigenstate")
     fig.show()
 
-    fig, ax, _ = plot_eigenstate_along_path(
+    fig, ax, _ = plot_state_vector_along_path(
         flat, path, wrap_distances=True, measure="angle"
     )
     ax.set_title("plot of angle against distance for the eigenstate")
     fig.show()
 
-    fig, ax, _ = plot_eigenstate_along_path(
+    fig, ax, _ = plot_state_vector_along_path(
         flat, path, wrap_distances=True, measure="real"
     )
     ax.set_title("plot of real against distance for the eigenstate")
     fig.show()
 
-    fig, ax, _ = plot_eigenstate_along_path(
+    fig, ax, _ = plot_state_vector_along_path(
         flat, path, wrap_distances=True, measure="imag"
     )
     ax.set_title("plot of imag against distance for the eigenstate")

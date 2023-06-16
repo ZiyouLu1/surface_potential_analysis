@@ -2,11 +2,9 @@ from __future__ import annotations
 
 import numpy as np
 from matplotlib import pyplot as plt
-from surface_potential_analysis.basis.conversion import (
-    basis_as_fundamental_position_basis,
+from surface_potential_analysis.state_vector.conversion import (
+    interpolate_state_vector_momentum,
 )
-from surface_potential_analysis.potential.conversion import convert_potential_to_basis
-from surface_potential_analysis.potential.plot import plot_potential_along_path
 from surface_potential_analysis.state_vector.eigenstate_collection import (
     select_eigenstate,
 )
@@ -15,9 +13,12 @@ from surface_potential_analysis.state_vector.eigenstate_collection_plot import (
     plot_lowest_band_energies_against_bloch_k,
     plot_occupation_against_bloch_phase_1d,
 )
-from surface_potential_analysis.state_vector.plot import plot_eigenstate_1d_x
+from surface_potential_analysis.state_vector.plot import (
+    plot_state_vector_1d_x,
+    plot_state_vector_difference_1d_k,
+)
 
-from sodium_copper_111.s1_potential import get_interpolated_potential
+from sodium_copper_111.s1_potential_plot import plot_sodium_potential
 
 from .s3_eigenstates import get_eigenstate_collection
 
@@ -30,7 +31,7 @@ def plot_lowest_band_energies() -> None:
     _, _, ln = plot_lowest_band_energies_against_bloch_k(collection, ax=ax)
     ln.set_label("(100)")
 
-    collection = get_eigenstate_collection((1000,))
+    collection = get_eigenstate_collection((2000,))
     _, _, ln = plot_lowest_band_energies_against_bloch_k(collection, ax=ax)
     ln.set_label("(200)")
 
@@ -58,6 +59,46 @@ def plot_first_six_band_energies() -> None:
     input()
 
 
+def plot_high_energy_band_eigenstates() -> None:
+    fig, ax = plt.subplots()
+
+    collection_0 = get_eigenstate_collection((1000,))
+
+    for i in [0, 5]:
+        eigenstate = select_eigenstate(collection_0, i, 16)
+        _, _, ln = plot_state_vector_1d_x(eigenstate, ax=ax, measure="abs")
+        ln.set_label(f"n={1000}")
+
+    collection_1 = get_eigenstate_collection((5000,))
+
+    for i in [0, 5]:
+        eigenstate = select_eigenstate(collection_1, i, 16)
+        eigenstate["vector"] *= np.sqrt(5)
+        _, _, ln = plot_state_vector_1d_x(eigenstate, ax=ax, measure="abs")
+        ln.set_label(f"n={5000}")
+
+    ax2 = ax.twinx()
+    _, _, ln = plot_sodium_potential((100,), ax=ax2)
+    ln.set_linestyle("--")
+    ln.set_label("potential")
+
+    ax.legend()
+    ax.set_title("Plot of eigenstates from the six lowest bands")
+
+    fig.show()
+
+    for i in [0, 5]:
+        state_0 = interpolate_state_vector_momentum(
+            select_eigenstate(collection_0, i, 16), (5000,)
+        )
+        state_0["vector"] *= np.exp(-1j * np.angle(state_0["vector"][0]))
+        state_1 = select_eigenstate(collection_1, i, 16)
+        state_1["vector"] *= np.exp(-1j * np.angle(state_1["vector"][0]))
+        fig, _, _ = plot_state_vector_difference_1d_k(state_0, state_1)
+        fig.show()
+    input()
+
+
 def plot_first_six_band_eigenstates() -> None:
     fig, ax = plt.subplots()
 
@@ -65,15 +106,11 @@ def plot_first_six_band_eigenstates() -> None:
 
     for i in range(15, 17):
         eigenstate = select_eigenstate(collection, 0, i)
-        _, _, ln = plot_eigenstate_1d_x(eigenstate, ax=ax, measure="abs")
+        _, _, ln = plot_state_vector_1d_x(eigenstate, ax=ax, measure="abs")
         ln.set_label(f"n={i}")
 
     ax2 = ax.twinx()
-    potential = get_interpolated_potential((100,))
-    plot_basis = basis_as_fundamental_position_basis(potential["basis"])
-    converted = convert_potential_to_basis(potential, plot_basis)
-    path = np.arange(100).reshape(1, -1)
-    _, _, ln = plot_potential_along_path(converted, path, ax=ax2)
+    _, _, ln = plot_sodium_potential((100,), ax=ax2)
     ln.set_linestyle("--")
     ln.set_label("potential")
 
