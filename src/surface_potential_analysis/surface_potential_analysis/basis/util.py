@@ -12,6 +12,9 @@ from surface_potential_analysis.axis.conversion import get_rotated_axis
 from surface_potential_analysis.axis.util import Axis3dUtil, AxisUtil
 
 from .basis import Basis, Basis3d
+from surface_potential_analysis.util.util import (
+    slice_ignoring_axes,
+)
 
 if TYPE_CHECKING:
     from surface_potential_analysis._types import (
@@ -682,103 +685,155 @@ class Basis3dUtil(BasisUtil[_B3d0Inv]):
         return super().get_stacked_index(idx)  # type: ignore[return-value]
 
 
-def project_k_points_along_axis(
-    basis: _B3d0Inv,
-    points: np.ndarray[tuple[Literal[3], Unpack[_S0Inv]], np.dtype[np.float_]],
-    axis: Literal[0, 1, 2, -1, -2, -3],
+def project_k_points_along_axes(
+    points: np.ndarray[tuple[int, Unpack[_S0Inv]], np.dtype[np.float_]],
+    basis: _B0Inv,
+    axes: tuple[int, int],
 ) -> np.ndarray[tuple[Literal[2], Unpack[_S0Inv]], np.dtype[np.float_]]:
     """
-    Get the list of points projected perpendicular to the given axis.
+    Get the list of k points projected onto the plane including both axes.
 
     Parameters
     ----------
-    basis : _B3d0Inv
-    points : np.ndarray[tuple[Literal[3], Unpack[_S0Inv]], np.dtype[np.float_]]
-    axis : Literal[0, 1, 2, -1, -2, -3]
+    points : np.ndarray[tuple[int, Unpack[_S0Inv]], np.dtype[np.float_]]
+    basis : _B0Inv
+    axes : tuple[int, int]
 
     Returns
     -------
     np.ndarray[tuple[Literal[2], Unpack[_S0Inv]], np.dtype[np.float_]]
-        points projected perpendicular to axis
     """
-    matrix = _get_rotation_matrix(basis[axis].delta_x, np.array([0, 0, 1]))
-    return np.tensordot(matrix, points, axes=(1, 0))[0:2]  # type: ignore[no-any-return]
+    util = BasisUtil(basis)
+
+    ax_0 = util.delta_k[axes[0]] / np.linalg.norm(util.delta_k[axes[0]])
+    # Subtract off parallel componet
+    ax_1 = util.delta_k[axes[1]] - np.tensordot(ax_0, util.delta_k[axes[1]])
+    ax_1 /= np.linalg.norm(ax_1)
+
+    projected_0 = np.tensordot(ax_0, points, axes=(0, 0))
+    projected_1 = np.tensordot(ax_1, points, axes=(0, 0))
+
+    return np.array([projected_0, projected_1])  # type: ignore[no-any-return]
 
 
-def get_fundamental_projected_k_points(
-    basis: _B3d0Inv,
-    axis: Literal[0, 1, 2, -1, -2, -3],
-) -> np.ndarray[tuple[Literal[2], int, int], np.dtype[np.float_]]:
+def get_fundamental_k_points_projected_along_axes(
+    basis: _B0Inv,
+    axes: tuple[int, int],
+) -> np.ndarray[tuple[Literal[2], int], np.dtype[np.float_]]:
     """
-    Get a grid of points projected perpendicular to the given basis axis.
-
-    This throws away the componet of the cooridnate grid in the direction
-    parallel to axis.
+    Get the fundamental_k_points projected onto the plane including both axes.
 
     Parameters
     ----------
-    basis : _B3d0Inv
-    axis : Literal[0, 1, 2,-1, -2, -3]
-        The index along the axis to take the coordinates from
+    basis : _B0Inv
+    axes : tuple[int, int]
 
     Returns
     -------
-    np.ndarray[tuple[Literal[2], int, int], np.dtype[np.float_]]
-        The coordinates in the plane perpendicular to axis
+    np.ndarray[tuple[Literal[2], int], np.dtype[np.float_]]
     """
-    rotated = get_rotated_basis3d(basis, axis)  # type: ignore[var-annotated,arg-type]
-    util = Basis3dUtil(rotated)
-    return util.fundamental_k_points.reshape(3, *util.fundamental_shape)[0:2,]
+    util = BasisUtil(basis)
+    points = util.fundamental_k_points
+    return project_x_points_along_axes(points, basis, axes)
 
 
-def project_x_points_along_axis(
-    basis: _B3d0Inv,
-    points: np.ndarray[tuple[Literal[3], Unpack[_S0Inv]], np.dtype[np.float_]],
-    axis: Literal[0, 1, 2, -1, -2, -3],
-) -> np.ndarray[tuple[Literal[2], Unpack[_S0Inv]], np.dtype[np.float_]]:
+def get_k_coordinates_in_axes(
+    basis: _B0Inv,
+    axes: tuple[int, int],
+    idx: SingleStackedIndexLike | None,
+) -> np.ndarray[tuple[Literal[2], int], np.dtype[np.float_]]:
     """
-    Get the list of points projected perpendicular to the given axis.
+    Get the fundamental_k_points projected onto the plane including both axes.
 
     Parameters
     ----------
-    basis : _B3d0Inv
-    points : np.ndarray[tuple[Literal[3], Unpack[_S0Inv]], np.dtype[np.float_]]
-    axis : Literal[0, 1, 2, -1, -2, -3]
+    basis : _B0Inv
+    axes : tuple[int, int]
+
+    Returns
+    -------
+    np.ndarray[tuple[Literal[2], int], np.dtype[np.float_]]
+    """
+    util = BasisUtil(basis)
+    idx = tuple(0 for _ in range(util.ndim - len(axes))) if idx is None else idx
+    points = get_fundamental_k_points_projected_along_axes(basis, axes)
+    _slice = slice_ignoring_axes(idx, axes)
+    return points.reshape(2, *util.shape)[_slice]
+
+
+def project_x_points_along_axes(
+    points: np.ndarray[tuple[int, Unpack[_S0Inv]], np.dtype[np.float_]],
+    basis: _B0Inv,
+    axes: tuple[int, int],
+) -> np.ndarray[tuple[Literal[2], Unpack[_S0Inv]], np.dtype[np.float_]]:
+    """
+    Get the list of x points projected onto the plane including both axes.
+
+    Parameters
+    ----------
+    points : np.ndarray[tuple[int, Unpack[_S0Inv]], np.dtype[np.float_]]
+    basis : _B0Inv
+    axes : tuple[int, int]
 
     Returns
     -------
     np.ndarray[tuple[Literal[2], Unpack[_S0Inv]], np.dtype[np.float_]]
-        points projected perpendicular to axis
     """
-    matrix = _get_rotation_matrix(basis[axis].delta_x, np.array([0, 0, 1]))
-    return np.tensordot(matrix, points, axes=(1, 0))[0:2]  # type: ignore[no-any-return]
+    util = BasisUtil(basis)
+
+    ax_0 = util.delta_x[axes[0]] / np.linalg.norm(util.delta_x[axes[0]])
+    # Subtract off parallel componet
+    ax_1 = util.delta_x[axes[1]] - np.tensordot(ax_0, util.delta_x[axes[1]])
+    ax_1 /= np.linalg.norm(ax_1)
+
+    projected_0 = np.tensordot(ax_0, points, axes=(0, 0))
+    projected_1 = np.tensordot(ax_1, points, axes=(0, 0))
+
+    return np.array([projected_0, projected_1])  # type: ignore[no-any-return]
 
 
-def get_fundamental_projected_x_points(
-    basis: _B3d0Inv,
-    axis: Literal[0, 1, 2, -1, -2, -3],
-) -> np.ndarray[tuple[Literal[2], int, int, int], np.dtype[np.float_]]:
+def get_fundamental_x_points_projected_along_axes(
+    basis: _B0Inv,
+    axes: tuple[int, int],
+) -> np.ndarray[tuple[Literal[2], int], np.dtype[np.float_]]:
     """
-    Get a grid of points projected perpendicular to the given basis axis, at the given index along this axis.
-
-    This throws away the componet of the cooridnate grid in the direction
-    parallel to axis.
+    Get the fundamental_x_points projected onto the plane including both axes.
 
     Parameters
     ----------
-    basis : _B3d0Inv
-    axis : Literal[0, 1, 2,-1, -2, -3]
-        The index along the axis to take the coordinates from
+    basis : _B0Inv
+    axes : tuple[int, int]
 
     Returns
     -------
-    np.ndarray[tuple[Literal[2], int, int], np.dtype[np.float_]]
-        The coordinates in the plane perpendicular to axis, as a list of [x_coords, y_coords, z_coords]
+    np.ndarray[tuple[Literal[2], int], np.dtype[np.float_]]
     """
-    rotated = get_rotated_basis3d(basis, axis, np.array([0, 0, 1]))  # type: ignore[var-annotated,arg-type]
-    util = Basis3dUtil(rotated)
-    return util.fundamental_x_points.reshape(3, *util.fundamental_shape)[0:2]
+    util = BasisUtil(basis)
+    points = util.fundamental_x_points
+    return project_x_points_along_axes(points, basis, axes)
 
+def get_x_coordinates_in_axes(
+    basis: _B0Inv,
+    axes: tuple[int, int],
+    idx: SingleStackedIndexLike | None,
+) -> np.ndarray[tuple[Literal[2], int], np.dtype[np.float_]]:
+    """
+    Get the fundamental_k_points projected onto the plane including both axes.
+
+    Parameters
+    ----------
+    basis : _B0Inv
+    axes : tuple[int, int]
+
+    Returns
+    -------
+    np.ndarray[tuple[Literal[2], int], np.dtype[np.float_]]
+    """
+    util = BasisUtil(basis)
+    idx = tuple(0 for _ in range(util.ndim - len(axes))) if idx is None else idx
+    points = get_fundamental_x_points_projected_along_axes(basis, axes)
+    _slice = slice_ignoring_axes(idx, axes)
+    return points.reshape(2, *util.shape)[_slice]
 
 @overload
 def _wrap_distance(distance: _IntLike_co, length: int) -> int:

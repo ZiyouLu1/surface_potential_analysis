@@ -10,7 +10,6 @@ from surface_potential_analysis.basis.util import (
     Basis3dUtil,
     BasisUtil,
     calculate_cumulative_x_distances_along_path,
-    get_fundamental_projected_x_points,
 )
 from surface_potential_analysis.potential.conversion import (
     convert_potential_to_position_basis,

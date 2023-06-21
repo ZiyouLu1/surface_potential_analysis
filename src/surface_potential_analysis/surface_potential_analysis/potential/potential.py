@@ -285,7 +285,7 @@ def undo_truncate_potential(
     points = (
         cutoff * (np.exp((data["vector"] + offset) / cutoff) - 1) ** (1 / n) - offset
     )
-    return {"points": points, "basis": data["basis"]}  # type: ignore[return-value]
+    return {"vector": points, "basis": data["basis"]}  # type: ignore[return-value]
 
 
 def interpolate_uneven_potential(

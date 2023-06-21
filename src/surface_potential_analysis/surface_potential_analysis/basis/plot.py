@@ -6,15 +6,15 @@ from matplotlib import pyplot as plt
 
 from surface_potential_analysis.axis.conversion import axis_as_single_point_axis
 from surface_potential_analysis.basis.brillouin_zone import (
-    decrement_brillouin_zone_3d,
+    decrement_brillouin_zone,
     get_all_brag_point,
 )
 from surface_potential_analysis.basis.util import (
-    Basis3dUtil,
-    project_k_points_along_axis,
-    project_x_points_along_axis,
+    BasisUtil,
+    project_k_points_along_axes,
+    project_x_points_along_axes,
 )
-from surface_potential_analysis.util.util import slice_along_axis
+from surface_potential_analysis.util.util import slice_ignoring_axes
 
 if TYPE_CHECKING:
     import numpy as np
@@ -22,21 +22,16 @@ if TYPE_CHECKING:
     from matplotlib.figure import Figure
     from matplotlib.lines import Line2D
 
-    from surface_potential_analysis._types import IndexLike3d, SingleFlatIndexLike
-    from surface_potential_analysis.axis import AxisLike3d
-    from surface_potential_analysis.basis.basis import (
-        Basis3d,
-    )
+    from surface_potential_analysis._types import IndexLike, SingleStackedIndexLike
+    from surface_potential_analysis.basis.basis import Basis
 
-    _A3d0Inv = TypeVar("_A3d0Inv", bound=AxisLike3d[Any, Any])
-    _A3d1Inv = TypeVar("_A3d1Inv", bound=AxisLike3d[Any, Any])
-    _A3d2Inv = TypeVar("_A3d2Inv", bound=AxisLike3d[Any, Any])
     _S0Inv = TypeVar("_S0Inv", bound=tuple[int, ...])
+    _B0Inv = TypeVar("_B0Inv", bound=Basis[Any])
 
 
 def plot_k_points_projected_2d(
-    basis: Basis3d[_A3d0Inv, _A3d1Inv, _A3d2Inv],
-    kz_axis: Literal[0, 1, 2, -1, -2, -3],
+    basis: _B0Inv,
+    axes: tuple[int, int],
     points: np.ndarray[tuple[Literal[3], Unpack[_S0Inv]], np.dtype[np.float_]],
     *,
     ax: Axes | None = None,
@@ -46,8 +41,8 @@ def plot_k_points_projected_2d(
 
     Parameters
     ----------
-    basis : Basis3d[_A3d0Inv, _A3d1Inv, _A3d2Inv]
-    kz_axis : Literal[0, 1, 2, -1, -2, -3]
+    basis : _B0Inv
+    axes : tuple[int, int]
         direction perpendicular to which the points should be projected onto
     points : np.ndarray[tuple[Literal[3], Unpack[_S0Inv]], np.dtype[np.float_]]
         points to project
@@ -59,22 +54,22 @@ def plot_k_points_projected_2d(
     tuple[Figure, Axes, Line2D]
     """
     fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
-    projected_points = project_k_points_along_axis(basis, points, kz_axis)
+    projected_points = project_k_points_along_axes(points, basis, axes)
 
     (line,) = ax.plot(*projected_points.reshape(2, -1))
     line.set_linestyle(" ")
     line.set_marker("x")
 
-    ax.set_xlabel(f"k{0 if (kz_axis % 3) != 0 else 1} axis")
-    ax.set_ylabel(f"k{2 if (kz_axis % 3) != 2 else 1} axis")  # noqa: PLR2004
+    ax.set_xlabel(f"k{axes[0]} axis")
+    ax.set_ylabel(f"k{axes[1]} axis")
     ax.set_aspect("equal", adjustable="box")
 
     return fig, ax, line
 
 
 def plot_brillouin_zone_points_projected_2d(
-    basis: Basis3d[_A3d0Inv, _A3d1Inv, _A3d2Inv],
-    kz_axis: Literal[0, 1, 2, -1, -2, -3],
+    basis: _B0Inv,
+    axes: tuple[int, int],
     *,
     ax: Axes | None = None,
 ) -> tuple[Figure, Axes, Line2D]:
@@ -83,8 +78,8 @@ def plot_brillouin_zone_points_projected_2d(
 
     Parameters
     ----------
-    basis : Basis3d[_A3d0Inv, _A3d1Inv, _A3d2Inv]
-    kz_axis : Literal[0, 1, 2, -1, -2, -3]
+    basis : _B0Inv
+    axes : tuple[int, int]
     ax : Axes | None, optional
         plot axis, by default None
 
@@ -92,17 +87,17 @@ def plot_brillouin_zone_points_projected_2d(
     -------
     tuple[Figure, Axes, Line2D]
     """
-    util = Basis3dUtil((basis[0], basis[1], axis_as_single_point_axis(basis[2])))
-    coordinates = decrement_brillouin_zone_3d(basis, util.nk_points)
-    coordinates = decrement_brillouin_zone_3d(basis, coordinates)
+    util = BasisUtil((basis[0], basis[1], axis_as_single_point_axis(basis[2])))
+    coordinates = decrement_brillouin_zone(basis, util.nk_points)
+    coordinates = decrement_brillouin_zone(basis, coordinates)
     points = util.get_k_points_at_index(coordinates)
 
-    return plot_k_points_projected_2d(basis, kz_axis, points, ax=ax)
+    return plot_k_points_projected_2d(basis, axes, points, ax=ax)
 
 
 def plot_bragg_points_projected_2d(
-    basis: Basis3d[_A3d0Inv, _A3d1Inv, _A3d2Inv],
-    kz_axis: Literal[0, 1, 2, -1, -2, -3],
+    basis: _B0Inv,
+    axes: tuple[int, int],
     *,
     ax: Axes | None = None,
 ) -> tuple[Figure, Axes, Line2D]:
@@ -111,8 +106,8 @@ def plot_bragg_points_projected_2d(
 
     Parameters
     ----------
-    basis : Basis3d[_A3d0Inv, _A3d1Inv, _A3d2Inv]
-    kz_axis : Literal[0, 1, 2, -1, -2, -3]
+    basis : _B0Inv
+    axes : tuple[int, int]
     ax : Axes | None, optional
         plot axis, by default None
 
@@ -121,13 +116,13 @@ def plot_bragg_points_projected_2d(
     tuple[Figure, Axes, Line2D]
     """
     points = get_all_brag_point(basis)
-    return plot_k_points_projected_2d(basis, kz_axis, points, ax=ax)
+    return plot_k_points_projected_2d(basis, axes, points, ax=ax)
 
 
 def plot_fundamental_k_in_plane_projected_2d(
-    basis: Basis3d[_A3d0Inv, _A3d1Inv, _A3d2Inv],
-    idx: SingleFlatIndexLike,
-    kz_axis: Literal[0, 1, 2, -1, -2, -3],
+    basis: _B0Inv,
+    axes: tuple[int, int],
+    idx: SingleStackedIndexLike,
     *,
     ax: Axes | None = None,
 ) -> tuple[Figure, Axes, Line2D]:
@@ -136,11 +131,11 @@ def plot_fundamental_k_in_plane_projected_2d(
 
     Parameters
     ----------
-    basis : Basis3d[_A3d0Inv, _A3d1Inv, _A3d2Inv]
-    idx : int
-        idx in kz_axis direction
-    kz_axis : Literal[0, 1, 2, -1, -2, -3]
+    basis : _B0Inv
+    axes : tuple[int, int]
         axis perpendicular to which to plot the points
+    idx : SingleStackedIndexLike
+        idx in kz_axis direction
     ax : Axes | None, optional
         plot axis, by default None
 
@@ -148,16 +143,16 @@ def plot_fundamental_k_in_plane_projected_2d(
     -------
     tuple[Figure, Axes, Line2D]
     """
-    util = Basis3dUtil(basis)
+    util = BasisUtil(basis)
     points = util.fundamental_k_points.reshape(3, *util.fundamental_shape)[
-        slice_along_axis(idx, (kz_axis % 3) + 1)
+        slice_ignoring_axes(idx, axes)
     ].reshape(3, -1)
-    return plot_k_points_projected_2d(basis, kz_axis, points, ax=ax)
+    return plot_k_points_projected_2d(basis, axes, points, ax=ax)
 
 
 def plot_x_points_projected_2d(
-    basis: Basis3d[_A3d0Inv, _A3d1Inv, _A3d2Inv],
-    z_axis: Literal[0, 1, 2, -1, -2, -3],
+    basis: _B0Inv,
+    axes: tuple[int, int],
     points: np.ndarray[tuple[Literal[3], Unpack[_S0Inv]], np.dtype[np.float_]],
     *,
     ax: Axes | None = None,
@@ -167,7 +162,7 @@ def plot_x_points_projected_2d(
 
     Parameters
     ----------
-    basis : Basis3d[_A3d0Inv, _A3d1Inv, _A3d2Inv]
+    basis : _B0Inv
     z_axis : Literal[0, 1, 2, -1, -2, -3]
         direction perpendicular to which the points should be projected onto
     points : np.ndarray[tuple[Literal[3], Unpack[_S0Inv]], np.dtype[np.float_]]
@@ -180,23 +175,23 @@ def plot_x_points_projected_2d(
     tuple[Figure, Axes, Line2D]
     """
     fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
-    projected_points = project_x_points_along_axis(basis, points, z_axis)
+    projected_points = project_x_points_along_axes(points, basis, axes)
 
     (line,) = ax.plot(*projected_points.reshape(2, -1))
     line.set_linestyle(" ")
     line.set_marker("x")
 
-    ax.set_xlabel(f"x{0 if (z_axis % 3) != 0 else 1} axis")
-    ax.set_ylabel(f"x{2 if (z_axis % 3) != 2 else 1} axis")  # noqa: PLR2004
+    ax.set_xlabel(f"x{axes[0]} axis")
+    ax.set_ylabel(f"x{axes[1]} axis")
     ax.set_aspect("equal", adjustable="box")
 
     return fig, ax, line
 
 
 def plot_fundamental_x_in_plane_projected_2d(
-    basis: Basis3d[_A3d0Inv, _A3d1Inv, _A3d2Inv],
-    idx: SingleFlatIndexLike,
-    z_axis: Literal[0, 1, 2, -1, -2, -3],
+    basis: _B0Inv,
+    axes: tuple[int, int],
+    idx: SingleStackedIndexLike,
     *,
     ax: Axes | None = None,
 ) -> tuple[Figure, Axes, Line2D]:
@@ -205,11 +200,11 @@ def plot_fundamental_x_in_plane_projected_2d(
 
     Parameters
     ----------
-    basis : Basis3d[_A3d0Inv, _A3d1Inv, _A3d2Inv]
-    idx : int
-        idx in z_axis direction
-    z_axis : Literal[0, 1, 2, -1, -2, -3]
+    basis : _B0Inv
+    axes : tuple[int, int]
         axis perpendicular to which to plot the points
+    idx : SingleStackedIndexLike
+        idx in kz_axis direction
     ax : Axes | None, optional
         plot axis, by default None
 
@@ -217,17 +212,17 @@ def plot_fundamental_x_in_plane_projected_2d(
     -------
     tuple[Figure, Axes, Line2D]
     """
-    util = Basis3dUtil(basis)
+    util = BasisUtil(basis)
     points = util.fundamental_x_points.reshape(3, *util.fundamental_shape)[
-        slice_along_axis(idx, (z_axis % 3) + 1)
+        slice_ignoring_axes(idx, axes)
     ].reshape(3, -1)
-    return plot_x_points_projected_2d(basis, z_axis, points, ax=ax)
+    return plot_x_points_projected_2d(basis, axes, points, ax=ax)
 
 
 def plot_fundamental_x_at_index_projected_2d(
-    basis: Basis3d[_A3d0Inv, _A3d1Inv, _A3d2Inv],
-    idx: IndexLike3d,
-    z_axis: Literal[0, 1, 2, -1, -2, -3] = 2,
+    basis: _B0Inv,
+    idx: IndexLike,
+    axes: tuple[int, int],
     *,
     ax: Axes | None = None,
 ) -> tuple[Figure, Axes, Line2D]:
@@ -236,7 +231,7 @@ def plot_fundamental_x_at_index_projected_2d(
 
     Parameters
     ----------
-    basis : Basis3d[_A3d0Inv, _A3d1Inv, _A3d2Inv]
+    basis : _B0Inv
     idx : IndexLike
         index to plot
     z_axis : Literal[0, 1, 2, -1, -2, -3], optional
@@ -248,9 +243,9 @@ def plot_fundamental_x_at_index_projected_2d(
     -------
     tuple[Figure, Axes, Line2D]
     """
-    util = Basis3dUtil(basis)
+    util = BasisUtil(basis)
     idx = idx if isinstance(idx, tuple) else util.get_stacked_index(idx)
     points = util.fundamental_x_points.reshape(3, *util.fundamental_shape)[
         :, *idx
     ].reshape(3, -1)
-    return plot_x_points_projected_2d(basis, z_axis, points, ax=ax)
+    return plot_x_points_projected_2d(basis, axes, points, ax=ax)

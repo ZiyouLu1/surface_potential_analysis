@@ -23,8 +23,6 @@ from surface_potential_analysis.basis.util import (
     BasisUtil,
     _wrap_distance,
     calculate_cumulative_x_distances_along_path,
-    get_fundamental_projected_k_points,
-    get_fundamental_projected_x_points,
     get_rotated_basis3d,
     project_k_points_along_axis,
     project_x_points_along_axis,

@@ -148,7 +148,7 @@ def sho_axis_3d_from_config(
     return ExplicitAxis3d(parent.delta_x, axis.vectors)
 
 
-def infinate_sho_basis_from_config(
+def infinate_sho_axis_3d_from_config(
     parent: AxisLike3d[_LF0Inv, _L1Inv], config: SHOBasisConfig, n: _L0Inv
 ) -> ExplicitAxis3d[_LF0Inv, _L0Inv]:
     """

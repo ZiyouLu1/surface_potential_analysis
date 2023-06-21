@@ -15,7 +15,7 @@ from surface_potential_analysis.axis.axis import (
 )
 from surface_potential_analysis.basis.sho_basis import (
     SHOBasisConfig,
-    infinate_sho_basis_from_config,
+    infinate_sho_axis_3d_from_config,
 )
 from surface_potential_analysis.basis.util import Basis3dUtil
 from surface_potential_analysis.state_vector.conversion import (
@@ -71,7 +71,7 @@ class EigenstateConversionTest(unittest.TestCase):
         eigenstate["basis"] = (
             eigenstate["basis"][0],
             eigenstate["basis"][1],
-            infinate_sho_basis_from_config(
+            infinate_sho_axis_3d_from_config(
                 eigenstate["basis"][2], config, resolution[2]
             ),
         )
@@ -119,7 +119,7 @@ class EigenstateConversionTest(unittest.TestCase):
         eigenstate["basis"] = (
             eigenstate["basis"][0],
             eigenstate["basis"][1],
-            infinate_sho_basis_from_config(
+            infinate_sho_axis_3d_from_config(
                 eigenstate["basis"][2], config, resolution[2]
             ),
         )

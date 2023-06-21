@@ -44,9 +44,7 @@ def get_all_wavepackets(
 
     save_bands = np.arange(99)
     return generate_wavepacket(
-        _hamiltonian_generator,
-        shape=shape,
-        save_bands=save_bands,
+        _hamiltonian_generator, shape=shape, save_bands=save_bands
     )
 
 

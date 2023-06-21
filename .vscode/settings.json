@@ -130,11 +130,11 @@
   "python.analysis.extraPaths": [
     "./src/surface_dynamics_simulation",
     "./src/surface_potential_analysis",
-    "./src/copper_100",
-    "./src/copper_111",
-    "./src/platinum_111",
-    "./src/ruthenium_100",
-    "./src/nickel_111",
+    "./src/hydrogen_copper_100",
+    "./src/hydrogen_copper_111",
+    "./src/hydrogen_platinum_111",
+    "./src/hydrogen_ruthenium_100",
+    "./src/hydrogen_nickel_111",
     "./src/sodium_copper_111"
   ],
   "[python]": {

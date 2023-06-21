@@ -6,10 +6,10 @@ import numpy as np
 from matplotlib import pyplot as plt
 
 from surface_potential_analysis.basis.util import (
-    Basis3dUtil,
+    BasisUtil,
     calculate_cumulative_k_distances_along_path,
-    get_fundamental_projected_k_points,
-    get_fundamental_projected_x_points,
+    get_k_coordinates_in_axes,
+    get_x_coordinates_in_axes,
 )
 from surface_potential_analysis.util.util import (
     Measure,
@@ -35,7 +35,7 @@ _L2Inv = TypeVar("_L2Inv", bound=int)
 
 def plot_overlap_2d_x(
     overlap: FundamentalPositionOverlap[_L0Inv, _L1Inv, _L2Inv],
-    idx: SingleFlatIndexLike,
+    idx: SingleFlatIndexLike | None,
     z_axis: Literal[0, 1, 2, -1, -2, -3],
     *,
     ax: Axes | None = None,
@@ -65,10 +65,9 @@ def plot_overlap_2d_x(
     """
     fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
 
-    coordinates = get_fundamental_projected_x_points(overlap["basis"], z_axis)[
-        slice_along_axis(idx, (z_axis % 3) + 1)
-    ]
-    util = Basis3dUtil(overlap["basis"])
+    axes = tuple(x for x in range(3) if x != z_axis)
+    coordinates = get_x_coordinates_in_axes(overlap["basis"], axes, idx)  # type: ignore[arg-type]
+    util = BasisUtil(overlap["basis"])
     points = overlap["vector"].reshape(*util.shape)[slice_along_axis(idx, z_axis)]
     data = get_measured_data(points, measure)
 
@@ -85,7 +84,7 @@ def plot_overlap_2d_x(
 
 def plot_overlap_2d_k(
     overlap: FundamentalMomentumOverlap[_L0Inv, _L1Inv, _L2Inv],
-    idx: SingleFlatIndexLike,
+    idx: SingleFlatIndexLike|None,
     z_axis: Literal[0, 1, 2, -1, -2, -3],
     *,
     ax: Axes | None = None,
@@ -116,10 +115,9 @@ def plot_overlap_2d_k(
     # TODO: shifted transform
     fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
 
-    coordinates = get_fundamental_projected_k_points(overlap["basis"], z_axis)[
-        slice_along_axis(idx, (z_axis % 3) + 1)
-    ]
-    util = Basis3dUtil(overlap["basis"])
+    axes = tuple(x for x in range(3) if x != z_axis)
+    coordinates = get_k_coordinates_in_axes(overlap["basis"], axes, idx) #type: ignore[arg-type]
+    util = BasisUtil(overlap["basis"])
     points = overlap["vector"].reshape(*util.shape)[slice_along_axis(idx, z_axis)]
     data = np.fft.ifftshift(get_measured_data(points, measure))
     shifted_coordinates = np.fft.ifftshift(coordinates)
@@ -255,7 +253,7 @@ def plot_overlap_along_path_k(
     """
     fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
 
-    util = Basis3dUtil(overlap["basis"])
+    util = BasisUtil(overlap["basis"])
     points = overlap["vector"].reshape(util.shape)[*path]
     data = get_measured_data(points, measure)
     distances = calculate_cumulative_k_distances_along_path(
@@ -292,7 +290,7 @@ def plot_overlap_along_k_diagonal(
     -------
     tuple[Figure, Axes, Line2D]
     """
-    util = Basis3dUtil(overlap["basis"])
+    util = BasisUtil(overlap["basis"])
     path = np.array([[i, i, k2_ind] for i in range(util.shape[0])]).T
 
     return plot_overlap_along_path_k(overlap, path, measure=measure, scale=scale, ax=ax)
@@ -326,7 +324,7 @@ def plot_overlap_along_k0(
     -------
     tuple[Figure, Axes, Line2D]
     """
-    util = Basis3dUtil(overlap["basis"])
+    util = BasisUtil(overlap["basis"])
     path = np.array([[i, k1_ind, k2_ind] for i in range(util.shape[0])]).T
 
     return plot_overlap_along_path_k(overlap, path, measure=measure, scale=scale, ax=ax)

@@ -3,12 +3,14 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Generic, Literal, TypeVar
 
 import numpy as np
-from scipy.constants import hbar
 
 from surface_potential_analysis.axis import (
     Axis3dUtil,
 )
-from surface_potential_analysis.basis.util import Basis3dUtil, BasisUtil
+from surface_potential_analysis.basis.util import BasisUtil
+from surface_potential_analysis.hamiltonian_builder.momentum_basis import (
+    hamiltonian_from_mass,
+)
 
 if TYPE_CHECKING:
     from surface_potential_analysis.axis.axis import (
@@ -111,28 +113,13 @@ class _SurfaceHamiltonianUtil(
         raise NotImplementedError
 
     def _calculate_diagonal_energy_fundamental_x2(
-        self, bloch_phase: np.ndarray[tuple[Literal[3]], np.dtype[np.float_]]
+        self, bloch_fraction: np.ndarray[tuple[Literal[3]], np.dtype[np.float_]]
     ) -> np.ndarray[tuple[int], np.dtype[np.float_]]:
-        util = Basis3dUtil(self._basis)
-
-        k0_coords, k1_coords, k2_fundamental = np.meshgrid(
-            util.x0_basis.nk_points,  # type: ignore[misc]
-            util.x1_basis.nk_points,  # type: ignore[misc]
-            util.x2_basis.fundamental_nk_points,  # type: ignore[misc]
-            indexing="ij",
+        kinetic_xy = hamiltonian_from_mass(
+            self._basis[0:2], self._mass, bloch_fraction[0:2]
         )
 
-        dk0 = util.dk0
-        dk1 = util.dk1
-        mass = self._mass
-
-        k0_points = dk0[0] * k0_coords + dk1[0] * k1_coords + bloch_phase[0]
-        x0_energy = (hbar * k0_points) ** 2 / (2 * mass)
-        k1_points = dk0[1] * k0_coords + dk1[1] * k1_coords + bloch_phase[1]
-        x1_energy = (hbar * k1_points) ** 2 / (2 * mass)
-        k2_points = dk0[2] * k0_coords + dk1[2] * k1_coords + bloch_phase[2]
-        x2_energy = (hbar * k2_points) ** 2 / (2 * mass)
-        return x0_energy + x1_energy + x2_energy  # type: ignore[no-any-return]
+        return kinetic_xy["array"]
 
     def get_ft_potential(
         self,

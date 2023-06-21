@@ -1,34 +1,33 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Literal, TypeVar
+from typing import TYPE_CHECKING, Any, TypeVar
 
 import numpy as np
 from matplotlib import pyplot as plt
 
 from surface_potential_analysis.basis.util import (
-    get_fundamental_projected_k_points,
-    get_fundamental_projected_x_points,
-)
-from surface_potential_analysis.state_vector.conversion import (
-    convert_state_vector_to_position_basis,
+    get_k_coordinates_in_axes,
+    get_x_coordinates_in_axes,
 )
 from surface_potential_analysis.state_vector.plot import (
     animate_eigenstate_3d_x,
-    plot_eigenstate_2d_k,
     plot_eigenstate_2d_x,
     plot_state_vector_1d_x,
+    plot_state_vector_2d_k,
     plot_state_vector_along_path,
     plot_state_vector_difference_2d_x,
 )
-from surface_potential_analysis.util.util import Measure, get_measured_data
+from surface_potential_analysis.util.util import (
+    Measure,
+    get_measured_data,
+)
 from surface_potential_analysis.wavepacket.eigenstate_conversion import (
     unfurl_wavepacket,
 )
 
 from .wavepacket import (
-    MomentumBasisWavepacket3d,
     Wavepacket,
-    Wavepacket3dWith2dSamples,
+    Wavepacket3d,
     get_sample_basis,
     get_wavepacket_sample_frequencies,
 )
@@ -40,26 +39,23 @@ if TYPE_CHECKING:
     from matplotlib.figure import Figure
     from matplotlib.lines import Line2D
 
-    from surface_potential_analysis._types import SingleFlatIndexLike
-    from surface_potential_analysis.axis.axis_like import AxisLike3d
+    from surface_potential_analysis._types import (
+        SingleFlatIndexLike,
+        SingleStackedIndexLike,
+    )
     from surface_potential_analysis.basis.basis import (
         Basis,
         Basis3d,
     )
+    from surface_potential_analysis.state_vector.state_vector import StateVector
     from surface_potential_analysis.util.plot import Scale
 
     _NS0Inv = TypeVar("_NS0Inv", bound=int)
     _NS1Inv = TypeVar("_NS1Inv", bound=int)
 
-    _L0Inv = TypeVar("_L0Inv", bound=int)
-    _L1Inv = TypeVar("_L1Inv", bound=int)
-    _L2Inv = TypeVar("_L2Inv", bound=int)
-
+    _S03dInv = TypeVar("_S03dInv", bound=tuple[int, int, int])
     _B3d0Inv = TypeVar("_B3d0Inv", bound=Basis3d[Any, Any, Any])
 
-    _A3d0Inv = TypeVar("_A3d0Inv", bound=AxisLike3d[Any, Any])
-    _A3d1Inv = TypeVar("_A3d1Inv", bound=AxisLike3d[Any, Any])
-    _A3d2Inv = TypeVar("_A3d2Inv", bound=AxisLike3d[Any, Any])
     _S0Inv = TypeVar("_S0Inv", bound=tuple[int, ...])
     _B0Inv = TypeVar("_B0Inv", bound=Basis[Any])
 
@@ -98,10 +94,10 @@ def plot_wavepacket_sample_frequencies(
     return fig, ax, line
 
 
-def plot_wavepacket_energies_momentum(
-    wavepacket: Wavepacket3dWith2dSamples[
-        _NS0Inv, _NS1Inv, Basis3d[_A3d0Inv, _A3d1Inv, _A3d2Inv]
-    ],
+def plot_wavepacket_energies_2d_k(
+    wavepacket: Wavepacket[_S0Inv, _B0Inv],
+    axes: tuple[int, int],
+    idx: SingleStackedIndexLike | None,
     *,
     ax: Axes | None = None,
     scale: Scale = "linear",
@@ -124,7 +120,8 @@ def plot_wavepacket_energies_momentum(
     fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
 
     basis = get_sample_basis(wavepacket["basis"], wavepacket["shape"])
-    coordinates = get_fundamental_projected_k_points(basis, 2)[:, :, :, 0]
+
+    coordinates = get_k_coordinates_in_axes(basis, axes, idx)
     points = np.fft.ifftshift(wavepacket["energies"])
 
     shifted_coordinates = np.fft.ifftshift(coordinates, axes=(1, 2))
@@ -141,10 +138,8 @@ def plot_wavepacket_energies_momentum(
     return fig, ax, mesh
 
 
-def plot_wavepacket_energies_position(
-    wavepacket: Wavepacket3dWith2dSamples[
-        _NS0Inv, _NS1Inv, Basis3d[_A3d0Inv, _A3d1Inv, _A3d2Inv]
-    ],
+def plot_wavepacket_energies_2d_x(
+    wavepacket: Wavepacket[_S0Inv, _B0Inv],
     *,
     ax: Axes | None = None,
     measure: Measure = "abs",
@@ -170,7 +165,7 @@ def plot_wavepacket_energies_position(
     fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
 
     basis = get_sample_basis(wavepacket["basis"], wavepacket["shape"])
-    coordinates = get_fundamental_projected_x_points(basis, 2)[:, :, :, 0]
+    coordinates = get_x_coordinates_in_axes(basis, axes, idx)
 
     data = np.fft.ifft2(wavepacket["energies"])
     data[0, 0] = 0
@@ -191,7 +186,7 @@ def plot_wavepacket_energies_position(
 def plot_wavepacket_1d_x(
     wavepacket: Wavepacket[_S0Inv, _B0Inv],
     idx: tuple[int, ...] | None = None,
-    axis: Literal[0, 1, 2, -1, -2, -3] = 0,
+    axis: int = 0,
     *,
     ax: Axes | None = None,
     measure: Measure = "abs",
@@ -219,11 +214,11 @@ def plot_wavepacket_1d_x(
     tuple[Figure, Axes, Line2D]
     """
     state = unfurl_wavepacket(wavepacket)
-    return plot_state_vector_1d_x(state, idx, axis, ax=ax, measure=measure, scale=scale)
+    return plot_state_vector_1d_x(state, axis, idx, ax=ax, measure=measure, scale=scale)  # type: ignore[arg-type]
 
 
 def plot_wavepacket_x0(
-    wavepacket: MomentumBasisWavepacket3d[_NS0Inv, _NS1Inv, _L0Inv, _L1Inv, _L2Inv],
+    wavepacket: Wavepacket[_S0Inv, _B0Inv],
     idx: tuple[int, int] = (0, 0),
     *,
     ax: Axes | None = None,
@@ -250,11 +245,11 @@ def plot_wavepacket_x0(
     tuple[Figure, Axes, Line2D]
     """
     state = unfurl_wavepacket(wavepacket)
-    return plot_state_vector_1d_x(state, idx, 0, ax=ax, measure=measure, scale=scale)
+    return plot_state_vector_1d_x(state, 0, idx, ax=ax, measure=measure, scale=scale)  # type: ignore[arg-type]
 
 
 def plot_wavepacket_x1(
-    wavepacket: MomentumBasisWavepacket3d[_NS0Inv, _NS1Inv, _L0Inv, _L1Inv, _L2Inv],
+    wavepacket: Wavepacket[_S0Inv, _B0Inv],
     idx: tuple[int, int] = (0, 0),
     *,
     ax: Axes | None = None,
@@ -281,11 +276,11 @@ def plot_wavepacket_x1(
     tuple[Figure, Axes, Line2D]
     """
     state = unfurl_wavepacket(wavepacket)
-    return plot_state_vector_1d_x(state, idx, 1, ax=ax, measure=measure, scale=scale)
+    return plot_state_vector_1d_x(state, 1, idx, ax=ax, measure=measure, scale=scale)  # type: ignore[arg-type]
 
 
 def plot_wavepacket_x2(
-    wavepacket: MomentumBasisWavepacket3d[_NS0Inv, _NS1Inv, _L0Inv, _L1Inv, _L2Inv],
+    wavepacket: Wavepacket[_S0Inv, _B0Inv],
     idx: tuple[int, int] = (0, 0),
     *,
     ax: Axes | None = None,
@@ -311,16 +306,14 @@ def plot_wavepacket_x2(
     -------
     tuple[Figure, Axes, Line2D]
     """
-    eigenstate = unfurl_wavepacket(wavepacket)
-    return plot_state_vector_1d_x(
-        eigenstate, idx, 2, ax=ax, measure=measure, scale=scale
-    )
+    state = unfurl_wavepacket(wavepacket)
+    return plot_state_vector_1d_x(state, 2, idx, ax=ax, measure=measure, scale=scale)  # type: ignore[arg-type]
 
 
 def plot_wavepacket_2d_k(
-    wavepacket: MomentumBasisWavepacket3d[_NS0Inv, _NS1Inv, _L0Inv, _L1Inv, _L2Inv],
-    idx: SingleFlatIndexLike,
-    kz_axis: Literal[0, 1, 2, -1, -2, -3],
+    wavepacket: Wavepacket[_S0Inv, _B0Inv],
+    axes: tuple[int, int] = (0, 1),
+    idx: SingleStackedIndexLike | None = None,
     *,
     ax: Axes | None = None,
     measure: Measure = "abs",
@@ -348,14 +341,12 @@ def plot_wavepacket_2d_k(
     -------
     tuple[Figure, Axes, QuadMesh]
     """
-    eigenstate = unfurl_wavepacket(wavepacket)
-    return plot_eigenstate_2d_k(
-        eigenstate, idx, kz_axis, ax=ax, measure=measure, scale=scale
-    )
+    state = unfurl_wavepacket(wavepacket)
+    return plot_state_vector_2d_k(state, axes, idx, ax=ax, measure=measure, scale=scale)  # type: ignore[arg-type]
 
 
 def plot_wavepacket_k0k1(
-    wavepacket: MomentumBasisWavepacket3d[_NS0Inv, _NS1Inv, _L0Inv, _L1Inv, _L2Inv],
+    wavepacket: Wavepacket3d[_S03dInv, _B3d0Inv],
     k2_idx: SingleFlatIndexLike,
     *,
     ax: Axes | None = None,
@@ -383,12 +374,12 @@ def plot_wavepacket_k0k1(
     tuple[Figure, Axes, QuadMesh]
     """
     return plot_wavepacket_2d_k(
-        wavepacket, k2_idx, 2, ax=ax, measure=measure, scale=scale
+        wavepacket, (0, 1), (k2_idx,), ax=ax, measure=measure, scale=scale
     )
 
 
 def plot_wavepacket_k1k2(
-    wavepacket: MomentumBasisWavepacket3d[_NS0Inv, _NS1Inv, _L0Inv, _L1Inv, _L2Inv],
+    wavepacket: Wavepacket3d[_S03dInv, _B3d0Inv],
     k0_idx: SingleFlatIndexLike,
     *,
     ax: Axes | None = None,
@@ -416,12 +407,12 @@ def plot_wavepacket_k1k2(
     tuple[Figure, Axes, QuadMesh]
     """
     return plot_wavepacket_2d_k(
-        wavepacket, k0_idx, 0, ax=ax, measure=measure, scale=scale
+        wavepacket, (1, 2), (k0_idx,), ax=ax, measure=measure, scale=scale
     )
 
 
 def plot_wavepacket_k2k0(
-    wavepacket: MomentumBasisWavepacket3d[_NS0Inv, _NS1Inv, _L0Inv, _L1Inv, _L2Inv],
+    wavepacket: Wavepacket3d[_S03dInv, _B3d0Inv],
     k1_idx: SingleFlatIndexLike,
     *,
     ax: Axes | None = None,
@@ -449,14 +440,14 @@ def plot_wavepacket_k2k0(
     tuple[Figure, Axes, QuadMesh]
     """
     return plot_wavepacket_2d_k(
-        wavepacket, k1_idx, 1, ax=ax, measure=measure, scale=scale
+        wavepacket, (2, 0), (k1_idx,), ax=ax, measure=measure, scale=scale
     )
 
 
 def plot_wavepacket_2d_x(
-    wavepacket: MomentumBasisWavepacket3d[_NS0Inv, _NS1Inv, _L0Inv, _L1Inv, _L2Inv],
-    idx: SingleFlatIndexLike,
-    z_axis: Literal[0, 1, 2, -1, -2, -3],
+    wavepacket: Wavepacket[_S0Inv, _B0Inv],
+    axes: tuple[int, int] = (0, 1),
+    idx: SingleStackedIndexLike | None = None,
     *,
     ax: Axes | None = None,
     measure: Measure = "abs",
@@ -484,14 +475,12 @@ def plot_wavepacket_2d_x(
     -------
     tuple[Figure, Axes, QuadMesh]
     """
-    eigenstate = unfurl_wavepacket(wavepacket)
-    return plot_eigenstate_2d_x(
-        eigenstate, idx, z_axis, ax=ax, measure=measure, scale=scale
-    )
+    state = unfurl_wavepacket(wavepacket)
+    return plot_eigenstate_2d_x(state, axes, idx, ax=ax, measure=measure, scale=scale)
 
 
 def plot_wavepacket_x0x1(
-    wavepacket: MomentumBasisWavepacket3d[_NS0Inv, _NS1Inv, _L0Inv, _L1Inv, _L2Inv],
+    wavepacket: Wavepacket3d[_S03dInv, _B3d0Inv],
     x2_idx: SingleFlatIndexLike,
     *,
     ax: Axes | None = None,
@@ -519,12 +508,12 @@ def plot_wavepacket_x0x1(
     tuple[Figure, Axes, QuadMesh]
     """
     return plot_wavepacket_2d_x(
-        wavepacket, x2_idx, 2, ax=ax, measure=measure, scale=scale
+        wavepacket, (0, 1), (x2_idx,), ax=ax, measure=measure, scale=scale
     )
 
 
 def plot_wavepacket_x1x2(
-    wavepacket: MomentumBasisWavepacket3d[_NS0Inv, _NS1Inv, _L0Inv, _L1Inv, _L2Inv],
+    wavepacket: Wavepacket3d[_S03dInv, _B3d0Inv],
     x0_idx: SingleFlatIndexLike,
     *,
     ax: Axes | None = None,
@@ -552,12 +541,12 @@ def plot_wavepacket_x1x2(
     tuple[Figure, Axes, QuadMesh]
     """
     return plot_wavepacket_2d_x(
-        wavepacket, x0_idx, 0, ax=ax, measure=measure, scale=scale
+        wavepacket, (1, 2), (x0_idx,), ax=ax, measure=measure, scale=scale
     )
 
 
 def plot_wavepacket_x2x0(
-    wavepacket: MomentumBasisWavepacket3d[_NS0Inv, _NS1Inv, _L0Inv, _L1Inv, _L2Inv],
+    wavepacket: Wavepacket3d[_S03dInv, _B3d0Inv],
     x1_idx: SingleFlatIndexLike,
     *,
     ax: Axes | None = None,
@@ -585,15 +574,15 @@ def plot_wavepacket_x2x0(
     tuple[Figure, Axes, QuadMesh]
     """
     return plot_wavepacket_2d_x(
-        wavepacket, x1_idx, 1, ax=ax, measure=measure, scale=scale
+        wavepacket, (2, 0), (x1_idx,), ax=ax, measure=measure, scale=scale
     )
 
 
 def plot_wavepacket_difference_2d_x(
-    wavepacket_0: MomentumBasisWavepacket3d[_NS0Inv, _NS1Inv, _L0Inv, _L1Inv, _L2Inv],
-    wavepacket_1: MomentumBasisWavepacket3d[_NS0Inv, _NS1Inv, _L0Inv, _L1Inv, _L2Inv],
-    idx: SingleFlatIndexLike,
-    z_axis: Literal[0, 1, 2, -1, -2, -3],
+    wavepacket_0: Wavepacket[_S0Inv, _B0Inv],
+    wavepacket_1: Wavepacket[_S0Inv, _B0Inv],
+    axes: tuple[int, int] = (0, 1),
+    idx: SingleStackedIndexLike | None = None,
     *,
     ax: Axes | None = None,
     measure: Measure = "abs",
@@ -621,20 +610,18 @@ def plot_wavepacket_difference_2d_x(
     -------
     tuple[Figure, Axes, QuadMesh]
     """
-    eigenstate_momentum_0 = unfurl_wavepacket(wavepacket_0)
-    eigenstate_0 = convert_state_vector_to_position_basis(eigenstate_momentum_0)
-
-    eigenstate_momentum_1 = unfurl_wavepacket(wavepacket_1)
-    eigenstate_1 = convert_state_vector_to_position_basis(eigenstate_momentum_1)
+    eigenstate_0 = unfurl_wavepacket(wavepacket_0)
+    eigenstate_1 = unfurl_wavepacket(wavepacket_1)
 
     return plot_state_vector_difference_2d_x(
-        eigenstate_0, eigenstate_1, idx, z_axis, ax=ax, measure=measure, scale=scale
+        eigenstate_0, eigenstate_1, axes, idx, ax=ax, measure=measure, scale=scale  # type: ignore[arg-type]
     )
 
 
 def animate_wavepacket_3d_x(
-    wavepacket: MomentumBasisWavepacket3d[_NS0Inv, _NS1Inv, _L0Inv, _L1Inv, _L2Inv],
-    z_axis: Literal[0, 1, 2, -1, -2, -3],
+    wavepacket: Wavepacket[_S0Inv, _B0Inv],
+    axes: tuple[int, int],
+    z_axis: int,
     *,
     ax: Axes | None = None,
     measure: Measure = "abs",
@@ -659,15 +646,14 @@ def animate_wavepacket_3d_x(
     -------
     tuple[Figure, Axes, ArtistAnimation]
     """
-    eigenstate_momentum = unfurl_wavepacket(wavepacket)
-    eigenstate = convert_state_vector_to_position_basis(eigenstate_momentum)
+    state = unfurl_wavepacket(wavepacket)
     return animate_eigenstate_3d_x(
-        eigenstate, z_axis, ax=ax, measure=measure, scale=scale
+        state, axes, z_axis, ax=ax, measure=measure, scale=scale  # type: ignore[arg-type]
     )
 
 
 def animate_wavepacket_x0x1(
-    wavepacket: MomentumBasisWavepacket3d[_NS0Inv, _NS1Inv, _L0Inv, _L1Inv, _L2Inv],
+    wavepacket: Wavepacket3d[_S03dInv, _B3d0Inv],
     *,
     ax: Axes | None = None,
     measure: Measure = "abs",
@@ -690,11 +676,13 @@ def animate_wavepacket_x0x1(
     -------
     tuple[Figure, Axes, ArtistAnimation]
     """
-    return animate_wavepacket_3d_x(wavepacket, 2, ax=ax, measure=measure, scale=scale)
+    return animate_wavepacket_3d_x(
+        wavepacket, (0, 1), 2, ax=ax, measure=measure, scale=scale
+    )
 
 
 def animate_wavepacket_x1x2(
-    wavepacket: MomentumBasisWavepacket3d[_NS0Inv, _NS1Inv, _L0Inv, _L1Inv, _L2Inv],
+    wavepacket: Wavepacket3d[_S03dInv, _B3d0Inv],
     *,
     ax: Axes | None = None,
     measure: Measure = "abs",
@@ -717,11 +705,13 @@ def animate_wavepacket_x1x2(
     -------
     tuple[Figure, Axes, ArtistAnimation]
     """
-    return animate_wavepacket_3d_x(wavepacket, 0, ax=ax, measure=measure, scale=scale)
+    return animate_wavepacket_3d_x(
+        wavepacket, (1, 2), 0, ax=ax, measure=measure, scale=scale
+    )
 
 
 def animate_wavepacket_x2x0(
-    wavepacket: MomentumBasisWavepacket3d[_NS0Inv, _NS1Inv, _L0Inv, _L1Inv, _L2Inv],
+    wavepacket: Wavepacket3d[_S03dInv, _B3d0Inv],
     *,
     ax: Axes | None = None,
     measure: Measure = "abs",
@@ -744,12 +734,14 @@ def animate_wavepacket_x2x0(
     -------
     tuple[Figure, Axes, ArtistAnimation]
     """
-    return animate_wavepacket_3d_x(wavepacket, 1, ax=ax, measure=measure, scale=scale)
+    return animate_wavepacket_3d_x(
+        wavepacket, (2, 0), 1, ax=ax, measure=measure, scale=scale
+    )
 
 
 def plot_wavepacket_along_path(
-    wavepacket: MomentumBasisWavepacket3d[_NS0Inv, _NS1Inv, _L0Inv, _L1Inv, _L2Inv],
-    path: np.ndarray[tuple[Literal[3], int], np.dtype[np.int_]],
+    wavepacket: Wavepacket[_S0Inv, _B0Inv],
+    path: np.ndarray[tuple[int, int], np.dtype[np.int_]],
     *,
     ax: Axes | None = None,
     measure: Measure = "abs",
@@ -761,7 +753,7 @@ def plot_wavepacket_along_path(
     Parameters
     ----------
     wavepacket : MomentumBasisWavepacket[_NS0Inv, _NS1Inv, _L0Inv, _L1Inv, _L2Inv]
-    path : np.ndarray[tuple[Literal[3], int], np.dtype[np.int_]]
+    path : np.ndarray[tuple[int, int], np.dtype[np.int_]]
         path to plot, as a list of x0,x1,x2 coordinate lists
     ax : Axes | None, optional
         plot axis, by default None
@@ -774,8 +766,7 @@ def plot_wavepacket_along_path(
     -------
     tuple[Figure, Axes, Line2D]
     """
-    eigenstate_momentum = unfurl_wavepacket(wavepacket)
-    eigenstate = convert_state_vector_to_position_basis(eigenstate_momentum)
+    eigenstate: StateVector[Any] = unfurl_wavepacket(wavepacket)
     return plot_state_vector_along_path(
         eigenstate, path, ax=ax, measure=measure, scale=scale
     )

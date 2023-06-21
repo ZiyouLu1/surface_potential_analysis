@@ -4,10 +4,11 @@ from typing import TYPE_CHECKING, Any, Literal, ParamSpec, TypeVar
 
 import numpy as np
 
-if TYPE_CHECKING:
-    from types import EllipsisType
+from surface_potential_analysis._types import _IntLike_co
 
-    from surface_potential_analysis._types import _IntLike_co
+if TYPE_CHECKING:
+    from collections.abc import Sequence
+    from types import EllipsisType
 
     P = ParamSpec("P")
     R = TypeVar("R")
@@ -30,6 +31,33 @@ def slice_along_axis(
         return (Ellipsis, slice_at_axis, *slice_padding)
 
     return (*slice_padding, slice_at_axis)
+
+
+_AX0Inv = TypeVar("_AX0Inv", bound=tuple[_IntLike_co, ...])
+
+
+def slice_ignoring_axes(
+    old_slice: Sequence[slice | _IntLike_co | None], axes: _AX0Inv
+) -> tuple[slice | _IntLike_co | None, ...]:
+    """
+    Given a slice, insert slice(None) everywhere given in axes.
+
+    Parameters
+    ----------
+    slice : list[slice  |  _IntLike_co  |  None]
+        _description_
+    axes : tuple[_IntLike_co]
+        _description_
+
+    Returns
+    -------
+    list[slice | _IntLike_co | None]
+        _description_
+    """
+    old_slice = list(old_slice)
+    for axis in axes:
+        old_slice.insert(axis, slice(None))
+    return tuple(old_slice)
 
 
 _LInv = TypeVar("_LInv", bound=int)

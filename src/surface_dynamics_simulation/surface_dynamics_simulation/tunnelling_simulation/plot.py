@@ -10,9 +10,6 @@ from surface_potential_analysis.basis.build import (
 from surface_potential_analysis.basis.conversion import (
     basis3d_as_single_point_basis,
 )
-from surface_potential_analysis.basis.util import (
-    get_fundamental_projected_x_points,
-)
 from surface_potential_analysis.util.plot import (
     Scale,
     animate_through_surface,

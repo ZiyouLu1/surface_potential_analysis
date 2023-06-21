@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Literal, TypeVar
+from typing import TYPE_CHECKING, Any, TypeVar
 
 import numpy as np
 from matplotlib import pyplot as plt
@@ -11,11 +11,10 @@ from surface_potential_analysis.basis.conversion import (
     basis_as_fundamental_position_basis,
 )
 from surface_potential_analysis.basis.util import (
-    Basis3dUtil,
     BasisUtil,
     calculate_cumulative_x_distances_along_path,
-    get_fundamental_projected_k_points,
-    get_fundamental_projected_x_points,
+    get_k_coordinates_in_axes,
+    get_x_coordinates_in_axes,
 )
 from surface_potential_analysis.state_vector.conversion import (
     convert_state_vector_to_basis,
@@ -26,7 +25,7 @@ from surface_potential_analysis.util.plot import animate_through_surface
 from surface_potential_analysis.util.util import (
     Measure,
     get_measured_data,
-    slice_along_axis,
+    slice_ignoring_axes,
 )
 
 if TYPE_CHECKING:
@@ -53,9 +52,6 @@ if TYPE_CHECKING:
     _B1Inv = TypeVar("_B1Inv", bound=Basis[Any])
     _B3d0Inv = TypeVar("_B3d0Inv", bound=Basis3d[Any, Any, Any])
 
-    _L0Inv = TypeVar("_L0Inv", bound=int)
-    _L1Inv = TypeVar("_L1Inv", bound=int)
-    _L2Inv = TypeVar("_L2Inv", bound=int)
 
 # ruff: noqa: PLR0913
 
@@ -112,8 +108,8 @@ def plot_state_vector_1d_k(
 
 def plot_state_vector_1d_x(
     state: StateVector[_B0Inv],
-    idx: SingleStackedIndexLike | None = None,
     axis: int = 0,
+    idx: SingleStackedIndexLike | None = None,
     *,
     ax: Axes | None = None,
     measure: Measure = "abs",
@@ -146,12 +142,10 @@ def plot_state_vector_1d_x(
     coordinates = np.linalg.norm(fundamental_x_points, axis=0)
 
     idx = tuple(0 for _ in range(len(state["basis"]) - 1)) if idx is None else idx
-    data_slice: list[slice | int | np.integer[Any]] = list(idx)
-    data_slice.insert(axis, slice(None))
 
     converted = convert_state_vector_to_position_basis(state)
     util = BasisUtil(converted["basis"])
-    points = converted["vector"].reshape(util.shape)[tuple(data_slice)]
+    points = converted["vector"].reshape(util.shape)[slice_ignoring_axes(idx, (axis,))]
     data = get_measured_data(points, measure)
 
     (line,) = ax.plot(coordinates, data)
@@ -161,10 +155,10 @@ def plot_state_vector_1d_x(
     return fig, ax, line
 
 
-def plot_eigenstate_2d_k(
-    eigenstate: StateVector3d[_B3d0Inv],
-    idx: SingleFlatIndexLike,
-    kz_axis: Literal[0, 1, 2, -1, -2, -3],
+def plot_state_vector_2d_k(
+    state: StateVector[_B0Inv],
+    axes: tuple[int, int],
+    idx: SingleStackedIndexLike | None = None,
     *,
     ax: Axes | None = None,
     measure: Measure = "abs",
@@ -192,13 +186,13 @@ def plot_eigenstate_2d_k(
     tuple[Figure, Axes, QuadMesh]
     """
     fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
-    converted = convert_state_vector_to_momentum_basis(eigenstate)  # type: ignore[var-annotated,arg-type]
+    converted = convert_state_vector_to_momentum_basis(state)
+    util = BasisUtil(converted["basis"])
 
-    coordinates = get_fundamental_projected_k_points(converted["basis"], kz_axis)[
-        slice_along_axis(idx, (kz_axis % 3) + 1)
-    ]
-    util = Basis3dUtil(converted["basis"])
-    points = converted["vector"].reshape(*util.shape)[slice_along_axis(idx, kz_axis)]
+    idx = tuple(0 for _ in range(len(state["basis"]) - 1)) if idx is None else idx
+    coordinates = get_k_coordinates_in_axes(converted["basis"], axes, idx)
+
+    points = converted["vector"].reshape(*util.shape)[slice_ignoring_axes(idx, axes)]
     data = get_measured_data(points, measure)
 
     mesh = ax.pcolormesh(*coordinates, data, shading="nearest")
@@ -206,8 +200,8 @@ def plot_eigenstate_2d_k(
     ax.set_aspect("equal", adjustable="box")
     fig.colorbar(mesh, ax=ax, format="%4.1e")
 
-    ax.set_xlabel(f"k{0 if (kz_axis % 3) != 0 else 1} axis")
-    ax.set_ylabel(f"k{2 if (kz_axis % 3) != 2 else 1} axis")  # noqa: PLR2004
+    ax.set_xlabel(f"k{axes[0]} axis")
+    ax.set_ylabel(f"k{axes[1]} axis")
 
     return fig, ax, mesh
 
@@ -239,8 +233,8 @@ def plot_eigenstate_k0k1(
     -------
     tuple[Figure, Axes, QuadMesh]
     """
-    return plot_eigenstate_2d_k(
-        eigenstate, k2_idx, 2, ax=ax, measure=measure, scale=scale
+    return plot_state_vector_2d_k(
+        eigenstate, (0, 1), (k2_idx,), ax=ax, measure=measure, scale=scale
     )
 
 
@@ -271,8 +265,8 @@ def plot_eigenstate_k1k2(
     -------
     tuple[Figure, Axes, QuadMesh]
     """
-    return plot_eigenstate_2d_k(
-        eigenstate, k0_idx, 0, ax=ax, measure=measure, scale=scale
+    return plot_state_vector_2d_k(
+        eigenstate, (1, 2), (k0_idx,), ax=ax, measure=measure, scale=scale
     )
 
 
@@ -303,15 +297,15 @@ def plot_eigenstate_k2k0(
     -------
     tuple[Figure, Axes, QuadMesh]
     """
-    return plot_eigenstate_2d_k(
-        eigenstate, k1_idx, 1, ax=ax, measure=measure, scale=scale
+    return plot_state_vector_2d_k(
+        eigenstate, (2, 0), (k1_idx,), ax=ax, measure=measure, scale=scale
     )
 
 
 def plot_eigenstate_2d_x(
     eigenstate: StateVector[_B0Inv],
-    idx: SingleStackedIndexLike | None = None,
     axes: tuple[int, int] = (0, 1),
+    idx: SingleStackedIndexLike | None = None,
     *,
     ax: Axes | None = None,
     measure: Measure = "abs",
@@ -339,13 +333,13 @@ def plot_eigenstate_2d_x(
     tuple[Figure, Axes, QuadMesh]
     """
     fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
-    converted = convert_state_vector_to_position_basis(eigenstate)  # type: ignore[var-annotated,arg-type]
-
-    coordinates = get_fundamental_projected_x_points(converted["basis"], z_axis)[  # type: ignore[type-var]
-        slice_along_axis(idx, (z_axis % 3) + 1)
-    ]
+    converted = convert_state_vector_to_position_basis(eigenstate)
     util = BasisUtil(converted["basis"])
-    points = converted["vector"].reshape(*util.shape)[slice_along_axis(idx, z_axis)]
+    idx = tuple(0 for _ in range(util.ndim - 2)) if idx is None else idx
+
+    coordinates = get_x_coordinates_in_axes(converted["basis"], axes, idx)
+
+    points = converted["vector"].reshape(*util.shape)[slice_ignoring_axes(idx, axes)]
     data = get_measured_data(points, measure)
 
     mesh = ax.pcolormesh(*coordinates, data, shading="nearest")
@@ -387,7 +381,7 @@ def plot_eigenstate_x0x1(
     tuple[Figure, Axes, QuadMesh]
     """
     return plot_eigenstate_2d_x(
-        eigenstate, (x2_idx,), (0, 1), ax=ax, measure=measure, scale=scale
+        eigenstate, (0, 1), (x2_idx,), ax=ax, measure=measure, scale=scale
     )
 
 
@@ -419,7 +413,7 @@ def plot_eigenstate_x1x2(
     tuple[Figure, Axes, QuadMesh]
     """
     return plot_eigenstate_2d_x(
-        eigenstate, (x0_idx,), (1, 2), ax=ax, measure=measure, scale=scale
+        eigenstate, (1, 2), (x0_idx,), ax=ax, measure=measure, scale=scale
     )
 
 
@@ -451,7 +445,7 @@ def plot_eigenstate_x2x0(
     tuple[Figure, Axes, QuadMesh]
     """
     return plot_eigenstate_2d_x(
-        eigenstate, (x1_idx,), (2, 0), ax=ax, measure=measure, scale=scale
+        eigenstate, (2, 0), (x1_idx,), ax=ax, measure=measure, scale=scale
     )
 
 
@@ -504,8 +498,8 @@ def plot_state_vector_difference_1d_k(
 def plot_state_vector_difference_2d_x(
     state_0: StateVector[_B0Inv],
     state_1: StateVector[_B1Inv],
-    idx: SingleStackedIndexLike | None = None,
     axes: tuple[int, int] = (0, 1),
+    idx: SingleStackedIndexLike | None = None,
     *,
     ax: Axes | None = None,
     measure: Measure = "abs",
@@ -542,13 +536,14 @@ def plot_state_vector_difference_2d_x(
         "vector": converted_0["vector"] - converted_1["vector"],
     }
     return plot_eigenstate_2d_x(
-        eigenstate, idx, axes, ax=ax, measure=measure, scale=scale
+        eigenstate, axes, idx, ax=ax, measure=measure, scale=scale
     )
 
 
 def animate_eigenstate_3d_x(
-    eigenstate: StateVector3d[_B3d0Inv],
-    z_axis: Literal[0, 1, 2, -1, -2, -3],
+    eigenstate: StateVector[_B0Inv],
+    axes: tuple[int, int],
+    z_axis: int,
     *,
     ax: Axes | None = None,
     measure: Measure = "abs",
@@ -574,9 +569,9 @@ def animate_eigenstate_3d_x(
     -------
     tuple[Figure, Axes, ArtistAnimation]
     """
-    converted = convert_state_vector_to_position_basis(eigenstate)  # type: ignore[var-annotated,arg-type]
+    converted = convert_state_vector_to_position_basis(eigenstate)
 
-    coordinates = get_fundamental_projected_x_points(converted["basis"], z_axis)  # type: ignore[type-var]
+    coordinates = get_x_coordinates_in_axes(converted["basis"], axes, idx)
     util = BasisUtil(converted["basis"])
     points = converted["vector"].reshape(*util.shape)
     data = get_measured_data(points, measure)
@@ -611,7 +606,9 @@ def animate_eigenstate_x0x1(
     -------
     tuple[Figure, Axes, ArtistAnimation]
     """
-    return animate_eigenstate_3d_x(eigenstate, 2, ax=ax, measure=measure, scale=scale)
+    return animate_eigenstate_3d_x(
+        eigenstate, (0, 1), 2, ax=ax, measure=measure, scale=scale
+    )
 
 
 def animate_eigenstate_x1x2(
@@ -638,7 +635,9 @@ def animate_eigenstate_x1x2(
     -------
     tuple[Figure, Axes, ArtistAnimation]
     """
-    return animate_eigenstate_3d_x(eigenstate, 0, ax=ax, measure=measure, scale=scale)
+    return animate_eigenstate_3d_x(
+        eigenstate, (1, 2), 0, ax=ax, measure=measure, scale=scale
+    )
 
 
 def animate_eigenstate_x2x0(
@@ -665,12 +664,14 @@ def animate_eigenstate_x2x0(
     -------
     tuple[Figure, Axes, ArtistAnimation]
     """
-    return animate_eigenstate_3d_x(eigenstate, 1, ax=ax, measure=measure, scale=scale)
+    return animate_eigenstate_3d_x(
+        eigenstate, (2, 0), 1, ax=ax, measure=measure, scale=scale
+    )
 
 
 def plot_state_vector_along_path(
-    eigenstate: StateVector3d[_B3d0Inv],
-    path: np.ndarray[tuple[Literal[3], int], np.dtype[np.int_]],
+    state: StateVector[_B0Inv],
+    path: np.ndarray[tuple[int, int], np.dtype[np.int_]],
     *,
     wrap_distances: bool = False,
     ax: Axes | None = None,
@@ -682,7 +683,7 @@ def plot_state_vector_along_path(
 
     Parameters
     ----------
-    eigenstate : Eigenstate[_B3d0Inv]
+    state : Eigenstate[_B3d0Inv]
     path : np.ndarray[tuple[Literal[3], int], np.dtype[np.int_]]
         path, as a list of [x0_coords, x1_coords, x2_coords]
     wrap_distances : bool, optional
@@ -699,7 +700,7 @@ def plot_state_vector_along_path(
     tuple[Figure, Axes, Line2D]
     """
     fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
-    converted = convert_state_vector_to_position_basis(eigenstate)  # type: ignore[var-annotated,arg-type]
+    converted = convert_state_vector_to_position_basis(state)  # type: ignore[var-annotated,arg-type]
 
     util = BasisUtil(converted["basis"])
     points = converted["vector"].reshape(*util.shape)[*path]

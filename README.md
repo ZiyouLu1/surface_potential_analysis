@@ -7,11 +7,12 @@ Code to produce localized wavepackets for periodic potential energy surfaces.
 To install the packages run
 
 ```shell
-pip install -e ./src/copper_100
-pip install -e ./src/copper_111
-pip install -e ./src/platinum_111
-pip install -e ./src/ruthenium_100
-pip install -e ./src/nickel_111
+pip install -e ./src/hydrogen_copper_100
+pip install -e ./src/hydrogen_copper_111
+pip install -e ./src/hydrogen_platinum_111
+pip install -e ./src/hydrogen_ruthenium_100
+pip install -e ./src/hydrogen_nickel_111
+pip install -e ./src/sodium_copper_111
 ```
 
 Functions can then be imported and run from main.py.

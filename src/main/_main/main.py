@@ -1,12 +1,12 @@
 from __future__ import annotations
 
-import sodium_copper_111
+import hydrogen_nickel_111
 from surface_potential_analysis.util.decorators import timed
 
 
 @timed
 def main() -> None:
-    sodium_copper_111.s4_wavepacket_plot.plot_operator_localized_states_many_band()
+    hydrogen_nickel_111.s3_eigenstates_plot.plot_lowest_band_energies()
 
 
 if __name__ == "__main__":
