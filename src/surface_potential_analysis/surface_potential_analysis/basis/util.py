@@ -10,11 +10,11 @@ from surface_potential_analysis.axis.axis import (
 )
 from surface_potential_analysis.axis.conversion import get_rotated_axis
 from surface_potential_analysis.axis.util import Axis3dUtil, AxisUtil
-
-from .basis import Basis, Basis3d
 from surface_potential_analysis.util.util import (
     slice_ignoring_axes,
 )
+
+from .basis import Basis, Basis3d
 
 if TYPE_CHECKING:
     from surface_potential_analysis._types import (
@@ -707,7 +707,7 @@ def project_k_points_along_axes(
 
     ax_0 = util.delta_k[axes[0]] / np.linalg.norm(util.delta_k[axes[0]])
     # Subtract off parallel componet
-    ax_1 = util.delta_k[axes[1]] - np.tensordot(ax_0, util.delta_k[axes[1]])
+    ax_1 = util.delta_k[axes[1]] - np.tensordot(ax_0, util.delta_k[axes[1]], 1)
     ax_1 /= np.linalg.norm(ax_1)
 
     projected_0 = np.tensordot(ax_0, points, axes=(0, 0))
@@ -734,7 +734,7 @@ def get_fundamental_k_points_projected_along_axes(
     """
     util = BasisUtil(basis)
     points = util.fundamental_k_points
-    return project_x_points_along_axes(points, basis, axes)
+    return project_k_points_along_axes(points, basis, axes)
 
 
 def get_k_coordinates_in_axes(
@@ -758,7 +758,7 @@ def get_k_coordinates_in_axes(
     idx = tuple(0 for _ in range(util.ndim - len(axes))) if idx is None else idx
     points = get_fundamental_k_points_projected_along_axes(basis, axes)
     _slice = slice_ignoring_axes(idx, axes)
-    return points.reshape(2, *util.shape)[_slice]
+    return points.reshape(2, *util.shape)[:, *_slice]
 
 
 def project_x_points_along_axes(
@@ -783,7 +783,7 @@ def project_x_points_along_axes(
 
     ax_0 = util.delta_x[axes[0]] / np.linalg.norm(util.delta_x[axes[0]])
     # Subtract off parallel componet
-    ax_1 = util.delta_x[axes[1]] - np.tensordot(ax_0, util.delta_x[axes[1]])
+    ax_1 = util.delta_x[axes[1]] - np.tensordot(ax_0, util.delta_x[axes[1]], 1)
     ax_1 /= np.linalg.norm(ax_1)
 
     projected_0 = np.tensordot(ax_0, points, axes=(0, 0))
@@ -812,6 +812,7 @@ def get_fundamental_x_points_projected_along_axes(
     points = util.fundamental_x_points
     return project_x_points_along_axes(points, basis, axes)
 
+
 def get_x_coordinates_in_axes(
     basis: _B0Inv,
     axes: tuple[int, int],
@@ -833,7 +834,8 @@ def get_x_coordinates_in_axes(
     idx = tuple(0 for _ in range(util.ndim - len(axes))) if idx is None else idx
     points = get_fundamental_x_points_projected_along_axes(basis, axes)
     _slice = slice_ignoring_axes(idx, axes)
-    return points.reshape(2, *util.shape)[_slice]
+    return points.reshape(2, *util.shape)[:, *_slice]
+
 
 @overload
 def _wrap_distance(distance: _IntLike_co, length: int) -> int:

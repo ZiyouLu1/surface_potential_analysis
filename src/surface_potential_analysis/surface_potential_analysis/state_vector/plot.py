@@ -58,8 +58,8 @@ if TYPE_CHECKING:
 
 def plot_state_vector_1d_k(
     state: StateVector[_B0Inv],
+    axes: tuple[int, int] = 0,
     idx: SingleStackedIndexLike | None = None,
-    axis: int = 0,
     *,
     ax: Axes | None = None,
     measure: Measure = "abs",
@@ -88,11 +88,11 @@ def plot_state_vector_1d_k(
     """
     fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
 
-    coordinates = AxisUtil(state["basis"][axis]).fundamental_nk_points
+    coordinates = AxisUtil(state["basis"][axes[0]]).fundamental_nk_points
 
     idx = tuple(0 for _ in range(len(state["basis"]) - 1)) if idx is None else idx
     data_slice: list[slice | int | np.integer[Any]] = list(idx)
-    data_slice.insert(axis, slice(None))
+    data_slice.insert(axes[0], slice(None))
 
     converted = convert_state_vector_to_momentum_basis(state)
     util = BasisUtil(converted["basis"])
@@ -100,7 +100,7 @@ def plot_state_vector_1d_k(
     data = get_measured_data(points, measure)
 
     (line,) = ax.plot(np.fft.fftshift(coordinates), np.fft.fftshift(data))
-    ax.set_xlabel(f"k{axis} axis")
+    ax.set_xlabel(f"k{axes[0]} axis")
     ax.set_ylabel("State /Au")
     ax.set_yscale(scale)
     return fig, ax, line
@@ -189,11 +189,14 @@ def plot_state_vector_2d_k(
     converted = convert_state_vector_to_momentum_basis(state)
     util = BasisUtil(converted["basis"])
 
-    idx = tuple(0 for _ in range(len(state["basis"]) - 1)) if idx is None else idx
+    idx = tuple(0 for _ in range(len(state["basis"]) - 2)) if idx is None else idx
     coordinates = get_k_coordinates_in_axes(converted["basis"], axes, idx)
 
     points = converted["vector"].reshape(*util.shape)[slice_ignoring_axes(idx, axes)]
     data = get_measured_data(points, measure)
+
+    data = np.fft.ifftshift(data)
+    coordinates = np.fft.ifftshift(coordinates, axes=(1, 2))
 
     mesh = ax.pcolormesh(*coordinates, data, shading="nearest")
     mesh.set_norm(scale)
@@ -452,8 +455,8 @@ def plot_eigenstate_x2x0(
 def plot_state_vector_difference_1d_k(
     state_0: StateVector[_B0Inv],
     state_1: StateVector[_B1Inv],
+    axes: tuple[int] = (0,),
     idx: SingleStackedIndexLike | None = None,
-    axis: int = 0,
     *,
     ax: Axes | None = None,
     measure: Measure = "abs",
@@ -492,7 +495,7 @@ def plot_state_vector_difference_1d_k(
             [np.abs(converted_0["vector"]), np.abs(converted_1["vector"])], axis=0
         ),
     }
-    return plot_state_vector_1d_k(state, idx, axis, ax=ax, measure=measure, scale=scale)
+    return plot_state_vector_1d_k(state, axes, idx, ax=ax, measure=measure, scale=scale)
 
 
 def plot_state_vector_difference_2d_x(
@@ -533,11 +536,60 @@ def plot_state_vector_difference_2d_x(
     converted_1 = convert_state_vector_to_basis(state_1, basis)
     eigenstate: StateVector[Any] = {
         "basis": basis,
-        "vector": converted_0["vector"] - converted_1["vector"],
+        "vector": (converted_0["vector"] - converted_1["vector"])
+        / np.max(
+            [np.abs(converted_0["vector"]), np.abs(converted_1["vector"])], axis=0
+        ),
     }
     return plot_eigenstate_2d_x(
         eigenstate, axes, idx, ax=ax, measure=measure, scale=scale
     )
+
+
+def plot_state_vector_difference_2d_k(
+    state_0: StateVector[_B0Inv],
+    state_1: StateVector[_B1Inv],
+    axes: tuple[int, int] = (0, 1),
+    idx: SingleStackedIndexLike | None = None,
+    *,
+    ax: Axes | None = None,
+    measure: Measure = "abs",
+    scale: Scale = "linear",
+) -> tuple[Figure, Axes, Line2D]:
+    """
+    Plot the difference between two eigenstates in k.
+
+    Parameters
+    ----------
+    state_0 : StateVector[_B0Inv]
+    state_1 : StateVector[_B1Inv]
+    idx : SingleStackedIndexLike | None, optional
+        index at each axis perpendicular to axis, by default None
+    axis : int, optional
+        axis to plot along, by default 0
+    ax : Axes | None, optional
+        plot axis, by default None
+    measure : Measure, optional
+        measure, by default "abs"
+    scale : Scale, optional
+        scale, by default "linear"
+
+    Returns
+    -------
+    tuple[Figure, Axes, Line2D]
+    """
+    basis = basis_as_fundamental_momentum_basis(state_0["basis"])
+
+    converted_0 = convert_state_vector_to_basis(state_0, basis)
+    converted_1 = convert_state_vector_to_basis(state_1, basis)
+    state: StateVector[Any] = {
+        "basis": basis,
+        "vector": (converted_0["vector"] - converted_1["vector"])
+        / np.max(
+            [np.abs(converted_0["vector"]), np.abs(converted_1["vector"])], axis=0
+        ),
+    }
+    return plot_state_vector_2d_k(state, axes, idx, ax=ax, measure=measure, scale=scale)
 
 
 def animate_eigenstate_3d_x(

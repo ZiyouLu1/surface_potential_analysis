@@ -21,7 +21,7 @@ from surface_potential_analysis.wavepacket.wavepacket import (
     load_wavepacket,
 )
 
-from .s2_hamiltonian import generate_hamiltonian_sho
+from .s2_hamiltonian import get_hamiltonian_hydrogen_sho
 from .surface_data import get_data_path
 
 if TYPE_CHECKING:
@@ -130,7 +130,7 @@ def generate_nickel_wavepacket_sho() -> None:
     def hamiltonian_generator(
         bloch_fraction: np.ndarray[tuple[Literal[3]], np.dtype[np.float_]]
     ) -> SingleBasisOperator3d[Any]:
-        return generate_hamiltonian_sho(
+        return get_hamiltonian_hydrogen_sho(
             shape=(250, 250, 250),
             bloch_fraction=bloch_fraction,
             resolution=(24, 24, 12),
@@ -153,7 +153,7 @@ def get_all_wavepackets() -> list[_NickelWavepacket]:
     def _hamiltonian_generator(
         bloch_fraction: np.ndarray[tuple[Literal[3]], np.dtype[np.float_]]
     ) -> SingleBasisOperator3d[Any]:
-        return generate_hamiltonian_sho(
+        return get_hamiltonian_hydrogen_sho(
             shape=(250, 250, 250),
             bloch_fraction=bloch_fraction,
             resolution=(24, 24, 12),
@@ -174,3 +174,10 @@ def _get_wavepacket_cache(band: int) -> Path:
 @npy_cached(_get_wavepacket_cache, load_pickle=True)
 def get_wavepacket(band: int) -> _NickelWavepacket:
     return get_all_wavepackets()[band]
+
+
+def get_two_point_normalized_wavepacket(
+    band: int, offset: tuple[int, int] = (0, 0), angle: float = 0
+) -> _NickelWavepacket:
+    wavepacket = get_wavepacket(band)
+    return localize_tightly_bound_wavepacket_two_point_max(wavepacket, offset, angle)

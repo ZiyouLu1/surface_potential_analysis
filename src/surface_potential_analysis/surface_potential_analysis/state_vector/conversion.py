@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING, Any, TypeVar
 import numpy as np
 
 from surface_potential_analysis.axis.axis import MomentumAxis
+from surface_potential_analysis.axis.conversion import axis_as_fundamental_momentum_axis
 from surface_potential_analysis.basis.conversion import (
     basis_as_fundamental_momentum_basis,
     basis_as_fundamental_position_basis,
@@ -18,6 +19,7 @@ if TYPE_CHECKING:
         FundamentalMomentumAxis,
         FundamentalPositionAxis,
     )
+    from surface_potential_analysis.axis.axis_like import AxisLike
     from surface_potential_analysis.basis.basis import (
         Basis,
     )
@@ -28,6 +30,7 @@ if TYPE_CHECKING:
     _B0Inv = TypeVar("_B0Inv", bound=Basis[Any])
     _B1Inv = TypeVar("_B1Inv", bound=Basis[Any])
     _S0Inv = TypeVar("_S0Inv", bound=tuple[int, ...])
+    _S1Inv = TypeVar("_S1Inv", bound=tuple[int, ...])
 
 
 @timed
@@ -91,8 +94,8 @@ def convert_state_vector_to_momentum_basis(
 
 
 def interpolate_state_vector_momentum(
-    state_vector: StateVector[_B0Inv], shape: _S0Inv
-) -> StateVector[tuple[MomentumAxis[Any, Any, Any], ...]]:
+    state_vector: StateVector[_B0Inv], shape: _S0Inv, axes: _S1Inv
+) -> StateVector[tuple[AxisLike[Any, Any, Any], ...]]:
     """
     Given a state vector, get the equivalent vector in as a truncated vector in a larger basis.
 
@@ -106,11 +109,20 @@ def interpolate_state_vector_momentum(
     -------
     StateVector[tuple[MomentumAxis[Any, Any, Any], ...]]
     """
-    converted = convert_state_vector_to_momentum_basis(state_vector)
+    converted_basis = tuple(
+        axis_as_fundamental_momentum_axis(ax) if iax in axes else ax
+        for (iax, ax) in enumerate(state_vector["basis"])
+    )
+    converted = convert_state_vector_to_basis(state_vector, converted_basis)
     util = BasisUtil(converted["basis"])
     final_basis = tuple(
-        MomentumAxis(parent.delta_x, parent.n, n)
-        for (parent, n) in zip(converted["basis"], shape, strict=True)
+        MomentumAxis(ax.delta_x, ax.n, shape[idx])
+        if (
+            idx := next((i for i, jax in enumerate(axes) if jax == iax), None)
+            is not None
+        )
+        else ax
+        for iax, ax in enumerate(converted["basis"])
     )
     scaled = converted["vector"] * np.sqrt(np.prod(shape) / util.size)
     return {"basis": final_basis, "vector": scaled}

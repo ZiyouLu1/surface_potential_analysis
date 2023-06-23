@@ -7,7 +7,7 @@ from surface_potential_analysis.axis.plot import plot_explicit_basis_states_x
 from surface_potential_analysis.basis.util import BasisUtil
 from surface_potential_analysis.util.interpolation import pad_ft_points
 
-from .s2_hamiltonian import generate_hamiltonian_sho, generate_sho_basis
+from .s2_hamiltonian import generate_sho_basis, get_hamiltonian_hydrogen_sho
 
 
 def _normalize_sho_basis(basis: ExplicitAxis3d[int, int]) -> ExplicitAxis3d[int, int]:
@@ -47,13 +47,13 @@ def test_hamiltonian_large_resolution() -> None:
     We expect the result should be equal if we throw away the additional states.
     """
     resolution0 = (23, 23, 12)
-    h0 = generate_hamiltonian_sho(
+    h0 = get_hamiltonian_hydrogen_sho(
         shape=(2 * resolution0[0], 2 * resolution0[1], 500),
         bloch_fraction=np.array([0, 0, 0]),
         resolution=resolution0,
     )
 
-    h0_large = generate_hamiltonian_sho(
+    h0_large = get_hamiltonian_hydrogen_sho(
         shape=(10 * resolution0[0], 10 * resolution0[1], 500),
         bloch_fraction=np.array([0, 0, 0]),
         resolution=resolution0,
@@ -64,7 +64,7 @@ def test_hamiltonian_large_resolution() -> None:
     # Max value 3.04e-18
     np.testing.assert_array_equal(h0_large["array"], h0["array"])
     resolution1 = (25, 25, 16)
-    h1 = generate_hamiltonian_sho(
+    h1 = get_hamiltonian_hydrogen_sho(
         shape=(2 * resolution1[0], 2 * resolution1[1], 500),
         bloch_fraction=np.array([0, 0, 0]),
         resolution=resolution1,
@@ -97,13 +97,13 @@ def test_hamiltonian_very_large_resolution() -> None:
     We expect the result should be equal if we throw away the additional states.
     """
     resolution = (23, 23, 12)
-    h0 = generate_hamiltonian_sho(
+    h0 = get_hamiltonian_hydrogen_sho(
         shape=(2 * resolution[0], 2 * resolution[1], 250),
         bloch_fraction=np.array([0, 0, 0]),
         resolution=resolution,
     )
 
-    h1 = generate_hamiltonian_sho(
+    h1 = get_hamiltonian_hydrogen_sho(
         shape=(200, 200, 250),
         bloch_fraction=np.array([0, 0, 0]),
         resolution=resolution,
@@ -113,7 +113,7 @@ def test_hamiltonian_very_large_resolution() -> None:
     # Max relative difference: 119.78769123
     # Max value 3.04e-18
 
-    h2 = generate_hamiltonian_sho(
+    h2 = get_hamiltonian_hydrogen_sho(
         shape=(100, 100, 250),
         bloch_fraction=np.array([0, 0, 0]),
         resolution=resolution,
@@ -122,7 +122,7 @@ def test_hamiltonian_very_large_resolution() -> None:
     # Max absolute difference: 1.83756526e-24
     # Max relative difference: 13.57765139
 
-    h3 = generate_hamiltonian_sho(
+    h3 = get_hamiltonian_hydrogen_sho(
         shape=(250, 250, 250),
         bloch_fraction=np.array([0, 0, 0]),
         resolution=resolution,

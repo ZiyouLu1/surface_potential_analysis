@@ -12,6 +12,7 @@ numpy = "^1.24.1"
 matplotlib = "^3.6.3"
 scipy = "^1.10.0"
 hamiltonian_generator = { path = "../hamiltonian_generator/", develop = true }
+qutip = "^4.7.1"
 
 [tool.poetry.group.dev.dependencies]
 black = "^23.1.0"
@@ -28,6 +29,10 @@ ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
 module = "scipy.*"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "qutip.*"
 ignore_missing_imports = true
 
 [tool.ruff]

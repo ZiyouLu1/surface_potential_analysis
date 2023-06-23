@@ -106,7 +106,7 @@ def plot_raw_energy_grid_points() -> None:
     mocked_potential = mock_even_potential(potential)
 
     fig, _, _ = plot_fundamental_x_in_plane_projected_2d(
-        mocked_potential["basis"], 0, 2
+        mocked_potential["basis"], (0, 1), (0,)
     )
     fig.show()
 

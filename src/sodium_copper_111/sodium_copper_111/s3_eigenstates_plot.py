@@ -87,9 +87,14 @@ def plot_high_energy_band_eigenstates() -> None:
 
     fig.show()
 
+
+def plot_state_vector_difference() -> None:
+    collection_0 = get_eigenstate_collection((1000,))
+    collection_1 = get_eigenstate_collection((5000,))
+
     for i in [0, 5]:
         state_0 = interpolate_state_vector_momentum(
-            select_eigenstate(collection_0, i, 16), (5000,)
+            select_eigenstate(collection_0, i, 16), (5000,), (0,)
         )
         state_0["vector"] *= np.exp(-1j * np.angle(state_0["vector"][0]))
         state_1 = select_eigenstate(collection_1, i, 16)

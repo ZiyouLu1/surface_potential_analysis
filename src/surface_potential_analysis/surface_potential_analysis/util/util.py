@@ -55,7 +55,7 @@ def slice_ignoring_axes(
         _description_
     """
     old_slice = list(old_slice)
-    for axis in axes:
+    for axis in sorted(axes):
         old_slice.insert(axis, slice(None))
     return tuple(old_slice)
 

@@ -41,6 +41,10 @@ ignore_missing_imports = true
 module = "scipy.*"
 ignore_missing_imports = true
 
+[[tool.mypy.overrides]]
+module = "qutip.*"
+ignore_missing_imports = true
+
 [tool.ruff]
 select = ["ALL"]
 ignore = [

@@ -29,6 +29,11 @@ from surface_dynamics_simulation.tunnelling_simulation.simulation import (
 from surface_potential_analysis.basis.util import (
     Basis3dUtil,
 )
+from surface_potential_analysis.dynamics.lindbladian import (
+    calculate_gamma_two_state,
+    calculate_jump_operators,
+    solve_master_equation,
+)
 from surface_potential_analysis.overlap.conversion import (
     convert_overlap_to_momentum_basis,
 )
@@ -60,6 +65,9 @@ if TYPE_CHECKING:
     from surface_potential_analysis.basis.basis import (
         FundamentalMomentumBasis3d,
         FundamentalPositionBasis3d,
+    )
+    from surface_potential_analysis.dynamics.lindbladian import (
+        NonHermitianGammaCoefficientMatrix,
     )
 
 _L0Inv = TypeVar("_L0Inv", bound=int)
@@ -499,3 +507,18 @@ def plot_nickel_isf_fast() -> None:
     fig.show()
     save_figure(fig, "nickel_isf.png")
     input()
+
+
+def build_gamma_coefficient_matrix_fcc_hcp() -> (
+    NonHermitianGammaCoefficientMatrix[Literal[2]]
+):
+    out = np.zeros((2, 2, 9))
+    raise NotImplementedError
+    return {"array": out}
+
+
+def solve_master_equation_nickel() -> None:
+    coefficient_matrix = build_gamma_coefficient_matrix_fcc_hcp()
+    gamma = calculate_gamma_two_state((3, 3), coefficient_matrix)
+    jump_operators = calculate_jump_operators(gamma)
+    _solution = solve_master_equation(jump_operators)

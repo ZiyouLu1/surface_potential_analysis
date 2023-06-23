@@ -14,7 +14,7 @@ from surface_potential_analysis.util.decorators import timed
 from .s1_potential import get_interpolated_potential
 
 if TYPE_CHECKING:
-    from surface_potential_analysis.axis.axis import ExplicitAxis3d, MomentumAxis3d
+    from surface_potential_analysis.axis.axis import ExplicitAxis3d
     from surface_potential_analysis.basis.sho_basis import SHOBasisConfig
     from surface_potential_analysis.operator import HamiltonianWith3dBasis
 
@@ -27,13 +27,13 @@ _L5 = TypeVar("_L5", bound=int)
 
 
 @timed
-def generate_hamiltonian_sho(
+def get_hamiltonian_hydrogen_sho(
     shape: tuple[_L0, _L1, _L2],
     bloch_fraction: np.ndarray[tuple[Literal[3]], np.dtype[np.float_]],
     resolution: tuple[_L3, _L4, _L5],
 ) -> HamiltonianWith3dBasis[
-    MomentumAxis3d[_L0, _L3],
-    MomentumAxis3d[_L1, _L4],
+    FundamentalMomentumAxis3d[_L3],
+    FundamentalMomentumAxis3d[_L4],
     ExplicitAxis3d[_L2, _L5],
 ]:
     """
@@ -62,13 +62,34 @@ def generate_hamiltonian_sho(
         "mass": 1.6735575e-27,
         "x_origin": np.array([0, 0, -1.0000000000000004e-10]),
     }
-    return sho_subtracted_basis.total_surface_hamiltonian(
+    hamiltonian = sho_subtracted_basis.total_surface_hamiltonian(
         potential, config, bloch_fraction, resolution
     )
+    return {
+        "basis": (
+            FundamentalMomentumAxis3d(
+                hamiltonian["basis"][0].delta_x, hamiltonian["basis"][0].n
+            ),
+            FundamentalMomentumAxis3d(
+                hamiltonian["basis"][1].delta_x, hamiltonian["basis"][1].n
+            ),
+            hamiltonian["basis"][2],
+        ),
+        "array": hamiltonian["array"],
+        "dual_basis": (
+            FundamentalMomentumAxis3d(
+                hamiltonian["dual_basis"][0].delta_x, hamiltonian["dual_basis"][0].n
+            ),
+            FundamentalMomentumAxis3d(
+                hamiltonian["dual_basis"][1].delta_x, hamiltonian["dual_basis"][1].n
+            ),
+            hamiltonian["dual_basis"][2],
+        ),
+    }
 
 
 @timed
-def get_hamiltonian_deuterium(
+def get_hamiltonian_deuterium_sho(
     shape: tuple[_L0, _L1, _L2],
     bloch_fraction: np.ndarray[tuple[Literal[3]], np.dtype[np.float_]],
     resolution: tuple[_L3, _L4, _L5],
