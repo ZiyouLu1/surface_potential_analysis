@@ -21,7 +21,10 @@ from surface_potential_analysis.state_vector.conversion import (
     convert_state_vector_to_momentum_basis,
     convert_state_vector_to_position_basis,
 )
-from surface_potential_analysis.util.plot import animate_through_surface
+from surface_potential_analysis.util.plot import (
+    animate_through_surface,
+    get_norm_with_clim,
+)
 from surface_potential_analysis.util.util import (
     Measure,
     get_measured_data,
@@ -199,7 +202,8 @@ def plot_state_vector_2d_k(
     coordinates = np.fft.ifftshift(coordinates, axes=(1, 2))
 
     mesh = ax.pcolormesh(*coordinates, data, shading="nearest")
-    mesh.set_norm(scale)
+    norm = get_norm_with_clim(scale, mesh.get_clim())
+    mesh.set_norm(norm)
     ax.set_aspect("equal", adjustable="box")
     fig.colorbar(mesh, ax=ax, format="%4.1e")
 
@@ -346,7 +350,8 @@ def plot_eigenstate_2d_x(
     data = get_measured_data(points, measure)
 
     mesh = ax.pcolormesh(*coordinates, data, shading="nearest")
-    mesh.set_norm(scale)
+    norm = get_norm_with_clim(scale, mesh.get_clim())
+    mesh.set_norm(norm)
     ax.set_aspect("equal", adjustable="box")
     fig.colorbar(mesh, ax=ax, format="%4.1e")
 

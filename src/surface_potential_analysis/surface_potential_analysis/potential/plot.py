@@ -16,6 +16,7 @@ from surface_potential_analysis.potential.conversion import (
 )
 from surface_potential_analysis.util.plot import (
     animate_through_surface,
+    get_norm_with_clim,
 )
 from surface_potential_analysis.util.util import (
     Measure,
@@ -229,7 +230,8 @@ def plot_potential_2d_x(
     data = potential["vector"].reshape(util.shape)[slice_along_axis(idx, z_axis)]
 
     mesh = ax.pcolormesh(*coordinates, data, shading="nearest")
-    mesh.set_norm(scale)
+    norm = get_norm_with_clim(scale, mesh.get_clim())
+    mesh.set_norm(norm)
     ax.set_aspect("equal", adjustable="box")
     fig.colorbar(mesh, ax=ax, format="%4.1e")
 

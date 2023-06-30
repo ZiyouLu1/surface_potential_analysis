@@ -11,10 +11,11 @@ from surface_potential_analysis.basis.util import (
     get_k_coordinates_in_axes,
     get_x_coordinates_in_axes,
 )
+from surface_potential_analysis.util.plot import get_norm_with_clim
 from surface_potential_analysis.util.util import (
     Measure,
     get_measured_data,
-    slice_along_axis,
+    slice_ignoring_axes,
 )
 
 if TYPE_CHECKING:
@@ -23,7 +24,10 @@ if TYPE_CHECKING:
     from matplotlib.figure import Figure
     from matplotlib.lines import Line2D
 
-    from surface_potential_analysis._types import SingleFlatIndexLike
+    from surface_potential_analysis._types import (
+        SingleFlatIndexLike,
+        SingleStackedIndexLike,
+    )
     from surface_potential_analysis.util.plot import Scale
 
     from .overlap import FundamentalMomentumOverlap, FundamentalPositionOverlap
@@ -33,10 +37,13 @@ _L1Inv = TypeVar("_L1Inv", bound=int)
 _L2Inv = TypeVar("_L2Inv", bound=int)
 
 
+# ruff: noqa: PLR0913
+
+
 def plot_overlap_2d_x(
     overlap: FundamentalPositionOverlap[_L0Inv, _L1Inv, _L2Inv],
-    idx: SingleFlatIndexLike | None,
-    z_axis: Literal[0, 1, 2, -1, -2, -3],
+    axes: tuple[int, int],
+    idx: SingleStackedIndexLike | None,
     *,
     ax: Axes | None = None,
     measure: Measure = "abs",
@@ -64,28 +71,29 @@ def plot_overlap_2d_x(
     tuple[Figure, Axes, QuadMesh]
     """
     fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
+    idx = tuple(0 for _ in range(len(overlap["basis"]) - 2)) if idx is None else idx
 
-    axes = tuple(x for x in range(3) if x != z_axis)
     coordinates = get_x_coordinates_in_axes(overlap["basis"], axes, idx)  # type: ignore[arg-type]
     util = BasisUtil(overlap["basis"])
-    points = overlap["vector"].reshape(*util.shape)[slice_along_axis(idx, z_axis)]
+    points = overlap["vector"].reshape(*util.shape)[slice_ignoring_axes(idx, axes)]
     data = get_measured_data(points, measure)
 
     mesh = ax.pcolormesh(*coordinates, data, shading="nearest")
-    mesh.set_norm(scale)
+    norm = get_norm_with_clim(scale, mesh.get_clim())
+    mesh.set_norm(norm)
     ax.set_aspect("equal", adjustable="box")
     fig.colorbar(mesh, ax=ax, format="%4.1e")
 
-    ax.set_xlabel(f"k{0 if (z_axis % 3) != 0 else 1} axis")
-    ax.set_ylabel(f"k{2 if (z_axis % 3) != 2 else 1} axis")  # noqa: PLR2004
+    ax.set_xlabel(f"x{axes[0]} axis")
+    ax.set_ylabel(f"x{axes[1]} axis")
 
     return fig, ax, mesh
 
 
 def plot_overlap_2d_k(
     overlap: FundamentalMomentumOverlap[_L0Inv, _L1Inv, _L2Inv],
-    idx: SingleFlatIndexLike|None,
-    z_axis: Literal[0, 1, 2, -1, -2, -3],
+    axes: tuple[int, int],
+    idx: SingleStackedIndexLike | None,
     *,
     ax: Axes | None = None,
     measure: Measure = "abs",
@@ -112,24 +120,23 @@ def plot_overlap_2d_k(
     -------
     tuple[Figure, Axes, QuadMesh]
     """
-    # TODO: shifted transform
     fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
+    idx = tuple(0 for _ in range(len(overlap["basis"]) - 2)) if idx is None else idx
 
-    axes = tuple(x for x in range(3) if x != z_axis)
-    coordinates = get_k_coordinates_in_axes(overlap["basis"], axes, idx) #type: ignore[arg-type]
+    coordinates = get_k_coordinates_in_axes(overlap["basis"], axes, idx)
     util = BasisUtil(overlap["basis"])
-    points = overlap["vector"].reshape(*util.shape)[slice_along_axis(idx, z_axis)]
+    points = overlap["vector"].reshape(*util.shape)[slice_ignoring_axes(idx, axes)]
     data = np.fft.ifftshift(get_measured_data(points, measure))
     shifted_coordinates = np.fft.ifftshift(coordinates)
 
     mesh = ax.pcolormesh(*shifted_coordinates, data, shading="nearest")
-    mesh.set_norm(scale)
+    norm = get_norm_with_clim(scale, mesh.get_clim())
+    mesh.set_norm(norm)
     ax.set_aspect("equal", adjustable="box")
     fig.colorbar(mesh, ax=ax, format="%4.1e")
 
-    ax.set_xlabel(f"k{0 if (z_axis % 3) != 0 else 1} axis")
-    ax.set_ylabel(f"k{2 if (z_axis % 3) != 2 else 1} axis")  # noqa: PLR2004
-
+    ax.set_xlabel(f"k{axes[0]} axis")
+    ax.set_ylabel(f"k{axes[1]} axis")
     return fig, ax, mesh
 
 
@@ -160,7 +167,9 @@ def plot_overlap_k0k1(
     -------
     tuple[Figure, Axes, QuadMesh]
     """
-    return plot_overlap_2d_k(overlap, idx, 2, ax=ax, measure=measure, scale=scale)
+    return plot_overlap_2d_k(
+        overlap, (0, 1), (idx,), ax=ax, measure=measure, scale=scale
+    )
 
 
 def plot_overlap_k1k2(
@@ -190,7 +199,9 @@ def plot_overlap_k1k2(
     -------
     tuple[Figure, Axes, QuadMesh]
     """
-    return plot_overlap_2d_k(overlap, idx, 0, ax=ax, measure=measure, scale=scale)
+    return plot_overlap_2d_k(
+        overlap, (1, 2), (idx,), ax=ax, measure=measure, scale=scale
+    )
 
 
 def plot_overlap_k2k0(
@@ -220,7 +231,9 @@ def plot_overlap_k2k0(
     -------
     tuple[Figure, Axes, QuadMesh]
     """
-    return plot_overlap_2d_k(overlap, idx, 1, ax=ax, measure=measure, scale=scale)
+    return plot_overlap_2d_k(
+        overlap, (2, 0), (idx,), ax=ax, measure=measure, scale=scale
+    )
 
 
 def plot_overlap_along_path_k(

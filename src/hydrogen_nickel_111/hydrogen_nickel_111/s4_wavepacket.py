@@ -4,9 +4,11 @@ from typing import TYPE_CHECKING, Any, Literal
 
 import numpy as np
 from surface_potential_analysis.axis.axis import (
+    ExplicitAxis,
     FundamentalMomentumAxis3d,
     MomentumAxis3d,
 )
+from surface_potential_analysis.axis.conversion import axis_as_orthonormal_axis
 from surface_potential_analysis.basis.util import Basis3dUtil
 from surface_potential_analysis.util.decorators import npy_cached
 from surface_potential_analysis.wavepacket import save_wavepacket
@@ -28,9 +30,7 @@ if TYPE_CHECKING:
     from pathlib import Path
 
     from surface_potential_analysis._types import SingleIndexLike3d
-    from surface_potential_analysis.axis.axis import (
-        ExplicitAxis3d,
-    )
+    from surface_potential_analysis.axis.axis import ExplicitAxis3d, MomentumAxis
     from surface_potential_analysis.basis.basis import (
         Basis3d,
         FundamentalMomentumBasis3d,
@@ -40,7 +40,11 @@ if TYPE_CHECKING:
     _NickelWavepacket = Wavepacket3dWith2dSamples[
         Literal[12],
         Literal[12],
-        FundamentalMomentumBasis3d[Literal[24], Literal[24], Literal[250]],
+        Basis3d[
+            MomentumAxis[Literal[24], Literal[24], Literal[3]],
+            MomentumAxis[Literal[24], Literal[24], Literal[3]],
+            ExplicitAxis[Literal[250], Literal[12], Literal[3]],
+        ],
     ]
 
 MAXIMUM_POINTS: list[tuple[int, int, int]] = [
@@ -111,19 +115,33 @@ def load_two_point_normalized_nickel_wavepacket_momentum(
 ) -> Wavepacket3dWith2dSamples[
     Literal[12],
     Literal[12],
-    FundamentalMomentumBasis3d[Literal[24], Literal[24], Literal[250]],
+    Basis3d[
+        FundamentalMomentumAxis3d[Literal[24]],
+        FundamentalMomentumAxis3d[Literal[24]],
+        ExplicitAxis3d[Literal[250], Literal[12]],
+    ],
 ]:
     wavepacket = load_nickel_wavepacket(band)
     util = Basis3dUtil(wavepacket["basis"])
-    basis: FundamentalMomentumBasis3d[Literal[24], Literal[24], Literal[250]] = (
+    basis: Basis3d[
+        FundamentalMomentumAxis3d[Literal[24]],
+        FundamentalMomentumAxis3d[Literal[24]],
+        ExplicitAxis3d[Literal[250], Literal[12]],
+    ] = (
         FundamentalMomentumAxis3d(util.delta_x0, 24),
         FundamentalMomentumAxis3d(util.delta_x1, 24),
-        FundamentalMomentumAxis3d(util.delta_x2, 250),
+        wavepacket["basis"][2],
     )
-    normalized = localize_tightly_bound_wavepacket_two_point_max(
-        wavepacket, offset, angle
+    return localize_tightly_bound_wavepacket_two_point_max(
+        {
+            "basis": basis,
+            "energies": wavepacket["energies"],
+            "shape": wavepacket["shape"],
+            "vectors": wavepacket["vectors"],
+        },
+        offset,
+        angle,
     )
-    return convert_wavepacket_to_basis(normalized, basis)
 
 
 def generate_nickel_wavepacket_sho() -> None:
@@ -173,7 +191,18 @@ def _get_wavepacket_cache(band: int) -> Path:
 
 @npy_cached(_get_wavepacket_cache, load_pickle=True)
 def get_wavepacket(band: int) -> _NickelWavepacket:
-    return get_all_wavepackets()[band]
+    wavepacket = get_all_wavepackets()[band]
+    # Work around for bug in cached wavepacket
+    wavepacket["basis"] = (
+        FundamentalMomentumAxis3d(
+            wavepacket["basis"][0].delta_x, wavepacket["basis"][0].n
+        ),
+        FundamentalMomentumAxis3d(
+            wavepacket["basis"][1].delta_x, wavepacket["basis"][1].n
+        ),
+        axis_as_orthonormal_axis(wavepacket["basis"][2]),
+    )
+    return wavepacket
 
 
 def get_two_point_normalized_wavepacket(

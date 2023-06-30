@@ -20,7 +20,7 @@ if TYPE_CHECKING:
     )
     from surface_potential_analysis.overlap.overlap import Overlap3d
     from surface_potential_analysis.state_vector.state_vector import StateVector3d
-    from surface_potential_analysis.wavepacket import Wavepacket3dWith2dSamples
+    from surface_potential_analysis.wavepacket.wavepacket import Wavepacket3d
 
     _B3d0Inv = TypeVar("_B3d0Inv", bound=Basis3d[Any, Any, Any])
 
@@ -30,6 +30,7 @@ _L2Inv = TypeVar("_L2Inv", bound=int)
 
 _NS0Inv = TypeVar("_NS0Inv", bound=int)
 _NS1Inv = TypeVar("_NS1Inv", bound=int)
+_S03dInv = TypeVar("_S03dInv", bound=tuple[int, int, int])
 
 
 def calculate_overlap_momentum_eigenstate(
@@ -57,17 +58,9 @@ def calculate_overlap_momentum_eigenstate(
 
 @timed
 def calculate_wavepacket_overlap(
-    wavepacket_0: Wavepacket3dWith2dSamples[
-        _NS0Inv,
-        _NS1Inv,
-        FundamentalMomentumBasis3d[_L0Inv, _L1Inv, _L2Inv],
-    ],
-    wavepacket_1: Wavepacket3dWith2dSamples[
-        _NS0Inv,
-        _NS1Inv,
-        FundamentalMomentumBasis3d[_L0Inv, _L1Inv, _L2Inv],
-    ],
-) -> Overlap3d[FundamentalPositionBasis3d[int, int, _L2Inv]]:
+    wavepacket_0: Wavepacket3d[_S03dInv, _B3d0Inv],
+    wavepacket_1: Wavepacket3d[_S03dInv, _B3d0Inv],
+) -> Overlap3d[FundamentalPositionBasis3d[int, int, int]]:
     """
     Given two wavepackets in (the same) momentum basis calculate the overlap factor.
 

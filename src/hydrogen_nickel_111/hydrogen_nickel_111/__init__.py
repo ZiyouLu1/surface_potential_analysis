@@ -12,10 +12,12 @@ from . import (
     s4_wavepacket,
     s4_wavepacket_analysis,
     s4_wavepacket_plot,
+    s4_wavepacket_report_plots,
     s5_electron_integral,
     s5_overlap,
     s5_overlap_analysis,
     s5_overlap_basic,
+    s5_overlap_report_plots,
 )
 
 __all__ = [
@@ -29,8 +31,10 @@ __all__ = [
     "s4_wavepacket",
     "s4_wavepacket_analysis",
     "s4_wavepacket_plot",
+    "s4_wavepacket_report_plots",
+    "s5_overlap",
     "s5_overlap_analysis",
     "s5_overlap_basic",
-    "s5_overlap",
+    "s5_overlap_report_plots",
     "s5_electron_integral",
 ]

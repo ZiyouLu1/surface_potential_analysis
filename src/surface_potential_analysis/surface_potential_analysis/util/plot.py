@@ -21,10 +21,22 @@ if TYPE_CHECKING:
 Scale = Literal["symlog", "linear"]
 
 
-def _get_norm(
+def get_norm_with_clim(
     scale: Scale,
     clim: tuple[float | None, float | None] = (None, None),
 ) -> Normalize:
+    """
+    Get the appropriate norm given the scale and clim.
+
+    Parameters
+    ----------
+    scale : Scale
+    clim : tuple[float  |  None, float  |  None], optional
+
+    Returns
+    -------
+    Normalize
+    """
     match scale:
         case "linear":
             return Normalize(vmin=clim[0], vmax=clim[1])
@@ -78,7 +90,7 @@ def build_animation(
     c_min: float = (
         np.min([i[0].get_clim()[0] for i in frames]) if clim[0] is None else clim[0]
     )
-    norm = _get_norm(scale, (c_min, c_max))
+    norm = get_norm_with_clim(scale, (c_min, c_max))
     for (mesh,) in frames:
         mesh.set_norm(norm)
         mesh.set_clim(c_min, c_max)

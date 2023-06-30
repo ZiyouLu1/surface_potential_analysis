@@ -6,7 +6,7 @@ from typing import Any, Literal, TypeVar
 import numpy as np
 
 from surface_potential_analysis.axis.axis import (
-    ExplicitAxis3d,
+    ExplicitAxis,
     FundamentalMomentumAxis,
     FundamentalPositionAxis,
 )
@@ -120,8 +120,8 @@ def axis_as_fundamental_momentum_axis(
 
 
 def axis_as_explicit_position_axis(
-    axis: AxisLike3d[_NF0Inv, _N0Inv]
-) -> ExplicitAxis3d[_NF0Inv, _N0Inv]:
+    axis: AxisLike[_NF0Inv, _N0Inv, _NDInv]
+) -> ExplicitAxis[_NF0Inv, _N0Inv, _NDInv]:
     """
     Convert the axis into an explicit position axis.
 
@@ -134,7 +134,32 @@ def axis_as_explicit_position_axis(
     ExplicitAxis[_NF0Inv, _N0Inv]
     """
     util = AxisUtil(axis)
-    return ExplicitAxis3d(axis.delta_x, util.vectors)
+    return ExplicitAxis(axis.delta_x, util.vectors)
+
+
+def axis_as_orthonormal_axis(
+    axis: AxisLike[_NF0Inv, _N0Inv, _NDInv]
+) -> ExplicitAxis[_NF0Inv, _N0Inv, _NDInv]:
+    """
+    make the given axis orthonormal.
+
+    Parameters
+    ----------
+    axis : AxisLike[_NF0Inv, _N0Inv]
+
+    Returns
+    -------
+    ExplicitAxis[_NF0Inv, _N0Inv]
+    """
+    vectors = AxisUtil(axis).vectors
+    orthonormal_vectors = np.zeros_like(vectors, dtype=vectors.dtype)
+    for i, v in enumerate(vectors):
+        vector = v
+        for other in orthonormal_vectors[:i]:
+            vector -= np.dot(vector, other) * other
+        orthonormal_vectors[i] = vector / np.linalg.norm(vector)
+
+    return ExplicitAxis(axis.delta_x, orthonormal_vectors)
 
 
 def axis_as_n_point_axis(

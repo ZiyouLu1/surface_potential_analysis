@@ -1,17 +1,17 @@
 from __future__ import annotations
 
-from typing import Any, TypeVar, Union
+from typing import Any, TypeVar
 
 import numpy as np
 
 # The 6 `<X>Like_co` type-aliases below represent all scalars that can be
 # coerced into `<X>` (with the casting rule `same_kind`)
-_BoolLike_co = Union[bool, np.bool_]
-_UIntLike_co = Union[_BoolLike_co, np.unsignedinteger]
-_IntLike_co = Union[int, np.integer]
-_FloatLike_co = Union[_IntLike_co, float, np.floating]
-_ComplexLike_co = Union[_FloatLike_co, complex, np.complexfloating]
-_TD64Like_co = Union[_IntLike_co, np.timedelta64]
+_BoolLike_co = bool | np.bool_
+_UIntLike_co = _BoolLike_co | np.unsignedinteger
+_IntLike_co = int | np.integer
+_FloatLike_co = _IntLike_co | float | np.floating
+_ComplexLike_co = _FloatLike_co | complex | np.complexfloating
+_TD64Like_co = _IntLike_co | np.timedelta64
 
 _S0Inv = TypeVar("_S0Inv", bound=tuple[int, ...])
 

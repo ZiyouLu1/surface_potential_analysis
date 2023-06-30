@@ -42,7 +42,7 @@ def timed(f: Callable[P, R]) -> Callable[P, R]:
 
 @overload
 def npy_cached(
-    path: Path,
+    path: Path | None,
     *,
     load_pickle: bool = False,
     save_pickle: bool = True,
@@ -52,7 +52,7 @@ def npy_cached(
 
 @overload
 def npy_cached(
-    path: Callable[P, Path],
+    path: Callable[P, Path | None],
     *,
     load_pickle: bool = False,
     save_pickle: bool = True,
@@ -61,7 +61,7 @@ def npy_cached(
 
 
 def npy_cached(
-    path: Path | Callable[P, Path],
+    path: Path | None | Callable[P, Path | None],
     *,
     load_pickle: bool = False,
     save_pickle: bool = True,
@@ -89,6 +89,8 @@ def npy_cached(
         @wraps(f)
         def wrap(*args: P.args, **kw: P.kwargs) -> R:
             cache_path = path(*args, **kw) if callable(path) else path
+            if cache_path is None:
+                return f(*args, **kw)
             try:
                 arr: R = np.load(cache_path, allow_pickle=load_pickle)[()]
             except FileNotFoundError:

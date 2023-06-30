@@ -17,6 +17,7 @@ from surface_potential_analysis.state_vector.plot import (
     plot_state_vector_along_path,
     plot_state_vector_difference_2d_x,
 )
+from surface_potential_analysis.util.plot import get_norm_with_clim
 from surface_potential_analysis.util.util import (
     Measure,
     get_measured_data,
@@ -127,7 +128,8 @@ def plot_wavepacket_energies_2d_k(
     shifted_coordinates = np.fft.ifftshift(coordinates, axes=(1, 2))
 
     mesh = ax.pcolormesh(*shifted_coordinates, points, shading="nearest")
-    mesh.set_norm(scale)
+    norm = get_norm_with_clim(scale, mesh.get_clim())
+    mesh.set_norm(norm)
     ax.set_aspect("equal", adjustable="box")
     fig.colorbar(mesh, ax=ax, format="%4.1e")
 
@@ -172,7 +174,8 @@ def plot_wavepacket_energies_2d_x(
     points = get_measured_data(data, measure)
 
     mesh = ax.pcolormesh(*coordinates, points, shading="nearest")
-    mesh.set_norm(scale)
+    norm = get_norm_with_clim(scale, mesh.get_clim())
+    mesh.set_norm(norm)
     ax.set_aspect("equal", adjustable="box")
     fig.colorbar(mesh, ax=ax, format="%4.1e")
 

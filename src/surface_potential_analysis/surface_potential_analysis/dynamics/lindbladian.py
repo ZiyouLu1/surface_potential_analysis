@@ -73,7 +73,7 @@ def calculate_gamma_two_state(
                         from_ty, to_ty, jump_idx
                     ]
 
-    return {"array": gamma_stacked.reshape(2 * n_sites)}
+    return {"array": gamma_stacked}
 
 
 def calculate_jump_operators(gamma: NonHermitianGamma) -> JumpOperatorCollection:

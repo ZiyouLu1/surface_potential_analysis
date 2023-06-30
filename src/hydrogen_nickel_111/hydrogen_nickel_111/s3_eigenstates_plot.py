@@ -68,6 +68,7 @@ def plot_hydrogen_lowest_band_energies() -> None:
 def generate_bandwidth_table() -> None:
     collection = get_eigenstate_collection_hydrogen((24, 24, 12))
     collection = get_eigenstate_collection_hydrogen((26, 26, 12))
+    collection = get_eigenstate_collection_hydrogen((26, 26, 10))
 
     energies = np.min(collection["energies"], axis=0) - np.min(collection["energies"])
     energies_mev = energies * 1000 / (electron_volt)
@@ -113,7 +114,7 @@ def plot_state_vector_difference_hydrogen() -> None:
     state_1 = select_eigenstate(collection_1, 0, 0)
     state_1["vector"] *= np.exp(-1j * np.angle(state_1["vector"][0]))
 
-    fig, _, _ = plot_state_vector_difference_2d_k(state_0, state_1, (1,0))
+    fig, _, _ = plot_state_vector_difference_2d_k(state_0, state_1, (1, 0))
     fig.show()
 
     z_max = np.argmax(collection_1["basis"][2].vectors[0])

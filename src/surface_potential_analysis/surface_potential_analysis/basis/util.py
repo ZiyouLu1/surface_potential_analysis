@@ -24,7 +24,6 @@ if TYPE_CHECKING:
         ArrayStackedIndexLike,
         ArrayStackedIndexLike3d,
         FlatIndexLike,
-        IndexLike3d,
         SingleFlatIndexLike,
         SingleIndexLike,
         SingleIndexLike3d,
@@ -46,7 +45,7 @@ if TYPE_CHECKING:
 _S0Inv = TypeVar("_S0Inv", bound=tuple[int, ...])
 _B0Inv = TypeVar("_B0Inv", bound=Basis[Any])
 _B3d0Inv = TypeVar("_B3d0Inv", bound=Basis3d[Any, Any, Any])
-
+_B3d1Inv = TypeVar("_B3d1Inv", bound=Basis3d[Any, Any, Any])
 _L0Inv = TypeVar("_L0Inv", bound=int)
 _L1Inv = TypeVar("_L1Inv", bound=int)
 _L2Inv = TypeVar("_L2Inv", bound=int)
@@ -838,62 +837,49 @@ def get_x_coordinates_in_axes(
 
 
 @overload
-def _wrap_distance(distance: _IntLike_co, length: int) -> int:
+def _wrap_distance(distance: _IntLike_co, length: _IntLike_co) -> int:
     ...
 
 
 @overload
 def _wrap_distance(
-    distance: np.ndarray[_S0Inv, np.dtype[np.int_]], length: int
+    distance: np.ndarray[_S0Inv, np.dtype[np.int_]], length: _IntLike_co
 ) -> np.ndarray[_S0Inv, np.dtype[np.int_]]:
     ...
 
 
-def _wrap_distance(distance: Any, length: int) -> Any:
+def _wrap_distance(distance: Any, length: _IntLike_co) -> Any:
     return np.subtract(np.mod(np.add(distance, length // 2), length), length // 2)
 
 
 @overload
-def wrap_index_around_origin_x01(
-    basis: _B3d0Inv,
-    idx: SingleStackedIndexLike3d,
-    origin_idx: SingleIndexLike3d = (0, 0, 0),
-) -> SingleStackedIndexLike3d:
+def wrap_index_around_origin(
+    basis: _B0Inv,
+    idx: SingleStackedIndexLike,
+    origin: SingleIndexLike | None = None,
+    axes: _S0Inv | None = None,
+) -> SingleStackedIndexLike:
     ...
 
 
 @overload
-def wrap_index_around_origin_x01(
-    basis: _B3d0Inv, idx: SingleFlatIndexLike, origin_idx: SingleIndexLike3d = (0, 0, 0)
-) -> SingleStackedIndexLike3d:
+def wrap_index_around_origin(
+    basis: _B0Inv,
+    idx: ArrayStackedIndexLike[_S0Inv],
+    origin: SingleIndexLike | None = None,
+    axes: _S0Inv | None = None,
+) -> ArrayStackedIndexLike[_S0Inv]:
     ...
 
 
-@overload
-def wrap_index_around_origin_x01(
-    basis: _B3d0Inv,
-    idx: ArrayStackedIndexLike3d[_S0Inv],
-    origin_idx: SingleIndexLike3d = (0, 0, 0),
-) -> ArrayStackedIndexLike3d[_S0Inv]:
-    ...
-
-
-@overload
-def wrap_index_around_origin_x01(
-    basis: _B3d0Inv,
-    idx: ArrayFlatIndexLike[_S0Inv],
-    origin_idx: SingleIndexLike3d = (0, 0, 0),
-) -> ArrayStackedIndexLike3d[_S0Inv]:
-    ...
-
-
-def wrap_index_around_origin_x01(
-    basis: _B3d0Inv,
-    idx: StackedIndexLike3d | FlatIndexLike,
-    origin_idx: SingleIndexLike3d = (0, 0, 0),
-) -> StackedIndexLike3d:
+def wrap_index_around_origin(
+    basis: _B0Inv,
+    idx: StackedIndexLike,
+    origin: SingleIndexLike | None = None,
+    axes: _S0Inv | None = None,
+) -> StackedIndexLike:
     """
-    Given an index or list of indexes in stacked form, find the equivalent index closest to the point origin_idx.
+    Given an index or list of indexes in stacked form, find the equivalent index closest to the origin.
 
     Parameters
     ----------
@@ -906,18 +892,14 @@ def wrap_index_around_origin_x01(
     -------
     StackedIndexLike
     """
-    util = Basis3dUtil(basis)
-    idx = idx if isinstance(idx, tuple) else util.get_stacked_index(idx)
-    origin_idx = (
-        origin_idx
-        if isinstance(origin_idx, tuple)
-        else util.get_stacked_index(origin_idx)
-    )
-    (n0, n1, _) = util.shape
-    return (  # type: ignore[return-value]
-        _wrap_distance(idx[0] - origin_idx[0], n0) + origin_idx[0],
-        _wrap_distance(idx[1] - origin_idx[1], n1) + origin_idx[1],
-        idx[2],
+    util = BasisUtil(basis)
+    origin = tuple(0 for _ in basis) if origin is None else origin
+    origin = origin if isinstance(origin, tuple) else util.get_stacked_index(origin)
+    return tuple(
+        _wrap_distance(idx[ax] - origin[ax], util.shape[ax]) + origin[ax]
+        if axes is None or ax in axes
+        else idx[ax]
+        for ax in range(util.ndim)
     )
 
 
@@ -1026,32 +1008,18 @@ def calculate_cumulative_k_distances_along_path(
 
 
 @overload
-def get_x01_mirrored_index(
-    basis: _B3d0Inv, idx: SingleStackedIndexLike3d
-) -> SingleStackedIndexLike3d:
-    ...
-
-
-@overload
-def get_x01_mirrored_index(basis: _B3d0Inv, idx: SingleFlatIndexLike) -> np.int_:
+def get_x01_mirrored_index(idx: SingleStackedIndexLike) -> SingleStackedIndexLike:
     ...
 
 
 @overload
 def get_x01_mirrored_index(
-    basis: _B3d0Inv, idx: ArrayStackedIndexLike3d[_S0Inv]
-) -> ArrayStackedIndexLike3d[_S0Inv]:
+    idx: ArrayStackedIndexLike[_S0Inv],
+) -> ArrayStackedIndexLike[_S0Inv]:
     ...
 
 
-@overload
-def get_x01_mirrored_index(
-    basis: _B3d0Inv, idx: ArrayFlatIndexLike[_S0Inv]
-) -> ArrayFlatIndexLike[_S0Inv]:
-    ...
-
-
-def get_x01_mirrored_index(basis: _B3d0Inv, idx: IndexLike3d) -> IndexLike3d:
+def get_x01_mirrored_index(idx: StackedIndexLike) -> StackedIndexLike:
     """
     Mirror the coordinate idx about x0=x1.
 
@@ -1067,10 +1035,10 @@ def get_x01_mirrored_index(basis: _B3d0Inv, idx: IndexLike3d) -> IndexLike3d:
     tuple[int, int, int] | int
         The mirrored index
     """
-    util = Basis3dUtil(basis)
-    idx = idx if isinstance(idx, tuple) else util.get_stacked_index(idx)
-    mirrored: StackedIndexLike3d = (idx[1], idx[0], idx[2])  # type: ignore[assignment]
-    return mirrored if isinstance(idx, tuple) else util.get_flat_index(mirrored)
+    arr = list(idx)
+    arr[0] = idx[1]
+    arr[1] = idx[0]
+    return tuple(arr)
 
 
 def get_single_point_basis(

@@ -9,10 +9,9 @@ from surface_potential_analysis.basis.conversion import (
     basis_as_fundamental_position_basis,
 )
 from surface_potential_analysis.basis.util import (
-    Basis3dUtil,
     BasisUtil,
     get_x01_mirrored_index,
-    wrap_index_around_origin_x01,
+    wrap_index_around_origin,
 )
 from surface_potential_analysis.operator.conversion import (
     convert_operator_to_basis,
@@ -49,7 +48,7 @@ if TYPE_CHECKING:
     from surface_potential_analysis._types import (
         ArrayIndexLike,
         SingleIndexLike,
-        SingleStackedIndexLike3d,
+        SingleStackedIndexLike,
     )
     from surface_potential_analysis.basis.basis import Basis, Basis3d
     from surface_potential_analysis.operator.operator import SingleBasisOperator
@@ -184,7 +183,7 @@ def localize_tightly_bound_wavepacket_idx(
 def get_wavepacket_two_points(
     wavepacket: Wavepacket3dWith2dSamples[_NS0Inv, _NS1Inv, _B3d0Inv],
     offset: tuple[int, int] = (0, 0),
-) -> tuple[SingleStackedIndexLike3d, SingleStackedIndexLike3d]:
+) -> tuple[SingleStackedIndexLike, SingleStackedIndexLike]:
     """
     Get the index of the maximum, and the index mirrored in x01 for the wavepacket, wrapped about the given offset.
 
@@ -198,14 +197,17 @@ def get_wavepacket_two_points(
     -------
     tuple[SingleStackedIndexLike, SingleStackedIndexLike]
     """
-    util = Basis3dUtil(wavepacket["basis"])
+    util = BasisUtil(wavepacket["basis"])
     origin = (util.shape[0] * offset[0], util.shape[1] * offset[1], 0)
 
     converted = convert_state_vector_to_position_basis(get_eigenstate(wavepacket, 0))  # type: ignore[arg-type,var-annotated]
-    idx_0: SingleStackedIndexLike3d = np.argmax(np.abs(converted["vector"]), axis=-1)
-    idx_0 = wrap_index_around_origin_x01(converted["basis"], idx_0, origin)
-    idx_1 = get_x01_mirrored_index(converted["basis"], idx_0)
-    idx_1 = wrap_index_around_origin_x01(converted["basis"], idx_1, origin)
+    converted_util = BasisUtil(converted["basis"])
+    idx_0: SingleStackedIndexLike = converted_util.get_stacked_index(
+        np.argmax(np.abs(converted["vector"]), axis=-1)
+    )
+    idx_0 = wrap_index_around_origin(wavepacket["basis"], idx_0, origin, (0, 1))
+    idx_1 = get_x01_mirrored_index(idx_0)
+    idx_1 = wrap_index_around_origin(wavepacket["basis"], idx_1, origin, (0, 1))
     return (idx_0, idx_1)
 
 
@@ -259,7 +261,6 @@ def localize_tightly_bound_wavepacket_two_point_max(
     averaged_fix = (
         phi_0 + phi_1 - phi_1 + 0.5 * (_wrap_phases(phi_1 - phi_0, np.pi / 2))
     )
-
     phases = np.exp(-1j * (averaged_fix - angle))
     # Use this to test the convergence of both points
     # ! converted_wavepacket = convert_wavepacket_to_position_basis(wavepacket)
@@ -292,7 +293,7 @@ def localize_tightly_bound_wavepacket_two_point_max(
     # !         )
     # !     )
     # ! )
-    fixed_eigenvectors = wavepacket["vectors"] * phases[:, :, np.newaxis]
+    fixed_eigenvectors = wavepacket["vectors"] * phases[:, np.newaxis]
 
     return {
         "basis": wavepacket["basis"],
@@ -327,7 +328,8 @@ def localize_tightly_bound_wavepacket_max_point(
     """
     converted = convert_state_vector_to_position_basis(get_eigenstate(wavepacket, 0))  # type: ignore[arg-type,var-annotated]
     max_idx = np.argmax(np.abs(converted["vector"]), axis=-1)
-    max_idx = wrap_index_around_origin_x01(converted["basis"], max_idx)
+    max_idx = BasisUtil(converted["basis"]).get_stacked_index(max_idx)
+    max_idx = wrap_index_around_origin(wavepacket["basis"], max_idx, axes=(0, 1))
 
     bloch_phases = _get_bloch_wavefunction_phases(wavepacket, max_idx)
     global_phases = _get_global_phases(wavepacket, max_idx)

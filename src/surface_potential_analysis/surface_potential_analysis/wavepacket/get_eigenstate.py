@@ -39,7 +39,7 @@ def _pad_sample_axis(
 ) -> np.ndarray[tuple[int, ...], _DT]:
     final_shape = np.array(vectors.shape)
     final_shape[axis] = ns * final_shape[axis]
-    padded = np.zeros(final_shape)
+    padded = np.zeros(final_shape, dtype=vectors.dtype)
 
     shifted_vectors = np.fft.fftshift(vectors, axes=(axis,))
     start = offset - (1 - ns) // 2

@@ -11,6 +11,7 @@ from surface_potential_analysis.basis.sho_basis import (
 from surface_potential_analysis.hamiltonian_builder import sho_subtracted_basis
 from surface_potential_analysis.util.decorators import timed
 
+from .constants import HYDROGEN_MASS
 from .s1_potential import get_interpolated_potential
 
 if TYPE_CHECKING:
@@ -59,7 +60,7 @@ def get_hamiltonian_hydrogen_sho(
     )
     config: SHOBasisConfig = {
         "sho_omega": 195636899474736.66,
-        "mass": 1.6735575e-27,
+        "mass": HYDROGEN_MASS,
         "x_origin": np.array([0, 0, -1.0000000000000004e-10]),
     }
     hamiltonian = sho_subtracted_basis.total_surface_hamiltonian(
