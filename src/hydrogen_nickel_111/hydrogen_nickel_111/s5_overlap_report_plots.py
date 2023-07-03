@@ -158,8 +158,7 @@ def get_rate_simple_equation(
             for t in temperature_flat
         ]
     )
-    fcc_hcp_gamma = get_hydrogen_fcc_hcp_gamma()
-    print(fcc_hcp_gamma)
+    fcc_hcp_gamma = 13.465247231353736  # get_hydrogen_fcc_hcp_gamma()
     return (  # type: ignore[no-any-return]
         (temperature_dep_integral + temperature_dep_integral2) * (3 * (fcc_hcp_gamma))
     ).reshape(temperature.shape)

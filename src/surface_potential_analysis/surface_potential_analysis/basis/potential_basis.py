@@ -6,8 +6,11 @@ import numpy as np
 
 from surface_potential_analysis.axis.axis import (
     ExplicitAxis1d,
+    FundamentalPositionAxis1d,
+    FundamentalPositionAxis3d,
 )
 from surface_potential_analysis.basis.basis import Basis1d
+from surface_potential_analysis.basis.util import BasisUtil
 from surface_potential_analysis.hamiltonian_builder.momentum_basis import (
     total_surface_hamiltonian,
 )
@@ -23,6 +26,8 @@ if TYPE_CHECKING:
 
 _B1d0Cov = TypeVar("_B1d0Cov", covariant=True, bound=Basis1d[Any])
 _B1d0Inv = TypeVar("_B1d0Inv", bound=Basis1d[Any])
+
+_L0Inv = TypeVar("_L0Inv", bound=int)
 _L1Cov = TypeVar("_L1Cov", covariant=True, bound=int)
 
 
@@ -77,3 +82,29 @@ def get_potential_basis_config_basis(
     return ExplicitAxis1d(
         eigenstates["basis"][0].delta_x, eigenstates["vectors"]  # type: ignore[arg-type]
     )
+
+
+def select_minimum_potential_3d(
+    potential: Potential[tuple[Any, Any, FundamentalPositionAxis3d[_L0Inv]]]
+) -> Potential[tuple[FundamentalPositionAxis1d[_L0Inv]]]:
+    """
+    Given a 3D potential in the standard configuration select the minimum potential.
+
+    Parameters
+    ----------
+    potential : Potential[tuple[Any, Any, FundamentalPositionAxis3d[_L0]]]
+
+    Returns
+    -------
+    Potential[tuple[FundamentalPositionAxis1d[_L0]]]
+    """
+    shape = BasisUtil(potential["basis"]).shape
+    arg_min = np.unravel_index(np.argmin(potential["vector"]), shape)
+    return {
+        "basis": (
+            FundamentalPositionAxis1d(
+                np.array([potential["basis"][2].delta_x[2]]), shape[2]  # type: ignore[arg-type]
+            ),
+        ),
+        "vector": potential["vector"].reshape(shape)[arg_min[0], arg_min[1], :],
+    }

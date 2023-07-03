@@ -48,9 +48,40 @@ def plot_deuterium_lowest_bands() -> None:
 def plot_deuterium_lowest_band_energy() -> None:
     fig, ax = plt.subplots()
 
-    shapes = [(23, 23, 10), (23, 23, 12), (24, 24, 12), (25, 25, 12)]
+    shapes = [
+        (23, 23, 10),
+        (23, 23, 12),
+        (24, 24, 12),
+        (25, 25, 12),
+        (27, 27, 10),
+        (28, 28, 8),
+    ]
     for shape in shapes:
         collection = get_eigenstate_collection_deuterium(shape)
+        _, _, ln = plot_energies_against_bloch_phase_1d(
+            collection, np.array([1, 0, 0]), band=0, ax=ax
+        )
+        ln.set_label(f"({shape[0]}, {shape[1]}, {shape[2]})")
+
+    ax.legend()
+    fig.show()
+    input()
+
+
+def plot_hydrogen_lowest_band_energy() -> None:
+    fig, ax = plt.subplots()
+
+    shapes = [
+        (23, 23, 8),
+        (23, 23, 10),
+        (23, 23, 12),
+        (24, 24, 10),
+        (24, 24, 12),
+        (25, 25, 10),
+        (27, 27, 10),
+    ]
+    for shape in shapes:
+        collection = get_eigenstate_collection_hydrogen(shape)
         _, _, ln = plot_energies_against_bloch_phase_1d(
             collection, np.array([1, 0, 0]), band=0, ax=ax
         )
@@ -66,7 +97,7 @@ def plot_hydrogen_lowest_band_energies() -> None:
 
     colors = plt.rcParams["axes.prop_cycle"].by_key()["color"]
 
-    collection = get_eigenstate_collection_hydrogen((24, 24, 12))
+    collection = get_eigenstate_collection_hydrogen((24, 24, 10))
     for band in range(8):
         _, _, ln = plot_energies_against_bloch_phase_1d(
             collection, np.array([1, 0, 0]), band=band, ax=ax
@@ -78,6 +109,7 @@ def plot_hydrogen_lowest_band_energies() -> None:
     ax.set_title("Plot of eight lowest band energies")
 
     fig.show()
+    input()
 
 
 def plot_state_vector_difference_hydrogen() -> None:

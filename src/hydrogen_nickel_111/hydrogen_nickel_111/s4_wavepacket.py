@@ -176,7 +176,7 @@ def generate_nickel_wavepacket_sho() -> None:
         save_wavepacket(path, wavepacket)
 
 
-@npy_cached(get_data_path("wavepacket/wavepacket.npy"), load_pickle=True)  # type: ignore[misc]
+@npy_cached(get_data_path("wavepacket/wavepacket_hydrogen.npy"), load_pickle=True)  # type: ignore[misc]
 def get_all_wavepackets_hydrogen() -> list[_HydrogenNickelWavepacket]:
     def _hamiltonian_generator(
         bloch_fraction: np.ndarray[tuple[Literal[3]], np.dtype[np.float_]]
@@ -196,7 +196,7 @@ def get_all_wavepackets_hydrogen() -> list[_HydrogenNickelWavepacket]:
 
 
 def _get_wavepacket_cache_h(band: int) -> Path:
-    return get_data_path(f"wavepacket/wavepacket_{band}.npy")
+    return get_data_path(f"wavepacket/wavepacket_hydrogen_{band}.npy")
 
 
 @npy_cached(_get_wavepacket_cache_h, load_pickle=True)

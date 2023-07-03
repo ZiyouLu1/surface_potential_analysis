@@ -8,7 +8,10 @@ from surface_potential_analysis.state_vector.eigenstate_collection import (
 )
 from surface_potential_analysis.util.decorators import npy_cached
 
-from .s2_hamiltonian import get_hamiltonian_deuterium, get_hamiltonian_hydrogen_sho
+from .s2_hamiltonian import (
+    get_hamiltonian_deuterium,
+    get_hamiltonian_hydrogen,
+)
 from .surface_data import get_data_path
 
 if TYPE_CHECKING:
@@ -41,7 +44,7 @@ def get_eigenstate_collection_hydrogen(
     tuple[
         FundamentalMomentumAxis3d[_L0],
         FundamentalMomentumAxis3d[_L1],
-        ExplicitAxis3d[Literal[501], _L2],
+        ExplicitAxis3d[Literal[250], _L2],
     ],
     Literal[11],
 ]:
@@ -53,10 +56,10 @@ def get_eigenstate_collection_hydrogen(
     ) -> HamiltonianWith3dBasis[
         FundamentalMomentumAxis3d[_L0],
         FundamentalMomentumAxis3d[_L1],
-        ExplicitAxis3d[Literal[501], _L2],
+        ExplicitAxis3d[Literal[250], _L2],
     ]:
-        return get_hamiltonian_hydrogen_sho(
-            shape=(2 * shape[0], 2 * shape[1], 501),
+        return get_hamiltonian_hydrogen(
+            shape=(250, 250, 250),
             bloch_fraction=bloch_fraction,
             resolution=shape,
         )
@@ -79,7 +82,7 @@ def get_eigenstate_collection_deuterium(
     tuple[
         FundamentalMomentumAxis3d[_L0],
         FundamentalMomentumAxis3d[_L1],
-        ExplicitAxis3d[Literal[100], _L2],
+        ExplicitAxis3d[Literal[250], _L2],
     ],
     Literal[11],
 ]:

@@ -23,8 +23,8 @@ from surface_potential_analysis.wavepacket.wavepacket import (
 )
 
 from .s2_hamiltonian import (
-    generate_hamiltonian_sho,
-    generate_hamiltonian_sho_relaxed,
+    get_hamiltonian,
+    get_hamiltonian_relaxed,
 )
 from .surface_data import get_data_path
 
@@ -77,7 +77,7 @@ def generate_wavepacket_sho_relaxed() -> None:
     def hamiltonian_generator(
         x: np.ndarray[tuple[Literal[3]], np.dtype[np.float_]]
     ) -> SingleBasisOperator3d[Any]:
-        return generate_hamiltonian_sho_relaxed(
+        return get_hamiltonian_relaxed(
             shape=(46, 46, 250),
             bloch_fraction=x,
             resolution=(23, 23, 18),
@@ -99,7 +99,7 @@ def generate_wavepacket_sho() -> None:
     def hamiltonian_generator(
         x: np.ndarray[tuple[Literal[3]], np.dtype[np.float_]]
     ) -> SingleBasisOperator3d[Any]:
-        return generate_hamiltonian_sho(
+        return get_hamiltonian(
             shape=(46, 46, 250),
             bloch_fraction=x,
             resolution=(23, 23, 18),

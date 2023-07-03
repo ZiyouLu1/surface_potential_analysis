@@ -20,6 +20,7 @@ from surface_potential_analysis.state_vector.plot import (
     plot_state_vector_difference_2d_x,
 )
 
+from .s3_eigenstates import get_eigenstate_collection, get_eigenstate_collection_relaxed
 from .surface_data import get_data_path, save_figure
 
 if TYPE_CHECKING:
@@ -28,6 +29,61 @@ if TYPE_CHECKING:
     from matplotlib.lines import Line2D
     from surface_potential_analysis.state_vector.state_vector import StateVector3d
     from surface_potential_analysis.util.util import Measure
+
+
+def plot_lowest_bands() -> None:
+    fig, ax = plt.subplots()
+
+    shape = (23, 23, 14)
+    for band in range(5):
+        collection = get_eigenstate_collection(shape)
+        _, _, ln = plot_energies_against_bloch_phase_1d(
+            collection, np.array([1, 0, 0]), band=band, ax=ax
+        )
+        ln.set_label(f"n={band}")
+
+    ax.legend()
+    fig.show()
+    input()
+
+
+def plot_lowest_bands_relaxed() -> None:
+    fig, ax = plt.subplots()
+
+    shape = (23, 23, 14)
+    for band in range(5):
+        collection = get_eigenstate_collection_relaxed(shape)
+        _, _, ln = plot_energies_against_bloch_phase_1d(
+            collection, np.array([1, 0, 0]), band=band, ax=ax
+        )
+        ln.set_label(f"n={band}")
+
+    ax.legend()
+    fig.show()
+    input()
+
+
+def plot_lowest_band_energy() -> None:
+    fig, ax = plt.subplots()
+
+    shapes = [
+        (23, 23, 10),
+        (23, 23, 12),
+        (23, 23, 14),
+        (21, 21, 14),
+        (21, 21, 16),
+        (21, 21, 18),
+    ]
+    for shape in shapes:
+        collection = get_eigenstate_collection(shape)
+        _, _, ln = plot_energies_against_bloch_phase_1d(
+            collection, np.array([1, 0, 0]), band=0, ax=ax
+        )
+        ln.set_label(f"({shape[0]}, {shape[1]}, {shape[2]})")
+
+    ax.legend()
+    fig.show()
+    input()
 
 
 def analyze_eigenvalue_convergence() -> None:

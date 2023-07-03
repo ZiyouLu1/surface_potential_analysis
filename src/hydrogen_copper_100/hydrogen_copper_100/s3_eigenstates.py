@@ -1,35 +1,63 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Literal
+from typing import TYPE_CHECKING, Literal, TypeVar
 
 import numpy as np
-from surface_potential_analysis.basis.util import Basis3dUtil
 from surface_potential_analysis.state_vector.eigenstate_collection import (
-    EigenstateColllection3d,
     calculate_eigenstate_collection,
-    save_eigenstate_collection,
 )
+from surface_potential_analysis.util.decorators import npy_cached
 
-from hydrogen_copper_100.s1_potential import get_interpolated_potential
-
-from .s2_hamiltonian import generate_hamiltonian_sho, generate_hamiltonian_sho_relaxed
+from .s2_hamiltonian import get_hamiltonian, get_hamiltonian_relaxed
 from .surface_data import get_data_path
 
 if TYPE_CHECKING:
-    from surface_potential_analysis.operator.operator import SingleBasisOperator3d
+    from pathlib import Path
+
+    _L0 = TypeVar("_L0", bound=int)
+    _L1 = TypeVar("_L1", bound=int)
+    _L2 = TypeVar("_L2", bound=int)
+    from surface_potential_analysis.axis.axis import (
+        ExplicitAxis3d,
+        FundamentalMomentumAxis3d,
+    )
+    from surface_potential_analysis.operator.operator import HamiltonianWith3dBasis
+    from surface_potential_analysis.state_vector.eigenstate_collection import (
+        EigenstateColllection,
+    )
 
 
-def _calculate_eigenstate_collection_sho(
-    bloch_fractions: np.ndarray[tuple[int, Literal[3]], np.dtype[np.float_]],
-    resolution: tuple[int, int, int],
-) -> EigenstateColllection3d[Any, Any]:
+def _get_eigenstate_collection_cache(shape: tuple[_L0, _L1, _L2]) -> Path:
+    return get_data_path(
+        f"eigenstates/eigenstates_{shape[0]}_{shape[1]}_{shape[2]}.npy"
+    )
+
+
+@npy_cached(_get_eigenstate_collection_cache, load_pickle=True)
+def get_eigenstate_collection(
+    shape: tuple[_L0, _L1, _L2],
+) -> EigenstateColllection[
+    tuple[
+        FundamentalMomentumAxis3d[_L0],
+        FundamentalMomentumAxis3d[_L1],
+        ExplicitAxis3d[Literal[250], _L2],
+    ],
+    Literal[11],
+]:
+    bloch_fractions_x = np.linspace(-0.5, 0.5, 11)
+    bloch_fractions = np.array([[f, 0, 0] for f in bloch_fractions_x])
+
     def hamiltonian_generator(
-        x: np.ndarray[tuple[Literal[3]], np.dtype[np.float_]]
-    ) -> SingleBasisOperator3d[Any]:
-        return generate_hamiltonian_sho(
-            shape=(200, 200, 501),
-            bloch_fraction=x,
-            resolution=resolution,
+        bloch_fraction: np.ndarray[tuple[Literal[3]], np.dtype[np.float_]]
+    ) -> HamiltonianWith3dBasis[
+        FundamentalMomentumAxis3d[_L0],
+        FundamentalMomentumAxis3d[_L1],
+        ExplicitAxis3d[Literal[250], _L2],
+    ]:
+        return get_hamiltonian(
+            shape=(2 * shape[0], 2 * shape[1], 250),
+            bloch_fraction=bloch_fraction,
+            resolution=shape,
         )
 
     return calculate_eigenstate_collection(
@@ -37,76 +65,39 @@ def _calculate_eigenstate_collection_sho(
     )
 
 
-def _generate_eigenstate_collection_sho(
-    bloch_fractions: np.ndarray[tuple[int, Literal[3]], np.dtype[np.float_]],
-    resolution: tuple[int, int, int],
-) -> None:
-    collection = _calculate_eigenstate_collection_sho(bloch_fractions, resolution)
-    filename = f"eigenstates_{resolution[0]}_{resolution[1]}_{resolution[2]}.npy"
-    path = get_data_path(filename)
-    save_eigenstate_collection(path, collection)
+def _get_eigenstate_collection_relaxed_cache(shape: tuple[_L0, _L1, _L2]) -> Path:
+    return get_data_path(
+        f"eigenstates/eigenstates_relaxed_{shape[0]}_{shape[1]}_{shape[2]}.npy"
+    )
 
 
-def generate_eigenstates_data() -> None:
-    """Generate data on the eigenstates and eigenvalues for a range of resolutions."""
-    potential = get_interpolated_potential(shape=(1, 1, 1))
-    Basis3dUtil(potential["basis"])
+@npy_cached(_get_eigenstate_collection_relaxed_cache, load_pickle=True)
+def get_eigenstate_collection_relaxed(
+    shape: tuple[_L0, _L1, _L2],
+) -> EigenstateColllection[
+    tuple[
+        FundamentalMomentumAxis3d[_L0],
+        FundamentalMomentumAxis3d[_L1],
+        ExplicitAxis3d[Literal[250], _L2],
+    ],
+    Literal[11],
+]:
+    bloch_fractions_x = np.linspace(-0.5, 0.5, 11)
+    bloch_fractions = np.array([[f, 0, 0] for f in bloch_fractions_x])
 
-    kx_points = np.linspace(0, 0.5, 5)
-    ky_points = np.linspace(0, 0.5, 5)
-    kz_points = np.zeros_like(kx_points)
-    bloch_fractions = np.array([kx_points, ky_points, kz_points]).T
-
-    # _generate_eigenstate_collection_sho(bloch_fractions, (25, 25, 14))  # noqa: ERA001
-
-    _generate_eigenstate_collection_sho(bloch_fractions, (23, 23, 14))
-
-    # _generate_eigenstate_collection_sho(bloch_fractions, (23, 23, 15)) # noqa: ERA001
-
-    # _generate_eigenstate_collection_sho(bloch_fractions, (25, 25, 16)) # noqa: ERA001
-
-
-def _calculate_eigenstate_collection_sho_relaxed(
-    bloch_fractions: np.ndarray[tuple[int, Literal[3]], np.dtype[np.float_]],
-    resolution: tuple[int, int, int],
-) -> EigenstateColllection3d[Any, Any]:
     def hamiltonian_generator(
-        x: np.ndarray[tuple[Literal[3]], np.dtype[np.float_]]
-    ) -> SingleBasisOperator3d[Any]:
-        return generate_hamiltonian_sho_relaxed(
-            shape=(200, 200, 501),
-            bloch_fraction=x,
-            resolution=resolution,
+        bloch_fraction: np.ndarray[tuple[Literal[3]], np.dtype[np.float_]]
+    ) -> HamiltonianWith3dBasis[
+        FundamentalMomentumAxis3d[_L0],
+        FundamentalMomentumAxis3d[_L1],
+        ExplicitAxis3d[Literal[250], _L2],
+    ]:
+        return get_hamiltonian_relaxed(
+            shape=(2 * shape[0], 2 * shape[1], 250),
+            bloch_fraction=bloch_fraction,
+            resolution=shape,
         )
 
     return calculate_eigenstate_collection(
         hamiltonian_generator, bloch_fractions, subset_by_index=(0, 10)  # type: ignore[arg-type]
     )
-
-
-def _generate_eigenstate_collection_sho_relaxed(
-    bloch_fractions: np.ndarray[tuple[int, Literal[3]], np.dtype[np.float_]],
-    resolution: tuple[int, int, int],
-) -> None:
-    collection = _calculate_eigenstate_collection_sho(bloch_fractions, resolution)
-    filename = (
-        f"eigenstates_relaxed_{resolution[0]}_{resolution[1]}_{resolution[2]}.npy"
-    )
-    path = get_data_path(filename)
-    save_eigenstate_collection(path, collection)
-
-
-def generate_eigenstates_data_relaxed() -> None:
-    """Generate data on the eigenstates and eigenvalues for a range of resolutions."""
-    kx_points = np.linspace(0, 0.5, 5)
-    ky_points = np.linspace(0, 0.5, 5)
-    kz_points = np.zeros_like(kx_points)
-    bloch_fractions = np.array([kx_points, ky_points, kz_points]).T
-
-    # _generate_eigenstate_collection_sho(bloch_fractions, (17, 17, 13))  # noqa: ERA001
-
-    _generate_eigenstate_collection_sho(bloch_fractions, (17, 17, 15))
-
-    # _generate_eigenstate_collection_sho(bloch_fractions, (21, 21, 14)) # noqa: ERA001
-
-    # _generate_eigenstate_collection_sho(bloch_fractions, (21, 21, 15)) # noqa: ERA001

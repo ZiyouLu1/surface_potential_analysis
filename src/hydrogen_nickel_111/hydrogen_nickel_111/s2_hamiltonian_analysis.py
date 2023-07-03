@@ -4,6 +4,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 from surface_potential_analysis.axis.axis import ExplicitAxis3d
 from surface_potential_analysis.axis.plot import plot_explicit_basis_states_x
+from surface_potential_analysis.basis.potential_basis import select_minimum_potential_3d
 from surface_potential_analysis.basis.util import BasisUtil
 from surface_potential_analysis.potential.plot import (
     plot_potential_1d_x,
@@ -16,7 +17,6 @@ from .s2_hamiltonian import (
     generate_sho_basis,
     get_hamiltonian_deuterium,
     get_hamiltonian_hydrogen_sho,
-    select_minimum_potential,
 )
 
 
@@ -60,7 +60,7 @@ def plot_deuterium_basis() -> None:
     fig, ax, _ = plot_explicit_basis_states_x(hamiltonian["basis"][2])
 
     potential = get_interpolated_potential(shape)
-    minimum = select_minimum_potential(potential)
+    minimum = select_minimum_potential_3d(potential)
     _, _, _ = plot_potential_1d_x(minimum, 0, (), ax=ax.twinx())
 
     fig.show()
