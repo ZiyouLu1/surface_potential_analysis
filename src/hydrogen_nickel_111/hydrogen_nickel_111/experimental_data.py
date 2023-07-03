@@ -58,6 +58,4 @@ def get_experimental_baseline_rates(
     r0 = rates[0] * np.exp(a0 / temperatures[0])
 
     popt, pcov = scipy.optimize.curve_fit(f, temperatures, rates, p0=[a0, r0])
-    print(a0, r0)
-    print(popt, rates[0], f(temperatures[0], *popt))
     return lambda t: f(t, *popt)

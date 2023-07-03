@@ -5,9 +5,19 @@ from matplotlib import pyplot as plt
 from surface_potential_analysis.axis.axis import ExplicitAxis3d
 from surface_potential_analysis.axis.plot import plot_explicit_basis_states_x
 from surface_potential_analysis.basis.util import BasisUtil
+from surface_potential_analysis.potential.plot import (
+    plot_potential_1d_x,
+)
 from surface_potential_analysis.util.interpolation import pad_ft_points
 
-from .s2_hamiltonian import generate_sho_basis, get_hamiltonian_hydrogen_sho
+from hydrogen_nickel_111.s1_potential import get_interpolated_potential
+
+from .s2_hamiltonian import (
+    generate_sho_basis,
+    get_hamiltonian_deuterium,
+    get_hamiltonian_hydrogen_sho,
+    select_minimum_potential,
+)
 
 
 def _normalize_sho_basis(basis: ExplicitAxis3d[int, int]) -> ExplicitAxis3d[int, int]:
@@ -35,6 +45,23 @@ def plot_sho_basis() -> None:
     _, _, lines = plot_explicit_basis_states_x(normalized, ax=ax, measure="real")
     for line in lines:
         line.set_color("tab:orange")
+
+    fig.show()
+    input()
+
+
+def plot_deuterium_basis() -> None:
+    shape = (50, 50, 100)
+    hamiltonian = get_hamiltonian_deuterium(
+        shape=shape,
+        bloch_fraction=np.array([0, 0, 0]),
+        resolution=(2, 2, 12),
+    )
+    fig, ax, _ = plot_explicit_basis_states_x(hamiltonian["basis"][2])
+
+    potential = get_interpolated_potential(shape)
+    minimum = select_minimum_potential(potential)
+    _, _, _ = plot_potential_1d_x(minimum, 0, (), ax=ax.twinx())
 
     fig.show()
     input()

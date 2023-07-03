@@ -67,7 +67,7 @@ def plot_uneven_potential_z_comparison(
     *,
     ax: Axes | None = None,
     scale: Scale = "linear",
-) -> tuple[Figure, Axes]:
+) -> tuple[Figure, Axes, list[Line2D]]:
     """
     Plot a nuneven potential in 1d along the x2 direction.
 
@@ -86,11 +86,13 @@ def plot_uneven_potential_z_comparison(
     tuple[Figure, Axes]
     """
     fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
+    lines: list[Line2D] = []
     for label, idx in comparison_points.items():
         (_, _, line) = plot_uneven_potential_z(potential, idx, ax=ax, scale=scale)
         line.set_label(label)
+        lines.append(line)
     ax.legend()
-    return fig, ax
+    return fig, ax, lines
 
 
 def plot_uneven_potential_z_comparison_111(
@@ -99,7 +101,7 @@ def plot_uneven_potential_z_comparison_111(
     *,
     ax: Axes | None = None,
     scale: Scale = "linear",
-) -> tuple[Figure, Axes]:
+) -> tuple[Figure, Axes, list[Line2D]]:
     """
     Plot the potential along the x2 at the relevant 111 sites.
 
@@ -128,7 +130,7 @@ def plot_uneven_potential_z_comparison_100(
     *,
     ax: Axes | None = None,
     scale: Scale = "linear",
-) -> tuple[Figure, Axes]:
+) -> tuple[Figure, Axes, list[Line2D]]:
     """
     Plot the potential along the x2 at the relevant 100 sites.
 

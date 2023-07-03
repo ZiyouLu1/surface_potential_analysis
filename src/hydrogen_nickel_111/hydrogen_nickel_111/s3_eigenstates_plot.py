@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import matplotlib.pyplot as plt
 import numpy as np
-from scipy.constants import electron_volt
 from surface_potential_analysis.axis.plot import plot_explicit_basis_states_x
 from surface_potential_analysis.state_vector.conversion import (
     interpolate_state_vector_momentum,
@@ -29,7 +28,7 @@ from hydrogen_nickel_111.s3_eigenstates import (
 from .surface_data import get_data_path, save_figure
 
 
-def plot_deuterium_lowest_band_energies() -> None:
+def plot_deuterium_lowest_bands() -> None:
     fig, ax = plt.subplots()
 
     collection = get_eigenstate_collection_deuterium((23, 23, 12))
@@ -42,6 +41,22 @@ def plot_deuterium_lowest_band_energies() -> None:
     ax.legend()
     ax.set_title("Plot of lowest band energies\nshowing convergence for n=100")
 
+    fig.show()
+    input()
+
+
+def plot_deuterium_lowest_band_energy() -> None:
+    fig, ax = plt.subplots()
+
+    shapes = [(23, 23, 10), (23, 23, 12), (24, 24, 12), (25, 25, 12)]
+    for shape in shapes:
+        collection = get_eigenstate_collection_deuterium(shape)
+        _, _, ln = plot_energies_against_bloch_phase_1d(
+            collection, np.array([1, 0, 0]), band=0, ax=ax
+        )
+        ln.set_label(f"({shape[0]}, {shape[1]}, {shape[2]})")
+
+    ax.legend()
     fig.show()
     input()
 
@@ -63,44 +78,6 @@ def plot_hydrogen_lowest_band_energies() -> None:
     ax.set_title("Plot of eight lowest band energies")
 
     fig.show()
-
-
-def generate_bandwidth_table() -> None:
-    collection = get_eigenstate_collection_hydrogen((24, 24, 12))
-    collection = get_eigenstate_collection_hydrogen((26, 26, 12))
-    collection = get_eigenstate_collection_hydrogen((26, 26, 10))
-
-    energies = np.min(collection["energies"], axis=0) - np.min(collection["energies"])
-    energies_mev = energies * 1000 / (electron_volt)
-
-    bandwidths = np.max(collection["energies"], axis=0) - np.min(
-        collection["energies"], axis=0
-    )
-    bandwidths_mev = bandwidths * 1000 / (electron_volt)
-
-    table = f"""
-\\begin{{table*}}\\centering
-    \\ra{{1.3}}
-    \\begin{{tabular}}{{@{{}}rlrr@{{}}}}
-        \\toprule
-        Band & Type              & Energy   & Bandwidth \\\\
-        \\midrule
-        0    & FCC groundstate   & {energies_mev[0]:.1e} & {bandwidths_mev[0]:.1e}  \\\\
-        1    & HCP groundstate   & {energies_mev[1]:.1e} & {bandwidths_mev[1]:.1e}  \\\\
-        2    & FCC parallel      & {energies_mev[2]:.1e} & {bandwidths_mev[2]:.1e}  \\\\
-        3    & FCC parallel      & {energies_mev[3]:.1e} & {bandwidths_mev[3]:.1e}  \\\\
-        4    & HCP parallel      & {energies_mev[4]:.1e} & {bandwidths_mev[4]:.1e}  \\\\
-        5    & HCP parallel      & {energies_mev[5]:.1e} & {bandwidths_mev[5]:.1e}  \\\\
-        6    & FCC perpendicular & {energies_mev[6]:.1e} & {bandwidths_mev[6]:.1e}  \\\\
-        7    & HCP perpendicular & {energies_mev[7]:.1e} & {bandwidths_mev[7]:.1e}  \\\\
-        \\bottomrule
-    \\end{{tabular}}
-    \\caption{{
-        Energy of the first eight bands of Hydrogen on the surface of Nickel,
-        .. consistent with previous calculations
-    }}
-\\end{{table*}}"""
-    print(table)  # noqa: T201
 
 
 def plot_state_vector_difference_hydrogen() -> None:

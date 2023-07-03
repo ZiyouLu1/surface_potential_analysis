@@ -224,6 +224,66 @@ impl SurfaceHamiltonian {
     }
 }
 
+trait AxisLike {}
+
+struct SurfaceHamiltonian2 {
+    resolution: EigenstateResolution,
+    ft_potential: Vec<Vec<Vec<Complex64>>>,
+    eigenstates_z: Vec<Vec<Complex64>>,
+}
+
+impl SurfaceHamiltonian2 {
+    fn get_nx0(&self) -> usize {
+        self.ft_potential.len()
+    }
+
+    fn get_nx1(&self) -> usize {
+        self.ft_potential[0].len()
+    }
+
+    fn calculate_off_diagonal_energies(&self) -> Vec<Vec<Complex64>> {
+        let coordinates = self.resolution.coordinates();
+
+        let mut g_points: HashMap<(usize, usize, usize, usize), Complex64> = HashMap::new();
+
+        coordinates
+            .iter()
+            .map(|(nkx0_1, nkx1_1, nz1)| -> Vec<Complex64> {
+                coordinates
+                    .iter()
+                    .map(|(nkx0_2, nkx1_2, nz2)| -> Complex64 {
+                        let n_dkx0 = usize::try_from(
+                            (nkx0_2 - nkx0_1).rem_euclid(i64::try_from(self.get_nx0()).unwrap()),
+                        )
+                        .unwrap();
+                        let n_dkx1 = usize::try_from(
+                            (nkx1_2 - nkx1_1).rem_euclid(i64::try_from(self.get_nx1()).unwrap()),
+                        )
+                        .unwrap();
+                        if let Some(a) = g_points.get(&(n_dkx0, n_dkx1, *nz1, *nz2)) {
+                            return *a;
+                        }
+
+                        let ft_pot_points = &self.ft_potential[n_dkx0][n_dkx1];
+
+                        let sho1: &Vec<Complex64> = &self.eigenstates_z[*nz1];
+                        let sho2: &Vec<Complex64> = &self.eigenstates_z[*nz2];
+
+                        let out = ft_pot_points
+                            .iter()
+                            .zip(sho1)
+                            .zip(sho2)
+                            .map(|((i, j), k)| i * j * k.conj())
+                            .sum::<Complex64>();
+                        g_points.insert((n_dkx0, n_dkx1, *nz1, *nz2), out);
+                        out
+                    })
+                    .collect()
+            })
+            .collect()
+    }
+}
+
 #[pyfunction]
 fn get_hermite_val(x: f64, n: u32) -> f64 {
     hermite_val(x, n)
@@ -265,6 +325,24 @@ fn calculate_off_diagonal_energies(
 }
 
 #[pyfunction]
+fn calculate_off_diagonal_energies2(
+    ft_potential: Vec<Vec<Vec<Complex64>>>,
+    eigenstates_z: Vec<Vec<Complex64>>,
+    resolution: [usize; 3],
+) -> Vec<Vec<Complex64>> {
+    let hamiltonian = SurfaceHamiltonian2 {
+        ft_potential,
+        resolution: EigenstateResolution(
+            resolution[0].try_into().unwrap(),
+            resolution[1].try_into().unwrap(),
+            resolution[2],
+        ),
+        eigenstates_z,
+    };
+    hamiltonian.calculate_off_diagonal_energies()
+}
+
+#[pyfunction]
 #[allow(clippy::too_many_arguments)]
 fn get_eigenstate_wavefunction(
     resolution: [usize; 3],
@@ -301,6 +379,7 @@ fn get_eigenstate_wavefunction(
 #[pymodule]
 fn hamiltonian_generator(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(calculate_off_diagonal_energies, m)?)?;
+    m.add_function(wrap_pyfunction!(calculate_off_diagonal_energies2, m)?)?;
     m.add_function(wrap_pyfunction!(get_sho_wavefunction, m)?)?;
     m.add_function(wrap_pyfunction!(get_hermite_val, m)?)?;
     m.add_function(wrap_pyfunction!(get_eigenstate_wavefunction, m)?)?;

@@ -5,11 +5,12 @@ from typing import TYPE_CHECKING, Any, Literal, TypeVar
 import numpy as np
 from matplotlib import pyplot as plt
 
-from surface_potential_analysis.axis.util import Axis3dUtil
+from surface_potential_analysis.axis.util import AxisUtil
 from surface_potential_analysis.basis.util import (
     Basis3dUtil,
     BasisUtil,
     calculate_cumulative_x_distances_along_path,
+    get_x_coordinates_in_axes,
 )
 from surface_potential_analysis.potential.conversion import (
     convert_potential_to_position_basis,
@@ -21,7 +22,7 @@ from surface_potential_analysis.util.plot import (
 from surface_potential_analysis.util.util import (
     Measure,
     get_measured_data,
-    slice_along_axis,
+    slice_ignoring_axes,
 )
 
 from ._comparison_points import (
@@ -38,7 +39,10 @@ if TYPE_CHECKING:
     from matplotlib.figure import Figure
     from matplotlib.lines import Line2D
 
-    from surface_potential_analysis._types import SingleFlatIndexLike
+    from surface_potential_analysis._types import (
+        SingleFlatIndexLike,
+        SingleStackedIndexLike,
+    )
     from surface_potential_analysis.basis.basis import Basis
     from surface_potential_analysis.potential.potential import Potential
     from surface_potential_analysis.util.plot import Scale
@@ -53,10 +57,10 @@ _L1Inv = TypeVar("_L1Inv", bound=int)
 _L2Inv = TypeVar("_L2Inv", bound=int)
 
 
-def plot_potential_1d(
-    potential: FundamentalPositionBasisPotential3d[_L0Inv, _L1Inv, _L2Inv],
-    idx: tuple[int, int],
-    axis: Literal[0, 1, 2, -1, -2, -3],
+def plot_potential_1d_x(
+    potential: Potential[_B0Inv],
+    axis: int = 0,
+    idx: SingleStackedIndexLike | None = None,
     *,
     ax: Axes | None = None,
     scale: Scale = "linear",
@@ -79,18 +83,16 @@ def plot_potential_1d(
     tuple[Figure, Axes, Line2D]
     """
     fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
+    idx = tuple(0 for _ in range(len(potential["basis"]) - 1)) if idx is None else idx
 
-    util = Axis3dUtil[Any, Any](potential["basis"][axis])
+    util = AxisUtil(potential["basis"][axis])
     coordinates = np.linalg.norm(util.fundamental_x_points, axis=0)
-    data_slice: list[slice | int] = [slice(None), slice(None), slice(None)]
-    data_slice[1 if (axis % 3) == 0 else 0] = idx[0]
-    data_slice[1 if (axis % 3) == 2 else 2] = idx[1]  # noqa: PLR2004
     data = potential["vector"].reshape(BasisUtil(potential["basis"]).shape)[
-        tuple(data_slice)
+        slice_ignoring_axes(idx, (axis,))
     ]
 
     (line,) = ax.plot(coordinates, data)
-    ax.set_xlabel(f"x{(axis % 3)} axis")
+    ax.set_xlabel(f"x{axis} axis")
     ax.set_ylabel("Energy /J")
     ax.set_yscale(scale)
     return fig, ax, line
@@ -104,7 +106,7 @@ def plot_potential_1d_comparison(
     *,
     ax: Axes | None = None,
     scale: Scale = "linear",
-) -> tuple[Figure, Axes]:
+) -> tuple[Figure, Axes, list[Line2D]]:
     """
     Plot the potential in 1d at the given comparison points.
 
@@ -123,11 +125,13 @@ def plot_potential_1d_comparison(
     tuple[Figure, Axes]
     """
     fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
+    lines: list[Line2D] = []
     for label, (idx, axis) in comparison_points.items():
-        (_, _, line) = plot_potential_1d(potential, idx, axis, ax=ax, scale=scale)
+        _, _, line = plot_potential_1d_x(potential, axis, idx, ax=ax, scale=scale)
         line.set_label(label)
+        lines.append(line)
     ax.legend()
-    return fig, ax
+    return fig, ax, lines
 
 
 def plot_potential_1d_x2_comparison_111(
@@ -136,7 +140,7 @@ def plot_potential_1d_x2_comparison_111(
     *,
     ax: Axes | None = None,
     scale: Scale = "linear",
-) -> tuple[Figure, Axes]:
+) -> tuple[Figure, Axes, list[Line2D]]:
     """
     Plot the potential along the x2 at the relevant 111 sites.
 
@@ -168,7 +172,7 @@ def plot_potential_1d_x2_comparison_100(
     *,
     ax: Axes | None = None,
     scale: Scale = "linear",
-) -> tuple[Figure, Axes]:
+) -> tuple[Figure, Axes, list[Line2D]]:
     """
     Plot the potential along the x2 at the relevant 100 sites.
 
@@ -196,8 +200,8 @@ def plot_potential_1d_x2_comparison_100(
 
 def plot_potential_2d_x(
     potential: FundamentalPositionBasisPotential3d[_L0Inv, _L1Inv, _L2Inv],
-    idx: SingleFlatIndexLike,
-    z_axis: Literal[0, 1, 2, -1, -2, -3],
+    axes: tuple[int, int] = (0, 1),
+    idx: SingleStackedIndexLike | None = None,
     *,
     ax: Axes | None = None,
     scale: Scale = "linear",
@@ -222,12 +226,11 @@ def plot_potential_2d_x(
     tuple[Figure, Axes, QuadMesh]
     """
     fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
-
-    coordinates = get_fundamental_projected_x_points(potential["basis"], z_axis)[
-        slice_along_axis(idx, (z_axis % 3) + 1)
-    ]
     util = BasisUtil(potential["basis"])
-    data = potential["vector"].reshape(util.shape)[slice_along_axis(idx, z_axis)]
+    idx = tuple(0 for _ in range(util.ndim - 2)) if idx is None else idx
+
+    coordinates = get_x_coordinates_in_axes(potential["basis"], axes, idx)
+    data = potential["vector"].reshape(util.shape)[slice_ignoring_axes(idx, axes)]
 
     mesh = ax.pcolormesh(*coordinates, data, shading="nearest")
     norm = get_norm_with_clim(scale, mesh.get_clim())
@@ -235,15 +238,15 @@ def plot_potential_2d_x(
     ax.set_aspect("equal", adjustable="box")
     fig.colorbar(mesh, ax=ax, format="%4.1e")
 
-    ax.set_xlabel(f"x{0 if (z_axis % 3) != 0 else 1} axis")
-    ax.set_ylabel(f"x{2 if (z_axis % 3) != 2 else 1} axis")  # noqa: PLR2004
+    ax.set_xlabel(f"x{axes[0]} axis")
+    ax.set_ylabel(f"x{axes[1]} axis")
 
     return fig, ax, mesh
 
 
 def plot_potential_x0x1(
     potential: FundamentalPositionBasisPotential3d[_L0Inv, _L1Inv, _L2Inv],
-    x3_idx: SingleFlatIndexLike,
+    x2_idx: SingleFlatIndexLike,
     *,
     ax: Axes | None = None,
     scale: Scale = "linear",
@@ -265,7 +268,7 @@ def plot_potential_x0x1(
     -------
     tuple[Figure, Axes, QuadMesh]
     """
-    return plot_potential_2d_x(potential, x3_idx, 2, ax=ax, scale=scale)
+    return plot_potential_2d_x(potential, (0, 1), (x2_idx,), ax=ax, scale=scale)
 
 
 def plot_potential_x1x2(
@@ -292,7 +295,7 @@ def plot_potential_x1x2(
     -------
     tuple[Figure, Axes, QuadMesh]
     """
-    return plot_potential_2d_x(potential, x0_idx, 0, ax=ax, scale=scale)
+    return plot_potential_2d_x(potential, (1, 2), (x0_idx,), ax=ax, scale=scale)
 
 
 def plot_potential_x2x0(
@@ -319,14 +322,14 @@ def plot_potential_x2x0(
     -------
     tuple[Figure, Axes, QuadMesh]
     """
-    return plot_potential_2d_x(potential, x1_idx, 1, ax=ax, scale=scale)
+    return plot_potential_2d_x(potential, (2, 0), (x1_idx,), ax=ax, scale=scale)
 
 
 def plot_potential_difference_2d_x(
     potential0: FundamentalPositionBasisPotential3d[_L0Inv, _L1Inv, _L2Inv],
     potential1: FundamentalPositionBasisPotential3d[_L0Inv, _L1Inv, _L2Inv],
-    idx: SingleFlatIndexLike,
-    z_axis: Literal[0, 1, 2, -1, -2, -3],
+    axes: tuple[int, int] = (0, 1),
+    idx: SingleStackedIndexLike | None = None,
     *,
     ax: Axes | None = None,
     scale: Scale = "linear",
@@ -355,7 +358,7 @@ def plot_potential_difference_2d_x(
         "basis": potential0["basis"],
         "vector": potential0["vector"] - potential1["vector"],
     }
-    return plot_potential_2d_x(potential, idx, z_axis, ax=ax, scale=scale)
+    return plot_potential_2d_x(potential, axes, idx, ax=ax, scale=scale)
 
 
 def animate_potential_3d_x(
@@ -387,7 +390,7 @@ def animate_potential_3d_x(
     tuple[Figure, Axes, ArtistAnimation]
     """
     util = BasisUtil(potential["basis"])
-    coordinates = get_fundamental_projected_x_points(potential["basis"], z_axis)
+    coordinates = get_x_coordinates_in_axes(potential["basis"], z_axis)
     points = potential["vector"].reshape(util.fundamental_shape)
     data = get_measured_data(points, measure)
     fig, ax, ani = animate_through_surface(  # type: ignore[misc]

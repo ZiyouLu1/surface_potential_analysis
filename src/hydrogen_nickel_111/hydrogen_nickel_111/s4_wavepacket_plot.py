@@ -41,7 +41,7 @@ from surface_potential_analysis.wavepacket.wavepacket import (
 
 from .s4_wavepacket import (
     MAXIMUM_POINTS,
-    get_wavepacket,
+    get_wavepacket_hydrogen,
     load_nickel_wavepacket,
     load_normalized_nickel_wavepacket_momentum,
     load_two_point_normalized_nickel_wavepacket_momentum,
@@ -117,7 +117,7 @@ def plot_nickel_wavepacket_energies() -> None:
 
 
 def animate_wavepacket_eigenstates_x1x2() -> None:
-    wavepacket = get_wavepacket(0)
+    wavepacket = get_wavepacket_hydrogen(0)
 
     eigenstate: StateVector3d[Any] = get_eigenstate(wavepacket, (0, 0))
     eigenstate["basis"] = (
@@ -132,7 +132,7 @@ def animate_wavepacket_eigenstates_x1x2() -> None:
     fig, _, _anim0 = animate_eigenstate_x1x2(eigenstate, measure="real")
     fig.show()
 
-    wavepacket = get_wavepacket(1)
+    wavepacket = get_wavepacket_hydrogen(1)
 
     eigenstate2: StateVector3d[Any] = get_eigenstate(wavepacket, (0, 0))
     eigenstate2["basis"] = (
@@ -147,7 +147,7 @@ def animate_wavepacket_eigenstates_x1x2() -> None:
     fig, _, _anim1 = animate_eigenstate_x1x2(eigenstate2, measure="real")
     fig.show()
 
-    wavepacket = get_wavepacket(2)
+    wavepacket = get_wavepacket_hydrogen(2)
 
     eigenstate3: StateVector3d[Any] = get_eigenstate(wavepacket, (0, 0))
     eigenstate3["basis"] = (

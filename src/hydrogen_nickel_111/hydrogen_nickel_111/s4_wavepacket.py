@@ -23,7 +23,7 @@ from surface_potential_analysis.wavepacket.wavepacket import (
     load_wavepacket,
 )
 
-from .s2_hamiltonian import get_hamiltonian_hydrogen_sho
+from .s2_hamiltonian import get_hamiltonian_deuterium, get_hamiltonian_hydrogen_sho
 from .surface_data import get_data_path
 
 if TYPE_CHECKING:
@@ -37,13 +37,23 @@ if TYPE_CHECKING:
     )
     from surface_potential_analysis.operator import SingleBasisOperator3d
 
-    _NickelWavepacket = Wavepacket3dWith2dSamples[
+    _HydrogenNickelWavepacket = Wavepacket3dWith2dSamples[
         Literal[12],
         Literal[12],
         Basis3d[
             MomentumAxis[Literal[24], Literal[24], Literal[3]],
             MomentumAxis[Literal[24], Literal[24], Literal[3]],
             ExplicitAxis[Literal[250], Literal[12], Literal[3]],
+        ],
+    ]
+
+    _DeuteriumNickelWavepacket = Wavepacket3dWith2dSamples[
+        Literal[12],
+        Literal[12],
+        Basis3d[
+            MomentumAxis[Literal[25], Literal[25], Literal[3]],
+            MomentumAxis[Literal[25], Literal[25], Literal[3]],
+            ExplicitAxis[Literal[200], Literal[10], Literal[3]],
         ],
     ]
 
@@ -167,7 +177,7 @@ def generate_nickel_wavepacket_sho() -> None:
 
 
 @npy_cached(get_data_path("wavepacket/wavepacket.npy"), load_pickle=True)  # type: ignore[misc]
-def get_all_wavepackets() -> list[_NickelWavepacket]:
+def get_all_wavepackets_hydrogen() -> list[_HydrogenNickelWavepacket]:
     def _hamiltonian_generator(
         bloch_fraction: np.ndarray[tuple[Literal[3]], np.dtype[np.float_]]
     ) -> SingleBasisOperator3d[Any]:
@@ -185,13 +195,13 @@ def get_all_wavepackets() -> list[_NickelWavepacket]:
     )
 
 
-def _get_wavepacket_cache(band: int) -> Path:
+def _get_wavepacket_cache_h(band: int) -> Path:
     return get_data_path(f"wavepacket/wavepacket_{band}.npy")
 
 
-@npy_cached(_get_wavepacket_cache, load_pickle=True)
-def get_wavepacket(band: int) -> _NickelWavepacket:
-    wavepacket = get_all_wavepackets()[band]
+@npy_cached(_get_wavepacket_cache_h, load_pickle=True)
+def get_wavepacket_hydrogen(band: int) -> _HydrogenNickelWavepacket:
+    wavepacket = get_all_wavepackets_hydrogen()[band]
     # Work around for bug in cached wavepacket
     wavepacket["basis"] = (
         FundamentalMomentumAxis3d(
@@ -205,8 +215,43 @@ def get_wavepacket(band: int) -> _NickelWavepacket:
     return wavepacket
 
 
-def get_two_point_normalized_wavepacket(
+def get_two_point_normalized_wavepacket_hydrogen(
     band: int, offset: tuple[int, int] = (0, 0), angle: float = 0
-) -> _NickelWavepacket:
-    wavepacket = get_wavepacket(band)
+) -> _HydrogenNickelWavepacket:
+    wavepacket = get_wavepacket_hydrogen(band)
+    return localize_tightly_bound_wavepacket_two_point_max(wavepacket, offset, angle)
+
+
+@npy_cached(get_data_path("wavepacket/wavepacket_deuterium.npy"), load_pickle=True)  # type: ignore[misc]
+def get_all_wavepackets_deuterium() -> list[_DeuteriumNickelWavepacket]:
+    def _hamiltonian_generator(
+        bloch_fraction: np.ndarray[tuple[Literal[3]], np.dtype[np.float_]]
+    ) -> SingleBasisOperator3d[Any]:
+        return get_hamiltonian_deuterium(
+            shape=(200, 200, 200),
+            bloch_fraction=bloch_fraction,
+            resolution=(25, 25, 10),
+        )
+
+    save_bands = np.arange(20)
+    return generate_wavepacket(
+        _hamiltonian_generator,
+        shape=(12, 12, 1),
+        save_bands=save_bands,
+    )
+
+
+def _get_wavepacket_cache_d(band: int) -> Path:
+    return get_data_path(f"wavepacket/wavepacket_deuterium_{band}.npy")
+
+
+@npy_cached(_get_wavepacket_cache_d, load_pickle=True)
+def get_wavepacket_deuterium(band: int) -> _DeuteriumNickelWavepacket:
+    return get_all_wavepackets_deuterium()[band]
+
+
+def get_two_point_normalized_wavepacket_deuterium(
+    band: int, offset: tuple[int, int] = (0, 0), angle: float = 0
+) -> _DeuteriumNickelWavepacket:
+    wavepacket = get_wavepacket_deuterium(band)
     return localize_tightly_bound_wavepacket_two_point_max(wavepacket, offset, angle)

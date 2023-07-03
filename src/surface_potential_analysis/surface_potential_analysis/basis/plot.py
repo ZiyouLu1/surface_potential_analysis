@@ -213,9 +213,9 @@ def plot_fundamental_x_in_plane_projected_2d(
     tuple[Figure, Axes, Line2D]
     """
     util = BasisUtil(basis)
-    points = util.fundamental_x_points.reshape(3, *util.fundamental_shape)[
+    points = util.fundamental_x_points.reshape(util.ndim, *util.fundamental_shape)[
         slice_ignoring_axes(idx, axes)
-    ].reshape(3, -1)
+    ].reshape(util.ndim, -1)
     return plot_x_points_projected_2d(basis, axes, points, ax=ax)
 
 
@@ -245,7 +245,7 @@ def plot_fundamental_x_at_index_projected_2d(
     """
     util = BasisUtil(basis)
     idx = idx if isinstance(idx, tuple) else util.get_stacked_index(idx)
-    points = util.fundamental_x_points.reshape(3, *util.fundamental_shape)[
+    points = util.fundamental_x_points.reshape(util.ndim, *util.fundamental_shape)[
         :, *idx
-    ].reshape(3, -1)
+    ].reshape(util.ndim, -1)
     return plot_x_points_projected_2d(basis, axes, points, ax=ax)

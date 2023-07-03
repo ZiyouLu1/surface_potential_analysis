@@ -1,13 +1,13 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, TypeVar
+from typing import TYPE_CHECKING, Any, TypeVar
 
 import numpy as np
 from matplotlib import pyplot as plt
 
 from surface_potential_analysis.util.util import Measure, get_measured_data
 
-from .util import Axis3dUtil
+from .util import AxisUtil
 
 if TYPE_CHECKING:
     from matplotlib.axes import Axes
@@ -15,21 +15,20 @@ if TYPE_CHECKING:
     from matplotlib.lines import Line2D
 
     from surface_potential_analysis._types import SingleFlatIndexLike
+    from surface_potential_analysis.axis.axis_like import AxisLike
 
-    from .axis_like import AxisLike3d
-
-    _A3d0Inv = TypeVar("_A3d0Inv", bound=AxisLike3d[int, int])
+    _A0Inv = TypeVar("_A0Inv", bound=AxisLike[int, int, Any])
 
 
 def plot_explicit_basis_states_x(
-    basis: _A3d0Inv,
+    basis: _A0Inv,
     *,
     ax: Axes | None = None,
     measure: Measure = "abs",
 ) -> tuple[Figure, Axes, list[Line2D]]:
     """Plot basis states against position."""
     fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
-    util = Axis3dUtil(basis)
+    util = AxisUtil(basis)
 
     x_points = np.linalg.norm(util.fundamental_x_points, axis=0)
     lines: list[Line2D] = []
@@ -46,7 +45,7 @@ def plot_explicit_basis_states_x(
 
 
 def plot_explicit_basis_state_x(
-    basis: _A3d0Inv,
+    basis: _A0Inv,
     idx: SingleFlatIndexLike = 0,
     *,
     ax: Axes | None = None,
@@ -54,7 +53,7 @@ def plot_explicit_basis_state_x(
 ) -> tuple[Figure, Axes, Line2D]:
     """Plot basis states against position."""
     fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
-    util = Axis3dUtil(basis)
+    util = AxisUtil(basis)
 
     x_points = np.linalg.norm(util.fundamental_x_points, axis=0)
     data = get_measured_data(util.vectors[idx], measure)

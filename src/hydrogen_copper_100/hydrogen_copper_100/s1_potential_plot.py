@@ -40,7 +40,7 @@ def plot_copper_raw_data() -> None:
     data = load_raw_copper_potential()
     data = normalize_potential(data)
 
-    fig, ax = plot_uneven_potential_z_comparison_100(data)
+    fig, ax, _ = plot_uneven_potential_z_comparison_100(data)
     ax.set_ylim(bottom=0, top=1e-18)
     fig.show()
     save_figure(fig, "copper_raw_data_z_direction.png")
@@ -53,7 +53,7 @@ def plot_copper_raw_data() -> None:
 def plot_copper_nc_data() -> None:
     data = normalize_potential(load_nc_raw_copper_potential())
 
-    fig, ax = plot_uneven_potential_z_comparison_100(data)
+    fig, ax, _ = plot_uneven_potential_z_comparison_100(data)
     ax.set_ylim(bottom=-0.1e-18, top=1e-18)
     fig.show()
     input()
@@ -66,8 +66,8 @@ def plot_copper_9h_data() -> None:
     data_7h = load_raw_copper_potential()
     data_7h_norm = normalize_potential(data_7h)
 
-    fig, ax = plot_uneven_potential_z_comparison_100(data)
-    _, _ = plot_uneven_potential_z_comparison_100(data_7h_norm, ax=ax)
+    fig, ax, _ = plot_uneven_potential_z_comparison_100(data)
+    _, _, _ = plot_uneven_potential_z_comparison_100(data_7h_norm, ax=ax)
     ax.set_ylim(bottom=-0.1e-18, top=1e-18)
 
     fig.show()
@@ -97,7 +97,7 @@ def plot_copper_relaxed_interpolated_data() -> None:
     data = get_interpolated_potential_relaxed((50, 50, 250))
     raw_data = normalize_potential(load_relaxed_copper_potential())
 
-    fig, ax = plot_potential_1d_x2_comparison_100(data)
+    fig, ax, _ = plot_potential_1d_x2_comparison_100(data)
     plot_uneven_potential_z_comparison_100(raw_data, ax=ax)
     ax.set_ylim(bottom=0, top=1e-18)
     fig.show()
@@ -129,7 +129,7 @@ def plot_copper_interpolated_data() -> None:
 
     raw_data = normalize_potential(load_raw_copper_potential())
 
-    fig, ax = plot_potential_1d_x2_comparison_100(data)
+    fig, ax, _ = plot_potential_1d_x2_comparison_100(data)
     plot_uneven_potential_z_comparison_100(raw_data, ax=ax)
     ax.set_ylim(bottom=0, top=1e-18)
     fig.show()
@@ -221,8 +221,8 @@ def compare_bridge_hollow_energy() -> None:
     print("--------------------------------------")  # noqa: T201
     print("Relaxed")  # noqa: T201
     data = get_interpolated_potential_relaxed((50, 50, 100))
-    util = BasisUtil(data["basis"])
-    points = np.array(data["vector"]).reshape(util.shape)
+    util2 = BasisUtil(data["basis"])
+    points = np.array(data["vector"]).reshape(util2.shape)
     print(points.shape)  # noqa: T201
 
     print("Bridge ", np.min(points[points.shape[0] // 2, 0, :]))  # noqa: T201
@@ -242,8 +242,8 @@ def compare_bridge_hollow_energy() -> None:
     )
 
     relaxed_data = normalize_potential(load_relaxed_copper_potential())
-    util = BasisUtil(relaxed_data["basis"])
-    points = np.array(relaxed_data["vector"]).reshape(util.shape)
+    util3 = BasisUtil(relaxed_data["basis"])
+    points = np.array(relaxed_data["vector"]).reshape(util3.shape)
     print(points.shape)  # noqa: T201
 
     print("Bridge ", np.min(points[points.shape[0] // 2, 0, :]))  # noqa: T201

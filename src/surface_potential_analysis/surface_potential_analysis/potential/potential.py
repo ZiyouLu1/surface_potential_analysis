@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING, Any, Generic, TypedDict, TypeVar, overload
 import numpy as np
 
 from surface_potential_analysis.axis.axis import (
+    FundamentalPositionAxis2d,
     FundamentalPositionAxis3d,
 )
 from surface_potential_analysis.basis.basis import (
@@ -128,8 +129,8 @@ class UnevenPotential3d(TypedDict, Generic[_L0Cov, _L1Cov, _L2Cov]):
     """Represents a potential unevenly spaced in the z direction."""
 
     basis: tuple[
-        FundamentalPositionAxis3d[_L0Cov],
-        FundamentalPositionAxis3d[_L1Cov],
+        FundamentalPositionAxis2d[_L0Cov],
+        FundamentalPositionAxis2d[_L1Cov],
         np.ndarray[tuple[_L2Cov], np.dtype[np.float_]],
     ]
     vector: PotentialPoints
@@ -191,8 +192,8 @@ def load_uneven_potential_json(
 
         return {
             "basis": (
-                FundamentalPositionAxis3d(np.array(out["delta_x0"]), points.shape[0]),
-                FundamentalPositionAxis3d(np.array(out["delta_x1"]), points.shape[1]),
+                FundamentalPositionAxis2d(np.array(out["delta_x0"]), points.shape[0]),
+                FundamentalPositionAxis2d(np.array(out["delta_x1"]), points.shape[1]),
                 np.array(out["z_points"]),
             ),
             "vector": points,
@@ -307,10 +308,12 @@ def interpolate_uneven_potential(
     interpolated = interpolate_points_along_axis_spline(
         xy_interpolated, data["basis"][2], shape[2], axis=2
     )
+    delta_x_0 = np.concatenate([util.delta_x[0], [0]])
+    delta_x_1 = np.concatenate([util.delta_x[1], [0]])
     return {
         "basis": (
-            FundamentalPositionAxis3d(data["basis"][0].delta_x, shape[0]),
-            FundamentalPositionAxis3d(data["basis"][1].delta_x, shape[1]),
+            FundamentalPositionAxis3d(delta_x_0, shape[0]),
+            FundamentalPositionAxis3d(delta_x_1, shape[1]),
             FundamentalPositionAxis3d(
                 np.array([0, 0, data["basis"][2][-1] - data["basis"][2][0]]), shape[2]
             ),

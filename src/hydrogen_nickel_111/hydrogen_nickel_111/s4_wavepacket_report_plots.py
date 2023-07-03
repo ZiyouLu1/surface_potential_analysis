@@ -12,30 +12,37 @@ from surface_potential_analysis.wavepacket.localization import (
 )
 from surface_potential_analysis.wavepacket.plot import plot_wavepacket_2d_x
 
-from hydrogen_nickel_111.s4_wavepacket import get_wavepacket
+from hydrogen_nickel_111.s4_wavepacket import get_wavepacket_hydrogen
 
 
 def plot_wavepacket_localization() -> None:
     fig, ax = plt.subplots()
 
-    wavepacket = get_wavepacket(0)
+    wavepacket = get_wavepacket_hydrogen(0)
     converted = convert_state_vector_to_position_basis(get_eigenstate(wavepacket, 0))
     idx_flat = np.argmax(np.abs(converted["vector"]), axis=-1)
     util = BasisUtil(converted["basis"])
     idx_max = util.get_stacked_index(idx_flat)
 
-    normalized = localize_tightly_bound_wavepacket_idx(wavepacket, idx_max)
+    normalized = localize_tightly_bound_wavepacket_idx(
+        wavepacket, (24 + idx_max[0], 24 + idx_max[0], idx_max[2])
+    )
     fig, ax, mesh = plot_wavepacket_2d_x(
         normalized, (0, 1), (idx_max[2],), scale="symlog"
     )
+    ax.set_xlim(None, 1e-9)
+    ax.set_ylim(None, 0.8e-9)
     fig.show()
 
-    wavepacket = get_wavepacket(0)
-    print(wavepacket["vectors"].shape)
-    normalized = localize_tightly_bound_wavepacket_idx(wavepacket, (8, 8, idx_max[2]))
+    wavepacket = get_wavepacket_hydrogen(0)
+    normalized = localize_tightly_bound_wavepacket_idx(
+        wavepacket, (24 + 8, 24 + 8, idx_max[2])
+    )
     fig, ax, mesh = plot_wavepacket_2d_x(
         normalized, (0, 1), (idx_max[2],), scale="symlog"
     )
+    ax.set_xlim(None, 1e-9)
+    ax.set_ylim(None, 0.8e-9)
     fig.show()
 
     input()

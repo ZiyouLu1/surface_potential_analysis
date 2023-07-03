@@ -1,12 +1,19 @@
 def calculate_off_diagonal_energies(
     ft_potential: list[list[list[complex]]],
-    resolution: tuple[float, float, float],
+    resolution: tuple[int, int, int],
     dz: float,
     mass: float,
     sho_omega: float,
     z_offset: float,
 ) -> list[list[complex]]:
-    """Calculate the off diagonal terms for the hamiltonian."""  # noqa: PYI021
+    """Calculate the off diagonal terms for the hamiltonian."""  # noqa: PYI021, PYI053
+
+def calculate_off_diagonal_energies2(
+    ft_potential: list[list[list[complex]]],
+    eigenstates_z: list[list[complex]],
+    resolution: tuple[int, int, int],
+) -> list[list[complex]]:
+    """Calculate the off diagonal terms for the hamiltonian."""  # noqa: PYI021, PYI053
 
 def get_sho_wavefunction(
     z_points: list[float], sho_omega: float, mass: float, n: int

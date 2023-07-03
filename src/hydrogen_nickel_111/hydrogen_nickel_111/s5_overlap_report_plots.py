@@ -8,14 +8,23 @@ from matplotlib.scale import FuncScale
 from scipy.constants import Boltzmann, electron_mass, hbar
 from surface_potential_analysis.dynamics.hermitian_gamma_integral import (
     calculate_hermitian_gamma_occupation_integral,
+    calculate_hermitian_gamma_potential_integral,
     get_hermitian_gamma_occupation_integrand,
+)
+from surface_potential_analysis.overlap.interpolation import (
+    get_overlap_momentum_interpolator_flat,
 )
 
 from hydrogen_nickel_111.experimental_data import (
     get_experiment_data,
     get_experimental_baseline_rates,
 )
-from hydrogen_nickel_111.s5_overlap import get_fcc_hcp_energy_difference
+from hydrogen_nickel_111.s5_overlap import (
+    get_hydrogen_fcc_hcp_energy_difference,
+    get_overlap_deuterium,
+    get_overlap_hydrogen,
+)
+from hydrogen_nickel_111.s5_overlap_analysis import get_angle_averaged_overlap
 
 from .constants import FERMI_WAVEVECTOR
 
@@ -38,7 +47,7 @@ def plot_fermi_occupation_intregrand() -> None:
         line.set_label(f"{t} K")
         line.set_color(PLOT_COLOURS[i])
 
-        omega = float(get_fcc_hcp_energy_difference())
+        omega = float(get_hydrogen_fcc_hcp_energy_difference())
         occupation = get_hermitian_gamma_occupation_integrand(
             k1_points, omega=omega, k_f=FERMI_WAVEVECTOR, boltzmann_energy=Boltzmann * t
         )
@@ -80,7 +89,7 @@ def plot_fermi_occupation_integral() -> None:
         )
         for t in temperatures
     ]
-    omega = float(get_fcc_hcp_energy_difference())
+    omega = float(get_hydrogen_fcc_hcp_energy_difference())
     integrals_non_zero_offset = [
         calculate_hermitian_gamma_occupation_integral(
             omega, FERMI_WAVEVECTOR, Boltzmann * t
@@ -112,10 +121,26 @@ def plot_fermi_occupation_integral() -> None:
     input()
 
 
+def get_hydrogen_fcc_hcp_gamma() -> float:
+    overlap = get_overlap_hydrogen(0, 1)
+    interpolator_0_1 = get_overlap_momentum_interpolator_flat(overlap)
+
+    def overlap_function(
+        q: np.ndarray[_S0Inv, np.dtype[np.float_]]
+    ) -> np.ndarray[_S0Inv, np.dtype[np.complex_]]:
+        return get_angle_averaged_overlap(
+            interpolator_0_1, interpolator_0_1, q.ravel()
+        ).reshape(q.shape)
+
+    return calculate_hermitian_gamma_potential_integral(
+        FERMI_WAVEVECTOR, overlap_function
+    )
+
+
 def get_rate_simple_equation(
     temperature: np.ndarray[_S0Inv, np.dtype[np.float_]]
 ) -> np.ndarray[_S0Inv, np.dtype[np.float_]]:
-    omega = float(get_fcc_hcp_energy_difference())
+    omega = float(get_hydrogen_fcc_hcp_energy_difference())
     temperature_flat = temperature.ravel()
     temperature_dep_integral = np.array(
         [
@@ -133,8 +158,52 @@ def get_rate_simple_equation(
             for t in temperature_flat
         ]
     )
-    fcc_hcp_gamma = 26.93
-    return (
+    fcc_hcp_gamma = get_hydrogen_fcc_hcp_gamma()
+    print(fcc_hcp_gamma)
+    return (  # type: ignore[no-any-return]
+        (temperature_dep_integral + temperature_dep_integral2) * (3 * (fcc_hcp_gamma))
+    ).reshape(temperature.shape)
+
+
+def get_deuterium_fcc_hcp_gamma() -> float:
+    overlap = get_overlap_deuterium(0, 1)
+    interpolator_0_1 = get_overlap_momentum_interpolator_flat(overlap)
+
+    def overlap_function(
+        q: np.ndarray[_S0Inv, np.dtype[np.float_]]
+    ) -> np.ndarray[_S0Inv, np.dtype[np.complex_]]:
+        return get_angle_averaged_overlap(
+            interpolator_0_1, interpolator_0_1, q.ravel()
+        ).reshape(q.shape)
+
+    return calculate_hermitian_gamma_potential_integral(
+        FERMI_WAVEVECTOR, overlap_function
+    )
+
+
+def get_rate_simple_equation_deuterium(
+    temperature: np.ndarray[_S0Inv, np.dtype[np.float_]]
+) -> np.ndarray[_S0Inv, np.dtype[np.float_]]:
+    omega = float(get_hydrogen_fcc_hcp_energy_difference())
+    temperature_flat = temperature.ravel()
+    temperature_dep_integral = np.array(
+        [
+            calculate_hermitian_gamma_occupation_integral(
+                omega, FERMI_WAVEVECTOR, Boltzmann * t
+            )
+            for t in temperature_flat
+        ]
+    )
+    temperature_dep_integral2 = np.array(
+        [
+            calculate_hermitian_gamma_occupation_integral(
+                -omega, FERMI_WAVEVECTOR, Boltzmann * t
+            )
+            for t in temperature_flat
+        ]
+    )
+    fcc_hcp_gamma = 0.012759755043446671  #!get_deuterium_fcc_hcp_gamma()
+    return (  # type: ignore[no-any-return]
         (temperature_dep_integral + temperature_dep_integral2) * (3 * (fcc_hcp_gamma))
     ).reshape(temperature.shape)
 
@@ -145,19 +214,21 @@ def plot_rate_equation() -> None:
     temperatures = np.linspace(100, 300)
     rates = get_rate_simple_equation(temperatures)
     rates += get_experimental_baseline_rates(get_rate_simple_equation)(temperatures)
-    (line,) = ax.plot(temperatures, rates)
+    (theory_line,) = ax.plot(temperatures, rates)
 
     data = get_experiment_data()
-    ax.errorbar(
+    exp_data_plot = ax.errorbar(
         data["temperature"],
         data["rate"],
         yerr=[data["rate"] - data["lower_error"], data["upper_error"] - data["rate"]],
     )
+    rates_deuterium = get_rate_simple_equation_deuterium(temperatures)
+    ax.plot(temperatures, rates_deuterium)
 
     scale = FuncScale(ax, [lambda x: 1 / x, lambda x: 1 / x])
     ax.set_xscale(scale)
     ax.set_yscale("log")
-    ax.legend()
+    ax.legend([theory_line, exp_data_plot], ["theoretical rate", "experimental rate"])
     ax.set_ylim(5e8, None)
     ax.set_ylabel("Rate /s")
     ax.set_xlabel("1/Temperature 1/$\\mathrm{K}^{-1}$")

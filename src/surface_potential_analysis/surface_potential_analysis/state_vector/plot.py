@@ -61,7 +61,7 @@ if TYPE_CHECKING:
 
 def plot_state_vector_1d_k(
     state: StateVector[_B0Inv],
-    axes: tuple[int, int] = 0,
+    axes: tuple[int] = (0,),
     idx: SingleStackedIndexLike | None = None,
     *,
     ax: Axes | None = None,
@@ -600,7 +600,7 @@ def plot_state_vector_difference_2d_k(
 def animate_eigenstate_3d_x(
     eigenstate: StateVector[_B0Inv],
     axes: tuple[int, int],
-    z_axis: int,
+    idx: SingleStackedIndexLike | None = None,
     *,
     ax: Axes | None = None,
     measure: Measure = "abs",
@@ -664,7 +664,7 @@ def animate_eigenstate_x0x1(
     tuple[Figure, Axes, ArtistAnimation]
     """
     return animate_eigenstate_3d_x(
-        eigenstate, (0, 1), 2, ax=ax, measure=measure, scale=scale
+        eigenstate, (0, 1), (0,), ax=ax, measure=measure, scale=scale
     )
 
 
@@ -693,7 +693,7 @@ def animate_eigenstate_x1x2(
     tuple[Figure, Axes, ArtistAnimation]
     """
     return animate_eigenstate_3d_x(
-        eigenstate, (1, 2), 0, ax=ax, measure=measure, scale=scale
+        eigenstate, (1, 2), (0,), ax=ax, measure=measure, scale=scale
     )
 
 
@@ -722,7 +722,7 @@ def animate_eigenstate_x2x0(
     tuple[Figure, Axes, ArtistAnimation]
     """
     return animate_eigenstate_3d_x(
-        eigenstate, (2, 0), 1, ax=ax, measure=measure, scale=scale
+        eigenstate, (2, 0), (0,), ax=ax, measure=measure, scale=scale
     )
 
 

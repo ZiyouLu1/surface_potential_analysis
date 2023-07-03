@@ -6,6 +6,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 
 from surface_potential_analysis.basis.util import (
+    BasisUtil,
     get_k_coordinates_in_axes,
     get_x_coordinates_in_axes,
 )
@@ -21,6 +22,7 @@ from surface_potential_analysis.util.plot import get_norm_with_clim
 from surface_potential_analysis.util.util import (
     Measure,
     get_measured_data,
+    slice_ignoring_axes,
 )
 from surface_potential_analysis.wavepacket.eigenstate_conversion import (
     unfurl_wavepacket,
@@ -51,9 +53,6 @@ if TYPE_CHECKING:
     from surface_potential_analysis.state_vector.state_vector import StateVector
     from surface_potential_analysis.util.plot import Scale
 
-    _NS0Inv = TypeVar("_NS0Inv", bound=int)
-    _NS1Inv = TypeVar("_NS1Inv", bound=int)
-
     _S03dInv = TypeVar("_S03dInv", bound=tuple[int, int, int])
     _B3d0Inv = TypeVar("_B3d0Inv", bound=Basis3d[Any, Any, Any])
 
@@ -62,7 +61,9 @@ if TYPE_CHECKING:
 
 
 def plot_wavepacket_sample_frequencies(
-    wavepacket: Wavepacket3dWith2dSamples[_NS0Inv, _NS1Inv, _B3d0Inv],
+    wavepacket: Wavepacket[_S0Inv, _B0Inv],
+    axes: tuple[int, int] = (0, 1),
+    idx: SingleStackedIndexLike | None = None,
     *,
     ax: Axes | None = None,
 ) -> tuple[Figure, Axes, Line2D]:
@@ -80,16 +81,19 @@ def plot_wavepacket_sample_frequencies(
     tuple[Figure, Axes, Line2D]
     """
     fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
+    util = BasisUtil(wavepacket["basis"])
+    idx = tuple(0 for _ in range(util.ndim - len(axes))) if idx is None else idx
 
     frequencies = get_wavepacket_sample_frequencies(
-        wavepacket["basis"], np.array(wavepacket["vectors"].shape)[0:2]
-    )[:2, :]
+        wavepacket["basis"], wavepacket["shape"]
+    ).reshape(-1, *wavepacket["shape"])
+    frequencies = frequencies[list(axes), slice_ignoring_axes(idx, axes)]
     (line,) = ax.plot(*frequencies.reshape(2, -1))
     line.set_marker("x")
     line.set_linestyle("")
 
-    ax.set_xlabel("kx /$m^{-1}$")
-    ax.set_ylabel("ky /$m^{-1}$")
+    ax.set_xlabel(f"k{axes[0]} /$m^{-1}$")
+    ax.set_ylabel(f"k{axes[1]} /$m^{-1}$")
     ax.set_title("Plot of sample points in the wavepacket")
 
     return fig, ax, line
@@ -97,8 +101,8 @@ def plot_wavepacket_sample_frequencies(
 
 def plot_wavepacket_energies_2d_k(
     wavepacket: Wavepacket[_S0Inv, _B0Inv],
-    axes: tuple[int, int],
-    idx: SingleStackedIndexLike | None,
+    axes: tuple[int, int] = (0, 1),
+    idx: SingleStackedIndexLike | None = None,
     *,
     ax: Axes | None = None,
     scale: Scale = "linear",
@@ -142,6 +146,8 @@ def plot_wavepacket_energies_2d_k(
 
 def plot_wavepacket_energies_2d_x(
     wavepacket: Wavepacket[_S0Inv, _B0Inv],
+    axes: tuple[int, int] = (0, 1),
+    idx: SingleStackedIndexLike | None = None,
     *,
     ax: Axes | None = None,
     measure: Measure = "abs",

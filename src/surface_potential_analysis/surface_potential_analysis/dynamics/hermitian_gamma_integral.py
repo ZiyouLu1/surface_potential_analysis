@@ -123,7 +123,7 @@ def calculate_hermitian_gamma_occupation_integral(
 
 
 def _calculate_real_gamma_prefactor(k_f: float) -> float:
-    return 8 * electron_mass * k_f**3 / (hbar**3 * (2 * np.pi) ** 3)  # type: ignore[no-any-return]
+    return 4 * electron_mass * k_f**3 / (hbar**3 * (2 * np.pi) ** 3)  # type: ignore[no-any-return]
 
 
 def _get_coulomb_potential(
@@ -179,7 +179,7 @@ def calculate_hermitian_gamma_potential_integral(
     k_f: float,
     overlap: Callable[
         [np.ndarray[_S0Inv, np.dtype[np.float_]]],
-        np.ndarray[_S0Inv, np.dtype[np.float_]],
+        np.ndarray[_S0Inv, np.dtype[np.complex_]],
     ],
 ) -> float:
     """
