@@ -58,7 +58,7 @@ def plot_lowest_bands_relaxed() -> None:
         )
         ln.set_label(f"n={band}")
 
-    ax.legend()
+    ax.legend(loc="bottom right")
     fig.show()
     input()
 

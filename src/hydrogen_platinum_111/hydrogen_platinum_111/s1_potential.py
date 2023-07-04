@@ -1,12 +1,19 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, TypeVar
 
 import numpy as np
-from surface_potential_analysis.axis.axis import FundamentalPositionAxis3d
+from surface_potential_analysis.axis.axis import FundamentalPositionAxis2d
 from surface_potential_analysis.potential.point_potential import (
     PointPotential3d,
     load_point_potential_json,
+)
+from surface_potential_analysis.potential.potential import (
+    FundamentalPositionBasisPotential3d,
+    interpolate_uneven_potential,
+    normalize_potential,
+    truncate_potential,
+    undo_truncate_potential,
 )
 
 from .surface_data import get_data_path
@@ -140,8 +147,8 @@ def map_irreducible_points_into_unit_cell(
     )
     diagonal_length = np.sqrt(np.square(y_height / 2) + np.square(x_width))
 
-    delta_x0 = np.array([2 * x_width, 0, 0])
-    delta_x1 = np.array([0.5 * delta_x0[0], np.sqrt(3) * delta_x0[0] / 2, 0])
+    delta_x0 = np.array([2 * x_width, 0])
+    delta_x1 = np.array([0.5 * delta_x0[0], np.sqrt(3) * delta_x0[0] / 2])
 
     if not np.allclose(delta_x1[1], y_height / 2 + diagonal_length):
         raise AssertionError(  # noqa: TRY003
@@ -149,14 +156,33 @@ def map_irreducible_points_into_unit_cell(
         )
     return {
         "basis": (
-            FundamentalPositionAxis3d(delta_x0, final_grid.shape[0]),
-            FundamentalPositionAxis3d(delta_x1, final_grid.shape[1]),
-            z_points,
+            FundamentalPositionAxis2d(delta_x0, final_grid.shape[0]),
+            FundamentalPositionAxis2d(delta_x1, final_grid.shape[1]),
+            z_points - z_points[0],
         ),
         "vector": final_grid.ravel(),
     }
 
 
-def get_reflected_data() -> UnevenPotential3d[int, int, int]:
+def get_reflected_potential() -> UnevenPotential3d[int, int, int]:
     irreducible_points = load_raw_data()
     return map_irreducible_points_into_unit_cell(irreducible_points)
+
+
+_L0 = TypeVar("_L0", bound=int)
+_L1 = TypeVar("_L1", bound=int)
+_L2 = TypeVar("_L2", bound=int)
+
+
+def get_interpolated_potential(
+    shape: tuple[_L0, _L1, _L2]
+) -> FundamentalPositionBasisPotential3d[_L0, _L1, _L2]:
+    data = get_reflected_potential()
+    normalized = normalize_potential(data)
+
+    # The Top site has such an insanely large energy
+    # We must bring it down first
+    # ! truncated = truncate_potential(normalized, cutoff=1e-17, n=5, offset=1e-20)
+    truncated = truncate_potential(normalized, cutoff=0.5e-18, n=1, offset=0)
+    interpolated = interpolate_uneven_potential(truncated, shape)
+    return undo_truncate_potential(interpolated, cutoff=0.5e-18, n=1, offset=0)

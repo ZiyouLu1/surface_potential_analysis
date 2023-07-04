@@ -2,11 +2,13 @@ from __future__ import annotations
 
 import hydrogen_copper_100
 import hydrogen_nickel_111
+import hydrogen_platinum_111.s3_eigenstates_plot
 from surface_potential_analysis.util.decorators import timed
 
 
 @timed
 def main() -> None:
+    hydrogen_platinum_111.s3_eigenstates_plot.plot_lowest_band_energy()
     hydrogen_nickel_111.s3_eigenstates_plot.plot_hydrogen_lowest_band_energy()
     hydrogen_nickel_111.s3_eigenstates_plot.plot_deuterium_lowest_band_energy()
     hydrogen_copper_100.s3_eigenstates_plot.plot_lowest_bands_relaxed()

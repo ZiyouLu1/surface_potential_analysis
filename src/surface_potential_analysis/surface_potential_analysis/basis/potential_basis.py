@@ -1,13 +1,13 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Generic, TypedDict, TypeVar
+from typing import TYPE_CHECKING, Any, Generic, Literal, TypedDict, TypeVar
 
 import numpy as np
 
 from surface_potential_analysis.axis.axis import (
     ExplicitAxis1d,
+    FundamentalPositionAxis,
     FundamentalPositionAxis1d,
-    FundamentalPositionAxis3d,
 )
 from surface_potential_analysis.basis.basis import Basis1d
 from surface_potential_analysis.basis.util import BasisUtil
@@ -85,7 +85,7 @@ def get_potential_basis_config_basis(
 
 
 def select_minimum_potential_3d(
-    potential: Potential[tuple[Any, Any, FundamentalPositionAxis3d[_L0Inv]]]
+    potential: Potential[tuple[Any, Any, FundamentalPositionAxis[_L0Inv, Literal[3]]]]
 ) -> Potential[tuple[FundamentalPositionAxis1d[_L0Inv]]]:
     """
     Given a 3D potential in the standard configuration select the minimum potential.

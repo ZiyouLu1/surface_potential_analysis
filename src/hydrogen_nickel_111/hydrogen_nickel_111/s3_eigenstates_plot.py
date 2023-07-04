@@ -55,6 +55,7 @@ def plot_deuterium_lowest_band_energy() -> None:
         (25, 25, 12),
         (27, 27, 10),
         (28, 28, 8),
+        (29, 29, 8),
     ]
     for shape in shapes:
         collection = get_eigenstate_collection_deuterium(shape)
@@ -72,13 +73,13 @@ def plot_hydrogen_lowest_band_energy() -> None:
     fig, ax = plt.subplots()
 
     shapes = [
-        (23, 23, 8),
         (23, 23, 10),
         (23, 23, 12),
         (24, 24, 10),
         (24, 24, 12),
         (25, 25, 10),
         (27, 27, 10),
+        (29, 29, 10),
     ]
     for shape in shapes:
         collection = get_eigenstate_collection_hydrogen(shape)
@@ -87,7 +88,7 @@ def plot_hydrogen_lowest_band_energy() -> None:
         )
         ln.set_label(f"({shape[0]}, {shape[1]}, {shape[2]})")
 
-    ax.legend()
+    ax.legend(loc="lower right")
     fig.show()
     input()
 
