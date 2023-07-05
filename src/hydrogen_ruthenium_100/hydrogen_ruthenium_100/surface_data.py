@@ -15,7 +15,7 @@ def get_out_path(filename: str) -> Path:
         if out_folder_env is not None
         else Path(__file__).parent.parent.parent.parent.parent / "out"
     )
-    return out_folder / "ruthenium_100" / filename
+    return out_folder / "hydrogen_ruthenium_100" / filename
 
 
 def save_figure(fig: Figure, filename: str) -> None:
@@ -30,4 +30,4 @@ def get_data_path(filename: str) -> Path:
         if data_folder_env is not None
         else Path(__file__).parent.parent.parent.parent.parent / "data"
     )
-    return data_folder / "ruthenium_100" / filename
+    return data_folder / "hydrogen_ruthenium_100" / filename

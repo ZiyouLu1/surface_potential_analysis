@@ -3,7 +3,10 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, TypeVar
 
 import numpy as np
-from surface_potential_analysis.axis.axis import FundamentalPositionAxis3d
+from surface_potential_analysis.axis.axis import (
+    FundamentalPositionAxis2d,
+    FundamentalPositionAxis3d,
+)
 from surface_potential_analysis.basis.build import (
     position_basis_3d_from_shape,
 )
@@ -27,7 +30,7 @@ from surface_potential_analysis.util.interpolation import (
 from .surface_data import get_data_path
 
 if TYPE_CHECKING:
-    from surface_potential_analysis.axis import AxisVector3d
+    from surface_potential_analysis.axis.axis_like import AxisVector2d
     from surface_potential_analysis.basis.basis import (
         FundamentalPositionBasis3d,
     )
@@ -98,12 +101,12 @@ def get_raw_potential_reciprocal_grid() -> UnevenPotential3d[Any, Any, Any]:
     length = np.max(y_points) - np.min(y_points)  # type: ignore[operator]
     return {
         "basis": (
-            FundamentalPositionAxis3d(
-                np.array([3 * length * (np.sqrt(3) / 2), 3 * length * (1 / 2), 0]),
+            FundamentalPositionAxis2d(
+                np.array([3 * length * (np.sqrt(3) / 2), 3 * length * (1 / 2)]),
                 reciprocal_points.shape[0],
             ),
-            FundamentalPositionAxis3d(
-                np.array([0, 3 * length, 0]), reciprocal_points.shape[1]
+            FundamentalPositionAxis2d(
+                np.array([0, 3 * length]), reciprocal_points.shape[1]
             ),
             z_c,
         ),
@@ -136,8 +139,8 @@ _L2Inv = TypeVar("_L2Inv", bound=int)
 
 def interpolate_points_fourier_nickel(  # noqa: PLR0913
     points: np.ndarray[tuple[int, int], np.dtype[np.float_]],
-    delta_x0_reciprocal: AxisVector3d,
-    delta_x1_reciprocal: AxisVector3d,
+    delta_x0_reciprocal: AxisVector2d,
+    delta_x1_reciprocal: AxisVector2d,
     delta_x0_real: tuple[float, float],
     delta_x1_real: tuple[float, float],
     shape: tuple[_L0Inv, _L1Inv],
@@ -218,11 +221,11 @@ def interpolate_energy_grid_xy_fourier_nickel(
         )
     return {
         "basis": (
-            FundamentalPositionAxis3d(
-                np.array([delta_x0_real[0], delta_x0_real[1], 0]), shape[0]
+            FundamentalPositionAxis2d(
+                np.array([delta_x0_real[0], delta_x0_real[1]]), shape[0]
             ),
-            FundamentalPositionAxis3d(
-                np.array([delta_x1_real[0], delta_x1_real[1], 0]), shape[1]
+            FundamentalPositionAxis2d(
+                np.array([delta_x1_real[0], delta_x1_real[1]]), shape[1]
             ),
             data["basis"][2],
         ),
@@ -253,8 +256,14 @@ def interpolate_energy_grid_fourier_nickel(
 
     return {
         "basis": (
-            xy_interpolation["basis"][0],
-            xy_interpolation["basis"][1],
+            FundamentalPositionAxis3d(
+                np.array([*xy_interpolation["basis"][0].delta_x, 0]),
+                xy_interpolation["basis"][0].n,
+            ),
+            FundamentalPositionAxis3d(
+                np.array([*xy_interpolation["basis"][1].delta_x, 0]),
+                xy_interpolation["basis"][1].n,
+            ),
             FundamentalPositionAxis3d(
                 np.array([0, 0, data["basis"][2][-1] - data["basis"][2][0]]),
                 shape[2],

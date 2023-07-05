@@ -49,7 +49,7 @@ _B3d1Inv = TypeVar("_B3d1Inv", bound=Basis3d[Any, Any, Any])
 _L0Inv = TypeVar("_L0Inv", bound=int)
 _L1Inv = TypeVar("_L1Inv", bound=int)
 _L2Inv = TypeVar("_L2Inv", bound=int)
-
+_NDInv = TypeVar("_NDInv", bound=int)
 _LF0Inv = TypeVar("_LF0Inv", bound=int)
 _LF1Inv = TypeVar("_LF1Inv", bound=int)
 _LF2Inv = TypeVar("_LF2Inv", bound=int)
@@ -685,7 +685,7 @@ class Basis3dUtil(BasisUtil[_B3d0Inv]):
 
 
 def project_k_points_along_axes(
-    points: np.ndarray[tuple[int, Unpack[_S0Inv]], np.dtype[np.float_]],
+    points: np.ndarray[tuple[_NDInv, Unpack[_S0Inv]], np.dtype[np.float_]],
     basis: _B0Inv,
     axes: tuple[int, int],
 ) -> np.ndarray[tuple[Literal[2], Unpack[_S0Inv]], np.dtype[np.float_]]:
@@ -757,11 +757,11 @@ def get_k_coordinates_in_axes(
     idx = tuple(0 for _ in range(util.ndim - len(axes))) if idx is None else idx
     points = get_fundamental_k_points_projected_along_axes(basis, axes)
     _slice = slice_ignoring_axes(idx, axes)
-    return points.reshape(2, *util.shape)[:, *_slice]
+    return points.reshape(2, *util.shape)[:, *_slice].swapaxes(1, 1 + np.argmin(axes))
 
 
 def project_x_points_along_axes(
-    points: np.ndarray[tuple[int, Unpack[_S0Inv]], np.dtype[np.float_]],
+    points: np.ndarray[tuple[_NDInv, Unpack[_S0Inv]], np.dtype[np.float_]],
     basis: _B0Inv,
     axes: tuple[int, int],
 ) -> np.ndarray[tuple[Literal[2], Unpack[_S0Inv]], np.dtype[np.float_]]:
@@ -818,7 +818,7 @@ def get_x_coordinates_in_axes(
     idx: SingleStackedIndexLike | None,
 ) -> np.ndarray[tuple[Literal[2], int], np.dtype[np.float_]]:
     """
-    Get the fundamental_k_points projected onto the plane including both axes.
+    Get the fundamental_x_points projected onto the plane including both axes.
 
     Parameters
     ----------
@@ -833,7 +833,7 @@ def get_x_coordinates_in_axes(
     idx = tuple(0 for _ in range(util.ndim - len(axes))) if idx is None else idx
     points = get_fundamental_x_points_projected_along_axes(basis, axes)
     _slice = slice_ignoring_axes(idx, axes)
-    return points.reshape(2, *util.shape)[:, *_slice]
+    return points.reshape(2, *util.shape)[:, *_slice].swapaxes(1, 1 + np.argmin(axes))
 
 
 @overload
@@ -895,7 +895,7 @@ def wrap_index_around_origin(
     util = BasisUtil(basis)
     origin = tuple(0 for _ in basis) if origin is None else origin
     origin = origin if isinstance(origin, tuple) else util.get_stacked_index(origin)
-    return tuple(
+    return tuple(  # type: ignore[return-value]
         _wrap_distance(idx[ax] - origin[ax], util.shape[ax]) + origin[ax]
         if axes is None or ax in axes
         else idx[ax]
@@ -1038,7 +1038,7 @@ def get_x01_mirrored_index(idx: StackedIndexLike) -> StackedIndexLike:
     arr = list(idx)
     arr[0] = idx[1]
     arr[1] = idx[0]
-    return tuple(arr)
+    return tuple(arr)  # type: ignore[return-value]
 
 
 def get_single_point_basis(

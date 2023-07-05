@@ -233,6 +233,7 @@ def plot_potential_2d_x(
     data = potential["vector"].reshape(util.shape)[slice_ignoring_axes(idx, axes)]
 
     mesh = ax.pcolormesh(*coordinates, data, shading="nearest")
+    mesh.set_clim(0, 1E-18)
     norm = get_norm_with_clim(scale, mesh.get_clim())
     mesh.set_norm(norm)
     ax.set_aspect("equal", adjustable="box")

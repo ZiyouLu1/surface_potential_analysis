@@ -93,7 +93,7 @@ def plot_hydrogen_lowest_band_energy() -> None:
     input()
 
 
-def plot_hydrogen_lowest_band_energies() -> None:
+def plot_hydrogen_lowest_bands() -> None:
     fig, ax = plt.subplots()
 
     colors = plt.rcParams["axes.prop_cycle"].by_key()["color"]

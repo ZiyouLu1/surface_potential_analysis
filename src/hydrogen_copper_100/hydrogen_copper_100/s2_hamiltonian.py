@@ -79,7 +79,6 @@ def generate_hamiltonian_sho(
     )
 
 
-@timed
 def get_hamiltonian(
     shape: tuple[_L0, _L1, _L2],
     bloch_fraction: np.ndarray[tuple[Literal[3]], np.dtype[np.float_]],
@@ -141,7 +140,6 @@ def get_hamiltonian(
     }
 
 
-@timed
 def get_hamiltonian_relaxed(
     shape: tuple[_L0, _L1, _L2],
     bloch_fraction: np.ndarray[tuple[Literal[3]], np.dtype[np.float_]],

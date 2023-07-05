@@ -73,9 +73,14 @@ def plot_overlap_2d_x(
     fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
     idx = tuple(0 for _ in range(len(overlap["basis"]) - 2)) if idx is None else idx
 
-    coordinates = get_x_coordinates_in_axes(overlap["basis"], axes, idx)  # type: ignore[arg-type]
+    coordinates = get_x_coordinates_in_axes(overlap["basis"], axes, idx).swapaxes(1, 2)
     util = BasisUtil(overlap["basis"])
-    points = overlap["vector"].reshape(*util.shape)[slice_ignoring_axes(idx, axes)]
+    points = (
+        overlap["vector"]
+        .reshape(*util.shape)[slice_ignoring_axes(idx, axes)]
+        .swapaxes(0, np.argmin(axes))
+        .swapaxes(0, 1)
+    )
     data = get_measured_data(points, measure)
 
     mesh = ax.pcolormesh(*coordinates, data, shading="nearest")
@@ -123,9 +128,14 @@ def plot_overlap_2d_k(
     fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
     idx = tuple(0 for _ in range(len(overlap["basis"]) - 2)) if idx is None else idx
 
-    coordinates = get_k_coordinates_in_axes(overlap["basis"], axes, idx)
+    coordinates = get_k_coordinates_in_axes(overlap["basis"], axes, idx).swapaxes(1, 2)
     util = BasisUtil(overlap["basis"])
-    points = overlap["vector"].reshape(*util.shape)[slice_ignoring_axes(idx, axes)]
+    points = (
+        overlap["vector"]
+        .reshape(*util.shape)[slice_ignoring_axes(idx, axes)]
+        .swapaxes(0, np.argmin(axes))
+        .swapaxes(0, 1)
+    )
     data = np.fft.ifftshift(get_measured_data(points, measure))
     shifted_coordinates = np.fft.ifftshift(coordinates)
 

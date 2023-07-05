@@ -62,7 +62,7 @@ def plot_operator_localized_states_large_band_increasing_resolution() -> None:
 
 
 def plot_operator_localized_states_single_band() -> None:
-    wavepackets = get_localized_wavepackets((40,), (100,), 15)
+    wavepackets = get_localized_wavepackets((8,), (100,), 3)
 
     fig, ax = plt.subplots()
     for i, wavepacket in enumerate(wavepackets):
@@ -77,7 +77,6 @@ def plot_operator_localized_states_single_band() -> None:
         ln.set_label(f"n={i}")
 
     ax.legend()
-    ax.set_title("Plot of the six lowest energy wavepackets")
     fig.show()
     input()
 
@@ -98,8 +97,7 @@ def plot_operator_localized_states_many_band() -> None:
         _, _, ln = plot_state_vector_1d_x(eigenstate, ax=ax)
         ln.set_label(f"n={i}")
 
-    ax.legend()
-    ax.set_title("Plot of the six lowest energy wavepackets")
+    ax.set_xlim(3.2e-9, 3.7e-9)
     fig.show()
     input()
 

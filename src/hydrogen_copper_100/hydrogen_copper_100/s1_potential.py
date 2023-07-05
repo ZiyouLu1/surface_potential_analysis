@@ -62,4 +62,6 @@ def get_interpolated_potential_relaxed(
     data = load_relaxed_copper_potential()
     normalized = normalize_potential(data)
 
-    return interpolate_uneven_potential(normalized, shape)
+    truncated = truncate_potential(normalized, cutoff=0.1e-18, n=1, offset=0)
+    interpolated = interpolate_uneven_potential(truncated, shape)
+    return undo_truncate_potential(interpolated, cutoff=0.1e-18, n=1, offset=0)

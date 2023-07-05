@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from . import (
-    basis_plot,
     s1_potential,
     s1_potential_plot,
     s2_hamiltonian,
@@ -21,7 +20,6 @@ from . import (
 )
 
 __all__ = [
-    "basis_plot",
     "s1_potential",
     "s1_potential_plot",
     "s2_hamiltonian",

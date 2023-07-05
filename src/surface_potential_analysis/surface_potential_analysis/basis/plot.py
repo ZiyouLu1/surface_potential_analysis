@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, Literal, TypeVar, Unpack
 
+import numpy as np
 from matplotlib import pyplot as plt
 
 from surface_potential_analysis.axis.conversion import axis_as_single_point_axis
@@ -17,7 +18,6 @@ from surface_potential_analysis.basis.util import (
 from surface_potential_analysis.util.util import slice_ignoring_axes
 
 if TYPE_CHECKING:
-    import numpy as np
     from matplotlib.axes import Axes
     from matplotlib.figure import Figure
     from matplotlib.lines import Line2D
@@ -27,12 +27,13 @@ if TYPE_CHECKING:
 
     _S0Inv = TypeVar("_S0Inv", bound=tuple[int, ...])
     _B0Inv = TypeVar("_B0Inv", bound=Basis[Any])
+    _NDInv = TypeVar("_NDInv", bound=int)
 
 
 def plot_k_points_projected_2d(
     basis: _B0Inv,
     axes: tuple[int, int],
-    points: np.ndarray[tuple[Literal[3], Unpack[_S0Inv]], np.dtype[np.float_]],
+    points: np.ndarray[tuple[_NDInv, Unpack[_S0Inv]], np.dtype[np.float_]],
     *,
     ax: Axes | None = None,
 ) -> tuple[Figure, Axes, Line2D]:
@@ -213,9 +214,11 @@ def plot_fundamental_x_in_plane_projected_2d(
     tuple[Figure, Axes, Line2D]
     """
     util = BasisUtil(basis)
-    points = util.fundamental_x_points.reshape(util.ndim, *util.fundamental_shape)[
-        slice_ignoring_axes(idx, axes)
-    ].reshape(util.ndim, -1)
+    points = (
+        np.array(util.fundamental_nx_points)
+        .reshape(util.ndim, *util.fundamental_shape)[slice_ignoring_axes(idx, axes)]
+        .reshape(util.ndim, -1)
+    )
     return plot_x_points_projected_2d(basis, axes, points, ax=ax)
 
 
@@ -245,7 +248,9 @@ def plot_fundamental_x_at_index_projected_2d(
     """
     util = BasisUtil(basis)
     idx = idx if isinstance(idx, tuple) else util.get_stacked_index(idx)
-    points = util.fundamental_x_points.reshape(util.ndim, *util.fundamental_shape)[
-        :, *idx
-    ].reshape(util.ndim, -1)
+    points = (
+        np.array(util.fundamental_nx_points)
+        .reshape(util.ndim, *util.fundamental_shape)[:, *idx]
+        .reshape(util.ndim, -1)
+    )
     return plot_x_points_projected_2d(basis, axes, points, ax=ax)

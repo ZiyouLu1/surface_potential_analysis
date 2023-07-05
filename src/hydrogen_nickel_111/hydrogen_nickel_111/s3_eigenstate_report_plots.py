@@ -11,9 +11,7 @@ from hydrogen_nickel_111.s3_eigenstates import get_eigenstate_collection_hydroge
 
 
 def generate_bandwidth_table() -> None:
-    collection = get_eigenstate_collection_hydrogen((24, 24, 12))
-    collection = get_eigenstate_collection_hydrogen((26, 26, 12))
-    collection = get_eigenstate_collection_hydrogen((26, 26, 10))
+    collection = get_eigenstate_collection_hydrogen((29, 29, 10))
 
     energies = np.min(collection["energies"], axis=0) - np.min(collection["energies"])
     energies_mev = energies * 1000 / (electron_volt)
@@ -25,19 +23,18 @@ def generate_bandwidth_table() -> None:
 
     table = f"""
 \\begin{{table*}}\\centering
-    \\ra{{1.3}}
     \\begin{{tabular}}{{@{{}}rlrr@{{}}}}
         \\toprule
         Band & Type              & Energy   & Bandwidth \\\\
         \\midrule
-        0    & FCC groundstate   & {energies_mev[0]:.1e} & {bandwidths_mev[0]:.1e}  \\\\
-        1    & HCP groundstate   & {energies_mev[1]:.1e} & {bandwidths_mev[1]:.1e}  \\\\
-        2    & FCC parallel      & {energies_mev[2]:.1e} & {bandwidths_mev[2]:.1e}  \\\\
-        3    & FCC parallel      & {energies_mev[3]:.1e} & {bandwidths_mev[3]:.1e}  \\\\
-        4    & HCP parallel      & {energies_mev[4]:.1e} & {bandwidths_mev[4]:.1e}  \\\\
-        5    & HCP parallel      & {energies_mev[5]:.1e} & {bandwidths_mev[5]:.1e}  \\\\
-        6    & FCC perpendicular & {energies_mev[6]:.1e} & {bandwidths_mev[6]:.1e}  \\\\
-        7    & HCP perpendicular & {energies_mev[7]:.1e} & {bandwidths_mev[7]:.1e}  \\\\
+        0    & FCC groundstate   & \\num{{{energies_mev[0]:.1e}}} & \\num{{{bandwidths_mev[0]:.1e}}}  \\\\
+        1    & HCP groundstate   & \\num{{{energies_mev[1]:.1e}}} & \\num{{{bandwidths_mev[1]:.1e}}}  \\\\
+        2    & FCC parallel      & \\num{{{energies_mev[2]:.1e}}} & \\num{{{bandwidths_mev[2]:.1e}}}  \\\\
+        3    & FCC parallel      & \\num{{{energies_mev[3]:.1e}}} & \\num{{{bandwidths_mev[3]:.1e}}}  \\\\
+        4    & HCP parallel      & \\num{{{energies_mev[4]:.1e}}} & \\num{{{bandwidths_mev[4]:.1e}}}  \\\\
+        5    & HCP parallel      & \\num{{{energies_mev[5]:.1e}}} & \\num{{{bandwidths_mev[5]:.1e}}}  \\\\
+        6    & FCC perpendicular & \\num{{{energies_mev[6]:.1e}}} & \\num{{{bandwidths_mev[6]:.1e}}}  \\\\
+        7    & HCP perpendicular & \\num{{{energies_mev[7]:.1e}}} & \\num{{{bandwidths_mev[7]:.1e}}}  \\\\
         \\bottomrule
     \\end{{tabular}}
     \\caption{{

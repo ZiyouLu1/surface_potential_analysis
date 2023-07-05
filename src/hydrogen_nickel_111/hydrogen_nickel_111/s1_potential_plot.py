@@ -58,6 +58,7 @@ from .surface_data import save_figure
 if TYPE_CHECKING:
     from matplotlib.axes import Axes
     from matplotlib.figure import Figure
+    from matplotlib.lines import Line2D
 
 
 def get_nickel_reciprocal_comparison_points_x0x1(
@@ -70,6 +71,16 @@ def get_nickel_reciprocal_comparison_points_x0x1(
         "Top Site": ((0, math.floor(shape[0] / 3)), 2),
         "FCC Site": ((0, 0), 2),
     }
+
+
+def plot_interpolated_potential_2d_x() -> None:
+    potential = get_interpolated_potential((200, 200, 100))
+    x2_min = BasisUtil(potential["basis"]).get_stacked_index(
+        np.argmin(potential["vector"])
+    )[2]
+    fig, ax, _ = plot_potential_2d_x(potential, (0, 1), (x2_min,), scale="symlog")
+    fig.show()
+    input()
 
 
 def plot_raw_data_points() -> None:
@@ -96,7 +107,7 @@ def plot_z_direction_energy_data_nickel_reciprocal_points(
     mocked = mock_even_potential(potential)
     locations = get_nickel_reciprocal_comparison_points_x0x1(mocked)
     locations_uneven = {k: v[0] for (k, v) in locations.items()}
-    fig, ax = plot_uneven_potential_z_comparison(potential, locations_uneven, ax=ax)
+    fig, ax, _ = plot_uneven_potential_z_comparison(potential, locations_uneven, ax=ax)
 
     return fig, ax
 
@@ -119,7 +130,7 @@ def plot_raw_energy_grid_points() -> None:
 
     cleaned = get_truncated_potential()
 
-    fig, ax = plot_uneven_potential_z_comparison_111(cleaned)
+    fig, ax, _ = plot_uneven_potential_z_comparison_111(cleaned)
     for ln in ax.lines:
         ln.set_marker("x")
         ln.set_linestyle("")
@@ -139,8 +150,8 @@ def plot_interpolated_energy_grid_points() -> None:
     )
     fig.show()
 
-    fig, ax, _ani = animate_potential_x0x1(potential, clim=(0, 2e-19))
-
+    # ! fig, ax, _ani = animate_potential_x0x1(potential, clim=(0, 2e-19))
+    fig, ax = plt.subplots()
     raw_potential = get_raw_potential_reciprocal_grid()
     mocked_raw_potential = mock_even_potential(raw_potential)
     plot_fundamental_x_in_plane_projected_2d(
@@ -158,7 +169,7 @@ def plot_interpolated_energy_grid_points() -> None:
     for ln in ax.lines:
         ln.set_marker("x")
         ln.set_linestyle("")
-    _, _ = plot_potential_1d_x2_comparison_111(potential, ax=ax)
+    _, _, _ = plot_potential_1d_x2_comparison_111(potential, ax=ax)
     ax.set_ylim(0, 5e-18)
 
     fig.show()
@@ -201,7 +212,7 @@ def plot_interpolated_energy_grid_reciprocal() -> None:
     )
     fig.show()
 
-    fig, ax = plot_potential_1d_x2_comparison_111(potential)
+    fig, ax, _ = plot_potential_1d_x2_comparison_111(potential)
     ax.set_ylim(0, 0.2e-18)
     fig.show()
 
@@ -223,7 +234,7 @@ def get_john_point_locations(
 
 def plot_z_direction_energy_data_john(
     grid: UnevenPotential3d[Any, Any, Any], *, ax: Axes | None = None
-) -> tuple[Figure, Axes]:
+) -> tuple[Figure, Axes, list[Line2D]]:
     fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
 
     locations = get_john_point_locations(grid)
@@ -247,7 +258,7 @@ def plot_john_interpolated_points() -> None:
 
     fig.show()
 
-    fig, ax = plot_z_direction_energy_data_john(data)
+    fig, ax, _ = plot_z_direction_energy_data_john(data)
     ax.set_ylim(0, 0.3e-18)
     fig.show()
     save_figure(fig, "john_interpolation_z.png")
@@ -263,16 +274,16 @@ def compare_john_interpolation() -> None:
     plot_point_potential_location_xy(raw_points, ax=ax)
     fig.show()
 
-    fig, ax, _ = plot_potential_2d_x(mocked_interpolation, 0, 2)
+    fig, ax, _ = plot_potential_2d_x(mocked_interpolation, (0, 1), (0,))
     plot_point_potential_location_xy(raw_points, ax=ax)
     ax.set_ylim(0, 3 * 10**-19)
     ax.set_title("Comparison between raw and interpolated potential for Nickel")
     fig.show()
     save_figure(fig, "raw_interpolation_comparison.png")
 
-    fig, ax = plot_z_direction_energy_data_john(john_interpolation)
+    fig, ax, _ = plot_z_direction_energy_data_john(john_interpolation)
     my_interpolation = get_interpolated_potential((209, 209, 501))
-    fig, ax = plot_potential_1d_x2_comparison_111(my_interpolation)
+    fig, ax, _ = plot_potential_1d_x2_comparison_111(my_interpolation)
     ax.set_ylim(0, 0.5e-18)
     fig.show()
     save_figure(fig, "original_and_new_interpolation_comparison.png")
@@ -376,7 +387,7 @@ def plot_potential_minimum_along_edge_reciprocal() -> None:
     potential_mock = mock_even_potential(potential)
     shape = BasisUtil(potential_mock["basis"]).shape
 
-    fig, _, _ = plot_potential_x0x1(potential_mock, x3_idx=0)
+    fig, _, _ = plot_potential_x0x1(potential_mock, x2_idx=0)
     fig.show()
 
     fig, ax = plt.subplots()
@@ -482,7 +493,7 @@ def plot_interpolated_potential_difference() -> None:
     }
 
     fig, _, _ = plot_potential_difference_2d_x(
-        potential0, potential1_0_basis, idx=0, z_axis=2
+        potential0, potential1_0_basis, (0, 1), idx=(0,)
     )
     fig.show()
     np.testing.assert_array_almost_equal(
@@ -529,7 +540,7 @@ def plot_interpolated_potential_difference_rfft() -> None:
         )[::5, ::5, :],
     }
     fig, _, _ = plot_potential_difference_2d_x(
-        potential0, potential0_1_basis, idx=0, z_axis=2
+        potential0, potential0_1_basis, (0, 1), idx=(0,)
     )
     fig.show()
 
@@ -547,11 +558,11 @@ def plot_interpolated_potential_difference_rfft() -> None:
         )[::5, ::5, :],
     }
     fig, _, _ = plot_potential_difference_2d_x(
-        potential0, potential0_1_basis1, idx=0, z_axis=2
+        potential0, potential0_1_basis1, (0, 1), idx=(0,)
     )
     fig.show()
 
-    fig, _, _ = plot_potential_2d_x(potential0, idx=0, z_axis=2)
+    fig, _, _ = plot_potential_2d_x(potential0, (0, 1), idx=(0,))
     fig.show()
     input()
 
@@ -684,9 +695,13 @@ def plot_potential_difference_very_large_resolution() -> None:
         np.argmax(np.abs(potential1["vector"] - potential0["vector"])),
         (50, 50, 250),
     )
-    fig, _, _ = plot_potential_difference_2d_x(potential0, potential1, int(a_max[2]), 2)
+    fig, _, _ = plot_potential_difference_2d_x(
+        potential0, potential1, (0, 1), (a_max[2],)
+    )
     fig.show()
 
-    fig, _, _ = plot_potential_difference_2d_x(potential0, potential1, int(a_max[0]), 0)
+    fig, _, _ = plot_potential_difference_2d_x(
+        potential0, potential1, (1, 2), (a_max[0],)
+    )
     fig.show()
     input()

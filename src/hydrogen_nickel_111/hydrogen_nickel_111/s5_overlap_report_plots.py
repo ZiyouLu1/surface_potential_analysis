@@ -6,14 +6,19 @@ import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib.scale import FuncScale
 from scipy.constants import Boltzmann, electron_mass, hbar
+from surface_potential_analysis.basis.util import BasisUtil
 from surface_potential_analysis.dynamics.hermitian_gamma_integral import (
     calculate_hermitian_gamma_occupation_integral,
     calculate_hermitian_gamma_potential_integral,
     get_hermitian_gamma_occupation_integrand,
 )
+from surface_potential_analysis.overlap.conversion import (
+    convert_overlap_to_momentum_basis,
+)
 from surface_potential_analysis.overlap.interpolation import (
     get_overlap_momentum_interpolator_flat,
 )
+from surface_potential_analysis.overlap.plot import plot_overlap_2d_k, plot_overlap_2d_x
 
 from hydrogen_nickel_111.experimental_data import (
     get_experiment_data,
@@ -232,5 +237,44 @@ def plot_rate_equation() -> None:
     ax.set_ylabel("Rate /s")
     ax.set_xlabel("1/Temperature 1/$\\mathrm{K}^{-1}$")
 
+
+    fig.show()
+    input()
+
+
+def plot_overlap_2d_comparison() -> None:
+    overlap = get_overlap_hydrogen(0, 0)
+    overlap_momentum = convert_overlap_to_momentum_basis(overlap)
+    util = BasisUtil(overlap["basis"])
+    k1_max = util.get_stacked_index(np.argmax(overlap["vector"]))[1]
+    fig, ax, _ = plot_overlap_2d_k(overlap_momentum, (0, 2), (k1_max,), measure="abs")
+    fig.show()
+    ax.set_xlim(-2e11, 2e11)
+    ax.set_ylim(-2e11, 2e11)
+    input()
+
+    overlap = get_overlap_hydrogen(0, 0)
+    overlap_momentum = convert_overlap_to_momentum_basis(overlap)
+    fig, ax, _ = plot_overlap_2d_k(overlap_momentum, (1, 0), (0,), measure="abs")
+    fig.show()
+    ax.set_xlim(-2e11, 2e11)
+    ax.set_ylim(-1.5e11, 1.5e11)
+    input()
+
+    overlap = get_overlap_hydrogen(0, 1)
+    overlap_momentum = convert_overlap_to_momentum_basis(overlap)
+    fig, ax, _ = plot_overlap_2d_k(overlap_momentum, (1, 0), (0,), measure="abs")
+    fig.show()
+    ax.set_xlim(-2e11, 2e11)
+    ax.set_ylim(-1.5e11, 1.5e11)
+    input()
+
+    overlap = get_overlap_hydrogen(0, 1, (1, 1), (1, 1))
+    util = BasisUtil(overlap["basis"])
+    x2_max = util.get_stacked_index(np.argmax(overlap["vector"]))[2]
+
+    fig, ax, _ = plot_overlap_2d_x(overlap, (0, 1), (x2_max,), measure="abs")
+    ax.set_xlim(3e-10, 6e-10)
+    ax.set_ylim(-0.5e-10, 2e-10)
     fig.show()
     input()

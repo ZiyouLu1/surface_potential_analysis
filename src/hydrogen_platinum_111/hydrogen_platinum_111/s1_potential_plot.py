@@ -1,8 +1,10 @@
 from __future__ import annotations
 
 import numpy as np
+from surface_potential_analysis.basis.util import BasisUtil
 from surface_potential_analysis.potential.plot import (
     plot_potential_1d_x2_comparison_111,
+    plot_potential_2d_x,
 )
 from surface_potential_analysis.potential.plot_point_potential import (
     get_point_potential_xy_locations,
@@ -68,12 +70,22 @@ def plot_raw_data_points() -> None:
     input()
 
 
+def plot_interpolated_potential_2d() -> None:
+    potential = get_interpolated_potential((50, 50, 100))
+    util = BasisUtil(potential["basis"])
+    min_x2 = util.get_stacked_index(np.argmin(potential["vector"]))[2]
+
+    fig, _, _ = plot_potential_2d_x(potential, (0, 1), (min_x2,), scale="symlog")
+    fig.show()
+    input()
+
+
 def plot_interpolated_potential_comparison() -> None:
-    data = get_interpolated_potential((50, 50, 100))
+    potential = get_interpolated_potential((50, 50, 100))
 
     raw_data = normalize_potential(get_reflected_potential())
 
-    fig, ax, _ = plot_potential_1d_x2_comparison_111(data)
+    fig, ax, _ = plot_potential_1d_x2_comparison_111(potential)
     _, _, lines = plot_uneven_potential_z_comparison_111(raw_data, ax=ax)
     for ln in lines:
         ln.set_marker("x")

@@ -110,7 +110,9 @@ def animate_through_surface(
         tuple[Literal[2], _L0Inv, _L1Inv, _L2Inv], np.dtype[np.float_]
     ],
     data: np.ndarray[tuple[_L0Inv, _L1Inv, _L2Inv], np.dtype[np.float_]],
+    axes: tuple[int, int],
     z_axis: Literal[0, 1, 2, -1, -2, -3],
+    idx: SingleStackedIndexLike,
     *,
     ax: Axes | None = None,
     scale: Scale = "linear",

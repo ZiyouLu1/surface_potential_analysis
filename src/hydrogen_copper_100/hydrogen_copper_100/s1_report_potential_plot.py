@@ -17,6 +17,7 @@ from surface_potential_analysis.potential.potential import normalize_potential
 
 from hydrogen_copper_100.s1_potential import (
     get_interpolated_potential,
+    get_interpolated_potential_relaxed,
     load_raw_copper_potential,
 )
 
@@ -73,6 +74,33 @@ def plot_copper_potential_interpolation() -> None:
         (line,) = ax.plot([], [])
         line.set_linestyle("-")
         line.set_marker("x")
+        line.set_color(PLOT_COLOURS[i])
+        lines.append(line)
+    ax.legend(lines, ["Top Site", "Bridge Site", "Hollow Site"])
+
+    ax.set_ylim(bottom=0, top=1e-18)
+    fig.show()
+    input()
+
+
+def plot_copper_relaxed_potential_comparison() -> None:
+    fig, ax = plt.subplots()
+
+    interpolated = get_interpolated_potential((100, 100, 100))
+    _, _, lines = plot_potential_1d_x2_comparison_100(interpolated, ax=ax)
+    for i, ln in enumerate(lines):
+        ln.set_color(PLOT_COLOURS[i])
+
+    interpolated = get_interpolated_potential_relaxed((100, 100, 100))
+    _, _, lines = plot_potential_1d_x2_comparison_100(interpolated, ax=ax)
+    for i, ln in enumerate(lines):
+        ln.set_color(PLOT_COLOURS[i])
+        ln.set_linestyle("--")
+
+    lines = []
+    for i in range(3):
+        (line,) = ax.plot([], [])
+        line.set_linestyle("-")
         line.set_color(PLOT_COLOURS[i])
         lines.append(line)
     ax.legend(lines, ["Top Site", "Bridge Site", "Hollow Site"])

@@ -338,13 +338,16 @@ def mock_even_potential(
     """
     return {
         "basis": (
-            uneven["basis"][0],
-            uneven["basis"][1],
-            {
-                "_type": "position",
-                "delta_x": np.array([0, 0, 1], dtype=float),
-                "n": len(uneven["basis"][2]),  # type: ignore[typeddict-item]
-            },
+            FundamentalPositionAxis3d(
+                np.array([*uneven["basis"][0].delta_x, 0]), uneven["basis"][0].n
+            ),
+            FundamentalPositionAxis3d(
+                np.array([*uneven["basis"][1].delta_x, 0]), uneven["basis"][1].n
+            ),
+            FundamentalPositionAxis3d(
+                np.array([0, 0, 1], dtype=float),
+                len(uneven["basis"][2]),  # type:ignore[arg-type]
+            ),
         ),
         "vector": uneven["vector"].reshape(-1),
     }
