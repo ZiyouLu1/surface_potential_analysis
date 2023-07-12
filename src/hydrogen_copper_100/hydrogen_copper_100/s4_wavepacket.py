@@ -8,9 +8,6 @@ from surface_potential_analysis.axis.axis import (
     FundamentalMomentumAxis3d,
     MomentumAxis3d,
 )
-from surface_potential_analysis.basis.util import (
-    Basis3dUtil,
-)
 from surface_potential_analysis.wavepacket.conversion import convert_wavepacket_to_basis
 from surface_potential_analysis.wavepacket.localization import (
     localize_tightly_bound_wavepacket_idx,
@@ -63,11 +60,11 @@ def load_normalized_copper_wavepacket_momentum(
     FundamentalMomentumBasis3d[Literal[24], Literal[24], Literal[250]],
 ]:
     wavepacket = load_copper_wavepacket(band)
-    util = Basis3dUtil(wavepacket["basis"])
+    util = BasisUtil(wavepacket["basis"])
     basis: FundamentalMomentumBasis3d[Literal[24], Literal[24], Literal[250]] = (
-        FundamentalMomentumAxis3d(util.delta_x0, 24),
-        FundamentalMomentumAxis3d(util.delta_x1, 24),
-        FundamentalMomentumAxis3d(util.delta_x2, 250),
+        FundamentalMomentumAxis3d(util.delta_x[0], 24),
+        FundamentalMomentumAxis3d(util.delta_x[1], 24),
+        FundamentalMomentumAxis3d(util.delta_x[2], 250),
     )
     normalized = localize_tightly_bound_wavepacket_idx(wavepacket, idx, angle)
     return convert_wavepacket_to_basis(normalized, basis)

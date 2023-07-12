@@ -33,7 +33,7 @@ def _get_eigenstate_collection_cache(shape: tuple[_L0, _L1, _L2]) -> Path:
     )
 
 
-@npy_cached(_get_eigenstate_collection_cache, load_pickle=True)
+@npy_cached(_get_eigenstate_collection_cache, load_pickle=True)  # type: ignore[misc]
 def get_eigenstate_collection(
     shape: tuple[_L0, _L1, _L2],
 ) -> EigenstateColllection[
@@ -71,7 +71,7 @@ def _get_eigenstate_collection_relaxed_cache(shape: tuple[_L0, _L1, _L2]) -> Pat
     )
 
 
-@npy_cached(_get_eigenstate_collection_relaxed_cache, load_pickle=True)
+@npy_cached(_get_eigenstate_collection_relaxed_cache, load_pickle=True)  # type: ignore[misc]
 def get_eigenstate_collection_relaxed(
     shape: tuple[_L0, _L1, _L2],
 ) -> EigenstateColllection[

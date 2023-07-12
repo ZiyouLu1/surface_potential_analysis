@@ -4,7 +4,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 from scipy.constants import electron_volt
 from surface_potential_analysis.state_vector.eigenstate_collection_plot import (
-    plot_energies_against_bloch_phase_1d,
+    plot_eigenvalues_against_bloch_phase_1d,
 )
 
 from hydrogen_nickel_111.s3_eigenstates import get_eigenstate_collection_hydrogen
@@ -13,11 +13,13 @@ from hydrogen_nickel_111.s3_eigenstates import get_eigenstate_collection_hydroge
 def generate_bandwidth_table() -> None:
     collection = get_eigenstate_collection_hydrogen((29, 29, 10))
 
-    energies = np.min(collection["energies"], axis=0) - np.min(collection["energies"])
+    energies = np.min(collection["eigenvalues"], axis=0) - np.min(
+        collection["eigenvalues"]
+    )
     energies_mev = energies * 1000 / (electron_volt)
 
-    bandwidths = np.max(collection["energies"], axis=0) - np.min(
-        collection["energies"], axis=0
+    bandwidths = np.max(collection["eigenvalues"], axis=0) - np.min(
+        collection["eigenvalues"], axis=0
     )
     bandwidths_mev = bandwidths * 1000 / (electron_volt)
 
@@ -52,14 +54,14 @@ def plot_band_convergence_diagram() -> None:
 
     collection = get_eigenstate_collection_hydrogen((24, 24, 12))
     for band in [0, 2, 3, 6]:
-        _, _, ln = plot_energies_against_bloch_phase_1d(
+        _, _, ln = plot_eigenvalues_against_bloch_phase_1d(
             collection, np.array([1, 0, 0]), band=band, ax=ax
         )
         ln.set_label("FCC")
         ln.set_color(colors[0])
 
     for band in [1, 4, 5, 7]:
-        _, _, ln = plot_energies_against_bloch_phase_1d(
+        _, _, ln = plot_eigenvalues_against_bloch_phase_1d(
             collection, np.array([1, 0, 0]), band=band, ax=ax
         )
         ln.set_label("HCP")

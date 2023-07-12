@@ -5,7 +5,7 @@ from matplotlib import pyplot as plt
 from surface_potential_analysis.axis.axis import ExplicitAxis3d
 from surface_potential_analysis.axis.plot import plot_explicit_basis_states_x
 from surface_potential_analysis.basis.potential_basis import select_minimum_potential_3d
-from surface_potential_analysis.basis.util import BasisUtil
+from surface_potential_analysis.basis.util import AxisWithLengthBasisUtil
 from surface_potential_analysis.potential.plot import (
     plot_potential_1d_x,
 )
@@ -16,6 +16,7 @@ from hydrogen_nickel_111.s1_potential import get_interpolated_potential
 from .s2_hamiltonian import (
     generate_sho_basis,
     get_hamiltonian_deuterium,
+    get_hamiltonian_hydrogen,
     get_hamiltonian_hydrogen_sho,
 )
 
@@ -67,6 +68,23 @@ def plot_deuterium_basis() -> None:
     input()
 
 
+def plot_hydrogen_basis() -> None:
+    shape = (50, 50, 100)
+    hamiltonian = get_hamiltonian_hydrogen(
+        shape=shape,
+        bloch_fraction=np.array([0, 0, 0]),
+        resolution=(2, 2, 12),
+    )
+    fig, ax, _ = plot_explicit_basis_states_x(hamiltonian["basis"][2])
+
+    potential = get_interpolated_potential(shape)
+    minimum = select_minimum_potential_3d(potential)
+    _, _, _ = plot_potential_1d_x(minimum, 0, (), ax=ax.twinx())
+
+    fig.show()
+    input()
+
+
 def test_hamiltonian_large_resolution() -> None:
     """
     Test the generated hamiltonian when using a larger basis.
@@ -97,14 +115,15 @@ def test_hamiltonian_large_resolution() -> None:
         resolution=resolution1,
     )
     expected = pad_ft_points(
-        h1["array"].reshape(*BasisUtil(h1["basis"]).shape, *BasisUtil(h1["dual_basis"]).shape),  # type: ignore[arg-type]
+        h1["array"].reshape(*AxisWithLengthBasisUtil(h1["basis"]).shape, *AxisWithLengthBasisUtil(h1["dual_basis"]).shape),  # type: ignore[arg-type]
         (resolution0[0], resolution0[0], resolution0[0], resolution0[0]),
         axes=(0, 1, 3, 4),
     )[:, :, : resolution0[2], :, :, : resolution0[2]]
     np.testing.assert_array_almost_equal(
         expected,
         h0["array"].reshape(
-            *BasisUtil(h0["basis"]).shape, *BasisUtil(h0["dual_basis"]).shape
+            *AxisWithLengthBasisUtil(h0["basis"]).shape,
+            *AxisWithLengthBasisUtil(h0["dual_basis"]).shape,
         ),
     )
     # Max absolute difference: 8.18056993e-25
@@ -112,7 +131,8 @@ def test_hamiltonian_large_resolution() -> None:
     np.testing.assert_array_equal(
         expected,
         h0["array"].reshape(
-            *BasisUtil(h0["basis"]).shape, *BasisUtil(h0["dual_basis"]).shape
+            *AxisWithLengthBasisUtil(h0["basis"]).shape,
+            *AxisWithLengthBasisUtil(h0["dual_basis"]).shape,
         ),
     )
 

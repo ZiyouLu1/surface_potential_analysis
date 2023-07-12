@@ -15,7 +15,7 @@ from surface_potential_analysis.basis.basis import (
 if TYPE_CHECKING:
     from surface_potential_analysis._types import SingleFlatIndexLike
 
-_B0Inv = TypeVar("_B0Inv", bound=Basis[Any])
+_B0Inv = TypeVar("_B0Inv", bound=Basis)
 
 
 class StateVector(TypedDict, Generic[_B0Inv]):
@@ -72,6 +72,23 @@ def as_dual_vector(vector: StateVector[_B0Inv]) -> StateDualVector[_B0Inv]:
     return {"basis": vector["basis"], "vector": np.conj(vector["vector"])}
 
 
+def calculate_normalization(vector: StateVector[Any] | StateDualVector[Any]) -> float:
+    """
+    calculate the normalization of an eigenstate.
+
+    This should always be 1
+
+    Parameters
+    ----------
+    eigenstate: Eigenstate[Any]
+
+    Returns
+    -------
+    float
+    """
+    return np.sum(np.conj(vector["vector"]) * vector["vector"])
+
+
 _NF0Inv = TypeVar("_NF0Inv", bound=int)
 _NF1Inv = TypeVar("_NF1Inv", bound=int)
 _NF2Inv = TypeVar("_NF2Inv", bound=int)
@@ -82,17 +99,17 @@ FundamentalPositionBasisEigenstate3d = StateVector3d[
 ]
 
 
-class StateVectorList(TypedDict, Generic[_B0Inv]):
+class EigenvectorList(TypedDict, Generic[_B0Inv]):
     """Represents a list of eigenstates, each with the same basis and bloch wavevector."""
 
     basis: _B0Inv
     vectors: np.ndarray[tuple[int, int], np.dtype[np.complex_]]
     """A list of state vectors"""
-    energies: np.ndarray[tuple[int], np.dtype[np.float_]]
+    eigenvalues: np.ndarray[tuple[int], np.dtype[np.float_]]
 
 
 def get_state_vector(
-    eigenstates: StateVectorList[_B0Inv], idx: SingleFlatIndexLike
+    eigenvectors: EigenvectorList[_B0Inv], idx: SingleFlatIndexLike
 ) -> StateVector[_B0Inv]:
     """
     Get a single state vector from a list of states.
@@ -106,11 +123,11 @@ def get_state_vector(
     -------
     Eigenstate[_B0Inv]
     """
-    return {"basis": eigenstates["basis"], "vector": eigenstates["vectors"][idx]}
+    return {"basis": eigenvectors["basis"], "vector": eigenvectors["vectors"][idx]}
 
 
 def get_state_dual_vector(
-    eigenstates: StateVectorList[_B0Inv], idx: SingleFlatIndexLike
+    eigenvectors: EigenvectorList[_B0Inv], idx: SingleFlatIndexLike
 ) -> StateDualVector[_B0Inv]:
     """
     Get a single state dual vector from a list of states.
@@ -125,23 +142,6 @@ def get_state_dual_vector(
     Eigenstate[_B0Inv]
     """
     return {
-        "basis": eigenstates["basis"],
-        "vector": np.conj(eigenstates["vectors"][idx]),
+        "basis": eigenvectors["basis"],
+        "vector": np.conj(eigenvectors["vectors"][idx]),
     }
-
-
-def calculate_normalization(eigenstate: StateVector3d[Any]) -> float:
-    """
-    calculate the normalization of an eigenstate.
-
-    This should always be 1
-
-    Parameters
-    ----------
-    eigenstate: Eigenstate[Any]
-
-    Returns
-    -------
-    float
-    """
-    return np.sum(np.conj(eigenstate["vector"]) * eigenstate["vector"])

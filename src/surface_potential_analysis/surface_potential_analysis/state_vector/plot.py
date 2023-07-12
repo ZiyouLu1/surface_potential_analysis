@@ -5,13 +5,13 @@ from typing import TYPE_CHECKING, Any, TypeVar
 import numpy as np
 from matplotlib import pyplot as plt
 
-from surface_potential_analysis.axis.util import Axis3dUtil, AxisUtil
+from surface_potential_analysis.axis.util import AxisWithLengthLikeUtil
 from surface_potential_analysis.basis.conversion import (
     basis_as_fundamental_momentum_basis,
     basis_as_fundamental_position_basis,
 )
 from surface_potential_analysis.basis.util import (
-    BasisUtil,
+    AxisWithLengthBasisUtil,
     calculate_cumulative_x_distances_along_path,
     get_k_coordinates_in_axes,
     get_x_coordinates_in_axes,
@@ -22,13 +22,13 @@ from surface_potential_analysis.state_vector.conversion import (
     convert_state_vector_to_position_basis,
 )
 from surface_potential_analysis.util.plot import (
-    animate_through_surface,
+    animate_through_surface_x,
     get_norm_with_clim,
 )
 from surface_potential_analysis.util.util import (
     Measure,
+    get_data_in_axes,
     get_measured_data,
-    slice_ignoring_axes,
 )
 
 if TYPE_CHECKING:
@@ -43,7 +43,7 @@ if TYPE_CHECKING:
         SingleStackedIndexLike,
     )
     from surface_potential_analysis.basis.basis import (
-        Basis,
+        AxisWithLengthBasis,
         Basis3d,
     )
     from surface_potential_analysis.state_vector.state_vector import StateVector
@@ -51,8 +51,8 @@ if TYPE_CHECKING:
 
     from .state_vector import StateVector3d
 
-    _B0Inv = TypeVar("_B0Inv", bound=Basis[Any])
-    _B1Inv = TypeVar("_B1Inv", bound=Basis[Any])
+    _B0Inv = TypeVar("_B0Inv", bound=AxisWithLengthBasis[Any])
+    _B1Inv = TypeVar("_B1Inv", bound=AxisWithLengthBasis[Any])
     _B3d0Inv = TypeVar("_B3d0Inv", bound=Basis3d[Any, Any, Any])
 
 
@@ -91,14 +91,14 @@ def plot_state_vector_1d_k(
     """
     fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
 
-    coordinates = AxisUtil(state["basis"][axes[0]]).fundamental_nk_points
+    coordinates = AxisWithLengthLikeUtil(state["basis"][axes[0]]).fundamental_nk_points
 
     idx = tuple(0 for _ in range(len(state["basis"]) - 1)) if idx is None else idx
     data_slice: list[slice | int | np.integer[Any]] = list(idx)
     data_slice.insert(axes[0], slice(None))
 
     converted = convert_state_vector_to_momentum_basis(state)
-    util = BasisUtil(converted["basis"])
+    util = AxisWithLengthBasisUtil(converted["basis"])
     points = converted["vector"].reshape(util.shape)[tuple(data_slice)]
     data = get_measured_data(points, measure)
 
@@ -141,14 +141,14 @@ def plot_state_vector_1d_x(
     """
     fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
 
-    fundamental_x_points = Axis3dUtil(state["basis"][axis]).fundamental_x_points
+    fundamental_x_points = AxisWithLengthLikeUtil(state["basis"][axis]).fundamental_x_points
     coordinates = np.linalg.norm(fundamental_x_points, axis=0)
 
     idx = tuple(0 for _ in range(len(state["basis"]) - 1)) if idx is None else idx
 
     converted = convert_state_vector_to_position_basis(state)
-    util = BasisUtil(converted["basis"])
-    points = converted["vector"].reshape(util.shape)[slice_ignoring_axes(idx, (axis,))]
+    util = AxisWithLengthBasisUtil(converted["basis"])
+    points = get_data_in_axes(converted["vector"].reshape(util.shape), (axis,), idx)
     data = get_measured_data(points, measure)
 
     (line,) = ax.plot(coordinates, data)
@@ -190,15 +190,13 @@ def plot_state_vector_2d_k(
     """
     fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
     converted = convert_state_vector_to_momentum_basis(state)
-    util = BasisUtil(converted["basis"])
+    util = AxisWithLengthBasisUtil(converted["basis"])
 
     idx = tuple(0 for _ in range(len(state["basis"]) - 2)) if idx is None else idx
     coordinates = get_k_coordinates_in_axes(converted["basis"], axes, idx)
+    points = get_data_in_axes(converted["vector"].reshape(util.shape), axes, idx)
 
-    points = converted["vector"].reshape(*util.shape)[slice_ignoring_axes(idx, axes)]
-    data = get_measured_data(points, measure)
-
-    data = np.fft.ifftshift(data)
+    data = np.fft.ifftshift(get_measured_data(points, measure))
     coordinates = np.fft.ifftshift(coordinates, axes=(1, 2))
 
     mesh = ax.pcolormesh(*coordinates, data, shading="nearest")
@@ -341,12 +339,12 @@ def plot_eigenstate_2d_x(
     """
     fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
     converted = convert_state_vector_to_position_basis(eigenstate)
-    util = BasisUtil(converted["basis"])
+    util = AxisWithLengthBasisUtil(converted["basis"])
     idx = tuple(0 for _ in range(util.ndim - 2)) if idx is None else idx
 
     coordinates = get_x_coordinates_in_axes(converted["basis"], axes, idx)
 
-    points = converted["vector"].reshape(*util.shape)[slice_ignoring_axes(idx, axes)]
+    points = get_data_in_axes(converted["vector"].reshape(util.shape), axes, idx)
     data = get_measured_data(points, measure)
 
     mesh = ax.pcolormesh(*coordinates, data, shading="nearest")
@@ -599,7 +597,7 @@ def plot_state_vector_difference_2d_k(
 
 def animate_eigenstate_3d_x(
     eigenstate: StateVector[_B0Inv],
-    axes: tuple[int, int],
+    axes: tuple[int, int, int],
     idx: SingleStackedIndexLike | None = None,
     *,
     ax: Axes | None = None,
@@ -627,15 +625,18 @@ def animate_eigenstate_3d_x(
     tuple[Figure, Axes, ArtistAnimation]
     """
     converted = convert_state_vector_to_position_basis(eigenstate)
-
-    coordinates = get_x_coordinates_in_axes(converted["basis"], axes, idx)
-    util = BasisUtil(converted["basis"])
+    util = AxisWithLengthBasisUtil(converted["basis"])
     points = converted["vector"].reshape(*util.shape)
-    data = get_measured_data(points, measure)
 
-    c_min = 0 if clim[0] is None and measure == "abs" else clim[0]
-    return animate_through_surface(
-        coordinates, data, z_axis, ax=ax, scale=scale, clim=(c_min, clim[1])
+    return animate_through_surface_x(
+        converted["basis"],
+        points,
+        axes,
+        idx,
+        ax=ax,
+        scale=scale,
+        measure=measure,
+        clim=clim,
     )
 
 
@@ -664,7 +665,7 @@ def animate_eigenstate_x0x1(
     tuple[Figure, Axes, ArtistAnimation]
     """
     return animate_eigenstate_3d_x(
-        eigenstate, (0, 1), (0,), ax=ax, measure=measure, scale=scale
+        eigenstate, (0, 1, 2), (), ax=ax, measure=measure, scale=scale
     )
 
 
@@ -693,7 +694,7 @@ def animate_eigenstate_x1x2(
     tuple[Figure, Axes, ArtistAnimation]
     """
     return animate_eigenstate_3d_x(
-        eigenstate, (1, 2), (0,), ax=ax, measure=measure, scale=scale
+        eigenstate, (1, 2, 0), (), ax=ax, measure=measure, scale=scale
     )
 
 
@@ -722,7 +723,7 @@ def animate_eigenstate_x2x0(
     tuple[Figure, Axes, ArtistAnimation]
     """
     return animate_eigenstate_3d_x(
-        eigenstate, (2, 0), (0,), ax=ax, measure=measure, scale=scale
+        eigenstate, (2, 0, 1), (), ax=ax, measure=measure, scale=scale
     )
 
 
@@ -759,7 +760,7 @@ def plot_state_vector_along_path(
     fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
     converted = convert_state_vector_to_position_basis(state)  # type: ignore[var-annotated,arg-type]
 
-    util = BasisUtil(converted["basis"])
+    util = AxisWithLengthBasisUtil(converted["basis"])
     points = converted["vector"].reshape(*util.shape)[*path]
     data = get_measured_data(points, measure)
     distances = calculate_cumulative_x_distances_along_path(

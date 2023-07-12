@@ -9,7 +9,7 @@ from surface_potential_analysis.basis.build import (
     position_basis_3d_from_shape,
 )
 from surface_potential_analysis.basis.util import (
-    Basis3dUtil,
+    AxisWithLengthBasisUtil,
 )
 from surface_potential_analysis.overlap.conversion import (
     convert_overlap_to_momentum_basis,
@@ -33,10 +33,10 @@ class OverlapTest(unittest.TestCase):
             "vector": np.array(rng.random(np.prod(shape)), dtype=complex),
         }
 
-        util = Basis3dUtil(overlap["basis"])
+        util = AxisWithLengthBasisUtil(overlap["basis"])
         overlap_momentum = convert_overlap_to_momentum_basis(overlap)
         expected = overlap_momentum["vector"]
-        actual = get_overlap_momentum_interpolator(overlap)(util.k_points)  # type: ignore[var-annotated]
+        actual = get_overlap_momentum_interpolator(overlap)(util.k_points)  # type: ignore[var-annotated,arg-type]
 
         np.testing.assert_array_almost_equal(expected, actual)
 
@@ -47,9 +47,9 @@ class OverlapTest(unittest.TestCase):
             "vector": np.array(rng.random(np.prod(shape)), dtype=complex),
         }
 
-        util = Basis3dUtil(overlap["basis"])
+        util = AxisWithLengthBasisUtil(overlap["basis"])
         overlap_momentum = convert_overlap_to_momentum_basis(overlap)
         expected = overlap_momentum["vector"]
-        actual = get_overlap_momentum_interpolator_k_fractions(overlap)(util.nk_points)
+        actual = get_overlap_momentum_interpolator_k_fractions(overlap)(util.nk_points)  # type: ignore[var-annotated,arg-type]
 
         np.testing.assert_array_almost_equal(expected, actual)

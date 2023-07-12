@@ -6,7 +6,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 
 from surface_potential_analysis.basis.util import (
-    BasisUtil,
+    AxisWithLengthBasisUtil,
     get_k_coordinates_in_axes,
     get_x_coordinates_in_axes,
 )
@@ -47,7 +47,7 @@ if TYPE_CHECKING:
         SingleStackedIndexLike,
     )
     from surface_potential_analysis.basis.basis import (
-        Basis,
+        AxisWithLengthBasis,
         Basis3d,
     )
     from surface_potential_analysis.state_vector.state_vector import StateVector
@@ -57,7 +57,8 @@ if TYPE_CHECKING:
     _B3d0Inv = TypeVar("_B3d0Inv", bound=Basis3d[Any, Any, Any])
 
     _S0Inv = TypeVar("_S0Inv", bound=tuple[int, ...])
-    _B0Inv = TypeVar("_B0Inv", bound=Basis[Any])
+    _B0Inv = TypeVar("_B0Inv", bound=AxisWithLengthBasis[Any])
+# ruff: noqa: PLR0913
 
 
 def plot_wavepacket_sample_frequencies(
@@ -81,7 +82,7 @@ def plot_wavepacket_sample_frequencies(
     tuple[Figure, Axes, Line2D]
     """
     fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
-    util = BasisUtil(wavepacket["basis"])
+    util = AxisWithLengthBasisUtil(wavepacket["basis"])
     idx = tuple(0 for _ in range(util.ndim - len(axes))) if idx is None else idx
 
     frequencies = get_wavepacket_sample_frequencies(
@@ -99,7 +100,7 @@ def plot_wavepacket_sample_frequencies(
     return fig, ax, line
 
 
-def plot_wavepacket_energies_2d_k(
+def plot_wavepacket_eigenvalues_2d_k(
     wavepacket: Wavepacket[_S0Inv, _B0Inv],
     axes: tuple[int, int] = (0, 1),
     idx: SingleStackedIndexLike | None = None,
@@ -127,7 +128,7 @@ def plot_wavepacket_energies_2d_k(
     basis = get_sample_basis(wavepacket["basis"], wavepacket["shape"])
 
     coordinates = get_k_coordinates_in_axes(basis, axes, idx)
-    points = np.fft.ifftshift(wavepacket["energies"])
+    points = np.fft.ifftshift(wavepacket["eigenvalues"])
 
     shifted_coordinates = np.fft.ifftshift(coordinates, axes=(1, 2))
 
@@ -144,7 +145,7 @@ def plot_wavepacket_energies_2d_k(
     return fig, ax, mesh
 
 
-def plot_wavepacket_energies_2d_x(
+def plot_wavepacket_eigenvalues_2d_x(
     wavepacket: Wavepacket[_S0Inv, _B0Inv],
     axes: tuple[int, int] = (0, 1),
     idx: SingleStackedIndexLike | None = None,
@@ -175,7 +176,7 @@ def plot_wavepacket_energies_2d_x(
     basis = get_sample_basis(wavepacket["basis"], wavepacket["shape"])
     coordinates = get_x_coordinates_in_axes(basis, axes, idx)
 
-    data = np.fft.ifft2(wavepacket["energies"])
+    data = np.fft.ifft2(wavepacket["eigenvalues"])
     data[0, 0] = 0
     points = get_measured_data(data, measure)
 
@@ -485,7 +486,7 @@ def plot_wavepacket_2d_x(
     tuple[Figure, Axes, QuadMesh]
     """
     state = unfurl_wavepacket(wavepacket)
-    return plot_eigenstate_2d_x(state, axes, idx, ax=ax, measure=measure, scale=scale)
+    return plot_eigenstate_2d_x(state, axes, idx, ax=ax, measure=measure, scale=scale)  # type: ignore[arg-type]
 
 
 def plot_wavepacket_x0x1(

@@ -3,7 +3,7 @@ from __future__ import annotations
 import numpy as np
 from matplotlib import pyplot as plt
 from surface_potential_analysis.state_vector.eigenstate_collection_plot import (
-    plot_energies_against_bloch_phase_1d,
+    plot_eigenvalues_against_bloch_phase_1d,
 )
 
 from .s3_eigenstates import (
@@ -25,7 +25,7 @@ def plot_lowest_band_energy_deuterium() -> None:
     ]
     for shape in shapes:
         collection = get_eigenstate_collection_deuterium(shape)
-        _, _, ln = plot_energies_against_bloch_phase_1d(
+        _, _, ln = plot_eigenvalues_against_bloch_phase_1d(
             collection, np.array([1, 0, 0]), band=0, ax=ax
         )
         ln.set_label(f"({shape[0]}, {shape[1]}, {shape[2]})")
@@ -45,7 +45,7 @@ def plot_lowest_band_energy_hydrogen() -> None:
     ]
     for shape in shapes:
         collection = get_eigenstate_collection_hydrogen(shape)
-        _, _, ln = plot_energies_against_bloch_phase_1d(
+        _, _, ln = plot_eigenvalues_against_bloch_phase_1d(
             collection, np.array([1, 0, 0]), band=0, ax=ax
         )
         ln.set_label(f"({shape[0]}, {shape[1]}, {shape[2]})")
@@ -60,18 +60,19 @@ def plot_lowest_bands_hydrogen() -> None:
 
     collection = get_eigenstate_collection_hydrogen((23, 23, 10))
     for band in range(8):
-        plot_energies_against_bloch_phase_1d(
+        plot_eigenvalues_against_bloch_phase_1d(
             collection, np.array([1, 0, 0]), band=band, ax=ax
         )
 
     print(  # noqa: T201
-        np.min(collection["energies"], axis=0) - np.min(collection["energies"])
+        np.min(collection["eigenvalues"], axis=0) - np.min(collection["eigenvalues"])
     )
     print(  # noqa: T201
-        np.max(collection["energies"], axis=0) - np.min(collection["energies"])
+        np.max(collection["eigenvalues"], axis=0) - np.min(collection["eigenvalues"])
     )
     print(  # noqa: T201
-        np.max(collection["energies"], axis=0) - np.min(collection["energies"], axis=0)
+        np.max(collection["eigenvalues"], axis=0)
+        - np.min(collection["eigenvalues"], axis=0)
     )
 
     fig.show()
@@ -83,18 +84,19 @@ def plot_lowest_bands_deuterium() -> None:
 
     collection = get_eigenstate_collection_deuterium((29, 29, 10))
     for band in range(8):
-        plot_energies_against_bloch_phase_1d(
+        plot_eigenvalues_against_bloch_phase_1d(
             collection, np.array([1, 0, 0]), band=band, ax=ax
         )
 
     print(  # noqa: T201
-        np.min(collection["energies"], axis=0) - np.min(collection["energies"])
+        np.min(collection["eigenvalues"], axis=0) - np.min(collection["eigenvalues"])
     )
     print(  # noqa: T201
-        np.max(collection["energies"], axis=0) - np.min(collection["energies"])
+        np.max(collection["eigenvalues"], axis=0) - np.min(collection["eigenvalues"])
     )
     print(  # noqa: T201
-        np.max(collection["energies"], axis=0) - np.min(collection["energies"], axis=0)
+        np.max(collection["eigenvalues"], axis=0)
+        - np.min(collection["eigenvalues"], axis=0)
     )
     fig.show()
     input()

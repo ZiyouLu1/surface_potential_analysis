@@ -6,7 +6,7 @@ import numpy as np
 
 from surface_potential_analysis.axis.conversion import axis_as_single_point_axis
 from surface_potential_analysis.basis.util import (
-    BasisUtil,
+    AxisWithLengthBasisUtil,
     wrap_index_around_origin,
 )
 
@@ -47,15 +47,14 @@ def get_overlap_momentum_interpolator_k_fractions(
         Interpolator which takes a list of coordinates as fractions of k0, k1, k2 index and returns the
         overlap at this point
     """
-    util = BasisUtil(overlap["basis"])
-    nx_points = util.nx_points
+    util = AxisWithLengthBasisUtil(overlap["basis"])
     nx_points_wrapped = wrap_index_around_origin(
-        overlap["basis"], nx_points, axes=(0, 1)
+        overlap["basis"], util.nx_points, axes=(0, 1)  # type: ignore[arg-type]
     )
     x_fractions = np.asarray(nx_points_wrapped, dtype=float)[:, :, np.newaxis]
-    x_fractions[0] /= util.n0  # type: ignore[misc]
-    x_fractions[1] /= util.n1  # type: ignore[misc]
-    x_fractions[2] /= util.n2  # type: ignore[misc]
+    x_fractions[0] /= util.shape[0]
+    x_fractions[1] /= util.shape[0]
+    x_fractions[2] /= util.shape[0]
 
     def _interpolator(
         k_fractions: ArrayStackedIndexFractionLike[_S0Inv],
@@ -84,10 +83,10 @@ def get_overlap_momentum_interpolator(
     Callable[[np.ndarray[tuple[Literal[3], Unpack[_S0Inv]], np.dtype[np.float_]]], np.ndarray[_S0Inv, np.dtype[np.complex_]], ]
         Interpolator, which takes a coordinate list on momentum basis
     """
-    util = BasisUtil(overlap["basis"])
+    util = AxisWithLengthBasisUtil(overlap["basis"])
     nx_points = util.nx_points
     nx_points_wrapped = wrap_index_around_origin(
-        overlap["basis"], nx_points, axes=(0, 1)
+        overlap["basis"], nx_points, axes=(0, 1)  # type: ignore[arg-type]
     )
     x_points = util.get_x_points_at_index(nx_points_wrapped)[:, :, np.newaxis]
 
@@ -124,14 +123,13 @@ def get_overlap_momentum_interpolator_flat(
         Interpolator, which takes a coordinate list in momentum basis ignoring k2 axis
     """
     basis = (*overlap["basis"][0:2], axis_as_single_point_axis(overlap["basis"][2]))
-    util = BasisUtil(basis)
-    nx_points = util.nx_points
+    util = AxisWithLengthBasisUtil(basis)
     nx_points_wrapped = wrap_index_around_origin(
-        overlap["basis"], nx_points, axes=(0, 1)
+        overlap["basis"], util.nx_points, axes=(0, 1)  # type: ignore[arg-type]
     )
     x_points = util.get_x_points_at_index(nx_points_wrapped)[:2, :, np.newaxis]
 
-    vector = overlap["vector"].reshape(BasisUtil(overlap["basis"]).shape)
+    vector = overlap["vector"].reshape(AxisWithLengthBasisUtil(overlap["basis"]).shape)
     vector_transformed = np.fft.ifft(vector, axis=2, norm="forward")[:, :, 0].ravel()
 
     def _interpolator(
@@ -143,3 +141,36 @@ def get_overlap_momentum_interpolator_flat(
         return np.sum(vector_transformed[:, np.newaxis] * np.exp(1j * phi), axis=0)  # type: ignore[no-any-return]
 
     return _interpolator
+
+
+def get_angle_averaged_diagonal_overlap_function(
+    interpolator: Callable[
+        [np.ndarray[tuple[Literal[2], int], np.dtype[np.float_]]],
+        np.ndarray[tuple[int], np.dtype[np.complex_]],
+    ],
+    abs_q: np.ndarray[_S0Inv, np.dtype[np.float_]],
+    *,
+    theta_samples: int = 50,
+) -> np.ndarray[_S0Inv, np.dtype[np.float_]]:
+    """
+    Given an interpolator for the overlap, average over the angle.
+
+    Parameters
+    ----------
+    interpolator : Callable[ [np.ndarray[tuple[Literal[2], int], np.dtype[np.float_]]], np.ndarray[tuple[int], np.dtype[np.complex_]], ]
+    abs_q : np.ndarray[tuple[int], np.dtype[np.float_]]
+    theta_samples : int, optional
+        number of samples to average over, by default 50
+
+    Returns
+    -------
+    np.ndarray[tuple[int], np.dtype[np.float_]]
+    """
+    theta = np.linspace(0, 2 * np.pi, theta_samples)
+    averages = []
+    for q in abs_q.ravel():
+        k_points = q * np.array([np.cos(theta), np.sin(theta)])
+        interpolated = interpolator(k_points)  # type: ignore[var-annotated]
+        averages.append(np.average(np.square(np.abs(interpolated))))
+
+    return np.array(averages).reshape(abs_q.shape)  # type: ignore[no-any-return]

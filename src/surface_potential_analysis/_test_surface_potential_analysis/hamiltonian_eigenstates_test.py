@@ -7,7 +7,7 @@ import numpy as np
 
 from surface_potential_analysis.axis.axis import FundamentalMomentumAxis3d
 from surface_potential_analysis.basis.util import (
-    Basis3dUtil,
+    AxisWithLengthBasisUtil,
 )
 from surface_potential_analysis.state_vector.eigenstate_calculation import (
     calculate_expectation,
@@ -32,15 +32,17 @@ class HamiltonianEigenstates(unittest.TestCase):
             FundamentalMomentumAxis3d(np.array([0, 1, 0]), rng.integers(1, 10)),
             FundamentalMomentumAxis3d(np.array([0, 0, 1]), rng.integers(1, 10)),
         )
-        energies = rng.random(Basis3dUtil(basis).size)
+        energies = rng.random(AxisWithLengthBasisUtil(basis).size)
         hamiltonian: FundamentalMomentumBasisHamiltonian3d[int, int, int] = {
             "basis": basis,
             "dual_basis": basis,
             "array": np.diag(energies),
         }
         actual: list[complex] = []
-        for i in range(Basis3dUtil(basis).size):
-            vector = np.zeros(shape=(Basis3dUtil(basis).size), dtype=complex)
+        for i in range(AxisWithLengthBasisUtil(basis).size):
+            vector = np.zeros(
+                shape=(AxisWithLengthBasisUtil(basis).size), dtype=complex
+            )
             vector[i] = np.exp(1j * 2 * np.pi * rng.random())
 
             actual.append(

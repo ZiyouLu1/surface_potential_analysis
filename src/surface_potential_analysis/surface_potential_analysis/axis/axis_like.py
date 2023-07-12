@@ -1,22 +1,20 @@
 from __future__ import annotations
 
 import abc
-from typing import Generic, Literal, Protocol, TypeVar
+from typing import Literal, Protocol, TypeVar
 
 import numpy as np
+
+_N0Cov = TypeVar("_N0Cov", bound=int, covariant=True)
+_NF0Cov = TypeVar("_NF0Cov", bound=int, covariant=True)
 
 _ND0Inv = TypeVar("_ND0Inv", bound=int)
 _N0Inv = TypeVar("_N0Inv", bound=int)
 _NF0Inv = TypeVar("_NF0Inv", bound=int)
 
-_ND0Cov = TypeVar("_ND0Cov", bound=int, covariant=True)
-_N0Cov = TypeVar("_N0Cov", bound=int, covariant=True)
-_NF0Cov = TypeVar("_NF0Cov", bound=int, covariant=True)
-
-
 AxisVector = np.ndarray[tuple[_ND0Inv], np.dtype[np.float_]]
-AxisVector1d = AxisVector[Literal[3]]
-AxisVector2d = AxisVector[Literal[3]]
+AxisVector1d = AxisVector[Literal[1]]
+AxisVector2d = AxisVector[Literal[2]]
 AxisVector3d = AxisVector[Literal[3]]
 
 
@@ -24,25 +22,20 @@ _S0Inv = TypeVar("_S0Inv", bound=tuple[int, ...])
 # ruff: noqa: D102
 
 
-class AxisLike(Protocol, Generic[_NF0Inv, _N0Inv, _ND0Inv]):
+class AxisLike(Protocol[_NF0Cov, _N0Cov]):
     """A generic object that represents an axis for a basis."""
 
     def __repr__(self) -> str:
-        return f"{self.__class__.__name__}(delta_x={self.delta_x.__repr__()}, n={self.n.__repr__()}, fundamental_n={self.fundamental_n.__repr__()})"
+        return f"{self.__class__.__name__}(n={self.n.__repr__()}, fundamental_n={self.fundamental_n.__repr__()})"
 
     @property
     @abc.abstractmethod
-    def delta_x(self) -> AxisVector[_ND0Inv]:
+    def n(self) -> _N0Cov:
         ...
 
     @property
     @abc.abstractmethod
-    def n(self) -> _N0Inv:
-        ...
-
-    @property
-    @abc.abstractmethod
-    def fundamental_n(self) -> _NF0Inv:
+    def fundamental_n(self) -> _NF0Cov:
         ...
 
     @abc.abstractmethod
@@ -77,6 +70,18 @@ class AxisLike(Protocol, Generic[_NF0Inv, _N0Inv, _ND0Inv]):
         return np.moveaxis(transformed, -1, axis)  # type: ignore[no-any-return]
 
 
-AxisLike1d = AxisLike[_NF0Inv, _N0Inv, Literal[1]]
-AxisLike2d = AxisLike[_NF0Inv, _N0Inv, Literal[2]]
-AxisLike3d = AxisLike[_NF0Inv, _N0Inv, Literal[3]]
+class AxisWithLengthLike(AxisLike[_NF0Cov, _N0Cov], Protocol[_NF0Cov, _N0Cov, _ND0Inv]):
+    """A generic object that represents an axis with a corresponding axis vector."""
+
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}(delta_x={self.delta_x.__repr__()}, n={self.n.__repr__()}, fundamental_n={self.fundamental_n.__repr__()})"
+
+    @property
+    @abc.abstractmethod
+    def delta_x(self) -> AxisVector[_ND0Inv]:
+        ...
+
+
+AxisWithLengthLike1d = AxisWithLengthLike[_NF0Inv, _N0Inv, Literal[1]]
+AxisWithLengthLike2d = AxisWithLengthLike[_NF0Inv, _N0Inv, Literal[2]]
+AxisWithLengthLike3d = AxisWithLengthLike[_NF0Inv, _N0Inv, Literal[3]]

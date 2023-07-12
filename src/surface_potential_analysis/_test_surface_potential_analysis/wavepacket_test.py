@@ -58,7 +58,7 @@ class WavepacketTest(unittest.TestCase):
         wavepacket: PositionBasisWavepacket3d[Any, Any, Any, Any, Any] = {
             "basis": position_basis_3d_from_shape(resolution),
             "vectors": np.zeros((ns0 * ns1, np.prod(resolution))),
-            "energies": np.zeros(ns0 * ns1),
+            "eigenvalues": np.zeros(ns0 * ns1),
             "shape": (ns0, ns1, 1),
         }
 
@@ -82,7 +82,7 @@ class WavepacketTest(unittest.TestCase):
             "basis": momentum_basis_3d_from_resolution((3, 3, 3)),
             "shape": (3, 2, 1),
             "vectors": np.zeros((3, 2, 27)),
-            "energies": np.zeros((3, 2)),
+            "eigenvalues": np.zeros((3, 2)),
         }
         wavepacket["vectors"][0][0][0] = 1
         wavepacket["vectors"][1][0][0] = 2
@@ -107,7 +107,7 @@ class WavepacketTest(unittest.TestCase):
             "basis": momentum_basis_3d_from_resolution((3, 3, 3)),
             "vectors": np.array(rng.random((3, 2, 27)), dtype=complex),
             "shape": (3, 2, 1),
-            "energies": np.zeros((3, 2)),
+            "eigenvalues": np.zeros((3, 2)),
         }
         eigenstate = unfurl_wavepacket(wavepacket)
         actual = furl_eigenstate(eigenstate, (3, 2, 1))

@@ -4,14 +4,14 @@ from typing import TYPE_CHECKING, Any
 
 import matplotlib.pyplot as plt
 import numpy as np
-from surface_potential_analysis.basis.util import Basis3dUtil
+from surface_potential_analysis.basis.util import AxisWithLengthBasisUtil
 from surface_potential_analysis.state_vector.eigenstate_collection import (
     load_eigenstate_collection,
     select_eigenstate,
 )
 from surface_potential_analysis.state_vector.eigenstate_collection_plot import (
-    plot_energies_against_bloch_phase_1d,
-    plot_lowest_band_energies_against_bloch_k,
+    plot_eigenvalues_against_bloch_phase_1d,
+    plot_lowest_band_eigenvalues_against_bloch_k,
 )
 from surface_potential_analysis.state_vector.plot import (
     animate_eigenstate_x0x1,
@@ -37,7 +37,7 @@ def plot_lowest_bands() -> None:
     shape = (23, 23, 14)
     for band in range(5):
         collection = get_eigenstate_collection(shape)
-        _, _, ln = plot_energies_against_bloch_phase_1d(
+        _, _, ln = plot_eigenvalues_against_bloch_phase_1d(
             collection, np.array([1, 0, 0]), band=band, ax=ax
         )
         ln.set_label(f"n={band}")
@@ -53,7 +53,7 @@ def plot_lowest_bands_relaxed() -> None:
     shape = (23, 23, 14)
     for band in range(5):
         collection = get_eigenstate_collection_relaxed(shape)
-        _, _, ln = plot_energies_against_bloch_phase_1d(
+        _, _, ln = plot_eigenvalues_against_bloch_phase_1d(
             collection, np.array([1, 0, 0]), band=band, ax=ax
         )
         ln.set_label(f"n={band}")
@@ -76,7 +76,7 @@ def plot_lowest_band_energy() -> None:
     ]
     for shape in shapes:
         collection = get_eigenstate_collection(shape)
-        _, _, ln = plot_energies_against_bloch_phase_1d(
+        _, _, ln = plot_eigenvalues_against_bloch_phase_1d(
             collection, np.array([1, 0, 0]), band=0, ax=ax
         )
         ln.set_label(f"({shape[0]}, {shape[1]}, {shape[2]})")
@@ -91,37 +91,37 @@ def analyze_eigenvalue_convergence() -> None:
 
     path = get_data_path("eigenstates_25_25_14.json")
     eigenstates = load_eigenstate_collection(path)
-    _, _, ln = plot_lowest_band_energies_against_bloch_k(eigenstates, ax=ax)
+    _, _, ln = plot_lowest_band_eigenvalues_against_bloch_k(eigenstates, ax=ax)
     ln.set_label("(25,25,14)")
 
     path = get_data_path("eigenstates_23_23_14.json")
     eigenstates = load_eigenstate_collection(path)
-    _, _, ln = plot_lowest_band_energies_against_bloch_k(eigenstates, ax=ax)
+    _, _, ln = plot_lowest_band_eigenvalues_against_bloch_k(eigenstates, ax=ax)
     ln.set_label("(23,23,14)")
 
     path = get_data_path("eigenstates_23_23_15.json")
     eigenstates = load_eigenstate_collection(path)
-    _, _, ln = plot_lowest_band_energies_against_bloch_k(eigenstates, ax=ax)
+    _, _, ln = plot_lowest_band_eigenvalues_against_bloch_k(eigenstates, ax=ax)
     ln.set_label("(23,23,15)")
 
     path = get_data_path("eigenstates_23_23_16.json")
     eigenstates = load_eigenstate_collection(path)
-    _, _, ln = plot_lowest_band_energies_against_bloch_k(eigenstates, ax=ax)
+    _, _, ln = plot_lowest_band_eigenvalues_against_bloch_k(eigenstates, ax=ax)
     ln.set_label("(23,23,16)")
 
     path = get_data_path("eigenstates_25_25_16.json")
     eigenstates = load_eigenstate_collection(path)
-    _, _, ln = plot_lowest_band_energies_against_bloch_k(eigenstates, ax=ax)
+    _, _, ln = plot_lowest_band_eigenvalues_against_bloch_k(eigenstates, ax=ax)
     ln.set_label("(25,25,16)")
 
     path = get_data_path("eigenstates_23_23_17.json")
     eigenstates = load_eigenstate_collection(path)
-    _, _, ln = plot_lowest_band_energies_against_bloch_k(eigenstates, ax=ax)
+    _, _, ln = plot_lowest_band_eigenvalues_against_bloch_k(eigenstates, ax=ax)
     ln.set_label("(23,23,17)")
 
     path = get_data_path("eigenstates_23_23_18.json")
     eigenstates = load_eigenstate_collection(path)
-    _, _, ln = plot_lowest_band_energies_against_bloch_k(eigenstates, ax=ax)
+    _, _, ln = plot_lowest_band_eigenvalues_against_bloch_k(eigenstates, ax=ax)
     ln.set_label("(23,23,18)")
 
     ax.set_title(
@@ -143,22 +143,22 @@ def analyze_eigenvalue_convergence_relaxed() -> None:
 
     path = get_data_path("eigenstates_relaxed_17_17_15.json")
     eigenstates = load_eigenstate_collection(path)
-    _, _, ln = plot_lowest_band_energies_against_bloch_k(eigenstates, ax=ax)
+    _, _, ln = plot_lowest_band_eigenvalues_against_bloch_k(eigenstates, ax=ax)
     ln.set_label("(17,17,15)")
 
     path = get_data_path("eigenstates_relaxed_21_21_14.json")
     eigenstates = load_eigenstate_collection(path)
-    _, _, ln = plot_lowest_band_energies_against_bloch_k(eigenstates, ax=ax)
+    _, _, ln = plot_lowest_band_eigenvalues_against_bloch_k(eigenstates, ax=ax)
     ln.set_label("(21,21,14)")
 
     path = get_data_path("eigenstates_relaxed_21_21_15.json")
     eigenstates = load_eigenstate_collection(path)
-    _, _, ln = plot_lowest_band_energies_against_bloch_k(eigenstates, ax=ax)
+    _, _, ln = plot_lowest_band_eigenvalues_against_bloch_k(eigenstates, ax=ax)
     ln.set_label("(21,21,15)")
 
     path = get_data_path("eigenstates_relaxed_17_17_13.json")
     eigenstates = load_eigenstate_collection(path)
-    _, _, ln = plot_lowest_band_energies_against_bloch_k(eigenstates, ax=ax)
+    _, _, ln = plot_lowest_band_eigenvalues_against_bloch_k(eigenstates, ax=ax)
     ln.set_label("(17,17,13)")
 
     ax.set_title(
@@ -177,14 +177,14 @@ def analyze_eigenvalue_convergence_relaxed() -> None:
 
     path = get_data_path("eigenstates_relaxed_10_10_14.json")
     eigenstates = load_eigenstate_collection(path)
-    _, _, ln = plot_energies_against_bloch_phase_1d(
+    _, _, ln = plot_eigenvalues_against_bloch_phase_1d(
         eigenstates, np.array([1.0, 0, 0]), 4, ax=ax
     )
     ln.set_label("(10,10,14)")
 
     path = get_data_path("eigenstates_relaxed_12_12_15.json")
     eigenstates = load_eigenstate_collection(path)
-    _, _, ln = plot_energies_against_bloch_phase_1d(
+    _, _, ln = plot_eigenvalues_against_bloch_phase_1d(
         eigenstates, np.array([1.0, 0, 0]), 4, ax=ax
     )
     ln.set_label("(12,12,15)")
@@ -220,9 +220,11 @@ def plot_eigenstate_z_hollow_site(
     ax: Axes | None = None,
     measure: Measure = "abs",
 ) -> tuple[Figure, Axes, Line2D]:
-    util = Basis3dUtil(eigenstate["basis"])
-    x2_points = np.arange(util.n2)
-    points = np.array([(util.n0 // 2, util.n1 // 2, z) for z in x2_points]).T
+    util = AxisWithLengthBasisUtil(eigenstate["basis"])
+    x2_points = np.arange(util.shape[2])
+    points = np.array(
+        [(util.shape[0] // 2, util.shape[1] // 2, z) for z in x2_points]
+    ).T
 
     return plot_state_vector_along_path(eigenstate, points, ax=ax, measure=measure)
 
@@ -254,9 +256,9 @@ def plot_eigenstate_through_bridge(
     ax: Axes | None = None,
     measure: Measure = "abs",
 ) -> tuple[Figure, Axes, Line2D]:
-    util = Basis3dUtil(eigenstate["basis"])
-    x0_points = np.arange(util.n0)
-    points = np.array([(x, util.n1 // 2, 0) for x in x0_points]).T
+    util = AxisWithLengthBasisUtil(eigenstate["basis"])
+    x0_points = np.arange(util.shape[0])
+    points = np.array([(x, util.shape[1] // 2, 0) for x in x0_points]).T
 
     return plot_state_vector_along_path(eigenstate, points, ax=ax, measure=measure)
 

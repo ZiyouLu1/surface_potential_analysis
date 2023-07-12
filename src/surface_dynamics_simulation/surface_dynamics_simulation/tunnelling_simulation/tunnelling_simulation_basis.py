@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, TypeVar
 
-from surface_potential_analysis.axis.axis_like import AxisLike3d, AxisVector3d
+from surface_potential_analysis.axis.axis_like import AxisVector3d, AxisWithLengthLike3d
 
 if TYPE_CHECKING:
     import numpy as np
@@ -13,7 +13,7 @@ _N1Inv = TypeVar("_N1Inv", bound=int)
 
 
 # ruff: noqa: D102
-class TunnellingSimulationBasis(AxisLike3d[_NF0Inv, _N0Inv]):
+class TunnellingSimulationBasis(AxisWithLengthLike3d[_NF0Inv, _N0Inv]):
     """
     Represents the basis of a tunnelling simulation.
 

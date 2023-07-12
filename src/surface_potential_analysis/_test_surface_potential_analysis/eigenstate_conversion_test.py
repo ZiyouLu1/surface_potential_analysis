@@ -17,7 +17,7 @@ from surface_potential_analysis.basis.sho_basis import (
     SHOBasisConfig,
     infinate_sho_axis_3d_from_config,
 )
-from surface_potential_analysis.basis.util import Basis3dUtil
+from surface_potential_analysis.basis.util import AxisWithLengthBasisUtil
 from surface_potential_analysis.state_vector.conversion import (
     convert_state_vector_to_basis,
 )
@@ -76,7 +76,7 @@ class EigenstateConversionTest(unittest.TestCase):
             ),
         )
 
-        util = Basis3dUtil(eigenstate["basis"])
+        util = AxisWithLengthBasisUtil(eigenstate["basis"])
 
         for i in range(resolution[2]):
             vector = np.zeros_like(eigenstate["vector"])
@@ -87,8 +87,8 @@ class EigenstateConversionTest(unittest.TestCase):
 
             actual = hamiltonian_generator.get_eigenstate_wavefunction(
                 resolution,
-                (util.delta_x0.item(0), 0),
-                (util.delta_x1.item(0), util.delta_x1.item(1)),
+                (util.delta_x[0].item(0), 0),
+                (util.delta_x[1].item(0), util.delta_x[1].item(1)),
                 config["mass"],
                 config["sho_omega"],
                 0,
@@ -98,9 +98,9 @@ class EigenstateConversionTest(unittest.TestCase):
             )
 
             basis = (
-                FundamentalPositionAxis3d(util.delta_x0, util.fundamental_n0),  # type: ignore[misc]
-                FundamentalPositionAxis3d(util.delta_x1, util.fundamental_n1),  # type: ignore[misc]
-                FundamentalPositionAxis3d(util.delta_x2, util.fundamental_n2),  # type: ignore[misc]
+                FundamentalPositionAxis3d(util.delta_x[0], util.fundamental_shape[0]),  # type: ignore[misc]
+                FundamentalPositionAxis3d(util.delta_x[1], util.fundamental_shape[1]),  # type: ignore[misc]
+                FundamentalPositionAxis3d(util.delta_x[2], util.fundamental_shape[2]),  # type: ignore[misc]
             )
             expected = convert_state_vector_to_basis(eigenstate, basis)
             np.testing.assert_allclose(
@@ -124,13 +124,13 @@ class EigenstateConversionTest(unittest.TestCase):
             ),
         )
 
-        util = Basis3dUtil(eigenstate["basis"])
+        util = AxisWithLengthBasisUtil(eigenstate["basis"])
 
         points = util.fundamental_x_points + config["x_origin"][:, np.newaxis]
         actual = hamiltonian_generator.get_eigenstate_wavefunction(
             resolution,
-            (util.delta_x0.item(0), 0),
-            (util.delta_x1.item(0), util.delta_x1.item(1)),
+            (util.delta_x[0].item(0), 0),
+            (util.delta_x[1].item(0), util.delta_x[1].item(1)),
             config["mass"],
             config["sho_omega"],
             0,
@@ -140,9 +140,9 @@ class EigenstateConversionTest(unittest.TestCase):
         )
 
         basis = (
-            FundamentalPositionAxis3d(util.delta_x0, util.fundamental_n0),  # type: ignore[misc]
-            FundamentalPositionAxis3d(util.delta_x1, util.fundamental_n1),  # type: ignore[misc]
-            FundamentalPositionAxis3d(util.delta_x2, util.fundamental_n2),  # type: ignore[misc]
+            FundamentalPositionAxis3d(util.delta_x[0], util.fundamental_shape[0]),  # type: ignore[misc]
+            FundamentalPositionAxis3d(util.delta_x[1], util.fundamental_shape[1]),  # type: ignore[misc]
+            FundamentalPositionAxis3d(util.delta_x[2], util.fundamental_shape[2]),  # type: ignore[misc]
         )
         expected = convert_state_vector_to_basis(eigenstate, basis)
         np.testing.assert_allclose(

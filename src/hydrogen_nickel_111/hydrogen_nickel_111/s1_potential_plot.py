@@ -10,17 +10,19 @@ from surface_potential_analysis.axis.axis import FundamentalPositionAxis3d
 from surface_potential_analysis.axis.plot import plot_explicit_basis_states_x
 from surface_potential_analysis.basis.plot import (
     plot_fundamental_x_in_plane_projected_2d,
+    plot_x_points_projected_2d,
 )
 from surface_potential_analysis.basis.sho_basis import (
     infinate_sho_axis_3d_from_config,
 )
-from surface_potential_analysis.basis.util import BasisUtil
+from surface_potential_analysis.basis.util import AxisWithLengthBasisUtil
 from surface_potential_analysis.potential import (
     FundamentalPositionBasisPotential3d,
     UnevenPotential3d,
     normalize_potential,
 )
 from surface_potential_analysis.potential.plot import (
+    animate_potential_3d_x,
     animate_potential_difference_2d_x,
     animate_potential_x0x1,
     plot_potential_1d_x2_comparison_111,
@@ -64,7 +66,7 @@ if TYPE_CHECKING:
 def get_nickel_reciprocal_comparison_points_x0x1(
     potential: FundamentalPositionBasisPotential3d[Any, Any, Any]
 ) -> dict[str, tuple[tuple[int, int], Literal[2]]]:
-    shape = BasisUtil(potential["basis"]).shape
+    shape = AxisWithLengthBasisUtil(potential["basis"]).shape
     return {
         "HCP Site": ((math.floor(shape[0] / 3), 0), 2),
         "Bridge Site": ((math.floor(shape[0] / 6), 0), 2),
@@ -75,7 +77,7 @@ def get_nickel_reciprocal_comparison_points_x0x1(
 
 def plot_interpolated_potential_2d_x() -> None:
     potential = get_interpolated_potential((200, 200, 100))
-    x2_min = BasisUtil(potential["basis"]).get_stacked_index(
+    x2_min = AxisWithLengthBasisUtil(potential["basis"]).get_stacked_index(
         np.argmin(potential["vector"])
     )[2]
     fig, ax, _ = plot_potential_2d_x(potential, (0, 1), (x2_min,), scale="symlog")
@@ -125,7 +127,12 @@ def plot_raw_energy_grid_points() -> None:
     ax.set_ylim(0, 0.2e-18)
     fig.show()
 
-    fig, ax, _ani = animate_potential_x0x1(mocked_potential, clim=(0, 0.2e-18))
+    fig, ax, _ani = animate_potential_3d_x(
+        mocked_potential, (0, 1, 2), clim=(0, 0.2e-18)
+    )
+    fig.show()
+
+    fig, ax, _ = plot_potential_2d_x(mocked_potential, (0, 1))
     fig.show()
 
     cleaned = get_truncated_potential()
@@ -144,18 +151,19 @@ def plot_raw_energy_grid_points() -> None:
 
 def plot_interpolated_energy_grid_points() -> None:
     potential = get_interpolated_potential((209, 209, 501))
-
     fig, ax, _ = plot_fundamental_x_in_plane_projected_2d(
         potential["basis"], (0, 1), (0,)
     )
     fig.show()
 
-    # ! fig, ax, _ani = animate_potential_x0x1(potential, clim=(0, 2e-19))
-    fig, ax = plt.subplots()
+    fig, ax, _ani = animate_potential_x0x1(potential, clim=(0, 2e-19))
     raw_potential = get_raw_potential_reciprocal_grid()
     mocked_raw_potential = mock_even_potential(raw_potential)
-    plot_fundamental_x_in_plane_projected_2d(
-        mocked_raw_potential["basis"], (0, 1), (0,), ax=ax
+    plot_x_points_projected_2d(
+        potential["basis"],
+        (0, 1),
+        AxisWithLengthBasisUtil(mocked_raw_potential["basis"]).fundamental_x_points,  # type: ignore[arg-type]
+        ax=ax,
     )
     fig.show()
 
@@ -170,7 +178,7 @@ def plot_interpolated_energy_grid_points() -> None:
         ln.set_marker("x")
         ln.set_linestyle("")
     _, _, _ = plot_potential_1d_x2_comparison_111(potential, ax=ax)
-    ax.set_ylim(0, 5e-18)
+    ax.set_ylim(0, 2e-19)
 
     fig.show()
 
@@ -179,7 +187,7 @@ def plot_interpolated_energy_grid_points() -> None:
 
 def plot_nickel_energy_grid_symmetry() -> None:
     potential = get_interpolated_potential((209, 209, 501))
-    shape = BasisUtil(potential["basis"]).shape
+    shape = AxisWithLengthBasisUtil(potential["basis"]).shape
     reflected_potential: FundamentalPositionBasisPotential3d[Any, Any, Any] = {
         "basis": potential["basis"],
         "vector": potential["vector"].reshape(shape).swapaxes(0, 1).reshape(-1),
@@ -187,7 +195,9 @@ def plot_nickel_energy_grid_symmetry() -> None:
     fig, _, _ani0 = animate_potential_x0x1(reflected_potential, clim=(0, 2e-19))
     fig.show()
 
-    fig, _, _ani1 = animate_potential_difference_2d_x(potential, reflected_potential, 2)
+    fig, _, _ani1 = animate_potential_difference_2d_x(
+        potential, reflected_potential, (0, 1, 2)
+    )
     fig.show()
     input()
 
@@ -223,7 +233,7 @@ def plot_interpolated_energy_grid_reciprocal() -> None:
 def get_john_point_locations(
     grid: UnevenPotential3d[Any, Any, Any]
 ) -> dict[str, tuple[int, int]]:
-    shape = BasisUtil(grid["basis"][0:2]).shape
+    shape = AxisWithLengthBasisUtil(grid["basis"][0:2]).shape
     return {
         "Top Site": (0, 0),
         "Bridge Site": (0, math.floor(shape[1] / 2)),
@@ -326,7 +336,7 @@ def plot_potential_minimum_along_diagonal() -> None:
     fig, ax = plt.subplots()
 
     interpolation = get_interpolated_potential((209, 209, 501))
-    shape = BasisUtil(interpolation["basis"]).shape
+    shape = AxisWithLengthBasisUtil(interpolation["basis"]).shape
     path = np.array([(x, x) for x in range(shape[0])])
     _, _, line = plot_potential_minimum_along_path(interpolation, path, ax=ax)
     line.set_label("My Interpolation")
@@ -351,7 +361,7 @@ def plot_potential_minimum_along_edge() -> None:
     interpolation = get_interpolated_potential((209, 209, 501))
     fig, ax = plt.subplots()
 
-    shape = BasisUtil(interpolation["basis"]).shape
+    shape = AxisWithLengthBasisUtil(interpolation["basis"]).shape
     # Note we are 'missing' two points here!
     path = np.array([(shape[0] - (x), x) for x in range(shape[0])]).T
     # Add a fake point here so they line up. path[0] is not included in the unit cell
@@ -385,7 +395,7 @@ def plot_potential_minimum_along_edge_reciprocal() -> None:
     """
     potential = get_raw_potential_reciprocal_grid()
     potential_mock = mock_even_potential(potential)
-    shape = BasisUtil(potential_mock["basis"]).shape
+    shape = AxisWithLengthBasisUtil(potential_mock["basis"]).shape
 
     fig, _, _ = plot_potential_x0x1(potential_mock, x2_idx=0)
     fig.show()
@@ -423,7 +433,7 @@ def test_potential_fourier_transform() -> None:
     # but the irrational unit vectors prevent us from testing this
 
     interpolation = get_interpolated_potential((209, 209, 501))
-    shape = BasisUtil(interpolation["basis"]).shape
+    shape = AxisWithLengthBasisUtil(interpolation["basis"]).shape
     fft_me = np.fft.ifft2(interpolation["vector"].reshape(shape), axes=(0, 1))
     ftt_origin_me = fft_me[0, 0, np.argmin(np.abs(interpolation["basis"][2]))]
 
@@ -439,7 +449,7 @@ def test_potential_fourier_transform() -> None:
     print(ftt_origin_me / fix_factor)  # noqa: T201
 
     john_grid_interpolation = get_interpolated_potential_john_grid()
-    shape = BasisUtil(john_grid_interpolation["basis"]).shape
+    shape = AxisWithLengthBasisUtil(john_grid_interpolation["basis"]).shape
     fft_john = np.fft.ifft2(
         john_grid_interpolation["vector"].reshape(shape), axes=(0, 1)
     )
@@ -462,7 +472,7 @@ def test_symmetry_point_interpolation() -> None:
     raw_points = load_raw_data()
     interpolation = load_john_interpolation()
     points = interpolation["vector"].reshape(
-        *BasisUtil(interpolation["basis"][0:2]).shape, -1
+        *AxisWithLengthBasisUtil(interpolation["basis"][0:2]).shape, -1
     )
 
     try:

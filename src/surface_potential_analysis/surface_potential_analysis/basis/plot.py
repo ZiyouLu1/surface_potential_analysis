@@ -11,7 +11,7 @@ from surface_potential_analysis.basis.brillouin_zone import (
     get_all_brag_point,
 )
 from surface_potential_analysis.basis.util import (
-    BasisUtil,
+    AxisWithLengthBasisUtil,
     project_k_points_along_axes,
     project_x_points_along_axes,
 )
@@ -23,10 +23,10 @@ if TYPE_CHECKING:
     from matplotlib.lines import Line2D
 
     from surface_potential_analysis._types import IndexLike, SingleStackedIndexLike
-    from surface_potential_analysis.basis.basis import Basis
+    from surface_potential_analysis.basis.basis import AxisWithLengthBasis
 
     _S0Inv = TypeVar("_S0Inv", bound=tuple[int, ...])
-    _B0Inv = TypeVar("_B0Inv", bound=Basis[Any])
+    _B0Inv = TypeVar("_B0Inv", bound=AxisWithLengthBasis[Any])
     _NDInv = TypeVar("_NDInv", bound=int)
 
 
@@ -88,7 +88,9 @@ def plot_brillouin_zone_points_projected_2d(
     -------
     tuple[Figure, Axes, Line2D]
     """
-    util = BasisUtil((basis[0], basis[1], axis_as_single_point_axis(basis[2])))
+    util = AxisWithLengthBasisUtil(
+        (basis[0], basis[1], axis_as_single_point_axis(basis[2]))
+    )
     coordinates = decrement_brillouin_zone(basis, util.nk_points)
     coordinates = decrement_brillouin_zone(basis, coordinates)
     points = util.get_k_points_at_index(coordinates)
@@ -144,7 +146,7 @@ def plot_fundamental_k_in_plane_projected_2d(
     -------
     tuple[Figure, Axes, Line2D]
     """
-    util = BasisUtil(basis)
+    util = AxisWithLengthBasisUtil(basis)
     points = util.fundamental_k_points.reshape(3, *util.fundamental_shape)[
         slice_ignoring_axes(idx, axes)
     ].reshape(3, -1)
@@ -213,10 +215,12 @@ def plot_fundamental_x_in_plane_projected_2d(
     -------
     tuple[Figure, Axes, Line2D]
     """
-    util = BasisUtil(basis)
+    util = AxisWithLengthBasisUtil(basis)
     points = (
-        np.array(util.fundamental_nx_points)
-        .reshape(util.ndim, *util.fundamental_shape)[slice_ignoring_axes(idx, axes)]
+        np.array(util.fundamental_x_points)
+        .reshape(util.ndim, *util.fundamental_shape)[
+            slice_ignoring_axes(idx, (0, *[1 + ax for ax in axes]))
+        ]
         .reshape(util.ndim, -1)
     )
     return plot_x_points_projected_2d(basis, axes, points, ax=ax)
@@ -246,7 +250,7 @@ def plot_fundamental_x_at_index_projected_2d(
     -------
     tuple[Figure, Axes, Line2D]
     """
-    util = BasisUtil(basis)
+    util = AxisWithLengthBasisUtil(basis)
     idx = idx if isinstance(idx, tuple) else util.get_stacked_index(idx)
     points = (
         np.array(util.fundamental_nx_points)

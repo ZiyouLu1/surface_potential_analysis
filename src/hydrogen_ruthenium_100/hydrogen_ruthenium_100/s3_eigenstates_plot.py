@@ -3,7 +3,7 @@ from __future__ import annotations
 import numpy as np
 from matplotlib import pyplot as plt
 from surface_potential_analysis.state_vector.eigenstate_collection_plot import (
-    plot_energies_against_bloch_phase_1d,
+    plot_eigenvalues_against_bloch_phase_1d,
 )
 
 from .s3_eigenstates import get_eigenstate_collection
@@ -20,7 +20,7 @@ def plot_lowest_band_energy() -> None:
     ]
     for shape in shapes:
         collection = get_eigenstate_collection(shape)
-        _, _, ln = plot_energies_against_bloch_phase_1d(
+        _, _, ln = plot_eigenvalues_against_bloch_phase_1d(
             collection, np.array([1, 0, 0]), band=0, ax=ax
         )
         ln.set_label(f"({shape[0]}, {shape[1]}, {shape[2]})")
@@ -35,12 +35,12 @@ def plot_lowest_bands() -> None:
 
     collection = get_eigenstate_collection((25, 25, 10))
     for band in range(8):
-        plot_energies_against_bloch_phase_1d(
+        plot_eigenvalues_against_bloch_phase_1d(
             collection, np.array([1, 0, 0]), band=band, ax=ax
         )
 
     print(  # noqa: T201
-        np.min(collection["energies"], axis=0) - np.min(collection["energies"])
+        np.min(collection["eigenvalues"], axis=0) - np.min(collection["eigenvalues"])
     )
 
     fig.show()

@@ -10,11 +10,11 @@ from surface_potential_analysis.axis.axis import (
     FundamentalMomentumAxis,
     FundamentalPositionAxis,
 )
-from surface_potential_analysis.axis.util import AxisUtil
+from surface_potential_analysis.axis.util import AxisWithLengthLikeUtil
 
-from .axis_like import AxisLike, AxisLike3d, AxisVector3d
+from .axis_like import AxisVector3d, AxisWithLengthLike, AxisWithLengthLike3d
 
-_A3d0Inv = TypeVar("_A3d0Inv", bound=AxisLike3d[Any, Any])
+_A3d0Inv = TypeVar("_A3d0Inv", bound=AxisWithLengthLike3d[Any, Any])
 
 _NDInv = TypeVar("_NDInv", bound=int)
 
@@ -25,10 +25,10 @@ _NF0Inv = TypeVar("_NF0Inv", bound=int)
 _S0Inv = TypeVar("_S0Inv", bound=tuple[int, ...])
 
 
-class _RotatedAxis(AxisLike3d[_NF0Inv, _N0Inv]):
+class _RotatedAxis(AxisWithLengthLike3d[_NF0Inv, _N0Inv]):
     def __init__(
         self,
-        axis: AxisLike3d[_NF0Inv, _N0Inv],
+        axis: AxisWithLengthLike3d[_NF0Inv, _N0Inv],
         matrix: np.ndarray[tuple[Literal[3], Literal[3]], np.dtype[np.float_]],
     ) -> None:
         self._axis = axis
@@ -86,7 +86,7 @@ def get_rotated_axis(
 
 
 def axis_as_fundamental_position_axis(
-    axis: AxisLike[_NF0Inv, _N0Inv, _NDInv]
+    axis: AxisWithLengthLike[_NF0Inv, _N0Inv, _NDInv]
 ) -> FundamentalPositionAxis[_NF0Inv, _NDInv]:
     """
     Get the fundamental position axis for a given axis.
@@ -103,7 +103,7 @@ def axis_as_fundamental_position_axis(
 
 
 def axis_as_fundamental_momentum_axis(
-    axis: AxisLike[_NF0Inv, _N0Inv, _NDInv]
+    axis: AxisWithLengthLike[_NF0Inv, _N0Inv, _NDInv]
 ) -> FundamentalMomentumAxis[_NF0Inv, _NDInv]:
     """
     Get the fundamental momentum axis for a given axis.
@@ -120,7 +120,7 @@ def axis_as_fundamental_momentum_axis(
 
 
 def axis_as_explicit_position_axis(
-    axis: AxisLike[_NF0Inv, _N0Inv, _NDInv]
+    axis: AxisWithLengthLike[_NF0Inv, _N0Inv, _NDInv]
 ) -> ExplicitAxis[_NF0Inv, _N0Inv, _NDInv]:
     """
     Convert the axis into an explicit position axis.
@@ -133,12 +133,12 @@ def axis_as_explicit_position_axis(
     -------
     ExplicitAxis[_NF0Inv, _N0Inv]
     """
-    util = AxisUtil(axis)
+    util = AxisWithLengthLikeUtil(axis)
     return ExplicitAxis(axis.delta_x, util.vectors)
 
 
 def axis_as_orthonormal_axis(
-    axis: AxisLike[_NF0Inv, _N0Inv, _NDInv]
+    axis: AxisWithLengthLike[_NF0Inv, _N0Inv, _NDInv]
 ) -> ExplicitAxis[_NF0Inv, _N0Inv, _NDInv]:
     """
     make the given axis orthonormal.
@@ -151,7 +151,7 @@ def axis_as_orthonormal_axis(
     -------
     ExplicitAxis[_NF0Inv, _N0Inv]
     """
-    vectors = AxisUtil(axis).vectors
+    vectors = AxisWithLengthLikeUtil(axis).vectors
     orthonormal_vectors = np.zeros_like(vectors, dtype=vectors.dtype)
     for i, v in enumerate(vectors):
         vector = v
@@ -163,7 +163,7 @@ def axis_as_orthonormal_axis(
 
 
 def axis_as_n_point_axis(
-    axis: AxisLike[_NF0Inv, _N0Inv, _NDInv], *, n: _N1Inv
+    axis: AxisWithLengthLike[_NF0Inv, _N0Inv, _NDInv], *, n: _N1Inv
 ) -> FundamentalPositionAxis[_N1Inv, _NDInv]:
     """
     Get the corresponding n point axis for a given axis.
@@ -181,7 +181,7 @@ def axis_as_n_point_axis(
 
 
 def axis_as_single_point_axis(
-    axis: AxisLike[_NF0Inv, _N0Inv, _NDInv]
+    axis: AxisWithLengthLike[_NF0Inv, _N0Inv, _NDInv]
 ) -> FundamentalPositionAxis[Literal[1], _NDInv]:
     """
     Get the corresponding single point axis for a given axis.

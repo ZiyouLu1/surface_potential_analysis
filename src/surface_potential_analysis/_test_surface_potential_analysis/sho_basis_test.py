@@ -11,7 +11,7 @@ from surface_potential_analysis.axis.axis import (
     ExplicitAxis3d,
     FundamentalPositionAxis3d,
 )
-from surface_potential_analysis.axis.util import AxisUtil
+from surface_potential_analysis.axis.util import AxisWithLengthLikeUtil
 from surface_potential_analysis.basis.sho_basis import (
     SHOBasisConfig,
     calculate_sho_wavefunction,
@@ -110,7 +110,9 @@ class SHOBasisTest(unittest.TestCase):
         parent: FundamentalPositionAxis3d[Literal[1001]] = FundamentalPositionAxis3d(
             np.array([0, 0, 20]), 1001
         )
-        basis = AxisUtil(infinate_sho_axis_3d_from_config(parent, config, 12))
+        basis = AxisWithLengthLikeUtil(
+            infinate_sho_axis_3d_from_config(parent, config, 12)
+        )
         np.testing.assert_almost_equal(
             np.ones((nz,)), np.sum(basis.vectors * np.conj(basis.vectors), axis=1)
         )
@@ -123,7 +125,7 @@ class SHOBasisTest(unittest.TestCase):
         }
         parent = FundamentalPositionAxis3d(np.array([0, 0, 10 * np.pi]), 1001)
 
-        axis = AxisUtil(sho_axis_3d_from_config(parent, config, 12))
+        axis = AxisWithLengthLikeUtil(sho_axis_3d_from_config(parent, config, 12))
 
         norm = np.linalg.norm(axis.vectors, axis=1)
         np.testing.assert_array_almost_equal(norm, np.ones_like(norm))
@@ -144,5 +146,6 @@ class SHOBasisTest(unittest.TestCase):
         )
         basis2 = _normalize_sho_basis(sho_axis_3d_from_config(parent, config, 16))
         np.testing.assert_array_almost_equal(
-            AxisUtil(basis1).vectors, AxisUtil(basis2).vectors
+            AxisWithLengthLikeUtil(basis1).vectors,
+            AxisWithLengthLikeUtil(basis2).vectors,
         )

@@ -69,7 +69,7 @@ def _calculate_mean_locations(
     ffc_locations = util.get_x_points_at_index(nx_points_wrapped)
 
     locations = np.tile(ffc_locations, (1, shape[2])).reshape(3, *shape)
-    hcp_offset = 1 / 3 * (util.delta_x0 + util.delta_x1)
+    hcp_offset = 1 / 3 * (util.delta_x[0] + util.delta_x[1])
     locations[:, :, :, [1, 4, 5]] += hcp_offset[:, np.newaxis, np.newaxis, np.newaxis]
     return locations  # type: ignore[no-any-return]
 

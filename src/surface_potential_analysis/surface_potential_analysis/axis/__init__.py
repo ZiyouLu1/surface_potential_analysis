@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
-from .axis_like import AxisLike3d, AxisVector3d
-from .util import Axis3dUtil
+from .axis_like import AxisVector3d, AxisWithLengthLike3d
+from .util import AxisUtil
 
 __all__ = [
-    "AxisLike3d",
+    "AxisWithLengthLike3d",
     "AxisVector3d",
-    "Axis3dUtil",
+    "AxisUtil",
 ]

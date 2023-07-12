@@ -10,7 +10,7 @@ from surface_potential_analysis.axis.axis import (
 from surface_potential_analysis.basis.build import (
     position_basis_3d_from_shape,
 )
-from surface_potential_analysis.basis.util import Basis3dUtil
+from surface_potential_analysis.basis.util import AxisWithLengthBasisUtil
 from surface_potential_analysis.potential import (
     FundamentalPositionBasisPotential3d,
     PointPotential3d,
@@ -155,7 +155,7 @@ def interpolate_points_fourier_nickel(  # noqa: PLR0913
     old_basis: FundamentalPositionBasis3d[int, int, int] = position_basis_3d_from_shape(
         shape=(*points.shape, 1)  # type: ignore[arg-type]
     )
-    old_basis_util = Basis3dUtil(old_basis)
+    old_basis_util = AxisWithLengthBasisUtil(old_basis)
     nk_points_stacked = np.array(old_basis_util.fundamental_nk_points).reshape(
         3, *old_basis_util.shape
     )[0:2, :, :, 0]
@@ -171,7 +171,7 @@ def interpolate_points_fourier_nickel(  # noqa: PLR0913
         ),
         FundamentalPositionAxis3d(np.array([0, 0, 1]), 1),
     )
-    util = Basis3dUtil(basis)
+    util = AxisWithLengthBasisUtil(basis)
     coordinates = util.fundamental_x_points[0:2].T
 
     fractions = get_coordinate_fractions(

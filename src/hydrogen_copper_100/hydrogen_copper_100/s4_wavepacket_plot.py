@@ -3,7 +3,7 @@ from __future__ import annotations
 import matplotlib.pyplot as plt
 import numpy as np
 from surface_potential_analysis.state_vector.plot import (
-    plot_eigenstate_x0x1,
+    plot_eigenstate_2d_x,
     plot_state_vector_difference_2d_x,
 )
 from surface_potential_analysis.wavepacket.get_eigenstate import get_eigenstate
@@ -162,24 +162,24 @@ def compare_wavefunction_eigenstate_2d() -> None:
     wavepacket = load_wavepacket(path)
     normalized = localize_tightly_bound_wavepacket_idx(wavepacket)
 
-    (ns0, ns1) = wavepacket["energies"].shape
+    (ns0, ns1) = wavepacket["eigenvalues"].shape
     eigenstate_0 = get_eigenstate(normalized, (ns0 // 2, ns1 // 2))
     eigenstate_1 = get_eigenstate(normalized, (0, 0))
     eigenstate_2 = get_eigenstate(normalized, (ns0 // 2, 0))
 
     fig, axs = plt.subplots(2, 3)
-    (_, ax, _) = plot_eigenstate_x0x1(eigenstate_0, 0, ax=axs[0][0])
+    (_, ax, _) = plot_eigenstate_2d_x(eigenstate_0, (0, 1), (0,), ax=axs[0][0])
     ax.set_title("(-dkx/2, -dky/2) at z=0")
-    (_, ax, _) = plot_eigenstate_x0x1(eigenstate_1, 0, ax=axs[0][1])
+    (_, ax, _) = plot_eigenstate_2d_x(eigenstate_1, (0, 1), (0,), ax=axs[0][1])
     ax.set_title("(0,0) at z=0")
-    (_, ax, _) = plot_eigenstate_x0x1(eigenstate_2, 0, ax=axs[0][2])
+    (_, ax, _) = plot_eigenstate_2d_x(eigenstate_2, (0, 1), (0,), ax=axs[0][2])
     ax.set_title("(-dkx/2, 0) at z=0")
 
-    (_, ax, _) = plot_eigenstate_x0x1(eigenstate_0, x2_idx=100, ax=axs[1][0])
+    (_, ax, _) = plot_eigenstate_2d_x(eigenstate_0, (0, 1), (100,), ax=axs[1][0])
     ax.set_title("(-dkx/2, -dky/2) at z=delta_x")
-    (_, ax, _) = plot_eigenstate_x0x1(eigenstate_1, x2_idx=100, ax=axs[1][1])
+    (_, ax, _) = plot_eigenstate_2d_x(eigenstate_1, (0, 1), (100,), ax=axs[1][1])
     ax.set_title("(0,0) at z=delta_x")
-    (_, ax, _) = plot_eigenstate_x0x1(eigenstate_2, x2_idx=100, ax=axs[1][2])
+    (_, ax, _) = plot_eigenstate_2d_x(eigenstate_2, (0, 1), (100,), ax=axs[1][2])
     ax.set_title("(-dkx/2, 0) at z=delta_x")
 
     fig.tight_layout()
@@ -189,11 +189,11 @@ def compare_wavefunction_eigenstate_2d() -> None:
 
     fig, axs = plt.subplots(1, 2)
     (_, ax, _) = plot_state_vector_difference_2d_x(
-        eigenstate_1, eigenstate_0, 2, axs[0]
+        eigenstate_1, eigenstate_0, (0, 1), axs[0]
     )
     ax.set_title("(-dkx/2, -dky/2) vs (0,0)")
     (_, ax, _) = plot_state_vector_difference_2d_x(
-        eigenstate_2, eigenstate_0, 2, axs[1]
+        eigenstate_2, eigenstate_0, (0, 1), axs[1]
     )
     ax.set_title("(-dkx/2, 0) vs (0,0)")
 
@@ -210,7 +210,7 @@ def calculate_eigenstate_cross_product() -> None:
     eigenstates = load_wavepacket(path)
     normalized = localize_tightly_bound_wavepacket_idx(eigenstates)
 
-    (ns0, ns1) = normalized["energies"].shape
+    (ns0, ns1) = normalized["eigenvalues"].shape
     eigenstate_0 = get_eigenstate(normalized, (ns0 // 2, ns1 // 2))
     eigenstate_1 = get_eigenstate(normalized, (0, 0))
 

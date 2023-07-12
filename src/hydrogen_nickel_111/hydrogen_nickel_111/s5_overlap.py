@@ -2,15 +2,12 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Literal
 
-import numpy as np
 from surface_potential_analysis.overlap.calculation import calculate_wavepacket_overlap
 from surface_potential_analysis.util.decorators import npy_cached
 
 from .s4_wavepacket import (
     get_two_point_normalized_wavepacket_deuterium,
     get_two_point_normalized_wavepacket_hydrogen,
-    get_wavepacket_deuterium,
-    get_wavepacket_hydrogen,
 )
 from .surface_data import get_data_path
 
@@ -31,7 +28,7 @@ def _overlap_inner_cache_hydrogen(
     dx0j, dx1j = offset_j
     too_large_i = not (-2 < dx0i < 2 and -2 < dx1i < 2)  # noqa: PLR2004
     too_large_j = not (-2 < dx0j < 2 and -2 < dx1j < 2)  # noqa: PLR2004
-    if too_large_i or too_large_j:
+    if too_large_i or too_large_j or i > 1 or j > 1:
         print("Unable to cache", offset_j, offset_i)  # noqa: T201
         return None
     dx0i, dx1i = dx0i % 3, dx1i % 3
@@ -57,15 +54,9 @@ def get_overlap_hydrogen(
     offset_i: tuple[int, int] = (0, 0),
     offset_j: tuple[int, int] = (0, 0),
 ) -> Overlap3d[FundamentalPositionBasis3d[int, int, Literal[250]]]:
-    i, j = (i, j) if i < j else (j, i)
     offset_i, offset_j = (offset_i, offset_j) if i < j else (offset_j, offset_i)
+    i, j = (i, j) if i < j else (j, i)
     return _get_overlap_inner_hydrogen(i, j, offset_i, offset_j)
-
-
-def get_hydrogen_fcc_hcp_energy_difference() -> np.float_:
-    fcc = get_wavepacket_hydrogen(0)
-    hcp = get_wavepacket_hydrogen(1)
-    return np.average(fcc["energies"]) - np.average(hcp["energies"])
 
 
 def _overlap_inner_cache_deuterium(
@@ -78,7 +69,7 @@ def _overlap_inner_cache_deuterium(
     dx0j, dx1j = offset_j
     too_large_i = not (-2 < dx0i < 2 and -2 < dx1i < 2)  # noqa: PLR2004
     too_large_j = not (-2 < dx0j < 2 and -2 < dx1j < 2)  # noqa: PLR2004
-    if too_large_i or too_large_j:
+    if too_large_i or too_large_j or i > 1 or j > 1:
         print("Unable to cache", offset_j, offset_i)  # noqa: T201
         return None
     dx0i, dx1i = dx0i % 3, dx1i % 3
@@ -106,12 +97,6 @@ def get_overlap_deuterium(
     offset_i: tuple[int, int] = (0, 0),
     offset_j: tuple[int, int] = (0, 0),
 ) -> Overlap3d[FundamentalPositionBasis3d[int, int, Literal[200]]]:
-    i, j = (i, j) if i < j else (j, i)
     offset_i, offset_j = (offset_i, offset_j) if i < j else (offset_j, offset_i)
+    i, j = (i, j) if i < j else (j, i)
     return _get_overlap_inner_deuterium(i, j, offset_i, offset_j)
-
-
-def get_deuterium_fcc_hcp_energy_difference() -> np.float_:
-    fcc = get_wavepacket_deuterium(0)
-    hcp = get_wavepacket_deuterium(1)
-    return np.average(fcc["energies"]) - np.average(hcp["energies"])

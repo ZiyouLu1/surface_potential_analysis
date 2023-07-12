@@ -6,7 +6,7 @@ from surface_potential_analysis.basis.plot import (
     plot_fundamental_x_at_index_projected_2d,
     plot_fundamental_x_in_plane_projected_2d,
 )
-from surface_potential_analysis.basis.util import BasisUtil
+from surface_potential_analysis.basis.util import AxisWithLengthBasisUtil
 from surface_potential_analysis.potential.plot import (
     plot_potential_1d_x2_comparison_100,
 )
@@ -28,7 +28,7 @@ def plot_raw_potential_points() -> None:
     fig, ax = plt.subplots()
     potential = load_raw_copper_potential()
     xy_basis = (potential["basis"][0], potential["basis"][1])
-    util = BasisUtil(xy_basis)
+    util = AxisWithLengthBasisUtil(xy_basis)
 
     idx = (
         np.array([0, 1, 2, 3, 4, 1, 2, 3, 4, 2, 3, 4, 3, 4, 4]),

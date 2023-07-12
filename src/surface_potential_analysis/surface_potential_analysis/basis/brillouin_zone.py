@@ -7,7 +7,7 @@ import numpy as np
 from surface_potential_analysis.basis.build import (
     position_basis_from_shape,
 )
-from surface_potential_analysis.basis.util import Basis3dUtil, BasisUtil
+from surface_potential_analysis.basis.util import AxisWithLengthBasisUtil
 
 if TYPE_CHECKING:
     from surface_potential_analysis._types import (
@@ -20,12 +20,12 @@ if TYPE_CHECKING:
     )
     from surface_potential_analysis.axis.axis import FundamentalPositionAxis
     from surface_potential_analysis.basis.basis import (
-        Basis,
+        AxisWithLengthBasis,
         Basis3d,
     )
 
     _B3d0Inv = TypeVar("_B3d0Inv", bound=Basis3d[Any, Any, Any])
-    _B0Inv = TypeVar("_B0Inv", bound=Basis[Any])
+    _B0Inv = TypeVar("_B0Inv", bound=AxisWithLengthBasis[Any])
 _S0Inv = TypeVar("_S0Inv", bound=tuple[int, ...])
 
 
@@ -97,7 +97,7 @@ def get_bragg_point_basis(
     FundamentalPositionBasis3d[int, int, int]
     """
     width = 2 * n_bands + 1
-    util = BasisUtil(basis)
+    util = AxisWithLengthBasisUtil(basis)
     shape: tuple[int, ...] = (width,) * len(util.shape)
     # we want a basis where dk_1 = delta_k_original
     # Since dk = 2 * pi / delta_x we need to decrease delta_x by a factor of util.ni
@@ -124,8 +124,8 @@ def get_all_brag_point_index(
         Index of each of the brag points, using the nk_points convention for the ArrayStackedIndexLike
     """
     bragg_point_basis = get_bragg_point_basis(basis, n_bands=n_bands)
-    nk_points = BasisUtil(bragg_point_basis).fundamental_nk_points
-    shape = BasisUtil(basis).shape
+    nk_points = AxisWithLengthBasisUtil(bragg_point_basis).fundamental_nk_points
+    shape = AxisWithLengthBasisUtil(basis).shape
     return tuple(
         ni * nki_points for (ni, nki_points) in zip(shape, nk_points, strict=True)
     )
@@ -149,7 +149,7 @@ def get_all_brag_point(
         Array of each of the brag points, using the nk_points convention
     """
     bragg_point_basis = get_bragg_point_basis(basis, n_bands=n_bands)
-    return BasisUtil(bragg_point_basis).fundamental_k_points
+    return AxisWithLengthBasisUtil(bragg_point_basis).fundamental_k_points
 
 
 @overload
@@ -196,7 +196,7 @@ def get_bragg_plane_distance(
 
 def _get_decrement_tolerance(basis: _B0Inv) -> float:
     r_tol = 1e-5
-    util = BasisUtil(basis)
+    util = AxisWithLengthBasisUtil(basis)
     return np.min(np.linalg.norm(util.dk, axis=1)) * r_tol
 
 
@@ -239,7 +239,7 @@ def decrement_brillouin_zone_3d(
     tolerance = _get_decrement_tolerance(basis)
     # Transpose used - we want the new axis to appear as the last axis not the first
     out = np.atleast_2d(np.transpose(coordinate)).T
-    coordinate_points = Basis3dUtil(basis).get_k_points_at_index(tuple(out))  # type: ignore[arg-type]
+    coordinate_points = AxisWithLengthBasisUtil(basis).get_k_points_at_index(tuple(out))  # type: ignore[arg-type]
     bragg_points = get_all_brag_point(basis, n_bands=1)
 
     closest_points = np.zeros_like(out[0], dtype=np.int_)
@@ -305,7 +305,7 @@ def decrement_brillouin_zone(
     tolerance = _get_decrement_tolerance(basis)
     # Transpose used - we want the new axis to appear as the last axis not the first
     out = np.atleast_2d(np.transpose(coordinate)).T
-    coordinate_points = BasisUtil(basis).get_k_points_at_index(tuple(out))  # type: ignore[arg-type]
+    coordinate_points = AxisWithLengthBasisUtil(basis).get_k_points_at_index(tuple(out))  # type: ignore[arg-type]
     bragg_points = get_all_brag_point(basis, n_bands=1)
 
     closest_points = np.zeros_like(out[0], dtype=np.int_)

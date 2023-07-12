@@ -10,13 +10,13 @@ from surface_potential_analysis.axis.axis import (
     FundamentalPositionAxis3d,
 )
 from surface_potential_analysis.basis.basis import (
-    Basis,
+    AxisWithLengthBasis,
     Basis1d,
     Basis2d,
     Basis3d,
     FundamentalPositionBasis3d,
 )
-from surface_potential_analysis.basis.util import BasisUtil
+from surface_potential_analysis.basis.util import AxisWithLengthBasisUtil
 from surface_potential_analysis.util.interpolation import (
     interpolate_points_along_axis_spline,
     interpolate_points_rfftn,
@@ -37,8 +37,8 @@ _L2Inv = TypeVar("_L2Inv", bound=int)
 
 PotentialPoints = np.ndarray[tuple[int], np.dtype[np.complex_]]
 
-_B0Cov = TypeVar("_B0Cov", bound=Basis[Any], covariant=True)
-_B0Inv = TypeVar("_B0Inv", bound=Basis[Any])
+_B0Cov = TypeVar("_B0Cov", bound=AxisWithLengthBasis[Any], covariant=True)
+_B0Inv = TypeVar("_B0Inv", bound=AxisWithLengthBasis[Any])
 _B1d0Cov = TypeVar("_B1d0Cov", bound=Basis1d[Any], covariant=True)
 _B2d0Cov = TypeVar("_B2d0Cov", bound=Basis2d[Any, Any], covariant=True)
 _B3d0Cov = TypeVar("_B3d0Cov", bound=Basis3d[Any, Any, Any], covariant=True)
@@ -298,7 +298,7 @@ def interpolate_uneven_potential(
     Makes use of a fourier transform to increase the number of points
     in the xy plane of the energy grid, and a cubic spline to interpolate in the z direction
     """
-    util = BasisUtil((data["basis"][0], data["basis"][1]))
+    util = AxisWithLengthBasisUtil((data["basis"][0], data["basis"][1]))
     # TODO: maybe along axis
     xy_interpolated = interpolate_points_rfftn(
         data["vector"].reshape(*util.shape, len(data["basis"][2])).astype(np.float_),

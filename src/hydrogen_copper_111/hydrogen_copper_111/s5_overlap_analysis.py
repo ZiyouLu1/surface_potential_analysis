@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING
 
 import numpy as np
 from matplotlib import pyplot as plt
-from surface_potential_analysis.basis.util import Basis3dUtil
+from surface_potential_analysis.basis.util import AxisWithLengthBasisUtil
 from surface_potential_analysis.overlap.conversion import (
     convert_overlap_to_momentum_basis,
 )
@@ -34,7 +34,7 @@ def plot_overlap() -> None:
     overlap = load_overlap_fcc_hcp()
     overlap_momentum = convert_overlap_to_momentum_basis(overlap)
 
-    fig, ax, _ = plot_overlap_2d_k(overlap_momentum, 0, 2)
+    fig, ax, _ = plot_overlap_2d_k(overlap_momentum, (0, 1), (0,))
     ax.set_title(
         "Plot of the overlap in momentum for ikz=0\n"
         "showing oscillation in the direction corresponding to\n"
@@ -43,7 +43,7 @@ def plot_overlap() -> None:
     save_figure(fig, "2d_overlap_transform_kx_ky.png")
     fig.show()
 
-    fig, ax, _ = plot_overlap_2d_k(overlap_momentum, 0, 2)
+    fig, ax, _ = plot_overlap_2d_k(overlap_momentum, (0, 1), (0,))
     ax.set_title(
         "Plot of the overlap summed over z\n"
         "showing the FCC and HCP asymmetry\n"
@@ -52,7 +52,7 @@ def plot_overlap() -> None:
     save_figure(fig, "2d_overlap_kx_ky.png")
     fig.show()
 
-    fig, ax, _ = plot_overlap_2d_k(overlap_momentum, 0, 1)
+    fig, ax, _ = plot_overlap_2d_k(overlap_momentum, (0, 1), (0,))
     ax.set_title(
         "Plot of the overlap in momentum  for ikx1=0\n"
         "A very sharp peak in the kz direction"
@@ -80,7 +80,7 @@ def plot_overlap() -> None:
 def print_max_overlap_momentum() -> None:
     overlap = load_overlap_fcc_hcp()
     overlap_momentum = convert_overlap_to_momentum_basis(overlap)
-    util = Basis3dUtil(overlap["basis"])
+    util = AxisWithLengthBasisUtil(overlap["basis"])
 
     print(overlap_momentum["vector"][0])  # noqa: T201
     print(  # noqa: T201

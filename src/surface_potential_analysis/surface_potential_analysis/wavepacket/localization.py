@@ -9,7 +9,7 @@ from surface_potential_analysis.basis.conversion import (
     basis_as_fundamental_position_basis,
 )
 from surface_potential_analysis.basis.util import (
-    BasisUtil,
+    AxisWithLengthBasisUtil,
     get_x01_mirrored_index,
     wrap_index_around_origin,
 )
@@ -21,7 +21,7 @@ from surface_potential_analysis.state_vector.conversion import (
     convert_state_vector_to_position_basis,
 )
 from surface_potential_analysis.state_vector.eigenstate_calculation import (
-    calculate_eigenstates_hermitian,
+    calculate_eigenvectors_hermitian,
     calculate_inner_product,
 )
 from surface_potential_analysis.state_vector.state_vector import (
@@ -50,12 +50,12 @@ if TYPE_CHECKING:
         SingleIndexLike,
         SingleStackedIndexLike,
     )
-    from surface_potential_analysis.basis.basis import Basis, Basis3d
+    from surface_potential_analysis.basis.basis import AxisWithLengthBasis, Basis3d
     from surface_potential_analysis.operator.operator import SingleBasisOperator
 
     _B3d0Inv = TypeVar("_B3d0Inv", bound=Basis3d[Any, Any, Any])
-    _B0Inv = TypeVar("_B0Inv", bound=Basis[Any])
-    _B1Inv = TypeVar("_B1Inv", bound=Basis[Any])
+    _B0Inv = TypeVar("_B0Inv", bound=AxisWithLengthBasis[Any])
+    _B1Inv = TypeVar("_B1Inv", bound=AxisWithLengthBasis[Any])
 
     _NS0Inv = TypeVar("_NS0Inv", bound=int)
     _NS1Inv = TypeVar("_NS1Inv", bound=int)
@@ -107,7 +107,7 @@ def _get_global_phases(  # type: ignore[misc]
         phases for each sample in the wavepacket
     """
     basis = basis_as_fundamental_position_basis(wavepacket["basis"])  # type: ignore[arg-type,var-annotated]
-    util = BasisUtil(basis)
+    util = AxisWithLengthBasisUtil(basis)
 
     nx_points = idx if isinstance(idx, tuple) else util.get_stacked_index(idx)
     nx_fractions = tuple(a / ni for (a, ni) in zip(nx_points, util.shape, strict=True))
@@ -136,7 +136,7 @@ def _get_bloch_wavefunction_phases(
         the angle for each point in the wavepacket
     """
     converted = convert_wavepacket_to_position_basis(wavepacket)
-    util = BasisUtil(converted["basis"])
+    util = AxisWithLengthBasisUtil(converted["basis"])
     idx = util.get_flat_index(idx, mode="wrap") if isinstance(idx, tuple) else idx
 
     return np.angle(converted["vectors"][:, idx])  # type: ignore[return-value]
@@ -176,7 +176,7 @@ def localize_tightly_bound_wavepacket_idx(
         "basis": wavepacket["basis"],
         "shape": wavepacket["shape"],
         "vectors": fixed_eigenvectors,
-        "energies": wavepacket["energies"],
+        "eigenvalues": wavepacket["eigenvalues"],
     }
 
 
@@ -197,11 +197,11 @@ def get_wavepacket_two_points(
     -------
     tuple[SingleStackedIndexLike, SingleStackedIndexLike]
     """
-    util = BasisUtil(wavepacket["basis"])
+    util = AxisWithLengthBasisUtil(wavepacket["basis"])
     origin = (util.shape[0] * offset[0], util.shape[1] * offset[1], 0)
 
     converted = convert_state_vector_to_position_basis(get_eigenstate(wavepacket, 0))  # type: ignore[arg-type,var-annotated]
-    converted_util = BasisUtil(converted["basis"])
+    converted_util = AxisWithLengthBasisUtil(converted["basis"])
     idx_0: SingleStackedIndexLike = converted_util.get_stacked_index(
         np.argmax(np.abs(converted["vector"]), axis=-1)
     )
@@ -299,7 +299,7 @@ def localize_tightly_bound_wavepacket_two_point_max(
         "basis": wavepacket["basis"],
         "shape": wavepacket["shape"],
         "vectors": fixed_eigenvectors,
-        "energies": wavepacket["energies"],
+        "eigenvalues": wavepacket["eigenvalues"],
     }
 
 
@@ -328,7 +328,7 @@ def localize_tightly_bound_wavepacket_max_point(
     """
     converted = convert_state_vector_to_position_basis(get_eigenstate(wavepacket, 0))  # type: ignore[arg-type,var-annotated]
     max_idx = np.argmax(np.abs(converted["vector"]), axis=-1)
-    max_idx = BasisUtil(converted["basis"]).get_stacked_index(max_idx)
+    max_idx = AxisWithLengthBasisUtil(converted["basis"]).get_stacked_index(max_idx)
     max_idx = wrap_index_around_origin(wavepacket["basis"], max_idx, axes=(0, 1))
 
     bloch_phases = _get_bloch_wavefunction_phases(wavepacket, max_idx)
@@ -340,13 +340,13 @@ def localize_tightly_bound_wavepacket_max_point(
     return {  # type: ignore[return-value]
         "basis": wavepacket["basis"],
         "vectors": fixed_eigenvectors,
-        "energies": wavepacket["energies"],
+        "eigenvalues": wavepacket["eigenvalues"],
         "shape": wavepacket["shape"],
     }
 
 
 def _get_position_operator(basis: _B0Inv) -> SingleBasisOperator[_B0Inv]:
-    util = BasisUtil(basis)
+    util = AxisWithLengthBasisUtil(basis)
     # We only get the location in the x0 direction here
     locations = util.x_points[0]
 
@@ -383,11 +383,11 @@ def _localize_operator(
         for state in get_eigenstates(wavepacket)
     ]
     operator_between_states = _get_operator_between_states(states, operator)
-    eigenstates = calculate_eigenstates_hermitian(operator_between_states)
+    eigenstates = calculate_eigenvectors_hermitian(operator_between_states)
     return [
         {
             "basis": wavepacket["basis"],
-            "energies": wavepacket["energies"],
+            "eigenvalues": wavepacket["eigenvalues"],
             "shape": wavepacket["shape"],
             "vectors": wavepacket["vectors"] * vector[:, np.newaxis],
         }
@@ -440,7 +440,7 @@ def localize_position_operator_many_band(
     ]
     operator_position = _get_position_operator(basis)
     operator = _get_operator_between_states(states, operator_position)
-    eigenstates = calculate_eigenstates_hermitian(operator)
+    eigenstates = calculate_eigenvectors_hermitian(operator)
     state_vectors = np.array([s["vector"] for s in states])
     return [
         {
@@ -473,7 +473,7 @@ def localize_position_operator_many_band_individual(
     ]
     operator_position = _get_position_operator(states[0]["basis"])
     operator = _get_operator_between_states(states, operator_position)
-    eigenstates = calculate_eigenstates_hermitian(operator)
+    eigenstates = calculate_eigenvectors_hermitian(operator)
     state_vectors = np.array([s["vector"] for s in states])
     return [
         {

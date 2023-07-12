@@ -9,11 +9,11 @@ from surface_potential_analysis.basis.conversion import (
 
 if TYPE_CHECKING:
     from surface_potential_analysis.axis.axis import FundamentalPositionAxis
-    from surface_potential_analysis.basis.basis import Basis
+    from surface_potential_analysis.basis.basis import AxisWithLengthBasis
     from surface_potential_analysis.potential.potential import Potential
 
-    _B0Inv = TypeVar("_B0Inv", bound=Basis[Any])
-    _B1Inv = TypeVar("_B1Inv", bound=Basis[Any])
+    _B0Inv = TypeVar("_B0Inv", bound=AxisWithLengthBasis[Any])
+    _B1Inv = TypeVar("_B1Inv", bound=AxisWithLengthBasis[Any])
 
 
 def convert_potential_to_basis(

@@ -6,8 +6,8 @@ import numpy as np
 import scipy.constants
 from matplotlib import pyplot as plt
 from surface_potential_analysis.wavepacket.plot import (
-    plot_wavepacket_energies_2d_k,
-    plot_wavepacket_energies_2d_x,
+    plot_wavepacket_eigenvalues_2d_k,
+    plot_wavepacket_eigenvalues_2d_x,
 )
 
 from hydrogen_copper_100.s4_wavepacket import load_copper_wavepacket
@@ -15,13 +15,13 @@ from hydrogen_copper_100.s4_wavepacket import load_copper_wavepacket
 from .surface_data import save_figure
 
 
-def plot_copper_wavepacket_energies() -> None:
+def plot_copper_wavepacket_eigenvalues() -> None:
     for i in range(10):
         wavepacket = load_copper_wavepacket(i)
-        fig, _, _ = plot_wavepacket_energies_2d_k(wavepacket)
+        fig, _, _ = plot_wavepacket_eigenvalues_2d_k(wavepacket)
         fig.show()
 
-        fig, _, _ = plot_wavepacket_energies_2d_x(wavepacket)
+        fig, _, _ = plot_wavepacket_eigenvalues_2d_x(wavepacket)
         fig.show()
     input()
 
@@ -30,7 +30,7 @@ def load_copper_eigenvalues() -> np.ndarray[tuple[int, int, int], np.dtype[np.fl
     out = np.zeros((10, 12, 12))
     for i in range(10):
         wavepacket = load_copper_wavepacket(i)
-        out[i] = wavepacket["energies"]
+        out[i] = wavepacket["eigenvalues"]
     return out  # type: ignore[no-any-return]
 
 
@@ -93,8 +93,8 @@ def find_band_with_1mev_bandwidth() -> None:
         "k=0", center_eigenvalues[first_relevant] - center_eigenvalues[0]
     )
     print("bandwidths", bandwidths[: first_relevant + 3])  # noqa: T201
-    energies = np.subtract(center_eigenvalues, center_eigenvalues[0])
-    print("energies", energies[: first_relevant + 3])  # noqa: T201
+    eigenvalues = np.subtract(center_eigenvalues, center_eigenvalues[0])
+    print("eigenvalues", eigenvalues[: first_relevant + 3])  # noqa: T201
 
     print("----------------------------------------")  # noqa: T201
 
@@ -145,9 +145,9 @@ def calculate_tst_rate_contributions(
 ) -> np.ndarray[tuple[_L0Inv], np.dtype[np.float_]]:
     bandwidths = calculate_bandwidths(eigenvalues)
     frequencies = bandwidths / (scipy.constants.hbar * np.pi)
-    energies = np.array(eigenvalues["center"])
+    eigenvalues = np.array(eigenvalues["center"])
     tunnelling_contributions = np.exp(
-        -energies / (scipy.constants.Boltzmann * temperature)
+        -eigenvalues / (scipy.constants.Boltzmann * temperature)
     )
     normalization: float = np.sum(tunnelling_contributions)
     return (frequencies * tunnelling_contributions) / normalization  # type: ignore[no-any-return]

@@ -15,7 +15,7 @@ from surface_potential_analysis.axis.axis import (
 from surface_potential_analysis.basis.potential_basis import (
     get_potential_basis_config_eigenstates,
 )
-from surface_potential_analysis.basis.util import BasisUtil
+from surface_potential_analysis.basis.util import AxisWithLengthBasisUtil
 from surface_potential_analysis.util.decorators import timed
 
 if TYPE_CHECKING:
@@ -25,7 +25,7 @@ if TYPE_CHECKING:
     from surface_potential_analysis.potential import (
         FundamentalPositionBasisPotential3d,
     )
-    from surface_potential_analysis.state_vector.state_vector import StateVectorList
+    from surface_potential_analysis.state_vector.state_vector import EigenvectorList
 
 _N0Inv = TypeVar("_N0Inv", bound=int)
 _N1Inv = TypeVar("_N1Inv", bound=int)
@@ -52,7 +52,7 @@ class _SurfaceHamiltonianUtil(
 
     _resolution: tuple[_N0Inv, _N1Inv]
     _config: PotentialBasisConfig[tuple[FundamentalPositionAxis1d[_NF2Inv]], _N2Inv]
-    state_vectors_z: StateVectorList[tuple[FundamentalPositionAxis1d[_NF2Inv]]]
+    state_vectors_z: EigenvectorList[tuple[FundamentalPositionAxis1d[_NF2Inv]]]
 
     def __init__(
         self,
@@ -104,7 +104,7 @@ class _SurfaceHamiltonianUtil(
         self,
     ) -> np.ndarray[tuple[_NF0Inv, _NF1Inv, _NF2Inv], np.dtype[np.complex_]]:
         return self._potential["vector"].reshape(  # type: ignore[no-any-return]
-            BasisUtil(self._potential["basis"]).shape
+            AxisWithLengthBasisUtil(self._potential["basis"]).shape
         )
 
     def hamiltonian(
@@ -128,7 +128,7 @@ class _SurfaceHamiltonianUtil(
             hamiltonian_generator.calculate_off_diagonal_energies2(
                 self.get_ft_potential().tolist(),
                 self.basis[2].vectors.tolist(),
-                BasisUtil(self.basis).shape,  # type: ignore[arg-type]
+                AxisWithLengthBasisUtil(self.basis).shape,  # type: ignore[arg-type]
             )
         )
 
@@ -144,7 +144,7 @@ class _SurfaceHamiltonianUtil(
                 self.basis[1].delta_x[:2], self.basis[1].n, self.basis[1].fundamental_n
             ),
         )
-        util = BasisUtil(xy_basis)
+        util = AxisWithLengthBasisUtil(xy_basis)
 
         bloch_phase = np.tensordot(util.dk, bloch_fraction[:2], axes=(0, 0))
         k_points = util.k_points + bloch_phase[:, np.newaxis]
@@ -153,7 +153,7 @@ class _SurfaceHamiltonianUtil(
             axis=0,
             dtype=np.complex_,
         )
-        z_energy = self.state_vectors_z["energies"]
+        z_energy = self.state_vectors_z["eigenvalues"]
         return (xy_energy[:, np.newaxis] + z_energy[np.newaxis, :]).ravel()  # type: ignore[no-any-return]
 
     @property

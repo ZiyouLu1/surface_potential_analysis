@@ -11,29 +11,27 @@ from surface_potential_analysis.basis.conversion import (
     basis_as_fundamental_position_basis,
     convert_vector,
 )
-from surface_potential_analysis.basis.util import BasisUtil
-from surface_potential_analysis.util.decorators import timed
+from surface_potential_analysis.basis.util import AxisWithLengthBasisUtil
 
 if TYPE_CHECKING:
     from surface_potential_analysis.axis.axis import (
         FundamentalMomentumAxis,
         FundamentalPositionAxis,
     )
-    from surface_potential_analysis.axis.axis_like import AxisLike
+    from surface_potential_analysis.axis.axis_like import AxisWithLengthLike
     from surface_potential_analysis.basis.basis import (
-        Basis,
+        AxisWithLengthBasis,
     )
     from surface_potential_analysis.state_vector.state_vector import (
         StateVector,
     )
 
-    _B0Inv = TypeVar("_B0Inv", bound=Basis[Any])
-    _B1Inv = TypeVar("_B1Inv", bound=Basis[Any])
+    _B0Inv = TypeVar("_B0Inv", bound=AxisWithLengthBasis[Any])
+    _B1Inv = TypeVar("_B1Inv", bound=AxisWithLengthBasis[Any])
     _S0Inv = TypeVar("_S0Inv", bound=tuple[int, ...])
     _S1Inv = TypeVar("_S1Inv", bound=tuple[int, ...])
 
 
-@timed
 def convert_state_vector_to_basis(
     state_vector: StateVector[_B0Inv], basis: _B1Inv
 ) -> StateVector[_B1Inv]:
@@ -95,7 +93,7 @@ def convert_state_vector_to_momentum_basis(
 
 def interpolate_state_vector_momentum(
     state_vector: StateVector[_B0Inv], shape: _S0Inv, axes: _S1Inv
-) -> StateVector[tuple[AxisLike[Any, Any, Any], ...]]:
+) -> StateVector[tuple[AxisWithLengthLike[Any, Any, Any], ...]]:
     """
     Given a state vector, get the equivalent vector in as a truncated vector in a larger basis.
 
@@ -114,7 +112,7 @@ def interpolate_state_vector_momentum(
         for (iax, ax) in enumerate(state_vector["basis"])
     )
     converted = convert_state_vector_to_basis(state_vector, converted_basis)
-    util = BasisUtil(converted["basis"])
+    util = AxisWithLengthBasisUtil(converted["basis"])
     final_basis = tuple(
         MomentumAxis(ax.delta_x, ax.n, shape[idx])
         if (

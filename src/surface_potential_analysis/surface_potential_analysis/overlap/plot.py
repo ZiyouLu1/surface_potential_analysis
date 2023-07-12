@@ -6,7 +6,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 
 from surface_potential_analysis.basis.util import (
-    BasisUtil,
+    AxisWithLengthBasisUtil,
     calculate_cumulative_k_distances_along_path,
     get_k_coordinates_in_axes,
     get_x_coordinates_in_axes,
@@ -14,8 +14,8 @@ from surface_potential_analysis.basis.util import (
 from surface_potential_analysis.util.plot import get_norm_with_clim
 from surface_potential_analysis.util.util import (
     Measure,
+    get_data_in_axes,
     get_measured_data,
-    slice_ignoring_axes,
 )
 
 if TYPE_CHECKING:
@@ -74,14 +74,9 @@ def plot_overlap_2d_x(
     idx = tuple(0 for _ in range(len(overlap["basis"]) - 2)) if idx is None else idx
 
     coordinates = get_x_coordinates_in_axes(overlap["basis"], axes, idx).swapaxes(1, 2)
-    util = BasisUtil(overlap["basis"])
-    points = (
-        overlap["vector"]
-        .reshape(*util.shape)[slice_ignoring_axes(idx, axes)]
-        .swapaxes(0, np.argmin(axes))
-        .swapaxes(0, 1)
-    )
-    data = get_measured_data(points, measure)
+    util = AxisWithLengthBasisUtil(overlap["basis"])
+    data = get_data_in_axes(overlap["vector"].reshape(*util.shape), axes, idx)
+    data = get_measured_data(data, measure)
 
     mesh = ax.pcolormesh(*coordinates, data, shading="nearest")
     norm = get_norm_with_clim(scale, mesh.get_clim())
@@ -129,14 +124,9 @@ def plot_overlap_2d_k(
     idx = tuple(0 for _ in range(len(overlap["basis"]) - 2)) if idx is None else idx
 
     coordinates = get_k_coordinates_in_axes(overlap["basis"], axes, idx).swapaxes(1, 2)
-    util = BasisUtil(overlap["basis"])
-    points = (
-        overlap["vector"]
-        .reshape(*util.shape)[slice_ignoring_axes(idx, axes)]
-        .swapaxes(0, np.argmin(axes))
-        .swapaxes(0, 1)
-    )
-    data = np.fft.ifftshift(get_measured_data(points, measure))
+    util = AxisWithLengthBasisUtil(overlap["basis"])
+    data = get_data_in_axes(overlap["vector"].reshape(*util.shape), axes, idx)
+    data = np.fft.ifftshift(get_measured_data(data, measure))
     shifted_coordinates = np.fft.ifftshift(coordinates)
 
     mesh = ax.pcolormesh(*shifted_coordinates, data, shading="nearest")
@@ -276,7 +266,7 @@ def plot_overlap_along_path_k(
     """
     fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
 
-    util = BasisUtil(overlap["basis"])
+    util = AxisWithLengthBasisUtil(overlap["basis"])
     points = overlap["vector"].reshape(util.shape)[*path]
     data = get_measured_data(points, measure)
     distances = calculate_cumulative_k_distances_along_path(
@@ -313,7 +303,7 @@ def plot_overlap_along_k_diagonal(
     -------
     tuple[Figure, Axes, Line2D]
     """
-    util = BasisUtil(overlap["basis"])
+    util = AxisWithLengthBasisUtil(overlap["basis"])
     path = np.array([[i, i, k2_ind] for i in range(util.shape[0])]).T
 
     return plot_overlap_along_path_k(overlap, path, measure=measure, scale=scale, ax=ax)
@@ -347,7 +337,7 @@ def plot_overlap_along_k0(
     -------
     tuple[Figure, Axes, Line2D]
     """
-    util = BasisUtil(overlap["basis"])
+    util = AxisWithLengthBasisUtil(overlap["basis"])
     path = np.array([[i, k1_ind, k2_ind] for i in range(util.shape[0])]).T
 
     return plot_overlap_along_path_k(overlap, path, measure=measure, scale=scale, ax=ax)

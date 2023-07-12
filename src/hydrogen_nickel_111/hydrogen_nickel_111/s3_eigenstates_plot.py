@@ -11,8 +11,8 @@ from surface_potential_analysis.state_vector.eigenstate_collection import (
     select_eigenstate,
 )
 from surface_potential_analysis.state_vector.eigenstate_collection_plot import (
-    plot_energies_against_bloch_phase_1d,
-    plot_lowest_band_energies_against_bloch_k,
+    plot_eigenvalues_against_bloch_phase_1d,
+    plot_lowest_band_eigenvalues_against_bloch_k,
 )
 from surface_potential_analysis.state_vector.plot import (
     animate_eigenstate_x0x1,
@@ -23,6 +23,7 @@ from surface_potential_analysis.state_vector.plot import (
 from hydrogen_nickel_111.s3_eigenstates import (
     get_eigenstate_collection_deuterium,
     get_eigenstate_collection_hydrogen,
+    get_eigenstate_collection_hydrogen_sho,
 )
 
 from .surface_data import get_data_path, save_figure
@@ -33,7 +34,7 @@ def plot_deuterium_lowest_bands() -> None:
 
     collection = get_eigenstate_collection_deuterium((23, 23, 12))
     for band in range(3):
-        _, _, ln = plot_energies_against_bloch_phase_1d(
+        _, _, ln = plot_eigenvalues_against_bloch_phase_1d(
             collection, np.array([1, 0, 0]), band=band, ax=ax
         )
         ln.set_label("(23, 23, 12)")
@@ -59,7 +60,7 @@ def plot_deuterium_lowest_band_energy() -> None:
     ]
     for shape in shapes:
         collection = get_eigenstate_collection_deuterium(shape)
-        _, _, ln = plot_energies_against_bloch_phase_1d(
+        _, _, ln = plot_eigenvalues_against_bloch_phase_1d(
             collection, np.array([1, 0, 0]), band=0, ax=ax
         )
         ln.set_label(f"({shape[0]}, {shape[1]}, {shape[2]})")
@@ -75,15 +76,14 @@ def plot_hydrogen_lowest_band_energy() -> None:
     shapes = [
         (23, 23, 10),
         (23, 23, 12),
-        (24, 24, 10),
-        (24, 24, 12),
         (25, 25, 10),
         (27, 27, 10),
+        (27, 27, 12),
         (29, 29, 10),
     ]
     for shape in shapes:
         collection = get_eigenstate_collection_hydrogen(shape)
-        _, _, ln = plot_energies_against_bloch_phase_1d(
+        _, _, ln = plot_eigenvalues_against_bloch_phase_1d(
             collection, np.array([1, 0, 0]), band=0, ax=ax
         )
         ln.set_label(f"({shape[0]}, {shape[1]}, {shape[2]})")
@@ -99,12 +99,22 @@ def plot_hydrogen_lowest_bands() -> None:
     colors = plt.rcParams["axes.prop_cycle"].by_key()["color"]
 
     collection = get_eigenstate_collection_hydrogen((24, 24, 10))
+    collection["eigenvalues"] -= np.min(collection["eigenvalues"])
     for band in range(8):
-        _, _, ln = plot_energies_against_bloch_phase_1d(
+        _, _, ln = plot_eigenvalues_against_bloch_phase_1d(
             collection, np.array([1, 0, 0]), band=band, ax=ax
         )
         ln.set_label(f"band={band}")
         ln.set_color(colors[0])
+
+    collection = get_eigenstate_collection_hydrogen_sho((24, 24, 10))
+    collection["eigenvalues"] -= np.min(collection["eigenvalues"])
+    for band in range(8):
+        _, _, ln = plot_eigenvalues_against_bloch_phase_1d(
+            collection, np.array([1, 0, 0]), band=band, ax=ax
+        )
+        ln.set_label(f"band={band}")
+        ln.set_color(colors[1])
 
     ax.legend()
     ax.set_title("Plot of eight lowest band energies")
@@ -141,32 +151,32 @@ def analyze_band_convergence() -> None:
 
     path = get_data_path("eigenstates_23_23_10.npy")
     eigenstates = load_eigenstate_collection(path)
-    _, _, ln = plot_lowest_band_energies_against_bloch_k(eigenstates, ax=ax)
+    _, _, ln = plot_lowest_band_eigenvalues_against_bloch_k(eigenstates, ax=ax)
     ln.set_label("(23,23,10)")
 
     path = get_data_path("eigenstates_23_23_12.npy")
     eigenstates = load_eigenstate_collection(path)
-    _, _, ln = plot_lowest_band_energies_against_bloch_k(eigenstates, ax=ax)
+    _, _, ln = plot_lowest_band_eigenvalues_against_bloch_k(eigenstates, ax=ax)
     ln.set_label("(23,23,12)")
 
     path = get_data_path("eigenstates_25_25_16.npy")
     eigenstates = load_eigenstate_collection(path)
-    _, _, ln = plot_lowest_band_energies_against_bloch_k(eigenstates, ax=ax)
+    _, _, ln = plot_lowest_band_eigenvalues_against_bloch_k(eigenstates, ax=ax)
     ln.set_label("(25,25,16)")
 
     path = get_data_path("eigenstates_23_23_10_large.npy")
     eigenstates = load_eigenstate_collection(path)
-    _, _, ln = plot_lowest_band_energies_against_bloch_k(eigenstates, ax=ax)
+    _, _, ln = plot_lowest_band_eigenvalues_against_bloch_k(eigenstates, ax=ax)
     ln.set_label("(23,23,10)")
 
     path = get_data_path("eigenstates_23_23_12_large.npy")
     eigenstates = load_eigenstate_collection(path)
-    _, _, ln = plot_lowest_band_energies_against_bloch_k(eigenstates, ax=ax)
+    _, _, ln = plot_lowest_band_eigenvalues_against_bloch_k(eigenstates, ax=ax)
     ln.set_label("(23,23,12)")
 
     path = get_data_path("eigenstates_25_25_16_large.npy")
     eigenstates = load_eigenstate_collection(path)
-    _, _, ln = plot_lowest_band_energies_against_bloch_k(eigenstates, ax=ax)
+    _, _, ln = plot_lowest_band_eigenvalues_against_bloch_k(eigenstates, ax=ax)
     ln.set_label("(25,25,16)")
 
     ax.legend()

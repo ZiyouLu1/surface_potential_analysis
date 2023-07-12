@@ -10,7 +10,7 @@ from surface_potential_analysis.basis.conversion import (
     basis_as_fundamental_position_basis,
 )
 from surface_potential_analysis.basis.util import (
-    BasisUtil,
+    AxisWithLengthBasisUtil,
 )
 from surface_potential_analysis.operator.conversion import (
     convert_operator_to_basis,
@@ -24,14 +24,14 @@ from surface_potential_analysis.util.decorators import timed
 
 if TYPE_CHECKING:
     from surface_potential_analysis.basis.basis import (
-        Basis,
+        AxisWithLengthBasis,
     )
     from surface_potential_analysis.potential.potential import Potential
 
     _L0 = TypeVar("_L0", bound=int)
     _L1 = TypeVar("_L1", bound=int)
     _L2 = TypeVar("_L2", bound=int)
-    _B0Inv = TypeVar("_B0Inv", bound=Basis[Any])
+    _B0Inv = TypeVar("_B0Inv", bound=AxisWithLengthBasis[Any])
 
 
 def hamiltonian_from_potential(
@@ -83,7 +83,7 @@ def hamiltonian_from_mass(
     Hamiltonian[_B0Inv]
     """
     bloch_fraction = np.zeros(len(basis)) if bloch_fraction is None else bloch_fraction
-    util = BasisUtil(basis)
+    util = AxisWithLengthBasisUtil(basis)
 
     bloch_phase = np.tensordot(util.fundamental_dk, bloch_fraction, axes=(0, 0))
     k_points = util.fundamental_k_points + bloch_phase[:, np.newaxis]

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import numpy as np
-from surface_potential_analysis.basis.util import BasisUtil
+from surface_potential_analysis.basis.util import AxisWithLengthBasisUtil
 from surface_potential_analysis.potential.plot import (
     plot_potential_1d_x2_comparison_111,
     plot_potential_2d_x,
@@ -72,7 +72,7 @@ def plot_raw_data_points() -> None:
 
 def plot_interpolated_potential_2d() -> None:
     potential = get_interpolated_potential((50, 50, 100))
-    util = BasisUtil(potential["basis"])
+    util = AxisWithLengthBasisUtil(potential["basis"])
     min_x2 = util.get_stacked_index(np.argmin(potential["vector"]))[2]
 
     fig, _, _ = plot_potential_2d_x(potential, (0, 1), (min_x2,), scale="symlog")

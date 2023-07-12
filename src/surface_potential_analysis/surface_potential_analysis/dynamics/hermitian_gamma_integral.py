@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, TypeVar, overload
+from typing import TYPE_CHECKING, Any, TypeVar, overload
 
 import numpy as np
 import scipy
@@ -152,18 +152,18 @@ def _get_hopping_potential_integrand(
     k_f: float,
     overlap: Callable[
         [np.ndarray[_S0Inv, np.dtype[np.float_]]],
-        np.ndarray[_S0Inv, np.dtype[np.float_]],
+        np.ndarray[_S0Inv, np.dtype[np.complex_ | np.float_]],
     ],
-) -> np.ndarray[_S0Inv, np.dtype[np.float_]]:
+) -> np.ndarray[_S0Inv, np.dtype[np.complex_]]:
     q = k_f * np.sin(phi / 2)
-    return _calculate_real_gamma_prefactor(k_f) * np.sin(phi) * _get_coulomb_potential(q) ** 2 * overlap(q)  # type: ignore[no-any-return]
+    return _calculate_real_gamma_prefactor(k_f) * np.sin(phi) * _get_coulomb_potential(q) ** 2 * overlap(q).astype(np.complex_)  # type: ignore[no-any-return]
 
 
-def _complex_quad(func, *args, **kwargs):  # noqa: ANN202
-    def real_func(x):
+def _complex_quad(func: Any, *args: Any, **kwargs: Any) -> Any:  # noqa: ANN401
+    def real_func(x: Any) -> Any:  # noqa: ANN401
         return np.real(func(x))
 
-    def imag_func(x):
+    def imag_func(x: Any) -> Any:  # noqa: ANN401
         return np.imag(func(x))
 
     real_integral = scipy.integrate.quad(real_func, *args, **kwargs)
@@ -179,9 +179,9 @@ def calculate_hermitian_gamma_potential_integral(
     k_f: float,
     overlap: Callable[
         [np.ndarray[_S0Inv, np.dtype[np.float_]]],
-        np.ndarray[_S0Inv, np.dtype[np.complex_]],
+        np.ndarray[_S0Inv, np.dtype[np.complex_ | np.float_]],
     ],
-) -> float:
+) -> np.complex_:
     """
     Given the overlap as a function of |q|, calculate the potential integral in hermitian gamma.
 
@@ -208,9 +208,9 @@ def calculate_real_gamma_integral(
     boltzmann_energy: float,
     overlap: Callable[
         [np.ndarray[_S0Inv, np.dtype[np.float_]]],
-        np.ndarray[_S0Inv, np.dtype[np.float_]],
+        np.ndarray[_S0Inv, np.dtype[np.complex_]],
     ],
-) -> float:
+) -> np.complex_:
     r"""Calculate the hermitian part of gamma.
 
     \gamma_{\vec{l}_1,\vec{l}_0}(\omega) =

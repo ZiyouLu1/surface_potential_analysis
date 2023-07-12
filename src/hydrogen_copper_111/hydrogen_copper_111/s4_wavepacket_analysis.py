@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import numpy as np
-from surface_potential_analysis.basis.util import BasisUtil
+from surface_potential_analysis.basis.util import AxisWithLengthBasisUtil
 from surface_potential_analysis.state_vector.conversion import (
     convert_state_vector_to_position_basis,
 )
@@ -17,7 +17,7 @@ def calculate_wavepacket_maximums() -> None:
 
         eigenstate = get_eigenstate(wavepacket, 0)
         converted = convert_state_vector_to_position_basis(eigenstate)  # type: ignore[arg-type] # Issues with variance
-        util = BasisUtil(converted["basis"])
+        util = AxisWithLengthBasisUtil(converted["basis"])
 
         print(f"Band {band}")  # noqa: T201
         print(util.get_stacked_index(int(np.argmax(converted["vector"]))))  # noqa: T201

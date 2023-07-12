@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import TypeVar
 
 import numpy as np
-from surface_potential_analysis.axis.axis import FundamentalPositionAxis3d
+from surface_potential_analysis.axis.axis import FundamentalPositionAxis2d
 from surface_potential_analysis.potential.point_potential import (
     PointPotential3d,
     load_point_potential_json,
@@ -163,8 +163,8 @@ def map_irreducible_points_into_unit_cell(
     )
     diagonal_length = np.sqrt(np.square(y_height / 2) + np.square(x_width))
 
-    delta_x0 = np.array([2 * x_width, 0, 0])
-    delta_x1 = np.array([0.5 * delta_x0[0], np.sqrt(3) * delta_x0[0] / 2, 0])
+    delta_x0 = np.array([2 * x_width, 0])
+    delta_x1 = np.array([0.5 * delta_x0[0], np.sqrt(3) * delta_x0[0] / 2])
 
     if not np.allclose(delta_x1[1], y_height / 2 + diagonal_length):
         raise AssertionError(  # noqa: TRY003
@@ -172,8 +172,8 @@ def map_irreducible_points_into_unit_cell(
         )
     return {
         "basis": (
-            FundamentalPositionAxis3d(delta_x0, final_grid.shape[0]),
-            FundamentalPositionAxis3d(delta_x1, final_grid.shape[1]),
+            FundamentalPositionAxis2d(delta_x0, final_grid.shape[0]),
+            FundamentalPositionAxis2d(delta_x1, final_grid.shape[1]),
             z_points,
         ),
         "vector": final_grid.ravel(),

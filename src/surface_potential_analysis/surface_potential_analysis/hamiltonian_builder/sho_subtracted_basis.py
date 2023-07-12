@@ -7,21 +7,20 @@ import hamiltonian_generator
 import numpy as np
 from scipy.constants import hbar
 
-from surface_potential_analysis.axis import (
-    Axis3dUtil,
-)
 from surface_potential_analysis.axis.axis import (
     ExplicitAxis3d,
     FundamentalPositionAxis3d,
     MomentumAxis3d,
 )
-from surface_potential_analysis.axis.util import AxisUtil
+from surface_potential_analysis.axis.util import (
+    AxisWithLengthLikeUtil,
+)
 from surface_potential_analysis.basis.sho_basis import (
     SHOBasisConfig,
     calculate_x_distances,
     infinate_sho_axis_3d_from_config,
 )
-from surface_potential_analysis.basis.util import Basis3dUtil, BasisUtil
+from surface_potential_analysis.basis.util import AxisWithLengthBasisUtil
 
 if TYPE_CHECKING:
     from surface_potential_analysis.basis.basis import (
@@ -74,7 +73,7 @@ class _SurfaceHamiltonianUtil(
     ) -> np.ndarray[tuple[_NF0Inv, _NF1Inv, _NF2Inv], np.dtype[np.float_]]:
         return np.real(  # type: ignore[no-any-return]
             self._potential["vector"].reshape(
-                Basis3dUtil(self._potential["basis"]).shape
+                AxisWithLengthBasisUtil(self._potential["basis"]).shape
             )
         )
 
@@ -96,7 +95,7 @@ class _SurfaceHamiltonianUtil(
 
     @property
     def dz(self) -> float:
-        util = Axis3dUtil(self._potential["basis"][2])
+        util = AxisWithLengthLikeUtil(self._potential["basis"][2])
         return np.linalg.norm(util.fundamental_dx)  # type: ignore[return-value]
 
     @property
@@ -152,12 +151,12 @@ class _SurfaceHamiltonianUtil(
     def eigenstate_indexes(
         self,
     ) -> np.ndarray[tuple[Literal[3], int], np.dtype[np.int_]]:
-        util = Basis3dUtil(self.basis)
+        util = AxisWithLengthBasisUtil(self.basis)
 
         x0t, x1t, zt = np.meshgrid(
-            util.x0_basis.nk_points,  # type: ignore[misc]
-            util.x1_basis.nk_points,  # type: ignore[misc]
-            util.x2_basis.nx_points,  # type: ignore[misc]
+            util._utils[0].nk_points,  # type: ignore[misc] # noqa: SLF001
+            util._utils[1].nk_points,  # type: ignore[misc] # noqa: SLF001
+            util._utils[2].nx_points,  # type: ignore[misc] # noqa: SLF001
             indexing="ij",
         )
         return np.array([x0t.ravel(), x1t.ravel(), zt.ravel()])  # type: ignore[no-any-return]
@@ -167,10 +166,10 @@ class _SurfaceHamiltonianUtil(
     ) -> np.ndarray[tuple[int], np.dtype[np.float_]]:
         k0_coords, k1_coords, nkz_coords = self.eigenstate_indexes
 
-        util = Basis3dUtil(self.basis)
+        util = AxisWithLengthBasisUtil(self.basis)
 
-        dk0 = util.dk0
-        dk1 = util.dk1
+        dk0 = util.dk[0]
+        dk1 = util.dk[1]
         mass = self._config["mass"]
         sho_omega = self._config["sho_omega"]
 
@@ -218,8 +217,8 @@ class _SurfaceHamiltonianUtil(
     ) -> float:
         """Calculate the off diagonal energy using the 'folded' points ndk0, ndk1."""
         ft_pot_points = self.get_ft_potential()[ndk0, ndk1]
-        hermite1 = AxisUtil(self.basis[2]).vectors[nz1]
-        hermite2 = AxisUtil(self.basis[2]).vectors[nz2]
+        hermite1 = AxisWithLengthLikeUtil(self.basis[2]).vectors[nz1]
+        hermite2 = AxisWithLengthLikeUtil(self.basis[2]).vectors[nz2]
 
         fourier_transform = float(np.sum(hermite1 * hermite2 * ft_pot_points))
 
@@ -277,7 +276,7 @@ def total_surface_hamiltonian(
     """
     util = _SurfaceHamiltonianUtil(potential, config, resolution)
     bloch_phase = np.tensordot(
-        BasisUtil(util.basis).fundamental_dk,
+        AxisWithLengthBasisUtil(util.basis).fundamental_dk,
         bloch_fraction,
         axes=(0, 0),
     )

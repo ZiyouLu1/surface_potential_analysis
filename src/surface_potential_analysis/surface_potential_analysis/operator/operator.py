@@ -4,7 +4,7 @@ from typing import Any, Generic, TypedDict, TypeVar
 
 import numpy as np
 
-from surface_potential_analysis.axis import AxisLike3d
+from surface_potential_analysis.axis.axis_like import AxisWithLengthLike3d
 from surface_potential_analysis.basis.basis import (
     Basis,
     Basis1d,
@@ -14,18 +14,18 @@ from surface_potential_analysis.basis.basis import (
     FundamentalPositionBasis3d,
 )
 
-_A3d0Cov = TypeVar("_A3d0Cov", bound=AxisLike3d[Any, Any], covariant=True)
-_A3d1Cov = TypeVar("_A3d1Cov", bound=AxisLike3d[Any, Any], covariant=True)
-_A3d2Cov = TypeVar("_A3d2Cov", bound=AxisLike3d[Any, Any], covariant=True)
+_A3d0Cov = TypeVar("_A3d0Cov", bound=AxisWithLengthLike3d[Any, Any], covariant=True)
+_A3d1Cov = TypeVar("_A3d1Cov", bound=AxisWithLengthLike3d[Any, Any], covariant=True)
+_A3d2Cov = TypeVar("_A3d2Cov", bound=AxisWithLengthLike3d[Any, Any], covariant=True)
 
 _L0Cov = TypeVar("_L0Cov", bound=int, covariant=True)
 _L1Cov = TypeVar("_L1Cov", bound=int, covariant=True)
 _L2Cov = TypeVar("_L2Cov", bound=int, covariant=True)
 
-_B0Cov = TypeVar("_B0Cov", bound=Basis[Any], covariant=True)
-_B0Inv = TypeVar("_B0Inv", bound=Basis[Any])
-_B1Cov = TypeVar("_B1Cov", bound=Basis[Any], covariant=True)
-_B1Inv = TypeVar("_B1Inv", bound=Basis[Any])
+_B0Cov = TypeVar("_B0Cov", bound=Basis, covariant=True)
+_B0Inv = TypeVar("_B0Inv", bound=Basis)
+_B1Cov = TypeVar("_B1Cov", bound=Basis, covariant=True)
+_B1Inv = TypeVar("_B1Inv", bound=Basis)
 _B1d0Inv = TypeVar("_B1d0Inv", bound=Basis1d[Any])
 _B1d1Inv = TypeVar("_B1d1Inv", bound=Basis1d[Any])
 _B2d0Inv = TypeVar("_B2d0Inv", bound=Basis2d[Any, Any])
@@ -33,7 +33,7 @@ _B2d1Inv = TypeVar("_B2d1Inv", bound=Basis2d[Any, Any])
 _B3d0Inv = TypeVar("_B3d0Inv", bound=Basis3d[Any, Any, Any])
 _B3d1Inv = TypeVar("_B3d1Inv", bound=Basis3d[Any, Any, Any])
 
-HamiltonianPoints = np.ndarray[
+OperatorPoints = np.ndarray[
     tuple[_L0Cov, _L1Cov], np.dtype[np.complex_] | np.dtype[np.float_]
 ]
 
@@ -46,7 +46,7 @@ class Operator(TypedDict, Generic[_B0Cov, _B1Cov]):
     dual_basis: _B1Cov
     """basis of the rhs (second index in array)"""
     # We need higher kinded types, and const generics to do this properly
-    array: HamiltonianPoints[int, int]
+    array: OperatorPoints[int, int]
 
 
 SingleBasisOperator = Operator[_B0Cov, _B0Cov]
@@ -91,4 +91,58 @@ def add_operator(
         "basis": a["basis"],
         "dual_basis": a["dual_basis"],
         "array": a["array"] + b["array"],
+    }
+
+
+class DiagonalOperator(TypedDict, Generic[_B0Cov, _B1Cov]):
+    """Represents an operator in the given basis."""
+
+    basis: _B0Cov
+    """Basis of the lhs (first index in array)"""
+    dual_basis: _B1Cov
+    """basis of the rhs (second index in array)"""
+    # We need higher kinded types, and const generics to do this properly
+    vector: np.ndarray[tuple[int], np.dtype[np.complex_] | np.dtype[np.float_]]
+
+
+def as_operator(operator: DiagonalOperator[_B0Cov, _B1Cov]) -> Operator[_B0Cov, _B1Cov]:
+    """
+    Convert a diagonal operator into an operator.
+
+    Parameters
+    ----------
+    operator : DiagonalOperator[_B0Cov, _B1Cov]
+
+    Returns
+    -------
+    Operator[_B0Cov, _B1Cov]
+    """
+    return {
+        "basis": operator["basis"],
+        "dual_basis": operator["dual_basis"],
+        "array": np.diag(operator["vector"]),
+    }
+
+
+def as_diagonal_operator(
+    operator: Operator[_B0Cov, _B1Cov]
+) -> DiagonalOperator[_B0Cov, _B1Cov]:
+    """
+    Convert an operator into a diagonal operator.
+
+    Parameters
+    ----------
+    operator : DiagonalOperator[_B0Cov, _B1Cov]
+
+    Returns
+    -------
+    Operator[_B0Cov, _B1Cov]
+    """
+    diagonal = np.diag(operator["array"])
+    np.testing.assert_array_equal(0, operator["array"] - np.diag(diagonal))
+    np.testing.assert_equal(operator["array"].shape[0], operator["array"].shape[1])
+    return {
+        "basis": operator["basis"],
+        "dual_basis": operator["dual_basis"],
+        "vector": np.diag(operator["array"]),
     }

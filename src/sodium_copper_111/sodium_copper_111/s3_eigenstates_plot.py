@@ -9,8 +9,8 @@ from surface_potential_analysis.state_vector.eigenstate_collection import (
     select_eigenstate,
 )
 from surface_potential_analysis.state_vector.eigenstate_collection_plot import (
-    plot_energies_against_bloch_phase_1d,
-    plot_lowest_band_energies_against_bloch_k,
+    plot_eigenvalues_against_bloch_phase_1d,
+    plot_lowest_band_eigenvalues_against_bloch_k,
     plot_occupation_against_bloch_phase_1d,
 )
 from surface_potential_analysis.state_vector.plot import (
@@ -28,11 +28,11 @@ def plot_lowest_band_energies() -> None:
     fig, ax = plt.subplots()
 
     collection = get_eigenstate_collection((1000,))
-    _, _, ln = plot_lowest_band_energies_against_bloch_k(collection, ax=ax)
+    _, _, ln = plot_lowest_band_eigenvalues_against_bloch_k(collection, ax=ax)
     ln.set_label("(100)")
 
     collection = get_eigenstate_collection((2000,))
-    _, _, ln = plot_lowest_band_energies_against_bloch_k(collection, ax=ax)
+    _, _, ln = plot_lowest_band_eigenvalues_against_bloch_k(collection, ax=ax)
     ln.set_label("(200)")
 
     ax.legend()
@@ -49,7 +49,9 @@ def plot_first_six_band_energies() -> None:
     direction = np.array([1])
 
     for i in range(25):
-        _, _, ln = plot_energies_against_bloch_phase_1d(collection, direction, i, ax=ax)
+        _, _, ln = plot_eigenvalues_against_bloch_phase_1d(
+            collection, direction, i, ax=ax
+        )
         ln.set_label(f"n={i}")
 
     ax.legend()

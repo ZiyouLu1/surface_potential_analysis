@@ -4,11 +4,11 @@ from typing import TYPE_CHECKING, Any, TypeVar
 
 import numpy as np
 
-from surface_potential_analysis.axis.axis_like import AxisLike, AxisVector
+from surface_potential_analysis.axis.axis_like import AxisVector, AxisWithLengthLike
 from surface_potential_analysis.basis.conversion import (
     basis_as_fundamental_momentum_basis,
 )
-from surface_potential_analysis.basis.util import BasisUtil
+from surface_potential_analysis.basis.util import AxisWithLengthBasisUtil
 from surface_potential_analysis.util.util import slice_along_axis
 from surface_potential_analysis.wavepacket.conversion import convert_wavepacket_to_basis
 from surface_potential_analysis.wavepacket.wavepacket import (
@@ -19,10 +19,10 @@ from surface_potential_analysis.wavepacket.wavepacket import (
 
 if TYPE_CHECKING:
     from surface_potential_analysis._types import SingleIndexLike
-    from surface_potential_analysis.basis.basis import Basis
+    from surface_potential_analysis.basis.basis import AxisWithLengthBasis
     from surface_potential_analysis.state_vector.state_vector import StateVector
 
-    _B0Inv = TypeVar("_B0Inv", bound=Basis[Any])
+    _B0Inv = TypeVar("_B0Inv", bound=AxisWithLengthBasis[Any])
     _DT = TypeVar("_DT", bound=np.dtype[Any])
 _NF0Inv = TypeVar("_NF0Inv", bound=int)
 _N0Inv = TypeVar("_N0Inv", bound=int)
@@ -56,11 +56,11 @@ def _truncate_sample_axis(
     return np.fft.ifftshift(truncated, axes=(axis,))  # type: ignore[no-any-return]
 
 
-class SampledAxis(AxisLike[_NF0Inv, _N0Inv, _ND0Inv]):
+class SampledAxis(AxisWithLengthLike[_NF0Inv, _N0Inv, _ND0Inv]):
     # TODO: Not sure if it possible to do the conversion correctly
     def __init__(
         self,
-        parent: AxisLike[_NF0Inv, int, _ND0Inv],
+        parent: AxisWithLengthLike[_NF0Inv, int, _ND0Inv],
         ns: int,
         offset: _NOInv,
     ) -> None:
@@ -103,7 +103,7 @@ class SampledAxis(AxisLike[_NF0Inv, _N0Inv, _ND0Inv]):
         return self._parent.__into_fundamental__(padded, axis)
 
 
-class WavepacketSampleAxis(AxisLike[_NF0Inv, _N0Inv, _ND0Inv]):
+class WavepacketSampleAxis(AxisWithLengthLike[_NF0Inv, _N0Inv, _ND0Inv]):
     def __init__(
         self,
         delta_x: AxisVector[_ND0Inv],
@@ -185,7 +185,9 @@ def get_eigenstate(
     converted = convert_wavepacket_to_basis(
         wavepacket, basis_as_fundamental_momentum_basis(wavepacket["basis"])
     )
-    util = BasisUtil(get_sample_basis(converted["basis"], converted["shape"]))
+    util = AxisWithLengthBasisUtil(
+        get_sample_basis(converted["basis"], converted["shape"])
+    )
     idx = util.get_flat_index(idx) if isinstance(idx, tuple) else idx
     offset = util.get_stacked_index(idx)
 
@@ -195,7 +197,7 @@ def get_eigenstate(
 
 def get_eigenstates(
     wavepacket: Wavepacket[_S0Inv, _B0Inv]
-) -> list[StateVector[Basis[Any]]]:
+) -> list[StateVector[AxisWithLengthBasis[Any]]]:
     """
     Get the eigenstate of a given wavepacket at a specific index.
 
@@ -210,7 +212,9 @@ def get_eigenstates(
     converted = convert_wavepacket_to_basis(
         wavepacket, basis_as_fundamental_momentum_basis(wavepacket["basis"])
     )
-    util = BasisUtil(get_sample_basis(wavepacket["basis"], wavepacket["shape"]))
+    util = AxisWithLengthBasisUtil(
+        get_sample_basis(wavepacket["basis"], wavepacket["shape"])
+    )
     return [
         {
             "basis": _get_sampled_basis(

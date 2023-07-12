@@ -7,8 +7,7 @@ from surface_potential_analysis.basis.conversion import (
     basis3d_as_single_point_basis,
 )
 from surface_potential_analysis.basis.util import (
-    Basis3dUtil,
-    BasisUtil,
+    AxisWithLengthBasisUtil,
 )
 from surface_potential_analysis.wavepacket.wavepacket import (
     get_unfurled_basis,
@@ -64,14 +63,14 @@ def _calculate_mean_locations(
         basis3d_as_single_point_basis(basis),
         (shape[0], shape[1]),
     )
-    util = Basis3dUtil(basis)
+    util = AxisWithLengthBasisUtil(basis)
 
-    nx_points = BasisUtil(hopping_basis).nx_points
+    nx_points = AxisWithLengthBasisUtil(hopping_basis).nx_points
     nx_points_wrapped = wrap_index_around_origin_x01(hopping_basis, nx_points)
     ffc_locations = util.get_x_points_at_index(nx_points_wrapped)
 
     locations = np.tile(ffc_locations, (1, shape[2])).reshape(3, *shape)
-    hcp_offset = 1 / 3 * (util.delta_x0 + util.delta_x1)
+    hcp_offset = 1 / 3 * (util.delta_x[0] + util.delta_x[1])
     locations[:, :, :, [1, 4, 5]] += hcp_offset[:, np.newaxis, np.newaxis, np.newaxis]
     return locations  # type: ignore[no-any-return]
 

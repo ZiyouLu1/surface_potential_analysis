@@ -63,9 +63,7 @@ def get_hamiltonian_hydrogen_sho(
         Hamiltonian in the specified basis
     """
     potential = get_interpolated_potential(shape)
-    potential["vector"] = 0.5 * (
-        potential["vector"] + potential["vector"].reshape(shape).swapaxes(0, 1).ravel()
-    )
+
     config: SHOBasisConfig = {
         "sho_omega": 195636899474736.66,
         "mass": HYDROGEN_MASS,
@@ -127,7 +125,7 @@ def get_hamiltonian_hydrogen(
     potential["vector"] = 0.5 * (
         potential["vector"] + potential["vector"].reshape(shape).swapaxes(0, 1).ravel()
     )
-    config: PotentialBasisConfig[tuple[FundamentalPositionAxis1d[_L0]], _L5] = {
+    config: PotentialBasisConfig[tuple[FundamentalPositionAxis1d[_L2]], _L5] = {
         "n": resolution[2],
         "mass": HYDROGEN_MASS,
         "potential": select_minimum_potential_3d(potential),
@@ -188,7 +186,7 @@ def get_hamiltonian_deuterium(
     potential["vector"] = 0.5 * (
         potential["vector"] + potential["vector"].reshape(shape).swapaxes(0, 1).ravel()
     )
-    config: PotentialBasisConfig[tuple[FundamentalPositionAxis1d[_L0]], _L5] = {
+    config: PotentialBasisConfig[tuple[FundamentalPositionAxis1d[_L2]], _L5] = {
         "n": resolution[2],
         "mass": DEUTERIUM_MASS,
         "potential": select_minimum_potential_3d(potential),

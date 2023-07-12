@@ -8,8 +8,7 @@ from surface_potential_analysis.axis.axis import (
     FundamentalMomentumAxis3d,
     MomentumAxis3d,
 )
-from surface_potential_analysis.axis.conversion import axis_as_orthonormal_axis
-from surface_potential_analysis.basis.util import Basis3dUtil
+from surface_potential_analysis.basis.util import AxisWithLengthBasisUtil
 from surface_potential_analysis.util.decorators import npy_cached
 from surface_potential_analysis.wavepacket import save_wavepacket
 from surface_potential_analysis.wavepacket.conversion import convert_wavepacket_to_basis
@@ -41,8 +40,8 @@ if TYPE_CHECKING:
         Literal[12],
         Literal[12],
         Basis3d[
-            MomentumAxis[Literal[24], Literal[24], Literal[3]],
-            MomentumAxis[Literal[24], Literal[24], Literal[3]],
+            MomentumAxis[Literal[29], Literal[29], Literal[3]],
+            MomentumAxis[Literal[29], Literal[29], Literal[3]],
             ExplicitAxis[Literal[250], Literal[12], Literal[3]],
         ],
     ]
@@ -51,8 +50,8 @@ if TYPE_CHECKING:
         Literal[12],
         Literal[12],
         Basis3d[
-            MomentumAxis[Literal[25], Literal[25], Literal[3]],
-            MomentumAxis[Literal[25], Literal[25], Literal[3]],
+            MomentumAxis[Literal[27], Literal[27], Literal[3]],
+            MomentumAxis[Literal[27], Literal[27], Literal[3]],
             ExplicitAxis[Literal[200], Literal[10], Literal[3]],
         ],
     ]
@@ -110,11 +109,11 @@ def load_normalized_nickel_wavepacket_momentum(
     FundamentalMomentumBasis3d[Literal[24], Literal[24], Literal[250]],
 ]:
     wavepacket = load_nickel_wavepacket(band)
-    util = Basis3dUtil(wavepacket["basis"])
+    util = AxisWithLengthBasisUtil(wavepacket["basis"])
     basis: FundamentalMomentumBasis3d[Literal[24], Literal[24], Literal[250]] = (
-        FundamentalMomentumAxis3d(util.delta_x0, 24),
-        FundamentalMomentumAxis3d(util.delta_x1, 24),
-        FundamentalMomentumAxis3d(util.delta_x2, 250),
+        FundamentalMomentumAxis3d(util.delta_x[0], 24),
+        FundamentalMomentumAxis3d(util.delta_x[1], 24),
+        FundamentalMomentumAxis3d(util.delta_x[2], 250),
     )
     normalized = localize_tightly_bound_wavepacket_idx(wavepacket, idx, angle)
     return convert_wavepacket_to_basis(normalized, basis)
@@ -132,20 +131,20 @@ def load_two_point_normalized_nickel_wavepacket_momentum(
     ],
 ]:
     wavepacket = load_nickel_wavepacket(band)
-    util = Basis3dUtil(wavepacket["basis"])
+    util = AxisWithLengthBasisUtil(wavepacket["basis"])
     basis: Basis3d[
         FundamentalMomentumAxis3d[Literal[24]],
         FundamentalMomentumAxis3d[Literal[24]],
         ExplicitAxis3d[Literal[250], Literal[12]],
     ] = (
-        FundamentalMomentumAxis3d(util.delta_x0, 24),
-        FundamentalMomentumAxis3d(util.delta_x1, 24),
+        FundamentalMomentumAxis3d(util.delta_x[0], 24),
+        FundamentalMomentumAxis3d(util.delta_x[1], 24),
         wavepacket["basis"][2],
     )
     return localize_tightly_bound_wavepacket_two_point_max(
         {
             "basis": basis,
-            "energies": wavepacket["energies"],
+            "eigenvalues": wavepacket["eigenvalues"],
             "shape": wavepacket["shape"],
             "vectors": wavepacket["vectors"],
         },
@@ -184,7 +183,7 @@ def get_all_wavepackets_hydrogen() -> list[_HydrogenNickelWavepacket]:
         return get_hamiltonian_hydrogen_sho(
             shape=(250, 250, 250),
             bloch_fraction=bloch_fraction,
-            resolution=(24, 24, 12),
+            resolution=(29, 29, 12),
         )
 
     save_bands = np.arange(20)
@@ -201,18 +200,7 @@ def _get_wavepacket_cache_h(band: int) -> Path:
 
 @npy_cached(_get_wavepacket_cache_h, load_pickle=True)
 def get_wavepacket_hydrogen(band: int) -> _HydrogenNickelWavepacket:
-    wavepacket = get_all_wavepackets_hydrogen()[band]
-    # Work around for bug in cached wavepacket
-    wavepacket["basis"] = (
-        FundamentalMomentumAxis3d(
-            wavepacket["basis"][0].delta_x, wavepacket["basis"][0].n
-        ),
-        FundamentalMomentumAxis3d(
-            wavepacket["basis"][1].delta_x, wavepacket["basis"][1].n
-        ),
-        axis_as_orthonormal_axis(wavepacket["basis"][2]),
-    )
-    return wavepacket
+    return get_all_wavepackets_hydrogen()[band]
 
 
 def get_two_point_normalized_wavepacket_hydrogen(
@@ -220,6 +208,14 @@ def get_two_point_normalized_wavepacket_hydrogen(
 ) -> _HydrogenNickelWavepacket:
     wavepacket = get_wavepacket_hydrogen(band)
     return localize_tightly_bound_wavepacket_two_point_max(wavepacket, offset, angle)
+
+
+def get_hydrogen_energy_difference(state_0: int, state_1: int) -> np.float_:
+    wavepacket_0 = get_wavepacket_hydrogen(state_0)
+    wavepacket_1 = get_wavepacket_hydrogen(state_1)
+    return np.average(wavepacket_0["eigenvalues"]) - np.average(
+        wavepacket_1["eigenvalues"]
+    )
 
 
 @npy_cached(get_data_path("wavepacket/wavepacket_deuterium.npy"), load_pickle=True)  # type: ignore[misc]
@@ -230,7 +226,7 @@ def get_all_wavepackets_deuterium() -> list[_DeuteriumNickelWavepacket]:
         return get_hamiltonian_deuterium(
             shape=(200, 200, 200),
             bloch_fraction=bloch_fraction,
-            resolution=(25, 25, 10),
+            resolution=(27, 27, 10),
         )
 
     save_bands = np.arange(20)
@@ -255,3 +251,11 @@ def get_two_point_normalized_wavepacket_deuterium(
 ) -> _DeuteriumNickelWavepacket:
     wavepacket = get_wavepacket_deuterium(band)
     return localize_tightly_bound_wavepacket_two_point_max(wavepacket, offset, angle)
+
+
+def get_deuterium_energy_difference(state_0: int, state_1: int) -> np.float_:
+    wavepacket_0 = get_wavepacket_deuterium(state_0)
+    wavepacket_1 = get_wavepacket_deuterium(state_1)
+    return np.average(wavepacket_0["eigenvalues"]) - np.average(
+        wavepacket_1["eigenvalues"]
+    )

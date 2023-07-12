@@ -5,10 +5,9 @@ from typing import TYPE_CHECKING, Any, Literal, TypeVar
 import numpy as np
 from matplotlib import pyplot as plt
 
-from surface_potential_analysis.axis.util import AxisUtil
+from surface_potential_analysis.axis.util import AxisWithLengthLikeUtil
 from surface_potential_analysis.basis.util import (
-    Basis3dUtil,
-    BasisUtil,
+    AxisWithLengthBasisUtil,
     calculate_cumulative_x_distances_along_path,
     get_x_coordinates_in_axes,
 )
@@ -16,13 +15,13 @@ from surface_potential_analysis.potential.conversion import (
     convert_potential_to_position_basis,
 )
 from surface_potential_analysis.util.plot import (
-    animate_through_surface,
+    animate_through_surface_x,
     get_norm_with_clim,
 )
 from surface_potential_analysis.util.util import (
     Measure,
+    get_data_in_axes,
     get_measured_data,
-    slice_ignoring_axes,
 )
 
 from ._comparison_points import (
@@ -43,18 +42,19 @@ if TYPE_CHECKING:
         SingleFlatIndexLike,
         SingleStackedIndexLike,
     )
-    from surface_potential_analysis.basis.basis import Basis
+    from surface_potential_analysis.basis.basis import AxisWithLengthBasis
     from surface_potential_analysis.potential.potential import Potential
     from surface_potential_analysis.util.plot import Scale
 
     from .potential import FundamentalPositionBasisPotential3d
 
-    _B0Inv = TypeVar("_B0Inv", bound=Basis[Any])
+    _B0Inv = TypeVar("_B0Inv", bound=AxisWithLengthBasis[Any])
 
+    _L0Inv = TypeVar("_L0Inv", bound=int)
+    _L1Inv = TypeVar("_L1Inv", bound=int)
+    _L2Inv = TypeVar("_L2Inv", bound=int)
 
-_L0Inv = TypeVar("_L0Inv", bound=int)
-_L1Inv = TypeVar("_L1Inv", bound=int)
-_L2Inv = TypeVar("_L2Inv", bound=int)
+# ruff: noqa: PLR0913
 
 
 def plot_potential_1d_x(
@@ -85,11 +85,13 @@ def plot_potential_1d_x(
     fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
     idx = tuple(0 for _ in range(len(potential["basis"]) - 1)) if idx is None else idx
 
-    util = AxisUtil(potential["basis"][axis])
+    util = AxisWithLengthLikeUtil(potential["basis"][axis])
     coordinates = np.linalg.norm(util.fundamental_x_points, axis=0)
-    data = potential["vector"].reshape(BasisUtil(potential["basis"]).shape)[
-        slice_ignoring_axes(idx, (axis,))
-    ]
+    data = get_data_in_axes(
+        potential["vector"].reshape(AxisWithLengthBasisUtil(potential["basis"]).shape),
+        (axis,),
+        idx,
+    )
 
     (line,) = ax.plot(coordinates, data)
     ax.set_xlabel(f"x{axis} axis")
@@ -158,7 +160,7 @@ def plot_potential_1d_x2_comparison_111(
     -------
     tuple[Figure, Axes]
     """
-    (s0, s1, _) = Basis3dUtil(potential["basis"]).shape
+    (s0, s1, _) = AxisWithLengthBasisUtil(potential["basis"]).shape
     points = get_111_comparison_points_x2((s0, s1), offset)
     comparison_points = {k: (v, 2) for (k, v) in points.items()}
     return plot_potential_1d_comparison(
@@ -190,7 +192,7 @@ def plot_potential_1d_x2_comparison_100(
     -------
     tuple[Figure, Axes]
     """
-    (s0, s1, _) = Basis3dUtil(potential["basis"]).shape
+    (s0, s1, _) = AxisWithLengthBasisUtil(potential["basis"]).shape
     points = get_100_comparison_points_x2((s0, s1), offset)
     comparison_points = {k: (v, 2) for (k, v) in points.items()}
     return plot_potential_1d_comparison(
@@ -226,14 +228,14 @@ def plot_potential_2d_x(
     tuple[Figure, Axes, QuadMesh]
     """
     fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
-    util = BasisUtil(potential["basis"])
+    util = AxisWithLengthBasisUtil(potential["basis"])
     idx = tuple(0 for _ in range(util.ndim - 2)) if idx is None else idx
 
     coordinates = get_x_coordinates_in_axes(potential["basis"], axes, idx)
-    data = potential["vector"].reshape(util.shape)[slice_ignoring_axes(idx, axes)]
+    data = get_data_in_axes(potential["vector"].reshape(util.shape), axes, idx)
 
     mesh = ax.pcolormesh(*coordinates, data, shading="nearest")
-    mesh.set_clim(0, 1E-18)
+    mesh.set_clim(0, 1e-18)
     norm = get_norm_with_clim(scale, mesh.get_clim())
     mesh.set_norm(norm)
     ax.set_aspect("equal", adjustable="box")
@@ -364,7 +366,8 @@ def plot_potential_difference_2d_x(
 
 def animate_potential_3d_x(
     potential: FundamentalPositionBasisPotential3d[_L0Inv, _L1Inv, _L2Inv],
-    z_axis: Literal[0, 1, 2, -1, -2, -3],
+    axes: tuple[int, int, int] = (0, 1, 2),
+    idx: SingleStackedIndexLike | None = None,
     *,
     ax: Axes | None = None,
     scale: Scale = "linear",
@@ -390,14 +393,19 @@ def animate_potential_3d_x(
     -------
     tuple[Figure, Axes, ArtistAnimation]
     """
-    util = BasisUtil(potential["basis"])
-    coordinates = get_x_coordinates_in_axes(potential["basis"], z_axis)
+    util = AxisWithLengthBasisUtil(potential["basis"])
     points = potential["vector"].reshape(util.fundamental_shape)
-    data = get_measured_data(points, measure)
-    fig, ax, ani = animate_through_surface(  # type: ignore[misc]
-        coordinates, data, z_axis, ax=ax, scale=scale, clim=clim
+    fig, ax, ani = animate_through_surface_x(  # type: ignore[misc]
+        potential["basis"],
+        points,
+        axes,
+        idx,
+        ax=ax,
+        scale=scale,
+        clim=clim,
+        measure=measure,
     )
-    ax.set_title(f"Animation of the potential perpendicular to the x{z_axis % 3} axis")
+    ax.set_title(f"Animation of the potential perpendicular to the x{axes[2]} axis")
 
     return fig, ax, ani
 
@@ -426,7 +434,7 @@ def animate_potential_x0x1(
     -------
     tuple[Figure, Axes, ArtistAnimation]
     """
-    return animate_potential_3d_x(potential, 2, ax=ax, scale=scale, clim=clim)
+    return animate_potential_3d_x(potential, (0, 1, 2), ax=ax, scale=scale, clim=clim)
 
 
 def animate_potential_x1x2(
@@ -453,7 +461,7 @@ def animate_potential_x1x2(
     -------
     tuple[Figure, Axes, ArtistAnimation]
     """
-    return animate_potential_3d_x(potential, 0, ax=ax, scale=scale, clim=clim)
+    return animate_potential_3d_x(potential, (1, 2, 0), ax=ax, scale=scale, clim=clim)
 
 
 def animate_potential_x2x0(
@@ -480,13 +488,14 @@ def animate_potential_x2x0(
     -------
     tuple[Figure, Axes, ArtistAnimation]
     """
-    return animate_potential_3d_x(potential, 1, ax=ax, scale=scale, clim=clim)
+    return animate_potential_3d_x(potential, (2, 0, 1), ax=ax, scale=scale, clim=clim)
 
 
 def animate_potential_difference_2d_x(
     potential0: FundamentalPositionBasisPotential3d[_L0Inv, _L1Inv, _L2Inv],
     potential1: FundamentalPositionBasisPotential3d[_L0Inv, _L1Inv, _L2Inv],
-    z_axis: Literal[0, 1, 2, -1, -2, -3],
+    axes: tuple[int, int, int] = (0, 1, 2),
+    idx: SingleStackedIndexLike | None = None,
     *,
     ax: Axes | None = None,
     scale: Scale = "linear",
@@ -518,7 +527,7 @@ def animate_potential_difference_2d_x(
             (potential0["vector"] - potential1["vector"]) / potential0["vector"]
         ),
     }
-    return animate_potential_3d_x(potential, z_axis, ax=ax, scale=scale, clim=clim)
+    return animate_potential_3d_x(potential, axes, idx, ax=ax, scale=scale, clim=clim)
 
 
 def plot_potential_along_path(
@@ -551,7 +560,7 @@ def plot_potential_along_path(
     fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
 
     converted = convert_potential_to_position_basis(potential)
-    util = BasisUtil(converted["basis"])
+    util = AxisWithLengthBasisUtil(converted["basis"])
 
     data = get_measured_data(converted["vector"].reshape(util.shape)[*path], measure)
     distances = calculate_cumulative_x_distances_along_path(
@@ -585,7 +594,7 @@ def get_minimum_path(
     np.ndarray[tuple[Literal[3], int], np.dtype[np.int_]]
         The complete path after finding the minimum at each coordinate
     """
-    util = BasisUtil(potential["basis"])
+    util = AxisWithLengthBasisUtil(potential["basis"])
     min_idx = np.argmin(potential["vector"].reshape(util.shape), axis=axis)
     min_idx_path = min_idx[*path]
     full_path = np.empty((3, path.shape[1]))

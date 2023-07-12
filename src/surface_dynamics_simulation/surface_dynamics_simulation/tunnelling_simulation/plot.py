@@ -12,7 +12,7 @@ from surface_potential_analysis.basis.conversion import (
 )
 from surface_potential_analysis.util.plot import (
     Scale,
-    animate_through_surface,
+    animate_through_surface_x,
 )
 from surface_potential_analysis.wavepacket.wavepacket import (
     get_unfurled_basis,
@@ -131,7 +131,7 @@ def animate_occupation_per_site_2d(
     x_coordinates = get_fundamental_projected_x_points(unfurled_basis, 2)
     coordinates = np.repeat(x_coordinates, occupations.shape[2], axis=3)
 
-    fig, ax, ani = animate_through_surface(
+    fig, ax, ani = animate_through_surface_x(
         coordinates, occupations, 2, ax=ax, scale=scale, clim=(0, 1)
     )
 

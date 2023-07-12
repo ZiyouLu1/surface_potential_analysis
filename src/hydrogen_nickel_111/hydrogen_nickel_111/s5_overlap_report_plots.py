@@ -6,7 +6,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib.scale import FuncScale
 from scipy.constants import Boltzmann, electron_mass, hbar
-from surface_potential_analysis.basis.util import BasisUtil
+from surface_potential_analysis.basis.util import AxisWithLengthBasisUtil
 from surface_potential_analysis.dynamics.hermitian_gamma_integral import (
     calculate_hermitian_gamma_occupation_integral,
     calculate_hermitian_gamma_potential_integral,
@@ -24,8 +24,11 @@ from hydrogen_nickel_111.experimental_data import (
     get_experiment_data,
     get_experimental_baseline_rates,
 )
+from hydrogen_nickel_111.s4_wavepacket import (
+    get_deuterium_energy_difference,
+    get_hydrogen_energy_difference,
+)
 from hydrogen_nickel_111.s5_overlap import (
-    get_hydrogen_fcc_hcp_energy_difference,
     get_overlap_deuterium,
     get_overlap_hydrogen,
 )
@@ -52,7 +55,7 @@ def plot_fermi_occupation_intregrand() -> None:
         line.set_label(f"{t} K")
         line.set_color(PLOT_COLOURS[i])
 
-        omega = float(get_hydrogen_fcc_hcp_energy_difference())
+        omega = float(get_hydrogen_energy_difference(0, 1))
         occupation = get_hermitian_gamma_occupation_integrand(
             k1_points, omega=omega, k_f=FERMI_WAVEVECTOR, boltzmann_energy=Boltzmann * t
         )
@@ -94,7 +97,7 @@ def plot_fermi_occupation_integral() -> None:
         )
         for t in temperatures
     ]
-    omega = float(get_hydrogen_fcc_hcp_energy_difference())
+    omega = float(get_hydrogen_energy_difference(0, 1))
     integrals_non_zero_offset = [
         calculate_hermitian_gamma_occupation_integral(
             omega, FERMI_WAVEVECTOR, Boltzmann * t
@@ -126,7 +129,7 @@ def plot_fermi_occupation_integral() -> None:
     input()
 
 
-def get_hydrogen_fcc_hcp_gamma() -> float:
+def get_hydrogen_fcc_hcp_gamma() -> np.complex_:
     overlap = get_overlap_hydrogen(0, 1)
     interpolator_0_1 = get_overlap_momentum_interpolator_flat(overlap)
 
@@ -145,7 +148,7 @@ def get_hydrogen_fcc_hcp_gamma() -> float:
 def get_rate_simple_equation(
     temperature: np.ndarray[_S0Inv, np.dtype[np.float_]]
 ) -> np.ndarray[_S0Inv, np.dtype[np.float_]]:
-    omega = float(get_hydrogen_fcc_hcp_energy_difference())
+    omega = float(get_hydrogen_energy_difference(0, 1))
     temperature_flat = temperature.ravel()
     temperature_dep_integral = np.array(
         [
@@ -169,7 +172,7 @@ def get_rate_simple_equation(
     ).reshape(temperature.shape)
 
 
-def get_deuterium_fcc_hcp_gamma() -> float:
+def get_deuterium_fcc_hcp_gamma() -> np.complex_:
     overlap = get_overlap_deuterium(0, 1)
     interpolator_0_1 = get_overlap_momentum_interpolator_flat(overlap)
 
@@ -188,7 +191,7 @@ def get_deuterium_fcc_hcp_gamma() -> float:
 def get_rate_simple_equation_deuterium(
     temperature: np.ndarray[_S0Inv, np.dtype[np.float_]]
 ) -> np.ndarray[_S0Inv, np.dtype[np.float_]]:
-    omega = float(get_hydrogen_fcc_hcp_energy_difference())
+    omega = float(get_deuterium_energy_difference(0, 1))
     temperature_flat = temperature.ravel()
     temperature_dep_integral = np.array(
         [
@@ -237,7 +240,6 @@ def plot_rate_equation() -> None:
     ax.set_ylabel("Rate /s")
     ax.set_xlabel("1/Temperature 1/$\\mathrm{K}^{-1}$")
 
-
     fig.show()
     input()
 
@@ -245,7 +247,7 @@ def plot_rate_equation() -> None:
 def plot_overlap_2d_comparison() -> None:
     overlap = get_overlap_hydrogen(0, 0)
     overlap_momentum = convert_overlap_to_momentum_basis(overlap)
-    util = BasisUtil(overlap["basis"])
+    util = AxisWithLengthBasisUtil(overlap["basis"])
     k1_max = util.get_stacked_index(np.argmax(overlap["vector"]))[1]
     fig, ax, _ = plot_overlap_2d_k(overlap_momentum, (0, 2), (k1_max,), measure="abs")
     fig.show()
@@ -270,7 +272,7 @@ def plot_overlap_2d_comparison() -> None:
     input()
 
     overlap = get_overlap_hydrogen(0, 1, (1, 1), (1, 1))
-    util = BasisUtil(overlap["basis"])
+    util = AxisWithLengthBasisUtil(overlap["basis"])
     x2_max = util.get_stacked_index(np.argmax(overlap["vector"]))[2]
 
     fig, ax, _ = plot_overlap_2d_x(overlap, (0, 1), (x2_max,), measure="abs")

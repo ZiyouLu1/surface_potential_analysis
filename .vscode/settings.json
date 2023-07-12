@@ -147,4 +147,5 @@
     "editor.defaultFormatter": "ms-python.black-formatter"
   },
   "python.analysis.enablePytestSupport": false,
+  "mypy-type-checker.importStrategy": "fromEnvironment",
 }

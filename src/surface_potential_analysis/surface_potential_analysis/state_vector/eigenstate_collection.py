@@ -5,14 +5,14 @@ from typing import TYPE_CHECKING, Any, Generic, TypedDict, TypeVar
 import numpy as np
 
 from surface_potential_analysis.basis.basis import (
-    Basis,
+    AxisWithLengthBasis,
     Basis1d,
     Basis2d,
     Basis3d,
 )
-from surface_potential_analysis.basis.util import BasisUtil
+from surface_potential_analysis.basis.util import AxisWithLengthBasisUtil
 
-from .eigenstate_calculation import calculate_eigenstates_hermitian
+from .eigenstate_calculation import calculate_eigenvectors_hermitian
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -24,8 +24,8 @@ if TYPE_CHECKING:
     from surface_potential_analysis.state_vector.state_vector import StateVector
 _L0Inv = TypeVar("_L0Inv", bound=int)
 
-_B0Cov = TypeVar("_B0Cov", bound=Basis[Any], covariant=True)
-_B0Inv = TypeVar("_B0Inv", bound=Basis[Any])
+_B0Cov = TypeVar("_B0Cov", bound=AxisWithLengthBasis[Any], covariant=True)
+_B0Inv = TypeVar("_B0Inv", bound=AxisWithLengthBasis[Any])
 
 _B1d0Cov = TypeVar("_B1d0Cov", bound=Basis1d[Any], covariant=True)
 _B1d0Inv = TypeVar("_B1d0Inv", bound=Basis1d[Any])
@@ -41,31 +41,31 @@ class EigenstateColllection(TypedDict, Generic[_B0Cov, _L0Inv]):
     basis: _B0Cov
     bloch_fractions: np.ndarray[tuple[_L0Inv, int], np.dtype[np.float_]]
     vectors: np.ndarray[tuple[_L0Inv, int, int], np.dtype[np.complex_]]
-    energies: np.ndarray[tuple[_L0Inv, int], np.dtype[np.float_]]
+    eigenvalues: np.ndarray[tuple[_L0Inv, int], np.dtype[np.float_]]
 
 
-class EigenstateColllection1d(EigenstateColllection[_B1d0Cov, _L0Inv]):
-    """
-    Represents a collection of eigenstates, each with the same basis but a variety of different bloch phases.
+EigenstateColllection1d = EigenstateColllection[_B1d0Cov, _L0Inv]
+"""
+Represents a collection of eigenstates, each with the same basis but a variety of different bloch phases.
 
-    NOTE: bloch_fractions: np.ndarray[tuple[_L0Inv, Literal[1]], np.dtype[np.float_]].
-    """
-
-
-class EigenstateColllection2d(EigenstateColllection[_B2d0Cov, _L0Inv]):
-    """
-    Represents a collection of eigenstates, each with the same basis but a variety of different bloch phases.
-
-    NOTE: bloch_fractions: np.ndarray[tuple[_L0Inv, Literal[2]], np.dtype[np.float_]]
-    """
+NOTE: bloch_fractions: np.ndarray[tuple[_L0Inv, Literal[1]], np.dtype[np.float_]].
+"""
 
 
-class EigenstateColllection3d(EigenstateColllection[_B3d0Cov, _L0Inv]):
-    """
-    Represents a collection of eigenstates, each with the same basis but a variety of different bloch phases.
+EigenstateColllection2d = EigenstateColllection[_B2d0Cov, _L0Inv]
+"""
+Represents a collection of eigenstates, each with the same basis but a variety of different bloch phases.
 
-    NOTE: bloch_fractions: np.ndarray[tuple[_L0Inv, Literal[3]], np.dtype[np.float_]]
-    """
+NOTE: bloch_fractions: np.ndarray[tuple[_L0Inv, Literal[2]], np.dtype[np.float_]]
+"""
+
+
+EigenstateColllection3d = EigenstateColllection[_B3d0Cov, _L0Inv]
+"""
+Represents a collection of eigenstates, each with the same basis but a variety of different bloch phases.
+
+NOTE: bloch_fractions: np.ndarray[tuple[_L0Inv, Literal[3]], np.dtype[np.float_]]
+"""
 
 
 def save_eigenstate_collection(
@@ -109,24 +109,24 @@ def calculate_eigenstate_collection(
     n_states = 1 + subset_by_index[1] - subset_by_index[0]
 
     basis = hamiltonian_generator(bloch_fractions[0])["basis"]
-    util = BasisUtil(basis)
+    util = AxisWithLengthBasisUtil(basis)
     out: EigenstateColllection[_B0Inv, _L0Inv] = {
         "basis": basis,
         "vectors": np.zeros(
             (bloch_fractions.shape[0], n_states, util.size), dtype=np.complex_
         ),
-        "energies": np.zeros((bloch_fractions.shape[0], n_states), dtype=np.float_),
+        "eigenvalues": np.zeros((bloch_fractions.shape[0], n_states), dtype=np.float_),
         "bloch_fractions": bloch_fractions,
     }
 
     for idx, bloch_fraction in enumerate(bloch_fractions):
         h = hamiltonian_generator(bloch_fraction)
-        eigenstates = calculate_eigenstates_hermitian(
+        eigenstates = calculate_eigenvectors_hermitian(
             h, subset_by_index=subset_by_index
         )
 
         out["vectors"][idx] = eigenstates["vectors"]
-        out["energies"][idx] = eigenstates["energies"]
+        out["eigenvalues"][idx] = eigenstates["eigenvalues"]
 
     return out
 

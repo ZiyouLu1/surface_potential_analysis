@@ -9,7 +9,7 @@ from surface_potential_analysis.basis.plot import (
 from surface_potential_analysis.basis.sho_basis import (
     infinate_sho_axis_3d_from_config,
 )
-from surface_potential_analysis.basis.util import BasisUtil
+from surface_potential_analysis.basis.util import AxisWithLengthBasisUtil
 from surface_potential_analysis.potential.plot import (
     animate_potential_x0x1,
     plot_potential_1d_x2_comparison_111,
@@ -90,14 +90,14 @@ def plot_raw_potential_points() -> None:
     fig, _, _ = plot_fundamental_x_in_plane_projected_2d(mocked["basis"], (0, 1), (0,))
     fig.show()
 
-    fig, ax = plot_potential_1d_x2_comparison_111(mocked)
+    fig, ax, _ = plot_potential_1d_x2_comparison_111(mocked)
     fig.show()
 
     fig, _, _ani = animate_potential_x0x1(mocked)
     fig.show()
 
     truncated = truncate_potential(potential, cutoff=2e-19, n=1, offset=1e-20)
-    fig, ax = plot_uneven_potential_z_comparison_111(truncated)
+    fig, ax, _ = plot_uneven_potential_z_comparison_111(truncated)
     plot_potential_1d_x2_comparison_111(mocked, ax=ax)
     ax.set_ylim(0, 0.2e-18)
     fig.show()
@@ -114,13 +114,14 @@ def plot_interpolated_energy_grid_points() -> None:
     fig.show()
 
     raw = normalize_potential(load_raw_data_potential())
-    fig, ax = plot_uneven_potential_z_comparison_111(raw)
+    fig, ax, _ = plot_uneven_potential_z_comparison_111(raw)
     plot_potential_1d_x2_comparison_111(potential, ax=ax)
     fig.show()
 
     fig, ax, _ani = animate_potential_x0x1(potential, clim=(0, 0.2e-18))
     z_energies = np.min(
-        potential["vector"].reshape(BasisUtil(potential["basis"]).shape), axis=2
+        potential["vector"].reshape(AxisWithLengthBasisUtil(potential["basis"]).shape),
+        axis=2,
     )
     xy_min = np.unravel_index(np.argmin(z_energies), z_energies.shape)
     x0_min = xy_min[0] / (1 + z_energies.shape[0])
@@ -130,16 +131,6 @@ def plot_interpolated_energy_grid_points() -> None:
         + x1_min * potential["basis"][1].delta_x[0],
         x0_min * potential["basis"][0].delta_x[1]
         + x1_min * potential["basis"][1].delta_x[1],
-    )
-    line.set_marker("x")
-
-    z_energies = np.min(raw["points"], axis=2)
-    xy_min = np.unravel_index(np.argmin(z_energies), z_energies.shape)
-    x0_min = xy_min[0] / (1 + z_energies.shape[0])
-    x1_min = xy_min[1] / (1 + z_energies.shape[1])
-    (line,) = ax.plot(
-        x0_min * raw["basis"][0].delta_x[0] + x1_min * raw["basis"][1].delta_x[0],
-        x0_min * raw["basis"][0].delta_x[1] + x1_min * raw["basis"][1].delta_x[1],
     )
     line.set_marker("x")
 
@@ -200,7 +191,7 @@ def plot_potential_minimum_along_diagonal() -> None:
     fig, ax = plt.subplots()
 
     interpolation = load_interpolated_potential()
-    shape = BasisUtil(interpolation["basis"]).shape
+    shape = AxisWithLengthBasisUtil(interpolation["basis"]).shape
     path = np.array([(x, x) for x in range(shape[0])]).T
     _, _, _ = plot_potential_minimum_along_path(interpolation, path, ax=ax)
     fig.show()
@@ -212,7 +203,7 @@ def plot_potential_minimum_along_diagonal() -> None:
 def plot_potential_minimum_along_edge() -> None:
     interpolation = load_interpolated_potential()
     fig, ax = plt.subplots()
-    shape = BasisUtil(interpolation["basis"]).shape
+    shape = AxisWithLengthBasisUtil(interpolation["basis"]).shape
     path = np.array([(shape[0] - (x), x) for x in range(shape[0])]).T
     # Add a fake point here so they line up. path[0] is not included in the unit cell
     path[:, 0] = path[:, 2]

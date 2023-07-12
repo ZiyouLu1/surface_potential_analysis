@@ -1,9 +1,11 @@
 from __future__ import annotations
 
 import unittest
+from typing import TYPE_CHECKING, Any, Literal, TypeVar
 
 import numpy as np
 
+from surface_potential_analysis.axis.conversion import get_rotated_axis
 from surface_potential_analysis.basis.brillouin_zone import (
     decrement_brillouin_zone_3d,
     get_all_brag_point,
@@ -19,17 +21,85 @@ from surface_potential_analysis.basis.conversion import (
     basis_as_fundamental_position_basis,
 )
 from surface_potential_analysis.basis.util import (
-    Basis3dUtil,
-    BasisUtil,
+    AxisWithLengthBasisUtil,
     _wrap_distance,
     calculate_cumulative_x_distances_along_path,
-    get_rotated_basis3d,
     project_k_points_along_axis,
     project_x_points_along_axis,
 )
 from surface_potential_analysis.util.util import slice_along_axis
 
+if TYPE_CHECKING:
+    from surface_potential_analysis.axis.axis_like import (
+        AxisVector3d,
+        AxisWithLengthLike3d,
+    )
+    from surface_potential_analysis.basis.basis import Basis3d
+
+    _A3d0Inv = TypeVar("_A3d0Inv", bound=AxisWithLengthLike3d[Any, Any])
+    _A3d1Inv = TypeVar("_A3d1Inv", bound=AxisWithLengthLike3d[Any, Any])
+    _A3d2Inv = TypeVar("_A3d2Inv", bound=AxisWithLengthLike3d[Any, Any])
 rng = np.random.default_rng()
+
+
+def _get_rotation_matrix(
+    vector: AxisVector3d, direction: AxisVector3d | None = None
+) -> np.ndarray[tuple[Literal[3], Literal[3]], np.dtype[np.float_]]:
+    # From http://www.j3d.org/matrix_faq/matrfaq_latest.html#Q38
+    unit = (
+        np.array([0.0, 0, 1])
+        if direction is None
+        else direction.copy() / np.linalg.norm(direction)
+    )
+    # Normalize vector length
+    vector = vector.copy() / np.linalg.norm(vector)
+
+    # Get axis
+    uvw = np.cross(vector, unit)
+
+    # compute trig values - no need to go through arccos and back
+    r_cos: np.float_ = np.dot(vector, unit)
+    r_sin: np.float_ = np.linalg.norm(uvw)
+
+    # normalize and unpack axis
+    if not np.isclose(r_sin, 0):
+        uvw /= r_sin
+    u, v, w = uvw
+
+    # Compute rotation matrix - re-expressed to show structure
+    return (  # type: ignore[no-any-return]
+        r_cos * np.eye(3)
+        + r_sin * np.array([[0, -w, v], [w, 0, -u], [-v, u, 0]])
+        + (1.0 - r_cos) * uvw[:, None] * uvw[None, :]
+    )
+
+
+def get_rotated_basis3d(
+    basis: Basis3d[_A3d0Inv, _A3d1Inv, _A3d2Inv],
+    axis: Literal[0, 1, 2, -1, -2, -3] = 0,
+    direction: AxisVector3d | None = None,
+) -> Basis3d[_A3d0Inv, _A3d1Inv, _A3d2Inv]:
+    """
+    Get the basis, rotated such that axis is along the basis vector direction.
+
+    Parameters
+    ----------
+    axis : Literal[0, 1, 2, -1, -2, -3], optional
+        axis to point along the basis vector direction, by default 0
+    direction : BasisVector | None, optional
+        basis vector to point along, by default [0,0,1]
+
+    Returns
+    -------
+    Basis3d[_A3d0Cov, _A3d1Cov, _A3d2Cov]
+        _description_
+    """
+    matrix = _get_rotation_matrix(basis[axis].delta_x, direction)
+    return (
+        get_rotated_axis(basis[0], matrix),
+        get_rotated_axis(basis[1], matrix),
+        get_rotated_axis(basis[2], matrix),
+    )
 
 
 class TestBasisConfig(unittest.TestCase):
@@ -39,14 +109,14 @@ class TestBasisConfig(unittest.TestCase):
             (1, 1, 1),
             np.array([[points[0], 0, 0], [0, points[1], 0], [0, 0, points[2]]]),
         )
-        util = Basis3dUtil(basis)
+        util = AxisWithLengthBasisUtil(basis)
 
         np.testing.assert_almost_equal(util.volume, np.prod(points))
         np.testing.assert_almost_equal(
             util.reciprocal_volume, (2 * np.pi) ** 3 / np.prod(points)
         )
 
-        util2 = BasisUtil(basis)
+        util2 = AxisWithLengthBasisUtil(basis)
         np.testing.assert_almost_equal(util2.volume, np.prod(points))
         np.testing.assert_almost_equal(
             util2.reciprocal_volume, (2 * np.pi) ** 3 / np.prod(points)
@@ -55,18 +125,18 @@ class TestBasisConfig(unittest.TestCase):
     def test_inverse_lattice_points_100(self) -> None:
         delta_x = np.array([[1, 0, 0], [0, 2, 0], [0, 0, 1]])
         basis = position_basis_3d_from_shape((1, 1, 1), delta_x)
-        util = Basis3dUtil(basis)
+        util = AxisWithLengthBasisUtil(basis)
 
-        np.testing.assert_array_equal(delta_x[0], util.delta_x0)
-        np.testing.assert_array_equal(delta_x[1], util.delta_x1)
-        np.testing.assert_array_equal(delta_x[2], util.delta_x2)
+        np.testing.assert_array_equal(delta_x[0], util.delta_x[0])
+        np.testing.assert_array_equal(delta_x[1], util.delta_x[1])
+        np.testing.assert_array_equal(delta_x[2], util.delta_x[2])
 
-        self.assertEqual(util.dk0[0], 2 * np.pi)
-        self.assertEqual(util.dk0[1], 0)
-        self.assertEqual(util.dk1[0], 0)
-        self.assertEqual(util.dk1[1], np.pi)
+        self.assertEqual(util.dk[0][0], 2 * np.pi)
+        self.assertEqual(util.dk[0][1], 0)
+        self.assertEqual(util.dk[1][0], 0)
+        self.assertEqual(util.dk[1][1], np.pi)
 
-        util2 = BasisUtil(basis)
+        util2 = AxisWithLengthBasisUtil(basis)
 
         np.testing.assert_array_equal(delta_x[0], util2.delta_x[0])
         np.testing.assert_array_equal(delta_x[1], util2.delta_x[1])
@@ -80,18 +150,18 @@ class TestBasisConfig(unittest.TestCase):
     def test_inverse_lattice_points_111(self) -> None:
         delta_x = np.array([[1, 0, 0], [0.5, np.sqrt(3) / 2, 0], [0, 0, 1]])
         basis = position_basis_3d_from_shape((1, 1, 1), delta_x)
-        util = Basis3dUtil(basis)
+        util = AxisWithLengthBasisUtil(basis)
 
-        np.testing.assert_array_equal(delta_x[0], util.delta_x0)
-        np.testing.assert_array_equal(delta_x[1], util.delta_x1)
-        np.testing.assert_array_equal(delta_x[2], util.delta_x2)
+        np.testing.assert_array_equal(delta_x[0], util.delta_x[0])
+        np.testing.assert_array_equal(delta_x[1], util.delta_x[1])
+        np.testing.assert_array_equal(delta_x[2], util.delta_x[2])
 
-        self.assertEqual(util.dk0[0], 2 * np.pi)
-        self.assertEqual(util.dk0[1], -2 * np.pi / np.sqrt(3))
-        self.assertEqual(util.dk1[0], 0)
-        self.assertEqual(util.dk1[1], 4 * np.pi / np.sqrt(3))
+        self.assertEqual(util.dk[0][0], 2 * np.pi)
+        self.assertEqual(util.dk[0][1], -2 * np.pi / np.sqrt(3))
+        self.assertEqual(util.dk[1][0], 0)
+        self.assertEqual(util.dk[1][1], 4 * np.pi / np.sqrt(3))
 
-        util2 = BasisUtil(basis)
+        util2 = AxisWithLengthBasisUtil(basis)
         np.testing.assert_array_equal(delta_x[0], util2.delta_x[0])
         np.testing.assert_array_equal(delta_x[1], util2.delta_x[1])
         np.testing.assert_array_equal(delta_x[2], util2.delta_x[2])
@@ -104,22 +174,28 @@ class TestBasisConfig(unittest.TestCase):
     def test_reciprocal_lattice(self) -> None:
         delta_x = rng.random((3, 3))
         basis = position_basis_3d_from_shape((1, 1, 1), delta_x)
-        util = Basis3dUtil(basis)
+        util = AxisWithLengthBasisUtil(basis)
 
-        np.testing.assert_array_almost_equal(delta_x[0], util.delta_x0)
-        np.testing.assert_array_almost_equal(delta_x[1], util.delta_x1)
-        np.testing.assert_array_almost_equal(delta_x[2], util.delta_x2)
+        np.testing.assert_array_almost_equal(delta_x[0], util.delta_x[0])
+        np.testing.assert_array_almost_equal(delta_x[1], util.delta_x[1])
+        np.testing.assert_array_almost_equal(delta_x[2], util.delta_x[2])
 
         reciprocal = basis_as_fundamental_momentum_basis(basis)
-        reciprocal_util = Basis3dUtil(reciprocal)
+        reciprocal_util = AxisWithLengthBasisUtil(reciprocal)
 
-        np.testing.assert_array_almost_equal(reciprocal_util.delta_x0, util.delta_x0)
-        np.testing.assert_array_almost_equal(reciprocal_util.delta_x1, util.delta_x1)
-        np.testing.assert_array_almost_equal(reciprocal_util.delta_x2, util.delta_x2)
+        np.testing.assert_array_almost_equal(
+            reciprocal_util.delta_x[0], util.delta_x[0]
+        )
+        np.testing.assert_array_almost_equal(
+            reciprocal_util.delta_x[1], util.delta_x[1]
+        )
+        np.testing.assert_array_almost_equal(
+            reciprocal_util.delta_x[2], util.delta_x[2]
+        )
 
-        np.testing.assert_array_almost_equal(reciprocal_util.dk0, util.dk0)
-        np.testing.assert_array_almost_equal(reciprocal_util.dk1, util.dk1)
-        np.testing.assert_array_almost_equal(reciprocal_util.dk2, util.dk2)
+        np.testing.assert_array_almost_equal(reciprocal_util.dk[0], util.dk[0])
+        np.testing.assert_array_almost_equal(reciprocal_util.dk[1], util.dk[1])
+        np.testing.assert_array_almost_equal(reciprocal_util.dk[2], util.dk[2])
 
         np.testing.assert_array_almost_equal(reciprocal_util.volume, util.volume)
         np.testing.assert_array_almost_equal(
@@ -127,15 +203,21 @@ class TestBasisConfig(unittest.TestCase):
         )
 
         reciprocal_2 = basis_as_fundamental_position_basis(reciprocal)
-        reciprocal_2_util = Basis3dUtil(reciprocal_2)
+        reciprocal_2_util = AxisWithLengthBasisUtil(reciprocal_2)
 
-        np.testing.assert_array_almost_equal(reciprocal_2_util.delta_x0, util.delta_x0)
-        np.testing.assert_array_almost_equal(reciprocal_2_util.delta_x1, util.delta_x1)
-        np.testing.assert_array_almost_equal(reciprocal_2_util.delta_x2, util.delta_x2)
+        np.testing.assert_array_almost_equal(
+            reciprocal_2_util.delta_x[0], util.delta_x[0]
+        )
+        np.testing.assert_array_almost_equal(
+            reciprocal_2_util.delta_x[1], util.delta_x[1]
+        )
+        np.testing.assert_array_almost_equal(
+            reciprocal_2_util.delta_x[2], util.delta_x[2]
+        )
 
-        np.testing.assert_array_almost_equal(reciprocal_2_util.dk0, util.dk0)
-        np.testing.assert_array_almost_equal(reciprocal_2_util.dk1, util.dk1)
-        np.testing.assert_array_almost_equal(reciprocal_2_util.dk2, util.dk2)
+        np.testing.assert_array_almost_equal(reciprocal_2_util.dk[0], util.dk[0])
+        np.testing.assert_array_almost_equal(reciprocal_2_util.dk[1], util.dk[1])
+        np.testing.assert_array_almost_equal(reciprocal_2_util.dk[2], util.dk[2])
 
     def test_get_stacked_index(self) -> None:
         delta_x = np.array(([1, 0, 0], [0, 2, 0], [0, 0, 1]))
@@ -145,11 +227,11 @@ class TestBasisConfig(unittest.TestCase):
             rng.integers(1, 10),
         )
         basis = position_basis_3d_from_shape(resolution, delta_x)
-        util = Basis3dUtil(basis)
+        util = AxisWithLengthBasisUtil(basis)
         for i in range(np.prod(resolution)):
             self.assertEqual(i, util.get_flat_index(util.get_stacked_index(i)))
 
-        util2 = BasisUtil(basis)
+        util2 = AxisWithLengthBasisUtil(basis)
         for i in range(np.prod(resolution)):
             self.assertEqual(i, util2.get_flat_index(util2.get_stacked_index(i)))
 
@@ -202,7 +284,7 @@ class TestBasisConfig(unittest.TestCase):
     def test_nx_points_simple(self) -> None:
         delta_x = rng.random((3, 3))
         basis = position_basis_3d_from_shape((2, 2, 2), delta_x)
-        util = Basis3dUtil(basis)
+        util = AxisWithLengthBasisUtil(basis)
 
         actual = util.fundamental_nx_points
         expected = [
@@ -218,7 +300,7 @@ class TestBasisConfig(unittest.TestCase):
             rng.integers(1, 20),
         )
         basis = position_basis_3d_from_shape(resolution, delta_x)
-        util = Basis3dUtil(basis)
+        util = AxisWithLengthBasisUtil(basis)
         actual = util.fundamental_nx_points
 
         for axis in range(3):
@@ -230,7 +312,7 @@ class TestBasisConfig(unittest.TestCase):
     def test_nk_points_simple(self) -> None:
         delta_x = rng.random((3, 3))
         basis = position_basis_3d_from_shape((2, 2, 2), delta_x)
-        util = Basis3dUtil(basis)
+        util = AxisWithLengthBasisUtil(basis)
 
         actual = util.fundamental_nk_points
         expected = [
@@ -246,7 +328,7 @@ class TestBasisConfig(unittest.TestCase):
             rng.integers(1, 20),
         )
         basis = position_basis_3d_from_shape(resolution, delta_x)
-        util = Basis3dUtil(basis)
+        util = AxisWithLengthBasisUtil(basis)
         actual = util.fundamental_nk_points
 
         for axis in range(3):
@@ -261,7 +343,7 @@ class TestBasisConfig(unittest.TestCase):
         delta_x = np.array([[1, 0, 0], [0, 1, 0], [0, 0, 1]], dtype=float)
 
         basis = position_basis_3d_from_shape((3, 3, 3), delta_x)
-        util = Basis3dUtil(basis)
+        util = AxisWithLengthBasisUtil(basis)
 
         actual = util.fundamental_x_points
         # fmt: off
@@ -280,7 +362,7 @@ class TestBasisConfig(unittest.TestCase):
             np.array([0, 0, 5], dtype=float),
         )
         basis = position_basis_3d_from_shape((3, 3, 3), delta_x)
-        util = Basis3dUtil(basis)
+        util = AxisWithLengthBasisUtil(basis)
         actual = util.fundamental_x_points
 
         # fmt: off
@@ -300,7 +382,7 @@ class TestBasisConfig(unittest.TestCase):
             np.array([0, 0, 1], dtype=float),
         )
         basis = momentum_basis_3d_from_resolution((3, 3, 3), dx)
-        util = Basis3dUtil(basis)
+        util = AxisWithLengthBasisUtil(basis)
 
         actual = util.fundamental_nk_points
         # fmt: off
@@ -319,7 +401,7 @@ class TestBasisConfig(unittest.TestCase):
             np.array([0, 0, 5], dtype=float),
         )
         basis = momentum_basis_3d_from_resolution((3, 3, 3), delta_x)
-        util = Basis3dUtil(basis)
+        util = AxisWithLengthBasisUtil(basis)
         actual = util.fundamental_nk_points
 
         np.testing.assert_array_equal(expected_x, actual[0])
@@ -422,14 +504,14 @@ class TestBasisConfig(unittest.TestCase):
 
     def test_decrement_brillouin_zone_many(self) -> None:
         basis = position_basis_3d_from_shape((3, 3, 3))
-        util = Basis3dUtil(position_basis_3d_from_shape((3, 3, 3)))
+        util = AxisWithLengthBasisUtil(position_basis_3d_from_shape((3, 3, 3)))
         actual = decrement_brillouin_zone_3d(basis, util.fundamental_nk_points)
 
         expected = util.fundamental_nk_points
         np.testing.assert_array_equal(actual, expected)
 
         basis = position_basis_3d_from_shape((6, 6, 6))
-        util = Basis3dUtil(position_basis_3d_from_shape((6, 6, 1)))
+        util = AxisWithLengthBasisUtil(position_basis_3d_from_shape((6, 6, 1)))
         actual = decrement_brillouin_zone_3d(basis, util.fundamental_nk_points)
 
         expected = util.fundamental_nk_points
@@ -456,17 +538,17 @@ class TestBasisConfig(unittest.TestCase):
     def test_project_k_points_along_axis(self) -> None:
         basis = position_basis_3d_from_shape((3, 3, 3))
 
-        points = Basis3dUtil(basis).fundamental_k_points
+        points = AxisWithLengthBasisUtil(basis).fundamental_k_points
         actual = project_k_points_along_axis(basis, points, axis=0)
         expected = get_fundamental_projected_k_points(basis, axis=0).reshape(2, -1)
         np.testing.assert_array_equal(actual, expected)
 
-        points = Basis3dUtil(basis).fundamental_k_points
+        points = AxisWithLengthBasisUtil(basis).fundamental_k_points
         actual = project_k_points_along_axis(basis, points, axis=1)
         expected = get_fundamental_projected_k_points(basis, axis=1).reshape(2, -1)
         np.testing.assert_array_equal(actual, expected)
 
-        points = Basis3dUtil(basis).fundamental_k_points
+        points = AxisWithLengthBasisUtil(basis).fundamental_k_points
         actual = project_k_points_along_axis(basis, points, axis=2)
         expected = get_fundamental_projected_k_points(basis, axis=2).reshape(2, -1)
         np.testing.assert_array_equal(actual, expected)
@@ -489,7 +571,7 @@ class TestBasisConfig(unittest.TestCase):
         expected = np.array([[1, 0, 0], [0, 1, 0]])
         np.testing.assert_array_equal(actual, expected)
 
-        points = Basis3dUtil(basis).fundamental_x_points
+        points = AxisWithLengthBasisUtil(basis).fundamental_x_points
         actual = project_x_points_along_axis(basis, points, axis=2)
         expected = get_fundamental_projected_x_points(basis, axis=2).reshape(2, -1)
         np.testing.assert_array_equal(actual, expected)
@@ -499,7 +581,7 @@ class TestBasisConfig(unittest.TestCase):
         expected = np.array([[0, -1], [1, 0]])
         np.testing.assert_array_equal(actual, expected)
 
-        points = Basis3dUtil(basis).fundamental_x_points
+        points = AxisWithLengthBasisUtil(basis).fundamental_x_points
         actual = project_x_points_along_axis(basis, points, axis=0)
         expected = get_fundamental_projected_x_points(basis, axis=0).reshape(2, -1)
         np.testing.assert_array_equal(actual, expected)

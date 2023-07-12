@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, Any
 
 import numpy as np
 from matplotlib import pyplot as plt
-from surface_potential_analysis.basis.util import BasisUtil
+from surface_potential_analysis.basis.util import AxisWithLengthBasisUtil
 from surface_potential_analysis.state_vector.conversion import (
     convert_state_vector_to_position_basis,
 )
@@ -123,7 +123,7 @@ def test_wavepacket_normalization() -> None:
 def test_wavepacket_zero_at_next_unit_cell() -> None:
     wavepacket = get_wavepacket((12,), (600,), 0)
     offset = 50
-    size = BasisUtil(wavepacket["basis"]).size
+    size = AxisWithLengthBasisUtil(wavepacket["basis"]).size
 
     normalized = localize_tightly_bound_wavepacket_idx(wavepacket, idx=(offset,))
     unfurled = unfurl_wavepacket(normalized)

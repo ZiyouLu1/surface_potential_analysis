@@ -8,31 +8,35 @@ import scipy.linalg
 from surface_potential_analysis.util.decorators import timed
 
 if TYPE_CHECKING:
-    from surface_potential_analysis.basis.basis import Basis
+    from surface_potential_analysis.basis.basis import AxisWithLengthBasis
     from surface_potential_analysis.operator.operator import (
         Operator,
         SingleBasisOperator,
     )
     from surface_potential_analysis.state_vector.state_vector import (
+        EigenvectorList,
         StateDualVector,
         StateVector,
-        StateVectorList,
     )
 
-    _B0Inv = TypeVar("_B0Inv", bound=Basis[Any])
-    _B1Inv = TypeVar("_B1Inv", bound=Basis[Any])
+    _B0Inv = TypeVar("_B0Inv", bound=AxisWithLengthBasis[Any])
+    _B1Inv = TypeVar("_B1Inv", bound=AxisWithLengthBasis[Any])
 
 
 @timed
-def calculate_eigenstates_hermitian(
+def calculate_eigenvectors_hermitian(
     hamiltonian: SingleBasisOperator[_B0Inv],
     subset_by_index: tuple[int, int] | None = None,
-) -> StateVectorList[_B0Inv]:
+) -> EigenvectorList[_B0Inv]:
     """Get a list of eigenstates for a given operator, assuming it is hermitian."""
-    energies, vectors = scipy.linalg.eigh(
+    eigenvalues, vectors = scipy.linalg.eigh(
         hamiltonian["array"], subset_by_index=subset_by_index
     )
-    return {"basis": hamiltonian["basis"], "vectors": vectors.T, "energies": energies}
+    return {
+        "basis": hamiltonian["basis"],
+        "vectors": vectors.T,
+        "eigenvalues": eigenvalues,
+    }
 
 
 def calculate_expectation(

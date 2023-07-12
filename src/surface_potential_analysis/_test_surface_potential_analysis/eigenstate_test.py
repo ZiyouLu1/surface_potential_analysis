@@ -25,7 +25,7 @@ class EigenstateTest(unittest.TestCase):
         collection: EigenstateColllection[Any, Any] = {
             "basis": position_basis_3d_from_shape((1, 1, 1)),
             "bloch_fractions": phases,
-            "energies": np.array([]),
+            "eigenvalues": np.array([]),
             "vectors": np.array([]),
         }
 

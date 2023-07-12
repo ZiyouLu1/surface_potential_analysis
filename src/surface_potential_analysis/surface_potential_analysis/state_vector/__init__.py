@@ -2,6 +2,6 @@
 
 from __future__ import annotations
 
-from .state_vector import StateVector, StateVectorList
+from .state_vector import EigenvectorList, StateVector
 
-__all__ = ["StateVector", "StateVectorList"]
+__all__ = ["StateVector", "EigenvectorList"]

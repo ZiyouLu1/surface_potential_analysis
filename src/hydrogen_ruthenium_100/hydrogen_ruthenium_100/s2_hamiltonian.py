@@ -55,15 +55,12 @@ def get_hamiltonian(
         Hamiltonian in the specified basis
     """
     potential = get_interpolated_potential(shape)
-    potential["vector"] = 0.5 * (
-        potential["vector"] + potential["vector"].reshape(shape).swapaxes(0, 1).ravel()
-    )
-    config: PotentialBasisConfig[tuple[FundamentalPositionAxis1d[_L0]], _L5] = {
+    config: PotentialBasisConfig[tuple[FundamentalPositionAxis1d[_L2]], _L5] = {
         "n": resolution[2],
         "mass": HYDROGEN_MASS,
-        "potential": select_minimum_potential_3d(potential),  # type: ignore[arg-type]
+        "potential": select_minimum_potential_3d(potential),
     }
-    hamiltonian = explicit_z_basis.total_surface_hamiltonian(  # type: ignore[misc]
+    hamiltonian = explicit_z_basis.total_surface_hamiltonian(
         potential, bloch_fraction, (resolution[0], resolution[1]), config
     )
     return {

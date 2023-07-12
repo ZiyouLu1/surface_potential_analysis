@@ -12,14 +12,14 @@ from surface_potential_analysis.axis.axis import (
     FundamentalPositionAxis,
     MomentumAxis1d,
 )
-from surface_potential_analysis.axis.util import AxisUtil
+from surface_potential_analysis.axis.util import AxisWithLengthLikeUtil
 from surface_potential_analysis.basis.conversion import (
     basis_as_fundamental_momentum_basis,
     basis_as_fundamental_position_basis,
     convert_matrix,
     convert_vector,
 )
-from surface_potential_analysis.basis.util import Basis3dUtil
+from surface_potential_analysis.basis.util import AxisWithLengthBasisUtil
 from surface_potential_analysis.util.interpolation import (
     interpolate_points_fftn,
     pad_ft_points,
@@ -35,7 +35,7 @@ class BasisConfigConversionTest(unittest.TestCase):
         axis = get_random_explicit_axis(1, fundamental_n=fundamental_n)
 
         expected = axis.vectors
-        actual = AxisUtil(axis).vectors
+        actual = AxisWithLengthLikeUtil(axis).vectors
         np.testing.assert_array_equal(expected, actual)
 
         a = axis.__from_fundamental__(actual)
@@ -62,11 +62,11 @@ class BasisConfigConversionTest(unittest.TestCase):
             ),
         )
 
-        util0 = Basis3dUtil(_basis_0)
+        util0 = AxisWithLengthBasisUtil(_basis_0)
         vector = special_ortho_group.rvs(util0.size)[0]
         converted = convert_vector(vector, _basis_0, _basis_1)
 
-        util1 = Basis3dUtil(_basis_1)
+        util1 = AxisWithLengthBasisUtil(_basis_1)
         np.testing.assert_equal(converted.size, util1.size)
 
         np.testing.assert_array_almost_equal(np.linalg.norm(converted), 1)
@@ -84,7 +84,7 @@ class BasisConfigConversionTest(unittest.TestCase):
         )
         _basis_1 = _basis_0
 
-        util = Basis3dUtil(_basis_0)
+        util = AxisWithLengthBasisUtil(_basis_0)
         vector = special_ortho_group.rvs(util.size)[0]
         converted = convert_vector(vector, _basis_0, _basis_1)
 

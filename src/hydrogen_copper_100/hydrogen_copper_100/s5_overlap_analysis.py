@@ -23,7 +23,7 @@ def plot_overlap() -> None:
     overlap = load_overlap(path)
     overlap_momentum = convert_overlap_to_momentum_basis(overlap)
 
-    fig, ax, _ = plot_overlap_2d_k(overlap_momentum, 0, 2)
+    fig, ax, _ = plot_overlap_2d_k(overlap_momentum, (0, 1), (0,))
     ax.set_title(
         "Plot of the overlap in momentum for ikz=0\n"
         "showing oscillation in the direction corresponding to\n"
@@ -32,7 +32,7 @@ def plot_overlap() -> None:
     save_figure(fig, "2d_overlap_transform_kx_ky.png")
     fig.show()
 
-    fig, ax, _ = plot_overlap_2d_k(overlap_momentum, 0, 2, measure="real")
+    fig, ax, _ = plot_overlap_2d_k(overlap_momentum, (0, 1), (0,), measure="real")
     ax.set_title(
         "Plot of the overlap in momentum for ikz=0\n"
         "showing oscillation in the direction corresponding to\n"
@@ -41,7 +41,7 @@ def plot_overlap() -> None:
     save_figure(fig, "2d_overlap_transform_real_kx_ky.png")
     fig.show()
 
-    fig, ax, _ = plot_overlap_2d_k(overlap_momentum, 0, 2, measure="imag")
+    fig, ax, _ = plot_overlap_2d_k(overlap_momentum, (0, 1), (0,), measure="imag")
     ax.set_title(
         "Plot of the overlap in momentum for ikz=0\n"
         "showing oscillation in the direction corresponding to\n"
@@ -50,12 +50,12 @@ def plot_overlap() -> None:
     save_figure(fig, "2d_overlap_transform_imag_kx_ky.png")
     fig.show()
 
-    fig, ax, _ = plot_overlap_2d_x(overlap, 0, 2)
+    fig, ax, _ = plot_overlap_2d_x(overlap, (0, 1), (0,))
     ax.set_title("Plot of the overlap summed over z")
     save_figure(fig, "2d_overlap_kx_ky.png")
     fig.show()
 
-    fig, ax, _ = plot_overlap_2d_k(overlap_momentum, 0, 1)
+    fig, ax, _ = plot_overlap_2d_k(overlap_momentum, (2, 0), (0,))
     ax.set_title(
         "Plot of the overlap in momentum for ikx1=0 with a decay in the kz direction"
     )

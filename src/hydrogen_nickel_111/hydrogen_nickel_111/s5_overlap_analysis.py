@@ -28,8 +28,7 @@ from surface_dynamics_simulation.tunnelling_simulation.simulation import (
     simulate_tunnelling_from_matrix,
 )
 from surface_potential_analysis.basis.util import (
-    Basis3dUtil,
-    BasisUtil,
+    AxisWithLengthBasisUtil,
 )
 from surface_potential_analysis.dynamics.hermitian_gamma_integral import (
     calculate_hermitian_gamma_occupation_integral,
@@ -55,8 +54,12 @@ from surface_potential_analysis.overlap.plot import (
 from surface_potential_analysis.util.decorators import npy_cached
 
 from .constants import FERMI_WAVEVECTOR
-from .s4_wavepacket import get_wavepacket_hydrogen, load_nickel_wavepacket
-from .s5_overlap import get_hydrogen_fcc_hcp_energy_difference, get_overlap_hydrogen
+from .s4_wavepacket import (
+    get_hydrogen_energy_difference,
+    get_wavepacket_hydrogen,
+    load_nickel_wavepacket,
+)
+from .s5_overlap import get_overlap_hydrogen
 from .surface_data import get_data_path, save_figure
 
 if TYPE_CHECKING:
@@ -114,7 +117,7 @@ def make_overlap_real_at(
     OverlapMomentum
         A new overlap, which is real at the given point
     """
-    util = Basis3dUtil(overlap["basis"])
+    util = AxisWithLengthBasisUtil(overlap["basis"])
     idx = int(np.argmax(np.abs(overlap["vector"]))) if idx is None else idx
     idx = util.get_flat_index(idx) if isinstance(idx, tuple) else idx
 
@@ -213,7 +216,8 @@ def plot_fcc_hcp_overlap_momentum() -> None:
     fig.show()
 
     x1_max = np.unravel_index(
-        np.argmax(overlap["vector"]), BasisUtil(overlap_momentum["basis"]).shape
+        np.argmax(overlap["vector"]),
+        AxisWithLengthBasisUtil(overlap_momentum["basis"]).shape,
     )[1]
     fig, ax, _ = plot_overlap_2d_k(overlap_momentum, (0, 2), (x1_max,))
     ax.set_title(
@@ -251,7 +255,7 @@ def plot_fcc_hcp_overlap_momentum_along_diagonal() -> None:
 def plot_fcc_hcp_overlap() -> None:
     overlap = get_overlap_hydrogen(0, 1)
     x2_max = np.unravel_index(
-        np.argmax(overlap["vector"]), BasisUtil(overlap["basis"]).shape
+        np.argmax(overlap["vector"]), AxisWithLengthBasisUtil(overlap["basis"]).shape
     )[2]
 
     fig, ax, _ = plot_overlap_2d_x(overlap, (0, 1), (x2_max,), measure="abs")
@@ -277,7 +281,7 @@ def plot_fcc_hcp_overlap() -> None:
 def plot_fcc_hcp_overlap_offset() -> None:
     overlap = get_overlap_hydrogen(0, 1, (1, 0))
     x2_max = np.unravel_index(
-        np.argmax(overlap["vector"]), BasisUtil(overlap["basis"]).shape
+        np.argmax(overlap["vector"]), AxisWithLengthBasisUtil(overlap["basis"]).shape
     )[2]
 
     fig, ax, _ = plot_overlap_2d_x(overlap, (0, 1), (x2_max,), measure="abs")
@@ -285,7 +289,7 @@ def plot_fcc_hcp_overlap_offset() -> None:
 
     overlap = get_overlap_hydrogen(0, 1, (0, 0), (-1, 0))
     x2_max = np.unravel_index(
-        np.argmax(overlap["vector"]), BasisUtil(overlap["basis"]).shape
+        np.argmax(overlap["vector"]), AxisWithLengthBasisUtil(overlap["basis"]).shape
     )[2]
 
     fig, ax, _ = plot_overlap_2d_x(overlap, (0, 1), (x2_max,), measure="abs")
@@ -321,7 +325,7 @@ def plot_angle_averaged_overlap_momentum() -> None:
     overlap = get_overlap_hydrogen(0, 1)
     interpolator = get_overlap_momentum_interpolator_flat(overlap)
     radius = np.linspace(0, 1.5e11, 100)
-    averaged = get_angle_averaged_overlap(interpolator, radius)
+    averaged = get_angle_averaged_overlap(interpolator, interpolator, radius)
 
     fig, ax = plt.subplots()
     ax.plot(radius, averaged)
@@ -329,23 +333,10 @@ def plot_angle_averaged_overlap_momentum() -> None:
     input()
 
 
-def _get_potential_integral_inner(
-    i_0: int,
-    offset_i_0: tuple[int, int],
-    j_0: int,
-    offset_j_0: tuple[int, int],
-    i_1: int,
-    offset_i_1: tuple[int, int],
-    j_1: int,
-    offset_j_1: tuple[int, int],
-) -> float:
-    return
-
-
 def shift_offset_0_to_origin(
     offset: np.ndarray[tuple[Literal[4], Literal[2]], np.dtype[np.int_]]
 ) -> np.ndarray[tuple[Literal[4], Literal[2]], np.dtype[np.int_]]:
-    return offset - offset[0][np.newaxis, :]
+    return offset - offset[0][np.newaxis, :]  # type: ignore[no-any-return]
 
 
 def shift_relative_offset(
@@ -364,11 +355,11 @@ def is_offset_irrelevant(
     offset: np.ndarray[tuple[Literal[4], Literal[2]], np.dtype[np.int_]]
 ) -> bool:
     too_large_i = not (
-        -2 < offset[1, 0] - offset[0, 0] < 2
+        -2 < offset[1, 0] - offset[0, 0] < 2  # noqa: PLR2004
         and -2 < offset[1, 1] - offset[0, 1] < 2  # noqa: PLR2004
     )
     too_large_j = not (
-        -2 < offset[3, 0] - offset[2, 0] < 2
+        -2 < offset[3, 0] - offset[2, 0] < 2  # noqa: PLR2004
         and -2 < offset[3, 1] - offset[2, 1] < 2  # noqa: PLR2004
     )
     return too_large_i or too_large_j
@@ -388,25 +379,29 @@ def get_overlap_interpolator_cached(
 def get_gamma_1(
     idx: np.ndarray[tuple[Literal[4]], np.dtype[np.int_]],
     offset: np.ndarray[tuple[Literal[4], Literal[2]], np.dtype[np.int_]],
-) -> float:
+) -> np.complex_:
     offset = shift_offset_0_to_origin(offset)
     offset, displacement = shift_relative_offset(offset)
 
-    util = BasisUtil(get_wavepacket_hydrogen(0)["basis"])
+    util = AxisWithLengthBasisUtil(get_wavepacket_hydrogen(0)["basis"])
     displacement_r = np.tensordot(displacement, util.delta_x[0:2], axes=(0, 0))[:2]
-    interpolator_0 = get_overlap_interpolator_cached(idx[0], idx[1], tuple(offset[1]))
-    interpolator_1 = get_overlap_interpolator_cached(idx[2], idx[3], tuple(offset[3]))
+    interpolator_0 = get_overlap_interpolator_cached(
+        idx.item(0), idx.item(1), tuple(offset[1])
+    )
+    interpolator_1 = get_overlap_interpolator_cached(
+        idx.item(2), idx.item(3), tuple(offset[3])
+    )
 
     def interpolator_1_shifted(
         q: np.ndarray[tuple[Literal[2], Any], np.dtype[np.float_]]
     ) -> np.ndarray[Any, np.dtype[np.complex_]]:
-        return interpolator_1(q) * np.exp(
+        return interpolator_1(q) * np.exp(  # type: ignore[no-any-return]
             1j * np.tensordot(q, displacement_r, axes=(0, 0))
         )
 
     def overlap_function(
         q: np.ndarray[_S0Inv, np.dtype[np.float_]]
-    ) -> np.ndarray[_S0Inv, np.dtype[np.float_]]:
+    ) -> np.ndarray[_S0Inv, np.dtype[np.complex_]]:
         return get_angle_averaged_overlap(
             interpolator_0, interpolator_1_shifted, q.ravel()
         ).reshape(q.shape)
@@ -421,7 +416,7 @@ def get_gamma_2(i: int, j: int, temperature: float) -> float:
         return calculate_hermitian_gamma_occupation_integral(
             0, FERMI_WAVEVECTOR, Boltzmann * temperature
         )
-    omega = float(get_hydrogen_fcc_hcp_energy_difference())
+    omega = float(get_hydrogen_energy_difference(0, 1))
     if i == 0 and j == 1:
         return calculate_hermitian_gamma_occupation_integral(
             -omega, FERMI_WAVEVECTOR, Boltzmann * temperature
@@ -443,11 +438,11 @@ def calculate_gamma(
 ) -> float:
     non_zero = (i == k and j == l) or (i == l and k == j)
     if not non_zero or is_offset_irrelevant(offset):
-        return 0
+        return 0.0
 
     gamma_1 = get_gamma_1(np.array([i, j, k, l]), offset)
     gamma_2 = get_gamma_2(i, j, temperature)
-    return gamma_1 * gamma_2
+    return float(gamma_1 * gamma_2)
 
 
 @npy_cached(get_data_path("GammaFirstAtempt.npy"))
@@ -463,7 +458,6 @@ def build_gamma(shape: tuple[int, int], temperature: float) -> NonHermitianGamma
             for k in range(0, 1):
                 for l in range(0, 1):
                     for site_0 in range(n_sites):
-                        print(i, j, k, l, site_0)
                         for hop_1 in range(9):
                             for hop_2 in range(n_sites):
                                 for hop_3 in range(9):
@@ -594,9 +588,7 @@ def calculate_potential_integral() -> None:
     print("(0, 1) (next 0, 1)", integral)
 
     overlap_0_1_previous = get_overlap_hydrogen(0, 1, (0, 0), (0, -1))
-    interpolator_0_1_previous = get_overlap_momentum_interpolator_flat(
-        overlap_0_1_previous
-    )
+    get_overlap_momentum_interpolator_flat(overlap_0_1_previous)
 
     # !def overlap_function(
     # !    q: np.ndarray[_S0Inv, np.dtype[np.float_]]
@@ -609,32 +601,6 @@ def calculate_potential_integral() -> None:
     # !    FERMI_WAVEVECTOR, overlap_function
     # !)
     # !print("(0, 1) (0, previous 1)", integral)
-
-    basis = get_wavepacket_hydrogen(0)["basis"]
-    print(basis[0].delta_x)
-
-    def interpolator_0_1_previous_shifted(
-        q: np.ndarray[tuple[Literal[2], Any], np.dtype[np.float_]]
-    ) -> np.ndarray[Any, np.dtype[np.complex_]]:
-        r = basis[0].delta_x[0:2]
-        a = np.exp(-1j * (np.tensordot(q, r, axes=(0, 0)))) * interpolator_0_1_previous(
-            q
-        )
-        b = interpolator_0_1_next(q)
-        np.testing.assert_almost_equal(a, b)
-        return a
-
-    def overlap_function(
-        q: np.ndarray[_S0Inv, np.dtype[np.float_]]
-    ) -> np.ndarray[_S0Inv, np.dtype[np.complex_]]:
-        return get_angle_averaged_overlap(
-            interpolator_0_1, interpolator_0_1_previous_shifted, q.ravel()
-        ).reshape(q.shape)
-
-    integral = calculate_hermitian_gamma_potential_integral(
-        FERMI_WAVEVECTOR, overlap_function
-    )
-    print("(0, 1) (0,next 1) with eiq shift", integral)
 
     # !overlap_0_1_next2 = get_overlap(0, 1, (2, 0))
     # !interpolator_0_1_next2 = get_overlap_momentum_interpolator_flat(overlap_0_1_next2)
@@ -677,7 +643,7 @@ def calculate_max_overlap(
     overlap: Overlap3d[FundamentalPositionBasis3d[_L0Inv, _L1Inv, _L2Inv]],
 ) -> tuple[complex, np.ndarray[tuple[Literal[3]], np.dtype[np.float_]]]:
     points = overlap["vector"]
-    util = Basis3dUtil(overlap["basis"])
+    util = AxisWithLengthBasisUtil(overlap["basis"])
     arg_max = np.argmax(np.abs(points))
     x_point = util.fundamental_x_points[:, arg_max]
 
@@ -688,7 +654,7 @@ def calculate_max_overlap_momentum(
     overlap: Overlap3d[FundamentalMomentumBasis3d[_L0Inv, _L1Inv, _L2Inv]],
 ) -> tuple[complex, np.ndarray[tuple[Literal[3]], np.dtype[np.float_]]]:
     points = overlap["vector"]
-    util = Basis3dUtil(overlap["basis"])
+    util = AxisWithLengthBasisUtil(overlap["basis"])
     arg_max = np.argmax(np.abs(points))
     k_point = util.fundamental_k_points[:, arg_max]
 
@@ -755,7 +721,7 @@ def load_average_band_energies(
     energies = np.zeros((n_bands,))
     for band in range(n_bands):
         wavepacket = load_nickel_wavepacket(band)
-        energies[band] = wavepacket["energies"][0, 0]
+        energies[band] = wavepacket["eigenvalues"][0, 0]
     return energies  # type: ignore[no-any-return]
 
 
@@ -872,8 +838,8 @@ def plot_nickel_isf_slow() -> None:
     grid_shape = (10, 10)
     basis = load_nickel_wavepacket(0)["basis"]
 
-    util = Basis3dUtil(basis)
-    dk = util.delta_x0 + util.delta_x1
+    util = AxisWithLengthBasisUtil(basis)
+    dk = util.delta_x[0] + util.delta_x[1]
     dk /= np.linalg.norm(dk)
     dk *= 0.8 * 10**10
 
@@ -901,8 +867,8 @@ def plot_nickel_isf_fast() -> None:
     grid_shape = (10, 10)
     basis = load_nickel_wavepacket(0)["basis"]
 
-    util = Basis3dUtil(basis)
-    dk = util.delta_x0 - util.delta_x1
+    util = AxisWithLengthBasisUtil(basis)
+    dk = util.delta_x[0] - util.delta_x[1]
     dk /= np.linalg.norm(dk)
     dk *= 0.8 * 10**10
 
@@ -929,7 +895,7 @@ def build_gamma_coefficient_matrix_fcc_hcp(
 ) -> NonHermitianGammaCoefficientMatrix[Literal[2]]:
     out = np.zeros((2, 2, 9))
     constant_rate = 26.93
-    omega = float(get_hydrogen_fcc_hcp_energy_difference())
+    omega = float(get_hydrogen_energy_difference(0, 1))
 
     fast_rate = constant_rate * calculate_hermitian_gamma_occupation_integral(
         omega, FERMI_WAVEVECTOR, Boltzmann * temperature

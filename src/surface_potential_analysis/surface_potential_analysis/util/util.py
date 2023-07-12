@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, Any, Literal, ParamSpec, TypeVar
 
 import numpy as np
 
-from surface_potential_analysis._types import _IntLike_co
+from surface_potential_analysis._types import SingleStackedIndexLike, _IntLike_co
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
@@ -12,6 +12,8 @@ if TYPE_CHECKING:
 
     P = ParamSpec("P")
     R = TypeVar("R")
+    _DTInv = TypeVar("_DTInv", bound=np.dtype[Any])
+    _S0Inv = TypeVar("_S0Inv", bound=tuple[int, ...])
 
 
 def slice_along_axis(
@@ -60,6 +62,46 @@ def slice_ignoring_axes(
     return tuple(old_slice)
 
 
+def get_position_in_sorted(axes: _AX0Inv) -> tuple[_IntLike_co, ...]:
+    """
+    Given a list of axes get the index in the sorted list.
+
+    ie 2,4,1,3 -> 1,3,0,2
+
+    Parameters
+    ----------
+    axes : _AX0Inv
+
+    Returns
+    -------
+    _AX0Inv
+    """
+    return tuple(np.argsort(np.argsort(axes)))
+
+
+def get_data_in_axes(
+    data: np.ndarray[_S0Inv, _DTInv],
+    axes: _AX0Inv,
+    idx: SingleStackedIndexLike,
+) -> np.ndarray[tuple[int, ...], _DTInv]:
+    """
+    Given a slice, insert slice(None) everywhere given in axes.
+
+    Parameters
+    ----------
+    slice : list[slice  |  _IntLike_co  |  None]
+        _description_
+    axes : tuple[_IntLike_co]
+        _description_
+
+    Returns
+    -------
+    list[slice | _IntLike_co | None]
+        _description_
+    """
+    return np.transpose(data[slice_ignoring_axes(idx, axes)], get_position_in_sorted(axes))  # type: ignore[no-any-return]
+
+
 _LInv = TypeVar("_LInv", bound=int)
 
 _L0Inv = TypeVar("_L0Inv", bound=int)
@@ -97,22 +139,19 @@ def calculate_cumulative_distances_along_path(
     return np.insert(cum_distances, 0, 0)  # type: ignore[no-any-return]
 
 
-_SInv = TypeVar("_SInv", bound=tuple[Any])
-
-
 Measure = Literal["real", "imag", "abs", "angle"]
 
 
 def get_measured_data(
-    data: np.ndarray[_SInv, np.dtype[np.complex_]],
+    data: np.ndarray[_S0Inv, _DTInv],
     measure: Measure,
-) -> np.ndarray[_SInv, np.dtype[np.float_]]:
+) -> np.ndarray[_S0Inv, np.dtype[np.float_]]:
     """
     Transform data with the given measure.
 
     Parameters
     ----------
-    data : np.ndarray[_SInv, np.dtype[np.complex_]]
+    data : np.ndarray[_S0Inv, np.dtype[np.complex_]]
     measure : Literal[&quot;real&quot;, &quot;imag&quot;, &quot;abs&quot;, &quot;angle&quot;]
 
 

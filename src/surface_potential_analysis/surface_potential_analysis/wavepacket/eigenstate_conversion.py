@@ -7,7 +7,7 @@ import numpy as np
 from surface_potential_analysis.basis.conversion import (
     basis_as_fundamental_momentum_basis,
 )
-from surface_potential_analysis.basis.util import Basis3dUtil, BasisUtil
+from surface_potential_analysis.basis.util import AxisWithLengthBasisUtil
 from surface_potential_analysis.wavepacket.conversion import convert_wavepacket_to_basis
 from surface_potential_analysis.wavepacket.wavepacket import (
     Wavepacket,
@@ -21,8 +21,8 @@ if TYPE_CHECKING:
         FundamentalMomentumAxis,
         FundamentalMomentumAxis3d,
     )
-    from surface_potential_analysis.axis.axis_like import AxisLike3d
-    from surface_potential_analysis.basis.basis import Basis, Basis3d
+    from surface_potential_analysis.axis.axis_like import AxisWithLengthLike3d
+    from surface_potential_analysis.basis.basis import AxisWithLengthBasis, Basis3d
     from surface_potential_analysis.state_vector.state_vector import (
         StateVector,
         StateVector3d,
@@ -33,11 +33,11 @@ if TYPE_CHECKING:
     _NS0Inv = TypeVar("_NS0Inv", bound=int)
     _NS1Inv = TypeVar("_NS1Inv", bound=int)
 
-    _A3d0Inv = TypeVar("_A3d0Inv", bound=AxisLike3d[Any, Any])
-    _A3d1Inv = TypeVar("_A3d1Inv", bound=AxisLike3d[Any, Any])
-    _A3d2Inv = TypeVar("_A3d2Inv", bound=AxisLike3d[Any, Any])
+    _A3d0Inv = TypeVar("_A3d0Inv", bound=AxisWithLengthLike3d[Any, Any])
+    _A3d1Inv = TypeVar("_A3d1Inv", bound=AxisWithLengthLike3d[Any, Any])
+    _A3d2Inv = TypeVar("_A3d2Inv", bound=AxisWithLengthLike3d[Any, Any])
 
-    _B0Inv = TypeVar("_B0Inv", bound=Basis[Any])
+    _B0Inv = TypeVar("_B0Inv", bound=AxisWithLengthBasis[Any])
     _BM0Inv = TypeVar("_BM0Inv", bound=tuple[FundamentalMomentumAxis[Any, Any], ...])
     _S0Inv = TypeVar("_S0Inv", bound=tuple[int, ...])
 
@@ -81,7 +81,7 @@ def furl_eigenstate(
         The wavepacket with a smaller unit cell
     """
     (ns0, ns1, _) = shape
-    (nx0_old, nx1_old, nx2) = Basis3dUtil(eigenstate["basis"]).shape
+    (nx0_old, nx1_old, nx2) = AxisWithLengthBasisUtil(eigenstate["basis"]).shape
     (nx0, nx1) = (nx0_old // ns0, nx1_old // ns1)
 
     # We do the opposite to unfurl wavepacket at each step
@@ -97,7 +97,7 @@ def furl_eigenstate(
         "basis": basis_as_fundamental_momentum_basis(basis),  # type: ignore[typeddict-item]
         "shape": shape,
         "vectors": flattened * np.sqrt(ns0 * ns1),
-        "energies": np.zeros(flattened.shape[0:2]),
+        "eigenvalues": np.zeros(flattened.shape[0:2]),
     }
 
 
@@ -105,7 +105,7 @@ def _unfurl_momentum_basis_wavepacket(
     wavepacket: Wavepacket[_S0Inv, _BM0Inv]
 ) -> StateVector[tuple[FundamentalMomentumAxis[Any, Any], ...]]:
     sample_shape = wavepacket["shape"]
-    states_shape = BasisUtil(wavepacket["basis"]).shape
+    states_shape = AxisWithLengthBasisUtil(wavepacket["basis"]).shape
     final_shape = tuple(
         ns * nx for (ns, nx) in zip(sample_shape, states_shape, strict=True)
     )

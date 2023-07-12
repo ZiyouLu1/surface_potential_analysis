@@ -9,7 +9,7 @@ from surface_potential_analysis.util.decorators import timed
 
 if TYPE_CHECKING:
     from surface_potential_analysis.basis.basis import (
-        Basis,
+        AxisWithLengthBasis,
         Basis1d,
         Basis2d,
         Basis3d,
@@ -19,10 +19,10 @@ if TYPE_CHECKING:
         Operator,
     )
 
-    _B0Inv = TypeVar("_B0Inv", bound=Basis[Any])
-    _B1Inv = TypeVar("_B1Inv", bound=Basis[Any])
-    _B2Inv = TypeVar("_B2Inv", bound=Basis[Any])
-    _B3Inv = TypeVar("_B3Inv", bound=Basis[Any])
+    _B0Inv = TypeVar("_B0Inv", bound=AxisWithLengthBasis[Any])
+    _B1Inv = TypeVar("_B1Inv", bound=AxisWithLengthBasis[Any])
+    _B2Inv = TypeVar("_B2Inv", bound=AxisWithLengthBasis[Any])
+    _B3Inv = TypeVar("_B3Inv", bound=AxisWithLengthBasis[Any])
 
     _B1d0Inv = TypeVar("_B1d0Inv", bound=Basis1d[Any])
     _B1d1Inv = TypeVar("_B1d1Inv", bound=Basis1d[Any])

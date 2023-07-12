@@ -21,29 +21,32 @@ from surface_potential_analysis.axis.conversion import (
     axis_as_n_point_axis,
     axis_as_single_point_axis,
 )
-from surface_potential_analysis.util.decorators import timed
 from surface_potential_analysis.util.interpolation import pad_ft_points
 
-from .util import BasisUtil
+from .util import AxisWithLengthBasisUtil
 
 if TYPE_CHECKING:
     from surface_potential_analysis.axis.axis_like import (
-        AxisLike,
-        AxisLike1d,
-        AxisLike2d,
-        AxisLike3d,
+        AxisWithLengthLike,
+        AxisWithLengthLike1d,
+        AxisWithLengthLike2d,
+        AxisWithLengthLike3d,
     )
-    from surface_potential_analysis.basis.basis import Basis, Basis1d, Basis2d
+    from surface_potential_analysis.basis.basis import (
+        AxisWithLengthBasis,
+        Basis1d,
+        Basis2d,
+    )
 
     from .basis import Basis3d
 
-    _A0Inv = TypeVar("_A0Inv", bound=AxisLike[Any, Any, Any])
-    _A1Inv = TypeVar("_A1Inv", bound=AxisLike[Any, Any, Any])
+    _A0Inv = TypeVar("_A0Inv", bound=AxisWithLengthLike[Any, Any, Any])
+    _A1Inv = TypeVar("_A1Inv", bound=AxisWithLengthLike[Any, Any, Any])
 
-    _B0Inv = TypeVar("_B0Inv", bound=Basis[Any])
-    _B1Inv = TypeVar("_B1Inv", bound=Basis[Any])
-    _B2Inv = TypeVar("_B2Inv", bound=Basis[Any])
-    _B3Inv = TypeVar("_B3Inv", bound=Basis[Any])
+    _B0Inv = TypeVar("_B0Inv", bound=AxisWithLengthBasis[Any])
+    _B1Inv = TypeVar("_B1Inv", bound=AxisWithLengthBasis[Any])
+    _B2Inv = TypeVar("_B2Inv", bound=AxisWithLengthBasis[Any])
+    _B3Inv = TypeVar("_B3Inv", bound=AxisWithLengthBasis[Any])
     _B1d0Inv = TypeVar("_B1d0Inv", bound=Basis1d[Any])
     _B1d1Inv = TypeVar("_B1d1Inv", bound=Basis1d[Any])
     _B1d2Inv = TypeVar("_B1d2Inv", bound=Basis1d[Any])
@@ -124,7 +127,6 @@ def convert_vector(
     ...
 
 
-@timed
 def convert_vector(
     vector: np.ndarray[_S0Inv, np.dtype[np.complex_] | np.dtype[np.float_]],
     initial_basis: _B0Inv,
@@ -147,7 +149,7 @@ def convert_vector(
     -------
     np.ndarray[tuple[int], np.dtype[np.complex_]]
     """
-    util = BasisUtil(initial_basis)
+    util = AxisWithLengthBasisUtil(initial_basis)
     swapped = vector.swapaxes(axis, 0)
     stacked = swapped.reshape(*util.shape, *swapped.shape[1:])
     for ax, (initial, final) in enumerate(zip(initial_basis, final_basis, strict=True)):
@@ -199,7 +201,6 @@ def convert_dual_vector(
     ...
 
 
-@timed
 def convert_dual_vector(
     co_vector: np.ndarray[_S0Inv, np.dtype[np.complex_] | np.dtype[np.float_]],
     initial_basis: _B0Inv,
@@ -304,14 +305,16 @@ _LF2Inv = TypeVar("_LF2Inv", bound=int)
 
 @overload
 def basis_as_fundamental_momentum_basis(
-    basis: Basis1d[AxisLike1d[_LF0Inv, _L0Inv]]
+    basis: Basis1d[AxisWithLengthLike1d[_LF0Inv, _L0Inv]]
 ) -> Basis1d[FundamentalMomentumAxis1d[_LF0Inv]]:
     ...
 
 
 @overload
 def basis_as_fundamental_momentum_basis(
-    basis: Basis2d[AxisLike2d[_LF0Inv, _L0Inv], AxisLike2d[_LF1Inv, _L1Inv]]
+    basis: Basis2d[
+        AxisWithLengthLike2d[_LF0Inv, _L0Inv], AxisWithLengthLike2d[_LF1Inv, _L1Inv]
+    ]
 ) -> Basis2d[FundamentalMomentumAxis2d[_LF0Inv], FundamentalMomentumAxis2d[_LF1Inv]]:
     ...
 
@@ -319,9 +322,9 @@ def basis_as_fundamental_momentum_basis(
 @overload
 def basis_as_fundamental_momentum_basis(
     basis: Basis3d[
-        AxisLike3d[_LF0Inv, _L0Inv],
-        AxisLike3d[_LF1Inv, _L1Inv],
-        AxisLike3d[_LF2Inv, _L2Inv],
+        AxisWithLengthLike3d[_LF0Inv, _L0Inv],
+        AxisWithLengthLike3d[_LF1Inv, _L1Inv],
+        AxisWithLengthLike3d[_LF2Inv, _L2Inv],
     ]
 ) -> Basis3d[
     FundamentalMomentumAxis3d[_LF0Inv],
@@ -357,14 +360,16 @@ def basis_as_fundamental_momentum_basis(
 
 @overload
 def basis_as_fundamental_position_basis(
-    basis: Basis1d[AxisLike1d[_LF0Inv, _L0Inv]]
+    basis: Basis1d[AxisWithLengthLike1d[_LF0Inv, _L0Inv]]
 ) -> Basis1d[FundamentalPositionAxis1d[_LF0Inv]]:
     ...
 
 
 @overload
 def basis_as_fundamental_position_basis(
-    basis: Basis2d[AxisLike2d[_LF0Inv, _L0Inv], AxisLike2d[_LF1Inv, _L1Inv]]
+    basis: Basis2d[
+        AxisWithLengthLike2d[_LF0Inv, _L0Inv], AxisWithLengthLike2d[_LF1Inv, _L1Inv]
+    ]
 ) -> Basis2d[FundamentalPositionAxis2d[_LF0Inv], FundamentalPositionAxis2d[_LF1Inv]]:
     ...
 
@@ -372,9 +377,9 @@ def basis_as_fundamental_position_basis(
 @overload
 def basis_as_fundamental_position_basis(
     basis: Basis3d[
-        AxisLike3d[_LF0Inv, _L0Inv],
-        AxisLike3d[_LF1Inv, _L1Inv],
-        AxisLike3d[_LF2Inv, _L2Inv],
+        AxisWithLengthLike3d[_LF0Inv, _L0Inv],
+        AxisWithLengthLike3d[_LF1Inv, _L1Inv],
+        AxisWithLengthLike3d[_LF2Inv, _L2Inv],
     ]
 ) -> Basis3d[
     FundamentalPositionAxis3d[_LF0Inv],
@@ -409,9 +414,9 @@ def basis_as_fundamental_position_basis(
 
 
 def basis_as_fundamental_with_shape(
-    basis: Basis[_NDInv],
+    basis: AxisWithLengthBasis[_NDInv],
     shape: tuple[int, ...],
-) -> Basis[_NDInv]:
+) -> AxisWithLengthBasis[_NDInv]:
     """
     Given a basis get a fundamental position basis with the given shape.
 
@@ -431,14 +436,14 @@ def basis_as_fundamental_with_shape(
 
 def basis3d_as_single_point_basis(
     basis: Basis3d[
-        AxisLike3d[_LF0Inv, _L0Inv],
-        AxisLike3d[_LF1Inv, _L1Inv],
-        AxisLike3d[_LF2Inv, _L2Inv],
+        AxisWithLengthLike3d[_LF0Inv, _L0Inv],
+        AxisWithLengthLike3d[_LF1Inv, _L1Inv],
+        AxisWithLengthLike3d[_LF2Inv, _L2Inv],
     ]
 ) -> Basis3d[
-    AxisLike3d[Literal[1], Literal[1]],
-    AxisLike3d[Literal[1], Literal[1]],
-    AxisLike3d[Literal[1], Literal[1]],
+    AxisWithLengthLike3d[Literal[1], Literal[1]],
+    AxisWithLengthLike3d[Literal[1], Literal[1]],
+    AxisWithLengthLike3d[Literal[1], Literal[1]],
 ]:
     """
     Get the fundamental single point basis for a given basis.

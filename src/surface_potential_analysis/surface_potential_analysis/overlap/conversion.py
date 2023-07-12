@@ -9,7 +9,7 @@ from surface_potential_analysis.basis.conversion import (
     basis_as_fundamental_position_basis,
 )
 from surface_potential_analysis.basis.util import (
-    Basis3dUtil,
+    AxisWithLengthBasisUtil,
 )
 from surface_potential_analysis.util.interpolation import pad_ft_points
 
@@ -36,7 +36,7 @@ def convert_overlap_to_momentum_basis(
     -------
     OverlapMomentum[_L0Inv, _L1Inv, _L2Inv]
     """
-    util = Basis3dUtil(overlap["basis"])
+    util = AxisWithLengthBasisUtil(overlap["basis"])
     transformed = np.fft.ifftn(
         overlap["vector"].reshape(util.shape),
         axes=(0, 1, 2),
@@ -65,7 +65,7 @@ def convert_overlap_to_position_basis(
     -------
     Overlap[PositionBasis3d[_L0Inv, _L1Inv, _L2Inv]]
     """
-    util = Basis3dUtil(overlap["basis"])
+    util = AxisWithLengthBasisUtil(overlap["basis"])
     padded = pad_ft_points(
         overlap["vector"].reshape(util.shape),
         s=util.fundamental_shape,

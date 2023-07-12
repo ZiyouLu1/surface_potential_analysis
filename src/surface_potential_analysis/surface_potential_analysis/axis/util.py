@@ -1,11 +1,11 @@
 from __future__ import annotations
 
 from functools import cached_property
-from typing import Literal, TypeVar
+from typing import TypeVar
 
 import numpy as np
 
-from .axis_like import AxisLike, AxisVector
+from .axis_like import AxisLike, AxisVector, AxisWithLengthLike
 
 _NF0Inv = TypeVar("_NF0Inv", bound=int)
 _N0Inv = TypeVar("_N0Inv", bound=int)
@@ -14,15 +14,13 @@ _S0Inv = TypeVar("_S0Inv", bound=tuple[int, ...])
 
 
 # ruff: noqa: D102
-class AxisUtil(AxisLike[_NF0Inv, _N0Inv, _ND0Inv]):
+class AxisUtil(AxisLike[_NF0Inv, _N0Inv]):
     """A class to help with the manipulation of an axis."""
 
-    def __init__(self, basis: AxisLike[_NF0Inv, _N0Inv, _ND0Inv]) -> None:
-        self._basis = basis
+    _basis: AxisLike[_NF0Inv, _N0Inv]
 
-    @property
-    def delta_x(self) -> AxisVector[_ND0Inv]:
-        return self._basis.delta_x
+    def __init__(self, basis: AxisLike[_NF0Inv, _N0Inv]) -> None:
+        self._basis = basis
 
     @property
     def n(self) -> _N0Inv:
@@ -74,6 +72,21 @@ class AxisUtil(AxisLike[_NF0Inv, _N0Inv, _ND0Inv]):
             0, self.fundamental_n, dtype=int  # type: ignore[misc]
         )
 
+
+class AxisWithLengthLikeUtil(
+    AxisUtil[_NF0Inv, _N0Inv], AxisWithLengthLike[_NF0Inv, _N0Inv, _ND0Inv]
+):
+    """A class to help with the manipulation of an axis."""
+
+    _basis: AxisWithLengthLike[_NF0Inv, _N0Inv, _ND0Inv]
+
+    def __init__(self, basis: AxisWithLengthLike[_NF0Inv, _N0Inv, _ND0Inv]) -> None:
+        super().__init__(basis)
+
+    @property
+    def delta_x(self) -> AxisVector[_ND0Inv]:
+        return self._basis.delta_x
+
     @cached_property
     def dx(self) -> AxisVector[_ND0Inv]:
         return self.delta_x / self.n  # type: ignore[no-any-return, misc]
@@ -91,7 +104,3 @@ class AxisUtil(AxisLike[_NF0Inv, _N0Inv, _ND0Inv]):
         self,
     ) -> np.ndarray[tuple[_ND0Inv, _NF0Inv], np.dtype[np.int_]]:
         return self.fundamental_dx[:, np.newaxis] * self.fundamental_nx_points  # type: ignore[no-any-return]
-
-
-class Axis3dUtil(AxisUtil[_NF0Inv, _N0Inv, Literal[3]]):
-    """A class to help with the manipulation of an axis with a 3d axis vector."""

@@ -9,24 +9,24 @@ from _test_surface_potential_analysis.utils import get_random_explicit_axis
 from surface_potential_analysis.axis.axis import (
     FundamentalMomentumAxis,
 )
-from surface_potential_analysis.axis.util import AxisUtil
+from surface_potential_analysis.axis.util import AxisWithLengthLikeUtil
 from surface_potential_analysis.basis.conversion import (
     basis_as_fundamental_position_basis,
     convert_vector,
 )
-from surface_potential_analysis.basis.util import BasisUtil
+from surface_potential_analysis.basis.util import AxisWithLengthBasisUtil
 
 if TYPE_CHECKING:
-    from surface_potential_analysis.axis.axis_like import AxisLike
-    from surface_potential_analysis.basis.basis import Basis
+    from surface_potential_analysis.axis.axis_like import AxisWithLengthLike
+    from surface_potential_analysis.basis.basis import AxisWithLengthBasis
 
-    _B0Inv = TypeVar("_B0Inv", bound=Basis[Any])
-    _B1Inv = TypeVar("_B1Inv", bound=Basis[Any])
+    _B0Inv = TypeVar("_B0Inv", bound=AxisWithLengthBasis[Any])
+    _B1Inv = TypeVar("_B1Inv", bound=AxisWithLengthBasis[Any])
     _S0Inv = TypeVar("_S0Inv", bound=tuple[int, ...])
     _NDInv = TypeVar("_NDInv", bound=int)
 
-    _A0Inv = TypeVar("_A0Inv", bound=AxisLike[Any, Any, Any])
-    _A1Inv = TypeVar("_A1Inv", bound=AxisLike[Any, Any, Any])
+    _A0Inv = TypeVar("_A0Inv", bound=AxisWithLengthLike[Any, Any, Any])
+    _A1Inv = TypeVar("_A1Inv", bound=AxisWithLengthLike[Any, Any, Any])
 
     _N0Inv = TypeVar("_N0Inv", bound=int)
     _N1Inv = TypeVar("_N1Inv", bound=int)
@@ -38,7 +38,8 @@ rng = np.random.default_rng()
 
 
 def get_axis_conversion_matrix(
-    axis_0: AxisLike[_N0Inv, _NF0Inv, _NDInv], axis_1: AxisLike[_N1Inv, _NF1Inv, _NDInv]
+    axis_0: AxisWithLengthLike[_N0Inv, _NF0Inv, _NDInv],
+    axis_1: AxisWithLengthLike[_N1Inv, _NF1Inv, _NDInv],
 ) -> np.ndarray[tuple[_NF0Inv, _NF1Inv], np.dtype[np.complex_]]:
     """
     Get the matrix to convert one set of axis axes into another.
@@ -52,8 +53,8 @@ def get_axis_conversion_matrix(
     -------
     np.ndarray[tuple[_NF0Inv, _NF1Inv], np.dtype[np.complex_]]
     """
-    vectors_0 = AxisUtil(axis_0).vectors
-    vectors_1 = AxisUtil(axis_1).vectors
+    vectors_0 = AxisWithLengthLikeUtil(axis_0).vectors
+    vectors_1 = AxisWithLengthLikeUtil(axis_1).vectors
     return np.dot(vectors_0, np.conj(vectors_1).T)  # type: ignore[no-any-return]
 
 
@@ -89,7 +90,7 @@ def convert_vector_simple(
     -------
     np.ndarray[tuple[int], np.dtype[np.complex_]]
     """
-    util = BasisUtil(initial_basis)
+    util = AxisWithLengthBasisUtil(initial_basis)
     swapped = vector.swapaxes(axis, -1)
     stacked = swapped.astype(np.complex_, copy=False).reshape(
         *swapped.shape[:-1], *util.shape
@@ -109,7 +110,9 @@ class BasisConversionTest(unittest.TestCase):
         n = rng.integers(1, fundamental_n)
 
         basis = (
-            AxisUtil(get_random_explicit_axis(1, fundamental_n=fundamental_n, n=n)),
+            AxisWithLengthLikeUtil(
+                get_random_explicit_axis(1, fundamental_n=fundamental_n, n=n)
+            ),
         )
 
         np.testing.assert_array_almost_equal(
@@ -186,7 +189,7 @@ class BasisConversionTest(unittest.TestCase):
         fundamental_n = rng.integers(2, 5)
         n = rng.integers(1, fundamental_n)
 
-        basis_0 = AxisUtil(
+        basis_0 = AxisWithLengthLikeUtil(
             get_random_explicit_axis(1, fundamental_n=fundamental_n, n=n)
         )
         np.testing.assert_array_equal(basis_0.vectors.shape, (n, fundamental_n))

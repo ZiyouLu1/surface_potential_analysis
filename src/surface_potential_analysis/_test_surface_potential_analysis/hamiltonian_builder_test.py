@@ -31,8 +31,7 @@ from surface_potential_analysis.basis.sho_basis import (
     calculate_x_distances,
 )
 from surface_potential_analysis.basis.util import (
-    Basis3dUtil,
-    BasisUtil,
+    AxisWithLengthBasisUtil,
 )
 from surface_potential_analysis.hamiltonian_builder import (
     momentum_basis,
@@ -46,7 +45,7 @@ from surface_potential_analysis.operator.conversion import (
 )
 from surface_potential_analysis.potential.conversion import convert_potential_to_basis
 from surface_potential_analysis.state_vector.eigenstate_calculation import (
-    calculate_eigenstates_hermitian,
+    calculate_eigenvectors_hermitian,
 )
 from surface_potential_analysis.util.interpolation import interpolate_points_rfftn
 from surface_potential_analysis.util.util import slice_along_axis
@@ -56,9 +55,9 @@ if TYPE_CHECKING:
         ExplicitAxis3d,
         FundamentalMomentumAxis,
     )
-    from surface_potential_analysis.axis.axis_like import AxisLike3d
+    from surface_potential_analysis.axis.axis_like import AxisWithLengthLike3d
     from surface_potential_analysis.basis.basis import (
-        Basis,
+        AxisWithLengthBasis,
         Basis1d,
         Basis2d,
         FundamentalMomentumBasis3d,
@@ -83,15 +82,15 @@ if TYPE_CHECKING:
 
     _LInv = TypeVar("_LInv", bound=int)
 
-    _A3d0Inv = TypeVar("_A3d0Inv", bound=AxisLike3d[Any, Any])
-    _A3d1Inv = TypeVar("_A3d1Inv", bound=AxisLike3d[Any, Any])
+    _A3d0Inv = TypeVar("_A3d0Inv", bound=AxisWithLengthLike3d[Any, Any])
+    _A3d1Inv = TypeVar("_A3d1Inv", bound=AxisWithLengthLike3d[Any, Any])
 
     _L0Cov = TypeVar("_L0Cov", bound=int, covariant=True)
     _L1Cov = TypeVar("_L1Cov", bound=int, covariant=True)
     _L2Cov = TypeVar("_L2Cov", bound=int, covariant=True)
 
-    _B0Cov = TypeVar("_B0Cov", bound=Basis[Any], covariant=True)
-    _B0Inv = TypeVar("_B0Inv", bound=Basis[Any])
+    _B0Cov = TypeVar("_B0Cov", bound=AxisWithLengthBasis[Any], covariant=True)
+    _B0Inv = TypeVar("_B0Inv", bound=AxisWithLengthBasis[Any])
     _B1d0Cov = TypeVar("_B1d0Cov", bound=Basis1d[Any], covariant=True)
     _B2d0Cov = TypeVar("_B2d0Cov", bound=Basis2d[Any, Any], covariant=True)
     _B3d0Inv = TypeVar("_B3d0Inv", bound=Basis3d[Any, Any, Any])
@@ -99,9 +98,9 @@ if TYPE_CHECKING:
         tuple[_L0Cov, _L1Cov, _L2Cov, _L0Cov, _L1Cov, _L2Cov],
         np.dtype[np.complex_] | np.dtype[np.float_],
     ]
-    _A3d0Cov = TypeVar("_A3d0Cov", bound=AxisLike3d[Any, Any], covariant=True)
-    _A3d1Cov = TypeVar("_A3d1Cov", bound=AxisLike3d[Any, Any], covariant=True)
-    _A3d2Cov = TypeVar("_A3d2Cov", bound=AxisLike3d[Any, Any], covariant=True)
+    _A3d0Cov = TypeVar("_A3d0Cov", bound=AxisWithLengthLike3d[Any, Any], covariant=True)
+    _A3d1Cov = TypeVar("_A3d1Cov", bound=AxisWithLengthLike3d[Any, Any], covariant=True)
+    _A3d2Cov = TypeVar("_A3d2Cov", bound=AxisWithLengthLike3d[Any, Any], covariant=True)
 
 rng = np.random.default_rng()
 _B3d0Cov = TypeVar("_B3d0Cov", bound=Basis3d[Any, Any, Any], covariant=True)
@@ -179,7 +178,7 @@ def stack_hamiltonian(
     -------
     StackedHamiltonian[_B3d0Inv]
     """
-    basis = Basis3dUtil(hamiltonian["basis"])
+    basis = AxisWithLengthBasisUtil(hamiltonian["basis"])
     return {
         "basis": hamiltonian["basis"],
         "array": hamiltonian["array"].reshape(*basis.shape, *basis.shape),
@@ -203,7 +202,7 @@ def hamiltonian_from_position_basis_potential_3d_stacked(
     HamiltonianStacked[PositionBasis, PositionBasis, PositionBasis]
         The hamiltonian in stacked form
     """
-    shape = BasisUtil(potential["basis"]).shape
+    shape = AxisWithLengthBasisUtil(potential["basis"]).shape
     array = np.diag(potential["vector"]).reshape(*shape, *shape)
     return {"basis": potential["basis"], "array": array}
 
@@ -507,8 +506,8 @@ class HamiltonianBuilderTest(unittest.TestCase):
         hamiltonian = _generate_random_diagonal_hamiltonian()
 
         actual = hamiltonian._calculate_off_diagonal_energies()  # noqa: SLF001
-        util = Basis3dUtil(hamiltonian.basis)
-        n_points = util.n0 * util.n1 * util.n2  # type: ignore[misc]
+        util = AxisWithLengthBasisUtil(hamiltonian.basis)
+        n_points = util.shape[0] * util.shape[1] * util.shape[2]  # type: ignore[misc]
         expected_shape = (n_points, n_points)
         np.testing.assert_equal(actual, np.zeros(shape=expected_shape))
 
@@ -751,7 +750,7 @@ class HamiltonianBuilderTest(unittest.TestCase):
         mass = hbar**2
         omega = 1 / hbar
         basis = (FundamentalPositionAxis1d(np.array([30]), 1000),)
-        util = BasisUtil(basis)
+        util = AxisWithLengthBasisUtil(basis)
         potential: Potential[tuple[FundamentalPositionAxis1d[int]]] = {
             "basis": basis,
             "vector": 0.5
@@ -762,11 +761,11 @@ class HamiltonianBuilderTest(unittest.TestCase):
         hamiltonian = momentum_basis.total_surface_hamiltonian(
             potential, mass, np.array([0])
         )
-        eigenstates = calculate_eigenstates_hermitian(
+        eigenstates = calculate_eigenvectors_hermitian(
             hamiltonian, subset_by_index=(0, 50)
         )
         expected = hbar * omega * (util.nx_points[0] + 0.5)
-        np.testing.assert_almost_equal(expected[:50], eigenstates["energies"][:50])
+        np.testing.assert_almost_equal(expected[:50], eigenstates["eigenvalues"][:50])
 
         in_basis = convert_potential_to_basis(
             potential, basis_as_fundamental_momentum_basis(potential["basis"])
@@ -774,10 +773,10 @@ class HamiltonianBuilderTest(unittest.TestCase):
         hamiltonian2 = momentum_basis.total_surface_hamiltonian(
             in_basis, mass, np.array([0])
         )
-        eigenstates2 = calculate_eigenstates_hermitian(
+        eigenstates2 = calculate_eigenvectors_hermitian(
             hamiltonian2, subset_by_index=(0, 50)
         )
-        np.testing.assert_almost_equal(expected[:50], eigenstates2["energies"][:50])
+        np.testing.assert_almost_equal(expected[:50], eigenstates2["eigenvalues"][:50])
 
         extended: Potential[tuple[MomentumAxis[int, int, int]]] = {
             "basis": (MomentumAxis(np.array([30]), 1000, 2000),),
@@ -789,7 +788,7 @@ class HamiltonianBuilderTest(unittest.TestCase):
         hamiltonian3 = momentum_basis.total_surface_hamiltonian(
             converted, mass, np.array([0])
         )
-        eigenstates3 = calculate_eigenstates_hermitian(
+        eigenstates3 = calculate_eigenvectors_hermitian(
             hamiltonian3, subset_by_index=(0, 50)
         )
-        np.testing.assert_almost_equal(expected[:50], eigenstates3["energies"][:50])
+        np.testing.assert_almost_equal(expected[:50], eigenstates3["eigenvalues"][:50])

@@ -12,7 +12,7 @@ from surface_potential_analysis.axis.conversion import (
 from surface_potential_analysis.basis.plot import (
     plot_fundamental_x_at_index_projected_2d,
 )
-from surface_potential_analysis.basis.util import Basis3dUtil
+from surface_potential_analysis.basis.util import BasisUtil
 from surface_potential_analysis.state_vector.conversion import (
     convert_state_vector_to_basis,
 )
@@ -29,8 +29,8 @@ from surface_potential_analysis.wavepacket.localization import (
 )
 from surface_potential_analysis.wavepacket.plot import (
     animate_wavepacket_x0x1,
-    plot_wavepacket_energies_2d_k,
-    plot_wavepacket_energies_2d_x,
+    plot_wavepacket_eigenvalues_2d_k,
+    plot_wavepacket_eigenvalues_2d_x,
     plot_wavepacket_sample_frequencies,
     plot_wavepacket_x0x1,
 )
@@ -50,7 +50,7 @@ from .surface_data import save_figure
 
 if TYPE_CHECKING:
     from surface_potential_analysis._types import SingleIndexLike3d
-    from surface_potential_analysis.basis.basis import Basis
+    from surface_potential_analysis.basis.basis import AxisWithLengthBasis
     from surface_potential_analysis.state_vector.state_vector import StateVector3d
 
 
@@ -80,7 +80,7 @@ def flaten_eigenstate_x(
         eigenstate["basis"][1],
         axis_as_fundamental_position_axis(eigenstate["basis"][2]),
     )
-    util = Basis3dUtil(position_basis)
+    util = BasisUtil(position_basis)
     idx = util.get_flat_index(idx) if isinstance(idx, tuple) else idx
     converted = convert_state_vector_to_basis(eigenstate, position_basis)
     flattened = (
@@ -108,10 +108,10 @@ def plot_nickel_wavepacket_points() -> None:
 def plot_nickel_wavepacket_energies() -> None:
     for i in range(10):
         wavepacket = load_nickel_wavepacket(i)
-        fig, _, _ = plot_wavepacket_energies_2d_k(wavepacket)
+        fig, _, _ = plot_wavepacket_eigenvalues_2d_k(wavepacket)
         fig.show()
 
-        fig, _, _ = plot_wavepacket_energies_2d_x(wavepacket)
+        fig, _, _ = plot_wavepacket_eigenvalues_2d_x(wavepacket)
         fig.show()
     input()
 
@@ -259,7 +259,7 @@ def plot_two_point_wavepacket_with_idx() -> None:
         fig, ax = plt.subplots()
 
         idx0, idx1 = get_wavepacket_two_points(normalized, offset)
-        unfurled_basis: Basis[Literal[3]] = get_unfurled_basis(
+        unfurled_basis: AxisWithLengthBasis[Literal[3]] = get_unfurled_basis(
             normalized["basis"], normalized["shape"]
         )
         plot_fundamental_x_at_index_projected_2d(unfurled_basis, idx0, (0, 1), ax=ax)
@@ -279,7 +279,7 @@ def plot_nickel_wavepacket_eigenstate() -> None:
         eigenstate = get_eigenstate(wavepacket, 0)
 
         fig, ax, _ = plot_eigenstate_2d_x(
-            eigenstate, MAXIMUM_POINTS[band][2], measure="abs"
+            eigenstate, (0, 1), (MAXIMUM_POINTS[band][2],), measure="abs"
         )
         fig.show()
 
@@ -303,11 +303,11 @@ def plot_phase_around_origin() -> None:
     )
     idx = (path[0], path[1], path[2])
     fig, ax, _ = plot_eigenstate_x0x1(flat, 0)
-    plot_fundamental_x_at_index_projected_2d(flat["basis"], idx, z_axis=2, ax=ax)
+    plot_fundamental_x_at_index_projected_2d(flat["basis"], idx, (0, 1), ax=ax)
     fig.show()
 
     fig, ax, _ = plot_eigenstate_x0x1(flat, 0, measure="real")
-    plot_fundamental_x_at_index_projected_2d(flat["basis"], idx, z_axis=2, ax=ax)
+    plot_fundamental_x_at_index_projected_2d(flat["basis"], idx, (0, 1), ax=ax)
     fig.show()
 
     fig, ax, _ = plot_state_vector_along_path(flat, path, wrap_distances=True)

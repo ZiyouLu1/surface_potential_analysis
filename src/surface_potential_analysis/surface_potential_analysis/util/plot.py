@@ -1,13 +1,18 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Literal, TypeVar
+from typing import TYPE_CHECKING, Any, Literal, TypeVar
 
 import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib.animation import ArtistAnimation
 from matplotlib.colors import Normalize, SymLogNorm
 
-from surface_potential_analysis.util.util import slice_along_axis
+from surface_potential_analysis.basis.util import (
+    AxisWithLengthBasisUtil,
+    get_x_coordinates_in_axes,
+)
+
+from .util import Measure, get_data_in_axes, get_measured_data
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -16,6 +21,11 @@ if TYPE_CHECKING:
     from matplotlib.collections import QuadMesh
     from matplotlib.figure import Figure
     from matplotlib.image import AxesImage
+
+    from surface_potential_analysis._types import SingleStackedIndexLike
+    from surface_potential_analysis.basis.basis import AxisWithLengthBasis
+
+    _B0Inv = TypeVar("_B0Inv", bound=AxisWithLengthBasis[Any])
 
 
 Scale = Literal["symlog", "linear"]
@@ -101,22 +111,21 @@ def build_animation(
 
 
 _L0Inv = TypeVar("_L0Inv", bound=int)
-_L1Inv = TypeVar("_L1Inv", bound=int)
-_L2Inv = TypeVar("_L2Inv", bound=int)
 
 
-def animate_through_surface(
-    coordinates: np.ndarray[
-        tuple[Literal[2], _L0Inv, _L1Inv, _L2Inv], np.dtype[np.float_]
-    ],
-    data: np.ndarray[tuple[_L0Inv, _L1Inv, _L2Inv], np.dtype[np.float_]],
-    axes: tuple[int, int],
-    z_axis: Literal[0, 1, 2, -1, -2, -3],
-    idx: SingleStackedIndexLike,
+# ruff: noqa: PLR0913
+
+
+def animate_through_surface_x(
+    basis: _B0Inv,
+    points: np.ndarray[tuple[_L0Inv], np.dtype[np.complex_ | np.float_ | np.bool_]],
+    axes: tuple[int, int, int] = (0, 1, 2),
+    idx: SingleStackedIndexLike | None = None,
     *,
     ax: Axes | None = None,
     scale: Scale = "linear",
     clim: tuple[float | None, float | None] = (None, None),
+    measure: Measure = "abs",
 ) -> tuple[Figure, Axes, ArtistAnimation]:
     """
     Given data on a given coordinate grid in 3D, animate through z_axis.
@@ -138,13 +147,20 @@ def animate_through_surface(
     -------
     tuple[Figure, Axes, ArtistAnimation]
     """
+    util = AxisWithLengthBasisUtil(basis)
+    idx = tuple(0 for _ in range(util.ndim - 3)) if idx is None else idx
+    clim = (0.0, clim[1]) if clim[0] is None and measure == "abs" else clim
+
+    coordinates = get_x_coordinates_in_axes(basis, axes, idx)
+    data = get_measured_data(get_data_in_axes(points, axes, idx), measure)
+
     fig, ax, ani = build_animation(
         lambda i, ax: ax.pcolormesh(
-            *coordinates[slice_along_axis(i, (z_axis % 3) + 1)],
-            data[slice_along_axis(i, (z_axis % 3))],
+            *coordinates[:, :, :, i],
+            data[:, :, i],
             shading="nearest",
         ),
-        data.shape[z_axis],
+        data.shape[2],
         ax=ax,
         scale=scale,
         clim=clim,
@@ -152,6 +168,6 @@ def animate_through_surface(
     ax.set_aspect("equal", adjustable="box")
     fig.colorbar(ax.collections[0], ax=ax, format="%4.1e")
 
-    ax.set_xlabel(f"x{0 if (z_axis % 3) != 0 else 1} axis")
-    ax.set_ylabel(f"x{2 if (z_axis % 3) != 2 else 1} axis")  # noqa: PLR2004
+    ax.set_xlabel(f"x{axes[0]} axis")
+    ax.set_ylabel(f"x{axes[1]} axis")
     return fig, ax, ani
