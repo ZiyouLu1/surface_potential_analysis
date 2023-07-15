@@ -10,14 +10,13 @@ from surface_potential_analysis.wavepacket.plot import (
     plot_wavepacket_eigenvalues_2d_x,
 )
 
-from hydrogen_copper_100.s4_wavepacket import load_copper_wavepacket
-
+from .s4_wavepacket import get_wavepacket_hydrogen
 from .surface_data import save_figure
 
 
 def plot_copper_wavepacket_eigenvalues() -> None:
     for i in range(10):
-        wavepacket = load_copper_wavepacket(i)
+        wavepacket = get_wavepacket_hydrogen(i)
         fig, _, _ = plot_wavepacket_eigenvalues_2d_k(wavepacket)
         fig.show()
 
@@ -29,7 +28,7 @@ def plot_copper_wavepacket_eigenvalues() -> None:
 def load_copper_eigenvalues() -> np.ndarray[tuple[int, int, int], np.dtype[np.float_]]:
     out = np.zeros((10, 12, 12))
     for i in range(10):
-        wavepacket = load_copper_wavepacket(i)
+        wavepacket = get_wavepacket_hydrogen(i)
         out[i] = wavepacket["eigenvalues"]
     return out  # type: ignore[no-any-return]
 

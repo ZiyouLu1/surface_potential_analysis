@@ -56,55 +56,11 @@ def _truncate_sample_axis(
     return np.fft.ifftshift(truncated, axes=(axis,))  # type: ignore[no-any-return]
 
 
-class SampledAxis(AxisWithLengthLike[_NF0Inv, _N0Inv, _ND0Inv]):
-    # TODO: Not sure if it possible to do the conversion correctly
-    def __init__(
-        self,
-        parent: AxisWithLengthLike[_NF0Inv, int, _ND0Inv],
-        ns: int,
-        offset: _NOInv,
-    ) -> None:
-        self._parent = parent
-        self._offset = offset
-        self._ns = ns
-        assert self.fundamental_n >= self.n
-        assert offset >= 0
-        assert offset < ns
-        super().__init__()
-
-    @property
-    def delta_x(self) -> AxisVector[_ND0Inv]:
-        return self._parent.delta_x
-
-    @property
-    def n(self) -> _N0Inv:
-        return self._parent.n // self._ns  # type: ignore[return-value]
-
-    @property
-    def fundamental_n(self) -> _NF0Inv:
-        return self._parent.fundamental_n
-
-    def __from_fundamental__(
-        self,
-        vectors: np.ndarray[_S0Inv, np.dtype[np.complex_ | np.float_]],
-        axis: int = -1,
-    ) -> np.ndarray[tuple[int, ...], np.dtype[np.complex_]]:
-        raise NotImplementedError
-        transformed = self._parent.__from_fundamental__(vectors, axis)
-        return _truncate_sample_axis(transformed, self._ns, self._offset, axis)
-
-    def __into_fundamental__(
-        self,
-        vectors: np.ndarray[_S0Inv, np.dtype[np.complex_ | np.float_]],
-        axis: int = -1,
-    ) -> np.ndarray[tuple[int, ...], np.dtype[np.complex_]]:
-        raise NotImplementedError
-        padded = _pad_sample_axis(vectors, self._ns, self._offset, axis)
-        return self._parent.__into_fundamental__(padded, axis)
-
-
+# ruff: noqa: D102
 class WavepacketSampleAxis(AxisWithLengthLike[_NF0Inv, _N0Inv, _ND0Inv]):
-    def __init__(
+    """Axis used to represent a single eigenstate from a wavepacket."""
+
+    def __init__(  # noqa: PLR0913
         self,
         delta_x: AxisVector[_ND0Inv],
         *,
@@ -191,7 +147,7 @@ def get_eigenstate(
     idx = util.get_flat_index(idx) if isinstance(idx, tuple) else idx
     offset = util.get_stacked_index(idx)
 
-    basis = _get_sampled_basis(converted["basis"], converted["shape"], offset)
+    basis = _get_sampled_basis(converted["basis"], converted["shape"], offset)  # type: ignore[type-var]
     return {"basis": basis, "vector": converted["vectors"][idx]}
 
 

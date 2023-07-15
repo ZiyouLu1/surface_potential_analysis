@@ -6,12 +6,10 @@ import matplotlib.pyplot as plt
 import numpy as np
 from surface_potential_analysis.basis.util import AxisWithLengthBasisUtil
 from surface_potential_analysis.state_vector.eigenstate_collection import (
-    load_eigenstate_collection,
     select_eigenstate,
 )
 from surface_potential_analysis.state_vector.eigenstate_collection_plot import (
     plot_eigenvalues_against_bloch_phase_1d,
-    plot_lowest_band_eigenvalues_against_bloch_k,
 )
 from surface_potential_analysis.state_vector.plot import (
     animate_eigenstate_x0x1,
@@ -21,7 +19,7 @@ from surface_potential_analysis.state_vector.plot import (
 )
 
 from .s3_eigenstates import get_eigenstate_collection, get_eigenstate_collection_relaxed
-from .surface_data import get_data_path, save_figure
+from .surface_data import save_figure
 
 if TYPE_CHECKING:
     from matplotlib.axes import Axes
@@ -86,127 +84,29 @@ def plot_lowest_band_energy() -> None:
     input()
 
 
-def analyze_eigenvalue_convergence() -> None:
+def plot_lowest_band_energy_relaxed() -> None:
     fig, ax = plt.subplots()
 
-    path = get_data_path("eigenstates_25_25_14.json")
-    eigenstates = load_eigenstate_collection(path)
-    _, _, ln = plot_lowest_band_eigenvalues_against_bloch_k(eigenstates, ax=ax)
-    ln.set_label("(25,25,14)")
+    shapes = [
+        (17, 17, 14),
+        (19, 19, 14),
+        (21, 21, 14),
+        (21, 21, 16),
+    ]
+    for shape in shapes:
+        collection = get_eigenstate_collection_relaxed(shape)
+        _, _, ln = plot_eigenvalues_against_bloch_phase_1d(
+            collection, np.array([1, 0, 0]), band=0, ax=ax
+        )
+        ln.set_label(f"({shape[0]}, {shape[1]}, {shape[2]})")
 
-    path = get_data_path("eigenstates_23_23_14.json")
-    eigenstates = load_eigenstate_collection(path)
-    _, _, ln = plot_lowest_band_eigenvalues_against_bloch_k(eigenstates, ax=ax)
-    ln.set_label("(23,23,14)")
-
-    path = get_data_path("eigenstates_23_23_15.json")
-    eigenstates = load_eigenstate_collection(path)
-    _, _, ln = plot_lowest_band_eigenvalues_against_bloch_k(eigenstates, ax=ax)
-    ln.set_label("(23,23,15)")
-
-    path = get_data_path("eigenstates_23_23_16.json")
-    eigenstates = load_eigenstate_collection(path)
-    _, _, ln = plot_lowest_band_eigenvalues_against_bloch_k(eigenstates, ax=ax)
-    ln.set_label("(23,23,16)")
-
-    path = get_data_path("eigenstates_25_25_16.json")
-    eigenstates = load_eigenstate_collection(path)
-    _, _, ln = plot_lowest_band_eigenvalues_against_bloch_k(eigenstates, ax=ax)
-    ln.set_label("(25,25,16)")
-
-    path = get_data_path("eigenstates_23_23_17.json")
-    eigenstates = load_eigenstate_collection(path)
-    _, _, ln = plot_lowest_band_eigenvalues_against_bloch_k(eigenstates, ax=ax)
-    ln.set_label("(23,23,17)")
-
-    path = get_data_path("eigenstates_23_23_18.json")
-    eigenstates = load_eigenstate_collection(path)
-    _, _, ln = plot_lowest_band_eigenvalues_against_bloch_k(eigenstates, ax=ax)
-    ln.set_label("(23,23,18)")
-
-    ax.set_title(
-        "Plot of energy against k for the lowest band of Copper for $K_y=0$\n"
-        "showing convergence to about 2x$10^{-30}$J "
-    )
-    ax.set_xlabel("K /$m^{-1}$")
-    ax.set_ylabel("energy / J")
     ax.legend()
-
-    fig.tight_layout()
     fig.show()
-    save_figure(fig, "copper_lowest_band_convergence.png")
-    input()
-
-
-def analyze_eigenvalue_convergence_relaxed() -> None:
-    fig, ax = plt.subplots()
-
-    path = get_data_path("eigenstates_relaxed_17_17_15.json")
-    eigenstates = load_eigenstate_collection(path)
-    _, _, ln = plot_lowest_band_eigenvalues_against_bloch_k(eigenstates, ax=ax)
-    ln.set_label("(17,17,15)")
-
-    path = get_data_path("eigenstates_relaxed_21_21_14.json")
-    eigenstates = load_eigenstate_collection(path)
-    _, _, ln = plot_lowest_band_eigenvalues_against_bloch_k(eigenstates, ax=ax)
-    ln.set_label("(21,21,14)")
-
-    path = get_data_path("eigenstates_relaxed_21_21_15.json")
-    eigenstates = load_eigenstate_collection(path)
-    _, _, ln = plot_lowest_band_eigenvalues_against_bloch_k(eigenstates, ax=ax)
-    ln.set_label("(21,21,15)")
-
-    path = get_data_path("eigenstates_relaxed_17_17_13.json")
-    eigenstates = load_eigenstate_collection(path)
-    _, _, ln = plot_lowest_band_eigenvalues_against_bloch_k(eigenstates, ax=ax)
-    ln.set_label("(17,17,13)")
-
-    ax.set_title(
-        "Plot of energy against kx for the lowest band of Copper for $K_y=0$\n"
-        "showing convergence to about 2x$10^{-30}$J "
-    )
-    ax.set_xlabel("K /$m^{-1}$")
-    ax.set_ylabel("energy / J")
-    ax.legend()
-
-    fig.tight_layout()
-    fig.show()
-    save_figure(fig, "lowest_band_convergence.png")
-
-    fig, ax = plt.subplots()
-
-    path = get_data_path("eigenstates_relaxed_10_10_14.json")
-    eigenstates = load_eigenstate_collection(path)
-    _, _, ln = plot_eigenvalues_against_bloch_phase_1d(
-        eigenstates, np.array([1.0, 0, 0]), 4, ax=ax
-    )
-    ln.set_label("(10,10,14)")
-
-    path = get_data_path("eigenstates_relaxed_12_12_15.json")
-    eigenstates = load_eigenstate_collection(path)
-    _, _, ln = plot_eigenvalues_against_bloch_phase_1d(
-        eigenstates, np.array([1.0, 0, 0]), 4, ax=ax
-    )
-    ln.set_label("(12,12,15)")
-
-    ax.set_title(
-        "Plot of energy against kx for the lowest band of Copper for $K_y=0$\n"
-        "showing convergence to about 2x$10^{-30}$J "
-    )
-    ax.set_xlabel("K /$m^{-1}$")
-    ax.set_ylabel("energy / J")
-    ax.legend()
-
-    fig.tight_layout()
-    fig.show()
-    save_figure(fig, "second_band_convergence.png")
     input()
 
 
 def plot_lowest_eigenstate_3d_xy() -> None:
-    path = get_data_path("eigenstates_relaxed_10_10_14.json")
-    collection = load_eigenstate_collection(path)
-
+    collection = get_eigenstate_collection_relaxed((10, 10, 14))
     eigenstate = select_eigenstate(collection, 0, 0)
 
     fig, _, _anim = animate_eigenstate_x0x1(eigenstate, measure="real")
@@ -232,14 +132,12 @@ def plot_eigenstate_z_hollow_site(
 def analyze_eigenvector_convergence_z() -> None:
     fig, ax = plt.subplots()
 
-    path = get_data_path("eigenstates_25_25_16.json")
-    collection = load_eigenstate_collection(path)
+    collection = get_eigenstate_collection((25, 25, 16))
     eigenstate = select_eigenstate(collection, 0, 0)
     _, _, ln1 = plot_eigenstate_z_hollow_site(eigenstate, ax=ax)
     ln1.set_label("(25,25,16) kx=G/2")
 
-    path = get_data_path("eigenstates_23_23_16.json")
-    collection = load_eigenstate_collection(path)
+    collection = get_eigenstate_collection((23, 23, 16))
     eigenstate = select_eigenstate(collection, 0, 0)
     _, _, ln2 = plot_eigenstate_z_hollow_site(eigenstate, ax=ax)
     ln2.set_label("(23,23,16) kx=G/2")
@@ -264,21 +162,16 @@ def plot_eigenstate_through_bridge(
 
 
 def analyze_eigenvector_convergence_through_bridge() -> None:
-    path = get_data_path("eigenstates_25_25_14.json")
-    load_eigenstate_collection(path)
-
     fig, ax = plt.subplots()
     ax2 = ax.twinx()
 
-    path = get_data_path("eigenstates_23_23_15.json")
-    collection = load_eigenstate_collection(path)
+    collection = get_eigenstate_collection((23, 23, 15))
     eigenstate = select_eigenstate(collection, 0, 0)
     _, _, ln = plot_eigenstate_through_bridge(eigenstate, ax=ax)
     _, _, _ = plot_eigenstate_through_bridge(eigenstate, ax=ax2, measure="angle")
     ln.set_label("(23,23,15)")
 
-    path = get_data_path("eigenstates_25_25_14.json")
-    collection = load_eigenstate_collection(path)
+    collection = get_eigenstate_collection((25, 25, 14))
     eigenstate = select_eigenstate(collection, 0, 0)
     _, _, ln = plot_eigenstate_through_bridge(eigenstate, ax=ax)
     _, _, _ = plot_eigenstate_through_bridge(eigenstate, ax=ax2, measure="angle")
@@ -295,15 +188,13 @@ def analyze_eigenvector_convergence_through_bridge() -> None:
 
 
 def plot_bloch_wavefunction_difference_at_boundary() -> None:
-    path = get_data_path("eigenstates_23_23_16.json")
-    collection = load_eigenstate_collection(path)
+    collection = get_eigenstate_collection((23, 23, 16))
     eigenstate_0 = select_eigenstate(collection, 0, 0)
 
     fig, ax, _ = plot_eigenstate_x2x0(eigenstate_0, 0)
     fig.show()
 
-    path = get_data_path("eigenstates_25_25_16.json")
-    collection = load_eigenstate_collection(path)
+    collection = get_eigenstate_collection((25, 25, 16))
     eigenstate_1 = select_eigenstate(collection, 0, 0)
 
     fig, ax, _ = plot_eigenstate_x2x0(eigenstate_1, 0)

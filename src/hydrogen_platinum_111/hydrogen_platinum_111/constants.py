@@ -1,4 +1,0 @@
-from __future__ import annotations
-
-HYDROGEN_MASS = 1.6735575e-27
-DEUTERIUM_MASS = 3.344494393406961e-27

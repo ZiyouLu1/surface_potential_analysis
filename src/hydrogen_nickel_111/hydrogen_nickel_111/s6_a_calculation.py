@@ -9,26 +9,42 @@ from surface_potential_analysis.dynamics.hermitian_gamma_integral import (
     calculate_hermitian_gamma_occupation_integral,
     calculate_hermitian_gamma_potential_integral,
 )
+from surface_potential_analysis.dynamics.incoherent_propagation.tunnelling_basis import (
+    TunnellingSimulationBandsAxis,
+)
+from surface_potential_analysis.dynamics.incoherent_propagation.tunnelling_matrix import (
+    TunnellingAMatrix,
+    get_tunnelling_a_matrix_from_function,
+)
 from surface_potential_analysis.overlap.interpolation import (
     get_angle_averaged_diagonal_overlap_function,
     get_overlap_momentum_interpolator_flat,
 )
+from surface_potential_analysis.util.constants import FERMI_WAVEVECTOR
+from surface_potential_analysis.util.decorators import npy_cached
 
-from hydrogen_nickel_111.constants import FERMI_WAVEVECTOR
-from hydrogen_nickel_111.s4_wavepacket import (
+from .s4_wavepacket import (
+    get_all_wavepackets_deuterium,
+    get_all_wavepackets_hydrogen,
     get_deuterium_energy_difference,
     get_hydrogen_energy_difference,
 )
-from hydrogen_nickel_111.s5_overlap import get_overlap_deuterium, get_overlap_hydrogen
+from .s5_overlap import get_overlap_deuterium, get_overlap_hydrogen
+from .surface_data import get_data_path
 
 if TYPE_CHECKING:
     from collections.abc import Callable
+    from pathlib import Path
+
+    from surface_potential_analysis.axis.axis import FundamentalAxis
 
     _S0Inv = TypeVar("_S0Inv", bound=tuple[int, ...])
+_L0Inv = TypeVar("_L0Inv", bound=int)
+_L1Inv = TypeVar("_L1Inv", bound=int)
+_L2Inv = TypeVar("_L2Inv", bound=int)
 
 
-@cache
-def _get_diagonal_overlap_function_hydrogen_cached(
+def _get_diagonal_overlap_function_hydrogen(
     i: int, j: int, offset_j: tuple[int, int]
 ) -> Callable[
     [np.ndarray[_S0Inv, np.dtype[np.float_]]],
@@ -49,9 +65,9 @@ def _get_diagonal_overlap_function_hydrogen_cached(
 def _calculate_gamma_potential_integral_hydrogen_diagonal(
     i: int, j: int, offset_j: tuple[int, int]
 ) -> np.complex_:
-    overlap_function = _get_diagonal_overlap_function_hydrogen_cached(i, j, offset_j)
+    overlap_function = _get_diagonal_overlap_function_hydrogen(i, j, offset_j)
     return calculate_hermitian_gamma_potential_integral(
-        FERMI_WAVEVECTOR, overlap_function
+        FERMI_WAVEVECTOR["NICKEL"], overlap_function
     )
 
 
@@ -78,7 +94,7 @@ def calculate_gamma_occupation_integral_hydrogen_diagonal(
 ) -> float:
     omega = get_hydrogen_energy_difference(j, i)
     return calculate_hermitian_gamma_occupation_integral(
-        float(omega), FERMI_WAVEVECTOR, Boltzmann * temperature
+        float(omega), FERMI_WAVEVECTOR["NICKEL"], Boltzmann * temperature
     )
 
 
@@ -94,8 +110,7 @@ def a_function_hydrogen(
     ) * calculate_gamma_potential_integral_hydrogen_diagonal(i, j, offset_i, offset_j)
 
 
-@cache
-def _get_diagonal_overlap_function_deuterium_cached(
+def _get_diagonal_overlap_function_deuterium(
     i: int, j: int, offset_j: tuple[int, int]
 ) -> Callable[
     [np.ndarray[_S0Inv, np.dtype[np.float_]]],
@@ -116,9 +131,9 @@ def _get_diagonal_overlap_function_deuterium_cached(
 def _calculate_gamma_potential_integral_deuterium_diagonal(
     i: int, j: int, offset_j: tuple[int, int]
 ) -> np.complex_:
-    overlap_function = _get_diagonal_overlap_function_deuterium_cached(i, j, offset_j)
+    overlap_function = _get_diagonal_overlap_function_deuterium(i, j, offset_j)
     return calculate_hermitian_gamma_potential_integral(
-        FERMI_WAVEVECTOR, overlap_function
+        FERMI_WAVEVECTOR["NICKEL"], overlap_function
     )
 
 
@@ -145,7 +160,7 @@ def calculate_gamma_occupation_integral_deuterium_diagonal(
 ) -> float:
     omega = get_deuterium_energy_difference(j, i)
     return calculate_hermitian_gamma_occupation_integral(
-        float(omega), FERMI_WAVEVECTOR, Boltzmann * temperature
+        float(omega), FERMI_WAVEVECTOR["NICKEL"], Boltzmann * temperature
     )
 
 
@@ -159,3 +174,66 @@ def a_function_deuterium(
     return calculate_gamma_occupation_integral_deuterium_diagonal(
         i, j, temperature
     ) * calculate_gamma_potential_integral_deuterium_diagonal(i, j, offset_i, offset_j)
+
+
+def _get_get_tunnelling_a_matrix_hydrogen_cache(
+    shape: tuple[_L0Inv, _L1Inv], n_bands: _L2Inv, temperature: float
+) -> Path:
+    return get_data_path(
+        f"dynamics/a_matrix_hydrogen_{shape[0]}_{shape[1]}_{n_bands}_{temperature}k.npy"
+    )
+
+
+@npy_cached(_get_get_tunnelling_a_matrix_hydrogen_cache, load_pickle=True)  # type: ignore[misc]
+def get_tunnelling_a_matrix_hydrogen(
+    shape: tuple[_L0Inv, _L1Inv],
+    n_bands: _L2Inv,
+    temperature: float,
+) -> TunnellingAMatrix[
+    tuple[
+        FundamentalAxis[_L0Inv],
+        FundamentalAxis[_L1Inv],
+        TunnellingSimulationBandsAxis[_L2Inv],
+    ]
+]:
+    def a_function(
+        i: int, j: int, offset_i: tuple[int, int], offset_j: tuple[int, int]
+    ) -> float:
+        return a_function_hydrogen(i, j, offset_i, offset_j, temperature)
+
+    bands_axis = TunnellingSimulationBandsAxis[_L2Inv].from_wavepackets(
+        get_all_wavepackets_hydrogen()[0:n_bands]
+    )
+
+    return get_tunnelling_a_matrix_from_function(shape, bands_axis, a_function)
+
+
+def _get_get_tunnelling_a_matrix_deuterium_cache(
+    shape: tuple[_L0Inv, _L1Inv], n_bands: _L2Inv, temperature: float
+) -> Path:
+    return get_data_path(
+        f"dynamics/a_matrix_deuterium_{shape[0]}_{shape[1]}_{n_bands}_{temperature}k.npy"
+    )
+
+
+@npy_cached(_get_get_tunnelling_a_matrix_deuterium_cache, load_pickle=True)  # type: ignore[misc]
+def get_tunnelling_a_matrix_deuterium(
+    shape: tuple[_L0Inv, _L1Inv],
+    n_bands: _L2Inv,
+    temperature: float,
+) -> TunnellingAMatrix[
+    tuple[
+        FundamentalAxis[_L0Inv],
+        FundamentalAxis[_L1Inv],
+        TunnellingSimulationBandsAxis[_L2Inv],
+    ]
+]:
+    def a_function(
+        i: int, j: int, offset_i: tuple[int, int], offset_j: tuple[int, int]
+    ) -> float:
+        return a_function_deuterium(i, j, offset_i, offset_j, temperature)
+
+    bands_axis = TunnellingSimulationBandsAxis[_L2Inv].from_wavepackets(
+        get_all_wavepackets_deuterium()[0:n_bands]
+    )
+    return get_tunnelling_a_matrix_from_function(shape, bands_axis, a_function)

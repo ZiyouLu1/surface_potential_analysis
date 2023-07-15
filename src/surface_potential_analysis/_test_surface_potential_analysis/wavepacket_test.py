@@ -5,7 +5,6 @@ from typing import TYPE_CHECKING, Any
 
 import numpy as np
 
-from surface_potential_analysis.axis.axis import FundamentalPositionAxis
 from surface_potential_analysis.basis.build import (
     momentum_basis_3d_from_resolution,
     position_basis_3d_from_shape,
@@ -16,7 +15,6 @@ from surface_potential_analysis.wavepacket.eigenstate_conversion import (
 )
 from surface_potential_analysis.wavepacket.localization import (
     _get_global_phases,
-    _get_zero_point_locations,
 )
 from surface_potential_analysis.wavepacket.wavepacket import (
     get_wavepacket_sample_fractions,
@@ -32,21 +30,6 @@ rng = np.random.default_rng()
 
 
 class WavepacketTest(unittest.TestCase):
-    def test_get_zero_point_locations(self) -> None:
-        ns0 = rng.integers(3, 10)
-        ns1 = rng.integers(1, 10)
-        resolution = (
-            rng.integers(2, 10),
-            rng.integers(1, 10),
-        )
-        basis = (
-            FundamentalPositionAxis(np.array([1, 0]), resolution[0]),
-            FundamentalPositionAxis(np.array([0, 1]), resolution[1]),
-        )
-        shape = (ns0, ns1)
-        locations = _get_zero_point_locations(basis, shape, 0)
-        assert locations
-
     def test_get_global_phases(self) -> None:
         ns0 = rng.integers(1, 10)
         ns1 = rng.integers(1, 10)

@@ -7,7 +7,6 @@ import numpy as np
 
 from surface_potential_analysis.axis.axis import (
     FundamentalPositionAxis,
-    FundamentalPositionAxis3d,
 )
 from surface_potential_analysis.axis.util import AxisUtil, AxisWithLengthLikeUtil
 from surface_potential_analysis.util.util import (
@@ -27,10 +26,9 @@ if TYPE_CHECKING:
         SingleIndexLike,
         SingleStackedIndexLike,
         StackedIndexLike,
+        _FloatLike_co,
         _IntLike_co,
     )
-
-
 
     _S0Inv = TypeVar("_S0Inv", bound=tuple[int, ...])
 _B0Inv = TypeVar("_B0Inv", bound=Basis)
@@ -448,19 +446,39 @@ def get_x_coordinates_in_axes(
 
 
 @overload
-def _wrap_distance(distance: _IntLike_co, length: _IntLike_co) -> int:
+def _wrap_distance(
+    distance: _IntLike_co, length: _IntLike_co, origin: _IntLike_co = 0
+) -> np.int_:
     ...
 
 
 @overload
 def _wrap_distance(
-    distance: np.ndarray[_S0Inv, np.dtype[np.int_]], length: _IntLike_co
+    distance: np.ndarray[_S0Inv, np.dtype[np.int_]],
+    length: _IntLike_co,
+    origin: _IntLike_co = 0,
 ) -> np.ndarray[_S0Inv, np.dtype[np.int_]]:
     ...
 
 
-def _wrap_distance(distance: Any, length: _IntLike_co) -> Any:
-    return np.subtract(np.mod(np.add(distance, length // 2), length), length // 2)
+@overload
+def _wrap_distance(
+    distance: _FloatLike_co, length: _FloatLike_co, origin: _FloatLike_co = 0
+) -> np.float_:
+    ...
+
+
+@overload
+def _wrap_distance(
+    distance: np.ndarray[_S0Inv, np.dtype[np.float_]],
+    length: _FloatLike_co,
+    origin: _FloatLike_co = 0,
+) -> np.ndarray[_S0Inv, np.dtype[np.float_]]:
+    ...
+
+
+def _wrap_distance(distance: Any, length: Any, origin: Any = 0) -> Any:
+    return np.mod(distance - origin + length / 2, length) + origin - length / 2
 
 
 @overload
@@ -507,11 +525,46 @@ def wrap_index_around_origin(
     origin = tuple(0 for _ in basis) if origin is None else origin
     origin = origin if isinstance(origin, tuple) else util.get_stacked_index(origin)
     return tuple(  # type: ignore[return-value]
-        _wrap_distance(idx[ax] - origin[ax], util.shape[ax]) + origin[ax]
+        _wrap_distance(idx[ax], util.shape[ax], origin[ax])
         if axes is None or ax in axes
         else idx[ax]
         for ax in range(util.ndim)
     )
+
+
+def wrap_x_point_around_origin(
+    basis: _ALB0Inv,
+    points: np.ndarray[tuple[_NDInv, Unpack[_S0Inv]], np.dtype[np.float_]],
+    origin: np.ndarray[tuple[_NDInv], np.dtype[np.float_]] | None = None,
+) -> np.ndarray[tuple[_NDInv, Unpack[_S0Inv]], np.dtype[np.float_]]:
+    """
+    Given an index or list of indexes in stacked form, find the equivalent index closest to the origin.
+
+    Parameters
+    ----------
+    basis : _B3d0Inv
+    idx : StackedIndexLike | FlatIndexLike
+    origin_idx : StackedIndexLike | FlatIndexLike, optional
+        origin to wrap around, by default (0, 0, 0)
+
+    Returns
+    -------
+    StackedIndexLike
+    """
+    util = AxisWithLengthBasisUtil(basis)
+    origin = np.zeros(points.shape[0]) if origin is None else origin
+
+    distance_along_axes = np.tensordot(np.linalg.inv(util.delta_x), points, axes=(0, 0))
+    origin_along_axes = np.tensordot(np.linalg.inv(util.delta_x), origin, axes=(0, 0))
+    wrapped_distances = np.array(
+        [
+            _wrap_distance(distance, 1, origin)
+            for (distance, origin) in zip(
+                distance_along_axes, origin_along_axes, strict=True
+            )
+        ]
+    )
+    return np.tensordot(util.delta_x, wrapped_distances, axes=(0, 0))  # type: ignore[no-any-return]
 
 
 def calculate_distances_along_path(
@@ -608,9 +661,9 @@ def calculate_cumulative_k_distances_along_path(
     )
     util = AxisWithLengthBasisUtil(basis)
     x_distances = np.linalg.norm(
-        d0[np.newaxis, :] * util.dk0[:, np.newaxis]
-        + d1[np.newaxis, :] * util.dk1[:, np.newaxis]
-        + d2[np.newaxis, :] * util.dk2[:, np.newaxis],
+        d0[np.newaxis, :] * util.dk[0][:, np.newaxis]
+        + d1[np.newaxis, :] * util.dk[1][:, np.newaxis]
+        + d2[np.newaxis, :] * util.dk[2][:, np.newaxis],
         axis=0,
     )
     cum_distances = np.cumsum(x_distances)
@@ -653,8 +706,8 @@ def get_x01_mirrored_index(idx: StackedIndexLike) -> StackedIndexLike:
 
 
 def get_single_point_basis(
-    basis: _ALB0Inv,
-) -> AxisWithLengthBasis[tuple[FundamentalPositionAxis[Literal[1], int], ...]]:
+    basis: AxisWithLengthBasis[_NDInv],
+) -> tuple[FundamentalPositionAxis[Literal[1], _NDInv], ...]:
     """
     Get the basis with a single point in position space.
 
@@ -670,4 +723,4 @@ def get_single_point_basis(
     _SPB|_SMB
         the single point basis in either position or momentum basis
     """
-    return tuple(FundamentalPositionAxis3d(b.delta_x, 1) for b in basis)  # type: ignore[return-value]
+    return tuple(FundamentalPositionAxis(b.delta_x, 1) for b in basis)  # type: ignore[return-value]

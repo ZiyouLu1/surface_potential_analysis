@@ -16,16 +16,20 @@ from surface_potential_analysis.hamiltonian_builder import (
     explicit_z_basis,
     sho_subtracted_basis,
 )
+from surface_potential_analysis.util.constants import DEUTERIUM_MASS, HYDROGEN_MASS
 from surface_potential_analysis.util.decorators import timed
 
-from .constants import DEUTERIUM_MASS, HYDROGEN_MASS
 from .s1_potential import get_interpolated_potential
 
 if TYPE_CHECKING:
-    from surface_potential_analysis.axis.axis import ExplicitAxis3d
+    from surface_potential_analysis.axis.axis import (
+        ExplicitAxis,
+        ExplicitAxis3d,
+        MomentumAxis,
+    )
     from surface_potential_analysis.basis.potential_basis import PotentialBasisConfig
     from surface_potential_analysis.basis.sho_basis import SHOBasisConfig
-    from surface_potential_analysis.operator import HamiltonianWith3dBasis
+    from surface_potential_analysis.operator import SingleBasisOperator
 
 _L0 = TypeVar("_L0", bound=int)
 _L1 = TypeVar("_L1", bound=int)
@@ -40,10 +44,12 @@ def get_hamiltonian_hydrogen_sho(
     shape: tuple[_L0, _L1, _L2],
     bloch_fraction: np.ndarray[tuple[Literal[3]], np.dtype[np.float_]],
     resolution: tuple[_L3, _L4, _L5],
-) -> HamiltonianWith3dBasis[
-    FundamentalMomentumAxis3d[_L3],
-    FundamentalMomentumAxis3d[_L4],
-    ExplicitAxis3d[_L2, _L5],
+) -> SingleBasisOperator[
+    tuple[
+        MomentumAxis[_L3, _L3, Literal[3]],
+        MomentumAxis[_L4, _L4, Literal[3]],
+        ExplicitAxis[_L2, _L5, Literal[3]],
+    ]
 ]:
     """
     Generate a Hamiltonian using an infinate SHO basis.
@@ -99,10 +105,12 @@ def get_hamiltonian_hydrogen(
     shape: tuple[_L0, _L1, _L2],
     bloch_fraction: np.ndarray[tuple[Literal[3]], np.dtype[np.float_]],
     resolution: tuple[_L3, _L4, _L5],
-) -> HamiltonianWith3dBasis[
-    FundamentalMomentumAxis3d[_L3],
-    FundamentalMomentumAxis3d[_L4],
-    ExplicitAxis3d[_L2, _L5],
+) -> SingleBasisOperator[
+    tuple[
+        MomentumAxis[_L3, _L3, Literal[3]],
+        MomentumAxis[_L4, _L4, Literal[3]],
+        ExplicitAxis[_L2, _L5, Literal[3]],
+    ]
 ]:
     """
     Generate a Hamiltonian using an infinate SHO basis.
@@ -130,40 +138,21 @@ def get_hamiltonian_hydrogen(
         "mass": HYDROGEN_MASS,
         "potential": select_minimum_potential_3d(potential),
     }
-    hamiltonian = explicit_z_basis.total_surface_hamiltonian(
+    return explicit_z_basis.total_surface_hamiltonian_as_fundamental(
         potential, bloch_fraction, (resolution[0], resolution[1]), config
     )
-    return {
-        "basis": (
-            FundamentalMomentumAxis3d(
-                hamiltonian["basis"][0].delta_x, hamiltonian["basis"][0].n
-            ),
-            FundamentalMomentumAxis3d(
-                hamiltonian["basis"][1].delta_x, hamiltonian["basis"][1].n
-            ),
-            hamiltonian["basis"][2],
-        ),
-        "array": hamiltonian["array"],
-        "dual_basis": (
-            FundamentalMomentumAxis3d(
-                hamiltonian["dual_basis"][0].delta_x, hamiltonian["dual_basis"][0].n
-            ),
-            FundamentalMomentumAxis3d(
-                hamiltonian["dual_basis"][1].delta_x, hamiltonian["dual_basis"][1].n
-            ),
-            hamiltonian["dual_basis"][2],
-        ),
-    }
 
 
 def get_hamiltonian_deuterium(
     shape: tuple[_L0, _L1, _L2],
     bloch_fraction: np.ndarray[tuple[Literal[3]], np.dtype[np.float_]],
     resolution: tuple[_L3, _L4, _L5],
-) -> HamiltonianWith3dBasis[
-    FundamentalMomentumAxis3d[_L3],
-    FundamentalMomentumAxis3d[_L4],
-    ExplicitAxis3d[_L2, _L5],
+) -> SingleBasisOperator[
+    tuple[
+        MomentumAxis[_L3, _L3, Literal[3]],
+        MomentumAxis[_L4, _L4, Literal[3]],
+        ExplicitAxis[_L2, _L5, Literal[3]],
+    ]
 ]:
     """
     Generate a Hamiltonian using an infinate SHO basis.
@@ -191,30 +180,9 @@ def get_hamiltonian_deuterium(
         "mass": DEUTERIUM_MASS,
         "potential": select_minimum_potential_3d(potential),
     }
-    hamiltonian = explicit_z_basis.total_surface_hamiltonian(
+    return explicit_z_basis.total_surface_hamiltonian_as_fundamental(
         potential, bloch_fraction, (resolution[0], resolution[1]), config
     )
-    return {
-        "basis": (
-            FundamentalMomentumAxis3d(
-                hamiltonian["basis"][0].delta_x, hamiltonian["basis"][0].n
-            ),
-            FundamentalMomentumAxis3d(
-                hamiltonian["basis"][1].delta_x, hamiltonian["basis"][1].n
-            ),
-            hamiltonian["basis"][2],
-        ),
-        "array": hamiltonian["array"],
-        "dual_basis": (
-            FundamentalMomentumAxis3d(
-                hamiltonian["dual_basis"][0].delta_x, hamiltonian["dual_basis"][0].n
-            ),
-            FundamentalMomentumAxis3d(
-                hamiltonian["dual_basis"][1].delta_x, hamiltonian["dual_basis"][1].n
-            ),
-            hamiltonian["dual_basis"][2],
-        ),
-    }
 
 
 def generate_sho_basis(

@@ -1,30 +1,32 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, TypeVar
+from typing import TYPE_CHECKING, Any, TypeVar
 
 import numpy as np
 import scipy
 
-from .tunnelling_matrix import (
-    TunnellingMMatrix,
-    TunnellingSimulationBasis,
-)
-
 if TYPE_CHECKING:
     from surface_potential_analysis.operator.operator import DiagonalOperator
     from surface_potential_analysis.operator.operator_list import DiagonalOperatorList
-    from surface_potential_analysis.state_vector.state_vector import (
+    from surface_potential_analysis.state_vector.eigenstate_calculation import (
         EigenvectorList,
+    )
+    from surface_potential_analysis.state_vector.state_vector import (
         StateVector,
     )
 
-_L0Inv = TypeVar("_L0Inv", bound=int)
-_B0Inv = TypeVar("_B0Inv", bound=TunnellingSimulationBasis)
+    from .tunnelling_basis import TunnellingSimulationBasis
+    from .tunnelling_matrix import (
+        TunnellingMMatrix,
+    )
+
+    _L0Inv = TypeVar("_L0Inv", bound=int)
+    _B0Inv = TypeVar("_B0Inv", bound=TunnellingSimulationBasis[Any, Any, Any])
 
 
 def calculate_tunnelling_eigenstates(
     matrix: TunnellingMMatrix[_B0Inv],
-) -> EigenvectorList[_B0Inv]:
+) -> EigenvectorList[_B0Inv, int]:
     """
     Given a tunnelling matrix, find the eigenstates.
 
@@ -45,7 +47,7 @@ def calculate_tunnelling_eigenstates(
 
 
 def get_equilibrium_state(
-    eigenstates: EigenvectorList[_B0Inv],
+    eigenstates: EigenvectorList[_B0Inv, int],
 ) -> StateVector[_B0Inv]:
     """
     Select the equilibrium tunnelling state from a list of eigenstates.
@@ -88,8 +90,8 @@ def calculate_equilibrium_state(
 
 def get_vector_eigenstate_decomposition(
     density_matrix: DiagonalOperator[_B0Inv, _B0Inv],
-    eigenstates: EigenvectorList[_B0Inv],
-) -> np.ndarray[tuple[int], np.dtype[np.float_]]:
+    eigenstates: EigenvectorList[_B0Inv, _L0Inv],
+) -> np.ndarray[tuple[_L0Inv], np.dtype[np.float_]]:
     """
     Given a state and a set of TunnellingEigenstates decompose the state into the eigenstates.
 
@@ -114,7 +116,7 @@ def get_vector_eigenstate_decomposition(
 
 
 def get_tunnelling_simulation_state(
-    eigenstates: EigenvectorList[_B0Inv],
+    eigenstates: EigenvectorList[_B0Inv, int],
     density_matrix: DiagonalOperator[_B0Inv, _B0Inv],
     times: np.ndarray[tuple[_L0Inv], np.dtype[np.float_]],
 ) -> DiagonalOperatorList[_B0Inv, _B0Inv, _L0Inv]:

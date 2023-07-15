@@ -117,7 +117,7 @@ def _get_global_phases(  # type: ignore[misc]
 
 
 def _get_bloch_wavefunction_phases(
-    wavepacket: _WInv,
+    wavepacket: Wavepacket[_S0Inv, _B0Inv],
     idx: SingleIndexLike = 0,
 ) -> np.ndarray[tuple[int], np.dtype[np.float_]]:
     """
@@ -144,10 +144,10 @@ def _get_bloch_wavefunction_phases(
 
 @timed
 def localize_tightly_bound_wavepacket_idx(
-    wavepacket: _WInv,
+    wavepacket: Wavepacket[_S0Inv, _B0Inv],
     idx: SingleIndexLike = 0,
     angle: float = 0,
-) -> _WInv:
+) -> Wavepacket[_S0Inv, _B0Inv]:
     """
     localize a wavepacket in momentum basis.
 
@@ -472,7 +472,7 @@ def localize_position_operator_many_band_individual(
         for wavepacket in wavepackets
     ]
     operator_position = _get_position_operator(states[0]["basis"])
-    operator = _get_operator_between_states(states, operator_position)
+    operator = _get_operator_between_states(states, operator_position)  # type: ignore[arg-type]
     eigenstates = calculate_eigenvectors_hermitian(operator)
     state_vectors = np.array([s["vector"] for s in states])
     return [

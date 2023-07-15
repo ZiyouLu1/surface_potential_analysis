@@ -40,11 +40,8 @@ from surface_potential_analysis.wavepacket.wavepacket import (
 )
 
 from .s4_wavepacket import (
-    MAXIMUM_POINTS,
+    get_two_point_normalized_wavepacket_hydrogen,
     get_wavepacket_hydrogen,
-    load_nickel_wavepacket,
-    load_normalized_nickel_wavepacket_momentum,
-    load_two_point_normalized_nickel_wavepacket_momentum,
 )
 from .surface_data import save_figure
 
@@ -97,7 +94,7 @@ def flaten_eigenstate_x(
 
 
 def plot_nickel_wavepacket_points() -> None:
-    wavepacket = load_nickel_wavepacket(0)
+    wavepacket = get_wavepacket_hydrogen(0)
 
     fig, _, _ = plot_wavepacket_sample_frequencies(wavepacket)
     fig.show()
@@ -107,7 +104,7 @@ def plot_nickel_wavepacket_points() -> None:
 
 def plot_nickel_wavepacket_energies() -> None:
     for i in range(10):
-        wavepacket = load_nickel_wavepacket(i)
+        wavepacket = get_wavepacket_hydrogen(i)
         fig, _, _ = plot_wavepacket_eigenvalues_2d_k(wavepacket)
         fig.show()
 
@@ -224,29 +221,25 @@ def plot_wavepacket_points_me() -> None:
 
 
 def animate_nickel_wavepacket() -> None:
-    wavepacket = load_normalized_nickel_wavepacket_momentum(0, (0, 0, 117), 0)
-
+    wavepacket = get_two_point_normalized_wavepacket_hydrogen(0)
     fig, _, _anim0 = animate_wavepacket_x0x1(wavepacket, scale="symlog")
     fig.show()
 
-    wavepacket = load_normalized_nickel_wavepacket_momentum(1, (8, 8, 118), 0)
-
+    wavepacket = get_two_point_normalized_wavepacket_hydrogen(1)
     fig, _, _anim1 = animate_wavepacket_x0x1(wavepacket, scale="symlog")
     fig.show()
-
     input()
 
 
-def plot_wavepacket_at_maximum_points_x2() -> None:
+def plot_hydrogen_wavepacket_at_x2_max() -> None:
     for band in range(0, 6):
-        max_point = MAXIMUM_POINTS[band]
-        # normalized = load_normalized_nickel_wavepacket_momentum(band, max_point, 0)  # noqa: ERA001
-        # normalized = load_two_point_normalized_nickel_wavepacket_momentum(band, 0) # noqa: ERA001
-        normalized = load_two_point_normalized_nickel_wavepacket_momentum(band)
-
-        fig, ax, _ = plot_wavepacket_x0x1(normalized, max_point[2], measure="abs")
+        normalized = get_two_point_normalized_wavepacket_hydrogen(band)
+        _, _, x2_max = BasisUtil(normalized["basis"]).get_stacked_index(
+            np.argmax(np.abs(normalized["vectors"][0]))
+        )
+        fig, ax, _ = plot_wavepacket_x0x1(normalized, x2_max, scale="symlog")
         fig.show()
-        ax.set_title(f"Plot of abs(wavefunction) for ix2={max_point[2]}")
+        ax.set_title(f"Plot of abs(wavefunction) for ix2={x2_max}")
         save_figure(fig, f"./wavepacket/wavepacket_{band}.png")
     input()
 
@@ -254,7 +247,7 @@ def plot_wavepacket_at_maximum_points_x2() -> None:
 def plot_two_point_wavepacket_with_idx() -> None:
     offset = (2, 1)
     for band in range(0, 6):
-        normalized = load_two_point_normalized_nickel_wavepacket_momentum(band, offset)
+        normalized = get_two_point_normalized_wavepacket_hydrogen(band, offset)
 
         fig, ax = plt.subplots()
 
@@ -275,19 +268,20 @@ def plot_two_point_wavepacket_with_idx() -> None:
 
 def plot_nickel_wavepacket_eigenstate() -> None:
     for band in range(20):
-        wavepacket = load_nickel_wavepacket(band)
+        wavepacket = get_wavepacket_hydrogen(band)
         eigenstate = get_eigenstate(wavepacket, 0)
-
-        fig, ax, _ = plot_eigenstate_2d_x(
-            eigenstate, (0, 1), (MAXIMUM_POINTS[band][2],), measure="abs"
+        _, _, x2_max = BasisUtil(eigenstate["basis"]).get_stacked_index(
+            np.argmax(np.abs(eigenstate["vector"]))
         )
+
+        fig, ax, _ = plot_eigenstate_2d_x(eigenstate, (0, 1), (x2_max,), measure="abs")
         fig.show()
 
     input()
 
 
 def plot_phase_around_origin() -> None:
-    wavepacket = load_nickel_wavepacket(band=2)
+    wavepacket = get_wavepacket_hydrogen(band=2)
     eigenstate = get_eigenstate(wavepacket, 0)
 
     flat = flaten_eigenstate_x(eigenstate, 124, 2)

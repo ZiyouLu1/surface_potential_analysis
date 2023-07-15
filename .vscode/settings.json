@@ -25,6 +25,7 @@
     "argmax",
     "argmin",
     "asarray",
+    "astype",
     "atol",
     "clim",
     "colorbar",
@@ -46,6 +47,7 @@
     "ishermitian",
     "isreal",
     "issymmetric",
+    "jianding",
     "Libary",
     "lindblad",
     "lindbladian",
@@ -102,14 +104,6 @@
   // "python.linting.flake8Args": [
   //   "--ignore=E501,W503,E203,E301,E302"
   // ],
-  // "python.testing.cwd": "${workspaceFolder}/src/surface_dynamics_simulation/",
-  // "python.testing.unittestArgs": [
-  //   "-v",
-  //   "-s",
-  //   "./_test_surface_dynamics_simulation",
-  //   "-p",
-  //   "test*.py"
-  // ],
   "python.testing.cwd": "${workspaceFolder}/src/surface_potential_analysis/",
   "python.testing.unittestArgs": [
     "-v",
@@ -134,7 +128,6 @@
   ],
   "rust-analyzer.checkOnSave.command": "clippy",
   "python.analysis.extraPaths": [
-    "./src/surface_dynamics_simulation",
     "./src/surface_potential_analysis",
     "./src/hydrogen_copper_100",
     "./src/hydrogen_copper_111",

@@ -22,7 +22,9 @@ if TYPE_CHECKING:
     from surface_potential_analysis.potential.potential import (
         Potential,
     )
-    from surface_potential_analysis.state_vector.state_vector import EigenvectorList
+    from surface_potential_analysis.state_vector.eigenstate_calculation import (
+        EigenvectorList,
+    )
 
 _B1d0Cov = TypeVar("_B1d0Cov", covariant=True, bound=Basis1d[Any])
 _B1d0Inv = TypeVar("_B1d0Inv", bound=Basis1d[Any])
@@ -44,7 +46,7 @@ _N0Inv = TypeVar("_N0Inv", bound=int)
 
 def get_potential_basis_config_eigenstates(
     config: PotentialBasisConfig[_B1d0Inv, _N0Inv],
-) -> EigenvectorList[_B1d0Inv]:
+) -> EigenvectorList[_B1d0Inv, _N0Inv]:
     """
     Get the eigenstates of the potential, as used in the final basis.
 
@@ -59,7 +61,7 @@ def get_potential_basis_config_eigenstates(
     hamiltonian = total_surface_hamiltonian(
         config["potential"], config["mass"], np.array([0])
     )
-    return calculate_eigenvectors_hermitian(
+    return calculate_eigenvectors_hermitian(  # type: ignore[return-value]
         hamiltonian, subset_by_index=(0, config["n"] - 1)
     )
 

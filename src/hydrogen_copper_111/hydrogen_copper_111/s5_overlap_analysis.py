@@ -1,37 +1,22 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
 import numpy as np
 from matplotlib import pyplot as plt
 from surface_potential_analysis.basis.util import AxisWithLengthBasisUtil
 from surface_potential_analysis.overlap.conversion import (
     convert_overlap_to_momentum_basis,
 )
-from surface_potential_analysis.overlap.overlap import (
-    Overlap3d,
-    load_overlap,
-)
 from surface_potential_analysis.overlap.plot import (
     plot_overlap_2d_k,
     plot_overlap_along_k_diagonal,
 )
 
-from .surface_data import get_data_path, save_figure
-
-if TYPE_CHECKING:
-    from surface_potential_analysis.basis.basis import (
-        FundamentalPositionBasis3d,
-    )
-
-
-def load_overlap_fcc_hcp() -> Overlap3d[FundamentalPositionBasis3d[int, int, int]]:
-    path = get_data_path("overlap_hcp_fcc.npy")
-    return load_overlap(path)
+from .s5_overlap import get_overlap_hydrogen
+from .surface_data import save_figure
 
 
 def plot_overlap() -> None:
-    overlap = load_overlap_fcc_hcp()
+    overlap = get_overlap_hydrogen(0, 1)
     overlap_momentum = convert_overlap_to_momentum_basis(overlap)
 
     fig, ax, _ = plot_overlap_2d_k(overlap_momentum, (0, 1), (0,))
@@ -78,7 +63,7 @@ def plot_overlap() -> None:
 
 
 def print_max_overlap_momentum() -> None:
-    overlap = load_overlap_fcc_hcp()
+    overlap = get_overlap_hydrogen(0, 1)
     overlap_momentum = convert_overlap_to_momentum_basis(overlap)
     util = AxisWithLengthBasisUtil(overlap["basis"])
 

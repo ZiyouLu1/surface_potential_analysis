@@ -26,7 +26,7 @@ if TYPE_CHECKING:
     from surface_potential_analysis.basis.basis import (
         Basis3d,
     )
-    from surface_potential_analysis.operator import HamiltonianWith3dBasis
+    from surface_potential_analysis.operator import SingleBasisOperator
     from surface_potential_analysis.potential import (
         FundamentalPositionBasisPotential3d,
     )
@@ -135,11 +135,12 @@ class _SurfaceHamiltonianUtil(
 
     def hamiltonian(
         self, bloch_phase: np.ndarray[tuple[Literal[3]], np.dtype[np.float_]]
-    ) -> HamiltonianWith3dBasis[
+    ) -> SingleBasisOperator[
+        tuple[
         MomentumAxis3d[_NF0Inv, _N0Inv],
         MomentumAxis3d[_NF1Inv, _N1Inv],
         ExplicitAxis3d[_NF2Inv, _N2Inv],
-    ]:
+    ]]:
         diagonal_energies = np.diag(self._calculate_diagonal_energy(bloch_phase))
         other_energies = self._calculate_off_diagonal_energies_fast()
 
@@ -255,11 +256,12 @@ def total_surface_hamiltonian(
     config: SHOBasisConfig,
     bloch_fraction: np.ndarray[tuple[Literal[3]], np.dtype[np.float_]],
     resolution: tuple[_N0Inv, _N1Inv, _N2Inv],
-) -> HamiltonianWith3dBasis[
+) -> SingleBasisOperator[
+        tuple[
     MomentumAxis3d[_NF0Inv, _N0Inv],
     MomentumAxis3d[_NF1Inv, _N1Inv],
     ExplicitAxis3d[_NF2Inv, _N2Inv],
-]:
+]]:
     """
     Calculate a hamiltonian using the infinite sho basis.
 

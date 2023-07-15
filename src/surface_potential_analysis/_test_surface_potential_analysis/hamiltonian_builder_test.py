@@ -51,10 +51,6 @@ from surface_potential_analysis.util.interpolation import interpolate_points_rff
 from surface_potential_analysis.util.util import slice_along_axis
 
 if TYPE_CHECKING:
-    from surface_potential_analysis.axis.axis import (
-        ExplicitAxis3d,
-        FundamentalMomentumAxis,
-    )
     from surface_potential_analysis.axis.axis_like import AxisWithLengthLike3d
     from surface_potential_analysis.basis.basis import (
         AxisWithLengthBasis,
@@ -64,8 +60,7 @@ if TYPE_CHECKING:
         FundamentalPositionBasis3d,
     )
     from surface_potential_analysis.operator.operator import (
-        HamiltonianWith3dBasis,
-        SingleBasisOperator3d,
+        SingleBasisOperator,
     )
     from surface_potential_analysis.potential.potential import (
         FundamentalPositionBasisPotential3d,
@@ -144,7 +139,7 @@ def convert_explicit_basis_x2(
 
 def flatten_hamiltonian(
     hamiltonian: StackedHamiltonian3d[_B3d0Inv],
-) -> SingleBasisOperator3d[_B3d0Inv]:
+) -> SingleBasisOperator[_B3d0Inv]:
     """
     Convert a stacked hamiltonian to a hamiltonian.
 
@@ -165,7 +160,7 @@ def flatten_hamiltonian(
 
 
 def stack_hamiltonian(
-    hamiltonian: SingleBasisOperator3d[_B3d0Inv],
+    hamiltonian: SingleBasisOperator[_B3d0Inv],
 ) -> StackedHamiltonian3d[_B3d0Inv]:
     """
     Convert a hamiltonian to a stacked hamiltonian.
@@ -205,29 +200,6 @@ def hamiltonian_from_position_basis_potential_3d_stacked(
     shape = AxisWithLengthBasisUtil(potential["basis"]).shape
     array = np.diag(potential["vector"]).reshape(*shape, *shape)
     return {"basis": potential["basis"], "array": array}
-
-
-def _convert_x2_to_explicit_basis(
-    hamiltonian: HamiltonianWith3dBasis[
-        _A3d0Inv, _A3d1Inv, FundamentalMomentumAxis[_L0Inv, Literal[3]]
-    ],
-    basis: ExplicitAxis3d[_L0Inv, _L1Inv],
-) -> HamiltonianWith3dBasis[_A3d0Inv, _A3d1Inv, ExplicitAxis3d[_L0Inv, _L1Inv]]:
-    stacked = stack_hamiltonian(hamiltonian)
-
-    x2_position = np.fft.fftn(
-        np.fft.ifftn(stacked["array"], axes=(2,), norm="ortho"),
-        axes=(5,),
-        norm="ortho",
-    )
-    x2_explicit = convert_explicit_basis_x2(x2_position, basis.vectors)
-
-    return flatten_hamiltonian(
-        {
-            "basis": (hamiltonian["basis"][0], hamiltonian["basis"][1], basis),
-            "array": x2_explicit,  # type: ignore[typeddict-item]
-        }
-    )
 
 
 def _generate_random_potential(
@@ -681,8 +653,8 @@ class HamiltonianBuilderTest(unittest.TestCase):
             (points.shape[0], points.shape[1], nz),
         )
 
-        expected = _convert_x2_to_explicit_basis(
-            momentum_builder_result, actual["basis"][2]
+        expected = convert_operator_to_basis(
+            momentum_builder_result, actual["basis"], actual["dual_basis"]
         )
 
         np.testing.assert_array_almost_equal(actual["array"], expected["array"])
@@ -740,8 +712,8 @@ class HamiltonianBuilderTest(unittest.TestCase):
             (points.shape[0], points.shape[1], nz),
         )
 
-        expected = _convert_x2_to_explicit_basis(
-            momentum_builder_result, actual["basis"][2]
+        expected = convert_operator_to_basis(
+            momentum_builder_result, actual["basis"], actual["dual_basis"]
         )
 
         np.testing.assert_array_almost_equal(actual["array"], expected["array"])

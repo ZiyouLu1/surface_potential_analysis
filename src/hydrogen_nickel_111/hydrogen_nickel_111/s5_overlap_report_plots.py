@@ -19,6 +19,7 @@ from surface_potential_analysis.overlap.interpolation import (
     get_overlap_momentum_interpolator_flat,
 )
 from surface_potential_analysis.overlap.plot import plot_overlap_2d_k, plot_overlap_2d_x
+from surface_potential_analysis.util.constants import FERMI_WAVEVECTOR
 
 from hydrogen_nickel_111.experimental_data import (
     get_experiment_data,
@@ -34,8 +35,6 @@ from hydrogen_nickel_111.s5_overlap import (
 )
 from hydrogen_nickel_111.s5_overlap_analysis import get_angle_averaged_overlap
 
-from .constants import FERMI_WAVEVECTOR
-
 _S0Inv = TypeVar("_S0Inv", bound=tuple[int, ...])
 
 PLOT_COLOURS = plt.rcParams["axes.prop_cycle"].by_key()["color"]
@@ -44,12 +43,17 @@ PLOT_COLOURS = plt.rcParams["axes.prop_cycle"].by_key()["color"]
 def plot_fermi_occupation_intregrand() -> None:
     fig, ax = plt.subplots()
 
-    dk = 2 * Boltzmann * 100 * electron_mass / (hbar**2 * FERMI_WAVEVECTOR)
-    k1_points = np.linspace(FERMI_WAVEVECTOR - 5 * dk, FERMI_WAVEVECTOR + 5 * dk)
+    dk = 2 * Boltzmann * 100 * electron_mass / (hbar**2 * FERMI_WAVEVECTOR["NICKEL"])
+    k1_points = np.linspace(
+        FERMI_WAVEVECTOR["NICKEL"] - 5 * dk, FERMI_WAVEVECTOR["NICKEL"] + 5 * dk
+    )
 
     for i, t in enumerate([150, 170, 190]):
         occupation = get_hermitian_gamma_occupation_integrand(
-            k1_points, omega=0, k_f=FERMI_WAVEVECTOR, boltzmann_energy=Boltzmann * t
+            k1_points,
+            omega=0,
+            k_f=FERMI_WAVEVECTOR["NICKEL"],
+            boltzmann_energy=Boltzmann * t,
         )
         (line,) = ax.plot(k1_points, occupation)
         line.set_label(f"{t} K")
@@ -57,7 +61,10 @@ def plot_fermi_occupation_intregrand() -> None:
 
         omega = float(get_hydrogen_energy_difference(0, 1))
         occupation = get_hermitian_gamma_occupation_integrand(
-            k1_points, omega=omega, k_f=FERMI_WAVEVECTOR, boltzmann_energy=Boltzmann * t
+            k1_points,
+            omega=omega,
+            k_f=FERMI_WAVEVECTOR["NICKEL"],
+            boltzmann_energy=Boltzmann * t,
         )
         (line,) = ax.plot(k1_points, occupation)
         line.set_linestyle("--")
@@ -66,14 +73,14 @@ def plot_fermi_occupation_intregrand() -> None:
         occupation = get_hermitian_gamma_occupation_integrand(
             k1_points,
             omega=-omega,
-            k_f=FERMI_WAVEVECTOR,
+            k_f=FERMI_WAVEVECTOR["NICKEL"],
             boltzmann_energy=Boltzmann * t,
         )
         (line,) = ax.plot(k1_points, occupation)
         line.set_linestyle("--")
         line.set_color(PLOT_COLOURS[i])
 
-    line = ax.axvline(FERMI_WAVEVECTOR)
+    line = ax.axvline(FERMI_WAVEVECTOR["NICKEL"])
     line.set_linestyle("--")
     line.set_alpha(0.5)
     line.set_color("black")
@@ -93,21 +100,21 @@ def plot_fermi_occupation_integral() -> None:
     temperatures = np.linspace(100, 250, 100)
     integrals_0_offset = [
         calculate_hermitian_gamma_occupation_integral(
-            0, FERMI_WAVEVECTOR, Boltzmann * t
+            0, FERMI_WAVEVECTOR["NICKEL"], Boltzmann * t
         )
         for t in temperatures
     ]
     omega = float(get_hydrogen_energy_difference(0, 1))
     integrals_non_zero_offset = [
         calculate_hermitian_gamma_occupation_integral(
-            omega, FERMI_WAVEVECTOR, Boltzmann * t
+            omega, FERMI_WAVEVECTOR["NICKEL"], Boltzmann * t
         )
         for t in temperatures
     ]
 
     integrals_non_zero_offset2 = [
         calculate_hermitian_gamma_occupation_integral(
-            -omega, FERMI_WAVEVECTOR, Boltzmann * t
+            -omega, FERMI_WAVEVECTOR["NICKEL"], Boltzmann * t
         )
         for t in temperatures
     ]
@@ -141,7 +148,7 @@ def get_hydrogen_fcc_hcp_gamma() -> np.complex_:
         ).reshape(q.shape)
 
     return calculate_hermitian_gamma_potential_integral(
-        FERMI_WAVEVECTOR, overlap_function
+        FERMI_WAVEVECTOR["NICKEL"], overlap_function
     )
 
 
@@ -153,7 +160,7 @@ def get_rate_simple_equation(
     temperature_dep_integral = np.array(
         [
             calculate_hermitian_gamma_occupation_integral(
-                omega, FERMI_WAVEVECTOR, Boltzmann * t
+                omega, FERMI_WAVEVECTOR["NICKEL"], Boltzmann * t
             )
             for t in temperature_flat
         ]
@@ -161,7 +168,7 @@ def get_rate_simple_equation(
     temperature_dep_integral2 = np.array(
         [
             calculate_hermitian_gamma_occupation_integral(
-                -omega, FERMI_WAVEVECTOR, Boltzmann * t
+                -omega, FERMI_WAVEVECTOR["NICKEL"], Boltzmann * t
             )
             for t in temperature_flat
         ]
@@ -184,7 +191,7 @@ def get_deuterium_fcc_hcp_gamma() -> np.complex_:
         ).reshape(q.shape)
 
     return calculate_hermitian_gamma_potential_integral(
-        FERMI_WAVEVECTOR, overlap_function
+        FERMI_WAVEVECTOR["NICKEL"], overlap_function
     )
 
 
@@ -196,7 +203,7 @@ def get_rate_simple_equation_deuterium(
     temperature_dep_integral = np.array(
         [
             calculate_hermitian_gamma_occupation_integral(
-                omega, FERMI_WAVEVECTOR, Boltzmann * t
+                omega, FERMI_WAVEVECTOR["NICKEL"], Boltzmann * t
             )
             for t in temperature_flat
         ]
@@ -204,7 +211,7 @@ def get_rate_simple_equation_deuterium(
     temperature_dep_integral2 = np.array(
         [
             calculate_hermitian_gamma_occupation_integral(
-                -omega, FERMI_WAVEVECTOR, Boltzmann * t
+                -omega, FERMI_WAVEVECTOR["NICKEL"], Boltzmann * t
             )
             for t in temperature_flat
         ]

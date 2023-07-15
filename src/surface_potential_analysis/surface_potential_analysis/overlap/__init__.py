@@ -6,14 +6,10 @@ from .overlap import (
     FundamentalMomentumOverlap,
     FundamentalPositionOverlap,
     Overlap3d,
-    load_overlap,
-    save_overlap,
 )
 
 __all__ = [
     "Overlap3d",
     "FundamentalPositionOverlap",
     "FundamentalMomentumOverlap",
-    "save_overlap",
-    "load_overlap",
 ]

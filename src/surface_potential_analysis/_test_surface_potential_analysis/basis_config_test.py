@@ -24,8 +24,12 @@ from surface_potential_analysis.basis.util import (
     AxisWithLengthBasisUtil,
     _wrap_distance,
     calculate_cumulative_x_distances_along_path,
-    project_k_points_along_axis,
-    project_x_points_along_axis,
+    get_fundamental_k_points_projected_along_axes,
+    get_fundamental_x_points_projected_along_axes,
+    project_k_points_along_axes,
+    project_x_points_along_axes,
+    wrap_index_around_origin,
+    wrap_x_point_around_origin,
 )
 from surface_potential_analysis.util.util import slice_along_axis
 
@@ -430,6 +434,25 @@ class TestBasisConfig(unittest.TestCase):
             np.testing.assert_equal(_wrap_distance(d, 4), e, f"d={d}, l=4")
         np.testing.assert_array_equal(_wrap_distance(distances, 4), expected)
 
+    def test_wrap_x_point_around_origin(self) -> None:
+        delta_x = np.array([[3, 0, 0], [0, 3, 0], [0, 0, 3]], dtype=float)
+        basis = position_basis_3d_from_shape((3, 3, 3), delta_x)
+        util = AxisWithLengthBasisUtil(basis)
+        actual = wrap_x_point_around_origin(basis, util.fundamental_x_points)
+        expected = util.get_x_points_at_index(
+            wrap_index_around_origin(basis, util.fundamental_nx_points)
+        )
+        np.testing.assert_array_almost_equal(actual, expected)
+
+        delta_x = np.array([[3, 0, 0], [1, 3, 0], [0, 0, 3]], dtype=float)
+        basis = position_basis_3d_from_shape((3, 3, 3), delta_x)
+        util = AxisWithLengthBasisUtil(basis)
+        actual = wrap_x_point_around_origin(basis, util.fundamental_x_points)
+        expected = util.get_x_points_at_index(
+            wrap_index_around_origin(basis, util.fundamental_nx_points)
+        )
+        np.testing.assert_array_almost_equal(actual, expected)
+
     def test_calculate_cumulative_distances_along_path(self) -> None:
         delta_x = np.array([[3, 0, 0], [0, 3, 0], [0, 0, 3]], dtype=float)
 
@@ -505,14 +528,14 @@ class TestBasisConfig(unittest.TestCase):
     def test_decrement_brillouin_zone_many(self) -> None:
         basis = position_basis_3d_from_shape((3, 3, 3))
         util = AxisWithLengthBasisUtil(position_basis_3d_from_shape((3, 3, 3)))
-        actual = decrement_brillouin_zone_3d(basis, util.fundamental_nk_points)
+        actual = decrement_brillouin_zone_3d(basis, util.fundamental_nk_points)  # type: ignore[arg-type,var-annotated]
 
         expected = util.fundamental_nk_points
         np.testing.assert_array_equal(actual, expected)
 
         basis = position_basis_3d_from_shape((6, 6, 6))
         util = AxisWithLengthBasisUtil(position_basis_3d_from_shape((6, 6, 1)))
-        actual = decrement_brillouin_zone_3d(basis, util.fundamental_nk_points)
+        actual = decrement_brillouin_zone_3d(basis, util.fundamental_nk_points)  # type: ignore[arg-type]
 
         expected = util.fundamental_nk_points
         # Not too sure about this tbh
@@ -539,49 +562,49 @@ class TestBasisConfig(unittest.TestCase):
         basis = position_basis_3d_from_shape((3, 3, 3))
 
         points = AxisWithLengthBasisUtil(basis).fundamental_k_points
-        actual = project_k_points_along_axis(basis, points, axis=0)
-        expected = get_fundamental_projected_k_points(basis, axis=0).reshape(2, -1)
+        actual = project_k_points_along_axes(points, basis, axes=(1, 2))
+        expected = get_fundamental_k_points_projected_along_axes(basis, axes=(1, 2))
         np.testing.assert_array_equal(actual, expected)
 
         points = AxisWithLengthBasisUtil(basis).fundamental_k_points
-        actual = project_k_points_along_axis(basis, points, axis=1)
-        expected = get_fundamental_projected_k_points(basis, axis=1).reshape(2, -1)
+        actual = project_k_points_along_axes(points, basis, axes=(2, 0))
+        expected = get_fundamental_k_points_projected_along_axes(basis, axes=(2, 0))
         np.testing.assert_array_equal(actual, expected)
 
         points = AxisWithLengthBasisUtil(basis).fundamental_k_points
-        actual = project_k_points_along_axis(basis, points, axis=2)
-        expected = get_fundamental_projected_k_points(basis, axis=2).reshape(2, -1)
+        actual = project_k_points_along_axes(points, basis, axes=(0, 1))
+        expected = get_fundamental_k_points_projected_along_axes(basis, axes=(0, 1))
         np.testing.assert_array_equal(actual, expected)
 
     def test_project_x_points_along_axis(self) -> None:
         basis = position_basis_3d_from_shape((3, 3, 3))
 
         points = np.array([1, 0, 0])
-        actual = project_x_points_along_axis(basis, points, axis=0)
+        actual = project_x_points_along_axes(points, basis, axes=(1, 2))
         expected = np.array([0, 0])
         np.testing.assert_array_equal(actual, expected)
 
         points = np.array([[1], [0], [0]])
-        actual = project_x_points_along_axis(basis, points, axis=0)
+        actual = project_x_points_along_axes(points, basis, axes=(1, 2))
         expected = np.array([[0], [0]])
         np.testing.assert_array_equal(actual, expected)
 
         points = np.array([[1, 0, 0], [0, 1, 0], [0, 0, 1]])
-        actual = project_x_points_along_axis(basis, points, axis=2)
+        actual = project_x_points_along_axes(points, basis, axes=(0, 1))
         expected = np.array([[1, 0, 0], [0, 1, 0]])
         np.testing.assert_array_equal(actual, expected)
 
         points = AxisWithLengthBasisUtil(basis).fundamental_x_points
-        actual = project_x_points_along_axis(basis, points, axis=2)
-        expected = get_fundamental_projected_x_points(basis, axis=2).reshape(2, -1)
+        actual = project_x_points_along_axes(points, basis, axes=(0, 1))
+        expected = get_fundamental_x_points_projected_along_axes(basis, axes=(0, 1))
         np.testing.assert_array_equal(actual, expected)
 
         points = np.array([[0, 0], [1, 0], [0, 1]])
-        actual = project_x_points_along_axis(basis, points, axis=0)
-        expected = np.array([[0, -1], [1, 0]])
+        actual = project_x_points_along_axes(points, basis, axes=(1, 2))
+        expected = np.array([[1, 0], [0, 1]])
         np.testing.assert_array_equal(actual, expected)
 
         points = AxisWithLengthBasisUtil(basis).fundamental_x_points
-        actual = project_x_points_along_axis(basis, points, axis=0)
-        expected = get_fundamental_projected_x_points(basis, axis=0).reshape(2, -1)
+        actual = project_x_points_along_axes(points, basis, axes=(1, 2))
+        expected = get_fundamental_x_points_projected_along_axes(basis, axes=(1, 2))
         np.testing.assert_array_equal(actual, expected)

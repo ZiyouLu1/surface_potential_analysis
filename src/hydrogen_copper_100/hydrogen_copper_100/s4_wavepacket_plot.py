@@ -12,22 +12,17 @@ from surface_potential_analysis.wavepacket.localization import (
 )
 from surface_potential_analysis.wavepacket.plot import (
     animate_wavepacket_x0x1,
-    plot_wavepacket_k0k1,
     plot_wavepacket_sample_frequencies,
-    plot_wavepacket_x0,
     plot_wavepacket_x0x1,
 )
-from surface_potential_analysis.wavepacket.wavepacket import (
-    load_wavepacket,
-)
 
-from hydrogen_copper_100.s4_wavepacket import load_copper_wavepacket
+from hydrogen_copper_100.s4_wavepacket import get_wavepacket_hydrogen
 
-from .surface_data import get_data_path, save_figure
+from .surface_data import save_figure
 
 
 def plot_wavepacket_points() -> None:
-    wavepacket = load_copper_wavepacket(0)
+    wavepacket = get_wavepacket_hydrogen(0)
     fig, _, _ = plot_wavepacket_sample_frequencies(wavepacket)
 
     fig.show()
@@ -36,8 +31,7 @@ def plot_wavepacket_points() -> None:
 
 
 def plot_wavepacket_at_z_origin() -> None:
-    path = get_data_path("eigenstates_grid_0.json")
-    wavepacket = load_wavepacket(path)
+    wavepacket = get_wavepacket_hydrogen(0)
     normalized = localize_tightly_bound_wavepacket_idx(wavepacket)
 
     fig, ax, _ = plot_wavepacket_x0x1(normalized, 0, measure="abs")
@@ -58,114 +52,25 @@ def plot_wavepacket_at_z_origin() -> None:
 
 
 def plot_wavepacket_3d_x() -> None:
-    path = get_data_path("eigenstates_grid_0.json")
-    path = get_data_path("eigenstates_grid_1.json")
-    eigenstates = load_wavepacket(path)
-    normalized = localize_tightly_bound_wavepacket_idx(eigenstates)
+    wavepacket = get_wavepacket_hydrogen(0)
+    normalized = localize_tightly_bound_wavepacket_idx(wavepacket)
 
     fig, _, _ = animate_wavepacket_x0x1(normalized)
     fig.show()
     input()
     fig, _, _ = animate_wavepacket_x0x1(normalized)
     fig.show()
-    input()
-
-
-def plot_ft_hd_wavepacket_at_origin() -> None:
-    path = get_data_path("relaxed_eigenstates_hd_wavepacket_flat.json")
-    wavepacket = load_wavepacket(path)
-    fig, _, _ = plot_wavepacket_x0x1(wavepacket, x2_idx=1, measure="real")
-    fig.show()
-    fig, _, _ = plot_wavepacket_k0k1(wavepacket, k2_idx=1, measure="real")
-
-
-def compare_wavefunction_4_8_points_log() -> None:
-    path = get_data_path("copper_eigenstates_wavepacket.json")
-    wavepacket_8 = load_wavepacket(path)
-
-    path = get_data_path("copper_eigenstates_wavepacket_4_point.json")
-    wavepacket_4 = load_wavepacket(path)
-
-    path = get_data_path("copper_eigenstates_wavepacket_flat_band.json")
-    wavepacket_1 = load_wavepacket(path)
-
-    fig, ax = plt.subplots()
-    _, _, l2 = plot_wavepacket_x0(wavepacket_4, (48, 10), ax=ax)
-    l2.set_label("4 point grid")
-    _, _, l4 = plot_wavepacket_x0(wavepacket_8, (48, 10), ax=ax)
-    l4.set_label("8 point grid")
-    _, _, l5 = plot_wavepacket_x0(wavepacket_1, (48, 10), ax=ax)
-    l5.set_label("1 point grid")
-
-    ax.legend()
-    ax.set_yscale("symlog")
-    ax.set_title("Log plot of the abs 4 and 8 point wavefunctions")
-    fig.show()
-    save_figure(fig, "wavefunction_4_8_points_abs_comparison.png")
-
-    fig, ax = plt.subplots()
-    _, _, l2 = plot_wavepacket_x0(wavepacket_4, (48, 10), ax=ax, measure="real")
-    l2.set_label("4 point grid")
-    _, _, l4 = plot_wavepacket_x0(wavepacket_8, (48, 10), ax=ax, measure="real")
-    l4.set_label("8 point grid")
-    _, _, l5 = plot_wavepacket_x0(wavepacket_1, (48, 10), ax=ax, measure="real")
-    l5.set_label("1 point grid")
-
-    ax.legend()
-    ax.set_yscale("symlog")
-    ax.set_title("Log plot of the real part of the 4 and 8 point wavefunctions")
-    fig.show()
-    save_figure(fig, "wavefunction_4_8_points_real_comparison.png")
-
-
-def compare_wavefunction_4_8_points() -> None:
-    path = get_data_path("copper_eigenstates_wavepacket.json")
-    wavepacket_8 = load_wavepacket(path)
-
-    path = get_data_path("copper_eigenstates_wavepacket_4_point.json")
-    wavepacket_4 = load_wavepacket(path)
-
-    path = get_data_path("copper_eigenstates_wavepacket_flat_band.json")
-    wavepacket_1 = load_wavepacket(path)
-
-    fig, ax = plt.subplots()
-    _, _, l1 = plot_wavepacket_x0(wavepacket_4, (48, 10), ax=ax, measure="imag")
-    l1.set_label("4 point grid")
-    _, _, l2 = plot_wavepacket_x0(wavepacket_8, (48, 10), ax=ax, measure="imag")
-    l2.set_label("8 point grid")
-    _, _, l3 = plot_wavepacket_x0(wavepacket_1, (48, 10), ax=ax, measure="imag")
-    l3.set_label("1 point grid")
-
-    ax.legend()
-    ax.set_yscale("linear")
-    ax.set_title("Imaginary part of the 4 and 8 point wavefunctions")
-    fig.show()
-    save_figure(fig, "wavefunction_4_8_points_imag_comparison.png")
-
-    fig, ax = plt.subplots()
-    _, _, l1 = plot_wavepacket_x0(wavepacket_4, (48, 12), ax=ax, measure="abs")
-    l1.set_label("4 point grid")
-    _, _, l2 = plot_wavepacket_x0(wavepacket_8, (48, 12), ax=ax, measure="abs")
-    l2.set_label("8 point grid")
-    _, _, l3 = plot_wavepacket_x0(wavepacket_1, (48, 12), ax=ax, measure="abs")
-    l3.set_label("1 point grid")
-    ax.legend()
-    ax.set_yscale("symlog")
-    ax.set_title("Abs part of the 4 and 8 point wavefunctions")
-    fig.show()
-    save_figure(fig, "wavefunction_4_8_points_abs_comparison_max_height.png")
     input()
 
 
 def compare_wavefunction_eigenstate_2d() -> None:
-    path = get_data_path("eigenstates_grid_0.json")
-    wavepacket = load_wavepacket(path)
+    wavepacket = get_wavepacket_hydrogen(0)
     normalized = localize_tightly_bound_wavepacket_idx(wavepacket)
 
-    (ns0, ns1) = wavepacket["eigenvalues"].shape
-    eigenstate_0 = get_eigenstate(normalized, (ns0 // 2, ns1 // 2))
-    eigenstate_1 = get_eigenstate(normalized, (0, 0))
-    eigenstate_2 = get_eigenstate(normalized, (ns0 // 2, 0))
+    (ns0, ns1, _) = wavepacket["eigenvalues"].shape
+    eigenstate_0 = get_eigenstate(normalized, (ns0 // 2, ns1 // 2, 0))
+    eigenstate_1 = get_eigenstate(normalized, (0, 0, 0))
+    eigenstate_2 = get_eigenstate(normalized, (ns0 // 2, 0, 0))
 
     fig, axs = plt.subplots(2, 3)
     (_, ax, _) = plot_eigenstate_2d_x(eigenstate_0, (0, 1), (0,), ax=axs[0][0])
@@ -206,8 +111,7 @@ def compare_wavefunction_eigenstate_2d() -> None:
 
 # How different are the bloch wavefunctions
 def calculate_eigenstate_cross_product() -> None:
-    path = get_data_path("eigenstates_grid_0.json")
-    eigenstates = load_wavepacket(path)
+    eigenstates = get_wavepacket_hydrogen(0)
     normalized = localize_tightly_bound_wavepacket_idx(eigenstates)
 
     (ns0, ns1) = normalized["eigenvalues"].shape

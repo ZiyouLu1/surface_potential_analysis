@@ -15,10 +15,10 @@ if TYPE_CHECKING:
     from pathlib import Path
 
     from surface_potential_analysis.axis.axis import (
-        ExplicitAxis3d,
-        FundamentalMomentumAxis3d,
+        ExplicitAxis,
+        MomentumAxis,
     )
-    from surface_potential_analysis.operator.operator import HamiltonianWith3dBasis
+    from surface_potential_analysis.operator.operator import SingleBasisOperator
     from surface_potential_analysis.state_vector.eigenstate_collection import (
         EigenstateColllection,
     )
@@ -39,9 +39,9 @@ def get_eigenstate_collection_hydrogen(
     shape: tuple[_L0, _L1, _L2],
 ) -> EigenstateColllection[
     tuple[
-        FundamentalMomentumAxis3d[_L0],
-        FundamentalMomentumAxis3d[_L1],
-        ExplicitAxis3d[Literal[250], _L2],
+        MomentumAxis[_L0, _L0, Literal[3]],
+        MomentumAxis[_L1, _L1, Literal[3]],
+        ExplicitAxis[Literal[250], _L2, Literal[3]],
     ],
     Literal[11],
 ]:
@@ -50,10 +50,12 @@ def get_eigenstate_collection_hydrogen(
 
     def hamiltonian_generator(
         bloch_fraction: np.ndarray[tuple[Literal[3]], np.dtype[np.float_]]
-    ) -> HamiltonianWith3dBasis[
-        FundamentalMomentumAxis3d[_L0],
-        FundamentalMomentumAxis3d[_L1],
-        ExplicitAxis3d[Literal[250], _L2],
+    ) -> SingleBasisOperator[
+        tuple[
+            MomentumAxis[_L0, _L0, Literal[3]],
+            MomentumAxis[_L1, _L1, Literal[3]],
+            ExplicitAxis[Literal[250], _L2, Literal[3]],
+        ]
     ]:
         return get_hamiltonian_hydrogen(
             shape=(2 * shape[0], 2 * shape[1], 250),
@@ -77,9 +79,9 @@ def get_eigenstate_collection_deuterium(
     shape: tuple[_L0, _L1, _L2],
 ) -> EigenstateColllection[
     tuple[
-        FundamentalMomentumAxis3d[_L0],
-        FundamentalMomentumAxis3d[_L1],
-        ExplicitAxis3d[Literal[250], _L2],
+        MomentumAxis[_L0, _L0, Literal[3]],
+        MomentumAxis[_L1, _L1, Literal[3]],
+        ExplicitAxis[Literal[250], _L2, Literal[3]],
     ],
     Literal[11],
 ]:
@@ -88,10 +90,12 @@ def get_eigenstate_collection_deuterium(
 
     def hamiltonian_generator(
         bloch_fraction: np.ndarray[tuple[Literal[3]], np.dtype[np.float_]]
-    ) -> HamiltonianWith3dBasis[
-        FundamentalMomentumAxis3d[_L0],
-        FundamentalMomentumAxis3d[_L1],
-        ExplicitAxis3d[Literal[250], _L2],
+    ) -> SingleBasisOperator[
+        tuple[
+            MomentumAxis[_L0, _L0, Literal[3]],
+            MomentumAxis[_L1, _L1, Literal[3]],
+            ExplicitAxis[Literal[250], _L2, Literal[3]],
+        ]
     ]:
         return get_hamiltonian_deuterium(
             shape=(2 * shape[0], 2 * shape[1], 250),

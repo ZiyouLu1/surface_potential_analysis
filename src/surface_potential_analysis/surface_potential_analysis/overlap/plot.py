@@ -75,8 +75,8 @@ def plot_overlap_2d_x(
 
     coordinates = get_x_coordinates_in_axes(overlap["basis"], axes, idx).swapaxes(1, 2)
     util = AxisWithLengthBasisUtil(overlap["basis"])
-    data = get_data_in_axes(overlap["vector"].reshape(*util.shape), axes, idx)
-    data = get_measured_data(data, measure)
+    points = get_data_in_axes(overlap["vector"].reshape(*util.shape), axes, idx)
+    data = get_measured_data(points, measure)
 
     mesh = ax.pcolormesh(*coordinates, data, shading="nearest")
     norm = get_norm_with_clim(scale, mesh.get_clim())

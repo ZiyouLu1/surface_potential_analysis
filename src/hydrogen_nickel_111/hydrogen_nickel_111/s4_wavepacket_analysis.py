@@ -7,13 +7,13 @@ from surface_potential_analysis.state_vector.conversion import (
 )
 from surface_potential_analysis.wavepacket.get_eigenstate import get_eigenstate
 
-from .s4_wavepacket import load_nickel_wavepacket
+from .s4_wavepacket import get_wavepacket_hydrogen
 
 
 def calculate_wavepacket_maximums() -> None:
     """Calculate the maximum of the k=0 eigenstate of a wavepacket for each band."""
     for band in range(20):
-        wavepacket = load_nickel_wavepacket(band)
+        wavepacket = get_wavepacket_hydrogen(band)
 
         eigenstate = get_eigenstate(wavepacket, 0)
         converted = convert_state_vector_to_position_basis(eigenstate)  # type: ignore[arg-type] # ive done variance wrong somewhere

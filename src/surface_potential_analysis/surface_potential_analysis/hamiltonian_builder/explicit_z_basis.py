@@ -7,8 +7,11 @@ import numpy as np
 from scipy.constants import hbar
 
 from surface_potential_analysis.axis.axis import (
+    ExplicitAxis,
     ExplicitAxis3d,
+    FundamentalMomentumAxis3d,
     FundamentalPositionAxis1d,
+    MomentumAxis,
     MomentumAxis2d,
     MomentumAxis3d,
 )
@@ -19,13 +22,14 @@ from surface_potential_analysis.basis.util import AxisWithLengthBasisUtil
 from surface_potential_analysis.util.decorators import timed
 
 if TYPE_CHECKING:
-    from surface_potential_analysis.basis.basis import Basis3d
     from surface_potential_analysis.basis.potential_basis import PotentialBasisConfig
-    from surface_potential_analysis.operator import HamiltonianWith3dBasis
+    from surface_potential_analysis.operator import SingleBasisOperator
     from surface_potential_analysis.potential import (
         FundamentalPositionBasisPotential3d,
     )
-    from surface_potential_analysis.state_vector.state_vector import EigenvectorList
+    from surface_potential_analysis.state_vector.eigenstate_calculation import (
+        EigenvectorList,
+    )
 
 _N0Inv = TypeVar("_N0Inv", bound=int)
 _N1Inv = TypeVar("_N1Inv", bound=int)
@@ -52,7 +56,7 @@ class _SurfaceHamiltonianUtil(
 
     _resolution: tuple[_N0Inv, _N1Inv]
     _config: PotentialBasisConfig[tuple[FundamentalPositionAxis1d[_NF2Inv]], _N2Inv]
-    state_vectors_z: EigenvectorList[tuple[FundamentalPositionAxis1d[_NF2Inv]]]
+    state_vectors_z: EigenvectorList[tuple[FundamentalPositionAxis1d[_NF2Inv]], _N2Inv]
 
     def __init__(
         self,
@@ -77,10 +81,10 @@ class _SurfaceHamiltonianUtil(
     @property
     def basis(
         self,
-    ) -> Basis3d[
-        MomentumAxis3d[_NF0Inv, _N0Inv],
-        MomentumAxis3d[_NF1Inv, _N1Inv],
-        ExplicitAxis3d[_NF2Inv, _N2Inv],
+    ) -> tuple[
+        MomentumAxis[_NF0Inv, _N0Inv, Literal[3]],
+        MomentumAxis[_NF1Inv, _N1Inv, Literal[3]],
+        ExplicitAxis[_NF2Inv, _N2Inv, Literal[3]],
     ]:
         return (
             MomentumAxis3d(
@@ -109,10 +113,12 @@ class _SurfaceHamiltonianUtil(
 
     def hamiltonian(
         self, bloch_fraction: np.ndarray[tuple[Literal[3]], np.dtype[np.float_]]
-    ) -> HamiltonianWith3dBasis[
-        MomentumAxis3d[_NF0Inv, _N0Inv],
-        MomentumAxis3d[_NF1Inv, _N1Inv],
-        ExplicitAxis3d[_NF2Inv, _N2Inv],
+    ) -> SingleBasisOperator[
+        tuple[
+            MomentumAxis[_NF0Inv, _N0Inv, Literal[3]],
+            MomentumAxis[_NF1Inv, _N1Inv, Literal[3]],
+            ExplicitAxis[_NF2Inv, _N2Inv, Literal[3]],
+        ]
     ]:
         diagonal_energies = np.diag(self._calculate_diagonal_energy(bloch_fraction))
         other_energies = self._calculate_off_diagonal_energies()
@@ -174,10 +180,12 @@ def total_surface_hamiltonian(
     bloch_fraction: np.ndarray[tuple[Literal[3]], np.dtype[np.float_]],
     resolution: tuple[_N0Inv, _N1Inv],
     config: PotentialBasisConfig[tuple[FundamentalPositionAxis1d[_NF2Inv]], _N2Inv],
-) -> HamiltonianWith3dBasis[
-    MomentumAxis3d[_NF0Inv, _N0Inv],
-    MomentumAxis3d[_NF1Inv, _N1Inv],
-    ExplicitAxis3d[_NF2Inv, _N2Inv],
+) -> SingleBasisOperator[
+    tuple[
+        MomentumAxis[_NF0Inv, _N0Inv, Literal[3]],
+        MomentumAxis[_NF1Inv, _N1Inv, Literal[3]],
+        ExplicitAxis[_NF2Inv, _N2Inv, Literal[3]],
+    ]
 ]:
     """
     Calculate a hamiltonian using the given basis.
@@ -195,3 +203,56 @@ def total_surface_hamiltonian(
     """
     util = _SurfaceHamiltonianUtil(potential, resolution, config)
     return util.hamiltonian(bloch_fraction)
+
+
+def total_surface_hamiltonian_as_fundamental(
+    potential: FundamentalPositionBasisPotential3d[_NF0Inv, _NF1Inv, _NF2Inv],
+    bloch_fraction: np.ndarray[tuple[Literal[3]], np.dtype[np.float_]],
+    resolution: tuple[_N0Inv, _N1Inv],
+    config: PotentialBasisConfig[tuple[FundamentalPositionAxis1d[_NF2Inv]], _N2Inv],
+) -> SingleBasisOperator[
+    tuple[
+        MomentumAxis[_N0Inv, _N0Inv, Literal[3]],
+        MomentumAxis[_N1Inv, _N1Inv, Literal[3]],
+        ExplicitAxis[_NF2Inv, _N2Inv, Literal[3]],
+    ]
+]:
+    """
+    calculate the hamiltonian, and ignore the true shape in the xy direction.
+
+    Parameters
+    ----------
+    potential : FundamentalPositionBasisPotential3d[_NF0Inv, _NF1Inv, _NF2Inv]
+    bloch_fraction : np.ndarray[tuple[Literal[3]], np.dtype[np.float_]]
+    resolution : tuple[_N0Inv, _N1Inv]
+    config : PotentialBasisConfig[tuple[FundamentalPositionAxis1d[_NF2Inv]], _N2Inv]
+
+    Returns
+    -------
+    SingleBasisOperator[
+        tuple[ MomentumAxis3d[_NF0Inv, _NF0Inv], MomentumAxis3d[_NF1Inv, _NF1Inv], ExplicitAxis3d[_NF2Inv, _N2Inv], ]
+    """
+    hamiltonian = total_surface_hamiltonian(
+        potential, bloch_fraction, resolution, config
+    )
+    return {
+        "basis": (
+            FundamentalMomentumAxis3d(
+                hamiltonian["basis"][0].delta_x, hamiltonian["basis"][0].n
+            ),
+            FundamentalMomentumAxis3d(
+                hamiltonian["basis"][1].delta_x, hamiltonian["basis"][1].n
+            ),
+            hamiltonian["basis"][2],
+        ),
+        "array": hamiltonian["array"],
+        "dual_basis": (
+            FundamentalMomentumAxis3d(
+                hamiltonian["dual_basis"][0].delta_x, hamiltonian["dual_basis"][0].n
+            ),
+            FundamentalMomentumAxis3d(
+                hamiltonian["dual_basis"][1].delta_x, hamiltonian["dual_basis"][1].n
+            ),
+            hamiltonian["dual_basis"][2],
+        ),
+    }

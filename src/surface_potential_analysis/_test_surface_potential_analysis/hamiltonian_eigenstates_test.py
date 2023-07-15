@@ -1,28 +1,26 @@
 from __future__ import annotations
 
 import unittest
-from typing import TYPE_CHECKING
 
 import numpy as np
 
 from surface_potential_analysis.axis.axis import FundamentalMomentumAxis3d
+from surface_potential_analysis.basis.basis import (
+    FundamentalMomentumBasis3d,
+)
 from surface_potential_analysis.basis.util import (
     AxisWithLengthBasisUtil,
 )
+from surface_potential_analysis.operator.operator import SingleBasisOperator
 from surface_potential_analysis.state_vector.eigenstate_calculation import (
     calculate_expectation,
 )
 
-if TYPE_CHECKING:
-    from surface_potential_analysis.basis.basis import (
-        FundamentalMomentumBasis3d,
-    )
-    from surface_potential_analysis.operator import (
-        FundamentalMomentumBasisHamiltonian3d,
-    )
-
-
 rng = np.random.default_rng()
+
+FundamentalMomentumBasisHamiltonian3d = SingleBasisOperator[
+    FundamentalMomentumBasis3d[int, int, int]
+]
 
 
 class HamiltonianEigenstates(unittest.TestCase):
@@ -33,7 +31,7 @@ class HamiltonianEigenstates(unittest.TestCase):
             FundamentalMomentumAxis3d(np.array([0, 0, 1]), rng.integers(1, 10)),
         )
         energies = rng.random(AxisWithLengthBasisUtil(basis).size)
-        hamiltonian: FundamentalMomentumBasisHamiltonian3d[int, int, int] = {
+        hamiltonian: FundamentalMomentumBasisHamiltonian3d = {
             "basis": basis,
             "dual_basis": basis,
             "array": np.diag(energies),

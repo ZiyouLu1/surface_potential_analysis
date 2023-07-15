@@ -58,14 +58,14 @@ def plot_raw_data_points() -> None:
     ax.text(x_min, y_min, "Top (largest E)")
 
     fig.show()
-    save_figure(fig, "raw_points.png")
+    save_figure(fig, "potential/raw_points.png")
 
     fig, ax = plot_point_potential_all_z(data)
     ax.set_ylim(-4.66e-17, -4.59e-17)
 
     ax.legend()
     fig.show()
-    save_figure(fig, "raw_points_z.png")
+    save_figure(fig, "potential/raw_points_z.png")
 
     input()
 

@@ -299,7 +299,6 @@ def interpolate_uneven_potential(
     in the xy plane of the energy grid, and a cubic spline to interpolate in the z direction
     """
     util = AxisWithLengthBasisUtil((data["basis"][0], data["basis"][1]))
-    # TODO: maybe along axis
     xy_interpolated = interpolate_points_rfftn(
         data["vector"].reshape(*util.shape, len(data["basis"][2])).astype(np.float_),
         s=(shape[0], shape[1]),

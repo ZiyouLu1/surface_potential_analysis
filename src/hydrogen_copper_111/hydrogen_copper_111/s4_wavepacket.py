@@ -3,110 +3,79 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, Literal
 
 import numpy as np
-from surface_potential_analysis.axis.axis import FundamentalMomentumAxis3d
-from surface_potential_analysis.basis.util import AxisWithLengthBasisUtil
-from surface_potential_analysis.wavepacket import save_wavepacket
-from surface_potential_analysis.wavepacket.conversion import convert_wavepacket_to_basis
+from surface_potential_analysis.util.decorators import npy_cached
 from surface_potential_analysis.wavepacket.localization import (
-    localize_tightly_bound_wavepacket_idx,
+    localize_tightly_bound_wavepacket_two_point_max,
 )
 from surface_potential_analysis.wavepacket.wavepacket import (
     Wavepacket3dWith2dSamples,
     generate_wavepacket,
-    load_wavepacket,
 )
 
-from .s2_hamiltonian import generate_hamiltonian_sho
+from .s2_hamiltonian import get_hamiltonian_hydrogen
 from .surface_data import get_data_path
 
 if TYPE_CHECKING:
-    from surface_potential_analysis._types import SingleIndexLike3d
+    from pathlib import Path
+
     from surface_potential_analysis.axis.axis import (
-        ExplicitAxis3d,
-        MomentumAxis3d,
+        ExplicitAxis,
+        MomentumAxis,
     )
     from surface_potential_analysis.basis.basis import (
         Basis3d,
-        FundamentalMomentumBasis3d,
     )
-    from surface_potential_analysis.operator import SingleBasisOperator3d
+    from surface_potential_analysis.operator import SingleBasisOperator
+
+    _HydrogenRutheniumWavepacket = Wavepacket3dWith2dSamples[
+        Literal[12],
+        Literal[12],
+        Basis3d[
+            MomentumAxis[Literal[25], Literal[25], Literal[3]],
+            MomentumAxis[Literal[25], Literal[25], Literal[3]],
+            ExplicitAxis[Literal[250], Literal[10], Literal[3]],
+        ],
+    ]
 
 
-MAXIMUM_POINTS: list[tuple[int, int, int]] = [
-    (0, 0, 102),
-    (8, 8, 103),
-    (1, 2, 108),
-    (21, 2, 108),
-    (11, 7, 109),
-    (11, 6, 109),
-    (20, 2, 118),
-    (0, 0, 85),
-    (8, 8, 86),
-    (17, 4, 116),
-    (16, 4, 116),
-    (0, 0, 114),
-    (23, 22, 112),
-    (23, 3, 112),
-    (1, 1, 95),
-    (22, 1, 95),
-    (7, 7, 96),
-    (7, 11, 98),
-    (6, 6, 104),
-    (1, 2, 123),
-]
-
-
-def load_copper_wavepacket(
-    band: int,
-) -> Wavepacket3dWith2dSamples[
-    Literal[12],
-    Literal[12],
-    Basis3d[
-        MomentumAxis3d[Literal[24], Literal[24]],
-        MomentumAxis3d[Literal[24], Literal[24]],
-        ExplicitAxis3d[Literal[250], Literal[12]],
-    ],
-]:
-    path = get_data_path(f"wavepacket_{band}.npy")
-    wavepacket = load_wavepacket(path)
-    wavepacket["basis"][0]["parent"]["n"] = 24
-    wavepacket["basis"][1]["parent"]["n"] = 24
-    return wavepacket
-
-
-def load_normalized_copper_wavepacket_momentum(
-    band: int, idx: SingleIndexLike3d = 0, angle: float = 0
-) -> Wavepacket3dWith2dSamples[
-    Literal[12],
-    Literal[12],
-    FundamentalMomentumBasis3d[Literal[24], Literal[24], Literal[250]],
-]:
-    wavepacket = load_copper_wavepacket(band)
-    util = AxisWithLengthBasisUtil(wavepacket["basis"])
-    basis: FundamentalMomentumBasis3d[Literal[24], Literal[24], Literal[250]] = (
-        FundamentalMomentumAxis3d(util.delta_x[0], 24),
-        FundamentalMomentumAxis3d(util.delta_x[1], 24),
-        FundamentalMomentumAxis3d(util.delta_x[2], 250),
-    )
-    normalized = localize_tightly_bound_wavepacket_idx(wavepacket, idx, angle)
-    return convert_wavepacket_to_basis(normalized, basis)
-
-
-def generate_wavepacket_sho() -> None:
-    def hamiltonian_generator(
-        x: np.ndarray[tuple[Literal[3]], np.dtype[np.float_]]
-    ) -> SingleBasisOperator3d[Any]:
-        return generate_hamiltonian_sho(
-            shape=(48, 48, 250),
-            bloch_fraction=x,
-            resolution=(24, 24, 16),
+@npy_cached(get_data_path("wavepacket/wavepacket_hydrogen.npy"), load_pickle=True)  # type: ignore[misc]
+def get_all_wavepackets_hydrogen() -> list[_HydrogenRutheniumWavepacket]:
+    def _hamiltonian_generator(
+        bloch_fraction: np.ndarray[tuple[Literal[3]], np.dtype[np.float_]]
+    ) -> SingleBasisOperator[Any]:
+        return get_hamiltonian_hydrogen(
+            shape=(50, 50, 250),
+            bloch_fraction=bloch_fraction,
+            resolution=(25, 25, 10),
         )
 
     save_bands = np.arange(20)
-
-    wavepackets = generate_wavepacket(
-        hamiltonian_generator, shape=(12, 12), save_bands=save_bands
+    return generate_wavepacket(
+        _hamiltonian_generator,
+        shape=(12, 12, 1),
+        save_bands=save_bands,
     )
-    for k, wavepacket in zip(save_bands, wavepackets, strict=True):
-        path = get_data_path(f"wavepacket_{k}.npy")
-        save_wavepacket(path, wavepacket)
+
+
+def _get_wavepacket_cache_h(band: int) -> Path:
+    return get_data_path(f"wavepacket/wavepacket_hydrogen_{band}.npy")
+
+
+@npy_cached(_get_wavepacket_cache_h, load_pickle=True)
+def get_wavepacket_hydrogen(band: int) -> _HydrogenRutheniumWavepacket:
+    return get_all_wavepackets_hydrogen()[band]
+
+
+def get_two_point_normalized_wavepacket_hydrogen(
+    band: int, offset: tuple[int, int] = (0, 0), angle: float = 0
+) -> _HydrogenRutheniumWavepacket:
+    wavepacket = get_wavepacket_hydrogen(band)
+    return localize_tightly_bound_wavepacket_two_point_max(wavepacket, offset, angle)
+
+
+def get_hydrogen_energy_difference(state_0: int, state_1: int) -> np.float_:
+    wavepacket_0 = get_wavepacket_hydrogen(state_0)
+    wavepacket_1 = get_wavepacket_hydrogen(state_1)
+    return np.average(wavepacket_0["eigenvalues"]) - np.average(
+        wavepacket_1["eigenvalues"]
+    )

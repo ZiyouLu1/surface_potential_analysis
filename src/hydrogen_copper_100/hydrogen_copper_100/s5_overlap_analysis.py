@@ -5,22 +5,18 @@ from matplotlib import pyplot as plt
 from surface_potential_analysis.overlap.conversion import (
     convert_overlap_to_momentum_basis,
 )
-from surface_potential_analysis.overlap.overlap import (
-    load_overlap,
-)
 from surface_potential_analysis.overlap.plot import (
     plot_overlap_2d_k,
     plot_overlap_2d_x,
     plot_overlap_along_k0,
 )
 
-from .surface_data import get_data_path, save_figure
+from .s5_overlap import get_overlap_hydrogen
+from .surface_data import save_figure
 
 
 def plot_overlap() -> None:
-    path = get_data_path("overlap_transform_0_next_0.npz")
-    path = get_data_path("overlap_transform_large_0_next_0.npz")
-    overlap = load_overlap(path)
+    overlap = get_overlap_hydrogen(0, 0)
     overlap_momentum = convert_overlap_to_momentum_basis(overlap)
 
     fig, ax, _ = plot_overlap_2d_k(overlap_momentum, (0, 1), (0,))
@@ -81,18 +77,7 @@ def plot_overlap() -> None:
 
 
 def fit_overlap_momentum() -> None:
-    path = get_data_path("overlap_transform_0_next_0.npz")
-    overlap = load_overlap(path)
-    overlap_momentum = convert_overlap_to_momentum_basis(overlap)
-    points = overlap_momentum["vector"]
-
-    print(points[0, 0, 0])  # noqa: T201
-    print(points.shape)  # noqa: T201
-    print(np.max(np.abs(points[:, :, 0])))  # noqa: T201
-    print(np.max(np.abs(points[:, :])))  # noqa: T201
-
-    path = get_data_path("overlap_transform_large_0_next_0.npz")
-    overlap = load_overlap(path)
+    overlap = get_overlap_hydrogen(0, 0, (0, 1))
     overlap_momentum = convert_overlap_to_momentum_basis(overlap)
     points = overlap_momentum["vector"]
 

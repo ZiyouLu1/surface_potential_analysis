@@ -10,8 +10,6 @@ from surface_potential_analysis.basis.basis import (
     Basis1d,
     Basis2d,
     Basis3d,
-    FundamentalMomentumBasis3d,
-    FundamentalPositionBasis3d,
 )
 
 _A3d0Cov = TypeVar("_A3d0Cov", bound=AxisWithLengthLike3d[Any, Any], covariant=True)
@@ -30,7 +28,7 @@ _B1d0Inv = TypeVar("_B1d0Inv", bound=Basis1d[Any])
 _B1d1Inv = TypeVar("_B1d1Inv", bound=Basis1d[Any])
 _B2d0Inv = TypeVar("_B2d0Inv", bound=Basis2d[Any, Any])
 _B2d1Inv = TypeVar("_B2d1Inv", bound=Basis2d[Any, Any])
-_B3d0Inv = TypeVar("_B3d0Inv", bound=Basis3d[Any, Any, Any])
+_B3d0Cov = TypeVar("_B3d0Cov", bound=Basis3d[Any, Any, Any], covariant=True)
 _B3d1Inv = TypeVar("_B3d1Inv", bound=Basis3d[Any, Any, Any])
 
 OperatorPoints = np.ndarray[
@@ -57,19 +55,7 @@ Operator1d = Operator[_B1d0Inv, _B1d1Inv]
 
 Operator2d = Operator[_B2d0Inv, _B2d1Inv]
 
-Operator3d = Operator[_B3d0Inv, _B3d1Inv]
-
-SingleBasisOperator3d = SingleBasisOperator[_B3d0Inv]
-
-
-HamiltonianWith3dBasis = SingleBasisOperator3d[Basis3d[_A3d0Cov, _A3d1Cov, _A3d2Cov]]
-
-FundamentalMomentumBasisHamiltonian3d = SingleBasisOperator3d[
-    FundamentalMomentumBasis3d[_L0Cov, _L1Cov, _L2Cov]
-]
-FundamentalPositionBasisHamiltonian3d = SingleBasisOperator3d[
-    FundamentalPositionBasis3d[_L0Cov, _L1Cov, _L2Cov]
-]
+Operator3d = Operator[_B3d0Cov, _B3d1Inv]
 
 
 def add_operator(

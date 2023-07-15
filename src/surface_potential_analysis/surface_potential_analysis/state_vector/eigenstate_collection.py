@@ -16,7 +16,6 @@ from .eigenstate_calculation import calculate_eigenvectors_hermitian
 
 if TYPE_CHECKING:
     from collections.abc import Callable
-    from pathlib import Path
 
     from surface_potential_analysis.operator.operator import (
         SingleBasisOperator,
@@ -28,11 +27,8 @@ _B0Cov = TypeVar("_B0Cov", bound=AxisWithLengthBasis[Any], covariant=True)
 _B0Inv = TypeVar("_B0Inv", bound=AxisWithLengthBasis[Any])
 
 _B1d0Cov = TypeVar("_B1d0Cov", bound=Basis1d[Any], covariant=True)
-_B1d0Inv = TypeVar("_B1d0Inv", bound=Basis1d[Any])
 _B2d0Cov = TypeVar("_B2d0Cov", bound=Basis2d[Any, Any], covariant=True)
-_B2d0Inv = TypeVar("_B2d0Inv", bound=Basis2d[Any, Any])
 _B3d0Cov = TypeVar("_B3d0Cov", bound=Basis3d[Any, Any, Any], covariant=True)
-_B3d0Inv = TypeVar("_B3d0Inv", bound=Basis3d[Any, Any, Any])
 
 
 class EigenstateColllection(TypedDict, Generic[_B0Cov, _L0Inv]):
@@ -66,18 +62,6 @@ Represents a collection of eigenstates, each with the same basis but a variety o
 
 NOTE: bloch_fractions: np.ndarray[tuple[_L0Inv, Literal[3]], np.dtype[np.float_]]
 """
-
-
-def save_eigenstate_collection(
-    path: Path, eigenstates: EigenstateColllection[Any, Any]
-) -> None:
-    """Save an eigenstate collection to an npy file."""
-    np.save(path, eigenstates)
-
-
-def load_eigenstate_collection(path: Path) -> EigenstateColllection[Any, Any]:
-    """Load an eigenstate collection from an npy file."""
-    return np.load(path, allow_pickle=True)[()]  # type: ignore[no-any-return]
 
 
 def calculate_eigenstate_collection(

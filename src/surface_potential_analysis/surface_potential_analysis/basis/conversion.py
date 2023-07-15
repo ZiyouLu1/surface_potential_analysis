@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Literal, TypeVar, overload
+from typing import TYPE_CHECKING, Any, TypeVar, overload
 
 import numpy as np
 
@@ -19,7 +19,6 @@ from surface_potential_analysis.axis.conversion import (
     axis_as_fundamental_momentum_axis,
     axis_as_fundamental_position_axis,
     axis_as_n_point_axis,
-    axis_as_single_point_axis,
 )
 from surface_potential_analysis.util.interpolation import pad_ft_points
 
@@ -431,33 +430,4 @@ def basis_as_fundamental_with_shape(
     """
     return tuple(
         axis_as_n_point_axis(ax, n=n) for (ax, n) in zip(basis, shape, strict=True)
-    )
-
-
-def basis3d_as_single_point_basis(
-    basis: Basis3d[
-        AxisWithLengthLike3d[_LF0Inv, _L0Inv],
-        AxisWithLengthLike3d[_LF1Inv, _L1Inv],
-        AxisWithLengthLike3d[_LF2Inv, _L2Inv],
-    ]
-) -> Basis3d[
-    AxisWithLengthLike3d[Literal[1], Literal[1]],
-    AxisWithLengthLike3d[Literal[1], Literal[1]],
-    AxisWithLengthLike3d[Literal[1], Literal[1]],
-]:
-    """
-    Get the fundamental single point basis for a given basis.
-
-    Parameters
-    ----------
-    self : BasisConfigUtil[tuple[BasisLike[_LF0Inv, _L0Inv], BasisLike[_LF1Inv, _L1Inv], BasisLike[_LF2Inv, _L2Inv]]]
-
-    Returns
-    -------
-    Basis3d[FundamentalPositionBasis[_LF0Inv], FundamentalPositionBasis[_LF1Inv], FundamentalPositionBasis[_LF2Inv]]
-    """
-    return (
-        axis_as_single_point_axis(basis[0]),
-        axis_as_single_point_axis(basis[1]),
-        axis_as_single_point_axis(basis[2]),
     )

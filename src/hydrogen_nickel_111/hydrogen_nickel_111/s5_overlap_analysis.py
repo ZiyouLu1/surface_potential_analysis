@@ -7,26 +7,6 @@ from typing import TYPE_CHECKING, Any, Literal, TypeVar, Unpack
 import numpy as np
 from matplotlib import pyplot as plt
 from scipy.constants import Boltzmann
-from surface_dynamics_simulation.hopping_matrix.old_electron_integral import (
-    calculate_approximate_electron_integral,
-    calculate_electron_integral,
-)
-from surface_dynamics_simulation.hopping_matrix.plot import plot_electron_integral
-from surface_dynamics_simulation.tunnelling_matrix.build import (
-    build_from_hopping_matrix,
-)
-from surface_dynamics_simulation.tunnelling_simulation.isf import calculate_isf
-from surface_dynamics_simulation.tunnelling_simulation.plot import (
-    animate_occupation_per_site_2d,
-    plot_isf,
-    plot_occupation_per_band,
-    plot_occupation_per_site,
-    plot_occupation_per_state,
-)
-from surface_dynamics_simulation.tunnelling_simulation.simulation import (
-    calculate_hopping_rate,
-    simulate_tunnelling_from_matrix,
-)
 from surface_potential_analysis.basis.util import (
     AxisWithLengthBasisUtil,
 )
@@ -51,13 +31,12 @@ from surface_potential_analysis.overlap.plot import (
     plot_overlap_along_k_diagonal,
     plot_overlap_k0k1,
 )
+from surface_potential_analysis.util.constants import FERMI_WAVEVECTOR
 from surface_potential_analysis.util.decorators import npy_cached
 
-from .constants import FERMI_WAVEVECTOR
 from .s4_wavepacket import (
     get_hydrogen_energy_difference,
     get_wavepacket_hydrogen,
-    load_nickel_wavepacket,
 )
 from .s5_overlap import get_overlap_hydrogen
 from .surface_data import get_data_path, save_figure
@@ -65,10 +44,6 @@ from .surface_data import get_data_path, save_figure
 if TYPE_CHECKING:
     from collections.abc import Callable
 
-    from surface_dynamics_simulation.hopping_matrix.hopping_matrix import HoppingMatrix
-    from surface_dynamics_simulation.tunnelling_matrix.tunnelling_matrix import (
-        TunnellingState,
-    )
     from surface_potential_analysis._types import SingleIndexLike3d
     from surface_potential_analysis.basis.basis import (
         FundamentalMomentumBasis3d,
@@ -407,41 +382,41 @@ def get_gamma_1(
         ).reshape(q.shape)
 
     return calculate_hermitian_gamma_potential_integral(
-        FERMI_WAVEVECTOR, overlap_function
+        FERMI_WAVEVECTOR["NICKEL"], overlap_function
     )
 
 
 def get_gamma_2(i: int, j: int, temperature: float) -> float:
     if i == j:
         return calculate_hermitian_gamma_occupation_integral(
-            0, FERMI_WAVEVECTOR, Boltzmann * temperature
+            0, FERMI_WAVEVECTOR["NICKEL"], Boltzmann * temperature
         )
     omega = float(get_hydrogen_energy_difference(0, 1))
     if i == 0 and j == 1:
         return calculate_hermitian_gamma_occupation_integral(
-            -omega, FERMI_WAVEVECTOR, Boltzmann * temperature
+            -omega, FERMI_WAVEVECTOR["NICKEL"], Boltzmann * temperature
         )
     if i == 1 and j == 0:
         return calculate_hermitian_gamma_occupation_integral(
-            omega, FERMI_WAVEVECTOR, Boltzmann * temperature
+            omega, FERMI_WAVEVECTOR["NICKEL"], Boltzmann * temperature
         )
     raise NotImplementedError
 
 
-def calculate_gamma(
+def calculate_gamma(  # noqa: PLR0913
     i: int,
-    j: int,
+    i1: int,
     k: int,
-    l: int,
+    k1: int,
     offset: np.ndarray[tuple[Literal[4], Literal[2]], np.dtype[np.int_]],
     temperature: float,
 ) -> float:
-    non_zero = (i == k and j == l) or (i == l and k == j)
+    non_zero = (i == k and i1 == k1) or (i == k1 and k == i1)
     if not non_zero or is_offset_irrelevant(offset):
         return 0.0
 
-    gamma_1 = get_gamma_1(np.array([i, j, k, l]), offset)
-    gamma_2 = get_gamma_2(i, j, temperature)
+    gamma_1 = get_gamma_1(np.array([i, i1, k, k1]), offset)
+    gamma_2 = get_gamma_2(i, i1, temperature)
     return float(gamma_1 * gamma_2)
 
 
@@ -454,9 +429,9 @@ def build_gamma(shape: tuple[int, int], temperature: float) -> NonHermitianGamma
     )
 
     for i in range(0, 1):
-        for j in range(0, 1):
+        for i1 in range(0, 1):
             for k in range(0, 1):
-                for l in range(0, 1):
+                for k1 in range(0, 1):
                     for site_0 in range(n_sites):
                         for hop_1 in range(9):
                             for hop_2 in range(n_sites):
@@ -470,7 +445,7 @@ def build_gamma(shape: tuple[int, int], temperature: float) -> NonHermitianGamma
                                     site_0_stacked = np.unravel_index(site_0, shape)
                                     site_1_stacked = site_0_stacked + hop_1_stacked
                                     idx_1 = np.ravel_multi_index(
-                                        (j, *site_1_stacked), (2, *shape), mode="wrap"
+                                        (i1, *site_1_stacked), (2, *shape), mode="wrap"
                                     )
 
                                     hop_2_stacked = np.unravel_index(
@@ -485,7 +460,7 @@ def build_gamma(shape: tuple[int, int], temperature: float) -> NonHermitianGamma
                                     ) - np.array([1, 1])
                                     site_3_stacked = site_2_stacked + hop_3_stacked
                                     idx_3 = np.ravel_multi_index(
-                                        (l, *site_3_stacked), (2, *shape), mode="wrap"
+                                        (k1, *site_3_stacked), (2, *shape), mode="wrap"
                                     )
 
                                     offset = np.array(
@@ -497,7 +472,7 @@ def build_gamma(shape: tuple[int, int], temperature: float) -> NonHermitianGamma
                                         ]
                                     )
                                     gamma[idx_0, idx_1, idx_2, idx_3] = calculate_gamma(
-                                        i, j, k, l, offset, temperature
+                                        i, i1, k, k1, offset, temperature
                                     )
     n_gamma = np.square(2 * n_sites)
     return {"array": gamma.reshape(n_gamma, n_gamma)}
@@ -511,7 +486,7 @@ def test_interpolation_shifted() -> None:
     interpolator_0_1_previous = get_overlap_momentum_interpolator_flat(
         overlap_0_1_previous
     )
-    q_points = np.linspace(0, FERMI_WAVEVECTOR, 1000)
+    q_points = np.linspace(0, FERMI_WAVEVECTOR["NICKEL"], 1000)
     q = np.array([np.zeros_like(q_points), q_points])
     np.testing.assert_almost_equal(
         interpolator_0_1_next(q), interpolator_0_1_previous(q)
@@ -538,7 +513,7 @@ def calculate_potential_integral() -> None:
     # !    ).reshape(r.shape)
     # !
     # !integral = calculate_hermitian_gamma_potential_integral(
-    # !    FERMI_WAVEVECTOR, overlap_function
+    # !    FERMI_WAVEVECTOR["NICKEL"], overlap_function
     # !)
     # !print("(0, 0)", integral)
     # !
@@ -553,7 +528,7 @@ def calculate_potential_integral() -> None:
     # !    ).reshape(q.shape)
     # !
     # !integral = calculate_hermitian_gamma_potential_integral(
-    # !    FERMI_WAVEVECTOR, overlap_function
+    # !    FERMI_WAVEVECTOR["NICKEL"], overlap_function
     # !)
     # !print("(1, 1)", integral)
 
@@ -568,7 +543,7 @@ def calculate_potential_integral() -> None:
     # !    ).reshape(q.shape)
     # !
     # !integral = calculate_hermitian_gamma_potential_integral(
-    # !    FERMI_WAVEVECTOR, overlap_function
+    # !    FERMI_WAVEVECTOR["NICKEL"], overlap_function
     # !)
     # !print("(0, 1)", integral)
 
@@ -583,9 +558,9 @@ def calculate_potential_integral() -> None:
         ).reshape(q.shape)
 
     integral = calculate_hermitian_gamma_potential_integral(
-        FERMI_WAVEVECTOR, overlap_function
+        FERMI_WAVEVECTOR["NICKEL"], overlap_function
     )
-    print("(0, 1) (next 0, 1)", integral)
+    print("(0, 1) (next 0, 1)", integral)  # noqa: T201
 
     overlap_0_1_previous = get_overlap_hydrogen(0, 1, (0, 0), (0, -1))
     get_overlap_momentum_interpolator_flat(overlap_0_1_previous)
@@ -598,7 +573,7 @@ def calculate_potential_integral() -> None:
     # !    ).reshape(q.shape)
     # !
     # !integral = calculate_hermitian_gamma_potential_integral(
-    # !    FERMI_WAVEVECTOR, overlap_function
+    # !    FERMI_WAVEVECTOR["NICKEL"], overlap_function
     # !)
     # !print("(0, 1) (0, previous 1)", integral)
 
@@ -613,7 +588,7 @@ def calculate_potential_integral() -> None:
     # !    ).reshape(q.shape)
     # !
     # !integral = calculate_hermitian_gamma_potential_integral(
-    # !    FERMI_WAVEVECTOR, overlap_function
+    # !    FERMI_WAVEVECTOR["NICKEL"], overlap_function
     # !)
     # !print("(0, 1) (1, next next 0)", integral)
 
@@ -628,7 +603,7 @@ def plot_temperature_dependent_integral() -> None:
     temperatures = np.linspace(50, 200, 50)
     vals = [
         calculate_hermitian_gamma_occupation_integral(
-            0, FERMI_WAVEVECTOR, Boltzmann * t
+            0, FERMI_WAVEVECTOR["NICKEL"], Boltzmann * t
         )
         for t in temperatures
     ]
@@ -720,7 +695,7 @@ def load_average_band_energies(
 ) -> np.ndarray[tuple[_L0Inv], np.dtype[np.float_]]:
     energies = np.zeros((n_bands,))
     for band in range(n_bands):
-        wavepacket = load_nickel_wavepacket(band)
+        wavepacket = get_wavepacket_hydrogen(band)
         energies[band] = wavepacket["eigenvalues"][0, 0]
     return energies  # type: ignore[no-any-return]
 
@@ -731,12 +706,12 @@ def load_average_band_energies(
     )
 )
 def build_incoherent_matrix(
-    n_bands: _L0Inv, temperature: float = 150
-) -> HoppingMatrix[_L0Inv]:
+    n_bands: _L0Inv, _temperature: float = 150
+) -> Any:  # noqa: ANN401
     # The coefficients np.ndarray[tuple[_L0Inv, _L0Inv, Literal[9]], np.dtype[np.float_]]
     # represent the total rate R[i,j,dx] from i to j with an offset of dx at the location i.
-    energies = load_average_band_energies(n_bands)
-    fermi_k = 1.77 * 10 ** (10)
+    load_average_band_energies(n_bands)
+    1.77 * 10 ** (10)
     out = np.zeros((n_bands, n_bands, 9))
     for i, j, dx0, dx1 in itertools.product(
         range(n_bands), range(n_bands), range(-1, 2), range(-1, 2)
@@ -748,8 +723,9 @@ def build_incoherent_matrix(
 
         max_overlap, _ = calculate_max_overlap_momentum(overlap_momentum)
         # ! prefactor = np.exp(-(energies[j] - energies[i]) / (Boltzmann * 150))
-        energy_jump = energies[j] - energies[i]
-        prefactor = calculate_electron_integral(fermi_k, energy_jump, temperature)
+        # ! energy_jump = energies[j] - energies[i]
+        # ! prefactor = calculate_electron_integral(fermi_k, energy_jump, temperature)
+        prefactor = 1
 
         dx = np.ravel_multi_index(offset, (3, 3), mode="wrap")
         out[i, j, dx] = np.abs(max_overlap) ** 2 * prefactor
@@ -776,120 +752,6 @@ def build_incoherent_matrix_fcc_hcp() -> (
     return out  # type: ignore [no-any-return]
 
 
-def calculate_hydrogen_flux() -> None:
-    n_states = 6
-    for t in [125, 150, 175, 200, 225]:
-        coefficients = build_incoherent_matrix(n_states, t)
-        grid_shape = (10, 10)
-        matrix = build_from_hopping_matrix(coefficients, grid_shape)
-        rate = calculate_hopping_rate(matrix)
-        print(t, f"{rate:.4g}")  # noqa: T201
-
-
-def simulate_hydrogen_system() -> None:
-    n_states = 6
-    coefficients = build_incoherent_matrix(n_states, 125)  # 230
-    grid_shape = (10, 10)
-    matrix = build_from_hopping_matrix(coefficients, grid_shape)
-
-    times = np.linspace(0, 1e-10, 100)
-    initial_state: TunnellingState[Any] = {
-        "vector": np.zeros(np.prod(grid_shape) * n_states),
-        "shape": (*grid_shape, n_states),
-    }
-    initial_state["vector"][0] = 1
-    out = simulate_tunnelling_from_matrix(matrix, initial_state, times)
-
-    vectors = out["vectors"]
-
-    print(np.sum(np.abs(vectors[:, -1])), np.sum(vectors[:, -1]))  # noqa: T201
-    print(  # noqa: T201
-        np.sum(np.abs(vectors[:, -1].reshape(*grid_shape, n_states)[:, :, 0])),
-        np.sum(vectors[:, -1].reshape(*grid_shape, n_states)[:, :, 0]),
-        np.sum(np.abs(vectors[:, -1].reshape(*grid_shape, n_states)[:, :, 1])),
-        np.sum(vectors[:, -1].reshape(*grid_shape, n_states)[:, :, 1]),
-    )
-    fig, _ = plot_occupation_per_band(out)
-    fig.show()
-
-    fig, _ = plot_occupation_per_site(out)
-    fig.show()
-
-    fig, _ = plot_occupation_per_state(out)
-    fig.show()
-    basis = load_nickel_wavepacket(0)["basis"]
-    fig, ax, _anim0 = animate_occupation_per_site_2d(out, basis, scale="symlog")
-    fig.show()
-    input()
-
-
-def plot_electron_integral_nickel() -> None:
-    fermi_k = 1.77 * 10 ** (10)
-    energies = load_average_band_energies(6)
-    energy_jump = energies[5] - energies[0]
-    print(calculate_approximate_electron_integral(fermi_k, energy_jump))  # noqa: T201
-    print(calculate_electron_integral(fermi_k, energy_jump))  # noqa: T201
-    plot_electron_integral(fermi_k, energy_jump)
-
-
-def plot_nickel_isf_slow() -> None:
-    fig, ax = plt.subplots()
-    times = np.linspace(0, 1e-10, 100)
-    grid_shape = (10, 10)
-    basis = load_nickel_wavepacket(0)["basis"]
-
-    util = AxisWithLengthBasisUtil(basis)
-    dk = util.delta_x[0] + util.delta_x[1]
-    dk /= np.linalg.norm(dk)
-    dk *= 0.8 * 10**10
-
-    for t in [125, 150, 175, 200, 225]:
-        coefficients: HoppingMatrix[Literal[6]] = build_incoherent_matrix(6, t)  # type: ignore[assignment]
-
-        matrix = build_from_hopping_matrix(coefficients, grid_shape)
-
-        isf = calculate_isf(matrix, basis, dk, times)
-        _, _, line = plot_isf(isf, ax=ax)
-        line.set_label(f"{t}K")
-    ax.legend()
-    ax.set_title(
-        "Plot of the Nickel ISF along the $110$ azimuth\n"
-        "at $\\Delta K = 0.8 \\AA^{-1}$"
-    )
-    fig.show()
-    save_figure(fig, "nickel_isf_slow.png")
-    input()
-
-
-def plot_nickel_isf_fast() -> None:
-    fig, ax = plt.subplots()
-    times = np.linspace(0, 1e-10, 100)
-    grid_shape = (10, 10)
-    basis = load_nickel_wavepacket(0)["basis"]
-
-    util = AxisWithLengthBasisUtil(basis)
-    dk = util.delta_x[0] - util.delta_x[1]
-    dk /= np.linalg.norm(dk)
-    dk *= 0.8 * 10**10
-
-    for t in [125, 150, 175, 200, 225]:
-        coefficients: HoppingMatrix[Literal[6]] = build_incoherent_matrix(6, t)  # type: ignore[assignment]
-
-        matrix = build_from_hopping_matrix(coefficients, grid_shape)
-
-        isf = calculate_isf(matrix, basis, dk, times)
-        _, _, line = plot_isf(isf, ax=ax)
-        line.set_label(f"{t}K")
-    ax.legend()
-    ax.set_title(
-        "Plot of the Nickel ISF along the $11\\bar{2}$ azimuth\n"
-        "at $\\Delta K = 0.8 \\AA^{-1}$"
-    )
-    fig.show()
-    save_figure(fig, "nickel_isf.png")
-    input()
-
-
 def build_gamma_coefficient_matrix_fcc_hcp(
     temperature: float,
 ) -> NonHermitianGammaCoefficientMatrix[Literal[2]]:
@@ -898,10 +760,10 @@ def build_gamma_coefficient_matrix_fcc_hcp(
     omega = float(get_hydrogen_energy_difference(0, 1))
 
     fast_rate = constant_rate * calculate_hermitian_gamma_occupation_integral(
-        omega, FERMI_WAVEVECTOR, Boltzmann * temperature
+        omega, FERMI_WAVEVECTOR["NICKEL"], Boltzmann * temperature
     )
     slow_rate = constant_rate * calculate_hermitian_gamma_occupation_integral(
-        omega, FERMI_WAVEVECTOR, Boltzmann * temperature
+        omega, FERMI_WAVEVECTOR["NICKEL"], Boltzmann * temperature
     )
 
     out[0, 1, 0] = fast_rate
@@ -917,7 +779,7 @@ def solve_master_equation_nickel() -> None:
     # ! coefficient_matrix = build_gamma_coefficient_matrix_fcc_hcp(150)
     # ! gamma = calculate_gamma_two_state((3, 3), coefficient_matrix)
     gamma = build_gamma((3, 3), 150)
-    print(gamma["array"].shape)
+    print(gamma["array"].shape)  # noqa: T201
     jump_operators = calculate_jump_operators(gamma)
     _solution = solve_master_equation(jump_operators)
-    print(_solution)
+    print(_solution)  # noqa: T201

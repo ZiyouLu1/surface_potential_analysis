@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Generic, TypedDict, TypeVar
+from typing import Any, Generic, TypedDict, TypeVar
 
 import numpy as np
 
@@ -11,9 +11,6 @@ from surface_potential_analysis.basis.basis import (
     Basis3d,
     FundamentalPositionBasis3d,
 )
-
-if TYPE_CHECKING:
-    from surface_potential_analysis._types import SingleFlatIndexLike
 
 _B0Inv = TypeVar("_B0Inv", bound=Basis)
 
@@ -97,51 +94,3 @@ _NF2Inv = TypeVar("_NF2Inv", bound=int)
 FundamentalPositionBasisEigenstate3d = StateVector3d[
     FundamentalPositionBasis3d[_NF0Inv, _NF1Inv, _NF2Inv]
 ]
-
-
-class EigenvectorList(TypedDict, Generic[_B0Inv]):
-    """Represents a list of eigenstates, each with the same basis and bloch wavevector."""
-
-    basis: _B0Inv
-    vectors: np.ndarray[tuple[int, int], np.dtype[np.complex_]]
-    """A list of state vectors"""
-    eigenvalues: np.ndarray[tuple[int], np.dtype[np.float_]]
-
-
-def get_state_vector(
-    eigenvectors: EigenvectorList[_B0Inv], idx: SingleFlatIndexLike
-) -> StateVector[_B0Inv]:
-    """
-    Get a single state vector from a list of states.
-
-    Parameters
-    ----------
-    eigenstates : EigenstateList[_B0Inv]
-    idx : SingleFlatIndexLike
-
-    Returns
-    -------
-    Eigenstate[_B0Inv]
-    """
-    return {"basis": eigenvectors["basis"], "vector": eigenvectors["vectors"][idx]}
-
-
-def get_state_dual_vector(
-    eigenvectors: EigenvectorList[_B0Inv], idx: SingleFlatIndexLike
-) -> StateDualVector[_B0Inv]:
-    """
-    Get a single state dual vector from a list of states.
-
-    Parameters
-    ----------
-    eigenstates : EigenstateList[_B0Inv]
-    idx : SingleFlatIndexLike
-
-    Returns
-    -------
-    Eigenstate[_B0Inv]
-    """
-    return {
-        "basis": eigenvectors["basis"],
-        "vector": np.conj(eigenvectors["vectors"][idx]),
-    }

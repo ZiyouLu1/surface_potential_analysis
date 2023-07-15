@@ -12,7 +12,7 @@ from surface_potential_analysis.wavepacket.wavepacket import (
     generate_wavepacket,
 )
 
-from .s2_hamiltonian import get_hamiltonian
+from .s2_hamiltonian import get_hamiltonian_deuterium, get_hamiltonian_hydrogen
 from .surface_data import get_data_path
 
 if TYPE_CHECKING:
@@ -25,7 +25,7 @@ if TYPE_CHECKING:
     from surface_potential_analysis.basis.basis import (
         Basis3d,
     )
-    from surface_potential_analysis.operator import SingleBasisOperator3d
+    from surface_potential_analysis.operator import SingleBasisOperator
 
     _HydrogenRutheniumWavepacket = Wavepacket3dWith2dSamples[
         Literal[12],
@@ -37,13 +37,23 @@ if TYPE_CHECKING:
         ],
     ]
 
+    _DeuteriumRutheniumWavepacket = Wavepacket3dWith2dSamples[
+        Literal[12],
+        Literal[12],
+        Basis3d[
+            MomentumAxis[Literal[33], Literal[33], Literal[3]],
+            MomentumAxis[Literal[33], Literal[33], Literal[3]],
+            ExplicitAxis[Literal[250], Literal[10], Literal[3]],
+        ],
+    ]
+
 
 @npy_cached(get_data_path("wavepacket/wavepacket_hydrogen.npy"), load_pickle=True)  # type: ignore[misc]
 def get_all_wavepackets_hydrogen() -> list[_HydrogenRutheniumWavepacket]:
     def _hamiltonian_generator(
         bloch_fraction: np.ndarray[tuple[Literal[3]], np.dtype[np.float_]]
-    ) -> SingleBasisOperator3d[Any]:
-        return get_hamiltonian(
+    ) -> SingleBasisOperator[Any]:
+        return get_hamiltonian_hydrogen(
             shape=(50, 50, 250),
             bloch_fraction=bloch_fraction,
             resolution=(25, 25, 10),
@@ -66,7 +76,7 @@ def get_wavepacket_hydrogen(band: int) -> _HydrogenRutheniumWavepacket:
     return get_all_wavepackets_hydrogen()[band]
 
 
-def get_two_point_normalized_wavepacket(
+def get_two_point_normalized_wavepacket_hydrogen(
     band: int, offset: tuple[int, int] = (0, 0), angle: float = 0
 ) -> _HydrogenRutheniumWavepacket:
     wavepacket = get_wavepacket_hydrogen(band)
@@ -76,6 +86,49 @@ def get_two_point_normalized_wavepacket(
 def get_hydrogen_energy_difference(state_0: int, state_1: int) -> np.float_:
     wavepacket_0 = get_wavepacket_hydrogen(state_0)
     wavepacket_1 = get_wavepacket_hydrogen(state_1)
+    return np.average(wavepacket_0["eigenvalues"]) - np.average(
+        wavepacket_1["eigenvalues"]
+    )
+
+
+@npy_cached(get_data_path("wavepacket/wavepacket_deuterium.npy"), load_pickle=True)  # type: ignore[misc]
+def get_all_wavepackets_deuterium() -> list[_DeuteriumRutheniumWavepacket]:
+    def _hamiltonian_generator(
+        bloch_fraction: np.ndarray[tuple[Literal[3]], np.dtype[np.float_]]
+    ) -> SingleBasisOperator[Any]:
+        return get_hamiltonian_deuterium(
+            shape=(66, 66, 250),
+            bloch_fraction=bloch_fraction,
+            resolution=(33, 33, 10),
+        )
+
+    save_bands = np.arange(20)
+    return generate_wavepacket(
+        _hamiltonian_generator,
+        shape=(12, 12, 1),
+        save_bands=save_bands,
+    )
+
+
+def _get_wavepacket_cache_d(band: int) -> Path:
+    return get_data_path(f"wavepacket/wavepacket_deuterium_{band}.npy")
+
+
+@npy_cached(_get_wavepacket_cache_d, load_pickle=True)
+def get_wavepacket_deuterium(band: int) -> _DeuteriumRutheniumWavepacket:
+    return get_all_wavepackets_deuterium()[band]
+
+
+def get_two_point_normalized_wavepacket_deuterium(
+    band: int, offset: tuple[int, int] = (0, 0), angle: float = 0
+) -> _DeuteriumRutheniumWavepacket:
+    wavepacket = get_wavepacket_deuterium(band)
+    return localize_tightly_bound_wavepacket_two_point_max(wavepacket, offset, angle)
+
+
+def get_deuterium_energy_difference(state_0: int, state_1: int) -> np.float_:
+    wavepacket_0 = get_wavepacket_deuterium(state_0)
+    wavepacket_1 = get_wavepacket_deuterium(state_1)
     return np.average(wavepacket_0["eigenvalues"]) - np.average(
         wavepacket_1["eigenvalues"]
     )

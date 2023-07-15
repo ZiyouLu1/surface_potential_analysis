@@ -2,96 +2,47 @@ from __future__ import annotations
 
 import numpy as np
 from matplotlib import pyplot as plt
-from surface_potential_analysis.state_vector.eigenstate_collection import (
-    load_eigenstate_collection,
-    select_eigenstate,
-)
 from surface_potential_analysis.state_vector.eigenstate_collection_plot import (
     plot_eigenvalues_against_bloch_phase_1d,
-    plot_lowest_band_eigenvalues_against_bloch_k,
 )
-from surface_potential_analysis.state_vector.plot import animate_eigenstate_x0x1
 
-from .surface_data import get_data_path, save_figure
+from hydrogen_copper_111.s3_eigenstates import (
+    get_eigenstate_collection_deuterium,
+    get_eigenstate_collection_hydrogen,
+)
 
 
-def analyze_band_convergence() -> None:
+def plot_lowest_band_energy_deuterium() -> None:
     fig, ax = plt.subplots()
 
-    path = get_data_path("eigenstates_23_23_10_large.npy")
-    eigenstates = load_eigenstate_collection(path)
-    _, _, ln = plot_lowest_band_eigenvalues_against_bloch_k(eigenstates, ax=ax)
-    ln.set_label("(23,23,10)")
-
-    path = get_data_path("eigenstates_23_23_12.npy")
-    eigenstates = load_eigenstate_collection(path)
-    _, _, ln = plot_lowest_band_eigenvalues_against_bloch_k(eigenstates, ax=ax)
-    ln.set_label("(23,23,12)")
-
-    path = get_data_path("eigenstates_25_25_16.npy")
-    eigenstates = load_eigenstate_collection(path)
-    _, _, ln = plot_lowest_band_eigenvalues_against_bloch_k(eigenstates, ax=ax)
-    ln.set_label("(25,25,16)")
-
-    ax.legend()
-    ax.set_title(
-        "Plot of lowest band energies\n"
-        "showing convergence for an eigenstate grid of (23,23,16)"
-    )
-
-    fig.show()
-    save_figure(fig, "lowest_band_convergence.png")
-
-    fig, ax = plt.subplots()
-
-    path = get_data_path("eigenstates_25_25_16.npy")
-    eigenstates = load_eigenstate_collection(path)
-    _, _, ln = plot_eigenvalues_against_bloch_phase_1d(
-        eigenstates, np.array([1, 0, 0]), band=0, ax=ax
-    )
-    ln.set_label("n=0")
-    _, _, ln = plot_eigenvalues_against_bloch_phase_1d(
-        eigenstates, np.array([1, 0, 0]), band=1, ax=ax
-    )
-    ln.set_label("n=1")
+    shapes = [(23, 23, 10)]
+    for shape in shapes:
+        collection = get_eigenstate_collection_deuterium(shape)
+        _, _, ln = plot_eigenvalues_against_bloch_phase_1d(
+            collection, np.array([1, 0, 0]), band=0, ax=ax
+        )
+        ln.set_label(f"({shape[0]}, {shape[1]}, {shape[2]})")
 
     ax.legend()
     fig.show()
-    save_figure(fig, "two_lowest_bands.png")
-
-    fig, ax = plt.subplots()
-
-    path = get_data_path("eigenstates_23_23_12.npy")
-    eigenstates = load_eigenstate_collection(path)
-    _, _, ln = plot_eigenvalues_against_bloch_phase_1d(
-        eigenstates, np.array([1, 0, 0]), band=1, ax=ax
-    )
-    ln.set_label("(23,23,12)")
-
-    path = get_data_path("eigenstates_25_25_16.npy")
-    eigenstates = load_eigenstate_collection(path)
-    _, _, ln = plot_eigenvalues_against_bloch_phase_1d(
-        eigenstates, np.array([1, 0, 0]), band=1, ax=ax
-    )
-    ln.set_label("(25,25,16)")
-
-    ax.legend()
-    fig.show()
-    save_figure(fig, "second_band_convergence.png")
-
     input()
 
 
-def plot_eigenstate_for_each_band() -> None:
-    """Check to see if the eigenstates look as they are supposed to."""
-    path = get_data_path("eigenstates_29_29_12.json")
-    eigenstates = load_eigenstate_collection(path)
+def plot_lowest_band_energy_hydrogen() -> None:
+    fig, ax = plt.subplots()
 
-    eigenstate = select_eigenstate(eigenstates, bloch_idx=0, band_idx=0)
-    fig, _, _anim1 = animate_eigenstate_x0x1(eigenstate)
-    fig.show()
+    shapes = [
+        (23, 23, 10),
+        (23, 23, 12),
+        (25, 25, 10),
+    ]
+    for shape in shapes:
+        collection = get_eigenstate_collection_hydrogen(shape)
+        _, _, ln = plot_eigenvalues_against_bloch_phase_1d(
+            collection, np.array([1, 0, 0]), band=0, ax=ax
+        )
+        ln.set_label(f"({shape[0]}, {shape[1]}, {shape[2]})")
 
-    eigenstate = select_eigenstate(eigenstates, bloch_idx=0, band_idx=1)
-    fig, _, _anim2 = animate_eigenstate_x0x1(eigenstate)
+    ax.legend()
     fig.show()
     input()

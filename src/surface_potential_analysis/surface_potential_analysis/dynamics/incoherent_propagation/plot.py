@@ -15,9 +15,9 @@ if TYPE_CHECKING:
         DiagonalOperatorList,
     )
 
-    from .tunnelling_matrix import TunnellingSimulationBasis
+    from .tunnelling_basis import TunnellingSimulationBasis
 
-    _B0Inv = TypeVar("_B0Inv", bound=TunnellingSimulationBasis)
+    _B0Inv = TypeVar("_B0Inv", bound=TunnellingSimulationBasis[Any, Any, Any])
     _L0Inv = TypeVar("_L0Inv", bound=int)
 
 
@@ -60,7 +60,7 @@ def plot_occupation_per_band(
 
     vectors_per_band = _sum_over_axes(state, axes=(0, 1))
     for n in range(vectors_per_band["vectors"].shape[1]):
-        (line,) = ax.plot(times, vectors_per_band["vectors"][:, n])
+        (line,) = ax.plot(times, np.real_if_close(vectors_per_band["vectors"][:, n]))
         line.set_label(f"band {n}")
 
     ax.legend()
@@ -94,7 +94,7 @@ def plot_occupation_per_site(
     util = BasisUtil(vectors_per_band["basis"])
 
     for i in range(util.size):
-        (line,) = ax.plot(times, vectors_per_band["vectors"][:, i])
+        (line,) = ax.plot(times, np.real_if_close(vectors_per_band["vectors"][:, i]))
         nx0, nx1 = util.get_stacked_index(i)
         line.set_label(f"site ({nx0}, {nx1})")
     ax.legend()
@@ -127,7 +127,7 @@ def plot_occupation_per_state(
     util = BasisUtil(state["basis"])
 
     for i, j, n in np.ndindex(*util.shape):
-        ax.plot(times, state["vectors"][:, i, j, n])
+        ax.plot(times, np.real_if_close(state["vectors"][:, i, j, n]))
 
     ax.set_title("Plot of occupation of each state against time")
     ax.set_xlabel("time /s")

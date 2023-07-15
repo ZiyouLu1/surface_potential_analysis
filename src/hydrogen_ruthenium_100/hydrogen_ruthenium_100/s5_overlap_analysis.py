@@ -12,17 +12,17 @@ from surface_potential_analysis.overlap.interpolation import (
     get_angle_averaged_diagonal_overlap_function,
     get_overlap_momentum_interpolator_flat,
 )
+from surface_potential_analysis.util.constants import FERMI_WAVEVECTOR
 
-from .constants import FERMI_WAVEVECTOR
 from .s4_wavepacket import get_hydrogen_energy_difference
-from .s5_overlap import get_overlap
+from .s5_overlap import get_overlap_hydrogen
 
 if TYPE_CHECKING:
     _S0Inv = TypeVar("_S0Inv", bound=tuple[int, ...])
 
 
 def get_fcc_hcp_gamma() -> np.complex_:
-    overlap = get_overlap(0, 1)
+    overlap = get_overlap_hydrogen(0, 1)
     interpolator_0_1 = get_overlap_momentum_interpolator_flat(overlap)
 
     def overlap_function(
@@ -33,7 +33,7 @@ def get_fcc_hcp_gamma() -> np.complex_:
         )
 
     return calculate_hermitian_gamma_potential_integral(
-        FERMI_WAVEVECTOR, overlap_function
+        FERMI_WAVEVECTOR["RUTHENIUM"], overlap_function
     )
 
 
@@ -45,7 +45,7 @@ def get_rate_simple_equation(
     temperature_dep_integral = np.array(
         [
             calculate_hermitian_gamma_occupation_integral(
-                omega, FERMI_WAVEVECTOR, Boltzmann * t
+                omega, FERMI_WAVEVECTOR["RUTHENIUM"], Boltzmann * t
             )
             for t in temperature_flat
         ]
@@ -53,7 +53,7 @@ def get_rate_simple_equation(
     temperature_dep_integral2 = np.array(
         [
             calculate_hermitian_gamma_occupation_integral(
-                -omega, FERMI_WAVEVECTOR, Boltzmann * t
+                -omega, FERMI_WAVEVECTOR["RUTHENIUM"], Boltzmann * t
             )
             for t in temperature_flat
         ]
