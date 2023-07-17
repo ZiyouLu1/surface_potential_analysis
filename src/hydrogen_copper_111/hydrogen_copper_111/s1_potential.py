@@ -12,14 +12,11 @@ from surface_potential_analysis.potential.potential import (
     FundamentalPositionBasisPotential3d,
     UnevenPotential3d,
     interpolate_uneven_potential,
-    load_potential,
-    load_uneven_potential,
     normalize_potential,
-    save_potential,
-    save_uneven_potential,
     truncate_potential,
     undo_truncate_potential,
 )
+from surface_potential_analysis.util.decorators import npy_cached
 
 from .surface_data import get_data_path
 
@@ -31,16 +28,6 @@ _L2Inv = TypeVar("_L2Inv", bound=int)
 def load_raw_data() -> PointPotential3d[int]:
     path = get_data_path("raw_data.json")
     return load_point_potential_json(path)
-
-
-def load_raw_data_potential() -> UnevenPotential3d[int, int, int]:
-    path = get_data_path("raw_data_reflected.npy")
-    return load_uneven_potential(path)
-
-
-def load_interpolated_potential() -> FundamentalPositionBasisPotential3d[int, int, int]:
-    path = get_data_path("interpolated_data.npy")
-    return load_potential(path)
 
 
 def map_irreducible_points_into_unit_cell(
@@ -180,27 +167,19 @@ def map_irreducible_points_into_unit_cell(
     }
 
 
-def generate_reflected_data() -> None:
-    irreducible_points = load_raw_data()
-    data = map_irreducible_points_into_unit_cell(irreducible_points)
-    path = get_data_path("raw_data_reflected.npy")
-    save_uneven_potential(path, data)
+@npy_cached(get_data_path("potential/reflected_potential.npy"), load_pickle=True)
+def get_reflected_potential() -> UnevenPotential3d[int, int, int]:
+    raw_potential = load_raw_data()
+    return map_irreducible_points_into_unit_cell(raw_potential)
 
 
 def get_interpolated_potential(
     shape: tuple[_L0Inv, _L1Inv, _L2Inv]
 ) -> FundamentalPositionBasisPotential3d[_L0Inv, _L1Inv, _L2Inv]:
-    grid = load_raw_data_potential()
-    normalized = normalize_potential(grid)
+    potential = get_reflected_potential()
+    normalized = normalize_potential(potential)
 
     truncated = truncate_potential(normalized, cutoff=1e-17, n=5, offset=1e-20)
     truncated = truncate_potential(truncated, cutoff=3e-19, n=1, offset=1e-20)
     data = interpolate_uneven_potential(truncated, shape)
     return undo_truncate_potential(data, cutoff=3e-19, n=1, offset=1e-20)
-
-
-def generate_interpolated_data() -> None:
-    data = get_interpolated_potential((70, 70, 100))
-
-    path = get_data_path("interpolated_data.npy")
-    save_potential(path, data)

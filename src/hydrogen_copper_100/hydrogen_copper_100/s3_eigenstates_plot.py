@@ -65,12 +65,11 @@ def plot_lowest_band_energy() -> None:
     fig, ax = plt.subplots()
 
     shapes = [
-        (23, 23, 10),
-        (23, 23, 12),
-        (23, 23, 14),
+        (21, 21, 12),
         (21, 21, 14),
+        (21, 21, 15),
         (21, 21, 16),
-        (21, 21, 18),
+        (23, 23, 15),
     ]
     for shape in shapes:
         collection = get_eigenstate_collection(shape)

@@ -33,9 +33,9 @@ if TYPE_CHECKING:
         Literal[12],
         Literal[12],
         Basis3d[
-            MomentumAxis[Literal[24], Literal[24], Literal[3]],
-            MomentumAxis[Literal[24], Literal[24], Literal[3]],
-            ExplicitAxis[Literal[250], Literal[18], Literal[3]],
+            MomentumAxis[Literal[21], Literal[21], Literal[3]],
+            MomentumAxis[Literal[21], Literal[21], Literal[3]],
+            ExplicitAxis[Literal[250], Literal[15], Literal[3]],
         ],
     ]
 
@@ -46,9 +46,9 @@ def get_all_wavepackets_hydrogen() -> list[_HydrogenCopperWavepacket]:
         bloch_fraction: np.ndarray[tuple[Literal[3]], np.dtype[np.float_]]
     ) -> SingleBasisOperator[Any]:
         return get_hamiltonian(
-            shape=(250, 250, 250),
+            shape=(42, 42, 250),
             bloch_fraction=bloch_fraction,
-            resolution=(24, 24, 18),
+            resolution=(21, 21, 15),
         )
 
     save_bands = np.arange(20)

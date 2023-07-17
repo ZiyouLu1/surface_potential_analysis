@@ -5,6 +5,8 @@ from typing import TYPE_CHECKING, Any, TypeVar
 import numpy as np
 import scipy
 
+from .tunnelling_matrix import get_initial_pure_density_matrix_for_basis
+
 if TYPE_CHECKING:
     from surface_potential_analysis.operator.operator import DiagonalOperator
     from surface_potential_analysis.operator.operator_list import DiagonalOperatorList
@@ -16,9 +18,7 @@ if TYPE_CHECKING:
     )
 
     from .tunnelling_basis import TunnellingSimulationBasis
-    from .tunnelling_matrix import (
-        TunnellingMMatrix,
-    )
+    from .tunnelling_matrix import TunnellingMMatrix
 
     _L0Inv = TypeVar("_L0Inv", bound=int)
     _B0Inv = TypeVar("_B0Inv", bound=TunnellingSimulationBasis[Any, Any, Any])
@@ -46,48 +46,6 @@ def calculate_tunnelling_eigenstates(
     }
 
 
-def get_equilibrium_state(
-    eigenstates: EigenvectorList[_B0Inv, int],
-) -> StateVector[_B0Inv]:
-    """
-    Select the equilibrium tunnelling state from a list of eigenstates.
-
-    Since all of the eigenstates have E < 0 except for the equilibrium
-    this corresponds to the single "zero energy" state
-
-    Parameters
-    ----------
-    eigenstates : TunnellingEigenstates[_S0Inv]
-
-    Returns
-    -------
-    TunnellingVector[_S0Inv]
-    """
-    vector = eigenstates["vectors"][np.argmax(eigenstates["eigenvalues"])]
-    return {"basis": eigenstates["basis"], "vector": vector}
-
-
-def calculate_equilibrium_state(
-    matrix: TunnellingMMatrix[_B0Inv],
-) -> StateVector[_B0Inv]:
-    """
-    Calculate the equilibrium tunnelling state for a given matrix.
-
-    Since all of the eigenstates have E < 0 except for the equilibrium
-    this corresponds to the single "zero energy" state
-
-    Parameters
-    ----------
-    matrix : TunnellingMatrix[_S0Inv]
-
-    Returns
-    -------
-    TunnellingVector[_S0Inv]
-    """
-    eigenstates = calculate_tunnelling_eigenstates(matrix)
-    return get_equilibrium_state(eigenstates)
-
-
 def get_vector_eigenstate_decomposition(
     density_matrix: DiagonalOperator[_B0Inv, _B0Inv],
     eigenstates: EigenvectorList[_B0Inv, _L0Inv],
@@ -113,6 +71,56 @@ def get_vector_eigenstate_decomposition(
     # of the product over the last axis of x, so a[i] x[:, i] = b[:]
     # ie solved is the decomposition of b into the eigenvectors
     return scipy.linalg.solve(eigenstates["vectors"].T, density_matrix["vector"])  # type: ignore[no-any-return]
+
+
+def get_equilibrium_state(
+    eigenstates: EigenvectorList[_B0Inv, int],
+) -> StateVector[_B0Inv]:
+    """
+    Select the equilibrium tunnelling state from a list of eigenstates.
+
+    Since all of the eigenstates have E < 0 except for the equilibrium
+    this corresponds to the single "zero energy" state
+
+    Parameters
+    ----------
+    eigenstates : TunnellingEigenstates[_S0Inv]
+
+    Returns
+    -------
+    TunnellingVector[_S0Inv]
+    """
+    # We assume the surface is 'well connected', ie all initial states
+    # end up in the equilibrium configuration
+    initial = get_initial_pure_density_matrix_for_basis(eigenstates["basis"])
+    coefficients = get_vector_eigenstate_decomposition(initial, eigenstates)
+
+    state_idx = np.argmax(eigenstates["eigenvalues"])
+    # eigenstates["vectors"][state_idx] is not necessarily normalized,
+    # and could contain negative or imaginary 'probabilities'
+    vector = coefficients[state_idx] * eigenstates["vectors"][state_idx]
+    return {"basis": eigenstates["basis"], "vector": vector}
+
+
+def calculate_equilibrium_state(
+    matrix: TunnellingMMatrix[_B0Inv],
+) -> StateVector[_B0Inv]:
+    """
+    Calculate the equilibrium tunnelling state for a given matrix.
+
+    Since all of the eigenstates have E < 0 except for the equilibrium
+    this corresponds to the single "zero energy" state
+
+    Parameters
+    ----------
+    matrix : TunnellingMatrix[_S0Inv]
+
+    Returns
+    -------
+    TunnellingVector[_S0Inv]
+    """
+    eigenstates = calculate_tunnelling_eigenstates(matrix)
+    return get_equilibrium_state(eigenstates)
 
 
 def get_tunnelling_simulation_state(

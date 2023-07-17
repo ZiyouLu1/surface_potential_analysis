@@ -22,30 +22,32 @@ from surface_potential_analysis.axis.conversion import (
 )
 from surface_potential_analysis.util.interpolation import pad_ft_points
 
-from .util import AxisWithLengthBasisUtil
+from .util import BasisUtil
 
 if TYPE_CHECKING:
     from surface_potential_analysis.axis.axis_like import (
-        AxisWithLengthLike,
+        AxisLike,
         AxisWithLengthLike1d,
         AxisWithLengthLike2d,
         AxisWithLengthLike3d,
     )
     from surface_potential_analysis.basis.basis import (
         AxisWithLengthBasis,
+        Basis,
         Basis1d,
         Basis2d,
     )
 
     from .basis import Basis3d
 
-    _A0Inv = TypeVar("_A0Inv", bound=AxisWithLengthLike[Any, Any, Any])
-    _A1Inv = TypeVar("_A1Inv", bound=AxisWithLengthLike[Any, Any, Any])
+    _A0Inv = TypeVar("_A0Inv", bound=AxisLike[Any, Any])
+    _A1Inv = TypeVar("_A1Inv", bound=AxisLike[Any, Any])
 
-    _B0Inv = TypeVar("_B0Inv", bound=AxisWithLengthBasis[Any])
-    _B1Inv = TypeVar("_B1Inv", bound=AxisWithLengthBasis[Any])
-    _B2Inv = TypeVar("_B2Inv", bound=AxisWithLengthBasis[Any])
-    _B3Inv = TypeVar("_B3Inv", bound=AxisWithLengthBasis[Any])
+    _B0Inv = TypeVar("_B0Inv", bound=Basis)
+    _ALB0Inv = TypeVar("_ALB0Inv", bound=AxisWithLengthBasis[Any])
+    _B1Inv = TypeVar("_B1Inv", bound=Basis)
+    _B2Inv = TypeVar("_B2Inv", bound=Basis)
+    _B3Inv = TypeVar("_B3Inv", bound=Basis)
     _B1d0Inv = TypeVar("_B1d0Inv", bound=Basis1d[Any])
     _B1d1Inv = TypeVar("_B1d1Inv", bound=Basis1d[Any])
     _B1d2Inv = TypeVar("_B1d2Inv", bound=Basis1d[Any])
@@ -148,7 +150,7 @@ def convert_vector(
     -------
     np.ndarray[tuple[int], np.dtype[np.complex_]]
     """
-    util = AxisWithLengthBasisUtil(initial_basis)
+    util = BasisUtil(initial_basis)
     swapped = vector.swapaxes(axis, 0)
     stacked = swapped.reshape(*util.shape, *swapped.shape[1:])
     for ax, (initial, final) in enumerate(zip(initial_basis, final_basis, strict=True)):
@@ -335,20 +337,20 @@ def basis_as_fundamental_momentum_basis(
 
 @overload
 def basis_as_fundamental_momentum_basis(
-    basis: _B0Inv,
+    basis: _ALB0Inv,
 ) -> tuple[FundamentalMomentumAxis[Any, Any], ...]:
     ...
 
 
 def basis_as_fundamental_momentum_basis(
-    basis: _B0Inv,
+    basis: _ALB0Inv,
 ) -> tuple[FundamentalMomentumAxis[Any, Any], ...]:
     """
     Get the fundamental momentum basis for a given basis.
 
     Parameters
     ----------
-    basis : _B0Inv
+    basis : _ALB0Inv
 
     Returns
     -------
@@ -390,13 +392,13 @@ def basis_as_fundamental_position_basis(
 
 @overload
 def basis_as_fundamental_position_basis(
-    basis: _B0Inv,
+    basis: _ALB0Inv,
 ) -> tuple[FundamentalPositionAxis[Any, Any], ...]:
     ...
 
 
 def basis_as_fundamental_position_basis(
-    basis: _B0Inv,
+    basis: _ALB0Inv,
 ) -> tuple[FundamentalPositionAxis[Any, Any], ...]:
     """
     Get the fundamental position basis for a given basis.

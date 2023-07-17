@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from typing import Literal
-
 import numpy as np
 from surface_potential_analysis.dynamics.incoherent_propagation.eigenstates import (
     calculate_equilibrium_state,
@@ -10,9 +8,6 @@ from surface_potential_analysis.dynamics.incoherent_propagation.eigenstates impo
 from surface_potential_analysis.dynamics.incoherent_propagation.plot import (
     plot_occupation_per_band,
     plot_occupation_per_site,
-)
-from surface_potential_analysis.dynamics.incoherent_propagation.tunnelling_basis import (
-    TunnellingSimulationBandsAxis,
 )
 from surface_potential_analysis.dynamics.incoherent_propagation.tunnelling_matrix import (
     get_initial_pure_density_matrix_for_basis,
@@ -23,10 +18,6 @@ from surface_potential_analysis.dynamics.incoherent_propagation.tunnelling_matri
 from hydrogen_nickel_111.s6_a_calculation import (
     get_tunnelling_a_matrix_deuterium,
     get_tunnelling_a_matrix_hydrogen,
-)
-
-from .s4_wavepacket import (
-    get_all_wavepackets_deuterium,
 )
 
 
@@ -98,10 +89,6 @@ def get_simulated_state_on_surface_hydrogen() -> None:
 
 def plot_occupation_on_surface_deuterium() -> None:
     a_matrix = get_tunnelling_a_matrix_deuterium((5, 5), 6, 150)
-    bands_axis = TunnellingSimulationBandsAxis[Literal[6]].from_wavepackets(
-        get_all_wavepackets_deuterium()[0:6]
-    )
-    a_matrix["basis"] = (a_matrix["basis"][0], a_matrix["basis"][1], bands_axis)
     m_matrix = get_tunnelling_m_matrix(a_matrix)
     initial_state = get_initial_pure_density_matrix_for_basis(m_matrix["basis"])
     times = np.linspace(0, 9e-10, 1000)

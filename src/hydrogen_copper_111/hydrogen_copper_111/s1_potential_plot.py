@@ -30,9 +30,9 @@ from surface_potential_analysis.potential.potential import (
 )
 
 from .s1_potential import (
-    load_interpolated_potential,
+    get_interpolated_potential,
+    get_reflected_potential,
     load_raw_data,
-    load_raw_data_potential,
 )
 from .surface_data import save_figure
 
@@ -84,7 +84,7 @@ def plot_raw_data_points() -> None:
 
 
 def plot_raw_potential_points() -> None:
-    potential = normalize_potential(load_raw_data_potential())
+    potential = normalize_potential(get_reflected_potential())
     mocked = mock_even_potential(potential)
 
     fig, _, _ = plot_fundamental_x_in_plane_projected_2d(mocked["basis"], (0, 1), (0,))
@@ -106,14 +106,14 @@ def plot_raw_potential_points() -> None:
 
 
 def plot_interpolated_energy_grid_points() -> None:
-    potential = load_interpolated_potential()
+    potential = get_interpolated_potential((70, 70, 100))
 
     fig, ax, _ = plot_fundamental_x_in_plane_projected_2d(
         potential["basis"], (0, 1), (0,)
     )
     fig.show()
 
-    raw = normalize_potential(load_raw_data_potential())
+    raw = normalize_potential(get_reflected_potential())
     fig, ax, _ = plot_uneven_potential_z_comparison_111(raw)
     plot_potential_1d_x2_comparison_111(potential, ax=ax)
     fig.show()
@@ -164,7 +164,7 @@ def plot_interpolation_with_sho_wavefunctions() -> None:
     Plotting them alongside the interpolation in the hZ direction will allow us to
     diagnose these issues
     """
-    potential = load_interpolated_potential()
+    potential = get_interpolated_potential((70, 70, 100))
     fig, ax = plt.subplots()
     plot_potential_1d_x2_comparison_111(potential, ax=ax)
     plot_explicit_basis_states_x(
@@ -190,7 +190,7 @@ def plot_interpolation_with_sho_wavefunctions() -> None:
 def plot_potential_minimum_along_diagonal() -> None:
     fig, ax = plt.subplots()
 
-    interpolation = load_interpolated_potential()
+    interpolation = get_interpolated_potential((70, 70, 100))
     shape = AxisWithLengthBasisUtil(interpolation["basis"]).shape
     path = np.array([(x, x) for x in range(shape[0])]).T
     _, _, _ = plot_potential_minimum_along_path(interpolation, path, ax=ax)
@@ -201,7 +201,7 @@ def plot_potential_minimum_along_diagonal() -> None:
 
 
 def plot_potential_minimum_along_edge() -> None:
-    interpolation = load_interpolated_potential()
+    interpolation = get_interpolated_potential((70, 70, 100))
     fig, ax = plt.subplots()
     shape = AxisWithLengthBasisUtil(interpolation["basis"]).shape
     path = np.array([(shape[0] - (x), x) for x in range(shape[0])]).T

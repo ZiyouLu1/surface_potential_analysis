@@ -6,19 +6,14 @@ import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib.scale import FuncScale
 from surface_potential_analysis.basis.util import AxisWithLengthBasisUtil
-from surface_potential_analysis.dynamics.incoherent_propagation.eigenstates import (
-    calculate_tunnelling_simulation_state,
-)
 from surface_potential_analysis.dynamics.incoherent_propagation.isf import (
-    calculate_isf_approximate_locations,
+    calculate_equilibrium_state_averaged_isf,
+    calculate_isf_at_times,
     fit_isf_to_double_exponential,
-    get_isf_from_fit,
 )
 from surface_potential_analysis.dynamics.incoherent_propagation.isf_plot import (
     plot_isf_against_time,
-)
-from surface_potential_analysis.dynamics.incoherent_propagation.tunnelling_basis import (
-    TunnellingSimulationBandsAxis,
+    plot_isf_fit_against_time,
 )
 from surface_potential_analysis.dynamics.incoherent_propagation.tunnelling_matrix import (
     get_initial_pure_density_matrix_for_basis,
@@ -52,20 +47,8 @@ def calculate_rates_hydrogen(
     rates = np.zeros((2, temperatures.shape[0]))
     for i, t in enumerate(temperatures):
         a_matrix = get_tunnelling_a_matrix_hydrogen((5, 5), 6, t)
-        a_matrix["basis"] = (
-            a_matrix["basis"][0],
-            a_matrix["basis"][1],
-            TunnellingSimulationBandsAxis(
-                a_matrix["basis"][2].locations,
-                tuple(x[0:2] for x in a_matrix["basis"][2].unit_cell),
-            ),
-        )
         m_matrix = get_tunnelling_m_matrix(a_matrix)
-        initial_state = get_initial_pure_density_matrix_for_basis(
-            m_matrix["basis"], (0, 0, 0)
-        )
-        state = calculate_tunnelling_simulation_state(m_matrix, initial_state, times)
-        isf = calculate_isf_approximate_locations(initial_state, state, dk)
+        isf = calculate_equilibrium_state_averaged_isf(m_matrix, times, dk)
         fit = fit_isf_to_double_exponential(isf, times)
         rates[0, i] = fit.fast_rate
         rates[1, i] = fit.slow_rate
@@ -74,9 +57,10 @@ def calculate_rates_hydrogen(
 
 def plot_tunnelling_rate_hydrogen() -> None:
     temperatures = np.array([125, 150, 175, 200, 225])
-    fast_rates, slow_rates = calculate_rates_hydrogen(temperatures)
+
     fig, ax = plt.subplots()
 
+    fast_rates, slow_rates = calculate_rates_hydrogen(temperatures)
     (line,) = ax.plot(temperatures, fast_rates)
     line.set_label("Fast Rate")
 
@@ -93,34 +77,22 @@ def plot_tunnelling_rate_hydrogen() -> None:
 
 def plot_isf_hydrogen() -> None:
     a_matrix = get_tunnelling_a_matrix_hydrogen((5, 5), 6, 150)
-    a_matrix["basis"] = (
-        a_matrix["basis"][0],
-        a_matrix["basis"][1],
-        TunnellingSimulationBandsAxis(
-            a_matrix["basis"][2].locations,
-            tuple(x[0:2] for x in a_matrix["basis"][2].unit_cell),
-        ),
-    )
-    m_matrix = get_tunnelling_m_matrix(a_matrix)
-    initial_state = get_initial_pure_density_matrix_for_basis(m_matrix["basis"])
     times = np.linspace(0, 90e-10, 1000)
-    state = calculate_tunnelling_simulation_state(m_matrix, initial_state, times)
-
-    m_matrix_2_band = get_m_matrix_reduced_bands(m_matrix, 2)
-    initial_state_2_band = get_initial_pure_density_matrix_for_basis(
-        m_matrix_2_band["basis"]
-    )
-    state_2_band = calculate_tunnelling_simulation_state(
-        m_matrix_2_band, initial_state_2_band, times
-    )
+    dk = get_jianding_isf_dk()
 
     fig, ax = plt.subplots()
-    dk = get_jianding_isf_dk()
-    isf = calculate_isf_approximate_locations(initial_state, state, dk)
+
+    m_matrix = get_tunnelling_m_matrix(a_matrix)
+    initial_state = get_initial_pure_density_matrix_for_basis(m_matrix["basis"])
+    isf = calculate_isf_at_times(m_matrix, initial_state, times, dk)
     fig, _, _ = plot_isf_against_time(isf, times, ax=ax)
-    isf_fit = get_isf_from_fit(fit_isf_to_double_exponential(isf, times), times)
-    fig, _, _ = plot_isf_against_time(isf_fit, times, ax=ax)
-    isf = calculate_isf_approximate_locations(initial_state_2_band, state_2_band, dk)
+
+    isf_fit = fit_isf_to_double_exponential(isf, times)
+    fig, _, _ = plot_isf_fit_against_time(isf_fit, times, ax=ax)
+
+    m_matrix = get_m_matrix_reduced_bands(m_matrix, 2)
+    initial_state = get_initial_pure_density_matrix_for_basis(m_matrix["basis"])
+    isf = calculate_isf_at_times(m_matrix, initial_state, times, dk)
     fig, _, _ = plot_isf_against_time(isf, times, ax=ax)
     fig.show()
     input()
@@ -128,14 +100,6 @@ def plot_isf_hydrogen() -> None:
 
 def compare_isf_initial_condition() -> None:
     a_matrix = get_tunnelling_a_matrix_hydrogen((5, 5), 6, 150)
-    a_matrix["basis"] = (
-        a_matrix["basis"][0],
-        a_matrix["basis"][1],
-        TunnellingSimulationBandsAxis(
-            a_matrix["basis"][2].locations,
-            tuple(x[0:2] for x in a_matrix["basis"][2].unit_cell),
-        ),
-    )
     m_matrix = get_tunnelling_m_matrix(a_matrix)
 
     fig, ax = plt.subplots()
@@ -145,17 +109,14 @@ def compare_isf_initial_condition() -> None:
         m_matrix["basis"], (0, 0, 0)
     )
     times = np.linspace(0, 90e-10, 1000)
-    state = calculate_tunnelling_simulation_state(m_matrix, initial_state, times)
-    isf = calculate_isf_approximate_locations(initial_state, state, dk)
+    isf = calculate_isf_at_times(m_matrix, initial_state, times, dk)
     _, _, line = plot_isf_against_time(isf, times, ax=ax)
     line.set_label("Initially FCC")
 
     initial_state = get_initial_pure_density_matrix_for_basis(
         m_matrix["basis"], (0, 0, 1)
     )
-    times = np.linspace(0, 90e-10, 1000)
-    state = calculate_tunnelling_simulation_state(m_matrix, initial_state, times)
-    isf = calculate_isf_approximate_locations(initial_state, state, dk)
+    isf = calculate_isf_at_times(m_matrix, initial_state, times, dk)
     _, _, line = plot_isf_against_time(isf, times, ax=ax)
     line.set_label("Initially HCP")
 

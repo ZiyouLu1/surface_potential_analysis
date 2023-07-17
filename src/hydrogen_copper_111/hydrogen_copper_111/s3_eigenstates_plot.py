@@ -32,9 +32,9 @@ def plot_lowest_band_energy_hydrogen() -> None:
     fig, ax = plt.subplots()
 
     shapes = [
-        (23, 23, 10),
         (23, 23, 12),
-        (25, 25, 10),
+        (21, 21, 12),
+        (21, 21, 14),
     ]
     for shape in shapes:
         collection = get_eigenstate_collection_hydrogen(shape)

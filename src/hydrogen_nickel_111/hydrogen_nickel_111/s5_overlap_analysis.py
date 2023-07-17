@@ -43,6 +43,7 @@ from .surface_data import get_data_path, save_figure
 
 if TYPE_CHECKING:
     from collections.abc import Callable
+    from pathlib import Path
 
     from surface_potential_analysis._types import SingleIndexLike3d
     from surface_potential_analysis.basis.basis import (
@@ -700,11 +701,11 @@ def load_average_band_energies(
     return energies  # type: ignore[no-any-return]
 
 
-@npy_cached(
-    lambda n_bands, temperature: get_data_path(
-        f"incoherent_matrix_{n_bands}_bands_{temperature}k.npy"
-    )
-)
+def _build_incoherent_matrix_cache(n_bands: _L0Inv, _temperature: float = 150) -> Path:
+    return get_data_path(f"incoherent_matrix_{n_bands}_bands_{_temperature}k.npy")
+
+
+@npy_cached(_build_incoherent_matrix_cache)
 def build_incoherent_matrix(
     n_bands: _L0Inv, _temperature: float = 150
 ) -> Any:  # noqa: ANN401

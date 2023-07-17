@@ -8,8 +8,19 @@ import scipy.optimize
 
 from surface_potential_analysis.axis.axis import FundamentalPositionAxis
 from surface_potential_analysis.basis.util import BasisUtil, wrap_x_point_around_origin
+from surface_potential_analysis.dynamics.incoherent_propagation.eigenstates import (
+    calculate_tunnelling_eigenstates,
+    calculate_tunnelling_simulation_state,
+    get_equilibrium_state,
+)
+from surface_potential_analysis.dynamics.incoherent_propagation.tunnelling_matrix import (
+    get_initial_pure_density_matrix_for_basis,
+)
 
 if TYPE_CHECKING:
+    from surface_potential_analysis.dynamics.incoherent_propagation.tunnelling_matrix import (
+        TunnellingMMatrix,
+    )
     from surface_potential_analysis.operator.operator import DiagonalOperator
     from surface_potential_analysis.operator.operator_list import DiagonalOperatorList
     from surface_potential_analysis.state_vector.eigenvalue_list import EigenvalueList
@@ -90,6 +101,76 @@ def calculate_isf_approximate_locations(
     return {"eigenvalues": eigenvalues}
 
 
+def calculate_isf_at_times(
+    matrix: TunnellingMMatrix[_B0Inv],
+    initial: DiagonalOperator[_B0Inv, _B0Inv],
+    times: np.ndarray[tuple[_L0Inv], np.dtype[np.float_]],
+    dk: np.ndarray[tuple[Literal[2]], np.dtype[np.float_]],
+) -> EigenvalueList[_L0Inv]:
+    """
+    Calculate the ISF, assuming all states are approximately eigenstates of position.
+
+    Parameters
+    ----------
+    initial_matrix : DiagonalOperator[_B0Inv, _B0Inv]
+        Initial density matrix
+    times : np.ndarray[tuple[_L0Inv], np.dtype[np.float_]]
+    dk : np.ndarray[tuple[Literal[3]], np.dtype[np.float_]]
+        direction along which to measure the ISF
+
+    Returns
+    -------
+    EigenvalueList[_L0Inv]
+    """
+    final = calculate_tunnelling_simulation_state(matrix, initial, times)
+    return calculate_isf_approximate_locations(initial, final, dk)
+
+
+def _average_eigenvalues(
+    eigenvalues: list[EigenvalueList[_L0Inv]],
+    weights: list[float] | np.ndarray[tuple[int], np.dtype[np.float_]] | None = None,
+) -> EigenvalueList[_L0Inv]:
+    averaged = np.average(
+        [e["eigenvalues"] for e in eigenvalues], axis=0, weights=weights
+    )
+    return {"eigenvalues": averaged}
+
+
+def calculate_equilibrium_state_averaged_isf(
+    matrix: TunnellingMMatrix[_B0Inv],
+    times: np.ndarray[tuple[_L0Inv], np.dtype[np.float_]],
+    dk: np.ndarray[tuple[Literal[2]], np.dtype[np.float_]],
+) -> EigenvalueList[_L0Inv]:
+    """
+    Calculate the ISF, averaging over the equilibrium occupation of each band.
+
+    Parameters
+    ----------
+    matrix : TunnellingMMatrix[_B0Inv]
+    times : np.ndarray[tuple[_L0Inv], np.dtype[np.float_]]
+    dk : np.ndarray[tuple[Literal[2]], np.dtype[np.float_]]
+
+    Returns
+    -------
+    EigenvalueList[_L0Inv]
+    """
+    util = BasisUtil(matrix["basis"])
+    eigenstates = calculate_tunnelling_eigenstates(matrix)
+    equilibrium = get_equilibrium_state(eigenstates)
+    occupation_probabilities = np.sum(
+        equilibrium["vector"].reshape(*util.shape), axis=(0, 1)
+    )
+    isf_per_band: list[EigenvalueList[_L0Inv]] = []
+    for band in range(util.shape[2]):
+        initial = get_initial_pure_density_matrix_for_basis(
+            matrix["basis"], (0, 0, band)
+        )
+        final = calculate_tunnelling_simulation_state(matrix, initial, times)
+        isf = calculate_isf_approximate_locations(initial, final, dk)
+        isf_per_band.append(isf)
+    return _average_eigenvalues(isf_per_band, occupation_probabilities)
+
+
 @dataclass
 class ISFFit:
     """Result of fitting a double exponential to an ISF."""
@@ -138,13 +219,14 @@ def fit_isf_to_double_exponential(
     -------
     ISFFit
     """
-    popt, pcov = scipy.optimize.curve_fit(
+    params, _ = scipy.optimize.curve_fit(
         lambda t, a, b, c, d: (
             a * np.exp(-(b) * t) + (1 - a - d) * np.exp(-(c) * t) + d
         ),
         times,
         isf["eigenvalues"],
-        p0=(0.5, 1e10, 2e10, 0),
+        p0=(0.5, 2e10, 1e10, 0),
         bounds=([0, 0, 0, 0], [1, np.inf, np.inf, 1]),
+        sigma=isf["eigenvalues"],
     )
-    return ISFFit(popt[1], popt[0], popt[2], 1 - popt[3] - popt[0], popt[3])
+    return ISFFit(params[1], params[0], params[2], 1 - params[3] - params[0], params[3])

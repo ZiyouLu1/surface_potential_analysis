@@ -5,11 +5,10 @@ from typing import TYPE_CHECKING, Any, TypeVar, overload
 from surface_potential_analysis.basis.conversion import (
     convert_matrix,
 )
-from surface_potential_analysis.util.decorators import timed
 
 if TYPE_CHECKING:
     from surface_potential_analysis.basis.basis import (
-        AxisWithLengthBasis,
+        Basis,
         Basis1d,
         Basis2d,
         Basis3d,
@@ -19,10 +18,10 @@ if TYPE_CHECKING:
         Operator,
     )
 
-    _B0Inv = TypeVar("_B0Inv", bound=AxisWithLengthBasis[Any])
-    _B1Inv = TypeVar("_B1Inv", bound=AxisWithLengthBasis[Any])
-    _B2Inv = TypeVar("_B2Inv", bound=AxisWithLengthBasis[Any])
-    _B3Inv = TypeVar("_B3Inv", bound=AxisWithLengthBasis[Any])
+    _B0Inv = TypeVar("_B0Inv", bound=Basis)
+    _B1Inv = TypeVar("_B1Inv", bound=Basis)
+    _B2Inv = TypeVar("_B2Inv", bound=Basis)
+    _B3Inv = TypeVar("_B3Inv", bound=Basis)
 
     _B1d0Inv = TypeVar("_B1d0Inv", bound=Basis1d[Any])
     _B1d1Inv = TypeVar("_B1d1Inv", bound=Basis1d[Any])
@@ -66,7 +65,6 @@ def convert_operator_to_basis(
     ...
 
 
-@timed
 def convert_operator_to_basis(
     operator: Operator[_B0Inv, _B1Inv], basis: _B2Inv, dual_basis: _B3Inv
 ) -> Operator[_B2Inv, _B3Inv]:

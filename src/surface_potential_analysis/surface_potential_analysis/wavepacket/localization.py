@@ -10,6 +10,7 @@ from surface_potential_analysis.basis.conversion import (
 )
 from surface_potential_analysis.basis.util import (
     AxisWithLengthBasisUtil,
+    BasisUtil,
     get_x01_mirrored_index,
     wrap_index_around_origin,
 )
@@ -107,7 +108,7 @@ def _get_global_phases(  # type: ignore[misc]
         phases for each sample in the wavepacket
     """
     basis = basis_as_fundamental_position_basis(wavepacket["basis"])  # type: ignore[arg-type,var-annotated]
-    util = AxisWithLengthBasisUtil(basis)
+    util = BasisUtil(basis)
 
     nx_points = idx if isinstance(idx, tuple) else util.get_stacked_index(idx)
     nx_fractions = tuple(a / ni for (a, ni) in zip(nx_points, util.shape, strict=True))
@@ -136,7 +137,7 @@ def _get_bloch_wavefunction_phases(
         the angle for each point in the wavepacket
     """
     converted = convert_wavepacket_to_position_basis(wavepacket)
-    util = AxisWithLengthBasisUtil(converted["basis"])
+    util = BasisUtil(converted["basis"])
     idx = util.get_flat_index(idx, mode="wrap") if isinstance(idx, tuple) else idx
 
     return np.angle(converted["vectors"][:, idx])  # type: ignore[return-value]
@@ -197,11 +198,11 @@ def get_wavepacket_two_points(
     -------
     tuple[SingleStackedIndexLike, SingleStackedIndexLike]
     """
-    util = AxisWithLengthBasisUtil(wavepacket["basis"])
+    util = BasisUtil(wavepacket["basis"])
     origin = (util.shape[0] * offset[0], util.shape[1] * offset[1], 0)
 
     converted = convert_state_vector_to_position_basis(get_eigenstate(wavepacket, 0))  # type: ignore[arg-type,var-annotated]
-    converted_util = AxisWithLengthBasisUtil(converted["basis"])
+    converted_util = BasisUtil(converted["basis"])
     idx_0: SingleStackedIndexLike = converted_util.get_stacked_index(
         np.argmax(np.abs(converted["vector"]), axis=-1)
     )
@@ -328,7 +329,7 @@ def localize_tightly_bound_wavepacket_max_point(
     """
     converted = convert_state_vector_to_position_basis(get_eigenstate(wavepacket, 0))  # type: ignore[arg-type,var-annotated]
     max_idx = np.argmax(np.abs(converted["vector"]), axis=-1)
-    max_idx = AxisWithLengthBasisUtil(converted["basis"]).get_stacked_index(max_idx)
+    max_idx = BasisUtil(converted["basis"]).get_stacked_index(max_idx)
     max_idx = wrap_index_around_origin(wavepacket["basis"], max_idx, axes=(0, 1))
 
     bloch_phases = _get_bloch_wavefunction_phases(wavepacket, max_idx)

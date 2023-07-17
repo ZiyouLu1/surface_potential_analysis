@@ -1,9 +1,9 @@
 from __future__ import annotations
 
+import hydrogen_copper_111
 import hydrogen_nickel_111.s6_a_calculation
 import hydrogen_nickel_111.s6_dynamics
 import hydrogen_nickel_111.s6_isf_analysis
-import hydrogen_ruthenium_100.s4_wavepacket
 from surface_potential_analysis.util.decorators import timed
 
 
@@ -24,10 +24,8 @@ def generate_a_matrix() -> None:
 
 @timed
 def main() -> None:
-    hydrogen_ruthenium_100.s4_wavepacket.get_all_wavepackets_deuterium()
-    generate_a_matrix()
-    hydrogen_nickel_111.s3_eigenstates_plot.plot_hydrogen_lowest_band_energy()
-    hydrogen_nickel_111.s3_eigenstates_plot.plot_deuterium_lowest_band_energy()
+    hydrogen_nickel_111.s6_isf_analysis.plot_tunnelling_rate_hydrogen()
+    hydrogen_copper_111.s3_eigenstates_plot.plot_lowest_band_energy_hydrogen()
 
 
 if __name__ == "__main__":

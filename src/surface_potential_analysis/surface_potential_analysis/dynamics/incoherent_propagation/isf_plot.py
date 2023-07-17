@@ -2,6 +2,10 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, TypeVar
 
+from surface_potential_analysis.dynamics.incoherent_propagation.isf import (
+    ISFFit,
+    get_isf_from_fit,
+)
 from surface_potential_analysis.state_vector.eigenvalue_list_plot import (
     plot_eigenvalue_against_x,
 )
@@ -55,3 +59,35 @@ def plot_isf_against_time(
     ax.set_xlabel("time /s")
     ax.set_xlim(times[0], times[-1])
     return fig, ax, line
+
+
+def plot_isf_fit_against_time(
+    fit: ISFFit,
+    times: np.ndarray[tuple[_N0Inv], np.dtype[np.float_]],
+    *,
+    ax: Axes | None = None,
+    measure: Measure = "abs",
+    scale: Scale = "linear",
+) -> tuple[Figure, Axes, Line2D]:
+    """
+    Plot the ISF fit against time.
+
+    Parameters
+    ----------
+    fit : ISFFit
+        The fit to the ISF
+    times : np.ndarray[tuple[_N0Inv], np.dtype[np.float_]]
+        times to plot
+    ax : Axes | None, optional
+        plot axis, by default None
+    measure : Measure, optional
+        measure, by default "abs"
+    scale : Scale, optional
+        scale, by default "linear"
+
+    Returns
+    -------
+    tuple[Figure, Axes, Line2D]
+    """
+    isf = get_isf_from_fit(fit, times)
+    return plot_isf_against_time(isf, times, ax=ax, measure=measure, scale=scale)

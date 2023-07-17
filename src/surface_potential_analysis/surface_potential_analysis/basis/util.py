@@ -447,23 +447,7 @@ def get_x_coordinates_in_axes(
 
 @overload
 def _wrap_distance(
-    distance: _IntLike_co, length: _IntLike_co, origin: _IntLike_co = 0
-) -> np.int_:
-    ...
-
-
-@overload
-def _wrap_distance(
-    distance: np.ndarray[_S0Inv, np.dtype[np.int_]],
-    length: _IntLike_co,
-    origin: _IntLike_co = 0,
-) -> np.ndarray[_S0Inv, np.dtype[np.int_]]:
-    ...
-
-
-@overload
-def _wrap_distance(
-    distance: _FloatLike_co, length: _FloatLike_co, origin: _FloatLike_co = 0
+    distance: float | np.float_, length: _FloatLike_co, origin: _FloatLike_co = 0
 ) -> np.float_:
     ...
 
@@ -479,6 +463,26 @@ def _wrap_distance(
 
 def _wrap_distance(distance: Any, length: Any, origin: Any = 0) -> Any:
     return np.mod(distance - origin + length / 2, length) + origin - length / 2
+
+
+@overload
+def _wrap_index(
+    distance: _IntLike_co, length: _IntLike_co, origin: _IntLike_co = 0
+) -> np.int_:
+    ...
+
+
+@overload
+def _wrap_index(
+    distance: np.ndarray[_S0Inv, np.dtype[np.int_]],
+    length: _IntLike_co,
+    origin: _IntLike_co = 0,
+) -> np.ndarray[_S0Inv, np.dtype[np.int_]]:
+    ...
+
+
+def _wrap_index(distance: Any, length: Any, origin: Any = 0) -> Any:
+    return np.mod(distance - origin + length // 2, length) + origin - length // 2
 
 
 @overload
@@ -525,7 +529,7 @@ def wrap_index_around_origin(
     origin = tuple(0 for _ in basis) if origin is None else origin
     origin = origin if isinstance(origin, tuple) else util.get_stacked_index(origin)
     return tuple(  # type: ignore[return-value]
-        _wrap_distance(idx[ax], util.shape[ax], origin[ax])
+        _wrap_index(idx[ax], util.shape[ax], origin[ax])
         if axes is None or ax in axes
         else idx[ax]
         for ax in range(util.ndim)
