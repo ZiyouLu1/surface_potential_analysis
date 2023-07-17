@@ -9,6 +9,8 @@ from scipy.constants import electron_mass, elementary_charge, epsilon_0, hbar
 if TYPE_CHECKING:
     from collections.abc import Callable
 
+    from surface_potential_analysis._types import _FloatLike_co
+
 _S0Inv = TypeVar("_S0Inv", bound=tuple[int, ...])
 
 
@@ -97,7 +99,7 @@ def get_hermitian_gamma_occupation_integrand(
 
 
 def calculate_hermitian_gamma_occupation_integral(
-    omega: float, k_f: float, boltzmann_energy: float
+    omega: _FloatLike_co, k_f: _FloatLike_co, boltzmann_energy: _FloatLike_co
 ) -> float:
     """
     Calculate int_k1 N1(1-N3) dk1.

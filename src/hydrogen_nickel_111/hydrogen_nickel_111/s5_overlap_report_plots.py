@@ -152,7 +152,7 @@ def get_hydrogen_fcc_hcp_gamma() -> np.complex_:
     )
 
 
-def get_rate_simple_equation(
+def get_rate_simple_equation_hydrogen(
     temperature: np.ndarray[_S0Inv, np.dtype[np.float_]]
 ) -> np.ndarray[_S0Inv, np.dtype[np.float_]]:
     omega = float(get_hydrogen_energy_difference(0, 1))
@@ -226,8 +226,10 @@ def plot_rate_equation() -> None:
     fig, ax = plt.subplots()
 
     temperatures = np.linspace(100, 300)
-    rates = get_rate_simple_equation(temperatures)
-    rates += get_experimental_baseline_rates(get_rate_simple_equation)(temperatures)
+    rates = get_rate_simple_equation_hydrogen(temperatures)
+    rates += get_experimental_baseline_rates(get_rate_simple_equation_hydrogen)(
+        temperatures
+    )
     (theory_line,) = ax.plot(temperatures, rates)
 
     data = get_experiment_data()

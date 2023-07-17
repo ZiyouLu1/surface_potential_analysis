@@ -16,6 +16,7 @@ from surface_potential_analysis.dynamics.incoherent_propagation.eigenstates impo
 from surface_potential_analysis.dynamics.incoherent_propagation.tunnelling_matrix import (
     get_initial_pure_density_matrix_for_basis,
 )
+from surface_potential_analysis.util.util import Measure, get_measured_data
 
 if TYPE_CHECKING:
     from surface_potential_analysis.dynamics.incoherent_propagation.tunnelling_matrix import (
@@ -205,7 +206,10 @@ def get_isf_from_fit(
 
 
 def fit_isf_to_double_exponential(
-    isf: EigenvalueList[_L0Inv], times: np.ndarray[tuple[_L0Inv], np.dtype[np.float_]]
+    isf: EigenvalueList[_L0Inv],
+    times: np.ndarray[tuple[_L0Inv], np.dtype[np.float_]],
+    *,
+    measure: Measure = "abs",
 ) -> ISFFit:
     """
     Fit the ISF to a double exponential, and calculate the fast and slow rates.
@@ -219,14 +223,15 @@ def fit_isf_to_double_exponential(
     -------
     ISFFit
     """
+    data = get_measured_data(isf["eigenvalues"], measure)
     params, _ = scipy.optimize.curve_fit(
         lambda t, a, b, c, d: (
             a * np.exp(-(b) * t) + (1 - a - d) * np.exp(-(c) * t) + d
         ),
         times,
-        isf["eigenvalues"],
+        data,
         p0=(0.5, 2e10, 1e10, 0),
         bounds=([0, 0, 0, 0], [1, np.inf, np.inf, 1]),
-        sigma=isf["eigenvalues"],
+        sigma=data,
     )
     return ISFFit(params[1], params[0], params[2], 1 - params[3] - params[0], params[3])

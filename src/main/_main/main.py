@@ -8,7 +8,7 @@ from surface_potential_analysis.util.decorators import timed
 
 
 def generate_a_matrix() -> None:
-    temperatures = [125, 150, 175, 200, 225]
+    temperatures = [100, 125, 150, 175, 200, 225, 250]
 
     for t in temperatures:
         hydrogen_nickel_111.s6_a_calculation.get_tunnelling_a_matrix_deuterium(
@@ -24,7 +24,10 @@ def generate_a_matrix() -> None:
 
 @timed
 def main() -> None:
-    hydrogen_nickel_111.s6_isf_analysis.plot_tunnelling_rate_hydrogen()
+    hydrogen_copper_111.s3_eigenstates_plot.plot_lowest_band_energy_deuterium()
+
+    hydrogen_nickel_111.s6_isf_analysis.plot_fast_slow_rate_ratios()
+
     hydrogen_copper_111.s3_eigenstates_plot.plot_lowest_band_energy_hydrogen()
 
 
