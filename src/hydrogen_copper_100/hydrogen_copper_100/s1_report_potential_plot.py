@@ -15,7 +15,7 @@ from surface_potential_analysis.potential.plot_uneven_potential import (
 )
 from surface_potential_analysis.potential.potential import normalize_potential
 
-from hydrogen_copper_100.s1_potential import (
+from .s1_potential import (
     get_interpolated_potential,
     get_interpolated_potential_relaxed,
     load_raw_copper_potential,

@@ -6,34 +6,20 @@ import numpy as np
 from matplotlib import pyplot as plt
 
 from surface_potential_analysis.basis.util import BasisUtil
+from surface_potential_analysis.operator.operator_list import (
+    sum_diagonal_operator_list_over_axes,
+)
 
 if TYPE_CHECKING:
     from matplotlib.axes import Axes
     from matplotlib.figure import Figure
 
-    from surface_potential_analysis.operator.operator_list import (
-        DiagonalOperatorList,
-    )
+    from surface_potential_analysis.operator.operator_list import DiagonalOperatorList
 
     from .tunnelling_basis import TunnellingSimulationBasis
 
     _B0Inv = TypeVar("_B0Inv", bound=TunnellingSimulationBasis[Any, Any, Any])
     _L0Inv = TypeVar("_L0Inv", bound=int)
-
-
-def _sum_over_axes(
-    states: DiagonalOperatorList[Any, Any, _L0Inv], axes: tuple[int, ...]
-) -> DiagonalOperatorList[Any, Any, _L0Inv]:
-    util = BasisUtil(states["basis"])
-    traced_basis = tuple(b for (i, b) in enumerate(states["basis"]) if i not in axes)
-    return {
-        "basis": traced_basis,
-        "dual_basis": traced_basis,
-        "vectors": np.sum(
-            states["vectors"].reshape(-1, *util.shape),
-            axis=tuple(1 + np.array(axes)),
-        ).reshape(states["vectors"].shape[0], -1),
-    }
 
 
 def plot_occupation_per_band(
@@ -56,9 +42,8 @@ def plot_occupation_per_band(
     tuple[Figure, Axes]
     """
     fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
-    BasisUtil(state["basis"])
 
-    vectors_per_band = _sum_over_axes(state, axes=(0, 1))
+    vectors_per_band = sum_diagonal_operator_list_over_axes(state, axes=(0, 1))
     for n in range(vectors_per_band["vectors"].shape[1]):
         (line,) = ax.plot(times, np.real_if_close(vectors_per_band["vectors"][:, n]))
         line.set_label(f"band {n}")
@@ -90,7 +75,7 @@ def plot_occupation_per_site(
     tuple[Figure, Axes]
     """
     fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
-    vectors_per_band = _sum_over_axes(state, axes=(2,))
+    vectors_per_band = sum_diagonal_operator_list_over_axes(state, axes=(2,))
     util = BasisUtil(vectors_per_band["basis"])
 
     for i in range(util.size):

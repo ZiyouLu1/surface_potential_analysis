@@ -24,7 +24,7 @@ from surface_potential_analysis.potential.potential import (
     normalize_potential,
 )
 
-from hydrogen_copper_100.s1_potential import (
+from .s1_potential import (
     get_interpolated_potential,
     get_interpolated_potential_relaxed,
     load_9h_copper_potential,
@@ -32,7 +32,6 @@ from hydrogen_copper_100.s1_potential import (
     load_raw_copper_potential,
     load_relaxed_copper_potential,
 )
-
 from .surface_data import save_figure
 
 

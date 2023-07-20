@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Generic, TypedDict, TypeVar
+from typing import TYPE_CHECKING, Any, Generic, TypedDict, TypeVar, overload
 
 import numpy as np
 
@@ -116,32 +116,12 @@ def get_tunnelling_a_matrix_from_function(
     return {"basis": _get_a_matrix_basis(shape, bands_axis), "array": array}
 
 
-@timed
-def get_tunnelling_m_matrix(
-    matrix: TunnellingAMatrix[_B0Inv],
-) -> TunnellingMMatrix[_B0Inv]:
-    r"""
-    Calculate the M matrix (M_{ij} = A_{j,i} - \delta_{i,j} \sum_k A_{i,k}).
-
-    Parameters
-    ----------
-    matrix : TunnellingAMatrix
-
-    Returns
-    -------
-    TunnellingMMatrix
-    """
-    np.fill_diagonal(matrix["array"], 0)
-    array = matrix["array"].T - np.diag(np.sum(matrix["array"], axis=1))
-    return {"basis": matrix["basis"], "array": array}
-
-
 _AX0Inv = TypeVar("_AX0Inv", bound=AxisLike[Any, Any])
 _AX1Inv = TypeVar("_AX1Inv", bound=AxisLike[Any, Any])
 
 
-def get_m_matrix_reduced_bands(
-    matrix: TunnellingMMatrix[
+def get_a_matrix_reduced_bands(
+    matrix: TunnellingAMatrix[
         tuple[
             _AX0Inv,
             _AX1Inv,
@@ -149,7 +129,7 @@ def get_m_matrix_reduced_bands(
         ],
     ],
     n_bands: _L1Inv,
-) -> TunnellingMMatrix[tuple[_AX0Inv, _AX1Inv, TunnellingSimulationBandsAxis[_L1Inv]]]:
+) -> TunnellingAMatrix[tuple[_AX0Inv, _AX1Inv, TunnellingSimulationBandsAxis[_L1Inv]]]:
     """
     Get the MMatrix with only the first n_bands included.
 
@@ -176,6 +156,50 @@ def get_m_matrix_reduced_bands(
         .reshape(*util.shape, *util.shape)[:, :, :n_bands, :, :, :n_bands]
         .reshape(n_bands * n_sites, n_bands * n_sites),
     }
+
+
+@overload
+def get_tunnelling_m_matrix(
+    matrix: TunnellingAMatrix[
+        tuple[
+            _AX0Inv,
+            _AX1Inv,
+            TunnellingSimulationBandsAxis[_L0Inv],
+        ]
+    ],
+    n_bands: _L1Inv,
+) -> TunnellingMMatrix[tuple[_AX0Inv, _AX1Inv, TunnellingSimulationBandsAxis[_L1Inv]]]:
+    ...
+
+
+@overload
+def get_tunnelling_m_matrix(
+    matrix: TunnellingAMatrix[_B0Inv],
+    n_bands: None = None,
+) -> TunnellingMMatrix[_B0Inv]:
+    ...
+
+
+@timed
+def get_tunnelling_m_matrix(
+    matrix: TunnellingAMatrix[Any],
+    n_bands: _L1Inv | None = None,
+) -> TunnellingMMatrix[Any]:
+    r"""
+    Calculate the M matrix (M_{ij} = A_{j,i} - \delta_{i,j} \sum_k A_{i,k}).
+
+    Parameters
+    ----------
+    matrix : TunnellingAMatrix
+
+    Returns
+    -------
+    TunnellingMMatrix
+    """
+    matrix = matrix if n_bands is None else get_a_matrix_reduced_bands(matrix, n_bands)
+    np.fill_diagonal(matrix["array"], 0)
+    array = matrix["array"].T - np.diag(np.sum(matrix["array"], axis=1))
+    return {"basis": matrix["basis"], "array": array}
 
 
 def get_initial_pure_density_matrix_for_basis(

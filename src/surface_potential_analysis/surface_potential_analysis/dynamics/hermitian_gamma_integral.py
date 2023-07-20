@@ -17,31 +17,31 @@ _S0Inv = TypeVar("_S0Inv", bound=tuple[int, ...])
 @overload
 def _get_delta_e(
     k_0: np.ndarray[_S0Inv, np.dtype[np.float_]],
-    k_1: np.ndarray[_S0Inv, np.dtype[np.float_]] | float,
+    k_1: np.ndarray[_S0Inv, np.dtype[np.float_]] | _FloatLike_co,
 ) -> np.ndarray[_S0Inv, np.dtype[np.float_]]:
     ...
 
 
 @overload
 def _get_delta_e(
-    k_0: float,
+    k_0: np.ndarray[_S0Inv, np.dtype[np.float_]] | _FloatLike_co,
     k_1: np.ndarray[_S0Inv, np.dtype[np.float_]],
-) -> np.ndarray[_S0Inv, np.dtype[np.float_]] | float:
+) -> np.ndarray[_S0Inv, np.dtype[np.float_]]:
     ...
 
 
 @overload
 def _get_delta_e(
-    k_0: float,
-    k_1: float,
-) -> float:
+    k_0: _FloatLike_co,
+    k_1: _FloatLike_co,
+) -> _FloatLike_co:
     ...
 
 
 def _get_delta_e(
-    k_0: np.ndarray[_S0Inv, np.dtype[np.float_]] | float,
-    k_1: np.ndarray[_S0Inv, np.dtype[np.float_]] | float,
-) -> np.ndarray[_S0Inv, np.dtype[np.float_]] | float:
+    k_0: np.ndarray[_S0Inv, np.dtype[np.float_]] | _FloatLike_co,
+    k_1: np.ndarray[_S0Inv, np.dtype[np.float_]] | _FloatLike_co,
+) -> np.ndarray[_S0Inv, np.dtype[np.float_]] | _FloatLike_co:
     e_0 = (hbar * k_0) ** 2 / (2 * electron_mass)
     e_1 = (hbar * k_1) ** 2 / (2 * electron_mass)
     return e_0 - e_1  # type: ignore[no-any-return]
@@ -50,32 +50,18 @@ def _get_delta_e(
 def _get_fermi_occupation(
     k: np.ndarray[_S0Inv, np.dtype[np.float_]],
     *,
-    k_f: float,
-    boltzmann_energy: float,
+    k_f: _FloatLike_co,
+    boltzmann_energy: _FloatLike_co,
 ) -> np.ndarray[_S0Inv, np.dtype[np.float_]]:
     return 1 / (1 + np.exp((_get_delta_e(k, k_f)) / boltzmann_energy))  # type: ignore[no-any-return]
-
-
-def _get_hopping_availability(
-    k: np.ndarray[_S0Inv, np.dtype[np.float_]],
-    *,
-    omega: float,
-    k_f: float,
-    boltzmann_energy: float,
-) -> np.ndarray[_S0Inv, np.dtype[np.float_]]:
-    k_3 = np.sqrt(k**2 - 2 * electron_mass * omega / (hbar**2))
-    kwargs = {"k_f": k_f, "boltzmann_energy": boltzmann_energy}
-    return _get_fermi_occupation(k, **kwargs) * (  # type: ignore[no-any-return]
-        1 - _get_fermi_occupation(k_3, **kwargs)
-    )
 
 
 def get_hermitian_gamma_occupation_integrand(
     k: np.ndarray[_S0Inv, np.dtype[np.float_]],
     *,
-    omega: float,
-    k_f: float,
-    boltzmann_energy: float,
+    omega: _FloatLike_co,
+    k_f: _FloatLike_co,
+    boltzmann_energy: _FloatLike_co,
 ) -> np.ndarray[_S0Inv, np.dtype[np.float_]]:
     """
     Get the integrand of the hermitian_gamma_occupation_integral.
@@ -83,15 +69,15 @@ def get_hermitian_gamma_occupation_integrand(
     Parameters
     ----------
     k : np.ndarray[_S0Inv, np.dtype[np.float_]]
-    omega : float
-    k_f : float
-    boltzmann_energy : float
+    omega : _FloatLike_co
+    k_f : _FloatLike_co
+    boltzmann_energy : _FloatLike_co
 
     Returns
     -------
     np.ndarray[_S0Inv, np.dtype[np.float_]]
     """
-    k_3 = np.sqrt(k**2 - 2 * electron_mass * omega / (hbar**2))
+    k_3 = np.sqrt(k**2 + 2 * electron_mass * omega / (hbar**2))
     kwargs = {"k_f": k_f, "boltzmann_energy": boltzmann_energy}
     return _get_fermi_occupation(k, **kwargs) * (  # type: ignore[no-any-return]
         1 - _get_fermi_occupation(k_3, **kwargs)

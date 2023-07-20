@@ -16,8 +16,7 @@ from surface_potential_analysis.wavepacket.plot import (
     plot_wavepacket_x0x1,
 )
 
-from hydrogen_copper_100.s4_wavepacket import get_wavepacket_hydrogen
-
+from .s4_wavepacket import get_wavepacket_hydrogen
 from .surface_data import save_figure
 
 

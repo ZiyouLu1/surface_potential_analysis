@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING, TypeVar
 
 import numpy as np
 from scipy.constants import Boltzmann
+from surface_potential_analysis.basis.util import BasisUtil
 from surface_potential_analysis.dynamics.hermitian_gamma_integral import (
     calculate_hermitian_gamma_occupation_integral,
     calculate_hermitian_gamma_potential_integral,
@@ -21,13 +22,15 @@ from surface_potential_analysis.overlap.interpolation import (
     get_overlap_momentum_interpolator_flat,
 )
 from surface_potential_analysis.util.constants import FERMI_WAVEVECTOR
-from surface_potential_analysis.util.decorators import npy_cached
+from surface_potential_analysis.util.decorators import npy_cached, timed
 
 from .s4_wavepacket import (
     get_all_wavepackets_deuterium,
     get_all_wavepackets_hydrogen,
     get_deuterium_energy_difference,
     get_hydrogen_energy_difference,
+    get_wavepacket_deuterium,
+    get_wavepacket_hydrogen,
 )
 from .s5_overlap import get_overlap_deuterium, get_overlap_hydrogen
 from .surface_data import get_data_path
@@ -44,6 +47,7 @@ _L1Inv = TypeVar("_L1Inv", bound=int)
 _L2Inv = TypeVar("_L2Inv", bound=int)
 
 
+@timed
 def _get_diagonal_overlap_function_hydrogen(
     i: int, j: int, offset_j: tuple[int, int]
 ) -> Callable[
@@ -51,7 +55,8 @@ def _get_diagonal_overlap_function_hydrogen(
     np.ndarray[_S0Inv, np.dtype[np.float_]],
 ]:
     overlap = get_overlap_hydrogen(i, j, (0, 0), offset_j)
-    interpolator = get_overlap_momentum_interpolator_flat(overlap)
+    n_points = np.prod(BasisUtil(get_wavepacket_hydrogen(0)["basis"]).shape[0:2])
+    interpolator = get_overlap_momentum_interpolator_flat(overlap, n_points)
 
     def overlap_function(
         q: np.ndarray[_S0Inv, np.dtype[np.float_]]
@@ -71,6 +76,7 @@ def _calculate_gamma_potential_integral_hydrogen_diagonal(
     )
 
 
+@timed
 def calculate_gamma_potential_integral_hydrogen_diagonal(
     i: int, j: int, offset_i: tuple[int, int], offset_j: tuple[int, int]
 ) -> float:
@@ -89,12 +95,13 @@ def calculate_gamma_potential_integral_hydrogen_diagonal(
 
 
 @cache
+@timed
 def calculate_gamma_occupation_integral_hydrogen_diagonal(
     i: int, j: int, temperature: float
 ) -> float:
-    omega = get_hydrogen_energy_difference(j, i)
+    omega_j_i = get_hydrogen_energy_difference(i, j)
     return calculate_hermitian_gamma_occupation_integral(
-        float(omega), FERMI_WAVEVECTOR["NICKEL"], Boltzmann * temperature
+        omega_j_i, FERMI_WAVEVECTOR["NICKEL"], Boltzmann * temperature
     )
 
 
@@ -117,7 +124,8 @@ def _get_diagonal_overlap_function_deuterium(
     np.ndarray[_S0Inv, np.dtype[np.float_]],
 ]:
     overlap = get_overlap_deuterium(i, j, (0, 0), offset_j)
-    interpolator = get_overlap_momentum_interpolator_flat(overlap)
+    n_points = np.prod(BasisUtil(get_wavepacket_deuterium(0)["basis"]).shape[0:2])
+    interpolator = get_overlap_momentum_interpolator_flat(overlap, n_points)
 
     def overlap_function(
         q: np.ndarray[_S0Inv, np.dtype[np.float_]]
@@ -204,7 +212,6 @@ def get_tunnelling_a_matrix_hydrogen(
     bands_axis = TunnellingSimulationBandsAxis[_L2Inv].from_wavepackets(
         get_all_wavepackets_hydrogen()[0:n_bands]
     )
-
     return get_tunnelling_a_matrix_from_function(shape, bands_axis, a_function)
 
 

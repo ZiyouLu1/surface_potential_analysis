@@ -2,8 +2,12 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, TypeVar
 
+import numpy as np
+from matplotlib import pyplot as plt
+
 from surface_potential_analysis.dynamics.incoherent_propagation.isf import (
     ISFFit,
+    RateDecomposition,
     get_isf_from_fit,
 )
 from surface_potential_analysis.state_vector.eigenvalue_list_plot import (
@@ -11,7 +15,6 @@ from surface_potential_analysis.state_vector.eigenvalue_list_plot import (
 )
 
 if TYPE_CHECKING:
-    import numpy as np
     from matplotlib.axes import Axes
     from matplotlib.figure import Figure
     from matplotlib.lines import Line2D
@@ -21,6 +24,7 @@ if TYPE_CHECKING:
     from surface_potential_analysis.util.util import Measure
 
 _N0Inv = TypeVar("_N0Inv", bound=int)
+_L0Inv = TypeVar("_L0Inv", bound=int)
 
 
 def plot_isf_against_time(
@@ -91,3 +95,36 @@ def plot_isf_fit_against_time(
     """
     isf = get_isf_from_fit(fit, times)
     return plot_isf_against_time(isf, times, ax=ax, measure=measure, scale=scale)
+
+
+def plot_rate_decomposition_against_temperature(
+    rates: list[RateDecomposition[_L0Inv]],
+    temperatures: np.ndarray[tuple[_N0Inv], np.dtype[np.float_]],
+    *,
+    ax: Axes | None = None,
+) -> tuple[Figure, Axes]:
+    """
+    Plot the individual rates in the simulation against temperature.
+
+    Parameters
+    ----------
+    rates : list[RateDecomposition[_L0Inv]]
+    temperatures : np.ndarray[tuple[_N0Inv], np.dtype[np.float_]]
+    ax : Axes | None, optional
+        plot axis, by default None
+
+    Returns
+    -------
+    tuple[Figure, Axes]
+    """
+    fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
+
+    rate_constants = -np.real([rate.eigenvalues for rate in rates])
+    coefficients = np.abs([rate.coefficients for rate in rates])
+    relevant_rates = np.argsort(coefficients, axis=-1)
+    sorted_rates = np.take_along_axis(rate_constants, relevant_rates, axis=-1)[:, ::-1]
+
+    coefficients = np.abs([rate.coefficients for rate in rates])
+    for i in range(50):
+        ax.plot(temperatures, sorted_rates[:, i])
+    return fig, ax

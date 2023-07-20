@@ -9,6 +9,7 @@ from matplotlib import pyplot as plt
 from scipy.constants import Boltzmann
 from surface_potential_analysis.basis.util import (
     AxisWithLengthBasisUtil,
+    BasisUtil,
 )
 from surface_potential_analysis.dynamics.hermitian_gamma_integral import (
     calculate_hermitian_gamma_occupation_integral,
@@ -23,6 +24,7 @@ from surface_potential_analysis.overlap.conversion import (
     convert_overlap_to_momentum_basis,
 )
 from surface_potential_analysis.overlap.interpolation import (
+    get_angle_averaged_diagonal_overlap_function,
     get_overlap_momentum_interpolator_flat,
 )
 from surface_potential_analysis.overlap.plot import (
@@ -47,6 +49,7 @@ if TYPE_CHECKING:
 
     from surface_potential_analysis._types import SingleIndexLike3d
     from surface_potential_analysis.basis.basis import (
+        Basis3d,
         FundamentalMomentumBasis3d,
         FundamentalPositionBasis3d,
     )
@@ -58,10 +61,11 @@ if TYPE_CHECKING:
         Overlap3d,
     )
 
-_L0Inv = TypeVar("_L0Inv", bound=int)
-_L1Inv = TypeVar("_L1Inv", bound=int)
-_L2Inv = TypeVar("_L2Inv", bound=int)
-_S0Inv = TypeVar("_S0Inv", bound=tuple[int, ...])
+    _L0Inv = TypeVar("_L0Inv", bound=int)
+    _L1Inv = TypeVar("_L1Inv", bound=int)
+    _L2Inv = TypeVar("_L2Inv", bound=int)
+    _S0Inv = TypeVar("_S0Inv", bound=tuple[int, ...])
+    _B0Inv = TypeVar("_B0Inv", bound=Basis3d[Any, Any, Any])
 
 
 def get_max_point(
@@ -73,9 +77,9 @@ def get_max_point(
 
 
 def make_overlap_real_at(
-    overlap: FundamentalMomentumOverlap[_L0Inv, _L1Inv, _L2Inv],
+    overlap: Overlap3d[_B0Inv],
     idx: SingleIndexLike3d | None = None,
-) -> FundamentalMomentumOverlap[_L0Inv, _L1Inv, _L2Inv]:
+) -> Overlap3d[_B0Inv]:
     """
     Shift the phase of the overlap transform such that is it real at point.
 
@@ -123,6 +127,26 @@ def print_averaged_overlap_nickel() -> None:
     print(calculate_average_overlap_nickel(0, 2))  # noqa: T201
     print(calculate_average_overlap_nickel(0, 3))  # noqa: T201
     print(calculate_average_overlap_nickel(1, 5))  # noqa: T201
+
+
+def plot_angle_averaged_overlap() -> None:
+    overlap = get_overlap_hydrogen(4, 2)
+    abs_q = np.linspace(0, 5 * FERMI_WAVEVECTOR["NICKEL"], num=25)
+
+    fig, ax = plt.subplots()
+
+    util = BasisUtil(get_wavepacket_hydrogen(0)["basis"])
+    interpolator = get_overlap_momentum_interpolator_flat(
+        overlap, np.prod(util.shape[:2])
+    )
+    average_overlap = get_angle_averaged_diagonal_overlap_function(interpolator, abs_q)
+    ax.plot(abs_q, average_overlap)
+
+    interpolator = get_overlap_momentum_interpolator_flat(overlap, None)
+    average_overlap = get_angle_averaged_diagonal_overlap_function(interpolator, abs_q)
+    ax.plot(abs_q, average_overlap)
+    fig.show()
+    input()
 
 
 def plot_overlap_momentum_interpolation() -> None:

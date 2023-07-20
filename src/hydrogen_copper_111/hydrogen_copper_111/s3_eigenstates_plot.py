@@ -15,17 +15,23 @@ from hydrogen_copper_111.s3_eigenstates import (
 def plot_lowest_band_energy_deuterium() -> None:
     fig, ax = plt.subplots()
 
-    shapes = [(23, 23, 8), (25, 25, 8), (27, 27, 7)]
+    shapes = [
+        (21, 21, 8),
+        (21, 21, 10),
+        (21, 21, 12),
+        (21, 21, 14),
+        (21, 21, 16),
+        (21, 21, 18),
+        (21, 21, 20),
+        (29, 29, 22),
+        (29, 29, 24),
+        (29, 29, 26),
+        (27, 27, 7),
+        (29, 29, 7),
+        (31, 31, 7),
+    ]
     for shape in shapes:
-        collection = get_eigenstate_collection_deuterium(shape)
-        _, _, ln = plot_eigenvalues_against_bloch_phase_1d(
-            collection, np.array([1, 0, 0]), band=0, ax=ax
-        )
-        ln.set_label(f"({shape[0]}, {shape[1]}, {shape[2]})")
-
-    ax.legend()
-    fig.show()
-    input()
+        get_eigenstate_collection_deuterium(shape)
 
 
 def plot_lowest_band_energy_hydrogen() -> None:

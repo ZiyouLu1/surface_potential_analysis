@@ -1,14 +1,15 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Generic, TypedDict, TypeVar
+from typing import TYPE_CHECKING, Any, Generic, TypedDict, TypeVar
+
+import numpy as np
 
 from surface_potential_analysis.basis.basis import (
     Basis,
 )
+from surface_potential_analysis.basis.util import BasisUtil
 
 if TYPE_CHECKING:
-    import numpy as np
-
     from surface_potential_analysis._types import SingleFlatIndexLike
 
     from .operator import (
@@ -80,4 +81,31 @@ def get_diagonal_operator(
         "basis": operator_list["basis"],
         "dual_basis": operator_list["dual_basis"],
         "vector": operator_list["vectors"][idx],
+    }
+
+
+def sum_diagonal_operator_list_over_axes(
+    states: DiagonalOperatorList[Any, Any, _L0Inv], axes: tuple[int, ...]
+) -> DiagonalOperatorList[Any, Any, _L0Inv]:
+    """
+    given a diagonal operator list, sum the states over axes.
+
+    Parameters
+    ----------
+    states : DiagonalOperatorList[Any, Any, _L0Inv]
+    axes : tuple[int, ...]
+
+    Returns
+    -------
+    DiagonalOperatorList[Any, Any, _L0Inv]
+    """
+    util = BasisUtil(states["basis"])
+    traced_basis = tuple(b for (i, b) in enumerate(states["basis"]) if i not in axes)
+    return {
+        "basis": traced_basis,
+        "dual_basis": traced_basis,
+        "vectors": np.sum(
+            states["vectors"].reshape(-1, *util.shape),
+            axis=tuple(1 + np.array(axes)),
+        ).reshape(states["vectors"].shape[0], -1),
     }

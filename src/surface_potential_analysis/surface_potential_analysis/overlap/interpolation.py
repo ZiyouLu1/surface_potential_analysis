@@ -9,10 +9,12 @@ from surface_potential_analysis.basis.util import (
     AxisWithLengthBasisUtil,
     wrap_index_around_origin,
 )
+from surface_potential_analysis.util.decorators import timed
 
 if TYPE_CHECKING:
     from collections.abc import Callable
 
+    from surface_potential_analysis._types import _IntLike_co
     from surface_potential_analysis.overlap.overlap import FundamentalPositionOverlap
 
 _L0Inv = TypeVar("_L0Inv", bound=int)
@@ -84,25 +86,26 @@ def get_overlap_momentum_interpolator(
         Interpolator, which takes a coordinate list on momentum basis
     """
     util = AxisWithLengthBasisUtil(overlap["basis"])
-    nx_points = util.nx_points
     nx_points_wrapped = wrap_index_around_origin(
-        overlap["basis"], nx_points, axes=(0, 1)  # type: ignore[arg-type]
+        overlap["basis"], util.nx_points, axes=(0, 1)  # type: ignore[arg-type]
     )
-    x_points = util.get_x_points_at_index(nx_points_wrapped)[:, :, np.newaxis]
+    x_points = util.get_x_points_at_index(nx_points_wrapped)
 
     def _interpolator(
         k_coordinates: np.ndarray[
             tuple[Literal[3], Unpack[_S0Inv]], np.dtype[np.float_]
         ]
     ) -> np.ndarray[_S0Inv, np.dtype[np.complex_]]:
-        phi = np.sum(x_points * k_coordinates[:, np.newaxis, :], axis=0)
-        return np.sum(overlap["vector"][:, np.newaxis] * np.exp(1j * phi), axis=0)  # type: ignore[no-any-return]
+        phi = np.tensordot(x_points, k_coordinates, axes=(0, 0))
+        return np.tensordot(overlap["vector"], np.exp(1j * phi), axes=(0, 0))  # type: ignore[no-any-return]
 
     return _interpolator
 
 
+@timed
 def get_overlap_momentum_interpolator_flat(
-    overlap: FundamentalPositionOverlap[_L0Inv, _L1Inv, _L2Inv]
+    overlap: FundamentalPositionOverlap[_L0Inv, _L1Inv, _L2Inv],
+    n_points: _IntLike_co | None = None,
 ) -> Callable[
     [np.ndarray[tuple[Literal[2], Unpack[_S0Inv]], np.dtype[np.float_]]],
     np.ndarray[_S0Inv, np.dtype[np.complex_]],
@@ -127,18 +130,26 @@ def get_overlap_momentum_interpolator_flat(
     nx_points_wrapped = wrap_index_around_origin(
         overlap["basis"], util.nx_points, axes=(0, 1)  # type: ignore[arg-type]
     )
-    x_points = util.get_x_points_at_index(nx_points_wrapped)[:2, :, np.newaxis]
+    x_points = util.get_x_points_at_index(nx_points_wrapped)[:2, :]
 
     vector = overlap["vector"].reshape(AxisWithLengthBasisUtil(overlap["basis"]).shape)
     vector_transformed = np.fft.ifft(vector, axis=2, norm="forward")[:, :, 0].ravel()
+
+    relevant_slice = (
+        slice(None)
+        if n_points is None
+        else np.argsort(np.abs(vector_transformed))[::-1][:n_points]
+    )
+    relevant_x_points = x_points[:, relevant_slice]
+    relevant_vector = vector_transformed[relevant_slice]
 
     def _interpolator(
         k_coordinates: np.ndarray[
             tuple[Literal[2], Unpack[_S0Inv]], np.dtype[np.float_]
         ]
     ) -> np.ndarray[_S0Inv, np.dtype[np.complex_]]:
-        phi = np.sum(x_points * k_coordinates[:, np.newaxis, :], axis=0)
-        return np.sum(vector_transformed[:, np.newaxis] * np.exp(1j * phi), axis=0)  # type: ignore[no-any-return]
+        phi = np.tensordot(relevant_x_points, k_coordinates, axes=(0, 0))
+        return np.tensordot(relevant_vector, np.exp(1j * phi), axes=(0, 0))  # type: ignore[no-any-return]
 
     return _interpolator
 

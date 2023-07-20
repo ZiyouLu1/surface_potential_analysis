@@ -4,17 +4,15 @@ from typing import Any, Generic, TypedDict, TypeVar
 
 import numpy as np
 
-from surface_potential_analysis.axis.axis_like import AxisWithLengthLike3d
 from surface_potential_analysis.basis.basis import (
     Basis,
     Basis1d,
     Basis2d,
     Basis3d,
 )
-
-_A3d0Cov = TypeVar("_A3d0Cov", bound=AxisWithLengthLike3d[Any, Any], covariant=True)
-_A3d1Cov = TypeVar("_A3d1Cov", bound=AxisWithLengthLike3d[Any, Any], covariant=True)
-_A3d2Cov = TypeVar("_A3d2Cov", bound=AxisWithLengthLike3d[Any, Any], covariant=True)
+from surface_potential_analysis.basis.util import (
+    BasisUtil,
+)
 
 _L0Cov = TypeVar("_L0Cov", bound=int, covariant=True)
 _L1Cov = TypeVar("_L1Cov", bound=int, covariant=True)
@@ -131,4 +129,28 @@ def as_diagonal_operator(
         "basis": operator["basis"],
         "dual_basis": operator["dual_basis"],
         "vector": np.diag(operator["array"]),
+    }
+
+
+def sum_diagonal_operator_over_axes(
+    operator: DiagonalOperator[Any, Any], axes: tuple[int, ...]
+) -> DiagonalOperator[Any, Any]:
+    """
+    given a diagonal operator, sum the states over axes.
+
+    Parameters
+    ----------
+    states : DiagonalOperator[Any, Any]
+    axes : tuple[int, ...]
+
+    Returns
+    -------
+    DiagonalOperator[Any, Any]
+    """
+    util = BasisUtil(operator["basis"])
+    traced_basis = tuple(b for (i, b) in enumerate(operator["basis"]) if i not in axes)
+    return {
+        "basis": traced_basis,
+        "dual_basis": traced_basis,
+        "vector": np.sum(operator["vector"].reshape(util.shape), axis=axes).reshape(-1),
     }

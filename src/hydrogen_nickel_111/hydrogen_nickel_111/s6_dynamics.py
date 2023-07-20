@@ -11,11 +11,11 @@ from surface_potential_analysis.dynamics.incoherent_propagation.plot import (
 )
 from surface_potential_analysis.dynamics.incoherent_propagation.tunnelling_matrix import (
     get_initial_pure_density_matrix_for_basis,
-    get_m_matrix_reduced_bands,
     get_tunnelling_m_matrix,
 )
+from surface_potential_analysis.operator.operator import sum_diagonal_operator_over_axes
 
-from hydrogen_nickel_111.s6_a_calculation import (
+from .s6_a_calculation import (
     get_tunnelling_a_matrix_deuterium,
     get_tunnelling_a_matrix_hydrogen,
 )
@@ -37,12 +37,26 @@ def test_normalization_of_m_matrix_hydrogen() -> None:
     np.testing.assert_array_equal(1, a_matrix["array"] >= 0)
 
 
-def get_equilibrium_state_on_surface_hydrogen() -> None:
+def test_reduced_band_matrix_hydrogen() -> None:
     a_matrix = get_tunnelling_a_matrix_hydrogen((5, 5), 2, 150)
+    expected = get_tunnelling_m_matrix(a_matrix)
+
+    a_matrix_6 = get_tunnelling_a_matrix_hydrogen((5, 5), 6, 150)
+    actual = get_tunnelling_m_matrix(a_matrix_6, 2)
+    np.testing.assert_array_almost_equal(actual["array"], expected["array"])
+
+
+def get_equilibrium_state_on_surface_hydrogen() -> None:
+    a_matrix = get_tunnelling_a_matrix_hydrogen((5, 5), 6, 150)
     m_matrix = get_tunnelling_m_matrix(a_matrix)
     state = calculate_equilibrium_state(m_matrix)
     print(state["vector"])  # noqa: T201
-    print(np.sum(state["vector"]))  # noqa: T201
+    print(sum_diagonal_operator_over_axes(state, (0, 1))["vector"])  # noqa: T201
+
+    m_matrix = get_tunnelling_m_matrix(a_matrix, 2)
+    state = calculate_equilibrium_state(m_matrix)
+    print(state["vector"])  # noqa: T201
+    print(sum_diagonal_operator_over_axes(state, (0, 1))["vector"])  # noqa: T201
 
 
 def plot_occupation_on_surface_hydrogen() -> None:
@@ -58,7 +72,7 @@ def plot_occupation_on_surface_hydrogen() -> None:
     fig, ax = plot_occupation_per_site(state, times)
     fig.show()
 
-    m_matrix_2_band = get_m_matrix_reduced_bands(m_matrix, 2)
+    m_matrix_2_band = get_tunnelling_m_matrix(a_matrix, 2)
     initial_state_2_band = get_initial_pure_density_matrix_for_basis(
         m_matrix_2_band["basis"]
     )
@@ -75,18 +89,6 @@ def plot_occupation_on_surface_hydrogen() -> None:
     input()
 
 
-def get_simulated_state_on_surface_hydrogen() -> None:
-    a_matrix = get_tunnelling_a_matrix_hydrogen((5, 5), 2, 150)
-    m_matrix = get_tunnelling_m_matrix(a_matrix)
-    initial_state = get_initial_pure_density_matrix_for_basis(m_matrix["basis"])
-    state = calculate_tunnelling_simulation_state(
-        m_matrix, initial_state, np.array([99999])
-    )
-
-    print(state["vectors"])  # noqa: T201
-    print(np.sum(state["vectors"]))  # noqa: T201
-
-
 def plot_occupation_on_surface_deuterium() -> None:
     a_matrix = get_tunnelling_a_matrix_deuterium((5, 5), 6, 150)
     m_matrix = get_tunnelling_m_matrix(a_matrix)
@@ -100,7 +102,7 @@ def plot_occupation_on_surface_deuterium() -> None:
     fig, ax = plot_occupation_per_site(state, times)
     fig.show()
 
-    m_matrix_2_band = get_m_matrix_reduced_bands(m_matrix, 2)
+    m_matrix_2_band = get_tunnelling_m_matrix(a_matrix, 2)
     initial_state_2_band = get_initial_pure_density_matrix_for_basis(
         m_matrix_2_band["basis"]
     )

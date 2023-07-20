@@ -16,12 +16,10 @@ def plot_lowest_band_energy_deuterium() -> None:
     fig, ax = plt.subplots()
 
     shapes = [
-        (23, 23, 10),
-        (23, 23, 12),
-        (25, 25, 10),
-        (27, 27, 10),
-        (29, 29, 10),
-        (29, 29, 12),
+        (29, 29, 16),
+        (29, 29, 17),
+        (29, 29, 18),
+        (31, 31, 17),
     ]
     for shape in shapes:
         collection = get_eigenstate_collection_deuterium(shape)

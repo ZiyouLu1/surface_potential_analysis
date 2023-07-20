@@ -89,6 +89,7 @@
     "xlabel",
     "xlim",
     "xscale",
+    "yerr",
     "ylabel",
     "ylim",
     "yscale"

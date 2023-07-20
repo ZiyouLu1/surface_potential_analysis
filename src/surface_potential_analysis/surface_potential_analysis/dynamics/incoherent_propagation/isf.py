@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, Literal, TypeVar
+from typing import TYPE_CHECKING, Any, Generic, Literal, TypeVar
 
 import numpy as np
 import scipy.optimize
@@ -12,10 +12,12 @@ from surface_potential_analysis.dynamics.incoherent_propagation.eigenstates impo
     calculate_tunnelling_eigenstates,
     calculate_tunnelling_simulation_state,
     get_equilibrium_state,
+    get_operator_state_vector_decomposition,
 )
 from surface_potential_analysis.dynamics.incoherent_propagation.tunnelling_matrix import (
     get_initial_pure_density_matrix_for_basis,
 )
+from surface_potential_analysis.operator.operator import sum_diagonal_operator_over_axes
 from surface_potential_analysis.util.util import Measure, get_measured_data
 
 if TYPE_CHECKING:
@@ -31,9 +33,10 @@ if TYPE_CHECKING:
         TunnellingSimulationBasis,
     )
 
-    _L0Inv = TypeVar("_L0Inv", bound=int)
     _B0Inv = TypeVar("_B0Inv", bound=TunnellingSimulationBasis[Any, Any, Any])
     _TSX0Inv = TypeVar("_TSX0Inv", bound=TunnellingSimulationBandsAxis[Any])
+
+_L0Inv = TypeVar("_L0Inv", bound=int)
 
 
 def _get_location_offsets_per_band(
@@ -97,7 +100,7 @@ def calculate_isf_approximate_locations(
 
     mean_phi = np.tensordot(dk, distances_wrapped, axes=(0, 0))
     eigenvalues = np.tensordot(
-        np.exp(-1j * mean_phi), final_matrices["vectors"], axes=(0, 1)
+        np.exp(1j * mean_phi), final_matrices["vectors"], axes=(0, 1)
     )
     return {"eigenvalues": eigenvalues}
 
@@ -158,8 +161,8 @@ def calculate_equilibrium_state_averaged_isf(
     util = BasisUtil(matrix["basis"])
     eigenstates = calculate_tunnelling_eigenstates(matrix)
     equilibrium = get_equilibrium_state(eigenstates)
-    occupation_probabilities = np.sum(
-        equilibrium["vector"].reshape(*util.shape), axis=(0, 1)
+    occupation_probabilities = np.real_if_close(
+        sum_diagonal_operator_over_axes(equilibrium, axes=(0, 1))["vector"]
     )
     isf_per_band: list[EigenvalueList[_L0Inv]] = []
     for band in range(util.shape[2]):
@@ -235,3 +238,31 @@ def fit_isf_to_double_exponential(
         sigma=data,
     )
     return ISFFit(params[1], params[0], params[2], 1 - params[3] - params[0], params[3])
+
+
+@dataclass
+class RateDecomposition(Generic[_L0Inv]):
+    """Result of fitting a double exponential to an ISF."""
+
+    eigenvalues: np.ndarray[tuple[_L0Inv], np.dtype[np.complex_]]
+    coefficients: np.ndarray[tuple[_L0Inv], np.dtype[np.complex_]]
+
+
+def get_rate_decomposition(
+    matrix: TunnellingMMatrix[_B0Inv], initial: DiagonalOperator[_B0Inv, _B0Inv]
+) -> RateDecomposition[int]:
+    """
+    Get the eigenvalues and relevant contribution of the rates in the simulation.
+
+    Parameters
+    ----------
+    matrix : TunnellingMMatrix[_B0Inv]
+    initial : DiagonalOperator[_B0Inv, _B0Inv]
+
+    Returns
+    -------
+    RateDecomposition[int]
+    """
+    eigenstates = calculate_tunnelling_eigenstates(matrix)
+    coefficients = get_operator_state_vector_decomposition(initial, eigenstates)
+    return RateDecomposition(eigenstates["eigenvalues"], coefficients)

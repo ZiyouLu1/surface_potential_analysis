@@ -14,7 +14,7 @@ from surface_potential_analysis.hamiltonian_builder import (
 from surface_potential_analysis.util.constants import HYDROGEN_MASS
 from surface_potential_analysis.util.decorators import timed
 
-from hydrogen_copper_100.s1_potential import (
+from .s1_potential import (
     get_interpolated_potential,
     get_interpolated_potential_relaxed,
 )
