@@ -11,6 +11,7 @@ from surface_potential_analysis.basis.basis import (
     Basis3d,
     FundamentalPositionBasis3d,
 )
+from surface_potential_analysis.util.decorators import timed
 
 _B0Inv = TypeVar("_B0Inv", bound=Basis)
 
@@ -69,21 +70,41 @@ def as_dual_vector(vector: StateVector[_B0Inv]) -> StateDualVector[_B0Inv]:
     return {"basis": vector["basis"], "vector": np.conj(vector["vector"])}
 
 
-def calculate_normalization(vector: StateVector[Any] | StateDualVector[Any]) -> float:
+def calculate_normalization(state: StateVector[Any] | StateDualVector[Any]) -> float:
     """
-    calculate the normalization of an eigenstate.
+    calculate the normalization of a state.
 
     This should always be 1
 
     Parameters
     ----------
-    eigenstate: Eigenstate[Any]
+    state: StateVector[Any] | StateDualVector[Any]
 
     Returns
     -------
     float
     """
-    return np.sum(np.conj(vector["vector"]) * vector["vector"])
+    return np.sum(np.abs(state["vector"]) ** 2)
+
+
+@timed
+def calculate_inner_product(
+    state_0: StateVector[_B0Inv],
+    state_1: StateDualVector[_B0Inv],
+) -> np.complex_:
+    """
+    Calculate the inner product of two states.
+
+    Parameters
+    ----------
+    state_0 : StateVector[_B0Inv]
+    state_1 : StateDualVector[_B0Inv]
+
+    Returns
+    -------
+    np.complex_
+    """
+    return np.tensordot(state_1["vector"], state_0["vector"], axes=(0, 0))  # type: ignore[no-any-return]
 
 
 _NF0Inv = TypeVar("_NF0Inv", bound=int)

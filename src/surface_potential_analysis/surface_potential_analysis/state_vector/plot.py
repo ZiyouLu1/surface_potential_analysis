@@ -12,6 +12,7 @@ from surface_potential_analysis.basis.conversion import (
 )
 from surface_potential_analysis.basis.util import (
     AxisWithLengthBasisUtil,
+    BasisUtil,
     calculate_cumulative_x_distances_along_path,
     get_k_coordinates_in_axes,
     get_x_coordinates_in_axes,
@@ -59,7 +60,7 @@ if TYPE_CHECKING:
 # ruff: noqa: PLR0913
 
 
-def plot_state_vector_1d_k(
+def plot_state_1d_k(
     state: StateVector[_B0Inv],
     axes: tuple[int] = (0,),
     idx: SingleStackedIndexLike | None = None,
@@ -69,7 +70,7 @@ def plot_state_vector_1d_k(
     scale: Scale = "linear",
 ) -> tuple[Figure, Axes, Line2D]:
     """
-    Plot an eigenstate in 1d along the given axis.
+    Plot an state in 1d along the given axis.
 
     Parameters
     ----------
@@ -109,7 +110,7 @@ def plot_state_vector_1d_k(
     return fig, ax, line
 
 
-def plot_state_vector_1d_x(
+def plot_state_1d_x(
     state: StateVector[_B0Inv],
     axis: int = 0,
     idx: SingleStackedIndexLike | None = None,
@@ -119,7 +120,7 @@ def plot_state_vector_1d_x(
     scale: Scale = "linear",
 ) -> tuple[Figure, Axes, Line2D]:
     """
-    Plot an eigenstate in 1d along the given axis.
+    Plot an state in 1d along the given axis.
 
     Parameters
     ----------
@@ -141,7 +142,9 @@ def plot_state_vector_1d_x(
     """
     fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
 
-    fundamental_x_points = AxisWithLengthLikeUtil(state["basis"][axis]).fundamental_x_points
+    fundamental_x_points = AxisWithLengthLikeUtil(
+        state["basis"][axis]
+    ).fundamental_x_points
     coordinates = np.linalg.norm(fundamental_x_points, axis=0)
 
     idx = tuple(0 for _ in range(len(state["basis"]) - 1)) if idx is None else idx
@@ -158,7 +161,7 @@ def plot_state_vector_1d_x(
     return fig, ax, line
 
 
-def plot_state_vector_2d_k(
+def plot_state_2d_k(
     state: StateVector[_B0Inv],
     axes: tuple[int, int],
     idx: SingleStackedIndexLike | None = None,
@@ -168,11 +171,11 @@ def plot_state_vector_2d_k(
     scale: Scale = "linear",
 ) -> tuple[Figure, Axes, QuadMesh]:
     """
-    Plot an eigenstate in 2d, perpendicular to kz_axis in momentum basis.
+    Plot an state in 2d, perpendicular to kz_axis in momentum basis.
 
     Parameters
     ----------
-    eigenstate : Eigenstate[_B3d0Inv]
+    state : Eigenstate[_B3d0Inv]
     idx : SingleFlatIndexLike
         index along z_axis to plot
     kz_axis : Literal[0, 1, 2, -1, -2, -3]
@@ -211,8 +214,8 @@ def plot_state_vector_2d_k(
     return fig, ax, mesh
 
 
-def plot_eigenstate_k0k1(
-    eigenstate: StateVector3d[_B3d0Inv],
+def plot_state_k0k1(
+    state: StateVector3d[_B3d0Inv],
     k2_idx: SingleFlatIndexLike,
     *,
     ax: Axes | None = None,
@@ -220,11 +223,11 @@ def plot_eigenstate_k0k1(
     scale: Scale = "linear",
 ) -> tuple[Figure, Axes, QuadMesh]:
     """
-    Plot an eigenstate in 2d perpendicular to the k2 axis.
+    Plot an state in 2d perpendicular to the k2 axis.
 
     Parameters
     ----------
-    eigenstate : Eigenstate[_B3d0Inv]
+    state : Eigenstate[_B3d0Inv]
     k2_idx : SingleFlatIndexLike
         index along the k2 axis to plot
     ax : Axes | None, optional
@@ -238,13 +241,13 @@ def plot_eigenstate_k0k1(
     -------
     tuple[Figure, Axes, QuadMesh]
     """
-    return plot_state_vector_2d_k(
-        eigenstate, (0, 1), (k2_idx,), ax=ax, measure=measure, scale=scale
+    return plot_state_2d_k(
+        state, (0, 1), (k2_idx,), ax=ax, measure=measure, scale=scale
     )
 
 
-def plot_eigenstate_k1k2(
-    eigenstate: StateVector3d[_B3d0Inv],
+def plot_state_k1k2(
+    state: StateVector3d[_B3d0Inv],
     k0_idx: SingleFlatIndexLike,
     *,
     ax: Axes | None = None,
@@ -252,11 +255,11 @@ def plot_eigenstate_k1k2(
     scale: Scale = "linear",
 ) -> tuple[Figure, Axes, QuadMesh]:
     """
-    Plot an eigenstate in 2d perpendicular to the k0 axis.
+    Plot an state in 2d perpendicular to the k0 axis.
 
     Parameters
     ----------
-    eigenstate : Eigenstate[_B3d0Inv]
+    state : Eigenstate[_B3d0Inv]
     k0_idx : SingleFlatIndexLike
         index along the k0 axis to plot
     ax : Axes | None, optional
@@ -270,13 +273,13 @@ def plot_eigenstate_k1k2(
     -------
     tuple[Figure, Axes, QuadMesh]
     """
-    return plot_state_vector_2d_k(
-        eigenstate, (1, 2), (k0_idx,), ax=ax, measure=measure, scale=scale
+    return plot_state_2d_k(
+        state, (1, 2), (k0_idx,), ax=ax, measure=measure, scale=scale
     )
 
 
-def plot_eigenstate_k2k0(
-    eigenstate: StateVector3d[_B3d0Inv],
+def plot_state_k2k0(
+    state: StateVector3d[_B3d0Inv],
     k1_idx: SingleFlatIndexLike,
     *,
     ax: Axes | None = None,
@@ -284,11 +287,11 @@ def plot_eigenstate_k2k0(
     scale: Scale = "linear",
 ) -> tuple[Figure, Axes, QuadMesh]:
     """
-    Plot an eigenstate in 2d perpendicular to the k1 axis.
+    Plot an state in 2d perpendicular to the k1 axis.
 
     Parameters
     ----------
-    eigenstate : Eigenstate[_B3d0Inv]
+    state : Eigenstate[_B3d0Inv]
     k1_idx : SingleFlatIndexLike
         index along the k1 axis to plot
     ax : Axes | None, optional
@@ -302,13 +305,13 @@ def plot_eigenstate_k2k0(
     -------
     tuple[Figure, Axes, QuadMesh]
     """
-    return plot_state_vector_2d_k(
-        eigenstate, (2, 0), (k1_idx,), ax=ax, measure=measure, scale=scale
+    return plot_state_2d_k(
+        state, (2, 0), (k1_idx,), ax=ax, measure=measure, scale=scale
     )
 
 
-def plot_eigenstate_2d_x(
-    eigenstate: StateVector[_B0Inv],
+def plot_state_2d_x(
+    state: StateVector[_B0Inv],
     axes: tuple[int, int] = (0, 1),
     idx: SingleStackedIndexLike | None = None,
     *,
@@ -317,11 +320,11 @@ def plot_eigenstate_2d_x(
     scale: Scale = "linear",
 ) -> tuple[Figure, Axes, QuadMesh]:
     """
-    Plot an eigenstate in 2d, perpendicular to z_axis.
+    Plot an state in 2d, perpendicular to z_axis.
 
     Parameters
     ----------
-    eigenstate : Eigenstate[_B3d0Inv]
+    state : Eigenstate[_B3d0Inv]
     idx : SingleFlatIndexLike
         index along z_axis to plot
     z_axis : Literal[0, 1, 2, -1, -2, -3]
@@ -338,7 +341,7 @@ def plot_eigenstate_2d_x(
     tuple[Figure, Axes, QuadMesh]
     """
     fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
-    converted = convert_state_vector_to_position_basis(eigenstate)
+    converted = convert_state_vector_to_position_basis(state)
     util = AxisWithLengthBasisUtil(converted["basis"])
     idx = tuple(0 for _ in range(util.ndim - 2)) if idx is None else idx
 
@@ -359,8 +362,44 @@ def plot_eigenstate_2d_x(
     return fig, ax, mesh
 
 
-def plot_eigenstate_x0x1(
-    eigenstate: StateVector3d[_B3d0Inv],
+def plot_state_2d_x_max(
+    state: StateVector[_B0Inv],
+    axes: tuple[int, int] = (0, 1),
+    *,
+    ax: Axes | None = None,
+    measure: Measure = "abs",
+    scale: Scale = "linear",
+) -> tuple[Figure, Axes, QuadMesh]:
+    """
+    Plot an state in 2d, perpendicular to z_axis.
+
+    Parameters
+    ----------
+    state : Eigenstate[_B3d0Inv]
+    idx : SingleFlatIndexLike
+        index along z_axis to plot
+    z_axis : Literal[0, 1, 2, -1, -2, -3]
+        axis perpendicular to which to plot
+    ax : Axes | None, optional
+        plot axis, by default None
+    measure : Literal[&quot;real&quot;, &quot;imag&quot;, &quot;abs&quot;, &quot;angle&quot;], optional
+        measure, by default "abs"
+    scale : Literal[&quot;symlog&quot;, &quot;linear&quot;], optional
+        scale, by default "linear"
+
+    Returns
+    -------
+    tuple[Figure, Axes, QuadMesh]
+    """
+    converted = convert_state_vector_to_position_basis(state)
+    util = BasisUtil(converted["basis"])
+    max_idx = util.get_stacked_index(np.argmax(np.abs(converted["vector"])))
+    idx = tuple(x for (i, x) in enumerate(max_idx) if i not in axes)
+    return plot_state_2d_x(converted, axes, idx, ax=ax, measure=measure, scale=scale)
+
+
+def plot_state_x0x1(
+    state: StateVector3d[_B3d0Inv],
     x2_idx: SingleFlatIndexLike,
     *,
     ax: Axes | None = None,
@@ -368,11 +407,11 @@ def plot_eigenstate_x0x1(
     scale: Scale = "linear",
 ) -> tuple[Figure, Axes, QuadMesh]:
     """
-    Plot an eigenstate in 2d perpendicular to the x2 axis.
+    Plot an state in 2d perpendicular to the x2 axis.
 
     Parameters
     ----------
-    eigenstate : Eigenstate[_B3d0Inv]
+    state : Eigenstate[_B3d0Inv]
     x2_idx : SingleFlatIndexLike
         index along the x2 axis to plot
     ax : Axes | None, optional
@@ -386,13 +425,13 @@ def plot_eigenstate_x0x1(
     -------
     tuple[Figure, Axes, QuadMesh]
     """
-    return plot_eigenstate_2d_x(
-        eigenstate, (0, 1), (x2_idx,), ax=ax, measure=measure, scale=scale
+    return plot_state_2d_x(
+        state, (0, 1), (x2_idx,), ax=ax, measure=measure, scale=scale
     )
 
 
-def plot_eigenstate_x1x2(
-    eigenstate: StateVector3d[_B3d0Inv],
+def plot_state_x1x2(
+    state: StateVector3d[_B3d0Inv],
     x0_idx: SingleFlatIndexLike,
     *,
     ax: Axes | None = None,
@@ -400,11 +439,11 @@ def plot_eigenstate_x1x2(
     scale: Scale = "linear",
 ) -> tuple[Figure, Axes, QuadMesh]:
     """
-    Plot an eigenstate in 2d perpendicular to the x0 axis.
+    Plot an state in 2d perpendicular to the x0 axis.
 
     Parameters
     ----------
-    eigenstate : Eigenstate[_B3d0Inv]
+    state : Eigenstate[_B3d0Inv]
     x0_idx : SingleFlatIndexLike
         index along the x0 axis to plot
     ax : Axes | None, optional
@@ -418,13 +457,13 @@ def plot_eigenstate_x1x2(
     -------
     tuple[Figure, Axes, QuadMesh]
     """
-    return plot_eigenstate_2d_x(
-        eigenstate, (1, 2), (x0_idx,), ax=ax, measure=measure, scale=scale
+    return plot_state_2d_x(
+        state, (1, 2), (x0_idx,), ax=ax, measure=measure, scale=scale
     )
 
 
-def plot_eigenstate_x2x0(
-    eigenstate: StateVector3d[_B3d0Inv],
+def plot_state_x2x0(
+    state: StateVector3d[_B3d0Inv],
     x1_idx: SingleFlatIndexLike,
     *,
     ax: Axes | None = None,
@@ -432,11 +471,11 @@ def plot_eigenstate_x2x0(
     scale: Scale = "linear",
 ) -> tuple[Figure, Axes, QuadMesh]:
     """
-    Plot an eigenstate in 2d perpendicular to the x1 axis.
+    Plot a state in 2d perpendicular to the x1 axis.
 
     Parameters
     ----------
-    eigenstate : Eigenstate[_B3d0Inv]
+    state : Eigenstate[_B3d0Inv]
     x1_idx : SingleFlatIndexLike
         index along the x1 axis to plot
     ax : Axes | None, optional
@@ -450,12 +489,12 @@ def plot_eigenstate_x2x0(
     -------
     tuple[Figure, Axes, QuadMesh]
     """
-    return plot_eigenstate_2d_x(
-        eigenstate, (2, 0), (x1_idx,), ax=ax, measure=measure, scale=scale
+    return plot_state_2d_x(
+        state, (2, 0), (x1_idx,), ax=ax, measure=measure, scale=scale
     )
 
 
-def plot_state_vector_difference_1d_k(
+def plot_state_difference_1d_k(
     state_0: StateVector[_B0Inv],
     state_1: StateVector[_B1Inv],
     axes: tuple[int] = (0,),
@@ -498,10 +537,10 @@ def plot_state_vector_difference_1d_k(
             [np.abs(converted_0["vector"]), np.abs(converted_1["vector"])], axis=0
         ),
     }
-    return plot_state_vector_1d_k(state, axes, idx, ax=ax, measure=measure, scale=scale)
+    return plot_state_1d_k(state, axes, idx, ax=ax, measure=measure, scale=scale)
 
 
-def plot_state_vector_difference_2d_x(
+def plot_state_difference_2d_x(
     state_0: StateVector[_B0Inv],
     state_1: StateVector[_B1Inv],
     axes: tuple[int, int] = (0, 1),
@@ -537,19 +576,17 @@ def plot_state_vector_difference_2d_x(
 
     converted_0 = convert_state_vector_to_basis(state_0, basis)
     converted_1 = convert_state_vector_to_basis(state_1, basis)
-    eigenstate: StateVector[Any] = {
+    state: StateVector[Any] = {
         "basis": basis,
         "vector": (converted_0["vector"] - converted_1["vector"])
         / np.max(
             [np.abs(converted_0["vector"]), np.abs(converted_1["vector"])], axis=0
         ),
     }
-    return plot_eigenstate_2d_x(
-        eigenstate, axes, idx, ax=ax, measure=measure, scale=scale
-    )
+    return plot_state_2d_x(state, axes, idx, ax=ax, measure=measure, scale=scale)
 
 
-def plot_state_vector_difference_2d_k(
+def plot_state_difference_2d_k(
     state_0: StateVector[_B0Inv],
     state_1: StateVector[_B1Inv],
     axes: tuple[int, int] = (0, 1),
@@ -592,11 +629,11 @@ def plot_state_vector_difference_2d_k(
             [np.abs(converted_0["vector"]), np.abs(converted_1["vector"])], axis=0
         ),
     }
-    return plot_state_vector_2d_k(state, axes, idx, ax=ax, measure=measure, scale=scale)
+    return plot_state_2d_k(state, axes, idx, ax=ax, measure=measure, scale=scale)
 
 
-def animate_eigenstate_3d_x(
-    eigenstate: StateVector[_B0Inv],
+def animate_state_3d_x(
+    state: StateVector[_B0Inv],
     axes: tuple[int, int, int],
     idx: SingleStackedIndexLike | None = None,
     *,
@@ -606,11 +643,11 @@ def animate_eigenstate_3d_x(
     clim: tuple[float | None, float | None] = (None, None),
 ) -> tuple[Figure, Axes, ArtistAnimation]:
     """
-    Animate an eigenstate in 3d, perpendicular to z_axis.
+    Animate a state in 3d, perpendicular to z_axis.
 
     Parameters
     ----------
-    eigenstate : Eigenstate[_B3d0Inv]
+    state : Eigenstate[_B3d0Inv]
     z_axis : Literal[0, 1, 2, -1, -2, -3]
         axis perpendicular to which to plot
     ax : Axes | None, optional
@@ -624,7 +661,7 @@ def animate_eigenstate_3d_x(
     -------
     tuple[Figure, Axes, ArtistAnimation]
     """
-    converted = convert_state_vector_to_position_basis(eigenstate)
+    converted = convert_state_vector_to_position_basis(state)
     util = AxisWithLengthBasisUtil(converted["basis"])
     points = converted["vector"].reshape(*util.shape)
 
@@ -640,19 +677,19 @@ def animate_eigenstate_3d_x(
     )
 
 
-def animate_eigenstate_x0x1(
-    eigenstate: StateVector3d[_B3d0Inv],
+def animate_state_x0x1(
+    state: StateVector3d[_B3d0Inv],
     *,
     ax: Axes | None = None,
     measure: Measure = "abs",
     scale: Scale = "linear",
 ) -> tuple[Figure, Axes, ArtistAnimation]:
     """
-    plot an eigenstate in 3d perpendicular to the x2 axis.
+    plot an state in 3d perpendicular to the x2 axis.
 
     Parameters
     ----------
-    eigenstate : Eigenstate[_B3d0Inv]
+    state : Eigenstate[_B3d0Inv]
     ax : Axes | None, optional
         plot axis, by default None
     measure : Literal[&quot;real&quot;, &quot;imag&quot;, &quot;abs&quot;], optional
@@ -664,24 +701,22 @@ def animate_eigenstate_x0x1(
     -------
     tuple[Figure, Axes, ArtistAnimation]
     """
-    return animate_eigenstate_3d_x(
-        eigenstate, (0, 1, 2), (), ax=ax, measure=measure, scale=scale
-    )
+    return animate_state_3d_x(state, (0, 1, 2), (), ax=ax, measure=measure, scale=scale)
 
 
-def animate_eigenstate_x1x2(
-    eigenstate: StateVector3d[_B3d0Inv],
+def animate_state_x1x2(
+    state: StateVector3d[_B3d0Inv],
     *,
     ax: Axes | None = None,
     measure: Measure = "abs",
     scale: Scale = "linear",
 ) -> tuple[Figure, Axes, ArtistAnimation]:
     """
-    plot an eigenstate in 3d perpendicular to the x0 axis.
+    plot an state in 3d perpendicular to the x0 axis.
 
     Parameters
     ----------
-    eigenstate : Eigenstate[_B3d0Inv]
+    state : Eigenstate[_B3d0Inv]
     ax : Axes | None, optional
         plot axis, by default None
     measure : Literal[&quot;real&quot;, &quot;imag&quot;, &quot;abs&quot;], optional
@@ -693,24 +728,22 @@ def animate_eigenstate_x1x2(
     -------
     tuple[Figure, Axes, ArtistAnimation]
     """
-    return animate_eigenstate_3d_x(
-        eigenstate, (1, 2, 0), (), ax=ax, measure=measure, scale=scale
-    )
+    return animate_state_3d_x(state, (1, 2, 0), (), ax=ax, measure=measure, scale=scale)
 
 
-def animate_eigenstate_x2x0(
-    eigenstate: StateVector3d[_B3d0Inv],
+def animate_state_x2x0(
+    state: StateVector3d[_B3d0Inv],
     *,
     ax: Axes | None = None,
     measure: Measure = "abs",
     scale: Scale = "linear",
 ) -> tuple[Figure, Axes, ArtistAnimation]:
     """
-    plot an eigenstate in 3d perpendicular to the x1 axis.
+    plot an state in 3d perpendicular to the x1 axis.
 
     Parameters
     ----------
-    eigenstate : Eigenstate[_B3d0Inv]
+    state : Eigenstate[_B3d0Inv]
     ax : Axes | None, optional
         plot axis, by default None
     measure : Literal[&quot;real&quot;, &quot;imag&quot;, &quot;abs&quot;], optional
@@ -722,12 +755,10 @@ def animate_eigenstate_x2x0(
     -------
     tuple[Figure, Axes, ArtistAnimation]
     """
-    return animate_eigenstate_3d_x(
-        eigenstate, (2, 0, 1), (), ax=ax, measure=measure, scale=scale
-    )
+    return animate_state_3d_x(state, (2, 0, 1), (), ax=ax, measure=measure, scale=scale)
 
 
-def plot_state_vector_along_path(
+def plot_state_along_path(
     state: StateVector[_B0Inv],
     path: np.ndarray[tuple[int, int], np.dtype[np.int_]],
     *,
@@ -737,7 +768,7 @@ def plot_state_vector_along_path(
     scale: Scale = "linear",
 ) -> tuple[Figure, Axes, Line2D]:
     """
-    Plot an eigenstate in 1d along the given path in position basis.
+    Plot an state in 1d along the given path in position basis.
 
     Parameters
     ----------

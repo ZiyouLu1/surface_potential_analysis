@@ -18,8 +18,8 @@ from surface_potential_analysis.wavepacket.wavepacket import (
 
 if TYPE_CHECKING:
     from surface_potential_analysis.axis.axis import (
-        FundamentalMomentumAxis,
-        FundamentalMomentumAxis3d,
+        FundamentalTransformedPositionAxis,
+        FundamentalTransformedPositionAxis3d,
     )
     from surface_potential_analysis.axis.axis_like import AxisWithLengthLike3d
     from surface_potential_analysis.basis.basis import AxisWithLengthBasis, Basis3d
@@ -38,7 +38,9 @@ if TYPE_CHECKING:
     _A3d2Inv = TypeVar("_A3d2Inv", bound=AxisWithLengthLike3d[Any, Any])
 
     _B0Inv = TypeVar("_B0Inv", bound=AxisWithLengthBasis[Any])
-    _BM0Inv = TypeVar("_BM0Inv", bound=tuple[FundamentalMomentumAxis[Any, Any], ...])
+    _BM0Inv = TypeVar(
+        "_BM0Inv", bound=tuple[FundamentalTransformedPositionAxis[Any, Any], ...]
+    )
     _S0Inv = TypeVar("_S0Inv", bound=tuple[int, ...])
 
     _S3d0Inv = TypeVar("_S3d0Inv", bound=tuple[int, int, int])
@@ -51,8 +53,8 @@ if TYPE_CHECKING:
 def furl_eigenstate(
     eigenstate: StateVector3d[
         tuple[
-            FundamentalMomentumAxis[_L0Inv, Literal[3]],
-            FundamentalMomentumAxis[_L1Inv, Literal[3]],
+            FundamentalTransformedPositionAxis[_L0Inv, Literal[3]],
+            FundamentalTransformedPositionAxis[_L1Inv, Literal[3]],
             _A3d2Inv,
         ]
     ],
@@ -60,8 +62,8 @@ def furl_eigenstate(
 ) -> WavepacketWithBasis3d[
     _NS0Inv,
     _NS1Inv,
-    FundamentalMomentumAxis3d[int],
-    FundamentalMomentumAxis3d[int],
+    FundamentalTransformedPositionAxis3d[int],
+    FundamentalTransformedPositionAxis3d[int],
     _A3d2Inv,
 ]:
     """
@@ -103,7 +105,7 @@ def furl_eigenstate(
 
 def _unfurl_momentum_basis_wavepacket(
     wavepacket: Wavepacket[_S0Inv, _BM0Inv]
-) -> StateVector[tuple[FundamentalMomentumAxis[Any, Any], ...]]:
+) -> StateVector[tuple[FundamentalTransformedPositionAxis[Any, Any], ...]]:
     sample_shape = wavepacket["shape"]
     states_shape = AxisWithLengthBasisUtil(wavepacket["basis"]).shape
     final_shape = tuple(
@@ -140,9 +142,9 @@ def unfurl_wavepacket(
     wavepacket: Wavepacket3d[_S3d0Inv, _B3d0Inv]
 ) -> StateVector[
     tuple[
-        FundamentalMomentumAxis[Any, Literal[3]],
-        FundamentalMomentumAxis[Any, Literal[3]],
-        FundamentalMomentumAxis[Any, Literal[3]],
+        FundamentalTransformedPositionAxis[Any, Literal[3]],
+        FundamentalTransformedPositionAxis[Any, Literal[3]],
+        FundamentalTransformedPositionAxis[Any, Literal[3]],
     ]
 ]:
     ...
@@ -152,12 +154,12 @@ def unfurl_wavepacket(
 def unfurl_wavepacket(
     wavepacket: Wavepacket[_S0Inv, _B0Inv]
 ) -> (
-    StateVector[tuple[FundamentalMomentumAxis[Any, Any], ...]]
+    StateVector[tuple[FundamentalTransformedPositionAxis[Any, Any], ...]]
     | StateVector[
         tuple[
-            FundamentalMomentumAxis[Any, Literal[3]],
-            FundamentalMomentumAxis[Any, Literal[3]],
-            FundamentalMomentumAxis[Any, Literal[3]],
+            FundamentalTransformedPositionAxis[Any, Literal[3]],
+            FundamentalTransformedPositionAxis[Any, Literal[3]],
+            FundamentalTransformedPositionAxis[Any, Literal[3]],
         ]
     ]
 ):

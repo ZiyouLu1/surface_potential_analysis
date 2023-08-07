@@ -11,7 +11,7 @@ from _test_surface_potential_analysis.utils import get_random_explicit_axis
 from surface_potential_analysis.axis.axis import (
     ExplicitAxis3d,
     FundamentalPositionAxis3d,
-    MomentumAxis3d,
+    TransformedPositionAxis3d,
 )
 from surface_potential_analysis.basis.sho_basis import (
     SHOBasisConfig,
@@ -33,7 +33,11 @@ _rng = np.random.default_rng()
 def _get_random_sho_eigenstate(
     resolution: tuple[int, int, int], fundamental_resolution: tuple[int, int, int]
 ) -> StateVector3d[
-    tuple[MomentumAxis3d[Any, Any], MomentumAxis3d[Any, Any], ExplicitAxis3d[int, Any]]
+    tuple[
+        TransformedPositionAxis3d[Any, Any],
+        TransformedPositionAxis3d[Any, Any],
+        ExplicitAxis3d[int, Any],
+    ]
 ]:
     vector = np.array(_rng.random(np.prod(resolution)), dtype=complex)
     vector /= np.linalg.norm(vector)
@@ -46,10 +50,10 @@ def _get_random_sho_eigenstate(
     )
     return {
         "basis": (
-            MomentumAxis3d(
+            TransformedPositionAxis3d(
                 np.array([1, 0, 0]), resolution[0], fundamental_resolution[0]
             ),
-            MomentumAxis3d(
+            TransformedPositionAxis3d(
                 np.array([0, 1, 0]), resolution[1], fundamental_resolution[1]
             ),
             x2_basis,

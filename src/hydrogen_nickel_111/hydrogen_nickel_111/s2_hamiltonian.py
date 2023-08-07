@@ -4,8 +4,8 @@ from typing import TYPE_CHECKING, Literal, TypeVar
 
 import numpy as np
 from surface_potential_analysis.axis.axis import (
-    FundamentalMomentumAxis3d,
     FundamentalPositionAxis1d,
+    FundamentalTransformedPositionAxis3d,
 )
 from surface_potential_analysis.basis.potential_basis import select_minimum_potential_3d
 from surface_potential_analysis.basis.sho_basis import (
@@ -25,7 +25,7 @@ if TYPE_CHECKING:
     from surface_potential_analysis.axis.axis import (
         ExplicitAxis,
         ExplicitAxis3d,
-        MomentumAxis,
+        TransformedPositionAxis,
     )
     from surface_potential_analysis.basis.potential_basis import PotentialBasisConfig
     from surface_potential_analysis.basis.sho_basis import SHOBasisConfig
@@ -46,8 +46,8 @@ def get_hamiltonian_hydrogen_sho(
     resolution: tuple[_L3, _L4, _L5],
 ) -> SingleBasisOperator[
     tuple[
-        MomentumAxis[_L3, _L3, Literal[3]],
-        MomentumAxis[_L4, _L4, Literal[3]],
+        TransformedPositionAxis[_L3, _L3, Literal[3]],
+        TransformedPositionAxis[_L4, _L4, Literal[3]],
         ExplicitAxis[_L2, _L5, Literal[3]],
     ]
 ]:
@@ -80,20 +80,20 @@ def get_hamiltonian_hydrogen_sho(
     )
     return {
         "basis": (
-            FundamentalMomentumAxis3d(
+            FundamentalTransformedPositionAxis3d(
                 hamiltonian["basis"][0].delta_x, hamiltonian["basis"][0].n
             ),
-            FundamentalMomentumAxis3d(
+            FundamentalTransformedPositionAxis3d(
                 hamiltonian["basis"][1].delta_x, hamiltonian["basis"][1].n
             ),
             hamiltonian["basis"][2],
         ),
         "array": hamiltonian["array"],
         "dual_basis": (
-            FundamentalMomentumAxis3d(
+            FundamentalTransformedPositionAxis3d(
                 hamiltonian["dual_basis"][0].delta_x, hamiltonian["dual_basis"][0].n
             ),
-            FundamentalMomentumAxis3d(
+            FundamentalTransformedPositionAxis3d(
                 hamiltonian["dual_basis"][1].delta_x, hamiltonian["dual_basis"][1].n
             ),
             hamiltonian["dual_basis"][2],
@@ -107,8 +107,8 @@ def get_hamiltonian_hydrogen(
     resolution: tuple[_L3, _L4, _L5],
 ) -> SingleBasisOperator[
     tuple[
-        MomentumAxis[_L3, _L3, Literal[3]],
-        MomentumAxis[_L4, _L4, Literal[3]],
+        TransformedPositionAxis[_L3, _L3, Literal[3]],
+        TransformedPositionAxis[_L4, _L4, Literal[3]],
         ExplicitAxis[_L2, _L5, Literal[3]],
     ]
 ]:
@@ -149,8 +149,8 @@ def get_hamiltonian_deuterium(
     resolution: tuple[_L3, _L4, _L5],
 ) -> SingleBasisOperator[
     tuple[
-        MomentumAxis[_L3, _L3, Literal[3]],
-        MomentumAxis[_L4, _L4, Literal[3]],
+        TransformedPositionAxis[_L3, _L3, Literal[3]],
+        TransformedPositionAxis[_L4, _L4, Literal[3]],
         ExplicitAxis[_L2, _L5, Literal[3]],
     ]
 ]:

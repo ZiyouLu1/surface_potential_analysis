@@ -34,8 +34,6 @@ _L2Inv = TypeVar("_L2Inv", bound=int)
 _ND0Inv = TypeVar("_ND0Inv", bound=int)
 
 _B0Inv = TypeVar("_B0Inv", bound=AxisWithLengthBasis[Any])
-_NF0Inv = TypeVar("_NF0Inv", bound=int)
-_N0Inv = TypeVar("_N0Inv", bound=int)
 
 _B3d0Inv = TypeVar(
     "_B3d0Inv",

@@ -138,7 +138,7 @@ def get_overlap_momentum_interpolator_flat(
     relevant_slice = (
         slice(None)
         if n_points is None
-        else np.argsort(np.abs(vector_transformed))[::-1][:n_points]
+        else np.argsort(np.abs(vector_transformed))[::-1][: int(n_points)]
     )
     relevant_x_points = x_points[:, relevant_slice]
     relevant_vector = vector_transformed[relevant_slice]

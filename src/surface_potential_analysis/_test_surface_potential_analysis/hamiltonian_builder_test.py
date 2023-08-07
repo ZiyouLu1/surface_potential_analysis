@@ -10,11 +10,11 @@ import scipy.special
 from scipy.constants import hbar
 
 from surface_potential_analysis.axis.axis import (
-    FundamentalMomentumAxis1d,
-    FundamentalMomentumAxis3d,
     FundamentalPositionAxis1d,
     FundamentalPositionAxis3d,
-    MomentumAxis,
+    FundamentalTransformedPositionAxis1d,
+    FundamentalTransformedPositionAxis3d,
+    TransformedPositionAxis,
 )
 from surface_potential_analysis.basis.basis import (
     Basis3d,
@@ -270,9 +270,15 @@ class HamiltonianBuilderTest(unittest.TestCase):
         hamiltonian: FundamentalMomentumBasisStackedHamiltonian3d[int, int, int] = {
             "array": rng.random((*shape, *shape)),
             "basis": (
-                FundamentalMomentumAxis3d(np.array([1.0, 0, 0]), shape.item(0)),
-                FundamentalMomentumAxis3d(np.array([0, 1.0, 0]), shape.item(1)),
-                FundamentalMomentumAxis3d(np.array([0, 0, 1.0]), shape.item(2)),
+                FundamentalTransformedPositionAxis3d(
+                    np.array([1.0, 0, 0]), shape.item(0)
+                ),
+                FundamentalTransformedPositionAxis3d(
+                    np.array([0, 1.0, 0]), shape.item(1)
+                ),
+                FundamentalTransformedPositionAxis3d(
+                    np.array([0, 0, 1.0]), shape.item(2)
+                ),
             ),
         }
         actual = flatten_hamiltonian(hamiltonian)
@@ -292,9 +298,15 @@ class HamiltonianBuilderTest(unittest.TestCase):
         hamiltonian: FundamentalMomentumBasisStackedHamiltonian3d[int, int, int] = {
             "array": rng.random((*shape, *shape)),
             "basis": (
-                FundamentalMomentumAxis3d(np.array([1.0, 0, 0]), shape.item(0)),
-                FundamentalMomentumAxis3d(np.array([0, 1.0, 0]), shape.item(1)),
-                FundamentalMomentumAxis3d(np.array([0, 0, 1.0]), shape.item(2)),
+                FundamentalTransformedPositionAxis3d(
+                    np.array([1.0, 0, 0]), shape.item(0)
+                ),
+                FundamentalTransformedPositionAxis3d(
+                    np.array([0, 1.0, 0]), shape.item(1)
+                ),
+                FundamentalTransformedPositionAxis3d(
+                    np.array([0, 0, 1.0]), shape.item(2)
+                ),
             ),
         }
 
@@ -302,8 +314,10 @@ class HamiltonianBuilderTest(unittest.TestCase):
         np.testing.assert_array_equal(hamiltonian["array"], actual["array"])
 
     def test_hamiltonian_from_potential_momentum(self) -> None:
-        potential: Potential[tuple[FundamentalMomentumAxis1d[Literal[100]]]] = {
-            "basis": (FundamentalMomentumAxis1d(np.array([1]), 100),),
+        potential: Potential[
+            tuple[FundamentalTransformedPositionAxis1d[Literal[100]]]
+        ] = {
+            "basis": (FundamentalTransformedPositionAxis1d(np.array([1]), 100),),
             "vector": np.array(rng.random(100), dtype=complex),
         }
         actual = momentum_basis.hamiltonian_from_potential(potential)
@@ -750,8 +764,8 @@ class HamiltonianBuilderTest(unittest.TestCase):
         )
         np.testing.assert_almost_equal(expected[:50], eigenstates2["eigenvalues"][:50])
 
-        extended: Potential[tuple[MomentumAxis[int, int, int]]] = {
-            "basis": (MomentumAxis(np.array([30]), 1000, 2000),),
+        extended: Potential[tuple[TransformedPositionAxis[int, int, int]]] = {
+            "basis": (TransformedPositionAxis(np.array([30]), 1000, 2000),),
             "vector": in_basis["vector"] * np.sqrt(2000 / 1000),
         }
         converted = convert_potential_to_basis(

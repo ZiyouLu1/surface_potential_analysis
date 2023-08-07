@@ -6,9 +6,11 @@ import numpy as np
 from matplotlib import pyplot as plt
 
 from surface_potential_analysis.dynamics.incoherent_propagation.isf import (
-    ISFFit,
+    ISF4VariableFit,
+    ISFFeyModelFit,
     RateDecomposition,
-    get_isf_from_fit,
+    get_isf_from_4_variable_fit,
+    get_isf_from_fey_model_fit,
 )
 from surface_potential_analysis.state_vector.eigenvalue_list_plot import (
     plot_eigenvalue_against_x,
@@ -65,8 +67,8 @@ def plot_isf_against_time(
     return fig, ax, line
 
 
-def plot_isf_fit_against_time(
-    fit: ISFFit,
+def plot_isf_4_variable_fit_against_time(
+    fit: ISF4VariableFit,
     times: np.ndarray[tuple[_N0Inv], np.dtype[np.float_]],
     *,
     ax: Axes | None = None,
@@ -93,7 +95,39 @@ def plot_isf_fit_against_time(
     -------
     tuple[Figure, Axes, Line2D]
     """
-    isf = get_isf_from_fit(fit, times)
+    isf = get_isf_from_4_variable_fit(fit, times)
+    return plot_isf_against_time(isf, times, ax=ax, measure=measure, scale=scale)
+
+
+def plot_isf_fey_model_fit_against_time(
+    fit: ISFFeyModelFit,
+    times: np.ndarray[tuple[_N0Inv], np.dtype[np.float_]],
+    *,
+    ax: Axes | None = None,
+    measure: Measure = "abs",
+    scale: Scale = "linear",
+) -> tuple[Figure, Axes, Line2D]:
+    """
+    Plot the ISF fit against time.
+
+    Parameters
+    ----------
+    fit : ISFFit
+        The fit to the ISF
+    times : np.ndarray[tuple[_N0Inv], np.dtype[np.float_]]
+        times to plot
+    ax : Axes | None, optional
+        plot axis, by default None
+    measure : Measure, optional
+        measure, by default "abs"
+    scale : Scale, optional
+        scale, by default "linear"
+
+    Returns
+    -------
+    tuple[Figure, Axes, Line2D]
+    """
+    isf = get_isf_from_fey_model_fit(fit, times)
     return plot_isf_against_time(isf, times, ax=ax, measure=measure, scale=scale)
 
 

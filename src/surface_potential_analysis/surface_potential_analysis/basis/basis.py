@@ -3,8 +3,8 @@ from __future__ import annotations
 from typing import Any, Literal, TypeVar
 
 from surface_potential_analysis.axis.axis import (
-    FundamentalMomentumAxis,
     FundamentalPositionAxis,
+    FundamentalTransformedPositionAxis,
 )
 from surface_potential_analysis.axis.axis_like import (
     AxisLike,
@@ -44,7 +44,7 @@ FundamentalPositionBasis3d = tuple[
 ]
 
 FundamentalMomentumBasis3d = tuple[
-    FundamentalMomentumAxis[_NF0Inv, Literal[3]],
-    FundamentalMomentumAxis[_NF1Inv, Literal[3]],
-    FundamentalMomentumAxis[_NF2Inv, Literal[3]],
+    FundamentalTransformedPositionAxis[_NF0Inv, Literal[3]],
+    FundamentalTransformedPositionAxis[_NF1Inv, Literal[3]],
+    FundamentalTransformedPositionAxis[_NF2Inv, Literal[3]],
 ]

@@ -4,13 +4,9 @@ from typing import TYPE_CHECKING, Any, Generic, TypedDict, TypeVar
 
 import numpy as np
 
-from surface_potential_analysis.basis.basis import (
-    AxisWithLengthBasis,
-    Basis1d,
-    Basis2d,
-    Basis3d,
-)
-from surface_potential_analysis.basis.util import AxisWithLengthBasisUtil
+from surface_potential_analysis.basis.basis import Basis, Basis1d, Basis2d, Basis3d
+from surface_potential_analysis.basis.util import BasisUtil
+from surface_potential_analysis.state_vector.state_vector import StateVector
 
 from .eigenstate_calculation import calculate_eigenvectors_hermitian
 
@@ -20,15 +16,20 @@ if TYPE_CHECKING:
     from surface_potential_analysis.operator.operator import (
         SingleBasisOperator,
     )
-    from surface_potential_analysis.state_vector.state_vector import StateVector
 _L0Inv = TypeVar("_L0Inv", bound=int)
 
-_B0Cov = TypeVar("_B0Cov", bound=AxisWithLengthBasis[Any], covariant=True)
-_B0Inv = TypeVar("_B0Inv", bound=AxisWithLengthBasis[Any])
+_B0Cov = TypeVar("_B0Cov", bound=Basis, covariant=True)
+_B0Inv = TypeVar("_B0Inv", bound=Basis)
 
 _B1d0Cov = TypeVar("_B1d0Cov", bound=Basis1d[Any], covariant=True)
 _B2d0Cov = TypeVar("_B2d0Cov", bound=Basis2d[Any, Any], covariant=True)
 _B3d0Cov = TypeVar("_B3d0Cov", bound=Basis3d[Any, Any, Any], covariant=True)
+
+
+class Eigenstate(StateVector[_B0Cov], TypedDict):
+    """A State vector which is the eigenvector of some operator."""
+
+    eigenvalue: complex | np.complex_
 
 
 class EigenstateColllection(TypedDict, Generic[_B0Cov, _L0Inv]):
@@ -37,7 +38,7 @@ class EigenstateColllection(TypedDict, Generic[_B0Cov, _L0Inv]):
     basis: _B0Cov
     bloch_fractions: np.ndarray[tuple[_L0Inv, int], np.dtype[np.float_]]
     vectors: np.ndarray[tuple[_L0Inv, int, int], np.dtype[np.complex_]]
-    eigenvalues: np.ndarray[tuple[_L0Inv, int], np.dtype[np.float_]]
+    eigenvalues: np.ndarray[tuple[_L0Inv, int], np.dtype[np.complex_]]
 
 
 EigenstateColllection1d = EigenstateColllection[_B1d0Cov, _L0Inv]
@@ -93,7 +94,7 @@ def calculate_eigenstate_collection(
     n_states = 1 + subset_by_index[1] - subset_by_index[0]
 
     basis = hamiltonian_generator(bloch_fractions[0])["basis"]
-    util = AxisWithLengthBasisUtil(basis)
+    util = BasisUtil(basis)
     out: EigenstateColllection[_B0Inv, _L0Inv] = {
         "basis": basis,
         "vectors": np.zeros(
@@ -119,7 +120,7 @@ def select_eigenstate(
     collection: EigenstateColllection[_B0Cov, _L0Inv],
     bloch_idx: int,
     band_idx: int,
-) -> StateVector[_B0Cov]:
+) -> Eigenstate[_B0Cov]:
     """
     Select an eigenstate from an eigenstate collection.
 
@@ -136,4 +137,5 @@ def select_eigenstate(
     return {
         "basis": collection["basis"],
         "vector": collection["vectors"][bloch_idx, band_idx],
+        "eigenvalue": collection["eigenvalues"][bloch_idx, band_idx],  # type: ignore[typeddict-item]
     }

@@ -7,6 +7,7 @@ Code to produce localized wavepackets for periodic potential energy surfaces.
 To install the packages run
 
 ```shell
+pip install -e ./src/main
 pip install -e ./src/hydrogen_copper_100
 pip install -e ./src/hydrogen_copper_111
 pip install -e ./src/hydrogen_platinum_111
@@ -21,3 +22,5 @@ To make sure surface_potential_analysis is also editable it is advised to then r
 ```shell
 pip install -e ./src/surface_potential_analysis
 ```
+
+Individual functions should then be imported and ran inside the main package

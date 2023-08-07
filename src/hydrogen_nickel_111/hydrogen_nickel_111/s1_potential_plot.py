@@ -52,7 +52,6 @@ from .s1_potential import (
     get_interpolated_potential_john_grid,
     get_raw_potential_reciprocal_grid,
     get_truncated_potential,
-    load_john_interpolation,
     load_raw_data,
 )
 from .surface_data import save_figure
@@ -251,55 +250,6 @@ def plot_z_direction_energy_data_john(
     return plot_uneven_potential_z_comparison(grid, locations, ax=ax)
 
 
-def plot_john_interpolated_points() -> None:
-    data = load_john_interpolation()
-    mocked_data = mock_even_potential(data)
-
-    fig, ax, _anim1 = animate_potential_x0x1(mocked_data)
-    ax.set_title(
-        "Plot of the interpolated Nickel surface potential\nthrough the x plane"
-    )
-    fig.show()
-
-    fig, ax, _anim2 = animate_potential_x0x1(mocked_data)
-    ax.set_title(
-        "Plot of the interpolated Nickel surface potential\nthrough the y plane"
-    )
-
-    fig.show()
-
-    fig, ax, _ = plot_z_direction_energy_data_john(data)
-    ax.set_ylim(0, 0.3e-18)
-    fig.show()
-    save_figure(fig, "john_interpolation_z.png")
-    input()
-
-
-def compare_john_interpolation() -> None:
-    raw_points = load_raw_data()
-    john_interpolation = load_john_interpolation()
-    mocked_interpolation = mock_even_potential(john_interpolation)
-
-    fig, ax, _anim2 = animate_potential_x0x1(mocked_interpolation)
-    plot_point_potential_location_xy(raw_points, ax=ax)
-    fig.show()
-
-    fig, ax, _ = plot_potential_2d_x(mocked_interpolation, (0, 1), (0,))
-    plot_point_potential_location_xy(raw_points, ax=ax)
-    ax.set_ylim(0, 3 * 10**-19)
-    ax.set_title("Comparison between raw and interpolated potential for Nickel")
-    fig.show()
-    save_figure(fig, "raw_interpolation_comparison.png")
-
-    fig, ax, _ = plot_z_direction_energy_data_john(john_interpolation)
-    my_interpolation = get_interpolated_potential((209, 209, 501))
-    fig, ax, _ = plot_potential_1d_x2_comparison_111(my_interpolation)
-    ax.set_ylim(0, 0.5e-18)
-    fig.show()
-    save_figure(fig, "original_and_new_interpolation_comparison.png")
-    input()
-
-
 def plot_interpolation_with_sho_wavefunctions() -> None:
     """
     Investigate the extent to which SHO wavefunctions lie outside the potential.
@@ -329,31 +279,6 @@ def plot_interpolation_with_sho_wavefunctions() -> None:
     fig.show()
 
     save_figure(fig, "sho_wavefunctions_alongside_potential.png")
-    input()
-
-
-def plot_potential_minimum_along_diagonal() -> None:
-    fig, ax = plt.subplots()
-
-    interpolation = get_interpolated_potential((209, 209, 501))
-    shape = AxisWithLengthBasisUtil(interpolation["basis"]).shape
-    path = np.array([(x, x) for x in range(shape[0])])
-    _, _, line = plot_potential_minimum_along_path(interpolation, path, ax=ax)
-    line.set_label("My Interpolation")
-
-    john_interpolation = mock_even_potential(load_john_interpolation())
-    path = np.array([(0, y) for y in range(shape[1])])
-    _, _, line = plot_potential_minimum_along_path(john_interpolation, path, ax=ax)
-    line.set_label("John Interpolation")
-
-    ax.set_title(
-        "comparison of energy along the classical trajectory\n"
-        "in the FCC-HCP-TOP direction"
-    )
-    ax.legend()
-    fig.show()
-    save_figure(fig, "classical_trajectory_comparison.png")
-
     input()
 
 
@@ -465,31 +390,6 @@ def test_potential_fourier_transform() -> None:
     # Max absolute difference: 3.31267687e-21
     # Max relative difference: 0.00026576
     np.testing.assert_allclose(fft_john[0, 0, :], fft_me[0, 0, :])
-
-
-def test_symmetry_point_interpolation() -> None:
-    """Check if the interpolation contain the same points at x=0 and x=L."""
-    raw_points = load_raw_data()
-    interpolation = load_john_interpolation()
-    points = interpolation["vector"].reshape(
-        *AxisWithLengthBasisUtil(interpolation["basis"][0:2]).shape, -1
-    )
-
-    try:
-        np.testing.assert_array_equal(points[0, :, :], points[-1, :, :])
-    except AssertionError:
-        print("Endpoint are not the same")  # noqa: T201
-    else:
-        print("Endpoint the same")  # noqa: T201
-
-    delta_x = 2 * (np.max(raw_points["x_points"]) - np.min(raw_points["x_points"]))  # type: ignore[operator]
-    # These are calculated assuming no symmetry point!
-    delta_x_john = interpolation["basis"][0].delta_x
-
-    delta_y = 2 * (np.max(raw_points["y_points"]) - np.min(raw_points["y_points"]))  # type: ignore[operator]
-    delta_y_john = interpolation["basis"][1].delta_x
-    # True - we have excluded the symmetry points properly!
-    print(np.allclose([delta_y, delta_x], [delta_x_john, delta_y_john]))  # noqa: T201
 
 
 def plot_interpolated_potential_difference() -> None:

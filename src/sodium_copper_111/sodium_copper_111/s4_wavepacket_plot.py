@@ -8,7 +8,7 @@ from surface_potential_analysis.basis.util import AxisWithLengthBasisUtil
 from surface_potential_analysis.state_vector.conversion import (
     convert_state_vector_to_position_basis,
 )
-from surface_potential_analysis.state_vector.plot import plot_state_vector_1d_x
+from surface_potential_analysis.state_vector.plot import plot_state_1d_x
 from surface_potential_analysis.util.decorators import npy_cached
 from surface_potential_analysis.wavepacket.eigenstate_conversion import (
     unfurl_wavepacket,
@@ -94,7 +94,7 @@ def plot_operator_localized_states_many_band() -> None:
 
     fig, ax = plt.subplots()
     for i, eigenstate in enumerate(eigenstates):
-        _, _, ln = plot_state_vector_1d_x(eigenstate, ax=ax)
+        _, _, ln = plot_state_1d_x(eigenstate, ax=ax)
         ln.set_label(f"n={i}")
 
     ax.set_xlim(3.2e-9, 3.7e-9)

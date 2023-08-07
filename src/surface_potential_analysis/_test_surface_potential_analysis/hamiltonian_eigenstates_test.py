@@ -4,7 +4,7 @@ import unittest
 
 import numpy as np
 
-from surface_potential_analysis.axis.axis import FundamentalMomentumAxis3d
+from surface_potential_analysis.axis.axis import FundamentalTransformedPositionAxis3d
 from surface_potential_analysis.basis.basis import (
     FundamentalMomentumBasis3d,
 )
@@ -26,9 +26,15 @@ FundamentalMomentumBasisHamiltonian3d = SingleBasisOperator[
 class HamiltonianEigenstates(unittest.TestCase):
     def test_calculate_energy_diagonal(self) -> None:
         basis: FundamentalMomentumBasis3d[int, int, int] = (
-            FundamentalMomentumAxis3d(np.array([1, 0, 0]), rng.integers(1, 10)),
-            FundamentalMomentumAxis3d(np.array([0, 1, 0]), rng.integers(1, 10)),
-            FundamentalMomentumAxis3d(np.array([0, 0, 1]), rng.integers(1, 10)),
+            FundamentalTransformedPositionAxis3d(
+                np.array([1, 0, 0]), rng.integers(1, 10)
+            ),
+            FundamentalTransformedPositionAxis3d(
+                np.array([0, 1, 0]), rng.integers(1, 10)
+            ),
+            FundamentalTransformedPositionAxis3d(
+                np.array([0, 0, 1]), rng.integers(1, 10)
+            ),
         )
         energies = rng.random(AxisWithLengthBasisUtil(basis).size)
         hamiltonian: FundamentalMomentumBasisHamiltonian3d = {

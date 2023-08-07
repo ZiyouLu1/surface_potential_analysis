@@ -5,9 +5,9 @@ from typing import TYPE_CHECKING, Any, Literal, TypeVar, overload
 import numpy as np
 
 from surface_potential_analysis.axis.axis import (
-    FundamentalMomentumAxis3d,
     FundamentalPositionAxis,
     FundamentalPositionAxis3d,
+    FundamentalTransformedPositionAxis3d,
 )
 
 if TYPE_CHECKING:
@@ -143,7 +143,7 @@ def momentum_basis_3d_from_resolution(
         else delta_x
     )
     return (
-        FundamentalMomentumAxis3d(delta_x[0], resolution[0]),
-        FundamentalMomentumAxis3d(delta_x[1], resolution[1]),
-        FundamentalMomentumAxis3d(delta_x[2], resolution[2]),
+        FundamentalTransformedPositionAxis3d(delta_x[0], resolution[0]),
+        FundamentalTransformedPositionAxis3d(delta_x[1], resolution[1]),
+        FundamentalTransformedPositionAxis3d(delta_x[2], resolution[2]),
     )

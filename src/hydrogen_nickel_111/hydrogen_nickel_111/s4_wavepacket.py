@@ -5,6 +5,8 @@ from typing import TYPE_CHECKING, Any, Literal
 import numpy as np
 from surface_potential_analysis.util.decorators import npy_cached
 from surface_potential_analysis.wavepacket.localization import (
+    localize_single_point_projection,
+    localize_tight_binding_projection,
     localize_tightly_bound_wavepacket_two_point_max,
 )
 from surface_potential_analysis.wavepacket.wavepacket import (
@@ -20,7 +22,7 @@ if TYPE_CHECKING:
 
     from surface_potential_analysis.axis.axis import (
         ExplicitAxis,
-        MomentumAxis,
+        TransformedPositionAxis,
     )
     from surface_potential_analysis.basis.basis import (
         Basis3d,
@@ -31,8 +33,8 @@ if TYPE_CHECKING:
         Literal[12],
         Literal[12],
         Basis3d[
-            MomentumAxis[Literal[29], Literal[29], Literal[3]],
-            MomentumAxis[Literal[29], Literal[29], Literal[3]],
+            TransformedPositionAxis[Literal[29], Literal[29], Literal[3]],
+            TransformedPositionAxis[Literal[29], Literal[29], Literal[3]],
             ExplicitAxis[Literal[250], Literal[12], Literal[3]],
         ],
     ]
@@ -41,8 +43,8 @@ if TYPE_CHECKING:
         Literal[12],
         Literal[12],
         Basis3d[
-            MomentumAxis[Literal[27], Literal[27], Literal[3]],
-            MomentumAxis[Literal[27], Literal[27], Literal[3]],
+            TransformedPositionAxis[Literal[27], Literal[27], Literal[3]],
+            TransformedPositionAxis[Literal[27], Literal[27], Literal[3]],
             ExplicitAxis[Literal[200], Literal[10], Literal[3]],
         ],
     ]
@@ -76,11 +78,35 @@ def get_wavepacket_hydrogen(band: int) -> _HydrogenNickelWavepacket:
     return get_all_wavepackets_hydrogen()[band]
 
 
-def get_two_point_normalized_wavepacket_hydrogen(
+def get_two_point_localized_wavepacket_hydrogen(
     band: int, offset: tuple[int, int] = (0, 0), angle: float = 0
 ) -> _HydrogenNickelWavepacket:
     wavepacket = get_wavepacket_hydrogen(band)
     return localize_tightly_bound_wavepacket_two_point_max(wavepacket, offset, angle)
+
+
+def _get_wavepacket_cache_tight_binding_h(band: int) -> Path:
+    return get_data_path(f"wavepacket/localized_wavepacket_tb_hydrogen_{band}.npy")
+
+
+@npy_cached(_get_wavepacket_cache_tight_binding_h, load_pickle=True)
+def get_tight_binding_projection_localized_wavepacket_hydrogen(
+    band: int,
+) -> _HydrogenNickelWavepacket:
+    wavepacket = get_wavepacket_hydrogen(band)
+    return localize_tight_binding_projection(wavepacket)
+
+
+def _get_wavepacket_cache_single_point_h(band: int) -> Path:
+    return get_data_path(f"wavepacket/localized_wavepacket_sp_hydrogen_{band}.npy")
+
+
+@npy_cached(_get_wavepacket_cache_single_point_h, load_pickle=True)
+def get_single_point_projection_localized_wavepacket_hydrogen(
+    band: int,
+) -> _HydrogenNickelWavepacket:
+    wavepacket = get_wavepacket_hydrogen(band)
+    return localize_single_point_projection(wavepacket)
 
 
 def get_hydrogen_energy_difference(state_0: int, state_1: int) -> np.float_:

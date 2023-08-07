@@ -4,11 +4,21 @@ from typing import TYPE_CHECKING, Any, TypeVar
 
 import numpy as np
 
-from surface_potential_analysis.axis.axis_like import AxisVector, AxisWithLengthLike
+from surface_potential_analysis.axis.axis_like import (
+    AsTransformedAxis,
+    AxisVector,
+    AxisWithLengthLike,
+)
 from surface_potential_analysis.basis.conversion import (
     basis_as_fundamental_momentum_basis,
 )
-from surface_potential_analysis.basis.util import AxisWithLengthBasisUtil
+from surface_potential_analysis.basis.util import (
+    BasisUtil,
+    wrap_index_around_origin,
+)
+from surface_potential_analysis.state_vector.conversion import (
+    convert_state_vector_to_position_basis,
+)
 from surface_potential_analysis.util.util import slice_along_axis
 from surface_potential_analysis.wavepacket.conversion import convert_wavepacket_to_basis
 from surface_potential_analysis.wavepacket.wavepacket import (
@@ -18,8 +28,15 @@ from surface_potential_analysis.wavepacket.wavepacket import (
 )
 
 if TYPE_CHECKING:
-    from surface_potential_analysis._types import SingleIndexLike
-    from surface_potential_analysis.basis.basis import AxisWithLengthBasis
+    from surface_potential_analysis._types import (
+        SingleIndexLike,
+        SingleStackedIndexLike,
+    )
+    from surface_potential_analysis.axis.axis import FundamentalPositionAxis
+    from surface_potential_analysis.basis.basis import (
+        AxisWithLengthBasis,
+    )
+    from surface_potential_analysis.state_vector.eigenstate_collection import Eigenstate
     from surface_potential_analysis.state_vector.state_vector import StateVector
 
     _B0Inv = TypeVar("_B0Inv", bound=AxisWithLengthBasis[Any])
@@ -40,24 +57,30 @@ def _pad_sample_axis(
     final_shape = np.array(vectors.shape)
     final_shape[axis] = ns * final_shape[axis]
     padded = np.zeros(final_shape, dtype=vectors.dtype)
+    if offset < 0:
+        # We could alternatively slice starting on zero
+        # and roll at the end but this is worse for performance
+        vectors = np.roll(vectors, -1, axis=axis)
+    padded[slice_along_axis(slice(offset % ns, None, ns), axis)] = vectors
 
-    shifted_vectors = np.fft.fftshift(vectors, axes=(axis,))
-    start = offset - (1 - ns) // 2
-    padded[slice_along_axis(slice(start, None, ns), axis)] = shifted_vectors
-    return np.fft.ifftshift(padded, axes=(axis,))  # type: ignore[no-any-return]  # type: ignore[no-any-return]
+    return padded  # type: ignore[no-any-return]
 
 
 def _truncate_sample_axis(
     vectors: np.ndarray[_S0Inv, _DT], ns: _NS0Inv, offset: _NOInv, axis: int = -1
 ) -> np.ndarray[tuple[int, ...], _DT]:
-    shifted = np.fft.fftshift(vectors, axes=(axis,))
-    start = offset - (1 - ns) // 2
-    truncated = shifted[slice_along_axis(slice(start, None, ns), axis)]
-    return np.fft.ifftshift(truncated, axes=(axis,))  # type: ignore[no-any-return]
+    truncated = vectors[slice_along_axis(slice(offset % ns, None, ns), axis)]
+    if offset < 0:
+        # We could alternatively roll before we take the slice
+        # and slice(0, None, ns) but this is worse for performance
+        truncated = np.roll(truncated, 1, axis=axis)
+    return truncated  # type: ignore[no-any-return]
 
 
 # ruff: noqa: D102
-class WavepacketSampleAxis(AxisWithLengthLike[_NF0Inv, _N0Inv, _ND0Inv]):
+class WavepacketSampleAxis(
+    AsTransformedAxis[_NF0Inv, _N0Inv], AxisWithLengthLike[_NF0Inv, _N0Inv, _ND0Inv]
+):
     """Axis used to represent a single eigenstate from a wavepacket."""
 
     def __init__(  # noqa: PLR0913
@@ -91,21 +114,21 @@ class WavepacketSampleAxis(AxisWithLengthLike[_NF0Inv, _N0Inv, _ND0Inv]):
     def fundamental_n(self) -> _NF0Inv:
         return self._fundamental_n
 
-    def __from_fundamental__(
+    def __as_transformed__(
         self,
         vectors: np.ndarray[_S0Inv, np.dtype[np.complex_ | np.float_]],
         axis: int = -1,
     ) -> np.ndarray[tuple[int, ...], np.dtype[np.complex_]]:
-        transformed = np.fft.fft(vectors, self.fundamental_n, axis=axis, norm="ortho")
-        return _truncate_sample_axis(transformed, self._ns, self._offset, axis)  # type: ignore[no-any-return]
+        casted = vectors.astype(np.complex_, copy=False)
+        return _pad_sample_axis(casted, self._ns, self._offset, axis)
 
-    def __into_fundamental__(
+    def __from_transformed__(
         self,
         vectors: np.ndarray[_S0Inv, np.dtype[np.complex_ | np.float_]],
         axis: int = -1,
     ) -> np.ndarray[tuple[int, ...], np.dtype[np.complex_]]:
-        padded = _pad_sample_axis(vectors, self._ns, self._offset, axis)
-        return np.fft.ifft(padded, self.fundamental_n, axis, norm="ortho")  # type: ignore[no-any-return]
+        casted = vectors.astype(np.complex_, copy=False)
+        return _truncate_sample_axis(casted, self._ns, self._offset, axis)
 
 
 def _get_sampled_basis(
@@ -126,7 +149,7 @@ def _get_sampled_basis(
 
 def get_eigenstate(
     wavepacket: Wavepacket[_S0Inv, _B0Inv], idx: SingleIndexLike
-) -> StateVector[tuple[WavepacketSampleAxis[Any, Any, Any], ...]]:
+) -> Eigenstate[tuple[WavepacketSampleAxis[Any, Any, Any], ...]]:
     """
     Get the eigenstate of a given wavepacket at a specific index.
 
@@ -134,6 +157,7 @@ def get_eigenstate(
     ----------
     wavepacket : Wavepacket[_S0Inv, _B0Inv]
     idx : SingleIndexLike
+
     Returns
     -------
     Eigenstate[_B0Inv].
@@ -141,19 +165,21 @@ def get_eigenstate(
     converted = convert_wavepacket_to_basis(
         wavepacket, basis_as_fundamental_momentum_basis(wavepacket["basis"])
     )
-    util = AxisWithLengthBasisUtil(
-        get_sample_basis(converted["basis"], converted["shape"])
-    )
+    util = BasisUtil(get_sample_basis(converted["basis"], converted["shape"]))
     idx = util.get_flat_index(idx) if isinstance(idx, tuple) else idx
     offset = util.get_stacked_index(idx)
 
     basis = _get_sampled_basis(converted["basis"], converted["shape"], offset)  # type: ignore[type-var]
-    return {"basis": basis, "vector": converted["vectors"][idx]}
+    return {
+        "basis": basis,
+        "vector": converted["vectors"][idx],
+        "eigenvalue": converted["eigenvalues"][idx],  # type: ignore[typeddict-item]
+    }
 
 
 def get_eigenstates(
     wavepacket: Wavepacket[_S0Inv, _B0Inv]
-) -> list[StateVector[AxisWithLengthBasis[Any]]]:
+) -> list[Eigenstate[AxisWithLengthBasis[Any]]]:
     """
     Get the eigenstate of a given wavepacket at a specific index.
 
@@ -168,15 +194,59 @@ def get_eigenstates(
     converted = convert_wavepacket_to_basis(
         wavepacket, basis_as_fundamental_momentum_basis(wavepacket["basis"])
     )
-    util = AxisWithLengthBasisUtil(
-        get_sample_basis(wavepacket["basis"], wavepacket["shape"])
-    )
+    util = BasisUtil(get_sample_basis(converted["basis"], converted["shape"]))
     return [
         {
-            "basis": _get_sampled_basis(
-                wavepacket["basis"], wavepacket["shape"], offset
-            ),
+            "basis": _get_sampled_basis(converted["basis"], converted["shape"], offset),
             "vector": v,
+            "eigenvalue": e,
         }
-        for (v, *offset) in zip(converted["vectors"], *util.nk_points, strict=True)
+        for (v, e, *offset) in zip(
+            converted["vectors"], converted["eigenvalues"], *util.nk_points, strict=True
+        )
     ]
+
+
+def get_tight_binding_state(
+    wavepacket: Wavepacket[_S0Inv, _B0Inv],
+    idx: SingleIndexLike = 0,
+    origin: SingleIndexLike | None = None,
+) -> StateVector[tuple[FundamentalPositionAxis[Any, Any], ...]]:
+    """
+    Given a wavepacket, get the state corresponding to the eigenstate under the tight binding approximation.
+
+    Parameters
+    ----------
+    wavepacket : Wavepacket[_S0Inv, _B0Inv]
+        The initial wavepacket
+    idx : SingleIndexLike, optional
+        The index of the state vector to use as reference, by default 0
+    origin : SingleIndexLike | None, optional
+        The origin about which to produce the localized state, by default the maximum of the wavefunction
+
+    Returns
+    -------
+    StateVector[tuple[FundamentalPositionAxis[Any, Any], ...]]
+        The localized state under the tight binding approximation
+    """
+    state_0 = convert_state_vector_to_position_basis(get_eigenstate(wavepacket, idx))
+    if origin is None:
+        util = BasisUtil(state_0["basis"])
+        idx_0: SingleStackedIndexLike = util.get_stacked_index(
+            np.argmax(np.abs(state_0["vector"]), axis=-1)
+        )
+        origin = wrap_index_around_origin(wavepacket["basis"], idx_0, (0, 0, 0), (0, 1))
+    # Under the tight binding approximation all state vectors are equal.
+    # The corresponding localized state is just the state at some index
+    # truncated to a single unit cell
+    unit_cell_util = BasisUtil(wavepacket["basis"])
+    relevant_idx = wrap_index_around_origin(
+        wavepacket["basis"], unit_cell_util.fundamental_nx_points, origin, (0, 1)  # type: ignore[arg-type]
+    )
+    relevant_idx_flat = util.get_flat_index(relevant_idx, mode="wrap")
+    out: StateVector[tuple[FundamentalPositionAxis[Any, Any], ...]] = {
+        "basis": state_0["basis"],
+        "vector": np.zeros_like(state_0["vector"]),
+    }
+    out["vector"][relevant_idx_flat] = state_0["vector"][relevant_idx_flat]
+    return out

@@ -20,7 +20,7 @@ if TYPE_CHECKING:
 
     from surface_potential_analysis.axis.axis import (
         ExplicitAxis,
-        MomentumAxis,
+        TransformedPositionAxis,
     )
     from surface_potential_analysis.basis.basis import (
         Basis3d,
@@ -31,8 +31,8 @@ if TYPE_CHECKING:
         Literal[12],
         Literal[12],
         Basis3d[
-            MomentumAxis[Literal[25], Literal[25], Literal[3]],
-            MomentumAxis[Literal[25], Literal[25], Literal[3]],
+            TransformedPositionAxis[Literal[25], Literal[25], Literal[3]],
+            TransformedPositionAxis[Literal[25], Literal[25], Literal[3]],
             ExplicitAxis[Literal[250], Literal[10], Literal[3]],
         ],
     ]
@@ -41,8 +41,8 @@ if TYPE_CHECKING:
         Literal[12],
         Literal[12],
         Basis3d[
-            MomentumAxis[Literal[33], Literal[33], Literal[3]],
-            MomentumAxis[Literal[33], Literal[33], Literal[3]],
+            TransformedPositionAxis[Literal[33], Literal[33], Literal[3]],
+            TransformedPositionAxis[Literal[33], Literal[33], Literal[3]],
             ExplicitAxis[Literal[250], Literal[10], Literal[3]],
         ],
     ]

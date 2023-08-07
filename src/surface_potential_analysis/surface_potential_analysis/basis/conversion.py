@@ -4,27 +4,27 @@ from typing import TYPE_CHECKING, Any, TypeVar, overload
 
 import numpy as np
 
-from surface_potential_analysis.axis.axis import (
-    FundamentalMomentumAxis,
-    FundamentalMomentumAxis1d,
-    FundamentalMomentumAxis2d,
-    FundamentalMomentumAxis3d,
-    FundamentalPositionAxis,
-    FundamentalPositionAxis1d,
-    FundamentalPositionAxis2d,
-    FundamentalPositionAxis3d,
-    MomentumAxis,
-)
+from surface_potential_analysis.axis.axis_like import AsTransformedAxis
 from surface_potential_analysis.axis.conversion import (
     axis_as_fundamental_momentum_axis,
     axis_as_fundamental_position_axis,
     axis_as_n_point_axis,
 )
-from surface_potential_analysis.util.interpolation import pad_ft_points
+from surface_potential_analysis.util.decorators import timed
 
 from .util import BasisUtil
 
 if TYPE_CHECKING:
+    from surface_potential_analysis.axis.axis import (
+        FundamentalPositionAxis,
+        FundamentalPositionAxis1d,
+        FundamentalPositionAxis2d,
+        FundamentalPositionAxis3d,
+        FundamentalTransformedPositionAxis,
+        FundamentalTransformedPositionAxis1d,
+        FundamentalTransformedPositionAxis2d,
+        FundamentalTransformedPositionAxis3d,
+    )
     from surface_potential_analysis.axis.axis_like import (
         AxisLike,
         AxisWithLengthLike1d,
@@ -82,9 +82,13 @@ def _convert_vector_along_axis(
 ) -> np.ndarray[Any, np.dtype[np.complex_]]:
     # Small speedup here, and prevents imprecision of fft followed by ifft
     # And two pad_ft_points
-    if isinstance(initial_axis, MomentumAxis) and isinstance(final_axis, MomentumAxis):
-        padded = pad_ft_points(vector, s=(final_axis.n,), axes=(axis,))
-        return padded.astype(np.complex_, copy=False)  # type: ignore[no-any-return]
+    if isinstance(initial_axis, AsTransformedAxis) and isinstance(
+        final_axis, AsTransformedAxis
+    ):
+        # If initial axis and final axis are AsTransformedAxis
+        # we (might) be able to prevent the need for a fft
+        transformed = initial_axis.__into_transformed__(vector, axis)
+        return final_axis.__from_transformed__(transformed, axis)
     return _convert_vector_along_axis_simple(vector, initial_axis, final_axis, axis)
 
 
@@ -128,6 +132,7 @@ def convert_vector(
     ...
 
 
+@timed
 def convert_vector(
     vector: np.ndarray[_S0Inv, np.dtype[np.complex_] | np.dtype[np.float_]],
     initial_basis: _B0Inv,
@@ -307,7 +312,7 @@ _LF2Inv = TypeVar("_LF2Inv", bound=int)
 @overload
 def basis_as_fundamental_momentum_basis(
     basis: Basis1d[AxisWithLengthLike1d[_LF0Inv, _L0Inv]]
-) -> Basis1d[FundamentalMomentumAxis1d[_LF0Inv]]:
+) -> Basis1d[FundamentalTransformedPositionAxis1d[_LF0Inv]]:
     ...
 
 
@@ -316,7 +321,10 @@ def basis_as_fundamental_momentum_basis(
     basis: Basis2d[
         AxisWithLengthLike2d[_LF0Inv, _L0Inv], AxisWithLengthLike2d[_LF1Inv, _L1Inv]
     ]
-) -> Basis2d[FundamentalMomentumAxis2d[_LF0Inv], FundamentalMomentumAxis2d[_LF1Inv]]:
+) -> Basis2d[
+    FundamentalTransformedPositionAxis2d[_LF0Inv],
+    FundamentalTransformedPositionAxis2d[_LF1Inv],
+]:
     ...
 
 
@@ -328,9 +336,9 @@ def basis_as_fundamental_momentum_basis(
         AxisWithLengthLike3d[_LF2Inv, _L2Inv],
     ]
 ) -> Basis3d[
-    FundamentalMomentumAxis3d[_LF0Inv],
-    FundamentalMomentumAxis3d[_LF1Inv],
-    FundamentalMomentumAxis3d[_LF2Inv],
+    FundamentalTransformedPositionAxis3d[_LF0Inv],
+    FundamentalTransformedPositionAxis3d[_LF1Inv],
+    FundamentalTransformedPositionAxis3d[_LF2Inv],
 ]:
     ...
 
@@ -338,13 +346,13 @@ def basis_as_fundamental_momentum_basis(
 @overload
 def basis_as_fundamental_momentum_basis(
     basis: _ALB0Inv,
-) -> tuple[FundamentalMomentumAxis[Any, Any], ...]:
+) -> tuple[FundamentalTransformedPositionAxis[Any, Any], ...]:
     ...
 
 
 def basis_as_fundamental_momentum_basis(
     basis: _ALB0Inv,
-) -> tuple[FundamentalMomentumAxis[Any, Any], ...]:
+) -> tuple[FundamentalTransformedPositionAxis[Any, Any], ...]:
     """
     Get the fundamental momentum basis for a given basis.
 

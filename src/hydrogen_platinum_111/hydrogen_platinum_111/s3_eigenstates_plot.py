@@ -19,6 +19,7 @@ def plot_lowest_band_energy_deuterium() -> None:
         (29, 29, 16),
         (29, 29, 17),
         (29, 29, 18),
+        (29, 29, 19),
         (31, 31, 17),
     ]
     for shape in shapes:

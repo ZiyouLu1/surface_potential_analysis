@@ -7,8 +7,8 @@ import numpy as np
 
 from surface_potential_analysis.axis.axis import (
     ExplicitAxis,
-    FundamentalMomentumAxis,
     FundamentalPositionAxis,
+    FundamentalTransformedPositionAxis,
 )
 from surface_potential_analysis.axis.util import AxisWithLengthLikeUtil
 
@@ -104,7 +104,7 @@ def axis_as_fundamental_position_axis(
 
 def axis_as_fundamental_momentum_axis(
     axis: AxisWithLengthLike[_NF0Inv, _N0Inv, _NDInv]
-) -> FundamentalMomentumAxis[_NF0Inv, _NDInv]:
+) -> FundamentalTransformedPositionAxis[_NF0Inv, _NDInv]:
     """
     Get the fundamental momentum axis for a given axis.
 
@@ -116,7 +116,7 @@ def axis_as_fundamental_momentum_axis(
     -------
     FundamentalMomentumAxis[_NF0Inv, _NDInv]
     """
-    return FundamentalMomentumAxis(axis.delta_x, axis.fundamental_n)
+    return FundamentalTransformedPositionAxis(axis.delta_x, axis.fundamental_n)
 
 
 def axis_as_explicit_position_axis(

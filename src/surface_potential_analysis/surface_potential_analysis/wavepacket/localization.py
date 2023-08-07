@@ -18,16 +18,19 @@ from surface_potential_analysis.operator.conversion import (
     convert_operator_to_basis,
 )
 from surface_potential_analysis.state_vector.conversion import (
+    convert_state_dual_vector_to_basis,
+    convert_state_dual_vector_to_momentum_basis,
     convert_state_vector_to_basis,
     convert_state_vector_to_position_basis,
 )
 from surface_potential_analysis.state_vector.eigenstate_calculation import (
     calculate_eigenvectors_hermitian,
-    calculate_inner_product,
+    calculate_operator_inner_product,
 )
 from surface_potential_analysis.state_vector.state_vector import (
     StateVector,
     as_dual_vector,
+    calculate_inner_product,
 )
 from surface_potential_analysis.util.decorators import timed
 from surface_potential_analysis.wavepacket.conversion import (
@@ -37,7 +40,7 @@ from surface_potential_analysis.wavepacket.eigenstate_conversion import (
     unfurl_wavepacket,
 )
 
-from .get_eigenstate import get_eigenstate, get_eigenstates
+from .get_eigenstate import get_eigenstate, get_eigenstates, get_tight_binding_state
 from .wavepacket import (
     Wavepacket,
     Wavepacket3dWith2dSamples,
@@ -46,6 +49,8 @@ from .wavepacket import (
 )
 
 if TYPE_CHECKING:
+    from collections.abc import Sequence
+
     from surface_potential_analysis._types import (
         ArrayIndexLike,
         SingleIndexLike,
@@ -370,7 +375,9 @@ def _get_operator_between_states(
         dual_vector = as_dual_vector(states[i])
         for j in range(n_states):
             vector = states[j]
-            array[i, j] = calculate_inner_product(dual_vector, operator, vector)
+            array[i, j] = calculate_operator_inner_product(
+                dual_vector, operator, vector
+            )
 
     basis = (FundamentalPositionAxis(np.array([0]), n_states),)
     return {"array": array, "basis": basis, "dual_basis": basis}
@@ -483,3 +490,195 @@ def localize_position_operator_many_band_individual(
         }
         for vector in eigenstates["vectors"]
     ]
+
+
+def _get_projection_matrix(
+    projection: StateVector[_B0Inv], states: Sequence[StateVector[_B1Inv]]
+) -> np.ndarray[tuple[int], np.dtype[np.complex_]]:
+    out = np.zeros(len(states), dtype=np.complex_)
+    projection_dual = as_dual_vector(projection)
+    projection_transformed = convert_state_dual_vector_to_momentum_basis(
+        projection_dual
+    )
+    for i, state in enumerate(states):
+        converted = convert_state_dual_vector_to_basis(
+            projection_transformed, state["basis"]
+        )
+        out[i] = calculate_inner_product(state, converted)
+
+    return out  # type: ignore[no-any-return]
+
+
+def _get_projection_coefficients(
+    projection: StateVector[_B0Inv], states: Sequence[StateVector[_B1Inv]]
+) -> np.ndarray[tuple[int], np.dtype[np.complex_]]:
+    matrix = _get_projection_matrix(projection, states)
+    # need to normalize the projected states
+    return matrix / np.abs(matrix)  # type: ignore[no-any-return]
+
+
+def localize_wavepacket_projection(
+    wavepacket: Wavepacket[_S0Inv, _B0Inv],
+    projection: StateVector[_B1Inv],
+) -> Wavepacket[_S0Inv, _B0Inv]:
+    """
+    Given a wavepacket, localize using the given projection.
+
+    Parameters
+    ----------
+    wavepacket : Wavepacket[_S0Inv, _B0Inv]
+    projection : StateVector[_B1Inv]
+
+    Returns
+    -------
+    Wavepacket[_S0Inv, _B0Inv]
+    """
+    coefficients = _get_projection_coefficients(projection, get_eigenstates(wavepacket))
+
+    return {
+        "basis": wavepacket["basis"],
+        "eigenvalues": wavepacket["eigenvalues"],
+        "shape": wavepacket["shape"],
+        "vectors": wavepacket["vectors"] / coefficients[:, np.newaxis],
+    }
+
+
+def localize_tight_binding_projection(
+    wavepacket: Wavepacket[_S0Inv, _B0Inv]
+) -> Wavepacket[_S0Inv, _B0Inv]:
+    """
+    Given a wavepacket, localize using a tight binding projection.
+
+    Parameters
+    ----------
+    wavepacket : Wavepacket[_S0Inv, _B0Inv]
+
+    Returns
+    -------
+    Wavepacket[_S0Inv, _B0Inv]
+    """
+    # Initial guess is that the localized state is just the state of some eigenstate
+    # truncated at the edge of the first
+    # unit cell, centered at the two point max of the wavefunction
+    projection = get_tight_binding_state(wavepacket)
+    return localize_wavepacket_projection(wavepacket, projection)
+
+
+def _get_single_point_state(
+    wavepacket: Wavepacket[_S0Inv, _B0Inv],
+    idx: SingleIndexLike = 0,
+    origin: SingleStackedIndexLike | None = None,
+) -> StateVector[tuple[FundamentalPositionAxis[Any, Any], ...]]:
+    state_0 = convert_state_vector_to_position_basis(get_eigenstate(wavepacket, idx))
+    util = BasisUtil(state_0["basis"])
+    if origin is None:
+        idx_0: SingleStackedIndexLike = util.get_stacked_index(
+            np.argmax(np.abs(state_0["vector"]), axis=-1)
+        )
+        origin = wrap_index_around_origin(wavepacket["basis"], idx_0, (0, 0, 0), (0, 1))
+
+    out: StateVector[tuple[FundamentalPositionAxis[Any, Any], ...]] = {
+        "basis": state_0["basis"],
+        "vector": np.zeros_like(state_0["vector"]),
+    }
+    out["vector"][util.get_flat_index(origin)] = 1
+    return out
+
+
+def localize_single_point_projection(
+    wavepacket: Wavepacket[_S0Inv, _B0Inv]
+) -> Wavepacket[_S0Inv, _B0Inv]:
+    """
+    Given a wavepacket, localize using a tight binding projection.
+
+    Parameters
+    ----------
+    wavepacket : Wavepacket[_S0Inv, _B0Inv]
+
+    Returns
+    -------
+    Wavepacket[_S0Inv, _B0Inv]
+    """
+    # Initial guess is that the localized state is just the state of some eigenstate
+    # truncated at the edge of the first
+    # unit cell, centered at the two point max of the wavefunction
+    projection = _get_single_point_state(wavepacket)
+    return localize_wavepacket_projection(wavepacket, projection)
+
+
+def get_exponential_state(
+    wavepacket: Wavepacket[_S0Inv, _B0Inv]
+) -> StateVector[tuple[FundamentalPositionAxis[Any, Any], ...]]:
+    """
+    Given a wavepacket, get the state decaying exponentially from the maximum.
+
+    Parameters
+    ----------
+    wavepacket : Wavepacket[_S0Inv, _B0Inv]
+        The initial wavepacket
+    idx : SingleIndexLike, optional
+        The index of the state vector to use as reference, by default 0
+    origin : SingleIndexLike | None, optional
+        The origin about which to produce the localized state, by default the maximum of the wavefunction
+
+    Returns
+    -------
+    StateVector[tuple[FundamentalPositionAxis[Any, Any], ...]]
+        The localized state under the tight binding approximation
+    """
+    state_0 = convert_state_vector_to_position_basis(get_eigenstate(wavepacket, 0))
+
+    util = BasisUtil(state_0["basis"])
+    idx_0: SingleStackedIndexLike = util.get_stacked_index(
+        np.argmax(np.abs(state_0["vector"]), axis=-1)
+    )
+    origin = wrap_index_around_origin(wavepacket["basis"], idx_0, (0, 0, 0), (0, 1))
+
+    coordinates = wrap_index_around_origin(state_0["basis"], util.nx_points, origin)
+    unit_cell_util = BasisUtil(wavepacket["basis"])
+    dx0 = coordinates[0] - origin[0] / unit_cell_util.fundamental_shape[0]
+    dx1 = coordinates[1] - origin[1] / unit_cell_util.fundamental_shape[1]
+    dx2 = coordinates[2] - origin[2] / unit_cell_util.fundamental_shape[2]
+
+    out: StateVector[tuple[FundamentalPositionAxis[Any, Any], ...]] = {
+        "basis": state_0["basis"],
+        "vector": np.zeros_like(state_0["vector"]),
+    }
+    out["vector"] = np.exp(-(dx0**2 + dx1**2 + dx2**2))
+    out["vector"] /= np.linalg.norm(out["vector"])
+    return out
+
+
+def _get_exponential_decay_state(
+    wavepacket: Wavepacket[_S0Inv, _B0Inv]
+) -> StateVector[tuple[FundamentalPositionAxis[Any, Any], ...]]:
+    exponential = get_exponential_state(wavepacket)
+    tight_binding = convert_state_vector_to_position_basis(
+        get_eigenstate(wavepacket, 0)
+    )
+    out: StateVector[tuple[FundamentalPositionAxis[Any, Any], ...]] = {
+        "basis": exponential["basis"],
+        "vector": exponential["vector"] * tight_binding["vector"],
+    }
+    out["vector"] /= np.linalg.norm(out["vector"])
+    return out
+
+
+def localize_exponential_decay_projection(
+    wavepacket: Wavepacket[_S0Inv, _B0Inv]
+) -> Wavepacket[_S0Inv, _B0Inv]:
+    """
+    Given a wavepacket, localize using a tight binding projection.
+
+    Parameters
+    ----------
+    wavepacket : Wavepacket[_S0Inv, _B0Inv]
+
+    Returns
+    -------
+    Wavepacket[_S0Inv, _B0Inv]
+    """
+    # Initial guess is that the localized state is the tight binding state
+    # multiplied by an exponential
+    projection = _get_exponential_decay_state(wavepacket)
+    return localize_wavepacket_projection(wavepacket, projection)

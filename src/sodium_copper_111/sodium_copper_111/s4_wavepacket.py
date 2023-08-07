@@ -18,14 +18,16 @@ from sodium_copper_111.surface_data import get_data_path
 if TYPE_CHECKING:
     from pathlib import Path
 
-    from surface_potential_analysis.axis.axis import FundamentalMomentumAxis1d
+    from surface_potential_analysis.axis.axis import (
+        FundamentalTransformedPositionAxis1d,
+    )
     from surface_potential_analysis.operator.operator import SingleBasisOperator
 
     _L0Inv = TypeVar("_L0Inv", bound=int)
     _L1Inv = TypeVar("_L1Inv", bound=int)
 
     _SodiumWavepacket = Wavepacket[
-        tuple[_L0Inv], tuple[FundamentalMomentumAxis1d[_L1Inv]]
+        tuple[_L0Inv], tuple[FundamentalTransformedPositionAxis1d[_L1Inv]]
     ]
 
 
@@ -39,7 +41,7 @@ def get_all_wavepackets(
 ) -> list[_SodiumWavepacket[_L0Inv, _L1Inv]]:
     def _hamiltonian_generator(
         bloch_fraction: np.ndarray[tuple[Literal[1]], np.dtype[np.float_]]
-    ) -> SingleBasisOperator[tuple[FundamentalMomentumAxis1d[_L1Inv]]]:
+    ) -> SingleBasisOperator[tuple[FundamentalTransformedPositionAxis1d[_L1Inv]]]:
         return get_hamiltonian(shape=resolution, bloch_fraction=bloch_fraction)
 
     save_bands = np.arange(99)

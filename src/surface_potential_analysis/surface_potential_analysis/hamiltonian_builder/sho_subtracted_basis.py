@@ -10,7 +10,7 @@ from scipy.constants import hbar
 from surface_potential_analysis.axis.axis import (
     ExplicitAxis3d,
     FundamentalPositionAxis3d,
-    MomentumAxis3d,
+    TransformedPositionAxis3d,
 )
 from surface_potential_analysis.axis.util import (
     AxisWithLengthLikeUtil,
@@ -108,17 +108,17 @@ class _SurfaceHamiltonianUtil(
     def basis(
         self,
     ) -> Basis3d[
-        MomentumAxis3d[_NF0Inv, _N0Inv],
-        MomentumAxis3d[_NF1Inv, _N1Inv],
+        TransformedPositionAxis3d[_NF0Inv, _N0Inv],
+        TransformedPositionAxis3d[_NF1Inv, _N1Inv],
         ExplicitAxis3d[_NF2Inv, _N2Inv],
     ]:
         return (
-            MomentumAxis3d(
+            TransformedPositionAxis3d(
                 self._potential["basis"][0].delta_x,
                 self._resolution[0],
                 self._potential["basis"][0].n,
             ),
-            MomentumAxis3d(
+            TransformedPositionAxis3d(
                 self._potential["basis"][1].delta_x,
                 self._resolution[1],
                 self._potential["basis"][1].n,
@@ -137,10 +137,11 @@ class _SurfaceHamiltonianUtil(
         self, bloch_phase: np.ndarray[tuple[Literal[3]], np.dtype[np.float_]]
     ) -> SingleBasisOperator[
         tuple[
-        MomentumAxis3d[_NF0Inv, _N0Inv],
-        MomentumAxis3d[_NF1Inv, _N1Inv],
-        ExplicitAxis3d[_NF2Inv, _N2Inv],
-    ]]:
+            TransformedPositionAxis3d[_NF0Inv, _N0Inv],
+            TransformedPositionAxis3d[_NF1Inv, _N1Inv],
+            ExplicitAxis3d[_NF2Inv, _N2Inv],
+        ]
+    ]:
         diagonal_energies = np.diag(self._calculate_diagonal_energy(bloch_phase))
         other_energies = self._calculate_off_diagonal_energies_fast()
 
@@ -257,11 +258,12 @@ def total_surface_hamiltonian(
     bloch_fraction: np.ndarray[tuple[Literal[3]], np.dtype[np.float_]],
     resolution: tuple[_N0Inv, _N1Inv, _N2Inv],
 ) -> SingleBasisOperator[
-        tuple[
-    MomentumAxis3d[_NF0Inv, _N0Inv],
-    MomentumAxis3d[_NF1Inv, _N1Inv],
-    ExplicitAxis3d[_NF2Inv, _N2Inv],
-]]:
+    tuple[
+        TransformedPositionAxis3d[_NF0Inv, _N0Inv],
+        TransformedPositionAxis3d[_NF1Inv, _N1Inv],
+        ExplicitAxis3d[_NF2Inv, _N2Inv],
+    ]
+]:
     """
     Calculate a hamiltonian using the infinite sho basis.
 

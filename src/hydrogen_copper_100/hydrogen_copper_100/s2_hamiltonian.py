@@ -24,8 +24,8 @@ if TYPE_CHECKING:
         ExplicitAxis,
         ExplicitAxis3d,
         FundamentalPositionAxis1d,
-        MomentumAxis,
-        MomentumAxis3d,
+        TransformedPositionAxis,
+        TransformedPositionAxis3d,
     )
     from surface_potential_analysis.basis.sho_basis import SHOBasisConfig
     from surface_potential_analysis.operator import SingleBasisOperator
@@ -44,7 +44,11 @@ def get_hamiltonian_sho(
     bloch_fraction: np.ndarray[tuple[Literal[3]], np.dtype[np.float_]],
     resolution: tuple[_L3, _L4, _L5],
 ) -> SingleBasisOperator[
-    tuple[MomentumAxis3d[_L0, _L3], MomentumAxis3d[_L1, _L4], ExplicitAxis3d[_L2, _L5]]
+    tuple[
+        TransformedPositionAxis3d[_L0, _L3],
+        TransformedPositionAxis3d[_L1, _L4],
+        ExplicitAxis3d[_L2, _L5],
+    ]
 ]:
     """
     Generate a Hamiltonian using an infinate SHO basis.
@@ -84,8 +88,8 @@ def get_hamiltonian(
     resolution: tuple[_L3, _L4, _L5],
 ) -> SingleBasisOperator[
     tuple[
-        MomentumAxis[_L3, _L3, Literal[3]],
-        MomentumAxis[_L4, _L4, Literal[3]],
+        TransformedPositionAxis[_L3, _L3, Literal[3]],
+        TransformedPositionAxis[_L4, _L4, Literal[3]],
         ExplicitAxis[_L2, _L5, Literal[3]],
     ]
 ]:
@@ -123,8 +127,8 @@ def get_hamiltonian_relaxed(
     resolution: tuple[_L3, _L4, _L5],
 ) -> SingleBasisOperator[
     tuple[
-        MomentumAxis[_L3, _L3, Literal[3]],
-        MomentumAxis[_L4, _L4, Literal[3]],
+        TransformedPositionAxis[_L3, _L3, Literal[3]],
+        TransformedPositionAxis[_L4, _L4, Literal[3]],
         ExplicitAxis[_L2, _L5, Literal[3]],
     ]
 ]:

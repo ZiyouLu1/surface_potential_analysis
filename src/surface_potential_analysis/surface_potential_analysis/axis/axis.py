@@ -5,6 +5,8 @@ from typing import Literal, TypeVar
 import numpy as np
 
 from surface_potential_analysis.axis.axis_like import (
+    AsFundamentalAxis,
+    AsTransformedAxis,
     AxisLike,
     AxisVector,
     AxisWithLengthLike,
@@ -80,7 +82,7 @@ class ExplicitAxis3d(ExplicitAxis[_NF0Inv, _N0Inv, Literal[3]]):
     """An axis with vectors given as explicit states with a 3d basis vector."""
 
 
-class FundamentalAxis(AxisLike[_NF0Cov, _NF0Cov]):
+class FundamentalAxis(AsFundamentalAxis[_NF0Cov, _NF0Cov], AxisLike[_NF0Cov, _NF0Cov]):
     """A axis with vectors that are the fundamental position states."""
 
     def __init__(self, n: _NF0Cov) -> None:
@@ -95,7 +97,7 @@ class FundamentalAxis(AxisLike[_NF0Cov, _NF0Cov]):
     def fundamental_n(self) -> _NF0Cov:
         return self._n
 
-    def __into_fundamental__(  # type: ignore[override]
+    def __as_fundamental__(  # type: ignore[override]
         self,
         vectors: np.ndarray[_S0Inv, np.dtype[np.complex_ | np.float_]],
         axis: int = -1,
@@ -136,7 +138,10 @@ class FundamentalPositionAxis3d(FundamentalPositionAxis[_NF0Inv, Literal[3]]):
     """A axis with vectors that are the fundamental position states with a 3d basis vector."""
 
 
-class MomentumAxis(AxisWithLengthLike[_NF0Cov, _N0Cov, _ND0Inv]):
+class TransformedPositionAxis(
+    AsTransformedAxis[_NF0Cov, _NF0Cov],
+    AxisWithLengthLike[_NF0Cov, _N0Cov, _ND0Inv],
+):
     """A axis with vectors which are the n lowest frequency momentum states."""
 
     def __init__(
@@ -160,36 +165,38 @@ class MomentumAxis(AxisWithLengthLike[_NF0Cov, _N0Cov, _ND0Inv]):
     def fundamental_n(self) -> _NF0Cov:
         return self._fundamental_n
 
-    def __into_fundamental__(
+    def __as_transformed__(
         self,
         vectors: np.ndarray[_S0Inv, np.dtype[np.complex_ | np.float_]],
         axis: int = -1,
     ) -> np.ndarray[tuple[int, ...], np.dtype[np.complex_]]:
-        padded = pad_ft_points(vectors, s=(self.fundamental_n,), axes=(axis,))
-        return np.fft.ifft(padded, self.fundamental_n, axis=axis, norm="ortho")  # type: ignore[no-any-return]
+        casted = vectors.astype(np.complex_, copy=False)
+        return pad_ft_points(casted, s=(self.fundamental_n,), axes=(axis,))
 
-    def __from_fundamental__(
+    def __from_transformed__(
         self,
         vectors: np.ndarray[_S0Inv, np.dtype[np.complex_ | np.float_]],
         axis: int = -1,
     ) -> np.ndarray[tuple[int, ...], np.dtype[np.complex_]]:
-        transformed = np.fft.fft(vectors, self.fundamental_n, axis=axis, norm="ortho")
-        return pad_ft_points(transformed, s=(self.n,), axes=(axis,))
+        casted = vectors.astype(np.complex_, copy=False)
+        return pad_ft_points(casted, s=(self.n,), axes=(axis,))
 
 
-class MomentumAxis1d(MomentumAxis[_NF0Inv, _N0Inv, Literal[1]]):
+class TransformedPositionAxis1d(TransformedPositionAxis[_NF0Inv, _N0Inv, Literal[1]]):
     """A axis with vectors which are the n lowest frequency momentum states with a 1d basis vector."""
 
 
-class MomentumAxis2d(MomentumAxis[_NF0Inv, _N0Inv, Literal[2]]):
+class TransformedPositionAxis2d(TransformedPositionAxis[_NF0Inv, _N0Inv, Literal[2]]):
     """A axis with vectors which are the n lowest frequency momentum states with a 2d basis vector."""
 
 
-class MomentumAxis3d(MomentumAxis[_NF0Inv, _N0Inv, Literal[3]]):
+class TransformedPositionAxis3d(TransformedPositionAxis[_NF0Inv, _N0Inv, Literal[3]]):
     """A axis with vectors which are the n lowest frequency momentum states with a 3d basis vector."""
 
 
-class FundamentalMomentumAxis(MomentumAxis[_NF0Cov, _NF0Cov, _ND0Inv]):
+class FundamentalTransformedPositionAxis(
+    TransformedPositionAxis[_NF0Cov, _NF0Cov, _ND0Inv]
+):
     """An axis with vectors which are the fundamental momentum states."""
 
     def __init__(self, delta_x: AxisVector[_ND0Inv], n: _NF0Cov) -> None:
@@ -201,13 +208,23 @@ class FundamentalMomentumAxis(MomentumAxis[_NF0Cov, _NF0Cov, _ND0Inv]):
         return np.fft.ifft(all_states_in_k, axis=1, norm="ortho")  # type: ignore[no-any-return]
 
 
-class FundamentalMomentumAxis1d(FundamentalMomentumAxis[_NF0Inv, Literal[1]]):
+class FundamentalTransformedPositionAxis1d(
+    FundamentalTransformedPositionAxis[_NF0Inv, Literal[1]]
+):
     """An axis with vectors which are the fundamental momentum states with a 1d basis vector."""
 
 
-class FundamentalMomentumAxis2d(FundamentalMomentumAxis[_NF0Inv, Literal[2]]):
+class FundamentalTransformedPositionAxis2d(
+    FundamentalTransformedPositionAxis[_NF0Inv, Literal[2]]
+):
     """An axis with vectors which are the fundamental momentum states with a 2d basis vector."""
 
 
-class FundamentalMomentumAxis3d(FundamentalMomentumAxis[_NF0Inv, Literal[3]]):
+class FundamentalTransformedPositionAxis3d(
+    FundamentalTransformedPositionAxis[_NF0Inv, Literal[3]]
+):
     """An axis with vectors which are the fundamental momentum states with a 3d basis vector."""
+
+
+# Deprecated Alias, required to load files
+FundamentalMomentumAxis3d = FundamentalTransformedPositionAxis3d

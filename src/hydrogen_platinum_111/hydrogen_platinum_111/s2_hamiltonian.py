@@ -15,7 +15,7 @@ if TYPE_CHECKING:
     from surface_potential_analysis.axis.axis import (
         ExplicitAxis,
         FundamentalPositionAxis1d,
-        MomentumAxis,
+        TransformedPositionAxis,
     )
     from surface_potential_analysis.basis.potential_basis import PotentialBasisConfig
     from surface_potential_analysis.operator import SingleBasisOperator
@@ -34,8 +34,8 @@ def get_hamiltonian_hydrogen(
     resolution: tuple[_L3, _L4, _L5],
 ) -> SingleBasisOperator[
     tuple[
-        MomentumAxis[_L3, _L3, Literal[3]],
-        MomentumAxis[_L4, _L4, Literal[3]],
+        TransformedPositionAxis[_L3, _L3, Literal[3]],
+        TransformedPositionAxis[_L4, _L4, Literal[3]],
         ExplicitAxis[_L2, _L5, Literal[3]],
     ]
 ]:
@@ -73,8 +73,8 @@ def get_hamiltonian_deuterium(
     resolution: tuple[_L3, _L4, _L5],
 ) -> SingleBasisOperator[
     tuple[
-        MomentumAxis[_L3, _L3, Literal[3]],
-        MomentumAxis[_L4, _L4, Literal[3]],
+        TransformedPositionAxis[_L3, _L3, Literal[3]],
+        TransformedPositionAxis[_L4, _L4, Literal[3]],
         ExplicitAxis[_L2, _L5, Literal[3]],
     ]
 ]:

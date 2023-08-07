@@ -17,7 +17,6 @@ from surface_potential_analysis.potential import (
     UnevenPotential3d,
     interpolate_uneven_potential,
     load_point_potential_json,
-    load_uneven_potential,
     normalize_potential,
     truncate_potential,
     undo_truncate_potential,
@@ -39,11 +38,6 @@ if TYPE_CHECKING:
 def load_raw_data() -> PointPotential3d[Any]:
     path = get_data_path("raw_data.json")
     return load_point_potential_json(path)
-
-
-def load_john_interpolation() -> UnevenPotential3d[Any, Any, Any]:
-    path = get_data_path("john_interpolated_data.json")
-    return load_uneven_potential(path)
 
 
 @npy_cached(

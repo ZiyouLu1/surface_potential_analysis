@@ -5,6 +5,8 @@ from typing import TYPE_CHECKING, Any, TypeVar
 import numpy as np
 import scipy
 
+from surface_potential_analysis.util.decorators import timed
+
 from .tunnelling_matrix import get_initial_pure_density_matrix_for_basis
 
 if TYPE_CHECKING:
@@ -24,6 +26,7 @@ if TYPE_CHECKING:
     _B0Inv = TypeVar("_B0Inv", bound=TunnellingSimulationBasis[Any, Any, Any])
 
 
+@timed
 def calculate_tunnelling_eigenstates(
     matrix: TunnellingMMatrix[_B0Inv],
 ) -> EigenvectorList[_B0Inv, int]:

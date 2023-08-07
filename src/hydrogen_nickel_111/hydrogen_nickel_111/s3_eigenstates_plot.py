@@ -13,8 +13,8 @@ from surface_potential_analysis.state_vector.eigenstate_collection_plot import (
     plot_eigenvalues_against_bloch_phase_1d,
 )
 from surface_potential_analysis.state_vector.plot import (
-    plot_state_vector_difference_2d_k,
-    plot_state_vector_difference_2d_x,
+    plot_state_difference_2d_k,
+    plot_state_difference_2d_x,
 )
 
 from hydrogen_nickel_111.s3_eigenstates import (
@@ -125,13 +125,11 @@ def plot_state_vector_difference_hydrogen() -> None:
     state_1 = select_eigenstate(collection_1, 0, 0)
     state_1["vector"] *= np.exp(-1j * np.angle(state_1["vector"][0]))
 
-    fig, _, _ = plot_state_vector_difference_2d_k(state_0, state_1, (1, 0))
+    fig, _, _ = plot_state_difference_2d_k(state_0, state_1, (1, 0))
     fig.show()
 
     z_max = np.argmax(collection_1["basis"][2].vectors[0])
-    fig, _, _ = plot_state_vector_difference_2d_x(
-        state_0, state_1, axes=(0, 1), idx=(z_max,)
-    )
+    fig, _, _ = plot_state_difference_2d_x(state_0, state_1, axes=(0, 1), idx=(z_max,))
     fig.show()
     input()
 

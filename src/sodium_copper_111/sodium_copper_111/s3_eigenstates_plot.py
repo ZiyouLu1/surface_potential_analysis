@@ -14,8 +14,8 @@ from surface_potential_analysis.state_vector.eigenstate_collection_plot import (
     plot_occupation_against_bloch_phase_1d,
 )
 from surface_potential_analysis.state_vector.plot import (
-    plot_state_vector_1d_x,
-    plot_state_vector_difference_1d_k,
+    plot_state_1d_x,
+    plot_state_difference_1d_k,
 )
 
 from sodium_copper_111.s1_potential_plot import plot_sodium_potential
@@ -68,7 +68,7 @@ def plot_high_energy_band_eigenstates() -> None:
 
     for i in [0, 5]:
         eigenstate = select_eigenstate(collection_0, i, 16)
-        _, _, ln = plot_state_vector_1d_x(eigenstate, ax=ax, measure="abs")
+        _, _, ln = plot_state_1d_x(eigenstate, ax=ax, measure="abs")
         ln.set_label(f"n={1000}")
 
     collection_1 = get_eigenstate_collection((5000,))
@@ -76,7 +76,7 @@ def plot_high_energy_band_eigenstates() -> None:
     for i in [0, 5]:
         eigenstate = select_eigenstate(collection_1, i, 16)
         eigenstate["vector"] *= np.sqrt(5)
-        _, _, ln = plot_state_vector_1d_x(eigenstate, ax=ax, measure="abs")
+        _, _, ln = plot_state_1d_x(eigenstate, ax=ax, measure="abs")
         ln.set_label(f"n={5000}")
 
     ax2 = ax.twinx()
@@ -101,7 +101,7 @@ def plot_state_vector_difference() -> None:
         state_0["vector"] *= np.exp(-1j * np.angle(state_0["vector"][0]))
         state_1 = select_eigenstate(collection_1, i, 16)
         state_1["vector"] *= np.exp(-1j * np.angle(state_1["vector"][0]))
-        fig, _, _ = plot_state_vector_difference_1d_k(state_0, state_1)
+        fig, _, _ = plot_state_difference_1d_k(state_0, state_1)
         fig.show()
     input()
 
@@ -113,7 +113,7 @@ def plot_first_six_band_eigenstates() -> None:
 
     for i in range(15, 17):
         eigenstate = select_eigenstate(collection, 0, i)
-        _, _, ln = plot_state_vector_1d_x(eigenstate, ax=ax, measure="abs")
+        _, _, ln = plot_state_1d_x(eigenstate, ax=ax, measure="abs")
         ln.set_label(f"n={i}")
 
     ax2 = ax.twinx()

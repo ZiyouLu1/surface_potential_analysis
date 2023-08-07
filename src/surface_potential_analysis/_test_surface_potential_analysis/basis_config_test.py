@@ -434,6 +434,20 @@ class TestBasisConfig(unittest.TestCase):
             np.testing.assert_equal(_wrap_distance(d, 4), e, f"d={d}, l=4")
         np.testing.assert_array_equal(_wrap_distance(distances, 4), expected)
 
+    def test_wrap_nx_point_around_origin(self) -> None:
+        delta_x = np.array([[3, 0, 0], [0, 3, 0], [0, 0, 3]], dtype=float)
+        basis = position_basis_3d_from_shape((3, 3, 3), delta_x)
+        util = AxisWithLengthBasisUtil(basis)
+        actual = wrap_index_around_origin(basis, util.fundamental_nx_points)
+        expected = util.fundamental_nk_points
+        np.testing.assert_array_almost_equal(actual, expected)
+
+        basis = position_basis_3d_from_shape((4, 4, 4), delta_x)
+        util = AxisWithLengthBasisUtil(basis)
+        actual = wrap_index_around_origin(basis, util.fundamental_nx_points)
+        expected = util.fundamental_nk_points
+        np.testing.assert_array_almost_equal(actual, expected)
+
     def test_wrap_x_point_around_origin(self) -> None:
         delta_x = np.array([[3, 0, 0], [0, 3, 0], [0, 0, 3]], dtype=float)
         basis = position_basis_3d_from_shape((3, 3, 3), delta_x)
@@ -443,14 +457,18 @@ class TestBasisConfig(unittest.TestCase):
             wrap_index_around_origin(basis, util.fundamental_nx_points)
         )
         np.testing.assert_array_almost_equal(actual, expected)
+        expected = util.get_x_points_at_index(util.fundamental_nk_points)
+        np.testing.assert_array_almost_equal(actual, expected)
 
-        delta_x = np.array([[3, 0, 0], [1, 3, 0], [0, 0, 3]], dtype=float)
+        delta_x = np.array([[3, 0, 0], [1, 3, 0], [0, 0, 4]], dtype=float)
         basis = position_basis_3d_from_shape((3, 3, 3), delta_x)
         util = AxisWithLengthBasisUtil(basis)
         actual = wrap_x_point_around_origin(basis, util.fundamental_x_points)
         expected = util.get_x_points_at_index(
             wrap_index_around_origin(basis, util.fundamental_nx_points)
         )
+        np.testing.assert_array_almost_equal(actual, expected)
+        expected = util.get_x_points_at_index(util.fundamental_nk_points)
         np.testing.assert_array_almost_equal(actual, expected)
 
     def test_calculate_cumulative_distances_along_path(self) -> None:

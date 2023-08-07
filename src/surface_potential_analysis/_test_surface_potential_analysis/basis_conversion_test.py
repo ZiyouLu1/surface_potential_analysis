@@ -7,7 +7,7 @@ import numpy as np
 
 from _test_surface_potential_analysis.utils import get_random_explicit_axis
 from surface_potential_analysis.axis.axis import (
-    FundamentalMomentumAxis,
+    FundamentalTransformedPositionAxis,
 )
 from surface_potential_analysis.axis.util import AxisWithLengthLikeUtil
 from surface_potential_analysis.basis.conversion import (
@@ -149,7 +149,7 @@ class BasisConversionTest(unittest.TestCase):
     def test_as_explicit_position_basis_momentum(self) -> None:
         n = rng.integers(5, 10)
 
-        basis = (FundamentalMomentumAxis(np.array([1]), n),)
+        basis = (FundamentalTransformedPositionAxis(np.array([1]), n),)
 
         np.testing.assert_array_almost_equal(
             np.linalg.norm(basis[0].vectors, axis=1), np.ones(n)

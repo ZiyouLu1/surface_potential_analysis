@@ -70,7 +70,7 @@ def calculate_expectation(
     )
 
 
-def calculate_inner_product(
+def calculate_operator_inner_product(
     dual_vector: StateDualVector[_B0Inv],
     operator: Operator[_B0Inv, _B1Inv],
     vector: StateVector[_B1Inv],

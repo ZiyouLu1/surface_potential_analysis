@@ -180,7 +180,6 @@ def get_tunnelling_m_matrix(
     ...
 
 
-@timed
 def get_tunnelling_m_matrix(
     matrix: TunnellingAMatrix[Any],
     n_bands: _L1Inv | None = None,

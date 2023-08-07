@@ -10,7 +10,7 @@ from _test_surface_potential_analysis.utils import get_random_explicit_axis
 from surface_potential_analysis.axis.axis import (
     ExplicitAxis,
     FundamentalPositionAxis,
-    MomentumAxis1d,
+    TransformedPositionAxis1d,
 )
 from surface_potential_analysis.axis.util import AxisWithLengthLikeUtil
 from surface_potential_analysis.basis.conversion import (
@@ -95,7 +95,7 @@ class BasisConfigConversionTest(unittest.TestCase):
         fundamental_n = rng.integers(3, 5)
         n = rng.integers(2, fundamental_n)
 
-        basis_0 = (MomentumAxis1d(np.array([1]), n, fundamental_n),)
+        basis_0 = (TransformedPositionAxis1d(np.array([1]), n, fundamental_n),)
 
         actual = convert_vector(
             np.identity(fundamental_n),
@@ -115,7 +115,7 @@ class BasisConfigConversionTest(unittest.TestCase):
 
         initial_points = rng.random(n)
         converted = convert_vector(initial_points, basis_0, momentum)
-        truncated_basis = (MomentumAxis1d(np.array([1]), n, fundamental_n),)
+        truncated_basis = (TransformedPositionAxis1d(np.array([1]), n, fundamental_n),)
         scaled = converted * np.sqrt(fundamental_n / n)
         actual = convert_vector(
             scaled,
@@ -140,8 +140,10 @@ class BasisConfigConversionTest(unittest.TestCase):
         fundamental_n = rng.integers(3, 10)
         n = rng.integers(2, fundamental_n)
 
-        truncated_basis = (MomentumAxis1d(np.array([1]), n, fundamental_n),)
-        final_basis = (MomentumAxis1d(np.array([1]), fundamental_n, fundamental_n),)
+        truncated_basis = (TransformedPositionAxis1d(np.array([1]), n, fundamental_n),)
+        final_basis = (
+            TransformedPositionAxis1d(np.array([1]), fundamental_n, fundamental_n),
+        )
         matrix = rng.random((n, n))
 
         actual = convert_matrix(
@@ -154,9 +156,13 @@ class BasisConfigConversionTest(unittest.TestCase):
         fundamental_n = rng.integers(3, 10)
         n = rng.integers(2, fundamental_n)
 
-        small_basis = (MomentumAxis1d(np.array([1]), n, n),)
-        truncated_large_basis = (MomentumAxis1d(np.array([1]), n, fundamental_n),)
-        large_basis = (MomentumAxis1d(np.array([1]), fundamental_n, fundamental_n),)
+        small_basis = (TransformedPositionAxis1d(np.array([1]), n, n),)
+        truncated_large_basis = (
+            TransformedPositionAxis1d(np.array([1]), n, fundamental_n),
+        )
+        large_basis = (
+            TransformedPositionAxis1d(np.array([1]), fundamental_n, fundamental_n),
+        )
 
         matrix = rng.random((n, n))
         converted = convert_matrix(

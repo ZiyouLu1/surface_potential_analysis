@@ -9,11 +9,11 @@ from scipy.constants import hbar
 from surface_potential_analysis.axis.axis import (
     ExplicitAxis,
     ExplicitAxis3d,
-    FundamentalMomentumAxis3d,
     FundamentalPositionAxis1d,
-    MomentumAxis,
-    MomentumAxis2d,
-    MomentumAxis3d,
+    FundamentalTransformedPositionAxis3d,
+    TransformedPositionAxis,
+    TransformedPositionAxis2d,
+    TransformedPositionAxis3d,
 )
 from surface_potential_analysis.basis.potential_basis import (
     get_potential_basis_config_eigenstates,
@@ -82,17 +82,17 @@ class _SurfaceHamiltonianUtil(
     def basis(
         self,
     ) -> tuple[
-        MomentumAxis[_NF0Inv, _N0Inv, Literal[3]],
-        MomentumAxis[_NF1Inv, _N1Inv, Literal[3]],
+        TransformedPositionAxis[_NF0Inv, _N0Inv, Literal[3]],
+        TransformedPositionAxis[_NF1Inv, _N1Inv, Literal[3]],
         ExplicitAxis[_NF2Inv, _N2Inv, Literal[3]],
     ]:
         return (
-            MomentumAxis3d(
+            TransformedPositionAxis3d(
                 self._potential["basis"][0].delta_x,
                 self._resolution[0],
                 self._potential["basis"][0].n,
             ),
-            MomentumAxis3d(
+            TransformedPositionAxis3d(
                 self._potential["basis"][1].delta_x,
                 self._resolution[1],
                 self._potential["basis"][1].n,
@@ -115,8 +115,8 @@ class _SurfaceHamiltonianUtil(
         self, bloch_fraction: np.ndarray[tuple[Literal[3]], np.dtype[np.float_]]
     ) -> SingleBasisOperator[
         tuple[
-            MomentumAxis[_NF0Inv, _N0Inv, Literal[3]],
-            MomentumAxis[_NF1Inv, _N1Inv, Literal[3]],
+            TransformedPositionAxis[_NF0Inv, _N0Inv, Literal[3]],
+            TransformedPositionAxis[_NF1Inv, _N1Inv, Literal[3]],
             ExplicitAxis[_NF2Inv, _N2Inv, Literal[3]],
         ]
     ]:
@@ -143,10 +143,10 @@ class _SurfaceHamiltonianUtil(
     ) -> np.ndarray[tuple[int], np.dtype[np.float_]]:
         # Note we ignore bloch_fraction in x2
         xy_basis = (
-            MomentumAxis2d(
+            TransformedPositionAxis2d(
                 self.basis[0].delta_x[:2], self.basis[0].n, self.basis[0].fundamental_n
             ),
-            MomentumAxis2d(
+            TransformedPositionAxis2d(
                 self.basis[1].delta_x[:2], self.basis[1].n, self.basis[1].fundamental_n
             ),
         )
@@ -182,8 +182,8 @@ def total_surface_hamiltonian(
     config: PotentialBasisConfig[tuple[FundamentalPositionAxis1d[_NF2Inv]], _N2Inv],
 ) -> SingleBasisOperator[
     tuple[
-        MomentumAxis[_NF0Inv, _N0Inv, Literal[3]],
-        MomentumAxis[_NF1Inv, _N1Inv, Literal[3]],
+        TransformedPositionAxis[_NF0Inv, _N0Inv, Literal[3]],
+        TransformedPositionAxis[_NF1Inv, _N1Inv, Literal[3]],
         ExplicitAxis[_NF2Inv, _N2Inv, Literal[3]],
     ]
 ]:
@@ -212,8 +212,8 @@ def total_surface_hamiltonian_as_fundamental(
     config: PotentialBasisConfig[tuple[FundamentalPositionAxis1d[_NF2Inv]], _N2Inv],
 ) -> SingleBasisOperator[
     tuple[
-        MomentumAxis[_N0Inv, _N0Inv, Literal[3]],
-        MomentumAxis[_N1Inv, _N1Inv, Literal[3]],
+        TransformedPositionAxis[_N0Inv, _N0Inv, Literal[3]],
+        TransformedPositionAxis[_N1Inv, _N1Inv, Literal[3]],
         ExplicitAxis[_NF2Inv, _N2Inv, Literal[3]],
     ]
 ]:
@@ -237,20 +237,20 @@ def total_surface_hamiltonian_as_fundamental(
     )
     return {
         "basis": (
-            FundamentalMomentumAxis3d(
+            FundamentalTransformedPositionAxis3d(
                 hamiltonian["basis"][0].delta_x, hamiltonian["basis"][0].n
             ),
-            FundamentalMomentumAxis3d(
+            FundamentalTransformedPositionAxis3d(
                 hamiltonian["basis"][1].delta_x, hamiltonian["basis"][1].n
             ),
             hamiltonian["basis"][2],
         ),
         "array": hamiltonian["array"],
         "dual_basis": (
-            FundamentalMomentumAxis3d(
+            FundamentalTransformedPositionAxis3d(
                 hamiltonian["dual_basis"][0].delta_x, hamiltonian["dual_basis"][0].n
             ),
-            FundamentalMomentumAxis3d(
+            FundamentalTransformedPositionAxis3d(
                 hamiltonian["dual_basis"][1].delta_x, hamiltonian["dual_basis"][1].n
             ),
             hamiltonian["dual_basis"][2],

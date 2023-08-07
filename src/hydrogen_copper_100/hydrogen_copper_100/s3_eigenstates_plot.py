@@ -12,10 +12,10 @@ from surface_potential_analysis.state_vector.eigenstate_collection_plot import (
     plot_eigenvalues_against_bloch_phase_1d,
 )
 from surface_potential_analysis.state_vector.plot import (
-    animate_eigenstate_x0x1,
-    plot_eigenstate_x2x0,
-    plot_state_vector_along_path,
-    plot_state_vector_difference_2d_x,
+    animate_state_x0x1,
+    plot_state_along_path,
+    plot_state_difference_2d_x,
+    plot_state_x2x0,
 )
 
 from .s3_eigenstates import get_eigenstate_collection, get_eigenstate_collection_relaxed
@@ -108,7 +108,7 @@ def plot_lowest_eigenstate_3d_xy() -> None:
     collection = get_eigenstate_collection_relaxed((10, 10, 14))
     eigenstate = select_eigenstate(collection, 0, 0)
 
-    fig, _, _anim = animate_eigenstate_x0x1(eigenstate, measure="real")
+    fig, _, _anim = animate_state_x0x1(eigenstate, measure="real")
     fig.show()
     input()
 
@@ -125,7 +125,7 @@ def plot_eigenstate_z_hollow_site(
         [(util.shape[0] // 2, util.shape[1] // 2, z) for z in x2_points]
     ).T
 
-    return plot_state_vector_along_path(eigenstate, points, ax=ax, measure=measure)
+    return plot_state_along_path(eigenstate, points, ax=ax, measure=measure)
 
 
 def analyze_eigenvector_convergence_z() -> None:
@@ -157,7 +157,7 @@ def plot_eigenstate_through_bridge(
     x0_points = np.arange(util.shape[0])
     points = np.array([(x, util.shape[1] // 2, 0) for x in x0_points]).T
 
-    return plot_state_vector_along_path(eigenstate, points, ax=ax, measure=measure)
+    return plot_state_along_path(eigenstate, points, ax=ax, measure=measure)
 
 
 def analyze_eigenvector_convergence_through_bridge() -> None:
@@ -190,28 +190,28 @@ def plot_bloch_wavefunction_difference_at_boundary() -> None:
     collection = get_eigenstate_collection((23, 23, 16))
     eigenstate_0 = select_eigenstate(collection, 0, 0)
 
-    fig, ax, _ = plot_eigenstate_x2x0(eigenstate_0, 0)
+    fig, ax, _ = plot_state_x2x0(eigenstate_0, 0)
     fig.show()
 
     collection = get_eigenstate_collection((25, 25, 16))
     eigenstate_1 = select_eigenstate(collection, 0, 0)
 
-    fig, ax, _ = plot_eigenstate_x2x0(eigenstate_1, 0)
+    fig, ax, _ = plot_state_x2x0(eigenstate_1, 0)
     fig.show()
 
-    fig, ax, _ = plot_state_vector_difference_2d_x(
+    fig, ax, _ = plot_state_difference_2d_x(
         eigenstate_0, eigenstate_1, (0, 2), (0,), measure="abs", scale="linear"
     )
     ax.set_title("Divergence in the Abs value of the wavefunction")
     fig.show()
 
-    fig, ax, _ = plot_state_vector_difference_2d_x(
+    fig, ax, _ = plot_state_difference_2d_x(
         eigenstate_0, eigenstate_1, (0, 2), (0,), measure="real", scale="linear"
     )
     ax.set_title("Divergence in the real part of the wavefunction")
     fig.show()
 
-    fig, ax, _ = plot_state_vector_difference_2d_x(
+    fig, ax, _ = plot_state_difference_2d_x(
         eigenstate_0, eigenstate_1, (0, 2), (0,), measure="imag", scale="linear"
     )
     ax.set_title("Divergence in the imaginary part of the wavefunction")

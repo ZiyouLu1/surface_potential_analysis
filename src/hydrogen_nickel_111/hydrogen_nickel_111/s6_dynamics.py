@@ -41,7 +41,7 @@ def test_reduced_band_matrix_hydrogen() -> None:
     a_matrix = get_tunnelling_a_matrix_hydrogen((5, 5), 2, 150)
     expected = get_tunnelling_m_matrix(a_matrix)
 
-    a_matrix_6 = get_tunnelling_a_matrix_hydrogen((5, 5), 6, 150)
+    a_matrix_6 = get_tunnelling_a_matrix_hydrogen((25, 25), 6, 150)
     actual = get_tunnelling_m_matrix(a_matrix_6, 2)
     np.testing.assert_array_almost_equal(actual["array"], expected["array"])
 
@@ -60,7 +60,7 @@ def get_equilibrium_state_on_surface_hydrogen() -> None:
 
 
 def plot_occupation_on_surface_hydrogen() -> None:
-    a_matrix = get_tunnelling_a_matrix_hydrogen((5, 5), 6, 150)
+    a_matrix = get_tunnelling_a_matrix_hydrogen((25, 25), 6, 150)
     m_matrix = get_tunnelling_m_matrix(a_matrix)
     initial_state = get_initial_pure_density_matrix_for_basis(m_matrix["basis"])
     times = np.linspace(0, 9e-10, 1000)
@@ -90,7 +90,7 @@ def plot_occupation_on_surface_hydrogen() -> None:
 
 
 def plot_occupation_on_surface_deuterium() -> None:
-    a_matrix = get_tunnelling_a_matrix_deuterium((5, 5), 6, 150)
+    a_matrix = get_tunnelling_a_matrix_deuterium((25, 25), 6, 150)
     m_matrix = get_tunnelling_m_matrix(a_matrix)
     initial_state = get_initial_pure_density_matrix_for_basis(m_matrix["basis"])
     times = np.linspace(0, 9e-10, 1000)

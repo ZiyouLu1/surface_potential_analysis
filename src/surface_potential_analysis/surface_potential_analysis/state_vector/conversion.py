@@ -4,25 +4,27 @@ from typing import TYPE_CHECKING, Any, TypeVar
 
 import numpy as np
 
-from surface_potential_analysis.axis.axis import MomentumAxis
+from surface_potential_analysis.axis.axis import TransformedPositionAxis
 from surface_potential_analysis.axis.conversion import axis_as_fundamental_momentum_axis
 from surface_potential_analysis.basis.conversion import (
     basis_as_fundamental_momentum_basis,
     basis_as_fundamental_position_basis,
+    convert_dual_vector,
     convert_vector,
 )
 from surface_potential_analysis.basis.util import AxisWithLengthBasisUtil
 
 if TYPE_CHECKING:
     from surface_potential_analysis.axis.axis import (
-        FundamentalMomentumAxis,
         FundamentalPositionAxis,
+        FundamentalTransformedPositionAxis,
     )
     from surface_potential_analysis.axis.axis_like import AxisWithLengthLike
     from surface_potential_analysis.basis.basis import (
         AxisWithLengthBasis,
     )
     from surface_potential_analysis.state_vector.state_vector import (
+        StateDualVector,
         StateVector,
     )
 
@@ -51,6 +53,27 @@ def convert_state_vector_to_basis(
     return {"basis": basis, "vector": converted}  # type: ignore[typeddict-item]
 
 
+def convert_state_dual_vector_to_basis(
+    state_vector: StateDualVector[_B0Inv], basis: _B1Inv
+) -> StateDualVector[_B1Inv]:
+    """
+    Given a state vector, calculate the vector in the given basis.
+
+    Parameters
+    ----------
+    state_vector : StateVector[_B0Inv]
+    basis : _B1Inv
+
+    Returns
+    -------
+    StateVector[_B1Inv]
+    """
+    converted = convert_dual_vector(
+        state_vector["vector"], state_vector["basis"], basis
+    )
+    return {"basis": basis, "vector": converted}  # type: ignore[typeddict-item]
+
+
 def convert_state_vector_to_position_basis(
     state_vector: StateVector[_B0Inv],
 ) -> StateVector[tuple[FundamentalPositionAxis[Any, Any], ...]]:
@@ -73,7 +96,7 @@ def convert_state_vector_to_position_basis(
 
 def convert_state_vector_to_momentum_basis(
     state_vector: StateVector[_B0Inv],
-) -> StateVector[tuple[FundamentalMomentumAxis[Any, Any], ...]]:
+) -> StateVector[tuple[FundamentalTransformedPositionAxis[Any, Any], ...]]:
     """
     Given a state vector, calculate the vector in the given basis.
 
@@ -86,6 +109,46 @@ def convert_state_vector_to_momentum_basis(
     StateVector[tuple[FundamentalMomentumAxis[Any, Any], ...]]
     """
     return convert_state_vector_to_basis(
+        state_vector,
+        basis_as_fundamental_momentum_basis(state_vector["basis"]),
+    )
+
+
+def convert_state_dual_vector_to_position_basis(
+    state_vector: StateDualVector[_B0Inv],
+) -> StateDualVector[tuple[FundamentalPositionAxis[Any, Any], ...]]:
+    """
+    Given an state vector, calculate the vector in position basis.
+
+    Parameters
+    ----------
+    state_vector : StateDualVector[_B0Inv]
+
+    Returns
+    -------
+    StateDualVector[tuple[FundamentalPositionAxis[Any, Any], ...]]
+    """
+    return convert_state_dual_vector_to_basis(
+        state_vector,
+        basis_as_fundamental_position_basis(state_vector["basis"]),
+    )
+
+
+def convert_state_dual_vector_to_momentum_basis(
+    state_vector: StateDualVector[_B0Inv],
+) -> StateDualVector[tuple[FundamentalTransformedPositionAxis[Any, Any], ...]]:
+    """
+    Given a state vector, calculate the vector in the given basis.
+
+    Parameters
+    ----------
+    state_vector : StateDualVector[_B0Inv]
+
+    Returns
+    -------
+    StateDualVector[tuple[FundamentalMomentumAxis[Any, Any], ...]]
+    """
+    return convert_state_dual_vector_to_basis(
         state_vector,
         basis_as_fundamental_momentum_basis(state_vector["basis"]),
     )
@@ -114,7 +177,7 @@ def interpolate_state_vector_momentum(
     converted = convert_state_vector_to_basis(state_vector, converted_basis)
     util = AxisWithLengthBasisUtil(converted["basis"])
     final_basis = tuple(
-        MomentumAxis(ax.delta_x, ax.n, shape[idx])
+        TransformedPositionAxis(ax.delta_x, ax.n, shape[idx])
         if (
             idx := next((i for i, jax in enumerate(axes) if jax == iax), None)
             is not None

@@ -19,7 +19,7 @@ if TYPE_CHECKING:
     _L2 = TypeVar("_L2", bound=int)
     from surface_potential_analysis.axis.axis import (
         ExplicitAxis,
-        MomentumAxis,
+        TransformedPositionAxis,
     )
     from surface_potential_analysis.operator.operator import SingleBasisOperator
     from surface_potential_analysis.state_vector.eigenstate_collection import (
@@ -38,8 +38,8 @@ def get_eigenstate_collection(
     shape: tuple[_L0, _L1, _L2],
 ) -> EigenstateColllection[
     tuple[
-        MomentumAxis[_L0, _L0, Literal[3]],
-        MomentumAxis[_L1, _L1, Literal[3]],
+        TransformedPositionAxis[_L0, _L0, Literal[3]],
+        TransformedPositionAxis[_L1, _L1, Literal[3]],
         ExplicitAxis[Literal[250], _L2, Literal[3]],
     ],
     Literal[11],
@@ -51,8 +51,8 @@ def get_eigenstate_collection(
         bloch_fraction: np.ndarray[tuple[Literal[3]], np.dtype[np.float_]]
     ) -> SingleBasisOperator[
         tuple[
-            MomentumAxis[_L0, _L0, Literal[3]],
-            MomentumAxis[_L1, _L1, Literal[3]],
+            TransformedPositionAxis[_L0, _L0, Literal[3]],
+            TransformedPositionAxis[_L1, _L1, Literal[3]],
             ExplicitAxis[Literal[250], _L2, Literal[3]],
         ]
     ]:
@@ -78,8 +78,8 @@ def get_eigenstate_collection_relaxed(
     shape: tuple[_L0, _L1, _L2],
 ) -> EigenstateColllection[
     tuple[
-        MomentumAxis[_L0, _L0, Literal[3]],
-        MomentumAxis[_L1, _L1, Literal[3]],
+        TransformedPositionAxis[_L0, _L0, Literal[3]],
+        TransformedPositionAxis[_L1, _L1, Literal[3]],
         ExplicitAxis[Literal[250], _L2, Literal[3]],
     ],
     Literal[11],
@@ -91,8 +91,8 @@ def get_eigenstate_collection_relaxed(
         bloch_fraction: np.ndarray[tuple[Literal[3]], np.dtype[np.float_]]
     ) -> SingleBasisOperator[
         tuple[
-            MomentumAxis[_L0, _L0, Literal[3]],
-            MomentumAxis[_L1, _L1, Literal[3]],
+            TransformedPositionAxis[_L0, _L0, Literal[3]],
+            TransformedPositionAxis[_L1, _L1, Literal[3]],
             ExplicitAxis[Literal[250], _L2, Literal[3]],
         ]
     ]:
