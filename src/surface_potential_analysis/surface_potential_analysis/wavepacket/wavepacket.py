@@ -270,7 +270,7 @@ def as_eigenstate_collection(
         "bloch_fractions": get_wavepacket_sample_fractions(wavepacket["shape"]).reshape(
             3, -1
         ),
-        "eigenvalues": wavepacket["eigenvalues"].reshape(-1),
+        "eigenvalues": wavepacket["eigenvalues"].reshape(-1).astype(np.complex_),
         "vectors": wavepacket["vectors"].reshape(wavepacket["eigenvalues"].size, -1),
     }
 
@@ -282,7 +282,9 @@ def _from_eigenstate_collection(
     return {
         "basis": collection["basis"],
         "shape": shape,
-        "eigenvalues": collection["eigenvalues"].reshape(np.prod(shape)),
+        "eigenvalues": collection["eigenvalues"]
+        .reshape(np.prod(shape))
+        .astype(np.complex_),
         "vectors": collection["vectors"].reshape(np.prod(shape), -1),
     }
 
