@@ -95,7 +95,7 @@ def get_rotated_basis3d(
 
     Returns
     -------
-    Basis3d[_A3d0Cov, _A3d1Cov, _A3d2Cov]
+    Basis3d[_A3d0_co, _A3d1_co, _A3d2_co]
         _description_
     """
     matrix = _get_rotation_matrix(basis[axis].delta_x, direction)

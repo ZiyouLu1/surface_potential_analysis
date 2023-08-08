@@ -18,30 +18,30 @@ if TYPE_CHECKING:
     )
 _L0Inv = TypeVar("_L0Inv", bound=int)
 
-_B0Cov = TypeVar("_B0Cov", bound=Basis, covariant=True)
+_B0_co = TypeVar("_B0_co", bound=Basis, covariant=True)
 _B0Inv = TypeVar("_B0Inv", bound=Basis)
 
-_B1d0Cov = TypeVar("_B1d0Cov", bound=Basis1d[Any], covariant=True)
-_B2d0Cov = TypeVar("_B2d0Cov", bound=Basis2d[Any, Any], covariant=True)
-_B3d0Cov = TypeVar("_B3d0Cov", bound=Basis3d[Any, Any, Any], covariant=True)
+_B1d0_co = TypeVar("_B1d0_co", bound=Basis1d[Any], covariant=True)
+_B2d0_co = TypeVar("_B2d0_co", bound=Basis2d[Any, Any], covariant=True)
+_B3d0_co = TypeVar("_B3d0_co", bound=Basis3d[Any, Any, Any], covariant=True)
 
 
-class Eigenstate(StateVector[_B0Cov], TypedDict):
+class Eigenstate(StateVector[_B0_co], TypedDict):
     """A State vector which is the eigenvector of some operator."""
 
     eigenvalue: complex | np.complex_
 
 
-class EigenstateColllection(TypedDict, Generic[_B0Cov, _L0Inv]):
+class EigenstateColllection(TypedDict, Generic[_B0_co, _L0Inv]):
     """Represents a collection of eigenstates, each with the same basis but with _L0Inv different bloch phases."""
 
-    basis: _B0Cov
+    basis: _B0_co
     bloch_fractions: np.ndarray[tuple[_L0Inv, int], np.dtype[np.float_]]
     vectors: np.ndarray[tuple[_L0Inv, int, int], np.dtype[np.complex_]]
     eigenvalues: np.ndarray[tuple[_L0Inv, int], np.dtype[np.complex_]]
 
 
-EigenstateColllection1d = EigenstateColllection[_B1d0Cov, _L0Inv]
+EigenstateColllection1d = EigenstateColllection[_B1d0_co, _L0Inv]
 """
 Represents a collection of eigenstates, each with the same basis but a variety of different bloch phases.
 
@@ -49,7 +49,7 @@ NOTE: bloch_fractions: np.ndarray[tuple[_L0Inv, Literal[1]], np.dtype[np.float_]
 """
 
 
-EigenstateColllection2d = EigenstateColllection[_B2d0Cov, _L0Inv]
+EigenstateColllection2d = EigenstateColllection[_B2d0_co, _L0Inv]
 """
 Represents a collection of eigenstates, each with the same basis but a variety of different bloch phases.
 
@@ -57,7 +57,7 @@ NOTE: bloch_fractions: np.ndarray[tuple[_L0Inv, Literal[2]], np.dtype[np.float_]
 """
 
 
-EigenstateColllection3d = EigenstateColllection[_B3d0Cov, _L0Inv]
+EigenstateColllection3d = EigenstateColllection[_B3d0_co, _L0Inv]
 """
 Represents a collection of eigenstates, each with the same basis but a variety of different bloch phases.
 
@@ -117,22 +117,22 @@ def calculate_eigenstate_collection(
 
 
 def select_eigenstate(
-    collection: EigenstateColllection[_B0Cov, _L0Inv],
+    collection: EigenstateColllection[_B0_co, _L0Inv],
     bloch_idx: int,
     band_idx: int,
-) -> Eigenstate[_B0Cov]:
+) -> Eigenstate[_B0_co]:
     """
     Select an eigenstate from an eigenstate collection.
 
     Parameters
     ----------
-    collection : EigenstateColllection[_B0Cov]
+    collection : EigenstateColllection[_B0_co]
     bloch_idx : int
     band_idx : int
 
     Returns
     -------
-    Eigenstate[_B0Cov]
+    Eigenstate[_B0_co]
     """
     return {
         "basis": collection["basis"],

@@ -26,19 +26,19 @@ if TYPE_CHECKING:
         EigenvectorList,
     )
 
-_B1d0Cov = TypeVar("_B1d0Cov", covariant=True, bound=Basis1d[Any])
+_B1d0_co = TypeVar("_B1d0_co", covariant=True, bound=Basis1d[Any])
 _B1d0Inv = TypeVar("_B1d0Inv", bound=Basis1d[Any])
 
 _L0Inv = TypeVar("_L0Inv", bound=int)
-_L1Cov = TypeVar("_L1Cov", covariant=True, bound=int)
+_L1_co = TypeVar("_L1_co", covariant=True, bound=int)
 
 
-class PotentialBasisConfig(TypedDict, Generic[_B1d0Cov, _L1Cov]):
+class PotentialBasisConfig(TypedDict, Generic[_B1d0_co, _L1_co]):
     """Configures the generation of an explicit basis from a given potential."""
 
-    potential: Potential[_B1d0Cov]
+    potential: Potential[_B1d0_co]
     mass: float
-    n: _L1Cov
+    n: _L1_co
 
 
 _N0Inv = TypeVar("_N0Inv", bound=int)

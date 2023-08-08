@@ -5,8 +5,8 @@ from typing import Literal, Protocol, TypeVar, runtime_checkable
 
 import numpy as np
 
-_N0Cov = TypeVar("_N0Cov", bound=int, covariant=True)
-_NF0Cov = TypeVar("_NF0Cov", bound=int, covariant=True)
+_N0_co = TypeVar("_N0_co", bound=int, covariant=True)
+_NF0_co = TypeVar("_NF0_co", bound=int, covariant=True)
 
 _ND0Inv = TypeVar("_ND0Inv", bound=int)
 _N0Inv = TypeVar("_N0Inv", bound=int)
@@ -23,7 +23,7 @@ _S0Inv = TypeVar("_S0Inv", bound=tuple[int, ...])
 
 # ruff: noqa: D102
 @runtime_checkable
-class FromFundamentalAxis(Protocol[_NF0Cov, _N0Cov]):
+class FromFundamentalAxis(Protocol[_NF0_co, _N0_co]):
     """Represents an axis which can be converted from the fundamental axis."""
 
     @abc.abstractmethod
@@ -50,7 +50,7 @@ class FromFundamentalAxis(Protocol[_NF0Cov, _N0Cov]):
 
 
 @runtime_checkable
-class FromTransformedAxis(Protocol[_NF0Cov, _N0Cov]):
+class FromTransformedAxis(Protocol[_NF0_co, _N0_co]):
     """Represents an axis which can be converted from the transformed axis."""
 
     @abc.abstractmethod
@@ -77,7 +77,7 @@ class FromTransformedAxis(Protocol[_NF0Cov, _N0Cov]):
 
 
 @runtime_checkable
-class IntoFundamentalAxis(Protocol[_NF0Cov, _N0Cov]):
+class IntoFundamentalAxis(Protocol[_NF0_co, _N0_co]):
     """Represents an axis which can be converted to fundamental axis."""
 
     @abc.abstractmethod
@@ -90,7 +90,7 @@ class IntoFundamentalAxis(Protocol[_NF0Cov, _N0Cov]):
 
 
 @runtime_checkable
-class IntoTransformedAxis(Protocol[_NF0Cov, _N0Cov]):
+class IntoTransformedAxis(Protocol[_NF0_co, _N0_co]):
     """Represents an axis which can be converted to transformed axis."""
 
     @abc.abstractmethod
@@ -104,9 +104,9 @@ class IntoTransformedAxis(Protocol[_NF0Cov, _N0Cov]):
 
 @runtime_checkable
 class AsFundamentalAxis(
-    IntoFundamentalAxis[_NF0Cov, _N0Cov],
-    IntoTransformedAxis[_NF0Cov, _N0Cov],
-    Protocol[_NF0Cov, _N0Cov],
+    IntoFundamentalAxis[_NF0_co, _N0_co],
+    IntoTransformedAxis[_NF0_co, _N0_co],
+    Protocol[_NF0_co, _N0_co],
 ):
     """Represents an axis which can (inexpensively) be converted to fundamental axis."""
 
@@ -136,9 +136,9 @@ class AsFundamentalAxis(
 
 @runtime_checkable
 class AsTransformedAxis(
-    IntoFundamentalAxis[_NF0Cov, _N0Cov],
-    IntoTransformedAxis[_NF0Cov, _N0Cov],
-    Protocol[_NF0Cov, _N0Cov],
+    IntoFundamentalAxis[_NF0_co, _N0_co],
+    IntoTransformedAxis[_NF0_co, _N0_co],
+    Protocol[_NF0_co, _N0_co],
 ):
     """Represents an axis which can (inexpensively) be converted to transformed axis."""
 
@@ -167,11 +167,11 @@ class AsTransformedAxis(
 
 
 class AxisLike(
-    FromFundamentalAxis[_NF0Cov, _N0Cov],
-    IntoFundamentalAxis[_NF0Cov, _N0Cov],
-    FromTransformedAxis[_NF0Cov, _N0Cov],
-    IntoTransformedAxis[_NF0Cov, _N0Cov],
-    Protocol[_NF0Cov, _N0Cov],
+    FromFundamentalAxis[_NF0_co, _N0_co],
+    IntoFundamentalAxis[_NF0_co, _N0_co],
+    FromTransformedAxis[_NF0_co, _N0_co],
+    IntoTransformedAxis[_NF0_co, _N0_co],
+    Protocol[_NF0_co, _N0_co],
 ):
     """A generic object that represents an axis for a axis."""
 
@@ -180,12 +180,12 @@ class AxisLike(
 
     @property
     @abc.abstractmethod
-    def n(self) -> _N0Cov:
+    def n(self) -> _N0_co:
         ...
 
     @property
     @abc.abstractmethod
-    def fundamental_n(self) -> _NF0Cov:
+    def fundamental_n(self) -> _NF0_co:
         ...
 
     def __into_fundamental__(
@@ -225,7 +225,7 @@ class AxisLike(
         return self.__from_fundamental__(fundamental, axis)
 
 
-class AxisWithLengthLike(AxisLike[_NF0Cov, _N0Cov], Protocol[_NF0Cov, _N0Cov, _ND0Inv]):
+class AxisWithLengthLike(AxisLike[_NF0_co, _N0_co], Protocol[_NF0_co, _N0_co, _ND0Inv]):
     """A generic object that represents an axis with a corresponding axis vector."""
 
     def __repr__(self) -> str:

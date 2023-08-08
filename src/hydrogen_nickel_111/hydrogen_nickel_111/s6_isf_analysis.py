@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Literal, TypeVar
 
 import numpy as np
+import scipy.optimize
 from matplotlib import pyplot as plt
 from matplotlib.scale import FuncScale
 from scipy.constants import Boltzmann
@@ -87,14 +88,40 @@ def calculate_rates_hydrogen(
         m_matrix = get_tunnelling_m_matrix(a_matrix, n_bands)
         isf = calculate_equilibrium_state_averaged_isf(m_matrix, ts, dk)
         fit = fit_isf_to_fey_model(isf, ts)
+        fit2 = fit_isf_to_double_exponential(isf, ts)
         if plot:
             fig, ax, _ = plot_isf_fey_model_fit_against_time(fit, ts)
             plot_isf_against_time(isf, ts, ax=ax)
+            _, _, line = plot_isf_4_variable_fit_against_time(fit2, ts, ax=ax)
+            line.set_linestyle("--")
             fig.show()
             input(fit)
-        rates[0, i] = fit.fast_rate
-        rates[1, i] = fit.slow_rate
+        rates[0, i] = fit2.fast_rate
+        rates[1, i] = fit2.slow_rate
     return np.array([temperatures, rates[0], rates[1]])  # type: ignore[no-any-return]
+
+
+def extract_intrinsic_rates(fast_rate: float, slow_rate: float) -> tuple[float, float]:
+    def _func(x: tuple[float, float]) -> list[float]:
+        nu, lam = x
+        z = np.sqrt(lam**2 + 16 * lam * np.cos(1 + np.sqrt(3)) / 9 + 1)
+
+        return [
+            nu * (lam + 1 + z) / (2 * lam) - fast_rate,
+            nu * (lam + 1 - z) / (2 * lam) - slow_rate,
+        ]
+
+    result, detail, _, _ = scipy.optimize.fsolve(
+        _func, [slow_rate, slow_rate / fast_rate], full_output=True, xtol=1e-15
+    )
+    print(detail)
+    fey_slow = result[0]
+    fey_fast = result[0] / result[1]
+    try:
+        np.testing.assert_array_almost_equal(_func(result), 0.0, decimal=5)
+    except AssertionError as e:
+        print(e)
+    return fey_fast, fey_slow
 
 
 def calculate_rates_hydrogen_tight_binding(
@@ -130,10 +157,21 @@ def plot_tunnelling_rate_hydrogen() -> None:
     fig, ax = plt.subplots()
 
     temperatures, fast_rates, slow_rates = calculate_rates_hydrogen(plot=True)
+    fast_rates_fey, slow_rates_fey = ([], [])
+    for fast, slow in zip(fast_rates, slow_rates, strict=True):
+        f, s = extract_intrinsic_rates(fast, slow)
+        fast_rates_fey.append(f)
+        slow_rates_fey.append(s)
+
     (line,) = ax.plot(temperatures, fast_rates)
     line.set_label("Fast Rate")
     (line,) = ax.plot(temperatures, slow_rates)
     line.set_label("Slow Rate")
+
+    (line,) = ax.plot(temperatures, fast_rates_fey)
+    line.set_label("Fast Rate fey")
+    (line,) = ax.plot(temperatures, slow_rates_fey)
+    line.set_label("Slow Rate fey")
 
     temperatures, fast_rates, slow_rates = calculate_rates_hydrogen(
         n_bands=2, plot=True

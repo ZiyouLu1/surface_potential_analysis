@@ -8,16 +8,16 @@ import numpy as np
 if TYPE_CHECKING:
     from pathlib import Path
 
-_L0Cov = TypeVar("_L0Cov", bound=int, covariant=True)
+_L0_co = TypeVar("_L0_co", bound=int, covariant=True)
 
 
-class PointPotential3d(TypedDict, Generic[_L0Cov]):
+class PointPotential3d(TypedDict, Generic[_L0_co]):
     """Represents an uneven potential, given at a series of points in the unit cell."""
 
-    x_points: np.ndarray[tuple[_L0Cov], np.dtype[np.float_]]
-    y_points: np.ndarray[tuple[_L0Cov], np.dtype[np.float_]]
-    z_points: np.ndarray[tuple[_L0Cov], np.dtype[np.float_]]
-    points: np.ndarray[tuple[_L0Cov], np.dtype[np.float_]]
+    x_points: np.ndarray[tuple[_L0_co], np.dtype[np.float_]]
+    y_points: np.ndarray[tuple[_L0_co], np.dtype[np.float_]]
+    z_points: np.ndarray[tuple[_L0_co], np.dtype[np.float_]]
+    points: np.ndarray[tuple[_L0_co], np.dtype[np.float_]]
 
 
 def load_point_potential_json(

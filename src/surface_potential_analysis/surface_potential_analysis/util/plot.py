@@ -89,10 +89,7 @@ def build_animation(
     fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
 
     mesh0 = build_frame(0, ax)
-
-    frames: list[list[QuadMesh | AxesImage]] = []
-    for d in range(n):
-        frames.append([build_frame(d, ax)])
+    frames = [[build_frame(d, ax)] for d in range(n)]
 
     c_max: float = (
         np.max([i[0].get_clim()[1] for i in frames]) if clim[1] is None else clim[1]

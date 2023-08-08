@@ -447,7 +447,7 @@ def calculate_gamma(  # noqa: PLR0913
 
 @npy_cached(get_data_path("GammaFirstAtempt.npy"))
 def build_gamma(shape: tuple[int, int], temperature: float) -> NonHermitianGamma:
-    n_sites = np.product(shape)
+    n_sites = np.prod(shape)
 
     gamma = np.zeros(
         (2 * n_sites, 2 * n_sites, 2 * n_sites, 2 * n_sites), dtype=np.complex_

@@ -20,17 +20,17 @@ Basis = tuple[AxisLike[Any, Any], ...]
 
 AxisWithLengthBasis = tuple[AxisWithLengthLike[Any, Any, _ND0Inv], ...]
 
-_A1d0Cov = TypeVar("_A1d0Cov", bound=AxisWithLengthLike1d[Any, Any], covariant=True)
-Basis1d = tuple[_A1d0Cov]
+_A1d0_co = TypeVar("_A1d0_co", bound=AxisWithLengthLike1d[Any, Any], covariant=True)
+Basis1d = tuple[_A1d0_co]
 
-_A2d0Cov = TypeVar("_A2d0Cov", bound=AxisWithLengthLike2d[Any, Any], covariant=True)
-_A2d1Cov = TypeVar("_A2d1Cov", bound=AxisWithLengthLike2d[Any, Any], covariant=True)
-Basis2d = tuple[_A2d0Cov, _A2d1Cov]
+_A2d0_co = TypeVar("_A2d0_co", bound=AxisWithLengthLike2d[Any, Any], covariant=True)
+_A2d1_co = TypeVar("_A2d1_co", bound=AxisWithLengthLike2d[Any, Any], covariant=True)
+Basis2d = tuple[_A2d0_co, _A2d1_co]
 
-_A3d0Cov = TypeVar("_A3d0Cov", bound=AxisWithLengthLike3d[Any, Any], covariant=True)
-_A3d1Cov = TypeVar("_A3d1Cov", bound=AxisWithLengthLike3d[Any, Any], covariant=True)
-_A3d2Cov = TypeVar("_A3d2Cov", bound=AxisWithLengthLike3d[Any, Any], covariant=True)
-Basis3d = tuple[_A3d0Cov, _A3d1Cov, _A3d2Cov]
+_A3d0_co = TypeVar("_A3d0_co", bound=AxisWithLengthLike3d[Any, Any], covariant=True)
+_A3d1_co = TypeVar("_A3d1_co", bound=AxisWithLengthLike3d[Any, Any], covariant=True)
+_A3d2_co = TypeVar("_A3d2_co", bound=AxisWithLengthLike3d[Any, Any], covariant=True)
+Basis3d = tuple[_A3d0_co, _A3d1_co, _A3d2_co]
 
 
 _NF0Inv = TypeVar("_NF0Inv", bound=int)

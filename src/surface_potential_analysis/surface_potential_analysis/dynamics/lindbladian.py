@@ -52,7 +52,7 @@ def calculate_gamma_two_state(
     coefficient_matrix: NonHermitianGammaCoefficientMatrix[Literal[2]],
 ) -> NonHermitianGamma:
     """Given a coefficient matrix, calculate the non-hermitian gamma matrix."""
-    n_sites = 2 * np.product(shape)
+    n_sites = 2 * np.prod(shape)
 
     gamma_stacked = np.zeros((n_sites, n_sites))
 

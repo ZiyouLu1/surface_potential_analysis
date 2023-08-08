@@ -15,13 +15,13 @@ if TYPE_CHECKING:
     pass
 
 
-_L0Cov = TypeVar("_L0Cov", bound=int, covariant=True)
+_L0_co = TypeVar("_L0_co", bound=int, covariant=True)
 
 _AX0Inv = TypeVar("_AX0Inv", bound=AxisLike[Any, Any])
 _AX1Inv = TypeVar("_AX1Inv", bound=AxisLike[Any, Any])
 
 
-class TunnellingSimulationBandsAxis(FundamentalAxis[_L0Cov]):
+class TunnellingSimulationBandsAxis(FundamentalAxis[_L0_co]):
     """
     Represents the bands axis of the simulation.
 
@@ -32,7 +32,7 @@ class TunnellingSimulationBandsAxis(FundamentalAxis[_L0Cov]):
 
     def __init__(
         self,
-        locations: np.ndarray[tuple[Literal[2], _L0Cov], np.dtype[np.float_]],
+        locations: np.ndarray[tuple[Literal[2], _L0_co], np.dtype[np.float_]],
         unit_cell: tuple[AxisVector2d, AxisVector2d],
     ) -> None:
         self.locations = locations

@@ -280,7 +280,7 @@ def plot_phase_around_origin() -> None:
 
 
 def plot_tight_binding_projection_localized_wavepacket_hydrogen() -> None:
-    for band in [3]:
+    for band in [0, 1, 3]:
         wavepacket = get_tight_binding_projection_localized_wavepacket_hydrogen(band)
         tight_binding_state = get_tight_binding_state(wavepacket)
         fig, ax, _ = plot_state_2d_x_max(tight_binding_state, (0, 1), scale="symlog")

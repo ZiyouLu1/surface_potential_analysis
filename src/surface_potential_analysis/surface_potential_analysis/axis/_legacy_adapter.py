@@ -10,20 +10,20 @@ from surface_potential_analysis.util.interpolation import (
 
 _L1Inv = TypeVar("_L1Inv", bound=int)
 _L2Inv = TypeVar("_L2Inv", bound=int)
-_LCov = TypeVar("_LCov", bound=int, covariant=True)
+_L_co = TypeVar("_L_co", bound=int, covariant=True)
 
 BasisVector = np.ndarray[tuple[Literal[3]], np.dtype[np.float_]]
 
 
-class _LegacyPositionBasis(TypedDict, Generic[_LCov]):
+class _LegacyPositionBasis(TypedDict, Generic[_L_co]):
     """Represents a basis in position space."""
 
     _type: Literal["position"]
-    n: _LCov
+    n: _L_co
     delta_x: BasisVector
 
 
-class _LegacyMomentumBasis(TypedDict, Generic[_LCov]):
+class _LegacyMomentumBasis(TypedDict, Generic[_L_co]):
     """
     Represents a basis in momentum space.
 
@@ -36,34 +36,34 @@ class _LegacyMomentumBasis(TypedDict, Generic[_LCov]):
     """
 
     _type: Literal["momentum"]
-    n: _LCov
+    n: _L_co
     delta_x: BasisVector
 
 
-FundamentalBasis = _LegacyPositionBasis[_LCov] | _LegacyMomentumBasis[_LCov]
+FundamentalBasis = _LegacyPositionBasis[_L_co] | _LegacyMomentumBasis[_L_co]
 
-_PCov = TypeVar("_PCov", bound=FundamentalBasis[Any], covariant=True)
+_P_co = TypeVar("_P_co", bound=FundamentalBasis[Any], covariant=True)
 _PInv = TypeVar("_PInv", bound=FundamentalBasis[Any])
 
 
-class _LegacyTruncatedBasis(TypedDict, Generic[_LCov, _PCov]):
+class _LegacyTruncatedBasis(TypedDict, Generic[_L_co, _P_co]):
     """Represents a basis with a reduced number of states."""
 
     _type: Literal["truncated"]
-    n: _LCov
-    parent: _PCov
+    n: _L_co
+    parent: _P_co
 
 
-class _LegacyExplicitBasis(TypedDict, Generic[_LCov, _PCov]):
+class _LegacyExplicitBasis(TypedDict, Generic[_L_co, _P_co]):
     """Represents a basis with a reduced number of states, given explicitly."""
 
     _type: Literal["explicit"]
-    vectors: np.ndarray[tuple[_LCov, int], np.dtype[np.complex_]]
-    parent: _PCov
+    vectors: np.ndarray[tuple[_L_co, int], np.dtype[np.complex_]]
+    parent: _P_co
 
 
 InheritedBasis = (
-    _LegacyTruncatedBasis[_LCov, _PCov] | _LegacyExplicitBasis[_LCov, _PCov]
+    _LegacyTruncatedBasis[_L_co, _P_co] | _LegacyExplicitBasis[_L_co, _P_co]
 )
 
 
@@ -205,7 +205,7 @@ def _as_explicit_position_basis(
             ),
         }
     if is_basis_type(basis, "truncated"):
-        # TODO: position - what does this mean??
+        # TODO: position - what does this mean??  # noqa: TD002, FIX002, TD003
         return {
             "_type": "explicit",
             "parent": {

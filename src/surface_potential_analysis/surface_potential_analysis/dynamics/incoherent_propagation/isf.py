@@ -269,16 +269,16 @@ def calculate_isf_fey_model_112bar(
     """
     lam = slow_rate / fast_rate
     # We are working with dk = 2/a, which simplifies things
-    z = np.sqrt(lam**2 + 2 * lam * np.cos(1 + np.sqrt(3) * 2 * np.pi) / 9 + 1)
+    z = np.sqrt(lam**2 + 16 * lam * np.cos(1 + np.sqrt(3)) / 9 + 1)
     n_0 = 1 + 4 * lam * np.square(
         np.abs(
-            (np.exp(4j * np.pi / np.sqrt(3)) + 2 * np.exp(-2j * np.pi / np.sqrt(3)))
+            (np.exp(2j / np.sqrt(3)) + 2 * np.exp(-1j / np.sqrt(3)))
             / (3 * lam - 3 + 3 * z)
         )
     )
     n_1 = 1 + 4 * lam * np.square(
         np.abs(
-            (np.exp(4j * np.pi / np.sqrt(3)) + 2 * np.exp(-2j * np.pi / np.sqrt(3)))
+            (np.exp(2j / np.sqrt(3)) + 2 * np.exp(-1j / np.sqrt(3)))
             / (3 * lam - 3 - 3 * z)
         )
     )

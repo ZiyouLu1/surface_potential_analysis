@@ -38,8 +38,7 @@ def load_9h_copper_potential() -> UnevenPotential3d[Any, Any, Any]:
 def load_clean_copper_data() -> UnevenPotential3d[Any, Any, Any]:
     data = load_raw_copper_potential()
     data = normalize_potential(data)
-    data = truncate_potential(data, cutoff=3e-18, n=6, offset=1e-20)
-    return data
+    return truncate_potential(data, cutoff=3e-18, n=6, offset=1e-20)
 
 
 def get_interpolated_potential(

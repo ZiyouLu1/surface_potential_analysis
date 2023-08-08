@@ -216,7 +216,7 @@ def get_rate_simple_equation_deuterium(
             for t in temperature_flat
         ]
     )
-    fcc_hcp_gamma = 0.012759755043446671  #!get_deuterium_fcc_hcp_gamma()
+    fcc_hcp_gamma = 0.012759755043446671  # !get_deuterium_fcc_hcp_gamma()
     return (  # type: ignore[no-any-return]
         (temperature_dep_integral + temperature_dep_integral2) * (3 * (fcc_hcp_gamma))
     ).reshape(temperature.shape)

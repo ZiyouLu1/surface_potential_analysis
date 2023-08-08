@@ -17,6 +17,7 @@ def calculate_normalization(wavepacket: _WInv) -> float:
     calculate the normalization of a wavepacket.
 
     This should always be 1
+
     Parameters
     ----------
     wavepacket : Wavepacket[Any]

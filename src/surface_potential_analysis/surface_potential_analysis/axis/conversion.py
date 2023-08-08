@@ -33,7 +33,7 @@ class _RotatedAxis(AxisWithLengthLike3d[_NF0Inv, _N0Inv]):
     ) -> None:
         self._axis = axis
         self._matrix = matrix
-        ##TODO: dunder methods
+        ##TODO: dunder methods, other conversion methods  # noqa: TD002, FIX002, TD003
 
     def __getattr__(self, *args, **kwargs):  # type: ignore[no-untyped-def] # noqa: ANN204, ANN002, ANN003
         return getattr(self._axis, *args, **kwargs)

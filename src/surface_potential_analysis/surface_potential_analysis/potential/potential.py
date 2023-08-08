@@ -26,9 +26,9 @@ if TYPE_CHECKING:
     from pathlib import Path
 
 
-_L0Cov = TypeVar("_L0Cov", bound=int, covariant=True)
-_L1Cov = TypeVar("_L1Cov", bound=int, covariant=True)
-_L2Cov = TypeVar("_L2Cov", bound=int, covariant=True)
+_L0_co = TypeVar("_L0_co", bound=int, covariant=True)
+_L1_co = TypeVar("_L1_co", bound=int, covariant=True)
+_L2_co = TypeVar("_L2_co", bound=int, covariant=True)
 
 _L0Inv = TypeVar("_L0Inv", bound=int)
 _L1Inv = TypeVar("_L1Inv", bound=int)
@@ -37,25 +37,25 @@ _L2Inv = TypeVar("_L2Inv", bound=int)
 
 PotentialPoints = np.ndarray[tuple[int], np.dtype[np.complex_]]
 
-_B0Cov = TypeVar("_B0Cov", bound=AxisWithLengthBasis[Any], covariant=True)
+_B0_co = TypeVar("_B0_co", bound=AxisWithLengthBasis[Any], covariant=True)
 _B0Inv = TypeVar("_B0Inv", bound=AxisWithLengthBasis[Any])
-_B1d0Cov = TypeVar("_B1d0Cov", bound=Basis1d[Any], covariant=True)
-_B2d0Cov = TypeVar("_B2d0Cov", bound=Basis2d[Any, Any], covariant=True)
-_B3d0Cov = TypeVar("_B3d0Cov", bound=Basis3d[Any, Any, Any], covariant=True)
+_B1d0_co = TypeVar("_B1d0_co", bound=Basis1d[Any], covariant=True)
+_B2d0_co = TypeVar("_B2d0_co", bound=Basis2d[Any, Any], covariant=True)
+_B3d0_co = TypeVar("_B3d0_co", bound=Basis3d[Any, Any, Any], covariant=True)
 
 
-class Potential(TypedDict, Generic[_B0Cov]):
+class Potential(TypedDict, Generic[_B0_co]):
     """Represents a potential in an evenly spaced grid of points."""
 
-    basis: _B0Cov
+    basis: _B0_co
     vector: PotentialPoints
 
 
-Potential1d = Potential[_B1d0Cov]
+Potential1d = Potential[_B1d0_co]
 
-Potential2d = Potential[_B2d0Cov]
+Potential2d = Potential[_B2d0_co]
 
-Potential3d = Potential[_B3d0Cov]
+Potential3d = Potential[_B3d0_co]
 
 
 FundamentalPositionBasisPotential3d = Potential3d[
@@ -125,13 +125,13 @@ def load_potential_grid_json(
         }
 
 
-class UnevenPotential3d(TypedDict, Generic[_L0Cov, _L1Cov, _L2Cov]):
+class UnevenPotential3d(TypedDict, Generic[_L0_co, _L1_co, _L2_co]):
     """Represents a potential unevenly spaced in the z direction."""
 
     basis: tuple[
-        FundamentalPositionAxis2d[_L0Cov],
-        FundamentalPositionAxis2d[_L1Cov],
-        np.ndarray[tuple[_L2Cov], np.dtype[np.float_]],
+        FundamentalPositionAxis2d[_L0_co],
+        FundamentalPositionAxis2d[_L1_co],
+        np.ndarray[tuple[_L2_co], np.dtype[np.float_]],
     ]
     vector: PotentialPoints
 

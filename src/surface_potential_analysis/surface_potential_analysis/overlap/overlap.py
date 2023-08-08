@@ -13,13 +13,13 @@ if TYPE_CHECKING:
 
     pass
 
-_B3d0Cov = TypeVar("_B3d0Cov", bound=Basis3d[Any, Any, Any], covariant=True)
+_B3d0_co = TypeVar("_B3d0_co", bound=Basis3d[Any, Any, Any], covariant=True)
 
 
-class Overlap3d(TypedDict, Generic[_B3d0Cov]):
+class Overlap3d(TypedDict, Generic[_B3d0_co]):
     """Represents the result of an overlap calculation of two wavepackets."""
 
-    basis: _B3d0Cov
+    basis: _B3d0_co
     vector: np.ndarray[tuple[int], np.dtype[np.complex_]]
 
 

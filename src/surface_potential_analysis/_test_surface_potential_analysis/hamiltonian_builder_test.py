@@ -80,44 +80,44 @@ if TYPE_CHECKING:
     _A3d0Inv = TypeVar("_A3d0Inv", bound=AxisWithLengthLike3d[Any, Any])
     _A3d1Inv = TypeVar("_A3d1Inv", bound=AxisWithLengthLike3d[Any, Any])
 
-    _L0Cov = TypeVar("_L0Cov", bound=int, covariant=True)
-    _L1Cov = TypeVar("_L1Cov", bound=int, covariant=True)
-    _L2Cov = TypeVar("_L2Cov", bound=int, covariant=True)
+    _L0_co = TypeVar("_L0_co", bound=int, covariant=True)
+    _L1_co = TypeVar("_L1_co", bound=int, covariant=True)
+    _L2_co = TypeVar("_L2_co", bound=int, covariant=True)
 
-    _B0Cov = TypeVar("_B0Cov", bound=AxisWithLengthBasis[Any], covariant=True)
+    _B0_co = TypeVar("_B0_co", bound=AxisWithLengthBasis[Any], covariant=True)
     _B0Inv = TypeVar("_B0Inv", bound=AxisWithLengthBasis[Any])
-    _B1d0Cov = TypeVar("_B1d0Cov", bound=Basis1d[Any], covariant=True)
-    _B2d0Cov = TypeVar("_B2d0Cov", bound=Basis2d[Any, Any], covariant=True)
+    _B1d0_co = TypeVar("_B1d0_co", bound=Basis1d[Any], covariant=True)
+    _B2d0_co = TypeVar("_B2d0_co", bound=Basis2d[Any, Any], covariant=True)
     _B3d0Inv = TypeVar("_B3d0Inv", bound=Basis3d[Any, Any, Any])
     _StackedHamiltonianPoints = np.ndarray[
-        tuple[_L0Cov, _L1Cov, _L2Cov, _L0Cov, _L1Cov, _L2Cov],
+        tuple[_L0_co, _L1_co, _L2_co, _L0_co, _L1_co, _L2_co],
         np.dtype[np.complex_] | np.dtype[np.float_],
     ]
-    _A3d0Cov = TypeVar("_A3d0Cov", bound=AxisWithLengthLike3d[Any, Any], covariant=True)
-    _A3d1Cov = TypeVar("_A3d1Cov", bound=AxisWithLengthLike3d[Any, Any], covariant=True)
-    _A3d2Cov = TypeVar("_A3d2Cov", bound=AxisWithLengthLike3d[Any, Any], covariant=True)
+    _A3d0_co = TypeVar("_A3d0_co", bound=AxisWithLengthLike3d[Any, Any], covariant=True)
+    _A3d1_co = TypeVar("_A3d1_co", bound=AxisWithLengthLike3d[Any, Any], covariant=True)
+    _A3d2_co = TypeVar("_A3d2_co", bound=AxisWithLengthLike3d[Any, Any], covariant=True)
 
 rng = np.random.default_rng()
-_B3d0Cov = TypeVar("_B3d0Cov", bound=Basis3d[Any, Any, Any], covariant=True)
+_B3d0_co = TypeVar("_B3d0_co", bound=Basis3d[Any, Any, Any], covariant=True)
 
 
-class StackedHamiltonian3d(TypedDict, Generic[_B3d0Cov]):
+class StackedHamiltonian3d(TypedDict, Generic[_B3d0_co]):
     """Represents an operator with it's array of points 'stacked'."""
 
-    basis: _B3d0Cov
+    basis: _B3d0_co
     # We need higher kinded types to do this properly
     array: _StackedHamiltonianPoints[int, int, int]
 
 
 if TYPE_CHECKING:
     StackedHamiltonianWith3dBasis = StackedHamiltonian3d[
-        Basis3d[_A3d0Cov, _A3d1Cov, _A3d2Cov]
+        Basis3d[_A3d0_co, _A3d1_co, _A3d2_co]
     ]
     FundamentalMomentumBasisStackedHamiltonian3d = StackedHamiltonian3d[
-        FundamentalMomentumBasis3d[_L0Cov, _L1Cov, _L2Cov]
+        FundamentalMomentumBasis3d[_L0_co, _L1_co, _L2_co]
     ]
     FundamentalPositionBasisStackedHamiltonian3d = StackedHamiltonian3d[
-        FundamentalPositionBasis3d[_L0Cov, _L1Cov, _L2Cov]
+        FundamentalPositionBasis3d[_L0_co, _L1_co, _L2_co]
     ]
 
 
