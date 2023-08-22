@@ -41,14 +41,15 @@ if TYPE_CHECKING:
 
     _B0Inv = TypeVar("_B0Inv", bound=AxisWithLengthBasis[Any])
     _DT = TypeVar("_DT", bound=np.dtype[Any])
+    _NS0Inv = TypeVar("_NS0Inv", bound=int)
+    _S0Inv = TypeVar("_S0Inv", bound=tuple[int, ...])
+    _S1Inv = TypeVar("_S1Inv", bound=tuple[int | np.int_, ...])
+
+    _NOInv = TypeVar("_NOInv", bound=int | np.int_)
+
 _NF0Inv = TypeVar("_NF0Inv", bound=int)
 _N0Inv = TypeVar("_N0Inv", bound=int)
 _ND0Inv = TypeVar("_ND0Inv", bound=int)
-_NS0Inv = TypeVar("_NS0Inv", bound=int)
-_S0Inv = TypeVar("_S0Inv", bound=tuple[int, ...])
-_S1Inv = TypeVar("_S1Inv", bound=tuple[int | np.int_, ...])
-
-_NOInv = TypeVar("_NOInv", bound=int | np.int_)
 
 
 def _pad_sample_axis(
@@ -177,7 +178,28 @@ def get_eigenstate(
     }
 
 
-def get_eigenstates(
+def get_bloch_state(
+    wavepacket: Wavepacket[_S0Inv, _B0Inv], idx: SingleIndexLike
+) -> StateVector[_B0Inv]:
+    """
+    Get the eigenstate of a given wavepacket at a specific index.
+
+    Parameters
+    ----------
+    wavepacket : Wavepacket[_S0Inv, _B0Inv]
+    idx : SingleIndexLike
+
+    Returns
+    -------
+    Eigenstate[_B0Inv].
+    """
+    util = BasisUtil(get_sample_basis(wavepacket["basis"], wavepacket["shape"]))
+    idx = util.get_flat_index(idx) if isinstance(idx, tuple) else idx
+
+    return {"basis": wavepacket["basis"], "vector": wavepacket["vectors"][idx]}
+
+
+def get_all_eigenstates(
     wavepacket: Wavepacket[_S0Inv, _B0Inv]
 ) -> list[Eigenstate[AxisWithLengthBasis[Any]]]:
     """
@@ -230,8 +252,8 @@ def get_tight_binding_state(
         The localized state under the tight binding approximation
     """
     state_0 = convert_state_vector_to_position_basis(get_eigenstate(wavepacket, idx))
+    util = BasisUtil(state_0["basis"])
     if origin is None:
-        util = BasisUtil(state_0["basis"])
         idx_0: SingleStackedIndexLike = util.get_stacked_index(
             np.argmax(np.abs(state_0["vector"]), axis=-1)
         )

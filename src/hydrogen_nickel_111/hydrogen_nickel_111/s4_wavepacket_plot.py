@@ -19,7 +19,7 @@ from surface_potential_analysis.wavepacket.get_eigenstate import (
     get_eigenstate,
     get_tight_binding_state,
 )
-from surface_potential_analysis.wavepacket.localization import (
+from surface_potential_analysis.wavepacket.localization._tight_binding import (
     get_wavepacket_two_points,
 )
 from surface_potential_analysis.wavepacket.plot import (
@@ -39,6 +39,7 @@ from .s4_wavepacket import (
     get_single_point_projection_localized_wavepacket_hydrogen,
     get_tight_binding_projection_localized_wavepacket_hydrogen,
     get_two_point_localized_wavepacket_hydrogen,
+    get_wannier90_localized_wavepacket_hydrogen,
     get_wavepacket_hydrogen,
 )
 from .surface_data import save_figure
@@ -280,7 +281,7 @@ def plot_phase_around_origin() -> None:
 
 
 def plot_tight_binding_projection_localized_wavepacket_hydrogen() -> None:
-    for band in [0, 1, 3]:
+    for band in [4]:
         wavepacket = get_tight_binding_projection_localized_wavepacket_hydrogen(band)
         tight_binding_state = get_tight_binding_state(wavepacket)
         fig, ax, _ = plot_state_2d_x_max(tight_binding_state, (0, 1), scale="symlog")
@@ -303,6 +304,14 @@ def plot_two_point_localized_wavepacket_hydrogen() -> None:
 def plot_single_point_projection_localized_wavepacket_hydrogen() -> None:
     for band in [0, 3]:
         wavepacket = get_single_point_projection_localized_wavepacket_hydrogen(band)
+        fig, ax, _ = plot_wavepacket_2d_x_max(wavepacket, (0, 1), scale="symlog")
+        fig.show()
+        input()
+
+
+def plot_wannier90_localized_wavepacket_hydrogen() -> None:
+    for band in [3]:
+        wavepacket = get_wannier90_localized_wavepacket_hydrogen(band)
         fig, ax, _ = plot_wavepacket_2d_x_max(wavepacket, (0, 1), scale="symlog")
         fig.show()
         input()

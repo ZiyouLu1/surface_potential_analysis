@@ -28,8 +28,6 @@ _L0Inv = TypeVar("_L0Inv", bound=int)
 _L1Inv = TypeVar("_L1Inv", bound=int)
 _L2Inv = TypeVar("_L2Inv", bound=int)
 
-_NS0Inv = TypeVar("_NS0Inv", bound=int)
-_NS1Inv = TypeVar("_NS1Inv", bound=int)
 _S03dInv = TypeVar("_S03dInv", bound=tuple[int, int, int])
 
 

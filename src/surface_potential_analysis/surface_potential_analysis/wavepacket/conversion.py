@@ -3,12 +3,16 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, TypeVar
 
 from surface_potential_analysis.basis.conversion import (
+    basis_as_fundamental_momentum_basis,
     basis_as_fundamental_position_basis,
     convert_vector,
 )
 
 if TYPE_CHECKING:
-    from surface_potential_analysis.axis.axis import FundamentalPositionAxis
+    from surface_potential_analysis.axis.axis import (
+        FundamentalPositionAxis,
+        FundamentalTransformedPositionAxis,
+    )
     from surface_potential_analysis.basis.basis import (
         AxisWithLengthBasis,
     )
@@ -64,4 +68,26 @@ def convert_wavepacket_to_position_basis(
     """
     return convert_wavepacket_to_basis(
         wavepacket, basis_as_fundamental_position_basis(wavepacket["basis"])
+    )
+
+
+def convert_wavepacket_to_fundamental_momentum_basis(
+    wavepacket: Wavepacket[
+        _S0Inv,
+        _B0Inv,
+    ]
+) -> Wavepacket[_S0Inv, tuple[FundamentalTransformedPositionAxis[Any, Any], ...]]:
+    """
+    Convert a wavepacket to the fundamental position basis.
+
+    Parameters
+    ----------
+    wavepacket : Wavepacket[_NS0Inv, _NS1Inv, _B3d0Inv]
+
+    Returns
+    -------
+    Wavepacket[_NS0Inv, _NS1Inv, Basis3d[PositionBasis[int], PositionBasis[int], PositionBasis[int]]]
+    """
+    return convert_wavepacket_to_basis(
+        wavepacket, basis_as_fundamental_momentum_basis(wavepacket["basis"])
     )

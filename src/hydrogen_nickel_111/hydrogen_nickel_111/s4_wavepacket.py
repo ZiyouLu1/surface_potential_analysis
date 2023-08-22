@@ -8,6 +8,7 @@ from surface_potential_analysis.wavepacket.localization import (
     localize_single_point_projection,
     localize_tight_binding_projection,
     localize_tightly_bound_wavepacket_two_point_max,
+    localize_wavepacket_wannier90,
 )
 from surface_potential_analysis.wavepacket.wavepacket import (
     Wavepacket3dWith2dSamples,
@@ -39,6 +40,16 @@ if TYPE_CHECKING:
         ],
     ]
 
+    _HydrogenNickelWavepacketTest = Wavepacket3dWith2dSamples[
+        Literal[6],
+        Literal[6],
+        Basis3d[
+            TransformedPositionAxis[Literal[31], Literal[31], Literal[3]],
+            TransformedPositionAxis[Literal[31], Literal[31], Literal[3]],
+            ExplicitAxis[Literal[250], Literal[12], Literal[3]],
+        ],
+    ]
+
     _DeuteriumNickelWavepacket = Wavepacket3dWith2dSamples[
         Literal[12],
         Literal[12],
@@ -65,6 +76,25 @@ def get_all_wavepackets_hydrogen() -> list[_HydrogenNickelWavepacket]:
     return generate_wavepacket(
         _hamiltonian_generator,
         shape=(12, 12, 1),
+        save_bands=save_bands,
+    )
+
+
+@npy_cached(get_data_path("wavepacket/wavepacket_hydrogen_test.npy"), load_pickle=True)  # type: ignore[misc]
+def get_all_wavepackets_hydrogen_test() -> list[_HydrogenNickelWavepacketTest]:
+    def _hamiltonian_generator(
+        bloch_fraction: np.ndarray[tuple[Literal[3]], np.dtype[np.float_]]
+    ) -> SingleBasisOperator[Any]:
+        return get_hamiltonian_hydrogen(
+            shape=(250, 250, 250),
+            bloch_fraction=bloch_fraction,
+            resolution=(31, 31, 12),
+        )
+
+    save_bands = np.arange(10)
+    return generate_wavepacket(
+        _hamiltonian_generator,
+        shape=(6, 6, 1),
         save_bands=save_bands,
     )
 
@@ -107,6 +137,27 @@ def get_single_point_projection_localized_wavepacket_hydrogen(
 ) -> _HydrogenNickelWavepacket:
     wavepacket = get_wavepacket_hydrogen(band)
     return localize_single_point_projection(wavepacket)
+
+
+def _get_wavepacket_cache_wannier90_h(band: int) -> Path:
+    return get_data_path(f"wavepacket/localized_wavepacket_w90_hydrogen_{band}.npy")
+
+
+@npy_cached(_get_wavepacket_cache_wannier90_h, load_pickle=True)
+def get_wannier90_localized_wavepacket_hydrogen(band: int) -> _HydrogenNickelWavepacketTest:
+    wavepacket = get_wavepacket_hydrogen(band)
+    return localize_wavepacket_wannier90(
+        {
+            "basis": wavepacket["basis"],
+            "eigenvalues": wavepacket["eigenvalues"]
+            .reshape(12, 12, 1, -1)[::2, ::2, :]
+            .reshape(36, -1),
+            "vectors": wavepacket["vectors"]
+            .reshape(12, 12, 1, -1)[::2, ::2, :]
+            .reshape(36, -1),
+            "shape": (6, 6, 1),
+        }
+    )
 
 
 def get_hydrogen_energy_difference(state_0: int, state_1: int) -> np.float_:

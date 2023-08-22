@@ -8,11 +8,11 @@ packages = [{ include = "surface_potential_analysis" }]
 
 [tool.poetry.dependencies]
 python = ">=3.11,<3.12"
-numpy = "^1.24.1"
+numpy = "^1.25.0"
 matplotlib = "^3.6.3"
 scipy = "^1.10.0"
 hamiltonian_generator = { path = "../hamiltonian_generator/", develop = true }
-qutip = "^4.7.1"
+qutip = "^4.0.0"
 
 [tool.poetry.group.dev.dependencies]
 black = "^23.1.0"

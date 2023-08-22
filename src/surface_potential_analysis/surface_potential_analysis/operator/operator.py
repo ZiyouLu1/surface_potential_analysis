@@ -16,7 +16,6 @@ from surface_potential_analysis.basis.util import (
 
 _L0_co = TypeVar("_L0_co", bound=int, covariant=True)
 _L1_co = TypeVar("_L1_co", bound=int, covariant=True)
-_L2_co = TypeVar("_L2_co", bound=int, covariant=True)
 
 _B0_co = TypeVar("_B0_co", bound=Basis, covariant=True)
 _B0Inv = TypeVar("_B0Inv", bound=Basis)

@@ -15,11 +15,6 @@ from surface_potential_analysis.dynamics.hermitian_gamma_integral import (
     calculate_hermitian_gamma_occupation_integral,
     calculate_hermitian_gamma_potential_integral,
 )
-from surface_potential_analysis.dynamics.lindbladian import (
-    NonHermitianGamma,
-    calculate_jump_operators,
-    solve_master_equation,
-)
 from surface_potential_analysis.overlap.conversion import (
     convert_overlap_to_momentum_basis,
 )
@@ -52,9 +47,6 @@ if TYPE_CHECKING:
         Basis3d,
         FundamentalMomentumBasis3d,
         FundamentalPositionBasis3d,
-    )
-    from surface_potential_analysis.dynamics.lindbladian import (
-        NonHermitianGammaCoefficientMatrix,
     )
     from surface_potential_analysis.overlap.overlap import (
         FundamentalMomentumOverlap,
@@ -445,64 +437,6 @@ def calculate_gamma(  # noqa: PLR0913
     return float(gamma_1 * gamma_2)
 
 
-@npy_cached(get_data_path("GammaFirstAtempt.npy"))
-def build_gamma(shape: tuple[int, int], temperature: float) -> NonHermitianGamma:
-    n_sites = np.prod(shape)
-
-    gamma = np.zeros(
-        (2 * n_sites, 2 * n_sites, 2 * n_sites, 2 * n_sites), dtype=np.complex_
-    )
-
-    for i in range(0, 1):
-        for i1 in range(0, 1):
-            for k in range(0, 1):
-                for k1 in range(0, 1):
-                    for site_0 in range(n_sites):
-                        for hop_1 in range(9):
-                            for hop_2 in range(n_sites):
-                                for hop_3 in range(9):
-                                    idx_0 = np.ravel_multi_index(
-                                        (i, site_0), (2, n_sites)
-                                    )
-                                    hop_1_stacked = np.unravel_index(
-                                        hop_1, (3, 3)
-                                    ) - np.array([1, 1])
-                                    site_0_stacked = np.unravel_index(site_0, shape)
-                                    site_1_stacked = site_0_stacked + hop_1_stacked
-                                    idx_1 = np.ravel_multi_index(
-                                        (i1, *site_1_stacked), (2, *shape), mode="wrap"
-                                    )
-
-                                    hop_2_stacked = np.unravel_index(
-                                        hop_2, (3, 3)
-                                    ) - np.array([shape[0] // 2, shape[1] // 2])
-                                    site_2_stacked = site_0_stacked + hop_2_stacked
-                                    idx_2 = np.ravel_multi_index(
-                                        (k, *site_2_stacked), (2, *shape), mode="wrap"
-                                    )
-                                    hop_3_stacked = np.unravel_index(
-                                        hop_3, (3, 3)
-                                    ) - np.array([1, 1])
-                                    site_3_stacked = site_2_stacked + hop_3_stacked
-                                    idx_3 = np.ravel_multi_index(
-                                        (k1, *site_3_stacked), (2, *shape), mode="wrap"
-                                    )
-
-                                    offset = np.array(
-                                        [
-                                            site_0_stacked,
-                                            site_1_stacked,
-                                            site_2_stacked,
-                                            site_3_stacked,
-                                        ]
-                                    )
-                                    gamma[idx_0, idx_1, idx_2, idx_3] = calculate_gamma(
-                                        i, i1, k, k1, offset, temperature
-                                    )
-    n_gamma = np.square(2 * n_sites)
-    return {"array": gamma.reshape(n_gamma, n_gamma)}
-
-
 def test_interpolation_shifted() -> None:
     overlap_0_1_next = get_overlap_hydrogen(0, 1, (1, 0))
     interpolator_0_1_next = get_overlap_momentum_interpolator_flat(overlap_0_1_next)
@@ -775,36 +709,3 @@ def build_incoherent_matrix_fcc_hcp() -> (
     out[1, 0, np.ravel_multi_index((1, 0), (3, 3), mode="wrap")] = rate / exponential
     out[1, 0, np.ravel_multi_index((0, 1), (3, 3), mode="wrap")] = rate / exponential
     return out  # type: ignore [no-any-return]
-
-
-def build_gamma_coefficient_matrix_fcc_hcp(
-    temperature: float,
-) -> NonHermitianGammaCoefficientMatrix[Literal[2]]:
-    out = np.zeros((2, 2, 9))
-    constant_rate = 26.93
-    omega = float(get_hydrogen_energy_difference(0, 1))
-
-    fast_rate = constant_rate * calculate_hermitian_gamma_occupation_integral(
-        omega, FERMI_WAVEVECTOR["NICKEL"], Boltzmann * temperature
-    )
-    slow_rate = constant_rate * calculate_hermitian_gamma_occupation_integral(
-        omega, FERMI_WAVEVECTOR["NICKEL"], Boltzmann * temperature
-    )
-
-    out[0, 1, 0] = fast_rate
-    out[0, 1, np.ravel_multi_index((-1, 0), (3, 3), mode="wrap")] = fast_rate
-    out[0, 1, np.ravel_multi_index((0, -1), (3, 3), mode="wrap")] = fast_rate
-    out[1, 0, 0] = slow_rate
-    out[1, 0, np.ravel_multi_index((1, 0), (3, 3), mode="wrap")] = slow_rate
-    out[1, 0, np.ravel_multi_index((0, 1), (3, 3), mode="wrap")] = slow_rate
-    return {"array": out}
-
-
-def solve_master_equation_nickel() -> None:
-    # ! coefficient_matrix = build_gamma_coefficient_matrix_fcc_hcp(150)
-    # ! gamma = calculate_gamma_two_state((3, 3), coefficient_matrix)
-    gamma = build_gamma((3, 3), 150)
-    print(gamma["array"].shape)  # noqa: T201
-    jump_operators = calculate_jump_operators(gamma)
-    _solution = solve_master_equation(jump_operators)
-    print(_solution)  # noqa: T201

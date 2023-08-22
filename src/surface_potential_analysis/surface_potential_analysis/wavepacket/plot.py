@@ -29,7 +29,7 @@ from surface_potential_analysis.wavepacket.eigenstate_conversion import (
     unfurl_wavepacket,
 )
 from surface_potential_analysis.wavepacket.get_eigenstate import (
-    get_eigenstates,
+    get_all_eigenstates,
 )
 
 from .wavepacket import (
@@ -525,7 +525,7 @@ def plot_all_wavepacket_states_2d_x(
     -------
     Generator[tuple[Figure, Axes, QuadMesh], None, None]
     """
-    states = get_eigenstates(wavepacket)
+    states = get_all_eigenstates(wavepacket)
     return (
         plot_state_2d_x(state, axes, idx, measure=measure, scale=scale)
         for state in states
@@ -596,7 +596,7 @@ def plot_all_wavepacket_states_2d_x_max(
     -------
     Generator[tuple[Figure, Axes, QuadMesh], None, None]
     """
-    states = get_eigenstates(wavepacket)
+    states = get_all_eigenstates(wavepacket)
     return (
         plot_state_2d_x_max(state, axes, ax=ax, measure=measure, scale=scale)
         for state in states

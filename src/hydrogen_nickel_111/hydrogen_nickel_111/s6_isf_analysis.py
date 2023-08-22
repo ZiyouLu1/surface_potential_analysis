@@ -12,16 +12,19 @@ from surface_potential_analysis.dynamics.hermitian_gamma_integral import (
     calculate_hermitian_gamma_occupation_integral,
 )
 from surface_potential_analysis.dynamics.incoherent_propagation.isf import (
+    ISFFeyModelFit,
     calculate_equilibrium_state_averaged_isf,
     calculate_isf_at_times,
     fit_isf_to_double_exponential,
-    fit_isf_to_fey_model,
+    fit_isf_to_fey_model_110,
+    fit_isf_to_fey_model_112bar,
     get_rate_decomposition,
 )
 from surface_potential_analysis.dynamics.incoherent_propagation.isf_plot import (
     plot_isf_4_variable_fit_against_time,
     plot_isf_against_time,
-    plot_isf_fey_model_fit_against_time,
+    plot_isf_fey_model_fit_110_against_time,
+    plot_isf_fey_model_fit_112bar_against_time,
     plot_rate_decomposition_against_temperature,
 )
 from surface_potential_analysis.dynamics.incoherent_propagation.tunnelling_matrix import (
@@ -29,7 +32,6 @@ from surface_potential_analysis.dynamics.incoherent_propagation.tunnelling_matri
     get_tunnelling_m_matrix,
 )
 from surface_potential_analysis.util.constants import FERMI_WAVEVECTOR
-from surface_potential_analysis.util.decorators import npy_cached
 
 from hydrogen_nickel_111.surface_data import get_data_path
 
@@ -46,13 +48,23 @@ if TYPE_CHECKING:
 _L0Inv = TypeVar("_L0Inv", bound=int)
 
 
-def get_jianding_isf_dk() -> np.ndarray[tuple[Literal[2]], np.dtype[np.float_]]:
+def get_jianding_isf_110() -> np.ndarray[tuple[Literal[2]], np.dtype[np.float_]]:
     basis = get_wavepacket_hydrogen(0)["basis"]
 
     util = AxisWithLengthBasisUtil(basis)
-    dk = util.delta_x[0] + util.delta_x[1]
+    dk = util.delta_x[0] / np.linalg.norm(util.delta_x[0])
+    dk *= 2 / np.linalg.norm(util.delta_x[0])
+    return dk[:2]  # type: ignore[no-any-return]
+
+
+def get_jianding_isf_112bar() -> np.ndarray[tuple[Literal[2]], np.dtype[np.float_]]:
+    basis = get_wavepacket_hydrogen(0)["basis"]
+
+    util = AxisWithLengthBasisUtil(basis)
+    dk_0_norm = util.delta_x[0] / np.linalg.norm(util.delta_x[0])
+    dk = util.delta_x[1] - dk_0_norm * np.dot(dk_0_norm, util.delta_x[1])
     dk /= np.linalg.norm(dk)
-    dk *= 0.8 * 10**10
+    dk *= 2 / np.linalg.norm(util.delta_x[0])
     return dk[:2]  # type: ignore[no-any-return]
 
 
@@ -64,7 +76,7 @@ def _calculate_rates_hydrogen_cache(
     return get_data_path(f"dynamics/rates_hydrogen_{n_bands}_band.npy")
 
 
-@npy_cached(_calculate_rates_hydrogen_cache)
+# @npy_cached(_calculate_rates_hydrogen_cache)
 def calculate_rates_hydrogen(
     n_bands: int = 6,
     *,
@@ -72,7 +84,7 @@ def calculate_rates_hydrogen(
 ) -> np.ndarray[tuple[Literal[3], Literal[7]], np.dtype[np.float_]]:
     temperatures = np.array([100, 125, 150, 175, 200, 225, 250])
     times = [
-        np.linspace(0, 5e-8, 2000),
+        np.linspace(0, 4e-8, 2000),
         np.linspace(0, 15e-9, 2000),
         np.linspace(0, 4e-9, 2000),
         np.linspace(0, 15e-10, 2000),
@@ -80,47 +92,67 @@ def calculate_rates_hydrogen(
         np.linspace(0, 4e-10, 2000),
         np.linspace(0, 4e-10, 2000),
     ]
-    dk = get_jianding_isf_dk()
+    dk = get_jianding_isf_110()
 
     rates = np.zeros((2, temperatures.shape[0]))
     for i, (temperature, ts) in enumerate(zip(temperatures, times, strict=True)):
         a_matrix = get_tunnelling_a_matrix_hydrogen((25, 25), 6, temperature)
         m_matrix = get_tunnelling_m_matrix(a_matrix, n_bands)
         isf = calculate_equilibrium_state_averaged_isf(m_matrix, ts, dk)
-        fit = fit_isf_to_fey_model(isf, ts)
+        fit = fit_isf_to_fey_model_112bar(isf, ts)
+        fit1 = fit_isf_to_fey_model_110(isf, ts)
         fit2 = fit_isf_to_double_exponential(isf, ts)
         if plot:
-            fig, ax, _ = plot_isf_fey_model_fit_against_time(fit, ts)
-            plot_isf_against_time(isf, ts, ax=ax)
+            fig, ax, line = plot_isf_fey_model_fit_112bar_against_time(fit, ts)
+            line.set_label("112bar")
+            _, _, line = plot_isf_against_time(isf, ts, ax=ax)
+            line.set_label("ISF")
+            _, _, line = plot_isf_fey_model_fit_110_against_time(fit1, ts, ax=ax)
+            line.set_label("100")
             _, _, line = plot_isf_4_variable_fit_against_time(fit2, ts, ax=ax)
             line.set_linestyle("--")
+            line.set_label("4 variable fit")
+            f, s = extract_intrinsic_rates(fit2.fast_rate, fit2.slow_rate)
+            _, _, line = plot_isf_fey_model_fit_110_against_time(
+                ISFFeyModelFit(f, s), ts, ax=ax
+            )
+            line.set_linestyle("-.")
+            ax.legend()
             fig.show()
-            input(fit)
+            input()
         rates[0, i] = fit2.fast_rate
         rates[1, i] = fit2.slow_rate
     return np.array([temperatures, rates[0], rates[1]])  # type: ignore[no-any-return]
 
 
 def extract_intrinsic_rates(fast_rate: float, slow_rate: float) -> tuple[float, float]:
+    a_dk = 2
+
     def _func(x: tuple[float, float]) -> list[float]:
         nu, lam = x
-        z = np.sqrt(lam**2 + 16 * lam * np.cos(1 + np.sqrt(3)) / 9 + 1)
-
+        y = np.sqrt(lam**2 + 2 * lam * (8 * np.cos(np.sqrt(3)) + 1) / 9 + 1)
+        z = np.sqrt(
+            9 * lam**2
+            + 16 * lam * np.cos(a_dk / 2) ** 2
+            + 16 * lam * np.cos(a_dk / 2)
+            - 14 * lam
+            + 9
+        )
         return [
-            nu * (lam + 1 + z) / (2 * lam) - fast_rate,
-            nu * (lam + 1 - z) / (2 * lam) - slow_rate,
+            nu * (3 * lam + 3 + z) / (6 * lam) - fast_rate,
+            nu * (3 * lam + 3 - z) / (6 * lam) - slow_rate,
+        ]
+        return [
+            nu * (lam + 1 + y) / (2 * lam) - fast_rate,
+            nu * (lam + 1 - y) / (2 * lam) - slow_rate,
         ]
 
     result, detail, _, _ = scipy.optimize.fsolve(
         _func, [slow_rate, slow_rate / fast_rate], full_output=True, xtol=1e-15
     )
-    print(detail)
     fey_slow = result[0]
     fey_fast = result[0] / result[1]
-    try:
-        np.testing.assert_array_almost_equal(_func(result), 0.0, decimal=5)
-    except AssertionError as e:
-        print(e)
+    np.testing.assert_array_almost_equal(_func(result), 0.0, decimal=5)
     return fey_fast, fey_slow
 
 
@@ -252,7 +284,7 @@ def plot_fast_slow_rate_ratios() -> None:
 def plot_isf_hydrogen() -> None:
     a_matrix = get_tunnelling_a_matrix_hydrogen((25, 25), 6, 150)
     times = np.linspace(0, 90e-10, 1000)
-    dk = get_jianding_isf_dk()
+    dk = get_jianding_isf_112bar()
 
     fig, ax = plt.subplots()
 
@@ -277,7 +309,7 @@ def compare_isf_initial_condition() -> None:
     m_matrix = get_tunnelling_m_matrix(a_matrix)
 
     fig, ax = plt.subplots()
-    dk = get_jianding_isf_dk()
+    dk = get_jianding_isf_112bar()
 
     initial = get_initial_pure_density_matrix_for_basis(m_matrix["basis"], (0, 0, 0))
     times = np.linspace(0, 90e-10, 1000)

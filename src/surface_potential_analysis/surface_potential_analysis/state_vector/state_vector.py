@@ -11,7 +11,6 @@ from surface_potential_analysis.basis.basis import (
     Basis3d,
     FundamentalPositionBasis3d,
 )
-from surface_potential_analysis.util.decorators import timed
 
 _B0Inv = TypeVar("_B0Inv", bound=Basis)
 
@@ -87,7 +86,6 @@ def calculate_normalization(state: StateVector[Any] | StateDualVector[Any]) -> f
     return np.sum(np.abs(state["vector"]) ** 2)
 
 
-@timed
 def calculate_inner_product(
     state_0: StateVector[_B0Inv],
     state_1: StateDualVector[_B0Inv],

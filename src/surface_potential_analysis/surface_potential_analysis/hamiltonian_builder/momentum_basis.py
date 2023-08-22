@@ -29,8 +29,6 @@ if TYPE_CHECKING:
     from surface_potential_analysis.potential.potential import Potential
 
     _L0 = TypeVar("_L0", bound=int)
-    _L1 = TypeVar("_L1", bound=int)
-    _L2 = TypeVar("_L2", bound=int)
     _B0Inv = TypeVar("_B0Inv", bound=AxisWithLengthBasis[Any])
 
 

@@ -197,11 +197,11 @@ def get_wavepacket_sample_fractions(
 
     Parameters
     ----------
-    shape : np.ndarray[tuple[Literal[2]], np.dtype[np.int_]]
+    shape : np.ndarray[tuple[_NDInv], np.dtype[np.int_]]
 
     Returns
     -------
-    np.ndarray[tuple[Literal[2], int, int], np.dtype[np.float_]]
+    np.ndarray[tuple[Literal[_NDInv], int], np.dtype[np.float_]]
     """
     sample_basis = position_basis_from_shape(shape)
     util = AxisWithLengthBasisUtil(sample_basis)

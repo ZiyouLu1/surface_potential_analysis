@@ -53,9 +53,6 @@ from surface_potential_analysis.util.util import slice_along_axis
 if TYPE_CHECKING:
     from surface_potential_analysis.axis.axis_like import AxisWithLengthLike3d
     from surface_potential_analysis.basis.basis import (
-        AxisWithLengthBasis,
-        Basis1d,
-        Basis2d,
         FundamentalMomentumBasis3d,
         FundamentalPositionBasis3d,
     )
@@ -77,17 +74,10 @@ if TYPE_CHECKING:
 
     _LInv = TypeVar("_LInv", bound=int)
 
-    _A3d0Inv = TypeVar("_A3d0Inv", bound=AxisWithLengthLike3d[Any, Any])
-    _A3d1Inv = TypeVar("_A3d1Inv", bound=AxisWithLengthLike3d[Any, Any])
-
     _L0_co = TypeVar("_L0_co", bound=int, covariant=True)
     _L1_co = TypeVar("_L1_co", bound=int, covariant=True)
     _L2_co = TypeVar("_L2_co", bound=int, covariant=True)
 
-    _B0_co = TypeVar("_B0_co", bound=AxisWithLengthBasis[Any], covariant=True)
-    _B0Inv = TypeVar("_B0Inv", bound=AxisWithLengthBasis[Any])
-    _B1d0_co = TypeVar("_B1d0_co", bound=Basis1d[Any], covariant=True)
-    _B2d0_co = TypeVar("_B2d0_co", bound=Basis2d[Any, Any], covariant=True)
     _B3d0Inv = TypeVar("_B3d0Inv", bound=Basis3d[Any, Any, Any])
     _StackedHamiltonianPoints = np.ndarray[
         tuple[_L0_co, _L1_co, _L2_co, _L0_co, _L1_co, _L2_co],

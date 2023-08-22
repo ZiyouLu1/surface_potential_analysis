@@ -1,23 +1,33 @@
 from __future__ import annotations
 
-import numpy as np
-from surface_potential_analysis.basis.util import BasisUtil
+from surface_potential_analysis.wavepacket.localization import (
+    localize_single_point_projection,
+)
 from surface_potential_analysis.wavepacket.plot import (
-    plot_wavepacket_x0x1,
+    plot_wavepacket_2d_x_max,
 )
 
-from .s4_wavepacket import get_two_point_normalized_wavepacket_hydrogen
+from .s4_wavepacket import (
+    get_two_point_normalized_wavepacket_hydrogen,
+    get_wavepacket_hydrogen,
+)
 from .surface_data import save_figure
 
 
 def plot_hydrogen_wavepacket_at_x2_max() -> None:
     for band in range(0, 6):
-        normalized = get_two_point_normalized_wavepacket_hydrogen(band)
-        _, _, x2_max = BasisUtil(normalized["basis"]).get_stacked_index(
-            np.argmax(np.abs(normalized["vectors"][0]))
-        )
-        fig, ax, _ = plot_wavepacket_x0x1(normalized, x2_max, scale="symlog")
+        wavepacket = get_two_point_normalized_wavepacket_hydrogen(band)
+        fig, ax, _ = plot_wavepacket_2d_x_max(wavepacket, (0, 1), scale="symlog")
         fig.show()
-        ax.set_title(f"Plot of abs(wavefunction) for ix2={x2_max}")
         save_figure(fig, f"./wavepacket/hydrogen_wavepacket_{band}.png")
     input()
+
+
+def plot_wannier90_localized_wavepacket_hydrogen() -> None:
+    for band in [1]:
+        wavepacket = get_wavepacket_hydrogen(band)
+        print(wavepacket["basis"])
+        wavepacket = localize_single_point_projection(wavepacket)
+        fig, ax, _ = plot_wavepacket_2d_x_max(wavepacket, (0, 1), scale="symlog")
+        fig.show()
+        input()

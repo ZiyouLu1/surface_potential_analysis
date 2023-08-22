@@ -7,7 +7,9 @@ import numpy as np
 from surface_potential_analysis.axis.axis import FundamentalAxis
 from surface_potential_analysis.axis.axis_like import AxisLike, AxisVector2d
 from surface_potential_analysis.basis.util import AxisWithLengthBasisUtil
-from surface_potential_analysis.wavepacket.localization import get_wavepacket_two_points
+from surface_potential_analysis.wavepacket.localization._tight_binding import (
+    get_wavepacket_two_points,
+)
 
 if TYPE_CHECKING:
     from surface_potential_analysis.wavepacket.wavepacket import Wavepacket

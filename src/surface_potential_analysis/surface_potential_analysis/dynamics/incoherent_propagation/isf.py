@@ -13,6 +13,7 @@ from surface_potential_analysis.dynamics.incoherent_propagation.eigenstates impo
     calculate_tunnelling_simulation_state,
     get_equilibrium_state,
     get_operator_state_vector_decomposition,
+    get_tunnelling_simulation_state,
 )
 from surface_potential_analysis.dynamics.incoherent_propagation.tunnelling_matrix import (
     get_initial_pure_density_matrix_for_basis,
@@ -62,6 +63,7 @@ def calculate_isf_approximate_locations(
     initial_matrix: DiagonalOperator[_B0Inv, _B0Inv],
     final_matrices: DiagonalOperatorList[_B0Inv, _B0Inv, _L0Inv],
     dk: np.ndarray[tuple[Literal[2]], np.dtype[np.float_]],
+    equilibrium_matrix: DiagonalOperator[_B0Inv, _B0Inv] | None = None,
 ) -> EigenvalueList[_L0Inv]:
     """
     Calculate the ISF, assuming all states are approximately eigenstates of position.
@@ -103,6 +105,11 @@ def calculate_isf_approximate_locations(
     eigenvalues = np.tensordot(
         np.exp(1j * mean_phi), final_matrices["vectors"], axes=(0, 1)
     )
+    if equilibrium_matrix is not None:
+        equilibrium_eigenvalue = np.tensordot(
+            np.exp(1j * mean_phi), equilibrium_matrix["vector"], axes=(0, 0)
+        )
+        eigenvalues -= equilibrium_eigenvalue
     return {"eigenvalues": eigenvalues}
 
 
@@ -170,8 +177,8 @@ def calculate_equilibrium_state_averaged_isf(
         initial = get_initial_pure_density_matrix_for_basis(
             matrix["basis"], (0, 0, band)
         )
-        final = calculate_tunnelling_simulation_state(matrix, initial, times)
-        isf = calculate_isf_approximate_locations(initial, final, dk)
+        final = get_tunnelling_simulation_state(eigenstates, initial, times)
+        isf = calculate_isf_approximate_locations(initial, final, dk, equilibrium)
         isf_per_band.append(isf)
     return _average_eigenvalues(isf_per_band, occupation_probabilities)
 
@@ -236,7 +243,6 @@ def fit_isf_to_double_exponential(
         data,
         p0=(0.5, 2e10, 1e10, 0),
         bounds=([0, 0, 0, 0], [1, np.inf, np.inf, 1]),
-        sigma=data,
     )
     return ISF4VariableFit(
         params[1], params[0], params[2], 1 - params[3] - params[0], params[3]
@@ -249,10 +255,15 @@ class ISFFeyModelFit:
 
     fast_rate: float
     slow_rate: float
+    a_dk: float = 2
 
 
-def calculate_isf_fey_model_112bar(
-    t: np.ndarray[_S0Inv, np.dtype[np.float_]], fast_rate: float, slow_rate: float
+def calculate_isf_fey_model_110(
+    t: np.ndarray[_S0Inv, np.dtype[np.float_]],
+    fast_rate: float,
+    slow_rate: float,
+    *,
+    a_dk: float,
 ) -> np.ndarray[_S0Inv, np.dtype[np.float_]]:
     """
     Use the fey model calculate the ISF as measured in the 112bar direction given dk = 2/a.
@@ -268,28 +279,82 @@ def calculate_isf_fey_model_112bar(
     np.ndarray[_S0Inv, np.dtype[np.float_]]
     """
     lam = slow_rate / fast_rate
-    # We are working with dk = 2/a, which simplifies things
-    z = np.sqrt(lam**2 + 16 * lam * np.cos(1 + np.sqrt(3)) / 9 + 1)
-    n_0 = 1 + 4 * lam * np.square(
-        np.abs(
-            (np.exp(2j / np.sqrt(3)) + 2 * np.exp(-1j / np.sqrt(3)))
-            / (3 * lam - 3 + 3 * z)
-        )
+    z = np.sqrt(
+        9 * lam**2
+        + 16 * lam * np.cos(a_dk / 2) ** 2
+        + 16 * lam * np.cos(a_dk / 2)
+        - 14 * lam
+        + 9
     )
-    n_1 = 1 + 4 * lam * np.square(
-        np.abs(
-            (np.exp(2j / np.sqrt(3)) + 2 * np.exp(-1j / np.sqrt(3)))
-            / (3 * lam - 3 - 3 * z)
-        )
-    )
-    a_0 = n_1 / (n_1 + n_0)
-    a_1 = n_0 / (n_1 + n_0)
-    return (a_0 * np.exp(-slow_rate * (lam + 1 + z) * t / (2 * lam))) + (  # type: ignore[no-any-return]
-        a_1 * np.exp(-slow_rate * (lam + 1 - z) * t / (2 * lam))
+    top_factor = 4 * np.cos(a_dk / 2) + 2
+    n_0 = 1 + lam * np.square(top_factor / (3 * lam - 3 + z))
+    n_1 = 1 + lam * np.square(top_factor / (3 * lam - 3 - z))
+    norm_0 = np.square(np.abs(1 - lam * top_factor / (3 * lam - 3 + z)))
+    norm_1 = np.square(np.abs(1 - lam * top_factor / (3 * lam - 3 - z)))
+    c_0 = 1 / (1 + lam)
+    return c_0 * (  # type: ignore[no-any-return]
+        ((norm_0 / n_0) * np.exp(-slow_rate * (3 * lam + 3 + z) * t / (6 * lam)))
+        + ((norm_1 / n_1) * np.exp(-slow_rate * (3 * lam + 3 - z) * t / (6 * lam)))
     )
 
 
-def get_isf_from_fey_model_fit(
+def calculate_isf_fey_model_112bar(
+    t: np.ndarray[_S0Inv, np.dtype[np.float_]],
+    fast_rate: float,
+    slow_rate: float,
+    *,
+    a_dk: float,
+) -> np.ndarray[_S0Inv, np.dtype[np.float_]]:
+    """
+    Use the fey model calculate the ISF as measured in the 112bar direction given dk = 2/a.
+
+    Parameters
+    ----------
+    t : np.ndarray[_S0Inv, np.dtype[np.float_]]
+    fast_rate : float
+    slow_rate : float
+
+    Returns
+    -------
+    np.ndarray[_S0Inv, np.dtype[np.float_]]
+    """
+    lam = slow_rate / fast_rate
+    y = np.sqrt(lam**2 + 2 * lam * (8 * np.cos(a_dk * np.sqrt(3) / 2) + 1) / 9 + 1)
+    top_factor = np.exp(1j * a_dk / np.sqrt(3)) + 2 * np.exp(-1j * a_dk / (np.sqrt(12)))
+    m_0 = 1 + 4 * lam * np.square(np.abs(top_factor / (3 * lam - 3 + 3 * y)))
+    m_1 = 1 + 4 * lam * np.square(np.abs(top_factor / (3 * lam - 3 - 3 * y)))
+    norm_0 = np.square(np.abs(1 - 2 * lam * top_factor / (3 * lam - 3 + 3 * y)))
+    norm_1 = np.square(np.abs(1 - 2 * lam * top_factor / (3 * lam - 3 - 3 * y)))
+    c_0 = 1 / (1 + lam)
+    return c_0 * (  # type: ignore[no-any-return]
+        ((norm_0 / m_0) * np.exp(-slow_rate * (lam + 1 + y) * t / (2 * lam)))
+        + ((norm_1 / m_1) * np.exp(-slow_rate * (lam + 1 - y) * t / (2 * lam)))
+    )
+
+
+def get_isf_from_fey_model_fit_110(
+    fit: ISFFeyModelFit, times: np.ndarray[tuple[_L0Inv], np.dtype[np.float_]]
+) -> EigenvalueList[_L0Inv]:
+    """
+    Given an ISF Fit calculate the ISF.
+
+    Parameters
+    ----------
+    fit : ISFFit
+    times : np.ndarray[tuple[int], np.dtype[np.float_]]
+
+    Returns
+    -------
+    EigenvalueList[_L0Inv]
+    """
+    return {
+        "eigenvalues": calculate_isf_fey_model_110(
+            times, fit.fast_rate, fit.slow_rate, a_dk=fit.a_dk
+        ).astype(np.complex_)
+    }
+
+
+def get_isf_from_fey_model_fit_112bar(
     fit: ISFFeyModelFit, times: np.ndarray[tuple[_L0Inv], np.dtype[np.float_]]
 ) -> EigenvalueList[_L0Inv]:
     """
@@ -306,16 +371,17 @@ def get_isf_from_fey_model_fit(
     """
     return {
         "eigenvalues": calculate_isf_fey_model_112bar(
-            times, fit.fast_rate, fit.slow_rate
+            times, fit.fast_rate, fit.slow_rate, a_dk=fit.a_dk
         ).astype(np.complex_)
     }
 
 
-def fit_isf_to_fey_model(
+def fit_isf_to_fey_model_110(
     isf: EigenvalueList[_L0Inv],
     times: np.ndarray[tuple[_L0Inv], np.dtype[np.float_]],
     *,
     measure: Measure = "abs",
+    a_dk: float = 2,
 ) -> ISFFeyModelFit:
     """
     Fit the ISF to a double exponential, and calculate the fast and slow rates.
@@ -331,14 +397,43 @@ def fit_isf_to_fey_model(
     """
     data = get_measured_data(isf["eigenvalues"], measure)
     params, _ = scipy.optimize.curve_fit(
-        calculate_isf_fey_model_112bar,
+        lambda t, f, s: calculate_isf_fey_model_110(t, f, s, a_dk=a_dk),
+        times,
+        data,
+        p0=(1.4e9, 3e8),
+        bounds=([0, 0], [np.inf, np.inf]),
+    )
+    return ISFFeyModelFit(params[0], params[1], a_dk=a_dk)
+
+
+def fit_isf_to_fey_model_112bar(
+    isf: EigenvalueList[_L0Inv],
+    times: np.ndarray[tuple[_L0Inv], np.dtype[np.float_]],
+    *,
+    measure: Measure = "abs",
+    a_dk: float = 2,
+) -> ISFFeyModelFit:
+    """
+    Fit the ISF to a double exponential, and calculate the fast and slow rates.
+
+    Parameters
+    ----------
+    isf : EigenvalueList[_L0Inv]
+    times : np.ndarray[tuple[int], np.dtype[np.float_]]
+
+    Returns
+    -------
+    ISFFit
+    """
+    data = get_measured_data(isf["eigenvalues"], measure)
+    params, _ = scipy.optimize.curve_fit(
+        lambda t, f, s: calculate_isf_fey_model_112bar(t, f, s, a_dk=a_dk),
         times,
         data,
         p0=(2e10, 1e10),
         bounds=([0, 0], [np.inf, np.inf]),
-        sigma=data,
     )
-    return ISFFeyModelFit(params[0], params[1])
+    return ISFFeyModelFit(params[0], params[1], a_dk=a_dk)
 
 
 @dataclass
