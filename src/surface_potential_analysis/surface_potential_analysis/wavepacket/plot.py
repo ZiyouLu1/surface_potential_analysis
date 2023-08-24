@@ -29,12 +29,12 @@ from surface_potential_analysis.wavepacket.eigenstate_conversion import (
     unfurl_wavepacket,
 )
 from surface_potential_analysis.wavepacket.get_eigenstate import (
-    get_all_eigenstates,
+    get_all_states,
 )
 
 from .wavepacket import (
     Wavepacket,
-    Wavepacket3d,
+    WavepacketWithEigenvalues,
     get_sample_basis,
     get_wavepacket_sample_frequencies,
 )
@@ -107,7 +107,7 @@ def plot_wavepacket_sample_frequencies(
 
 
 def plot_wavepacket_eigenvalues_2d_k(
-    wavepacket: Wavepacket[_S0Inv, _B0Inv],
+    wavepacket: WavepacketWithEigenvalues[_S0Inv, _B0Inv],
     axes: tuple[int, int] = (0, 1),
     idx: SingleStackedIndexLike | None = None,
     *,
@@ -152,7 +152,7 @@ def plot_wavepacket_eigenvalues_2d_k(
 
 
 def plot_wavepacket_eigenvalues_2d_x(
-    wavepacket: Wavepacket[_S0Inv, _B0Inv],
+    wavepacket: WavepacketWithEigenvalues[_S0Inv, _B0Inv],
     axes: tuple[int, int] = (0, 1),
     idx: SingleStackedIndexLike | None = None,
     *,
@@ -165,7 +165,7 @@ def plot_wavepacket_eigenvalues_2d_x(
 
     Parameters
     ----------
-    wavepacket : Wavepacket[_NS0Inv, _NS1Inv, Basis3d[_A3d0Inv, _A3d1Inv, _A3d2Inv]]
+    wavepacket : WavepacketWithEigenvalues[_NS0Inv, _NS1Inv, Basis3d[_A3d0Inv, _A3d1Inv, _A3d2Inv]]
     ax : Axes | None, optional
         plot axis, by default None
     measure : Literal[&quot;real&quot;, &quot;imag&quot;, &quot;abs&quot;], optional
@@ -362,7 +362,7 @@ def plot_wavepacket_2d_k(
 
 
 def plot_wavepacket_k0k1(
-    wavepacket: Wavepacket3d[_S03dInv, _B3d0Inv],
+    wavepacket: Wavepacket[_S03dInv, _B3d0Inv],
     k2_idx: SingleFlatIndexLike,
     *,
     ax: Axes | None = None,
@@ -395,7 +395,7 @@ def plot_wavepacket_k0k1(
 
 
 def plot_wavepacket_k1k2(
-    wavepacket: Wavepacket3d[_S03dInv, _B3d0Inv],
+    wavepacket: Wavepacket[_S03dInv, _B3d0Inv],
     k0_idx: SingleFlatIndexLike,
     *,
     ax: Axes | None = None,
@@ -428,7 +428,7 @@ def plot_wavepacket_k1k2(
 
 
 def plot_wavepacket_k2k0(
-    wavepacket: Wavepacket3d[_S03dInv, _B3d0Inv],
+    wavepacket: Wavepacket[_S03dInv, _B3d0Inv],
     k1_idx: SingleFlatIndexLike,
     *,
     ax: Axes | None = None,
@@ -525,7 +525,7 @@ def plot_all_wavepacket_states_2d_x(
     -------
     Generator[tuple[Figure, Axes, QuadMesh], None, None]
     """
-    states = get_all_eigenstates(wavepacket)
+    states = get_all_states(wavepacket)
     return (
         plot_state_2d_x(state, axes, idx, measure=measure, scale=scale)
         for state in states
@@ -596,7 +596,7 @@ def plot_all_wavepacket_states_2d_x_max(
     -------
     Generator[tuple[Figure, Axes, QuadMesh], None, None]
     """
-    states = get_all_eigenstates(wavepacket)
+    states = get_all_states(wavepacket)
     return (
         plot_state_2d_x_max(state, axes, ax=ax, measure=measure, scale=scale)
         for state in states
@@ -604,7 +604,7 @@ def plot_all_wavepacket_states_2d_x_max(
 
 
 def plot_wavepacket_x0x1(
-    wavepacket: Wavepacket3d[_S03dInv, _B3d0Inv],
+    wavepacket: Wavepacket[_S03dInv, _B3d0Inv],
     x2_idx: SingleFlatIndexLike,
     *,
     ax: Axes | None = None,
@@ -637,7 +637,7 @@ def plot_wavepacket_x0x1(
 
 
 def plot_wavepacket_x1x2(
-    wavepacket: Wavepacket3d[_S03dInv, _B3d0Inv],
+    wavepacket: Wavepacket[_S03dInv, _B3d0Inv],
     x0_idx: SingleFlatIndexLike,
     *,
     ax: Axes | None = None,
@@ -670,7 +670,7 @@ def plot_wavepacket_x1x2(
 
 
 def plot_wavepacket_x2x0(
-    wavepacket: Wavepacket3d[_S03dInv, _B3d0Inv],
+    wavepacket: Wavepacket[_S03dInv, _B3d0Inv],
     x1_idx: SingleFlatIndexLike,
     *,
     ax: Axes | None = None,
@@ -775,7 +775,7 @@ def animate_wavepacket_3d_x(
 
 
 def animate_wavepacket_x0x1(
-    wavepacket: Wavepacket3d[_S03dInv, _B3d0Inv],
+    wavepacket: Wavepacket[_S03dInv, _B3d0Inv],
     *,
     ax: Axes | None = None,
     measure: Measure = "abs",
@@ -804,7 +804,7 @@ def animate_wavepacket_x0x1(
 
 
 def animate_wavepacket_x1x2(
-    wavepacket: Wavepacket3d[_S03dInv, _B3d0Inv],
+    wavepacket: Wavepacket[_S03dInv, _B3d0Inv],
     *,
     ax: Axes | None = None,
     measure: Measure = "abs",
@@ -833,7 +833,7 @@ def animate_wavepacket_x1x2(
 
 
 def animate_wavepacket_x2x0(
-    wavepacket: Wavepacket3d[_S03dInv, _B3d0Inv],
+    wavepacket: Wavepacket[_S03dInv, _B3d0Inv],
     *,
     ax: Axes | None = None,
     measure: Measure = "abs",

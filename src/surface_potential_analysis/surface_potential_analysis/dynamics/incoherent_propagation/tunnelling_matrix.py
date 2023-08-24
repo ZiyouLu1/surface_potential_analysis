@@ -4,23 +4,30 @@ from typing import TYPE_CHECKING, Any, Generic, TypedDict, TypeVar, overload
 
 import numpy as np
 
-from surface_potential_analysis.axis.axis import FundamentalAxis
-from surface_potential_analysis.axis.axis_like import AxisLike
 from surface_potential_analysis.basis.util import BasisUtil
 from surface_potential_analysis.util.decorators import timed
 
-from .tunnelling_basis import TunnellingSimulationBandsAxis, TunnellingSimulationBasis
+from .tunnelling_basis import (
+    TunnellingSimulationBandsAxis,
+    TunnellingSimulationBasis,
+    get_basis_from_shape,
+)
 
 if TYPE_CHECKING:
     from collections.abc import Callable
 
     from surface_potential_analysis._types import SingleIndexLike
+    from surface_potential_analysis.axis.axis import FundamentalAxis
+    from surface_potential_analysis.axis.axis_like import AxisLike
     from surface_potential_analysis.operator.operator import DiagonalOperator
 
+    _L0Inv = TypeVar("_L0Inv", bound=int)
+    _L1Inv = TypeVar("_L1Inv", bound=int)
+    _L2Inv = TypeVar("_L2Inv", bound=int)
 
-_L0Inv = TypeVar("_L0Inv", bound=int)
-_L1Inv = TypeVar("_L1Inv", bound=int)
-_L2Inv = TypeVar("_L2Inv", bound=int)
+    _AX0Inv = TypeVar("_AX0Inv", bound=AxisLike[Any, Any])
+    _AX1Inv = TypeVar("_AX1Inv", bound=AxisLike[Any, Any])
+    _AX2Inv = TunnellingSimulationBandsAxis[Any]
 
 
 _B0Inv = TypeVar(
@@ -53,29 +60,41 @@ class TunnellingMMatrix(TypedDict, Generic[_B0Inv]):
     array: np.ndarray[tuple[int, int], np.dtype[np.float_]]
 
 
-def _get_a_matrix_basis(
-    shape: tuple[_L0Inv, _L1Inv], bands_axis: TunnellingSimulationBandsAxis[_L2Inv]
-) -> tuple[
-    FundamentalAxis[_L0Inv],
-    FundamentalAxis[_L1Inv],
-    TunnellingSimulationBandsAxis[_L2Inv],
+def downsample_tunnelling_a_matrix(
+    matrix: TunnellingAMatrix[tuple[_AX0Inv, _AX1Inv, _AX2Inv]],
+    shape: tuple[_L0Inv, _L1Inv],
+) -> TunnellingAMatrix[
+    tuple[FundamentalAxis[_L0Inv], FundamentalAxis[_L1Inv], _AX2Inv]
 ]:
-    return (FundamentalAxis(shape[0]), FundamentalAxis(shape[1]), bands_axis)
+    """
+    Given a tunnelling a matrix, get an a matrix with a reduced grid shape.
+
+    Parameters
+    ----------
+    matrix : TunnellingAMatrix[tuple[_AX0Inv, _AX1Inv, _AX2Inv]]
+    shape : tuple[_L0Inv, _L1Inv]
+
+    Returns
+    -------
+    TunnellingAMatrix[tuple[FundamentalAxis[_L0Inv], FundamentalAxis[_L1Inv], _AX2Inv]]
+    """
+    util = BasisUtil(matrix["basis"])
+    n_final = np.prod([*shape, util.shape[2]])
+    return {
+        "basis": get_basis_from_shape(shape, matrix["basis"][2]),
+        "array": matrix["array"]
+        .reshape(*util.shape, *util.shape)[
+            : shape[0], : shape[1], :, : shape[0], : shape[1], :
+        ]
+        .reshape(n_final, n_final),
+    }
 
 
 @timed
 def get_tunnelling_a_matrix_from_function(
     shape: tuple[_L0Inv, _L1Inv],
     bands_axis: TunnellingSimulationBandsAxis[_L2Inv],
-    a_function: Callable[
-        [
-            int,
-            int,
-            tuple[int, int],
-            tuple[int, int],
-        ],
-        float,
-    ],
+    a_function: Callable[[int, int, tuple[int, int], tuple[int, int]], float],
 ) -> TunnellingAMatrix[
     tuple[
         FundamentalAxis[_L0Inv],
@@ -113,11 +132,7 @@ def get_tunnelling_a_matrix_from_function(
                 array[i, j] = a_function(
                     int(n0), n1, (0, 0), (d1_stacked[0], d1_stacked[1])
                 )
-    return {"basis": _get_a_matrix_basis(shape, bands_axis), "array": array}
-
-
-_AX0Inv = TypeVar("_AX0Inv", bound=AxisLike[Any, Any])
-_AX1Inv = TypeVar("_AX1Inv", bound=AxisLike[Any, Any])
+    return {"basis": get_basis_from_shape(shape, bands_axis), "array": array}
 
 
 def get_a_matrix_reduced_bands(

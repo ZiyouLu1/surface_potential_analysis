@@ -31,7 +31,7 @@ from surface_potential_analysis.wavepacket.eigenstate_conversion import (
 )
 from surface_potential_analysis.wavepacket.get_eigenstate import get_all_eigenstates
 from surface_potential_analysis.wavepacket.wavepacket import (
-    Wavepacket,
+    WavepacketWithEigenvalues,
     get_unfurled_basis,
 )
 
@@ -78,8 +78,9 @@ def _get_operator_between_states(
 
 
 def _localize_operator(
-    wavepacket: Wavepacket[_S0Inv, _B0Inv], operator: SingleBasisOperator[_B1Inv]
-) -> list[Wavepacket[_S0Inv, _B0Inv]]:
+    wavepacket: WavepacketWithEigenvalues[_S0Inv, _B0Inv],
+    operator: SingleBasisOperator[_B1Inv],
+) -> list[WavepacketWithEigenvalues[_S0Inv, _B0Inv]]:
     states = [
         convert_state_vector_to_basis(state, operator["basis"])
         for state in get_all_eigenstates(wavepacket)
@@ -98,8 +99,8 @@ def _localize_operator(
 
 
 def localize_position_operator(
-    wavepacket: Wavepacket[_S0Inv, _B0Inv]
-) -> list[Wavepacket[_S0Inv, _B0Inv]]:
+    wavepacket: WavepacketWithEigenvalues[_S0Inv, _B0Inv]
+) -> list[WavepacketWithEigenvalues[_S0Inv, _B0Inv]]:
     """
     Given a wavepacket generate a set of normalized wavepackets using the operator method.
 
@@ -119,7 +120,7 @@ def localize_position_operator(
 
 
 def localize_position_operator_many_band(
-    wavepackets: list[Wavepacket[_S0Inv, _B0Inv]]
+    wavepackets: list[WavepacketWithEigenvalues[_S0Inv, _B0Inv]]
 ) -> list[StateVector[Any]]:
     """
     Given a sequence of wavepackets at each band, get all possible eigenstates of position.
@@ -154,7 +155,7 @@ def localize_position_operator_many_band(
 
 
 def localize_position_operator_many_band_individual(
-    wavepackets: list[Wavepacket[_S0Inv, _B0Inv]]
+    wavepackets: list[WavepacketWithEigenvalues[_S0Inv, _B0Inv]]
 ) -> list[StateVector[Any]]:
     """
     Given a wavepacket generate a set of normalized wavepackets using the operator method.

@@ -6,10 +6,10 @@ import numpy as np
 
 if TYPE_CHECKING:
     from surface_potential_analysis.wavepacket.wavepacket import (
-        Wavepacket,
+        WavepacketWithEigenvalues,
     )
 
-    _WInv = TypeVar("_WInv", bound=Wavepacket[Any, Any])
+    _WInv = TypeVar("_WInv", bound=WavepacketWithEigenvalues[Any, Any])
 
 
 def calculate_normalization(wavepacket: _WInv) -> float:

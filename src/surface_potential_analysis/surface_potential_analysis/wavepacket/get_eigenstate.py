@@ -23,6 +23,7 @@ from surface_potential_analysis.util.util import slice_along_axis
 from surface_potential_analysis.wavepacket.conversion import convert_wavepacket_to_basis
 from surface_potential_analysis.wavepacket.wavepacket import (
     Wavepacket,
+    WavepacketWithEigenvalues,
     get_sample_basis,
     get_unfurled_basis,
 )
@@ -148,9 +149,9 @@ def _get_sampled_basis(
     )
 
 
-def get_eigenstate(
+def get_state_vector(
     wavepacket: Wavepacket[_S0Inv, _B0Inv], idx: SingleIndexLike
-) -> Eigenstate[tuple[WavepacketSampleAxis[Any, Any, Any], ...]]:
+) -> StateVector[tuple[WavepacketSampleAxis[Any, Any, Any], ...]]:
     """
     Get the eigenstate of a given wavepacket at a specific index.
 
@@ -171,14 +172,10 @@ def get_eigenstate(
     offset = util.get_stacked_index(idx)
 
     basis = _get_sampled_basis(converted["basis"], converted["shape"], offset)  # type: ignore[type-var]
-    return {
-        "basis": basis,
-        "vector": converted["vectors"][idx],
-        "eigenvalue": converted["eigenvalues"][idx],  # type: ignore[typeddict-item]
-    }
+    return {"basis": basis, "vector": converted["vectors"][idx]}
 
 
-def get_bloch_state(
+def get_bloch_state_vector(
     wavepacket: Wavepacket[_S0Inv, _B0Inv], idx: SingleIndexLike
 ) -> StateVector[_B0Inv]:
     """
@@ -200,7 +197,7 @@ def get_bloch_state(
 
 
 def get_all_eigenstates(
-    wavepacket: Wavepacket[_S0Inv, _B0Inv]
+    wavepacket: WavepacketWithEigenvalues[_S0Inv, _B0Inv]
 ) -> list[Eigenstate[AxisWithLengthBasis[Any]]]:
     """
     Get the eigenstate of a given wavepacket at a specific index.
@@ -224,8 +221,38 @@ def get_all_eigenstates(
             "eigenvalue": e,
         }
         for (v, e, *offset) in zip(
-            converted["vectors"], converted["eigenvalues"], *util.nk_points, strict=True
+            converted["vectors"],
+            wavepacket["eigenvalues"],
+            *util.nk_points,
+            strict=True,
         )
+    ]
+
+
+def get_all_states(
+    wavepacket: Wavepacket[_S0Inv, _B0Inv]
+) -> list[StateVector[AxisWithLengthBasis[Any]]]:
+    """
+    Get the eigenstate of a given wavepacket at a specific index.
+
+    Parameters
+    ----------
+    wavepacket : Wavepacket[_S0Inv, _B0Inv]
+
+    Returns
+    -------
+    Eigenstate[_B0Inv].
+    """
+    converted = convert_wavepacket_to_basis(
+        wavepacket, basis_as_fundamental_momentum_basis(wavepacket["basis"])
+    )
+    util = BasisUtil(get_sample_basis(converted["basis"], converted["shape"]))
+    return [
+        {
+            "basis": _get_sampled_basis(converted["basis"], converted["shape"], offset),
+            "vector": v,
+        }
+        for (v, *offset) in zip(converted["vectors"], *util.nk_points, strict=True)
     ]
 
 
@@ -251,7 +278,7 @@ def get_tight_binding_state(
     StateVector[tuple[FundamentalPositionAxis[Any, Any], ...]]
         The localized state under the tight binding approximation
     """
-    state_0 = convert_state_vector_to_position_basis(get_eigenstate(wavepacket, idx))
+    state_0 = convert_state_vector_to_position_basis(get_state_vector(wavepacket, idx))
     util = BasisUtil(state_0["basis"])
     if origin is None:
         idx_0: SingleStackedIndexLike = util.get_stacked_index(

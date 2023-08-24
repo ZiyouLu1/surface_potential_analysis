@@ -17,7 +17,10 @@ from ._tight_binding import (
     localize_tightly_bound_wavepacket_max_point,
     localize_tightly_bound_wavepacket_two_point_max,
 )
-from ._wannier90 import localize_wavepacket_wannier90
+from ._wannier90 import (
+    localize_wavepacket_wannier90,
+    localize_wavepacket_wannier90_many_band,
+)
 
 __all__ = [
     "localize_position_operator",
@@ -31,4 +34,5 @@ __all__ = [
     "localize_tightly_bound_wavepacket_max_point",
     "localize_tightly_bound_wavepacket_two_point_max",
     "localize_wavepacket_wannier90",
+    "localize_wavepacket_wannier90_many_band",
 ]

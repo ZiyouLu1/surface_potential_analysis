@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, TypeVar, Unpack, overload
+from typing import TYPE_CHECKING, Any, Literal, TypeVar, Unpack, overload
 
 import numpy as np
 
@@ -19,10 +19,9 @@ from surface_potential_analysis.util.decorators import timed
 from surface_potential_analysis.wavepacket.conversion import (
     convert_wavepacket_to_position_basis,
 )
-from surface_potential_analysis.wavepacket.get_eigenstate import get_eigenstate
+from surface_potential_analysis.wavepacket.get_eigenstate import get_state_vector
 from surface_potential_analysis.wavepacket.wavepacket import (
     Wavepacket,
-    Wavepacket3dWith2dSamples,
     get_wavepacket_sample_fractions,
 )
 
@@ -156,12 +155,11 @@ def localize_tightly_bound_wavepacket_idx(
         "basis": wavepacket["basis"],
         "shape": wavepacket["shape"],
         "vectors": fixed_eigenvectors,
-        "eigenvalues": wavepacket["eigenvalues"],
     }
 
 
 def get_wavepacket_two_points(
-    wavepacket: Wavepacket3dWith2dSamples[_NS0Inv, _NS1Inv, _B3d0Inv],
+    wavepacket: Wavepacket[tuple[_NS0Inv, _NS1Inv, Literal[1]], _B3d0Inv],
     offset: tuple[int, int] = (0, 0),
 ) -> tuple[SingleStackedIndexLike, SingleStackedIndexLike]:
     """
@@ -180,7 +178,7 @@ def get_wavepacket_two_points(
     util = BasisUtil(wavepacket["basis"])
     origin = (util.shape[0] * offset[0], util.shape[1] * offset[1], 0)
 
-    converted = convert_state_vector_to_position_basis(get_eigenstate(wavepacket, 0))  # type: ignore[arg-type,var-annotated]
+    converted = convert_state_vector_to_position_basis(get_state_vector(wavepacket, 0))  # type: ignore[arg-type,var-annotated]
     converted_util = BasisUtil(converted["basis"])
     idx_0: SingleStackedIndexLike = converted_util.get_stacked_index(
         np.argmax(np.abs(converted["vector"]), axis=-1)
@@ -199,10 +197,10 @@ def _wrap_phases(
 
 @timed
 def localize_tightly_bound_wavepacket_two_point_max(
-    wavepacket: Wavepacket3dWith2dSamples[_NS0Inv, _NS1Inv, _B3d0Inv],
+    wavepacket: Wavepacket[tuple[_NS0Inv, _NS1Inv, Literal[1]], _B3d0Inv],
     offset: tuple[int, int] = (0, 0),
     angle: float = 0,
-) -> Wavepacket3dWith2dSamples[_NS0Inv, _NS1Inv, _B3d0Inv]:
+) -> Wavepacket[tuple[_NS0Inv, _NS1Inv, Literal[1]], _B3d0Inv]:
     """
     Normalize a wavepacket using a 'two-point' calculation.
 
@@ -279,7 +277,6 @@ def localize_tightly_bound_wavepacket_two_point_max(
         "basis": wavepacket["basis"],
         "shape": wavepacket["shape"],
         "vectors": fixed_eigenvectors,
-        "eigenvalues": wavepacket["eigenvalues"],
     }
 
 
@@ -306,7 +303,7 @@ def localize_tightly_bound_wavepacket_max_point(
     Wavepacket[_NS0Inv, _NS1Inv, _B3d0Inv]
         Normalized wavepacket
     """
-    converted = convert_state_vector_to_position_basis(get_eigenstate(wavepacket, 0))
+    converted = convert_state_vector_to_position_basis(get_state_vector(wavepacket, 0))
     max_idx = np.argmax(np.abs(converted["vector"]), axis=-1)
     max_idx = BasisUtil(converted["basis"]).get_stacked_index(max_idx)
     max_idx = wrap_index_around_origin(wavepacket["basis"], max_idx, axes=(0, 1))
@@ -320,6 +317,5 @@ def localize_tightly_bound_wavepacket_max_point(
     return {  # type: ignore[return-value]
         "basis": wavepacket["basis"],
         "vectors": fixed_eigenvectors,
-        "eigenvalues": wavepacket["eigenvalues"],
         "shape": wavepacket["shape"],
     }

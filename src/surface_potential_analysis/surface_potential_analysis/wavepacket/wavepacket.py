@@ -18,10 +18,12 @@ from surface_potential_analysis.basis.util import AxisWithLengthBasisUtil
 from surface_potential_analysis.state_vector.eigenstate_calculation import (
     calculate_eigenvectors_hermitian,
 )
+from surface_potential_analysis.state_vector.eigenvalue_list import (
+    EigenvalueList,
+)
 
 if TYPE_CHECKING:
     from collections.abc import Callable
-    from pathlib import Path
 
     from surface_potential_analysis.operator.operator import SingleBasisOperator
     from surface_potential_analysis.state_vector.eigenstate_collection import (
@@ -57,73 +59,21 @@ class Wavepacket(TypedDict, Generic[_S0Inv, _B0Inv]):
     # Vectors such that vectors.reshape(*shape, -1)[is0,is1, ..., :]
     # gives the eigenstate for the sample is0, is1, ...
     vectors: np.ndarray[tuple[int, int], np.dtype[np.complex_]]
-    # Energies such that energies.reshape(*shape)[is0,is1, ..., isn]
-    # gives the energies for the sample is0, is1, ...
-    eigenvalues: np.ndarray[tuple[int], np.dtype[np.float_]]
 
 
-_S03dInv = TypeVar("_S03dInv", bound=tuple[int, int, int])
+class WavepacketWithEigenvalues(EigenvalueList[int], Wavepacket[_S0Inv, _B0Inv]):
+    """represents an approximation of a Wannier function."""
 
 
-Wavepacket3d = Wavepacket[_S03dInv, _B3d0Inv]
-"""represents an approximation of a Wannier function."""
-
-
-_A3d0Inv = TypeVar("_A3d0Inv", bound=AxisWithLengthLike3d[Any, Any])
-_A3d1Inv = TypeVar("_A3d1Inv", bound=AxisWithLengthLike3d[Any, Any])
-_A3d2Inv = TypeVar("_A3d2Inv", bound=AxisWithLengthLike3d[Any, Any])
-
-Wavepacket3dWith2dSamples = Wavepacket3d[
+PositionBasisWavepacket3d = WavepacketWithEigenvalues[
     tuple[_NS0Inv, _NS1Inv, Literal[1]],
-    _B3d0Inv,
-]
-
-WavepacketWithBasis3d = Wavepacket3d[
-    tuple[_NS0Inv, _NS1Inv, Literal[1]],
-    Basis3d[_A3d0Inv, _A3d1Inv, _A3d2Inv],
-]
-
-
-PositionBasisWavepacket3d = Wavepacket3dWith2dSamples[
-    _NS0Inv,
-    _NS1Inv,
     FundamentalPositionBasis3d[_L0Inv, _L1Inv, _L2Inv],
 ]
 
-MomentumBasisWavepacket3d = Wavepacket3dWith2dSamples[
-    _NS0Inv,
-    _NS1Inv,
+MomentumBasisWavepacket3d = WavepacketWithEigenvalues[
+    tuple[_NS0Inv, _NS1Inv, Literal[1]],
     FundamentalMomentumBasis3d[_L0Inv, _L1Inv, _L2Inv],
 ]
-
-
-def save_wavepacket(path: Path, wavepacket: Wavepacket[Any, Any]) -> None:
-    """
-    Save a wavepacket in the npy format.
-
-    Parameters
-    ----------
-    path : Path
-    wavepacket :  Wavepacket[Any, Any]
-    """
-    np.save(path, wavepacket)
-
-
-def load_wavepacket(
-    path: Path,
-) -> Wavepacket[Any, Any]:
-    """
-    Load a wavepacket from the npy format.
-
-    Parameters
-    ----------
-    path : Path
-
-    Returns
-    -------
-    Wavepacket[Any, Any, Any]
-    """
-    return np.load(path, allow_pickle=True)[()]  # type: ignore[no-any-return]
 
 
 def get_sample_basis(
@@ -252,7 +202,7 @@ def get_wavepacket_sample_frequencies_first_brillouin_zone(
 
 
 def as_eigenstate_collection(
-    wavepacket: Wavepacket3dWith2dSamples[_NS0Inv, _NS1Inv, _B3d0Inv]
+    wavepacket: WavepacketWithEigenvalues[_S0Inv, _B3d0Inv]
 ) -> EigenstateColllection3d[_B3d0Inv, int]:
     """
     Convert a wavepacket into an eigenstate collection.
@@ -278,7 +228,7 @@ def as_eigenstate_collection(
 def _from_eigenstate_collection(
     collection: EigenstateColllection3d[_B3d0Inv, _L0Inv],
     shape: _S0Inv,
-) -> Wavepacket[_S0Inv, _B3d0Inv]:
+) -> WavepacketWithEigenvalues[_S0Inv, _B3d0Inv]:
     return {
         "basis": collection["basis"],
         "shape": shape,
@@ -297,7 +247,7 @@ def generate_wavepacket(
     shape: _S0Inv,
     *,
     save_bands: np.ndarray[tuple[int], np.dtype[np.int_]] | None = None,
-) -> list[Wavepacket[_S0Inv, _B0Inv]]:
+) -> list[WavepacketWithEigenvalues[_S0Inv, _B0Inv]]:
     """
     Generate a wavepacket with the given number of samples.
 
@@ -320,7 +270,7 @@ def generate_wavepacket(
     n_samples = np.prod(shape)
     vectors = np.empty((n_samples, basis_size), dtype=np.complex128)
     energies = np.empty(n_samples, dtype=np.float_)
-    out: list[Wavepacket[_S0Inv, _B0Inv]] = [
+    out: list[WavepacketWithEigenvalues[_S0Inv, _B0Inv]] = [
         {
             "basis": h["basis"],
             "vectors": vectors.copy(),

@@ -8,7 +8,7 @@ from surface_potential_analysis.wavepacket.localization import (
     localize_position_operator,
 )
 from surface_potential_analysis.wavepacket.wavepacket import (
-    Wavepacket,
+    WavepacketWithEigenvalues,
     generate_wavepacket,
 )
 
@@ -26,7 +26,7 @@ if TYPE_CHECKING:
     _L0Inv = TypeVar("_L0Inv", bound=int)
     _L1Inv = TypeVar("_L1Inv", bound=int)
 
-    _SodiumWavepacket = Wavepacket[
+    _SodiumWavepacket = WavepacketWithEigenvalues[
         tuple[_L0Inv], tuple[FundamentalTransformedPositionAxis1d[_L1Inv]]
     ]
 

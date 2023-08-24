@@ -36,8 +36,8 @@ def plot_first_six_wavepackets() -> None:
 
     for i in range(0, 13):
         wavepacket = get_wavepacket((12,), (600,), i)
-        wavepacket = localize_tightly_bound_wavepacket_idx(wavepacket, idx=(0,))
-        _, _, ln = plot_wavepacket_1d_x(wavepacket, ax=ax)
+        localized = localize_tightly_bound_wavepacket_idx(wavepacket, idx=(0,))
+        _, _, ln = plot_wavepacket_1d_x(localized, ax=ax)
         ln.set_label(f"n={i}")
 
     ax.legend()

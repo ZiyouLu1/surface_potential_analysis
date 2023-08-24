@@ -8,7 +8,8 @@ from surface_potential_analysis.wavepacket.localization import (
     localize_tightly_bound_wavepacket_two_point_max,
 )
 from surface_potential_analysis.wavepacket.wavepacket import (
-    Wavepacket3dWith2dSamples,
+    Wavepacket,
+    WavepacketWithEigenvalues,
     generate_wavepacket,
 )
 
@@ -29,9 +30,16 @@ if TYPE_CHECKING:
     )
     from surface_potential_analysis.operator.operator import SingleBasisOperator
 
-    _HydrogenCopperWavepacket = Wavepacket3dWith2dSamples[
-        Literal[12],
-        Literal[12],
+    _HydrogenCopperWavepacketWithEigenvalues = WavepacketWithEigenvalues[
+        tuple[Literal[12], Literal[12], Literal[1]],
+        Basis3d[
+            TransformedPositionAxis[Literal[21], Literal[21], Literal[3]],
+            TransformedPositionAxis[Literal[21], Literal[21], Literal[3]],
+            ExplicitAxis[Literal[250], Literal[15], Literal[3]],
+        ],
+    ]
+    _HydrogenCopperWavepacket = Wavepacket[
+        tuple[Literal[12], Literal[12], Literal[1]],
         Basis3d[
             TransformedPositionAxis[Literal[21], Literal[21], Literal[3]],
             TransformedPositionAxis[Literal[21], Literal[21], Literal[3]],
@@ -41,7 +49,7 @@ if TYPE_CHECKING:
 
 
 @npy_cached(get_data_path("wavepacket/wavepacket_hydrogen.npy"), load_pickle=True)  # type: ignore[misc]
-def get_all_wavepackets_hydrogen() -> list[_HydrogenCopperWavepacket]:
+def get_all_wavepackets_hydrogen() -> list[_HydrogenCopperWavepacketWithEigenvalues]:
     def _hamiltonian_generator(
         bloch_fraction: np.ndarray[tuple[Literal[3]], np.dtype[np.float_]]
     ) -> SingleBasisOperator[Any]:
@@ -53,9 +61,7 @@ def get_all_wavepackets_hydrogen() -> list[_HydrogenCopperWavepacket]:
 
     save_bands = np.arange(20)
     return generate_wavepacket(
-        _hamiltonian_generator,
-        shape=(12, 12, 1),
-        save_bands=save_bands,
+        _hamiltonian_generator, shape=(12, 12, 1), save_bands=save_bands
     )
 
 
@@ -64,7 +70,7 @@ def _get_wavepacket_cache_h(band: int) -> Path:
 
 
 @npy_cached(_get_wavepacket_cache_h, load_pickle=True)
-def get_wavepacket_hydrogen(band: int) -> _HydrogenCopperWavepacket:
+def get_wavepacket_hydrogen(band: int) -> _HydrogenCopperWavepacketWithEigenvalues:
     return get_all_wavepackets_hydrogen()[band]
 
 

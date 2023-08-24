@@ -14,7 +14,7 @@ from .s4_wavepacket import (
 from .surface_data import save_figure
 
 
-def plot_hydrogen_wavepacket_at_x2_max() -> None:
+def plot_hydrogen_wavepacket() -> None:
     for band in range(0, 6):
         wavepacket = get_two_point_normalized_wavepacket_hydrogen(band)
         fig, ax, _ = plot_wavepacket_2d_x_max(wavepacket, (0, 1), scale="symlog")
@@ -23,11 +23,10 @@ def plot_hydrogen_wavepacket_at_x2_max() -> None:
     input()
 
 
-def plot_wannier90_localized_wavepacket_hydrogen() -> None:
-    for band in [1]:
+def plot_projection_localized_wavepacket_hydrogen() -> None:
+    for band in [2]:
         wavepacket = get_wavepacket_hydrogen(band)
-        print(wavepacket["basis"])
-        wavepacket = localize_single_point_projection(wavepacket)
-        fig, ax, _ = plot_wavepacket_2d_x_max(wavepacket, (0, 1), scale="symlog")
+        localized = localize_single_point_projection(wavepacket)
+        fig, ax, _ = plot_wavepacket_2d_x_max(localized, (0, 1), scale="symlog")
         fig.show()
         input()

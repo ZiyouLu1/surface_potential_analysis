@@ -19,8 +19,8 @@ from surface_potential_analysis.state_vector.state_vector import (
     calculate_inner_product,
 )
 from surface_potential_analysis.wavepacket.get_eigenstate import (
-    get_all_eigenstates,
-    get_eigenstate,
+    get_all_states,
+    get_state_vector,
     get_tight_binding_state,
 )
 
@@ -94,12 +94,11 @@ def localize_wavepacket_projection(
     Wavepacket[_S0Inv, _B0Inv]
     """
     coefficients = _get_normalized_projection_coefficients(
-        projection, get_all_eigenstates(wavepacket)
+        projection, get_all_states(wavepacket)
     )
 
     return {
         "basis": wavepacket["basis"],
-        "eigenvalues": wavepacket["eigenvalues"],
         "shape": wavepacket["shape"],
         "vectors": wavepacket["vectors"] / coefficients[:, np.newaxis],
     }
@@ -133,7 +132,7 @@ def _get_single_point_state(
     idx: SingleIndexLike = 0,
     origin: SingleStackedIndexLike | None = None,
 ) -> StateVector[tuple[FundamentalPositionAxis[Any, Any], ...]]:
-    state_0 = convert_state_vector_to_position_basis(get_eigenstate(wavepacket, idx))
+    state_0 = convert_state_vector_to_position_basis(get_state_vector(wavepacket, idx))
     util = BasisUtil(state_0["basis"])
     if origin is None:
         idx_0: SingleStackedIndexLike = util.get_stacked_index(
@@ -191,7 +190,7 @@ def get_exponential_state(
     StateVector[tuple[FundamentalPositionAxis[Any, Any], ...]]
         The localized state under the tight binding approximation
     """
-    state_0 = convert_state_vector_to_position_basis(get_eigenstate(wavepacket, 0))
+    state_0 = convert_state_vector_to_position_basis(get_state_vector(wavepacket, 0))
 
     util = BasisUtil(state_0["basis"])
     idx_0: SingleStackedIndexLike = util.get_stacked_index(
@@ -219,7 +218,7 @@ def _get_exponential_decay_state(
 ) -> StateVector[tuple[FundamentalPositionAxis[Any, Any], ...]]:
     exponential = get_exponential_state(wavepacket)
     tight_binding = convert_state_vector_to_position_basis(
-        get_eigenstate(wavepacket, 0)
+        get_state_vector(wavepacket, 0)
     )
     out: StateVector[tuple[FundamentalPositionAxis[Any, Any], ...]] = {
         "basis": exponential["basis"],

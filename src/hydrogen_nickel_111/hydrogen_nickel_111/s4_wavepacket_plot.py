@@ -15,9 +15,13 @@ from surface_potential_analysis.state_vector.plot import (
     plot_state_2d_x_max,
     plot_state_along_path,
 )
+from surface_potential_analysis.wavepacket.conversion import convert_wavepacket_to_shape
 from surface_potential_analysis.wavepacket.get_eigenstate import (
-    get_eigenstate,
+    get_state_vector,
     get_tight_binding_state,
+)
+from surface_potential_analysis.wavepacket.localization import (
+    localize_wavepacket_wannier90_many_band,
 )
 from surface_potential_analysis.wavepacket.localization._tight_binding import (
     get_wavepacket_two_points,
@@ -72,47 +76,47 @@ def plot_nickel_wavepacket_energies() -> None:
 def animate_wavepacket_eigenstates_x1x2() -> None:
     wavepacket = get_wavepacket_hydrogen(0)
 
-    eigenstate: StateVector3d[Any] = get_eigenstate(wavepacket, (0, 0))
-    eigenstate["basis"] = (
+    state_1: StateVector3d[Any] = get_state_vector(wavepacket, (0, 0))
+    state_1["basis"] = (
         FundamentalTransformedPositionAxis3d(
-            eigenstate["basis"][0].delta_x, eigenstate["basis"][0].n
+            state_1["basis"][0].delta_x, state_1["basis"][0].n
         ),
         FundamentalTransformedPositionAxis3d(
-            eigenstate["basis"][1].delta_x, eigenstate["basis"][1].n
+            state_1["basis"][1].delta_x, state_1["basis"][1].n
         ),
-        eigenstate["basis"][2],
+        state_1["basis"][2],
     )
-    fig, _, _anim0 = animate_state_x1x2(eigenstate, measure="real")
+    fig, _, _anim0 = animate_state_x1x2(state_1, measure="real")
     fig.show()
 
     wavepacket = get_wavepacket_hydrogen(1)
 
-    eigenstate2: StateVector3d[Any] = get_eigenstate(wavepacket, (0, 0))
-    eigenstate2["basis"] = (
+    state_2: StateVector3d[Any] = get_state_vector(wavepacket, (0, 0))
+    state_2["basis"] = (
         FundamentalTransformedPositionAxis3d(
-            eigenstate2["basis"][0].delta_x, eigenstate2["basis"][0].n
+            state_2["basis"][0].delta_x, state_2["basis"][0].n
         ),
         FundamentalTransformedPositionAxis3d(
-            eigenstate2["basis"][1].delta_x, eigenstate2["basis"][1].n
+            state_2["basis"][1].delta_x, state_2["basis"][1].n
         ),
-        eigenstate2["basis"][2],
+        state_2["basis"][2],
     )
-    fig, _, _anim1 = animate_state_x1x2(eigenstate2, measure="real")
+    fig, _, _anim1 = animate_state_x1x2(state_2, measure="real")
     fig.show()
 
     wavepacket = get_wavepacket_hydrogen(2)
 
-    eigenstate3: StateVector3d[Any] = get_eigenstate(wavepacket, (0, 0))
-    eigenstate3["basis"] = (
+    state_3: StateVector3d[Any] = get_state_vector(wavepacket, (0, 0))
+    state_3["basis"] = (
         FundamentalTransformedPositionAxis3d(
-            eigenstate3["basis"][0].delta_x, eigenstate3["basis"][0].n
+            state_3["basis"][0].delta_x, state_3["basis"][0].n
         ),
         FundamentalTransformedPositionAxis3d(
-            eigenstate3["basis"][1].delta_x, eigenstate3["basis"][1].n
+            state_3["basis"][1].delta_x, state_3["basis"][1].n
         ),
-        eigenstate3["basis"][2],
+        state_3["basis"][2],
     )
-    fig, _, _anim2 = animate_state_x1x2(eigenstate3, measure="real")
+    fig, _, _anim2 = animate_state_x1x2(state_3, measure="real")
     fig.show()
     input()
 
@@ -225,12 +229,9 @@ def plot_two_point_wavepacket_with_idx() -> None:
 def plot_nickel_wavepacket_eigenstate() -> None:
     for band in range(20):
         wavepacket = get_wavepacket_hydrogen(band)
-        eigenstate = get_eigenstate(wavepacket, 0)
-        _, _, x2_max = BasisUtil(eigenstate["basis"]).get_stacked_index(
-            np.argmax(np.abs(eigenstate["vector"]))
-        )
+        state = get_state_vector(wavepacket, 0)
 
-        fig, ax, _ = plot_state_2d_x(eigenstate, (0, 1), (x2_max,), measure="abs")
+        fig, ax, _ = plot_state_2d_x_max(state, (0, 1), measure="abs")
         fig.show()
 
     input()
@@ -238,7 +239,7 @@ def plot_nickel_wavepacket_eigenstate() -> None:
 
 def plot_phase_around_origin() -> None:
     wavepacket = get_wavepacket_hydrogen(2)
-    eigenstate = get_eigenstate(wavepacket, 0)
+    eigenstate = get_state_vector(wavepacket, 0)
 
     path = np.array(
         [
@@ -310,8 +311,33 @@ def plot_single_point_projection_localized_wavepacket_hydrogen() -> None:
 
 
 def plot_wannier90_localized_wavepacket_hydrogen() -> None:
-    for band in [3]:
+    for band in [0, 1, 2, 3, 4, 5]:
         wavepacket = get_wannier90_localized_wavepacket_hydrogen(band)
-        fig, ax, _ = plot_wavepacket_2d_x_max(wavepacket, (0, 1), scale="symlog")
+        fig, _, _ = plot_wavepacket_2d_x_max(wavepacket, (0, 1), scale="symlog")
+        fig.show()
+
+        fig, _, _ = plot_wavepacket_2d_x_max(wavepacket, (1, 2), scale="symlog")
         fig.show()
         input()
+
+
+def plot_wannier90_many_band_localized_wavepacket_hydrogen() -> None:
+    wavepackets = [
+        convert_wavepacket_to_shape(get_wavepacket_hydrogen(2), (4, 4, 1)),
+        convert_wavepacket_to_shape(get_wavepacket_hydrogen(3), (4, 4, 1)),
+        convert_wavepacket_to_shape(get_wavepacket_hydrogen(6), (4, 4, 1)),
+    ]
+    localized = localize_wavepacket_wannier90_many_band(wavepackets)
+
+    fig, _, _ = plot_wavepacket_2d_x_max(localized[0], (0, 1), scale="symlog")
+    fig.show()
+
+    fig, _, _ = plot_wavepacket_2d_x_max(localized[0], (1, 2), scale="symlog")
+    fig.show()
+
+    fig, _, _ = plot_wavepacket_2d_x_max(localized[1], (0, 1), scale="symlog")
+    fig.show()
+
+    fig, _, _ = plot_wavepacket_2d_x_max(localized[1], (1, 2), scale="symlog")
+    fig.show()
+    input()

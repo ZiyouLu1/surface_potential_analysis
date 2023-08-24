@@ -12,7 +12,9 @@ from surface_potential_analysis.wavepacket.localization._tight_binding import (
 )
 
 if TYPE_CHECKING:
-    from surface_potential_analysis.wavepacket.wavepacket import Wavepacket
+    from surface_potential_analysis.wavepacket.wavepacket import (
+        WavepacketWithEigenvalues,
+    )
 
     pass
 
@@ -44,7 +46,7 @@ class TunnellingSimulationBandsAxis(FundamentalAxis[_L0_co]):
     @classmethod
     def from_wavepackets(
         cls,  # noqa: ANN102
-        wavepacket_list: list[Wavepacket[Any, Any]],
+        wavepacket_list: list[WavepacketWithEigenvalues[Any, Any]],
     ) -> Self:
         """
         Generate a basis given a list of wavepackets.
@@ -71,3 +73,29 @@ Basis used to represent the tunnelling simulation state
 
 First two axes represent the shape of the supercell, last axis is the band
 """
+
+_L0Inv = TypeVar("_L0Inv", bound=int)
+_L1Inv = TypeVar("_L1Inv", bound=int)
+_L2Inv = TypeVar("_L2Inv", bound=int)
+
+
+def get_basis_from_shape(
+    shape: tuple[_L0Inv, _L1Inv], bands_axis: TunnellingSimulationBandsAxis[_L2Inv]
+) -> tuple[
+    FundamentalAxis[_L0Inv],
+    FundamentalAxis[_L1Inv],
+    TunnellingSimulationBandsAxis[_L2Inv],
+]:
+    """
+    Get the simulation basis from the shape and TunnellingSimulationBandsAxis.
+
+    Parameters
+    ----------
+    shape : tuple[_L0Inv, _L1Inv]
+    bands_axis : TunnellingSimulationBandsAxis[_L2Inv]
+
+    Returns
+    -------
+    tuple[FundamentalAxis[_L0Inv], FundamentalAxis[_L1Inv], TunnellingSimulationBandsAxis[_L2Inv]]
+    """
+    return (FundamentalAxis(shape[0]), FundamentalAxis(shape[1]), bands_axis)

@@ -11,7 +11,6 @@ from surface_potential_analysis.basis.util import AxisWithLengthBasisUtil
 from surface_potential_analysis.wavepacket.conversion import convert_wavepacket_to_basis
 from surface_potential_analysis.wavepacket.wavepacket import (
     Wavepacket,
-    Wavepacket3d,
     get_furled_basis,
     get_unfurled_basis,
 )
@@ -19,7 +18,6 @@ from surface_potential_analysis.wavepacket.wavepacket import (
 if TYPE_CHECKING:
     from surface_potential_analysis.axis.axis import (
         FundamentalTransformedPositionAxis,
-        FundamentalTransformedPositionAxis3d,
     )
     from surface_potential_analysis.axis.axis_like import AxisWithLengthLike3d
     from surface_potential_analysis.basis.basis import AxisWithLengthBasis, Basis3d
@@ -27,8 +25,6 @@ if TYPE_CHECKING:
         StateVector,
         StateVector3d,
     )
-
-    from .wavepacket import WavepacketWithBasis3d
 
     _NS0Inv = TypeVar("_NS0Inv", bound=int)
     _NS1Inv = TypeVar("_NS1Inv", bound=int)
@@ -57,12 +53,13 @@ def furl_eigenstate(
         ]
     ],
     shape: tuple[_NS0Inv, _NS1Inv, Literal[1]],
-) -> WavepacketWithBasis3d[
-    _NS0Inv,
-    _NS1Inv,
-    FundamentalTransformedPositionAxis3d[int],
-    FundamentalTransformedPositionAxis3d[int],
-    _A3d2Inv,
+) -> Wavepacket[
+    tuple[_NS0Inv, _NS1Inv, Literal[1]],
+    tuple[
+        FundamentalTransformedPositionAxis[_L0Inv, Literal[3]],
+        FundamentalTransformedPositionAxis[_L1Inv, Literal[3]],
+        _A3d2Inv,
+    ],
 ]:
     """
     Convert an eigenstate into a wavepacket of a smaller unit cell.
@@ -137,7 +134,7 @@ def _unfurl_momentum_basis_wavepacket(
 
 @overload
 def unfurl_wavepacket(
-    wavepacket: Wavepacket3d[_S3d0Inv, _B3d0Inv]
+    wavepacket: Wavepacket[_S3d0Inv, _B3d0Inv]
 ) -> StateVector[
     tuple[
         FundamentalTransformedPositionAxis[Any, Literal[3]],
