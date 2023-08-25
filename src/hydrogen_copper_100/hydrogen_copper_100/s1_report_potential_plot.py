@@ -13,7 +13,10 @@ from surface_potential_analysis.potential.plot import (
 from surface_potential_analysis.potential.plot_uneven_potential import (
     plot_uneven_potential_z_comparison_100,
 )
-from surface_potential_analysis.potential.potential import normalize_potential
+from surface_potential_analysis.potential.potential import (
+    UnevenPotential3dZAxis,
+    normalize_potential,
+)
 
 from .s1_potential import (
     get_interpolated_potential,
@@ -56,7 +59,9 @@ def plot_copper_potential_interpolation() -> None:
     potential["basis"] = (
         potential["basis"][0],
         potential["basis"][1],
-        potential["basis"][2] - potential["basis"][2][0],
+        UnevenPotential3dZAxis(
+            potential["basis"][2].z_points - potential["basis"][2].z_points[0]
+        ),
     )
     _, _, lines = plot_uneven_potential_z_comparison_100(potential, ax=ax)
     for i, ln in enumerate(lines):

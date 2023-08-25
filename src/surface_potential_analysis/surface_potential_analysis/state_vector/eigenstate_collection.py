@@ -1,10 +1,10 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Generic, TypedDict, TypeVar
+from typing import TYPE_CHECKING, Generic, TypedDict, TypeVar
 
 import numpy as np
 
-from surface_potential_analysis.basis.basis import Basis, Basis1d, Basis2d, Basis3d
+from surface_potential_analysis.basis.basis import Basis
 from surface_potential_analysis.basis.util import BasisUtil
 from surface_potential_analysis.state_vector.state_vector import StateVector
 
@@ -21,10 +21,6 @@ _L0Inv = TypeVar("_L0Inv", bound=int)
 _B0_co = TypeVar("_B0_co", bound=Basis, covariant=True)
 _B0Inv = TypeVar("_B0Inv", bound=Basis)
 
-_B1d0_co = TypeVar("_B1d0_co", bound=Basis1d[Any], covariant=True)
-_B2d0_co = TypeVar("_B2d0_co", bound=Basis2d[Any, Any], covariant=True)
-_B3d0_co = TypeVar("_B3d0_co", bound=Basis3d[Any, Any, Any], covariant=True)
-
 
 class Eigenstate(StateVector[_B0_co], TypedDict):
     """A State vector which is the eigenvector of some operator."""
@@ -33,36 +29,16 @@ class Eigenstate(StateVector[_B0_co], TypedDict):
 
 
 class EigenstateColllection(TypedDict, Generic[_B0_co, _L0Inv]):
-    """Represents a collection of eigenstates, each with the same basis but with _L0Inv different bloch phases."""
+    """
+    Represents a collection of eigenstates, each with the same basis but with _L0Inv different bloch phases.
+
+    NOTE: bloch_fractions: np.ndarray[tuple[_L0Inv, Literal[_NdInv]], np.dtype[np.float_]].
+    """
 
     basis: _B0_co
     bloch_fractions: np.ndarray[tuple[_L0Inv, int], np.dtype[np.float_]]
     vectors: np.ndarray[tuple[_L0Inv, int, int], np.dtype[np.complex_]]
     eigenvalues: np.ndarray[tuple[_L0Inv, int], np.dtype[np.complex_]]
-
-
-EigenstateColllection1d = EigenstateColllection[_B1d0_co, _L0Inv]
-"""
-Represents a collection of eigenstates, each with the same basis but a variety of different bloch phases.
-
-NOTE: bloch_fractions: np.ndarray[tuple[_L0Inv, Literal[1]], np.dtype[np.float_]].
-"""
-
-
-EigenstateColllection2d = EigenstateColllection[_B2d0_co, _L0Inv]
-"""
-Represents a collection of eigenstates, each with the same basis but a variety of different bloch phases.
-
-NOTE: bloch_fractions: np.ndarray[tuple[_L0Inv, Literal[2]], np.dtype[np.float_]]
-"""
-
-
-EigenstateColllection3d = EigenstateColllection[_B3d0_co, _L0Inv]
-"""
-Represents a collection of eigenstates, each with the same basis but a variety of different bloch phases.
-
-NOTE: bloch_fractions: np.ndarray[tuple[_L0Inv, Literal[3]], np.dtype[np.float_]]
-"""
 
 
 def calculate_eigenstate_collection(

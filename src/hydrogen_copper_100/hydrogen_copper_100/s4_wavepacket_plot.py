@@ -12,11 +12,14 @@ from surface_potential_analysis.wavepacket.localization import (
 )
 from surface_potential_analysis.wavepacket.plot import (
     animate_wavepacket_x0x1,
+    plot_wavepacket_2d_x_max,
     plot_wavepacket_sample_frequencies,
-    plot_wavepacket_x0x1,
 )
 
-from .s4_wavepacket import get_wavepacket_hydrogen
+from .s4_wavepacket import (
+    get_wannier90_localized_wavepacket_hydrogen,
+    get_wavepacket_hydrogen,
+)
 from .surface_data import save_figure
 
 
@@ -29,25 +32,23 @@ def plot_wavepacket_points() -> None:
     input()
 
 
-def plot_wavepacket_at_z_origin() -> None:
-    wavepacket = get_wavepacket_hydrogen(0)
-    normalized = localize_tightly_bound_wavepacket_idx(wavepacket)
+def plot_wavepacket_hydrogen() -> None:
+    for band in [0, 2]:
+        wavepacket = get_wavepacket_hydrogen(band)
+        fig, _, _ = plot_wavepacket_2d_x_max(wavepacket, (0, 1), scale="symlog")
+        fig.show()
+        input()
 
-    fig, ax, _ = plot_wavepacket_x0x1(normalized, 0, measure="abs")
-    fig.show()
-    ax.set_title("Plot of abs(wavefunction) for z=0")
-    save_figure(fig, "wavepacket_grid_z_origin.png")
 
-    fig, ax, _ = plot_wavepacket_x0x1(normalized, 0, measure="real")
-    fig.show()
-    ax.set_title("Plot of real(wavefunction) for z=0")
-    save_figure(fig, "wavepacket_grid_z_origin_real.png")
+def plot_wannier90_localized_wavepacket_hydrogen() -> None:
+    for band in [0, 2]:
+        wavepacket = get_wannier90_localized_wavepacket_hydrogen(band)
+        fig, _, _ = plot_wavepacket_2d_x_max(wavepacket, (0, 1), scale="symlog")
+        fig.show()
 
-    fig, ax, _ = plot_wavepacket_x0x1(normalized, 0, measure="imag")
-    fig.show()
-    ax.set_title("Plot of imag(wavefunction) for z=0")
-    save_figure(fig, "wavepacket_grid_z_origin_imag.png")
-    input()
+        fig, _, _ = plot_wavepacket_2d_x_max(wavepacket, (1, 2), scale="symlog")
+        fig.show()
+        input()
 
 
 def plot_wavepacket_3d_x() -> None:

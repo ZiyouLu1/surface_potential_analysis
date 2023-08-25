@@ -10,7 +10,7 @@ from surface_potential_analysis.basis.plot import (
 from surface_potential_analysis.basis.sho_basis import (
     infinate_sho_axis_3d_from_config,
 )
-from surface_potential_analysis.basis.util import AxisWithLengthBasisUtil
+from surface_potential_analysis.basis.util import BasisUtil
 from surface_potential_analysis.potential.plot import (
     animate_potential_x0x1,
     plot_potential_1d_x2_comparison_100,
@@ -194,10 +194,9 @@ def compare_bridge_hollow_energy() -> None:
     )
 
     raw_data = normalize_potential(load_raw_copper_potential())
-    util = AxisWithLengthBasisUtil(raw_data["basis"][0:2])
-    points = np.array(raw_data["vector"]).reshape(
-        *util.shape, len(raw_data["basis"][2])
-    )
+    util = BasisUtil(raw_data["basis"])
+    points = np.array(raw_data["vector"]).reshape(util.shape)
+
     print(points.shape)  # noqa: T201
 
     print("Bridge ", np.min(points[points.shape[0] // 2, 0, :]))  # noqa: T201
@@ -220,7 +219,7 @@ def compare_bridge_hollow_energy() -> None:
     print("--------------------------------------")  # noqa: T201
     print("Relaxed")  # noqa: T201
     data = get_interpolated_potential_relaxed((50, 50, 100))
-    util2 = AxisWithLengthBasisUtil(data["basis"])
+    util2 = BasisUtil(data["basis"])
     points = np.array(data["vector"]).reshape(util2.shape)
     print(points.shape)  # noqa: T201
 
@@ -242,10 +241,8 @@ def compare_bridge_hollow_energy() -> None:
 
     relaxed_data = normalize_potential(load_relaxed_copper_potential())
 
-    util3 = AxisWithLengthBasisUtil(relaxed_data["basis"][0:2])
-    points = np.array(relaxed_data["vector"]).reshape(
-        *util3.shape, len(relaxed_data["basis"][2])
-    )
+    util3 = BasisUtil(relaxed_data["basis"][0:2])
+    points = np.array(relaxed_data["vector"]).reshape(util3.shape)
     print(points.shape)  # noqa: T201
 
     print("Bridge ", np.min(points[points.shape[0] // 2, 0, :]))  # noqa: T201
@@ -268,9 +265,9 @@ def compare_bridge_hollow_energy() -> None:
 
 def calculate_hollow_free_energy_jump() -> None:
     data = load_relaxed_copper_potential()
-    util = AxisWithLengthBasisUtil(data["basis"][0:2])
+    util = BasisUtil(data["basis"])
 
-    points = data["vector"].reshape(*util.shape, -1)
+    points = data["vector"].reshape(util.shape)
     middle_x_index = points.shape[0] // 2
     middle_y_index = points.shape[1] // 2
     hollow_points = points[middle_x_index, middle_y_index]

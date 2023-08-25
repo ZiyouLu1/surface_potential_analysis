@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING, Any, Generic, TypedDict, TypeVar, overload
 import numpy as np
 
 from surface_potential_analysis.axis.axis import (
+    FundamentalAxis,
     FundamentalPositionAxis2d,
     FundamentalPositionAxis3d,
 )
@@ -16,7 +17,7 @@ from surface_potential_analysis.basis.basis import (
     Basis3d,
     FundamentalPositionBasis3d,
 )
-from surface_potential_analysis.basis.util import AxisWithLengthBasisUtil
+from surface_potential_analysis.basis.util import BasisUtil
 from surface_potential_analysis.util.interpolation import (
     interpolate_points_along_axis_spline,
     interpolate_points_rfftn,
@@ -125,13 +126,23 @@ def load_potential_grid_json(
         }
 
 
+class UnevenPotential3dZAxis(FundamentalAxis[_L2_co]):
+    """Represents the z axis of an uneven potential."""
+
+    def __init__(
+        self, z_points: np.ndarray[tuple[_L2_co], np.dtype[np.float_]]
+    ) -> None:
+        self.z_points = z_points
+        super().__init__(z_points.size)  # type:ignore[arg-type]
+
+
 class UnevenPotential3d(TypedDict, Generic[_L0_co, _L1_co, _L2_co]):
     """Represents a potential unevenly spaced in the z direction."""
 
     basis: tuple[
         FundamentalPositionAxis2d[_L0_co],
         FundamentalPositionAxis2d[_L1_co],
-        np.ndarray[tuple[_L2_co], np.dtype[np.float_]],
+        UnevenPotential3dZAxis[_L2_co],
     ]
     vector: PotentialPoints
 
@@ -298,23 +309,26 @@ def interpolate_uneven_potential(
     Makes use of a fourier transform to increase the number of points
     in the xy plane of the energy grid, and a cubic spline to interpolate in the z direction
     """
-    util = AxisWithLengthBasisUtil((data["basis"][0], data["basis"][1]))
+    util = BasisUtil(data["basis"])
     xy_interpolated = interpolate_points_rfftn(
-        data["vector"].reshape(*util.shape, len(data["basis"][2])).astype(np.float_),
+        data["vector"].reshape(util.shape).astype(np.float_),
         s=(shape[0], shape[1]),
         axes=(0, 1),
     )
     interpolated = interpolate_points_along_axis_spline(
-        xy_interpolated, data["basis"][2], shape[2], axis=2
+        xy_interpolated, data["basis"][2].z_points, shape[2], axis=2
     )
-    delta_x_0 = np.concatenate([util.delta_x[0], [0]])
-    delta_x_1 = np.concatenate([util.delta_x[1], [0]])
+    delta_x_0 = np.concatenate([data["basis"][0].delta_x, [0]])
+    delta_x_1 = np.concatenate([data["basis"][1].delta_x, [0]])
     return {
         "basis": (
             FundamentalPositionAxis3d(delta_x_0, shape[0]),
             FundamentalPositionAxis3d(delta_x_1, shape[1]),
             FundamentalPositionAxis3d(
-                np.array([0, 0, data["basis"][2][-1] - data["basis"][2][0]]), shape[2]
+                np.array(
+                    [0, 0, data["basis"][2].z_points[-1] - data["basis"][2].z_points[0]]
+                ),
+                shape[2],
             ),
         ),
         "vector": interpolated.reshape(-1),  # type: ignore[typeddict-item]
@@ -345,7 +359,7 @@ def mock_even_potential(
             ),
             FundamentalPositionAxis3d(
                 np.array([0, 0, 1], dtype=float),
-                len(uneven["basis"][2]),  # type:ignore[arg-type]
+                uneven["basis"][2].fundamental_n,  # type:ignore[arg-type]
             ),
         ),
         "vector": uneven["vector"].reshape(-1),

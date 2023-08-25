@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Literal, TypeVar, Unpack
+from typing import TYPE_CHECKING, Any, TypeVar, Unpack
 
 import numpy as np
 from matplotlib import pyplot as plt
@@ -156,7 +156,7 @@ def plot_fundamental_k_in_plane_projected_2d(
 def plot_x_points_projected_2d(
     basis: _B0Inv,
     axes: tuple[int, int],
-    points: np.ndarray[tuple[Literal[3], Unpack[_S0Inv]], np.dtype[np.float_]],
+    points: np.ndarray[tuple[int, Unpack[_S0Inv]], np.dtype[np.float_]],
     *,
     ax: Axes | None = None,
 ) -> tuple[Figure, Axes, Line2D]:
@@ -168,7 +168,7 @@ def plot_x_points_projected_2d(
     basis : _B0Inv
     z_axis : Literal[0, 1, 2, -1, -2, -3]
         direction perpendicular to which the points should be projected onto
-    points : np.ndarray[tuple[Literal[3], Unpack[_S0Inv]], np.dtype[np.float_]]
+    points : np.ndarray[tuple[int, Unpack[_S0Inv]], np.dtype[np.float_]]
         points to project
     ax : Axes | None, optional
         plot axis, by default None

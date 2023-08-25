@@ -7,7 +7,7 @@ from surface_potential_analysis.overlap.overlap import get_overlap_cache_filenam
 from surface_potential_analysis.util.decorators import npy_cached
 
 from .s4_wavepacket import (
-    get_two_point_normalized_wavepacket_hydrogen,
+    get_two_point_localized_wavepacket_hydrogen,
 )
 from .surface_data import get_data_path
 
@@ -37,8 +37,8 @@ def _get_overlap_inner_hydrogen(
     offset_i: tuple[int, int] = (0, 0),
     offset_j: tuple[int, int] = (0, 0),
 ) -> Overlap3d[FundamentalPositionBasis3d[int, int, Literal[250]]]:
-    wavepacket_i = get_two_point_normalized_wavepacket_hydrogen(i, offset_i)
-    wavepacket_j = get_two_point_normalized_wavepacket_hydrogen(j, offset_j)
+    wavepacket_i = get_two_point_localized_wavepacket_hydrogen(i, offset_i)
+    wavepacket_j = get_two_point_localized_wavepacket_hydrogen(j, offset_j)
     return calculate_wavepacket_overlap(wavepacket_i, wavepacket_j)  # type: ignore[return-value]
 
 

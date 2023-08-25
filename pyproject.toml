@@ -25,7 +25,7 @@ hamiltonian_generator = { path = "src/hamiltonian_generator/", develop = true }
 
 [tool.poetry.group.dev.dependencies]
 black = "^23.1.0"
-mypy = "^1.1.1"
+mypy = "*"
 ruff = "*"
 
 [tool.mypy]

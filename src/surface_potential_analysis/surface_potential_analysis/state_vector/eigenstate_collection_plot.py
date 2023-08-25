@@ -61,7 +61,7 @@ def plot_eigenvalues_against_bloch_phase_1d(
     fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
 
     projected = _get_projected_bloch_phases(collection, direction)
-    (line,) = ax.plot(projected, collection["eigenvalues"][:, band])
+    (line,) = ax.plot(projected, collection["eigenvalues"][band])
     ax.set_xlabel("Bloch Phase")
     ax.set_ylabel("Energy / J")
     return fig, ax, line

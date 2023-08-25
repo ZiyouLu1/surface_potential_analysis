@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import matplotlib.pyplot as plt
 import numpy as np
-from surface_potential_analysis.axis.plot import plot_explicit_basis_states_x
 from surface_potential_analysis.state_vector.conversion import (
     interpolate_state_vector_momentum,
 )
@@ -20,7 +19,6 @@ from surface_potential_analysis.state_vector.plot import (
 from hydrogen_nickel_111.s3_eigenstates import (
     get_eigenstate_collection_deuterium,
     get_eigenstate_collection_hydrogen,
-    get_eigenstate_collection_hydrogen_sho,
 )
 
 
@@ -98,15 +96,6 @@ def plot_hydrogen_lowest_bands() -> None:
         ln.set_label(f"band={band}")
         ln.set_color(colors[0])
 
-    collection = get_eigenstate_collection_hydrogen_sho((24, 24, 10))
-    collection["eigenvalues"] -= np.min(collection["eigenvalues"])
-    for band in range(8):
-        _, _, ln = plot_eigenvalues_against_bloch_phase_1d(
-            collection, np.array([1, 0, 0]), band=band, ax=ax
-        )
-        ln.set_label(f"band={band}")
-        ln.set_color(colors[1])
-
     ax.legend()
     ax.set_title("Plot of eight lowest band energies")
 
@@ -130,15 +119,5 @@ def plot_state_vector_difference_hydrogen() -> None:
 
     z_max = np.argmax(collection_1["basis"][2].vectors[0])
     fig, _, _ = plot_state_difference_2d_x(state_0, state_1, axes=(0, 1), idx=(z_max,))
-    fig.show()
-    input()
-
-
-def plot_sho_basis_states() -> None:
-    """Plot the basis states used to generate the eigenvectors."""
-    collection = get_eigenstate_collection_hydrogen_sho((25, 25, 16))
-
-    eigenstate = select_eigenstate(collection, 0, 0)
-    fig, _, _ = plot_explicit_basis_states_x(eigenstate["basis"][2], measure="real")
     fig.show()
     input()

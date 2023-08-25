@@ -6,6 +6,7 @@ import numpy as np
 from surface_potential_analysis.util.decorators import npy_cached
 from surface_potential_analysis.wavepacket.localization import (
     localize_tightly_bound_wavepacket_two_point_max,
+    localize_wavepacket_wannier90,
 )
 from surface_potential_analysis.wavepacket.wavepacket import (
     Wavepacket,
@@ -74,11 +75,23 @@ def get_wavepacket_hydrogen(band: int) -> _HydrogenCopperWavepacketWithEigenvalu
     return get_all_wavepackets_hydrogen()[band]
 
 
-def get_two_point_normalized_wavepacket_hydrogen(
+def get_two_point_localized_wavepacket_hydrogen(
     band: int, offset: tuple[int, int] = (0, 0), angle: float = 0
 ) -> _HydrogenCopperWavepacket:
     wavepacket = get_wavepacket_hydrogen(band)
     return localize_tightly_bound_wavepacket_two_point_max(wavepacket, offset, angle)
+
+
+def _get_wavepacket_cache_wannier90_h(band: int) -> Path:
+    return get_data_path(f"wavepacket/localized_wavepacket_w90_hydrogen_{band}.npy")
+
+
+@npy_cached(_get_wavepacket_cache_wannier90_h, load_pickle=True)
+def get_wannier90_localized_wavepacket_hydrogen(
+    band: int,
+) -> _HydrogenCopperWavepacket:
+    wavepacket = get_wavepacket_hydrogen(band)
+    return localize_wavepacket_wannier90(wavepacket)
 
 
 def get_hydrogen_energy_difference(state_0: int, state_1: int) -> np.float_:

@@ -4,11 +4,9 @@ from typing import TYPE_CHECKING, Any, Generic, Literal, TypedDict, TypeVar
 
 import numpy as np
 
-from surface_potential_analysis.axis import AxisWithLengthLike3d
 from surface_potential_analysis.axis.axis import FundamentalPositionAxis
 from surface_potential_analysis.basis.basis import (
     AxisWithLengthBasis,
-    Basis3d,
     FundamentalMomentumBasis3d,
     FundamentalPositionBasis3d,
 )
@@ -27,7 +25,7 @@ if TYPE_CHECKING:
 
     from surface_potential_analysis.operator.operator import SingleBasisOperator
     from surface_potential_analysis.state_vector.eigenstate_collection import (
-        EigenstateColllection3d,
+        EigenstateColllection,
     )
 
 _L0Inv = TypeVar("_L0Inv", bound=int)
@@ -37,14 +35,6 @@ _ND0Inv = TypeVar("_ND0Inv", bound=int)
 
 _B0Inv = TypeVar("_B0Inv", bound=AxisWithLengthBasis[Any])
 
-_B3d0Inv = TypeVar(
-    "_B3d0Inv",
-    bound=Basis3d[
-        AxisWithLengthLike3d[Any, Any],
-        AxisWithLengthLike3d[Any, Any],
-        AxisWithLengthLike3d[Any, Any],
-    ],
-)
 
 _S0Inv = TypeVar("_S0Inv", bound=tuple[int, ...])
 _NS0Inv = TypeVar("_NS0Inv", bound=int)
@@ -202,8 +192,8 @@ def get_wavepacket_sample_frequencies_first_brillouin_zone(
 
 
 def as_eigenstate_collection(
-    wavepacket: WavepacketWithEigenvalues[_S0Inv, _B3d0Inv]
-) -> EigenstateColllection3d[_B3d0Inv, int]:
+    wavepackets: list[WavepacketWithEigenvalues[_S0Inv, _B0Inv]]
+) -> EigenstateColllection[_B0Inv, int]:
     """
     Convert a wavepacket into an eigenstate collection.
 
@@ -216,26 +206,12 @@ def as_eigenstate_collection(
     EigenstateColllection[_B3d0Inv]
     """
     return {
-        "basis": wavepacket["basis"],
-        "bloch_fractions": get_wavepacket_sample_fractions(wavepacket["shape"]).reshape(
-            3, -1
+        "basis": wavepackets[0]["basis"],
+        "bloch_fractions": get_wavepacket_sample_fractions(wavepackets[0]["shape"]).T,
+        "eigenvalues": np.array([w["eigenvalues"] for w in wavepackets]).astype(
+            np.complex_
         ),
-        "eigenvalues": wavepacket["eigenvalues"].reshape(-1).astype(np.complex_),
-        "vectors": wavepacket["vectors"].reshape(wavepacket["eigenvalues"].size, -1),
-    }
-
-
-def _from_eigenstate_collection(
-    collection: EigenstateColllection3d[_B3d0Inv, _L0Inv],
-    shape: _S0Inv,
-) -> WavepacketWithEigenvalues[_S0Inv, _B3d0Inv]:
-    return {
-        "basis": collection["basis"],
-        "shape": shape,
-        "eigenvalues": collection["eigenvalues"]
-        .reshape(np.prod(shape))
-        .astype(np.complex_),
-        "vectors": collection["vectors"].reshape(np.prod(shape), -1),
+        "vectors": np.array([w["vectors"] for w in wavepackets]),
     }
 
 

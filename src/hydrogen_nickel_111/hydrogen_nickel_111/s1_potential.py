@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, TypeVar
 
 import numpy as np
+import scipy
 from surface_potential_analysis.axis.axis import (
     FundamentalPositionAxis2d,
     FundamentalPositionAxis3d,
@@ -10,7 +11,7 @@ from surface_potential_analysis.axis.axis import (
 from surface_potential_analysis.basis.build import (
     position_basis_3d_from_shape,
 )
-from surface_potential_analysis.basis.util import AxisWithLengthBasisUtil
+from surface_potential_analysis.basis.util import AxisWithLengthBasisUtil, BasisUtil
 from surface_potential_analysis.potential import (
     FundamentalPositionBasisPotential3d,
     PointPotential3d,
@@ -21,6 +22,7 @@ from surface_potential_analysis.potential import (
     truncate_potential,
     undo_truncate_potential,
 )
+from surface_potential_analysis.potential.potential import UnevenPotential3dZAxis
 from surface_potential_analysis.util.decorators import npy_cached
 from surface_potential_analysis.util.interpolation import (
     interpolate_points_along_axis_spline,
@@ -35,7 +37,7 @@ if TYPE_CHECKING:
     )
 
 
-def load_raw_data() -> PointPotential3d[Any]:
+def load_raw_potential_points() -> PointPotential3d[Any]:
     path = get_data_path("raw_data.json")
     return load_point_potential_json(path)
 
@@ -44,7 +46,7 @@ def load_raw_data() -> PointPotential3d[Any]:
     get_data_path("potential/raw_potential_reciprocal_grid.npy"), load_pickle=True
 )
 def get_raw_potential_reciprocal_grid() -> UnevenPotential3d[Any, Any, Any]:
-    data = load_raw_data()
+    data = load_raw_potential_points()
     x_points = data["x_points"]
     y_points = data["y_points"]
     z_points = data["z_points"]
@@ -102,7 +104,7 @@ def get_raw_potential_reciprocal_grid() -> UnevenPotential3d[Any, Any, Any]:
             FundamentalPositionAxis2d(
                 np.array([0, 3 * length]), reciprocal_points.shape[1]
             ),
-            z_c,
+            UnevenPotential3dZAxis(z_c),
         ),
         "vector": reciprocal_points.reshape(-1),
     }
@@ -149,7 +151,7 @@ def interpolate_points_fourier_nickel(  # noqa: PLR0913
     old_basis: FundamentalPositionBasis3d[int, int, int] = position_basis_3d_from_shape(
         shape=(*points.shape, 1)  # type: ignore[arg-type]
     )
-    old_basis_util = AxisWithLengthBasisUtil(old_basis)
+    old_basis_util = BasisUtil(old_basis)
     nk_points_stacked = np.array(old_basis_util.fundamental_nk_points).reshape(
         3, *old_basis_util.shape
     )[0:2, :, :, 0]
@@ -243,7 +245,7 @@ def interpolate_energy_grid_fourier_nickel(
     )
     interpolated = interpolate_points_along_axis_spline(
         xy_interpolation["vector"].reshape((shape[0], shape[1], -1)),  # type: ignore[arg-type]
-        xy_interpolation["basis"][2],
+        xy_interpolation["basis"][2].z_points,
         shape[2],
         -1,
     )
@@ -259,7 +261,9 @@ def interpolate_energy_grid_fourier_nickel(
                 xy_interpolation["basis"][1].n,
             ),
             FundamentalPositionAxis3d(
-                np.array([0, 0, data["basis"][2][-1] - data["basis"][2][0]]),
+                np.array(
+                    [0, 0, data["basis"][2].z_points[-1] - data["basis"][2].z_points[0]]
+                ),
                 shape[2],
             ),
         ),
@@ -267,36 +271,72 @@ def interpolate_energy_grid_fourier_nickel(
     }
 
 
-def get_truncated_potential() -> UnevenPotential3d[Any, Any, Any]:
-    data = get_raw_potential_reciprocal_grid()
-    normalized = normalize_potential(data)
-    return truncate_potential(normalized, cutoff=0.4e-18, n=1, offset=1e-20)
-
-
-def get_interpolated_potential(
-    shape: tuple[_L0Inv, _L1Inv, _L2Inv]
+def interpolate_nickel_potential(
+    potential: UnevenPotential3d[Any, Any, Any], shape: tuple[_L0Inv, _L1Inv, _L2Inv]
 ) -> FundamentalPositionBasisPotential3d[_L0Inv, _L1Inv, _L2Inv]:
-    truncated = get_truncated_potential()
-
-    raw_data = load_raw_data()
+    raw_data = load_raw_potential_points()
     x_width = np.max(raw_data["x_points"]) - np.min(raw_data["x_points"])  # type: ignore[operator]
 
     delta_x0_real = (2 * x_width, 0)
     delta_x1_real = (0.5 * delta_x0_real[0], np.sqrt(3) * delta_x0_real[0] / 2)
 
+    normalized = normalize_potential(potential)
+    truncated = truncate_potential(normalized, cutoff=0.4e-18, n=1, offset=1e-20)
     data = interpolate_energy_grid_fourier_nickel(
         truncated, delta_x0_real, delta_x1_real, shape
     )
     return undo_truncate_potential(data, cutoff=0.4e-18, n=1, offset=1e-20)
 
 
-@npy_cached(get_data_path("interpolated_data_john_grid.npy"))
+def get_interpolated_potential(
+    shape: tuple[_L0Inv, _L1Inv, _L2Inv]
+) -> FundamentalPositionBasisPotential3d[_L0Inv, _L1Inv, _L2Inv]:
+    potential = get_raw_potential_reciprocal_grid()
+    return interpolate_nickel_potential(potential, shape)
+
+
+def extrapolate_uneven_potential(
+    potential: UnevenPotential3d[Any, Any, Any]
+) -> UnevenPotential3d[Any, Any, Any]:
+    old_z_points = potential["basis"][2].z_points
+    z_range = old_z_points[-1] - old_z_points[0]
+    z_points = np.linspace(
+        old_z_points[0] - z_range,
+        old_z_points[0] + 2 * z_range,
+        4 * potential["basis"][2].n,
+    )
+    util = BasisUtil(potential["basis"])
+    return {
+        "basis": (
+            potential["basis"][0],
+            potential["basis"][1],
+            UnevenPotential3dZAxis(z_points),
+        ),
+        "vector": scipy.interpolate.interp1d(
+            old_z_points,
+            potential["vector"].reshape(util.shape),
+            axis=2,
+            kind="slinear",
+            fill_value="extrapolate",
+        )(z_points).reshape(-1),
+    }
+
+
+def get_interpolated_extrapolated_potential(
+    shape: tuple[_L0Inv, _L1Inv, _L2Inv]
+) -> FundamentalPositionBasisPotential3d[_L0Inv, _L1Inv, _L2Inv]:
+    potential = extrapolate_uneven_potential(get_raw_potential_reciprocal_grid())
+    return interpolate_nickel_potential(potential, shape)
+
+
 def get_interpolated_potential_john_grid() -> (
     FundamentalPositionBasisPotential3d[Any, Any, Any]
 ):
-    truncated = get_truncated_potential()
+    potential = get_raw_potential_reciprocal_grid()
+    normalized = normalize_potential(potential)
+    truncated = truncate_potential(normalized, cutoff=0.4e-18, n=1, offset=1e-20)
 
-    raw_data = load_raw_data()
+    raw_data = load_raw_potential_points()
     x_width = np.max(raw_data["x_points"]) - np.min(raw_data["x_points"])  # type: ignore[operator]
     y_width = np.max(raw_data["y_points"]) - np.min(raw_data["y_points"])  # type: ignore[operator]
 
@@ -309,11 +349,12 @@ def get_interpolated_potential_john_grid() -> (
     return undo_truncate_potential(data, cutoff=0.4e-18, n=1, offset=1e-20)
 
 
-@npy_cached(get_data_path("interpolated_data_reciprocal.npy"))
 def get_interpolated_potential_reciprocal_grid() -> (
     FundamentalPositionBasisPotential3d[Any, Any, Any]
 ):
-    truncated = get_truncated_potential()
+    potential = get_raw_potential_reciprocal_grid()
+    normalized = normalize_potential(potential)
+    truncated = truncate_potential(normalized, cutoff=0.4e-18, n=1, offset=1e-20)
 
     data = interpolate_uneven_potential(truncated, (48, 48, 100))
     return undo_truncate_potential(data, cutoff=0.4e-18, n=1, offset=1e-20)

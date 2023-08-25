@@ -1,14 +1,12 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Literal
+from typing import TYPE_CHECKING, Literal
 
 import numpy as np
 from matplotlib import pyplot as plt
-from surface_potential_analysis.axis.axis import FundamentalTransformedPositionAxis3d
 from surface_potential_analysis.basis.plot import (
     plot_fundamental_x_at_index_projected_2d,
 )
-from surface_potential_analysis.basis.util import BasisUtil
 from surface_potential_analysis.state_vector.plot import (
     animate_state_x1x2,
     plot_state_2d_x,
@@ -50,7 +48,6 @@ from .surface_data import save_figure
 
 if TYPE_CHECKING:
     from surface_potential_analysis.basis.basis import AxisWithLengthBasis
-    from surface_potential_analysis.state_vector.state_vector import StateVector3d
 
 
 def plot_nickel_wavepacket_points() -> None:
@@ -73,52 +70,24 @@ def plot_nickel_wavepacket_energies() -> None:
     input()
 
 
-def animate_wavepacket_eigenstates_x1x2() -> None:
-    wavepacket = get_wavepacket_hydrogen(0)
+def plot_wavepacket_eigenstates() -> None:
+    for band in range(20):
+        wavepacket = get_wavepacket_hydrogen(band)
+        state = get_state_vector(wavepacket, 0)
 
-    state_1: StateVector3d[Any] = get_state_vector(wavepacket, (0, 0))
-    state_1["basis"] = (
-        FundamentalTransformedPositionAxis3d(
-            state_1["basis"][0].delta_x, state_1["basis"][0].n
-        ),
-        FundamentalTransformedPositionAxis3d(
-            state_1["basis"][1].delta_x, state_1["basis"][1].n
-        ),
-        state_1["basis"][2],
-    )
-    fig, _, _anim0 = animate_state_x1x2(state_1, measure="real")
-    fig.show()
+        fig, ax, _ = plot_state_2d_x_max(state, (0, 1), measure="abs")
+        fig.show()
 
-    wavepacket = get_wavepacket_hydrogen(1)
-
-    state_2: StateVector3d[Any] = get_state_vector(wavepacket, (0, 0))
-    state_2["basis"] = (
-        FundamentalTransformedPositionAxis3d(
-            state_2["basis"][0].delta_x, state_2["basis"][0].n
-        ),
-        FundamentalTransformedPositionAxis3d(
-            state_2["basis"][1].delta_x, state_2["basis"][1].n
-        ),
-        state_2["basis"][2],
-    )
-    fig, _, _anim1 = animate_state_x1x2(state_2, measure="real")
-    fig.show()
-
-    wavepacket = get_wavepacket_hydrogen(2)
-
-    state_3: StateVector3d[Any] = get_state_vector(wavepacket, (0, 0))
-    state_3["basis"] = (
-        FundamentalTransformedPositionAxis3d(
-            state_3["basis"][0].delta_x, state_3["basis"][0].n
-        ),
-        FundamentalTransformedPositionAxis3d(
-            state_3["basis"][1].delta_x, state_3["basis"][1].n
-        ),
-        state_3["basis"][2],
-    )
-    fig, _, _anim2 = animate_state_x1x2(state_3, measure="real")
-    fig.show()
     input()
+
+
+def animate_wavepacket_eigenstates() -> None:
+    for band in [0, 1, 2]:
+        wavepacket = get_wavepacket_hydrogen(band)
+        state = get_state_vector(wavepacket, (0, 0))
+        fig, _, _anim0 = animate_state_x1x2(state, measure="real")  # type: ignore[type-var]
+        fig.show()
+        input()
 
 
 def plot_wavepacket_points_john() -> None:
@@ -191,19 +160,6 @@ def animate_nickel_wavepacket() -> None:
     input()
 
 
-def plot_hydrogen_wavepacket_at_x2_max() -> None:
-    for band in range(0, 6):
-        normalized = get_two_point_localized_wavepacket_hydrogen(band)
-        _, _, x2_max = BasisUtil(normalized["basis"]).get_stacked_index(
-            np.argmax(np.abs(normalized["vectors"][0]))
-        )
-        fig, ax, _ = plot_wavepacket_x0x1(normalized, x2_max, scale="symlog")
-        fig.show()
-        ax.set_title(f"Plot of abs(wavefunction) for ix2={x2_max}")
-        save_figure(fig, f"./wavepacket/wavepacket_{band}.png")
-    input()
-
-
 def plot_two_point_wavepacket_with_idx() -> None:
     offset = (2, 1)
     for band in range(0, 6):
@@ -223,17 +179,6 @@ def plot_two_point_wavepacket_with_idx() -> None:
         fig.show()
         ax.set_title(f"Plot of abs(wavefunction) for ix2={idx0[2]}")
         save_figure(fig, f"./wavepacket/wavepacket_{band}.png")
-    input()
-
-
-def plot_nickel_wavepacket_eigenstate() -> None:
-    for band in range(20):
-        wavepacket = get_wavepacket_hydrogen(band)
-        state = get_state_vector(wavepacket, 0)
-
-        fig, ax, _ = plot_state_2d_x_max(state, (0, 1), measure="abs")
-        fig.show()
-
     input()
 
 
@@ -285,11 +230,10 @@ def plot_tight_binding_projection_localized_wavepacket_hydrogen() -> None:
     for band in [4]:
         wavepacket = get_tight_binding_projection_localized_wavepacket_hydrogen(band)
         tight_binding_state = get_tight_binding_state(wavepacket)
-        fig, ax, _ = plot_state_2d_x_max(tight_binding_state, (0, 1), scale="symlog")
+        fig, _, _ = plot_state_2d_x_max(tight_binding_state, (0, 1), scale="symlog")
         fig.show()
-        input()
 
-        fig, ax, _ = plot_wavepacket_2d_x_max(wavepacket, (0, 1), scale="symlog")
+        fig, _, _ = plot_wavepacket_2d_x_max(wavepacket, (0, 1), scale="symlog")
         fig.show()
         input()
 

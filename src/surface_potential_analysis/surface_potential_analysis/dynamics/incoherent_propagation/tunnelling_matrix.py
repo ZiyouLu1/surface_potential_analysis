@@ -1,9 +1,10 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Generic, TypedDict, TypeVar, overload
+from typing import TYPE_CHECKING, Any, Generic, Literal, TypedDict, TypeVar, overload
 
 import numpy as np
 
+from surface_potential_analysis.axis.axis import FundamentalAxis
 from surface_potential_analysis.basis.util import BasisUtil
 from surface_potential_analysis.util.decorators import timed
 
@@ -17,7 +18,6 @@ if TYPE_CHECKING:
     from collections.abc import Callable
 
     from surface_potential_analysis._types import SingleIndexLike
-    from surface_potential_analysis.axis.axis import FundamentalAxis
     from surface_potential_analysis.axis.axis_like import AxisLike
     from surface_potential_analysis.operator.operator import DiagonalOperator
 
@@ -27,7 +27,7 @@ if TYPE_CHECKING:
 
     _AX0Inv = TypeVar("_AX0Inv", bound=AxisLike[Any, Any])
     _AX1Inv = TypeVar("_AX1Inv", bound=AxisLike[Any, Any])
-    _AX2Inv = TunnellingSimulationBandsAxis[Any]
+_AX2Inv = TunnellingSimulationBandsAxis[Any]
 
 
 _B0Inv = TypeVar(
@@ -60,18 +60,27 @@ class TunnellingMMatrix(TypedDict, Generic[_B0Inv]):
     array: np.ndarray[tuple[int, int], np.dtype[np.float_]]
 
 
-def downsample_tunnelling_a_matrix(
-    matrix: TunnellingAMatrix[tuple[_AX0Inv, _AX1Inv, _AX2Inv]],
+FundamentalTunnellingAMatrixBasis = TunnellingSimulationBasis[
+    FundamentalAxis[Literal[3]],
+    FundamentalAxis[Literal[3]],
+    _AX2Inv,
+]
+
+
+def resample_tunnelling_a_matrix(
+    matrix: TunnellingAMatrix[TunnellingSimulationBasis[_AX0Inv, _AX1Inv, _AX2Inv]],
     shape: tuple[_L0Inv, _L1Inv],
 ) -> TunnellingAMatrix[
     tuple[FundamentalAxis[_L0Inv], FundamentalAxis[_L1Inv], _AX2Inv]
 ]:
     """
-    Given a tunnelling a matrix, get an a matrix with a reduced grid shape.
+    Given a tunnelling a matrix in at least a 3x3 grid, generate the full matrix.
+
+    Uses the symmetry properties of the a matrix
 
     Parameters
     ----------
-    matrix : TunnellingAMatrix[tuple[_AX0Inv, _AX1Inv, _AX2Inv]]
+    matrix : TunnellingAMatrix[FundamentalTunnellingAMatrixBasis[_AX2Inv]]
     shape : tuple[_L0Inv, _L1Inv]
 
     Returns
@@ -79,14 +88,28 @@ def downsample_tunnelling_a_matrix(
     TunnellingAMatrix[tuple[FundamentalAxis[_L0Inv], FundamentalAxis[_L1Inv], _AX2Inv]]
     """
     util = BasisUtil(matrix["basis"])
-    n_final = np.prod([*shape, util.shape[2]])
+    final_basis = get_basis_from_shape(shape, matrix["basis"][2])
+    final_util = BasisUtil(final_basis)
+
+    (n_x1, n_x2, n_bands) = final_util.shape
+    jump_array = matrix["array"].reshape(*util.shape, *util.shape)[0, 0]
+    array = np.zeros((*final_util.shape, *final_util.shape))
+    for n_0 in range(n_bands):
+        for n_1 in range(n_bands):
+            for hop in range(9):
+                # Get the value of a particular hop, and fill the corresponding
+                # locations in the final operator
+                hop_shift = np.unravel_index(hop, (3, 3)) - np.array([1, 1])
+                hop_val = jump_array[n_0, hop_shift[0], hop_shift[1], n_1]
+                operator = hop_val * np.identity(n_x1 * n_x2).reshape(
+                    n_x1, n_x2, n_x1, n_x2
+                )
+                operator = np.roll(operator, hop_shift, (2, 3))
+                array[:, :, n_0, :, :, n_1] += operator
+
     return {
-        "basis": get_basis_from_shape(shape, matrix["basis"][2]),
-        "array": matrix["array"]
-        .reshape(*util.shape, *util.shape)[
-            : shape[0], : shape[1], :, : shape[0], : shape[1], :
-        ]
-        .reshape(n_final, n_final),
+        "basis": final_basis,
+        "array": array.reshape(final_util.size, final_util.size),
     }
 
 

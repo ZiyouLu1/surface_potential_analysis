@@ -7,7 +7,7 @@ from matplotlib import pyplot as plt
 
 from surface_potential_analysis.axis.util import AxisWithLengthLikeUtil
 from surface_potential_analysis.basis.util import (
-    AxisWithLengthBasisUtil,
+    BasisUtil,
     calculate_cumulative_x_distances_along_path,
     get_x_coordinates_in_axes,
 )
@@ -88,7 +88,7 @@ def plot_potential_1d_x(
     util = AxisWithLengthLikeUtil(potential["basis"][axis])
     coordinates = np.linalg.norm(util.fundamental_x_points, axis=0)
     data = get_data_in_axes(
-        potential["vector"].reshape(AxisWithLengthBasisUtil(potential["basis"]).shape),
+        potential["vector"].reshape(BasisUtil(potential["basis"]).shape),
         (axis,),
         idx,
     )
@@ -160,7 +160,7 @@ def plot_potential_1d_x2_comparison_111(
     -------
     tuple[Figure, Axes]
     """
-    (s0, s1, _) = AxisWithLengthBasisUtil(potential["basis"]).shape
+    (s0, s1, _) = BasisUtil(potential["basis"]).shape
     points = get_111_comparison_points_x2((s0, s1), offset)
     comparison_points = {k: (v, 2) for (k, v) in points.items()}
     return plot_potential_1d_comparison(
@@ -192,7 +192,7 @@ def plot_potential_1d_x2_comparison_100(
     -------
     tuple[Figure, Axes]
     """
-    (s0, s1, _) = AxisWithLengthBasisUtil(potential["basis"]).shape
+    (s0, s1, _) = BasisUtil(potential["basis"]).shape
     points = get_100_comparison_points_x2((s0, s1), offset)
     comparison_points = {k: (v, 2) for (k, v) in points.items()}
     return plot_potential_1d_comparison(
@@ -201,9 +201,58 @@ def plot_potential_1d_x2_comparison_100(
 
 
 def plot_potential_2d_x(
-    potential: FundamentalPositionBasisPotential3d[_L0Inv, _L1Inv, _L2Inv],
+    potential: Potential[_B0Inv],
     axes: tuple[int, int] = (0, 1),
     idx: SingleStackedIndexLike | None = None,
+    *,
+    ax: Axes | None = None,
+    scale: Scale = "linear",
+) -> tuple[Figure, Axes, QuadMesh]:
+    """
+    Plot the potential in 2d, perpendicular to z_axis at idx along z_axis.
+
+    Parameters
+    ----------
+    potential : Potential[_B0Inv]
+    idx : SingleFlatIndexLike
+        index along z_axis
+    z_axis : Literal[0, 1, 2, -1, -2, -3]
+        axis perpendicular to direction of plot
+    ax : Axes | None, optional
+        plot axis, by default None
+    scale : Literal[&quot;symlog&quot;, &quot;linear&quot;], optional
+        scale, by default "linear"
+
+    Returns
+    -------
+    tuple[Figure, Axes, QuadMesh]
+    """
+    fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
+
+    converted = convert_potential_to_position_basis(potential)
+    util = BasisUtil(converted["basis"])
+    idx = tuple(0 for _ in range(util.ndim - 2)) if idx is None else idx
+
+    coordinates = get_x_coordinates_in_axes(converted["basis"], axes, idx)
+    data = get_data_in_axes(converted["vector"].reshape(util.shape), axes, idx)
+    points = get_measured_data(data, "real")
+
+    mesh = ax.pcolormesh(*coordinates, points, shading="nearest")
+    mesh.set_clim(0, 1e-18)
+    norm = get_norm_with_clim(scale, mesh.get_clim())
+    mesh.set_norm(norm)
+    ax.set_aspect("equal", adjustable="box")
+    fig.colorbar(mesh, ax=ax, format="%4.1e")
+
+    ax.set_xlabel(f"x{axes[0]} axis")
+    ax.set_ylabel(f"x{axes[1]} axis")
+
+    return fig, ax, mesh
+
+
+def plot_potential_2d_x_min(
+    potential: Potential[_B0Inv],
+    axes: tuple[int, int] = (0, 1),
     *,
     ax: Axes | None = None,
     scale: Scale = "linear",
@@ -227,24 +276,12 @@ def plot_potential_2d_x(
     -------
     tuple[Figure, Axes, QuadMesh]
     """
-    fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
-    util = AxisWithLengthBasisUtil(potential["basis"])
-    idx = tuple(0 for _ in range(util.ndim - 2)) if idx is None else idx
+    converted = convert_potential_to_position_basis(potential)
+    util = BasisUtil(converted["basis"])
+    min_idx = util.get_stacked_index(np.argmin(np.abs(converted["vector"])))
+    idx = tuple(x for (i, x) in enumerate(min_idx) if i not in axes)
 
-    coordinates = get_x_coordinates_in_axes(potential["basis"], axes, idx)
-    data = get_data_in_axes(potential["vector"].reshape(util.shape), axes, idx)
-
-    mesh = ax.pcolormesh(*coordinates, data, shading="nearest")
-    mesh.set_clim(0, 1e-18)
-    norm = get_norm_with_clim(scale, mesh.get_clim())
-    mesh.set_norm(norm)
-    ax.set_aspect("equal", adjustable="box")
-    fig.colorbar(mesh, ax=ax, format="%4.1e")
-
-    ax.set_xlabel(f"x{axes[0]} axis")
-    ax.set_ylabel(f"x{axes[1]} axis")
-
-    return fig, ax, mesh
+    return plot_potential_2d_x(converted, axes, idx, ax=ax, scale=scale)
 
 
 def plot_potential_x0x1(
@@ -393,7 +430,7 @@ def animate_potential_3d_x(
     -------
     tuple[Figure, Axes, ArtistAnimation]
     """
-    util = AxisWithLengthBasisUtil(potential["basis"])
+    util = BasisUtil(potential["basis"])
     points = potential["vector"].reshape(util.fundamental_shape)
     fig, ax, ani = animate_through_surface_x(  # type: ignore[misc]
         potential["basis"],
@@ -560,7 +597,7 @@ def plot_potential_along_path(
     fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
 
     converted = convert_potential_to_position_basis(potential)
-    util = AxisWithLengthBasisUtil(converted["basis"])
+    util = BasisUtil(converted["basis"])
 
     data = get_measured_data(converted["vector"].reshape(util.shape)[*path], measure)
     distances = calculate_cumulative_x_distances_along_path(
@@ -594,7 +631,7 @@ def get_minimum_path(
     np.ndarray[tuple[Literal[3], int], np.dtype[np.int_]]
         The complete path after finding the minimum at each coordinate
     """
-    util = AxisWithLengthBasisUtil(potential["basis"])
+    util = BasisUtil(potential["basis"])
     min_idx = np.argmin(potential["vector"].reshape(util.shape), axis=axis)
     min_idx_path = min_idx[*path]
     full_path = np.empty((3, path.shape[1]))

@@ -395,6 +395,7 @@ def plot_state_2d_x_max(
     util = BasisUtil(converted["basis"])
     max_idx = util.get_stacked_index(np.argmax(np.abs(converted["vector"])))
     idx = tuple(x for (i, x) in enumerate(max_idx) if i not in axes)
+
     return plot_state_2d_x(converted, axes, idx, ax=ax, measure=measure, scale=scale)
 
 

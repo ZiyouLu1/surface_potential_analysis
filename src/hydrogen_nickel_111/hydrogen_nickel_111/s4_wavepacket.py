@@ -16,7 +16,11 @@ from surface_potential_analysis.wavepacket.wavepacket import (
     generate_wavepacket,
 )
 
-from .s2_hamiltonian import get_hamiltonian_deuterium, get_hamiltonian_hydrogen
+from .s2_hamiltonian import (
+    get_hamiltonian_deuterium,
+    get_hamiltonian_hydrogen,
+    get_hamiltonian_hydrogen_extrapolated,
+)
 from .surface_data import get_data_path
 
 if TYPE_CHECKING:
@@ -48,12 +52,12 @@ if TYPE_CHECKING:
         ],
     ]
 
-    _HydrogenNickelWavepacketTest = WavepacketWithEigenvalues[
+    _HydrogenNickelWavepacketExtrapolated = WavepacketWithEigenvalues[
         tuple[Literal[6], Literal[6], Literal[1]],
         Basis3d[
-            TransformedPositionAxis[Literal[31], Literal[31], Literal[3]],
-            TransformedPositionAxis[Literal[31], Literal[31], Literal[3]],
-            ExplicitAxis[Literal[250], Literal[12], Literal[3]],
+            TransformedPositionAxis[Literal[27], Literal[27], Literal[3]],
+            TransformedPositionAxis[Literal[27], Literal[27], Literal[3]],
+            ExplicitAxis[Literal[250], Literal[15], Literal[3]],
         ],
     ]
     _DeuteriumNickelWavepacketWithEigenvalues = WavepacketWithEigenvalues[
@@ -91,15 +95,19 @@ def get_all_wavepackets_hydrogen() -> list[_HydrogenNickelWavepacketWithEigenval
     )
 
 
-@npy_cached(get_data_path("wavepacket/wavepacket_hydrogen_test.npy"), load_pickle=True)
-def get_all_wavepackets_hydrogen_test() -> list[_HydrogenNickelWavepacketTest]:
+@npy_cached(
+    get_data_path("wavepacket/wavepacket_hydrogen_extrapolated_2.npy"), load_pickle=True
+)
+def get_all_wavepackets_hydrogen_extrapolated() -> (
+    list[_HydrogenNickelWavepacketExtrapolated]
+):
     def _hamiltonian_generator(
         bloch_fraction: np.ndarray[tuple[Literal[3]], np.dtype[np.float_]]
     ) -> SingleBasisOperator[Any]:
-        return get_hamiltonian_hydrogen(
+        return get_hamiltonian_hydrogen_extrapolated(
             shape=(250, 250, 250),
             bloch_fraction=bloch_fraction,
-            resolution=(31, 31, 12),
+            resolution=(27, 27, 15),
         )
 
     save_bands = np.arange(10)
