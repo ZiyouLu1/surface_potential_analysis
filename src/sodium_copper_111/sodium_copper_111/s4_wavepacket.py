@@ -19,6 +19,7 @@ if TYPE_CHECKING:
     from pathlib import Path
 
     from surface_potential_analysis.axis.axis import (
+        FundamentalAxis,
         FundamentalTransformedPositionAxis1d,
     )
     from surface_potential_analysis.operator.operator import SingleBasisOperator
@@ -27,7 +28,8 @@ if TYPE_CHECKING:
     _L1Inv = TypeVar("_L1Inv", bound=int)
 
     _SodiumWavepacket = WavepacketWithEigenvalues[
-        tuple[_L0Inv], tuple[FundamentalTransformedPositionAxis1d[_L1Inv]]
+        tuple[FundamentalAxis[_L0Inv]],
+        tuple[FundamentalTransformedPositionAxis1d[_L1Inv]],
     ]
 
 

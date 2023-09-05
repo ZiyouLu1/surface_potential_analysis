@@ -29,19 +29,19 @@ if TYPE_CHECKING:
     from collections.abc import Sequence
 
     from surface_potential_analysis.axis.axis import TransformedPositionAxis
-    from surface_potential_analysis.basis.basis import AxisWithLengthBasis
+    from surface_potential_analysis.basis.basis import AxisWithLengthBasis, Basis
     from surface_potential_analysis.state_vector.state_vector import StateVector
     from surface_potential_analysis.wavepacket.wavepacket import (
         Wavepacket,
     )
 
-    _B0Inv = TypeVar("_B0Inv", bound=AxisWithLengthBasis[Any])
-    _PB0Inv = TypeVar(
-        "_PB0Inv", bound=tuple[TransformedPositionAxis[Any, Any, Any], ...]
-    )
     _B1Inv = TypeVar("_B1Inv", bound=AxisWithLengthBasis[Any])
+    _PB1Inv = TypeVar(
+        "_PB1Inv", bound=tuple[TransformedPositionAxis[Any, Any, Any], ...]
+    )
+    _B2Inv = TypeVar("_B2Inv", bound=AxisWithLengthBasis[Any])
 
-    _S0Inv = TypeVar("_S0Inv", bound=tuple[int, ...])
+    _B0Inv = TypeVar("_B0Inv", bound=Basis)
 
 
 def _build_real_lattice_block(
@@ -53,25 +53,25 @@ def _build_real_lattice_block(
 end unit_cell_cart"""
 
 
-def _build_kpoints_block(shape: _S0Inv) -> str:
-    fractions = get_wavepacket_sample_fractions(shape)
+def _build_kpoints_block(list_basis: _B0Inv) -> str:
+    fractions = get_wavepacket_sample_fractions(list_basis)
     # TODO(matt): declare inline in python 3.12  # noqa: TD003, FIX002
     newline = "\n"
-    return f"""mp_grid : {" ".join(str(x) for x in shape)}
+    return f"""mp_grid : {" ".join(str(x.fundamental_n) for x in list_basis)}
 begin kpoints
 {newline.join([f"{f0} {f1} {f2}" for (f0,f1,f2) in fractions.T])}
 end kpoints"""
 
 
 def _build_win_file(
-    wavepackets: Sequence[Wavepacket[_S0Inv, _B0Inv]], *, postproc_setup: bool = False
+    wavepackets: Sequence[Wavepacket[_B0Inv, _B1Inv]], *, postproc_setup: bool = False
 ) -> str:
     """
     Build a postproc setup file.
 
     Parameters
     ----------
-    wavepacket : Wavepacket[_S0Inv, _B0Inv]
+    wavepacket : Wavepacket[_B0Inv, _B0Inv]
 
     Returns
     -------
@@ -84,14 +84,14 @@ auto_projections = .true.
 write_u_matrices = .true.
 num_wann = {len(wavepackets)}
 {_build_real_lattice_block(util.delta_x)}
-{_build_kpoints_block(wavepackets[0]["shape"])}
+{_build_kpoints_block(wavepackets[0]["list_basis"])}
 search_shells = 48
 """
 
 
 def _get_offset_bloch_state(
-    state: StateVector[_B0Inv], offset: tuple[int, ...]
-) -> StateVector[_B0Inv]:
+    state: StateVector[_B1Inv], offset: tuple[int, ...]
+) -> StateVector[_B1Inv]:
     """
     Get the bloch state corresponding to the bloch k offset by 'offset'.
 
@@ -120,7 +120,7 @@ def _get_offset_bloch_state(
 
 
 def _build_mmn_file_block(
-    wavepackets: Sequence[Wavepacket[_S0Inv, _PB0Inv]],
+    wavepackets: Sequence[Wavepacket[_B0Inv, _PB1Inv]],
     k: tuple[int, int, int, int, int],
 ) -> str:
     k_0, k_1, *offset = k
@@ -158,21 +158,21 @@ def _parse_nnkpts_file(
 
 
 def _build_mmn_file(
-    wavepackets: Sequence[Wavepacket[_S0Inv, _B0Inv]], nnkpts_file: str
+    wavepackets: Sequence[Wavepacket[_B0Inv, _B1Inv]], nnkpts_file: str
 ) -> str:
     """
     Given a .nnkp file, generate the mmn file.
 
     Parameters
     ----------
-    wavepacket : Wavepacket[_S0Inv, _B0Inv]
+    wavepacket : Wavepacket[_B0Inv, _B0Inv]
     file : str
 
     Returns
     -------
-    Wavepacket[_S0Inv, _B0Inv]
+    Wavepacket[_B0Inv, _B0Inv]
     """
-    num_kpts = np.prod(wavepackets[0]["shape"])
+    num_kpts = BasisUtil(wavepackets[0]["list_basis"]).size
     (nntot, nnkpts) = _parse_nnkpts_file(nnkpts_file)
     converted = [
         convert_wavepacket_to_fundamental_momentum_basis(wavepacket)
@@ -185,22 +185,22 @@ def _build_mmn_file(
 
 
 def _build_amn_file(
-    wavepackets: Sequence[Wavepacket[_S0Inv, _B0Inv]],
-    projections: Sequence[StateVector[_B1Inv]],
+    wavepackets: Sequence[Wavepacket[_B0Inv, _B1Inv]],
+    projections: Sequence[StateVector[_B2Inv]],
 ) -> str:
     """
     Build an amn file from a wavepacket.
 
     Parameters
     ----------
-    wavepacket : Wavepacket[_S0Inv, _B0Inv]
+    wavepacket : Wavepacket[_B0Inv, _B0Inv]
     projection: StateVector[_B1Inv]
 
     Returns
     -------
     str
     """
-    num_kpts = np.prod(wavepackets[0]["shape"])
+    num_kpts = BasisUtil(wavepackets[0]["list_basis"]).size
     eigenstates = [get_all_states(wavepacket) for wavepacket in wavepackets]
     # Note: np.conj as get_projection_coefficients is the wrong way round
     coefficients = [
@@ -252,26 +252,26 @@ def _parse_u_mat_file(
 
 
 def localize_wavepacket_from_u_matrix_file(
-    wavepackets: Sequence[Wavepacket[_S0Inv, _B0Inv]], u_matrix_file: str
-) -> list[Wavepacket[_S0Inv, _B0Inv]]:
+    wavepackets: Sequence[Wavepacket[_B0Inv, _B1Inv]], u_matrix_file: str
+) -> list[Wavepacket[_B0Inv, _B1Inv]]:
     """
     Given a _u.mat file, localize the wavepacket.
 
     Parameters
     ----------
-    wavepacket : Wavepacket[_S0Inv, _B0Inv]
+    wavepacket : Wavepacket[_B0Inv, _B0Inv]
     file : str
 
     Returns
     -------
-    Wavepacket[_S0Inv, _B0Inv]
+    Wavepacket[_B0Inv, _B0Inv]
     """
     coefficients = _parse_u_mat_file(u_matrix_file)
     vectors = np.array([w["vectors"] for w in wavepackets])
     return [
         {
             "basis": wavepackets[0]["basis"],
-            "shape": wavepackets[0]["shape"],
+            "list_basis": wavepackets[0]["list_basis"],
             "vectors": np.sum(coefficient[:, :, np.newaxis] * vectors, axis=0),
         }
         for coefficient in coefficients
@@ -279,7 +279,7 @@ def localize_wavepacket_from_u_matrix_file(
 
 
 def _write_setup_files_wannier90(
-    wavepackets: Sequence[Wavepacket[_S0Inv, _B0Inv]], tmp_dir_path: Path
+    wavepackets: Sequence[Wavepacket[_B0Inv, _B1Inv]], tmp_dir_path: Path
 ) -> None:
     win_filename = tmp_dir_path / "spa.win"
     with win_filename.open("w") as f:
@@ -287,7 +287,7 @@ def _write_setup_files_wannier90(
 
 
 def _write_localization_files_wannier90(
-    wavepackets: Sequence[Wavepacket[_S0Inv, _B0Inv]],
+    wavepackets: Sequence[Wavepacket[_B0Inv, _B1Inv]],
     tmp_dir_path: Path,
     nnkp_file: str,
 ) -> None:
@@ -308,8 +308,8 @@ def _write_localization_files_wannier90(
 
 
 def localize_wavepacket_wannier90_many_band(
-    wavepackets: Sequence[Wavepacket[_S0Inv, _B0Inv]]
-) -> list[Wavepacket[_S0Inv, _B0Inv]]:
+    wavepackets: Sequence[Wavepacket[_B0Inv, _B1Inv]]
+) -> list[Wavepacket[_B0Inv, _B1Inv]]:
     """
     Localizes a set of wavepackets using wannier 90, with a single point projection as an initial guess.
 
@@ -318,11 +318,11 @@ def localize_wavepacket_wannier90_many_band(
 
     Parameters
     ----------
-    wavepacket : Wavepacket[_S0Inv, _B0Inv]
+    wavepacket : Wavepacket[_B0Inv, _B0Inv]
 
     Returns
     -------
-    Wavepacket[_S0Inv, _B0Inv]
+    Wavepacket[_B0Inv, _B0Inv]
         The localized wavepacket
     """
     with tempfile.TemporaryDirectory() as tmp_dir:
@@ -350,8 +350,8 @@ def localize_wavepacket_wannier90_many_band(
 
 
 def localize_wavepacket_wannier90(
-    wavepacket: Wavepacket[_S0Inv, _B0Inv]
-) -> Wavepacket[_S0Inv, _B0Inv]:
+    wavepacket: Wavepacket[_B0Inv, _B1Inv]
+) -> Wavepacket[_B0Inv, _B1Inv]:
     """
     Localizes a wavepacket using wannier 90, with a single point projection as an initial guess.
 
@@ -360,11 +360,11 @@ def localize_wavepacket_wannier90(
 
     Parameters
     ----------
-    wavepacket : Wavepacket[_S0Inv, _B0Inv]
+    wavepacket : Wavepacket[_B0Inv, _B0Inv]
 
     Returns
     -------
-    Wavepacket[_S0Inv, _B0Inv]
+    Wavepacket[_B0Inv, _B0Inv]
         The localized wavepacket
     """
     return localize_wavepacket_wannier90_many_band([wavepacket])[0]

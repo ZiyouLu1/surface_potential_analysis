@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING, Any, Literal, TypeVar, overload
 import numpy as np
 
 from surface_potential_analysis.axis.axis import (
+    FundamentalAxis,
     FundamentalPositionAxis,
     FundamentalPositionAxis3d,
     FundamentalTransformedPositionAxis3d,
@@ -48,6 +49,26 @@ def position_basis_3d_from_parent(
         FundamentalPositionAxis3d(parent[1].delta_x, resolution[1]),
         FundamentalPositionAxis3d(parent[2].delta_x, resolution[2]),
     )
+
+
+def fundamental_basis_from_shape(
+    shape: _S0Inv,
+) -> tuple[FundamentalAxis[int], ...]:
+    """
+    Given a resolution and a set of directions construct a FundamentalPositionBasisConfig.
+
+    Parameters
+    ----------
+    resolution : tuple[_NF0Inv, _NF1Inv, _NF2Inv]
+        resolution of the basis
+    delta_x : tuple[np.ndarray[tuple[Literal[3]], np.dtype[np.float_]], np.ndarray[tuple[Literal[3]], np.dtype[np.float_]], np.ndarray[tuple[Literal[3]], np.dtype[np.float_]], ] | None, optional
+        vectors for the basis, by default (np.array([1, 0, 0]), np.array([0, 1, 0]), np.array([0, 0, 1]))
+
+    Returns
+    -------
+    FundamentalPositionBasis3d[_NF0Inv, _NF1Inv, _NF2Inv]
+    """
+    return tuple(FundamentalAxis(n) for n in shape)
 
 
 @overload

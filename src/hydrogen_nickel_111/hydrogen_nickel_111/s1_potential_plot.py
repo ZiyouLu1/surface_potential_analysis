@@ -40,6 +40,7 @@ from surface_potential_analysis.potential.potential import (
     UnevenPotential3dZAxis,
     mock_even_potential,
     normalize_potential,
+    truncate_potential,
 )
 from surface_potential_analysis.util.interpolation import (
     interpolate_points_fftn,
@@ -127,12 +128,13 @@ def plot_raw_grid_potential() -> None:
     mocked_potential = mock_even_potential(potential)
 
     fig, ax = plot_z_direction_energy_data_nickel_reciprocal_points(potential)
-    ax.set_ylim(0, 0.2e-18)
+    ax.set_ylim(0, 0.5e-18)
     fig.show()
 
     potential = extrapolate_uneven_potential(potential)
+    potential = truncate_potential(potential, cutoff=3.5e-19, n=5, offset=1e-20)
     mocked_potential = mock_even_potential(potential)
-    fig, ax = plot_z_direction_energy_data_nickel_reciprocal_points(potential, ax=ax)
+    fig, ax = plot_z_direction_energy_data_nickel_reciprocal_points(potential)
     ax.set_ylim(0, 1e-18)
     fig.show()
 

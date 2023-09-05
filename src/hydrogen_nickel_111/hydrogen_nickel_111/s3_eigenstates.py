@@ -19,7 +19,11 @@ if TYPE_CHECKING:
 
     from surface_potential_analysis.axis.axis import (
         ExplicitAxis,
+        FundamentalAxis,
         TransformedPositionAxis,
+    )
+    from surface_potential_analysis.axis.block_fraction_axis import (
+        ExplicitBlockFractionAxis,
     )
     from surface_potential_analysis.operator.operator import SingleBasisOperator
     from surface_potential_analysis.state_vector.eigenstate_collection import (
@@ -41,12 +45,12 @@ def _get_eigenstate_collection_h_cache(shape: tuple[_L0, _L1, _L2]) -> Path:
 def get_eigenstate_collection_hydrogen(
     shape: tuple[_L0, _L1, _L2],
 ) -> EigenstateColllection[
+    tuple[ExplicitBlockFractionAxis[Literal[11]], FundamentalAxis[Literal[10]]],
     tuple[
         TransformedPositionAxis[_L0, _L0, Literal[3]],
         TransformedPositionAxis[_L1, _L1, Literal[3]],
         ExplicitAxis[Literal[250], _L2, Literal[3]],
     ],
-    Literal[11],
 ]:
     bloch_fractions_x = np.linspace(-0.5, 0.5, 11)
     bloch_fractions = np.array([[f, 0, 0] for f in bloch_fractions_x])
@@ -67,7 +71,7 @@ def get_eigenstate_collection_hydrogen(
         )
 
     return calculate_eigenstate_collection(
-        hamiltonian_generator, bloch_fractions, subset_by_index=(0, 10)  # type: ignore[arg-type]
+        hamiltonian_generator, bloch_fractions, subset_by_index=(0, 10)  # type: ignore[arg-type,return-value]
     )
 
 
@@ -81,12 +85,12 @@ def _get_eigenstate_collection_d_cache(shape: tuple[_L0, _L1, _L2]) -> Path:
 def get_eigenstate_collection_deuterium(
     shape: tuple[_L0, _L1, _L2],
 ) -> EigenstateColllection[
+    tuple[ExplicitBlockFractionAxis[Literal[11]], FundamentalAxis[Literal[99]]],
     tuple[
         TransformedPositionAxis[_L0, _L0, Literal[3]],
         TransformedPositionAxis[_L1, _L1, Literal[3]],
         ExplicitAxis[Literal[250], _L2, Literal[3]],
     ],
-    Literal[11],
 ]:
     bloch_fractions_x = np.linspace(-0.5, 0.5, 11)
     bloch_fractions = np.array([[f, 0, 0] for f in bloch_fractions_x])
@@ -107,5 +111,5 @@ def get_eigenstate_collection_deuterium(
         )
 
     return calculate_eigenstate_collection(
-        hamiltonian_generator, bloch_fractions, subset_by_index=(0, 99)  # type: ignore[arg-type]
+        hamiltonian_generator, bloch_fractions, subset_by_index=(0, 99)  # type: ignore[arg-type,return-value]
     )

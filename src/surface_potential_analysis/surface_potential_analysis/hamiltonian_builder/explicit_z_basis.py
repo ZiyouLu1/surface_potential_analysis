@@ -9,6 +9,7 @@ from scipy.constants import hbar
 from surface_potential_analysis.axis.axis import (
     ExplicitAxis,
     ExplicitAxis3d,
+    FundamentalAxis,
     FundamentalPositionAxis1d,
     FundamentalTransformedPositionAxis3d,
     TransformedPositionAxis,
@@ -19,7 +20,6 @@ from surface_potential_analysis.basis.potential_basis import (
     get_potential_basis_config_eigenstates,
 )
 from surface_potential_analysis.basis.util import AxisWithLengthBasisUtil
-from surface_potential_analysis.util.decorators import timed
 
 if TYPE_CHECKING:
     from surface_potential_analysis.basis.potential_basis import PotentialBasisConfig
@@ -27,8 +27,8 @@ if TYPE_CHECKING:
     from surface_potential_analysis.potential import (
         FundamentalPositionBasisPotential3d,
     )
-    from surface_potential_analysis.state_vector.eigenstate_calculation import (
-        EigenvectorList,
+    from surface_potential_analysis.state_vector.eigenstate_collection import (
+        EigenstateList,
     )
 
 _N0Inv = TypeVar("_N0Inv", bound=int)
@@ -56,18 +56,24 @@ class _SurfaceHamiltonianUtil(
 
     _resolution: tuple[_N0Inv, _N1Inv]
     _config: PotentialBasisConfig[tuple[FundamentalPositionAxis1d[_NF2Inv]], _N2Inv]
-    state_vectors_z: EigenvectorList[tuple[FundamentalPositionAxis1d[_NF2Inv]], _N2Inv]
+    state_vectors_z: EigenstateList[
+        tuple[FundamentalAxis[_N2Inv]], tuple[FundamentalPositionAxis1d[_NF2Inv]]
+    ]
 
     def __init__(
         self,
         potential: FundamentalPositionBasisPotential3d[_NF0Inv, _NF1Inv, _NF2Inv],
         resolution: tuple[_N0Inv, _N1Inv],
         config: PotentialBasisConfig[tuple[FundamentalPositionAxis1d[_NF2Inv]], _N2Inv],
+        bloch_fraction: np.ndarray[tuple[Literal[3]], np.dtype[np.float_]],
     ) -> None:
         self._potential = potential
         self._resolution = resolution
+        self._bloch_fraction = bloch_fraction
         self._config = config
-        self.state_vectors_z = get_potential_basis_config_eigenstates(self._config)
+        self.state_vectors_z = get_potential_basis_config_eigenstates(
+            self._config, bloch_fraction=bloch_fraction.item(2)
+        )
         if 2 * (self.basis[0].n - 1) > self._potential["basis"][0].n:
             raise PotentialSizeError(
                 0, 2 * (self.basis[0].n - 1), self._potential["basis"][0].n
@@ -112,7 +118,7 @@ class _SurfaceHamiltonianUtil(
         )
 
     def hamiltonian(
-        self, bloch_fraction: np.ndarray[tuple[Literal[3]], np.dtype[np.float_]]
+        self,
     ) -> SingleBasisOperator[
         tuple[
             TransformedPositionAxis[_NF0Inv, _N0Inv, Literal[3]],
@@ -120,7 +126,7 @@ class _SurfaceHamiltonianUtil(
             ExplicitAxis[_NF2Inv, _N2Inv, Literal[3]],
         ]
     ]:
-        diagonal_energies = np.diag(self._calculate_diagonal_energy(bloch_fraction))
+        diagonal_energies = np.diag(self._calculate_diagonal_energy())
         other_energies = self._calculate_off_diagonal_energies()
 
         energies = diagonal_energies + other_energies
@@ -139,9 +145,8 @@ class _SurfaceHamiltonianUtil(
         )
 
     def _calculate_diagonal_energy(
-        self, bloch_fraction: np.ndarray[tuple[Literal[3]], np.dtype[np.float_]]
+        self,
     ) -> np.ndarray[tuple[int], np.dtype[np.float_]]:
-        # Note we ignore bloch_fraction in x2
         xy_basis = (
             TransformedPositionAxis2d(
                 self.basis[0].delta_x[:2], self.basis[0].n, self.basis[0].fundamental_n
@@ -152,7 +157,7 @@ class _SurfaceHamiltonianUtil(
         )
         util = AxisWithLengthBasisUtil(xy_basis)
 
-        bloch_phase = np.tensordot(util.dk, bloch_fraction[:2], axes=(0, 0))
+        bloch_phase = np.tensordot(util.dk, self._bloch_fraction[:2], axes=(0, 0))
         k_points = util.k_points + bloch_phase[:, np.newaxis]
         xy_energy = np.sum(
             np.square(hbar * k_points) / (2 * self._config["mass"]),
@@ -174,7 +179,6 @@ class _SurfaceHamiltonianUtil(
         return np.fft.ifft2(self.subtracted_points, axes=(0, 1))  # type: ignore[no-any-return]
 
 
-@timed
 def total_surface_hamiltonian(
     potential: FundamentalPositionBasisPotential3d[_NF0Inv, _NF1Inv, _NF2Inv],
     bloch_fraction: np.ndarray[tuple[Literal[3]], np.dtype[np.float_]],
@@ -201,8 +205,8 @@ def total_surface_hamiltonian(
     -------
     HamiltonianWithBasis[TruncatedBasis[_L3, MomentumBasis[_L0]], TruncatedBasis[_L4, MomentumBasis[_L1]], ExplicitBasis[_L5, MomentumBasis[_L2]]]
     """
-    util = _SurfaceHamiltonianUtil(potential, resolution, config)
-    return util.hamiltonian(bloch_fraction)
+    util = _SurfaceHamiltonianUtil(potential, resolution, config, bloch_fraction)
+    return util.hamiltonian()
 
 
 def total_surface_hamiltonian_as_fundamental(

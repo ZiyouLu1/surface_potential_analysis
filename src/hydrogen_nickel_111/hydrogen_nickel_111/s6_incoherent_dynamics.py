@@ -5,13 +5,14 @@ from surface_potential_analysis.dynamics.incoherent_propagation.eigenstates impo
     calculate_equilibrium_state,
     calculate_tunnelling_simulation_state,
 )
-from surface_potential_analysis.dynamics.incoherent_propagation.plot import (
-    plot_occupation_per_band,
-    plot_occupation_per_site,
-)
 from surface_potential_analysis.dynamics.incoherent_propagation.tunnelling_matrix import (
+    density_matrix_list_as_probabilities,
     get_initial_pure_density_matrix_for_basis,
     get_tunnelling_m_matrix,
+)
+from surface_potential_analysis.dynamics.plot import (
+    plot_probability_per_band,
+    plot_probability_per_site,
 )
 from surface_potential_analysis.operator.operator import sum_diagonal_operator_over_axes
 
@@ -65,11 +66,12 @@ def plot_occupation_on_surface_hydrogen() -> None:
     initial_state = get_initial_pure_density_matrix_for_basis(m_matrix["basis"])
     times = np.linspace(0, 9e-10, 1000)
     state = calculate_tunnelling_simulation_state(m_matrix, initial_state, times)
+    probabilities = density_matrix_list_as_probabilities(state)
 
-    fig, ax = plot_occupation_per_band(state, times)
+    fig, _, _ = plot_probability_per_band(probabilities)
     fig.show()
 
-    fig, ax = plot_occupation_per_site(state, times)
+    fig, _, _ = plot_probability_per_site(probabilities)
     fig.show()
 
     m_matrix_2_band = get_tunnelling_m_matrix(a_matrix, 2)
@@ -80,11 +82,12 @@ def plot_occupation_on_surface_hydrogen() -> None:
     state = calculate_tunnelling_simulation_state(
         m_matrix_2_band, initial_state_2_band, times
     )
+    probabilities = density_matrix_list_as_probabilities(state)
 
-    fig, ax = plot_occupation_per_band(state, times)
+    fig, _, _ = plot_probability_per_band(probabilities)
     fig.show()
 
-    fig, ax = plot_occupation_per_site(state, times)
+    fig, _, _ = plot_probability_per_site(probabilities)
     fig.show()
     input()
 
@@ -95,11 +98,12 @@ def plot_occupation_on_surface_deuterium() -> None:
     initial_state = get_initial_pure_density_matrix_for_basis(m_matrix["basis"])
     times = np.linspace(0, 9e-10, 1000)
     state = calculate_tunnelling_simulation_state(m_matrix, initial_state, times)
+    probabilities = density_matrix_list_as_probabilities(state)
 
-    fig, ax = plot_occupation_per_band(state, times)
+    fig, _, _ = plot_probability_per_band(probabilities)
     fig.show()
 
-    fig, ax = plot_occupation_per_site(state, times)
+    fig, _, _ = plot_probability_per_site(probabilities)
     fig.show()
 
     m_matrix_2_band = get_tunnelling_m_matrix(a_matrix, 2)
@@ -110,10 +114,11 @@ def plot_occupation_on_surface_deuterium() -> None:
     state = calculate_tunnelling_simulation_state(
         m_matrix_2_band, initial_state_2_band, times
     )
+    probabilities = density_matrix_list_as_probabilities(state)
 
-    fig, ax = plot_occupation_per_band(state, times)
+    fig, _, _ = plot_probability_per_band(probabilities)
     fig.show()
 
-    fig, ax = plot_occupation_per_site(state, times)
+    fig, _, _ = plot_probability_per_site(probabilities)
     fig.show()
     input()

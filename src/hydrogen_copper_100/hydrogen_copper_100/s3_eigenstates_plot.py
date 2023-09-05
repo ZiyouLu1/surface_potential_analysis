@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, Any
 
 import matplotlib.pyplot as plt
 import numpy as np
-from surface_potential_analysis.basis.util import AxisWithLengthBasisUtil
+from surface_potential_analysis.basis.util import BasisUtil
 from surface_potential_analysis.state_vector.eigenstate_collection import (
     select_eigenstate,
 )
@@ -32,7 +32,7 @@ if TYPE_CHECKING:
 def plot_lowest_bands() -> None:
     fig, ax = plt.subplots()
 
-    shape = (23, 23, 14)
+    shape = (23, 23, 15)
     for band in range(5):
         collection = get_eigenstate_collection(shape)
         _, _, ln = plot_eigenvalues_against_bloch_phase_1d(
@@ -119,7 +119,7 @@ def plot_eigenstate_z_hollow_site(
     ax: Axes | None = None,
     measure: Measure = "abs",
 ) -> tuple[Figure, Axes, Line2D]:
-    util = AxisWithLengthBasisUtil(eigenstate["basis"])
+    util = BasisUtil(eigenstate["basis"])
     x2_points = np.arange(util.shape[2])
     points = np.array(
         [(util.shape[0] // 2, util.shape[1] // 2, z) for z in x2_points]
@@ -153,7 +153,7 @@ def plot_eigenstate_through_bridge(
     ax: Axes | None = None,
     measure: Measure = "abs",
 ) -> tuple[Figure, Axes, Line2D]:
-    util = AxisWithLengthBasisUtil(eigenstate["basis"])
+    util = BasisUtil(eigenstate["basis"])
     x0_points = np.arange(util.shape[0])
     points = np.array([(x, util.shape[1] // 2, 0) for x in x0_points]).T
 

@@ -12,24 +12,30 @@ from surface_potential_analysis.dynamics.hermitian_gamma_integral import (
     calculate_hermitian_gamma_occupation_integral,
 )
 from surface_potential_analysis.dynamics.incoherent_propagation.isf import (
-    ISFFeyModelFit,
+    calculate_equilibrium_initial_state_isf,
     calculate_equilibrium_state_averaged_isf,
     calculate_isf_at_times,
+    get_rate_decomposition,
+)
+from surface_potential_analysis.dynamics.incoherent_propagation.plot import (
+    plot_rate_decomposition_against_temperature,
+)
+from surface_potential_analysis.dynamics.incoherent_propagation.tunnelling_matrix import (
+    get_a_matrix_from_jump_matrix,
+    get_initial_pure_density_matrix_for_basis,
+    get_tunnelling_m_matrix,
+)
+from surface_potential_analysis.dynamics.isf import (
+    ISFFeyModelFit,
     fit_isf_to_double_exponential,
     fit_isf_to_fey_model_110,
     fit_isf_to_fey_model_112bar,
-    get_rate_decomposition,
 )
-from surface_potential_analysis.dynamics.incoherent_propagation.isf_plot import (
+from surface_potential_analysis.dynamics.isf_plot import (
     plot_isf_4_variable_fit_against_time,
     plot_isf_against_time,
     plot_isf_fey_model_fit_110_against_time,
     plot_isf_fey_model_fit_112bar_against_time,
-    plot_rate_decomposition_against_temperature,
-)
-from surface_potential_analysis.dynamics.incoherent_propagation.tunnelling_matrix import (
-    get_initial_pure_density_matrix_for_basis,
-    get_tunnelling_m_matrix,
 )
 from surface_potential_analysis.util.constants import FERMI_WAVEVECTOR
 
@@ -39,6 +45,7 @@ from .experimental_data import get_experiment_data
 from .s4_wavepacket import get_hydrogen_energy_difference, get_wavepacket_hydrogen
 from .s6_a_calculation import (
     calculate_gamma_potential_integral_hydrogen_diagonal,
+    get_fey_jump_matrix_hydrogen,
     get_tunnelling_a_matrix_hydrogen,
 )
 
@@ -63,6 +70,16 @@ def get_jianding_isf_112bar() -> np.ndarray[tuple[Literal[2]], np.dtype[np.float
     util = AxisWithLengthBasisUtil(basis)
     dk_0_norm = util.delta_x[0] / np.linalg.norm(util.delta_x[0])
     dk = util.delta_x[1] - dk_0_norm * np.dot(dk_0_norm, util.delta_x[1])
+    dk /= np.linalg.norm(dk)
+    dk *= 2 / np.linalg.norm(util.delta_x[0])
+    return dk[:2]  # type: ignore[no-any-return]
+
+
+def get_jianding_isf_diagonal() -> np.ndarray[tuple[Literal[2]], np.dtype[np.float_]]:
+    basis = get_wavepacket_hydrogen(0)["basis"]
+
+    util = AxisWithLengthBasisUtil(basis)
+    dk = util.delta_x[0] + util.delta_x[1]
     dk /= np.linalg.norm(dk)
     dk *= 2 / np.linalg.norm(util.delta_x[0])
     return dk[:2]  # type: ignore[no-any-return]
@@ -99,13 +116,13 @@ def calculate_rates_hydrogen(
         a_matrix = get_tunnelling_a_matrix_hydrogen((25, 25), 6, temperature)
         m_matrix = get_tunnelling_m_matrix(a_matrix, n_bands)
         isf = calculate_equilibrium_state_averaged_isf(m_matrix, ts, dk)
-        fit = fit_isf_to_fey_model_112bar(isf, ts)
-        fit1 = fit_isf_to_fey_model_110(isf, ts)
-        fit2 = fit_isf_to_double_exponential(isf, ts)
+        fit = fit_isf_to_fey_model_112bar(isf)
+        fit1 = fit_isf_to_fey_model_110(isf)
+        fit2 = fit_isf_to_double_exponential(isf)
         if plot:
             fig, ax, line = plot_isf_fey_model_fit_112bar_against_time(fit, ts)
             line.set_label("112bar")
-            _, _, line = plot_isf_against_time(isf, ts, ax=ax)
+            _, _, line = plot_isf_against_time(isf, ax=ax)
             line.set_label("ISF")
             _, _, line = plot_isf_fey_model_fit_110_against_time(fit1, ts, ax=ax)
             line.set_label("100")
@@ -291,15 +308,60 @@ def plot_isf_hydrogen() -> None:
     m_matrix = get_tunnelling_m_matrix(a_matrix, 6)
     initial = get_initial_pure_density_matrix_for_basis(m_matrix["basis"])
     isf = calculate_isf_at_times(m_matrix, initial, times, dk)
-    fig, _, _ = plot_isf_against_time(isf, times, ax=ax)
+    fig, _, _ = plot_isf_against_time(isf, ax=ax)
 
-    isf_fit = fit_isf_to_double_exponential(isf, times)
+    isf_fit = fit_isf_to_double_exponential(isf)
     fig, _, _ = plot_isf_4_variable_fit_against_time(isf_fit, times, ax=ax)
 
     m_matrix = get_tunnelling_m_matrix(a_matrix, 2)
     initial = get_initial_pure_density_matrix_for_basis(m_matrix["basis"])
     isf = calculate_isf_at_times(m_matrix, initial, times, dk)
-    fig, _, _ = plot_isf_against_time(isf, times, ax=ax)
+    fig, _, _ = plot_isf_against_time(isf, ax=ax)
+    fig.show()
+    input()
+
+
+def plot_isf_hydrogen_fey_model() -> None:
+    a_matrix = get_a_matrix_from_jump_matrix(get_fey_jump_matrix_hydrogen(), (12, 12))
+    times = np.linspace(0, 90e-10, 1000)
+    dk = get_jianding_isf_112bar()
+
+    fig, ax = plt.subplots()
+
+    m_matrix = get_tunnelling_m_matrix(a_matrix)
+    isf = calculate_equilibrium_state_averaged_isf(m_matrix, times, dk)
+    _, _, line = plot_isf_against_time(isf, ax=ax)
+    line.set_label("ISF")
+
+    isf = calculate_equilibrium_initial_state_isf(m_matrix, times, dk)
+    _, _, line = plot_isf_against_time(isf, ax=ax)
+    line.set_label("ISF")
+
+    exponential_fit = fit_isf_to_double_exponential(isf)
+    _, _, line = plot_isf_4_variable_fit_against_time(exponential_fit, times, ax=ax)
+    line.set_label("Double exponential Model")
+    line.set_linestyle("--")
+
+    fey_fit = fit_isf_to_fey_model_112bar(isf)
+    _, _, line = plot_isf_fey_model_fit_112bar_against_time(fey_fit, times, ax=ax)
+    line.set_label("Fey Model 112")
+    line.set_linestyle("--")
+
+    fey_fit = fit_isf_to_fey_model_110(isf)
+    _, _, line = plot_isf_fey_model_fit_110_against_time(fey_fit, times, ax=ax)
+    line.set_label("Fey Model 110")
+    line.set_linestyle("--")
+
+    fey_fit = ISFFeyModelFit(3 * 6.55978349e08, 3 * 3.02959631e08)
+    _, _, line = plot_isf_fey_model_fit_112bar_against_time(fey_fit, times, ax=ax)
+    line.set_label("Fey Model 112 actual")
+    line.set_linestyle("--")
+
+    _, _, line = plot_isf_fey_model_fit_110_against_time(fey_fit, times, ax=ax)
+    line.set_label("Fey Model 110 actual")
+    line.set_linestyle("--")
+
+    ax.legend()
     fig.show()
     input()
 
@@ -314,12 +376,12 @@ def compare_isf_initial_condition() -> None:
     initial = get_initial_pure_density_matrix_for_basis(m_matrix["basis"], (0, 0, 0))
     times = np.linspace(0, 90e-10, 1000)
     isf = calculate_isf_at_times(m_matrix, initial, times, dk)
-    _, _, line = plot_isf_against_time(isf, times, ax=ax)
+    _, _, line = plot_isf_against_time(isf, ax=ax)
     line.set_label("Initially FCC")
 
     initial = get_initial_pure_density_matrix_for_basis(m_matrix["basis"], (0, 0, 1))
     isf = calculate_isf_at_times(m_matrix, initial, times, dk)
-    _, _, line = plot_isf_against_time(isf, times, ax=ax)
+    _, _, line = plot_isf_against_time(isf, ax=ax)
     line.set_label("Initially HCP")
 
     ax.legend()

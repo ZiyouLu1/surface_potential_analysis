@@ -6,6 +6,7 @@ from surface_potential_analysis.basis.potential_basis import select_minimum_pote
 from surface_potential_analysis.hamiltonian_builder import (
     explicit_z_basis,
 )
+from surface_potential_analysis.potential.potential import truncate_potential
 from surface_potential_analysis.util.constants import DEUTERIUM_MASS, HYDROGEN_MASS
 
 from .s1_potential import (
@@ -102,6 +103,7 @@ def get_hamiltonian_hydrogen_extrapolated(
         Hamiltonian in the specified basis
     """
     potential = get_interpolated_extrapolated_potential(shape)
+    potential = truncate_potential(potential, cutoff=3.5e-19, n=5, offset=1e-20)
     potential["vector"] = 0.5 * (
         potential["vector"] + potential["vector"].reshape(shape).swapaxes(0, 1).ravel()
     )

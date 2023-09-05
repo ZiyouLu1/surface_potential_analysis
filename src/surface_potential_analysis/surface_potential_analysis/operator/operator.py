@@ -77,12 +77,12 @@ def add_operator(
     }
 
 
-class DiagonalOperator(TypedDict, Generic[_B0_co, _B1_co]):
+class DiagonalOperator(TypedDict, Generic[_B0Inv, _B1Inv]):
     """Represents an operator in the given basis."""
 
-    basis: _B0_co
+    basis: _B0Inv
     """Basis of the lhs (first index in array)"""
-    dual_basis: _B1_co
+    dual_basis: _B1Inv
     """basis of the rhs (second index in array)"""
     # We need higher kinded types, and const generics to do this properly
     vector: np.ndarray[tuple[int], np.dtype[np.complex_] | np.dtype[np.float_]]

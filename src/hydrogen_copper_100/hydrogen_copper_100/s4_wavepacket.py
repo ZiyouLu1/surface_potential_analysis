@@ -24,6 +24,7 @@ if TYPE_CHECKING:
 
     from surface_potential_analysis.axis.axis import (
         ExplicitAxis,
+        FundamentalAxis,
         TransformedPositionAxis,
     )
     from surface_potential_analysis.basis.basis import (
@@ -32,7 +33,11 @@ if TYPE_CHECKING:
     from surface_potential_analysis.operator.operator import SingleBasisOperator
 
     _HydrogenCopperWavepacketWithEigenvalues = WavepacketWithEigenvalues[
-        tuple[Literal[12], Literal[12], Literal[1]],
+        tuple[
+            FundamentalAxis[Literal[12]],
+            FundamentalAxis[Literal[12]],
+            FundamentalAxis[Literal[1]],
+        ],
         Basis3d[
             TransformedPositionAxis[Literal[21], Literal[21], Literal[3]],
             TransformedPositionAxis[Literal[21], Literal[21], Literal[3]],
@@ -40,7 +45,11 @@ if TYPE_CHECKING:
         ],
     ]
     _HydrogenCopperWavepacket = Wavepacket[
-        tuple[Literal[12], Literal[12], Literal[1]],
+        tuple[
+            FundamentalAxis[Literal[12]],
+            FundamentalAxis[Literal[12]],
+            FundamentalAxis[Literal[1]],
+        ],
         Basis3d[
             TransformedPositionAxis[Literal[21], Literal[21], Literal[3]],
             TransformedPositionAxis[Literal[21], Literal[21], Literal[3]],
@@ -49,7 +58,7 @@ if TYPE_CHECKING:
     ]
 
 
-@npy_cached(get_data_path("wavepacket/wavepacket_hydrogen.npy"), load_pickle=True)  # type: ignore[misc]
+@npy_cached(get_data_path("wavepacket/wavepacket_hydrogen_new.npy"), load_pickle=True)  # type: ignore[misc]
 def get_all_wavepackets_hydrogen() -> list[_HydrogenCopperWavepacketWithEigenvalues]:
     def _hamiltonian_generator(
         bloch_fraction: np.ndarray[tuple[Literal[3]], np.dtype[np.float_]]
@@ -60,7 +69,7 @@ def get_all_wavepackets_hydrogen() -> list[_HydrogenCopperWavepacketWithEigenval
             resolution=(21, 21, 15),
         )
 
-    save_bands = np.arange(20)
+    save_bands = np.arange(25)
     return generate_wavepacket(
         _hamiltonian_generator, shape=(12, 12, 1), save_bands=save_bands
     )

@@ -21,6 +21,7 @@ if TYPE_CHECKING:
 
     from surface_potential_analysis.axis.axis import (
         ExplicitAxis,
+        FundamentalAxis,
         TransformedPositionAxis,
     )
     from surface_potential_analysis.basis.basis import (
@@ -29,7 +30,11 @@ if TYPE_CHECKING:
     from surface_potential_analysis.operator import SingleBasisOperator
 
     _HydrogenRutheniumWavepacketWithEigenvalues = WavepacketWithEigenvalues[
-        tuple[Literal[12], Literal[12], Literal[1]],
+        tuple[
+            FundamentalAxis[Literal[12]],
+            FundamentalAxis[Literal[12]],
+            FundamentalAxis[Literal[1]],
+        ],
         Basis3d[
             TransformedPositionAxis[Literal[25], Literal[25], Literal[3]],
             TransformedPositionAxis[Literal[25], Literal[25], Literal[3]],
@@ -38,7 +43,11 @@ if TYPE_CHECKING:
     ]
 
     _HydrogenRutheniumWavepacket = Wavepacket[
-        tuple[Literal[12], Literal[12], Literal[1]],
+        tuple[
+            FundamentalAxis[Literal[12]],
+            FundamentalAxis[Literal[12]],
+            FundamentalAxis[Literal[1]],
+        ],
         Basis3d[
             TransformedPositionAxis[Literal[25], Literal[25], Literal[3]],
             TransformedPositionAxis[Literal[25], Literal[25], Literal[3]],
@@ -47,7 +56,11 @@ if TYPE_CHECKING:
     ]
 
     _DeuteriumRutheniumWavepacketWithEigenvalues = WavepacketWithEigenvalues[
-        tuple[Literal[12], Literal[12], Literal[1]],
+        tuple[
+            FundamentalAxis[Literal[12]],
+            FundamentalAxis[Literal[12]],
+            FundamentalAxis[Literal[1]],
+        ],
         Basis3d[
             TransformedPositionAxis[Literal[33], Literal[33], Literal[3]],
             TransformedPositionAxis[Literal[33], Literal[33], Literal[3]],
@@ -56,7 +69,11 @@ if TYPE_CHECKING:
     ]
 
     _DeuteriumRutheniumWavepacket = Wavepacket[
-        tuple[Literal[12], Literal[12], Literal[1]],
+        tuple[
+            FundamentalAxis[Literal[12]],
+            FundamentalAxis[Literal[12]],
+            FundamentalAxis[Literal[1]],
+        ],
         Basis3d[
             TransformedPositionAxis[Literal[33], Literal[33], Literal[3]],
             TransformedPositionAxis[Literal[33], Literal[33], Literal[3]],

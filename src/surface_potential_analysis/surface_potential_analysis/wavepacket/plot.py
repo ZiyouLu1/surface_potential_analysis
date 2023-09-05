@@ -6,7 +6,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 
 from surface_potential_analysis.basis.util import (
-    AxisWithLengthBasisUtil,
+    BasisUtil,
     get_k_coordinates_in_axes,
     get_x_coordinates_in_axes,
 )
@@ -29,6 +29,7 @@ from surface_potential_analysis.wavepacket.eigenstate_conversion import (
     unfurl_wavepacket,
 )
 from surface_potential_analysis.wavepacket.get_eigenstate import (
+    get_all_bloch_states,
     get_all_states,
 )
 
@@ -52,23 +53,28 @@ if TYPE_CHECKING:
         SingleFlatIndexLike,
         SingleStackedIndexLike,
     )
+    from surface_potential_analysis.axis.axis import FundamentalAxis
     from surface_potential_analysis.basis.basis import (
         AxisWithLengthBasis,
+        Basis,
         Basis3d,
     )
     from surface_potential_analysis.state_vector.state_vector import StateVector
     from surface_potential_analysis.util.plot import Scale
 
-    _S03dInv = TypeVar("_S03dInv", bound=tuple[int, int, int])
+    _B03dInv = TypeVar(
+        "_B03dInv",
+        bound=tuple[FundamentalAxis[int], FundamentalAxis[int], FundamentalAxis[int]],
+    )
     _B3d0Inv = TypeVar("_B3d0Inv", bound=Basis3d[Any, Any, Any])
 
-    _S0Inv = TypeVar("_S0Inv", bound=tuple[int, ...])
-    _B0Inv = TypeVar("_B0Inv", bound=AxisWithLengthBasis[Any])
+    _B0Inv = TypeVar("_B0Inv", bound=Basis)
+    _B1Inv = TypeVar("_B1Inv", bound=AxisWithLengthBasis[Any])
 # ruff: noqa: PLR0913
 
 
 def plot_wavepacket_sample_frequencies(
-    wavepacket: Wavepacket[_S0Inv, _B0Inv],
+    wavepacket: Wavepacket[_B0Inv, _B1Inv],
     axes: tuple[int, int] = (0, 1),
     idx: SingleStackedIndexLike | None = None,
     *,
@@ -88,12 +94,12 @@ def plot_wavepacket_sample_frequencies(
     tuple[Figure, Axes, Line2D]
     """
     fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
-    util = AxisWithLengthBasisUtil(wavepacket["basis"])
+    util = BasisUtil(wavepacket["basis"])
     idx = tuple(0 for _ in range(util.ndim - len(axes))) if idx is None else idx
 
     frequencies = get_wavepacket_sample_frequencies(
-        wavepacket["basis"], wavepacket["shape"]
-    ).reshape(-1, *wavepacket["shape"])
+        wavepacket["list_basis"], wavepacket["basis"]
+    ).reshape(-1, *BasisUtil(wavepacket["list_basis"]).shape)
     frequencies = frequencies[list(axes), slice_ignoring_axes(idx, axes)]
     (line,) = ax.plot(*frequencies.reshape(2, -1))
     line.set_marker("x")
@@ -107,7 +113,7 @@ def plot_wavepacket_sample_frequencies(
 
 
 def plot_wavepacket_eigenvalues_2d_k(
-    wavepacket: WavepacketWithEigenvalues[_S0Inv, _B0Inv],
+    wavepacket: WavepacketWithEigenvalues[_B0Inv, _B1Inv],
     axes: tuple[int, int] = (0, 1),
     idx: SingleStackedIndexLike | None = None,
     *,
@@ -131,7 +137,7 @@ def plot_wavepacket_eigenvalues_2d_k(
     """
     fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
 
-    basis = get_sample_basis(wavepacket["basis"], wavepacket["shape"])
+    basis = get_sample_basis(wavepacket["list_basis"], wavepacket["basis"])
 
     coordinates = get_k_coordinates_in_axes(basis, axes, idx)
     points = np.fft.ifftshift(wavepacket["eigenvalues"])
@@ -152,7 +158,7 @@ def plot_wavepacket_eigenvalues_2d_k(
 
 
 def plot_wavepacket_eigenvalues_2d_x(
-    wavepacket: WavepacketWithEigenvalues[_S0Inv, _B0Inv],
+    wavepacket: WavepacketWithEigenvalues[_B0Inv, _B1Inv],
     axes: tuple[int, int] = (0, 1),
     idx: SingleStackedIndexLike | None = None,
     *,
@@ -179,7 +185,7 @@ def plot_wavepacket_eigenvalues_2d_x(
     """
     fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
 
-    basis = get_sample_basis(wavepacket["basis"], wavepacket["shape"])
+    basis = get_sample_basis(wavepacket["list_basis"], wavepacket["basis"])
     coordinates = get_x_coordinates_in_axes(basis, axes, idx)
 
     data = np.fft.ifft2(wavepacket["eigenvalues"])
@@ -200,7 +206,7 @@ def plot_wavepacket_eigenvalues_2d_x(
 
 
 def plot_wavepacket_1d_x(
-    wavepacket: Wavepacket[_S0Inv, _B0Inv],
+    wavepacket: Wavepacket[_B0Inv, _B1Inv],
     idx: tuple[int, ...] | None = None,
     axis: int = 0,
     *,
@@ -234,7 +240,7 @@ def plot_wavepacket_1d_x(
 
 
 def plot_wavepacket_x0(
-    wavepacket: Wavepacket[_S0Inv, _B0Inv],
+    wavepacket: Wavepacket[_B0Inv, _B1Inv],
     idx: tuple[int, int] = (0, 0),
     *,
     ax: Axes | None = None,
@@ -265,7 +271,7 @@ def plot_wavepacket_x0(
 
 
 def plot_wavepacket_x1(
-    wavepacket: Wavepacket[_S0Inv, _B0Inv],
+    wavepacket: Wavepacket[_B0Inv, _B1Inv],
     idx: tuple[int, int] = (0, 0),
     *,
     ax: Axes | None = None,
@@ -296,7 +302,7 @@ def plot_wavepacket_x1(
 
 
 def plot_wavepacket_x2(
-    wavepacket: Wavepacket[_S0Inv, _B0Inv],
+    wavepacket: Wavepacket[_B0Inv, _B1Inv],
     idx: tuple[int, int] = (0, 0),
     *,
     ax: Axes | None = None,
@@ -327,7 +333,7 @@ def plot_wavepacket_x2(
 
 
 def plot_wavepacket_2d_k(
-    wavepacket: Wavepacket[_S0Inv, _B0Inv],
+    wavepacket: Wavepacket[_B0Inv, _B1Inv],
     axes: tuple[int, int] = (0, 1),
     idx: SingleStackedIndexLike | None = None,
     *,
@@ -362,7 +368,7 @@ def plot_wavepacket_2d_k(
 
 
 def plot_wavepacket_k0k1(
-    wavepacket: Wavepacket[_S03dInv, _B3d0Inv],
+    wavepacket: Wavepacket[_B03dInv, _B3d0Inv],
     k2_idx: SingleFlatIndexLike,
     *,
     ax: Axes | None = None,
@@ -395,7 +401,7 @@ def plot_wavepacket_k0k1(
 
 
 def plot_wavepacket_k1k2(
-    wavepacket: Wavepacket[_S03dInv, _B3d0Inv],
+    wavepacket: Wavepacket[_B03dInv, _B3d0Inv],
     k0_idx: SingleFlatIndexLike,
     *,
     ax: Axes | None = None,
@@ -428,7 +434,7 @@ def plot_wavepacket_k1k2(
 
 
 def plot_wavepacket_k2k0(
-    wavepacket: Wavepacket[_S03dInv, _B3d0Inv],
+    wavepacket: Wavepacket[_B03dInv, _B3d0Inv],
     k1_idx: SingleFlatIndexLike,
     *,
     ax: Axes | None = None,
@@ -461,7 +467,7 @@ def plot_wavepacket_k2k0(
 
 
 def plot_wavepacket_2d_x(
-    wavepacket: Wavepacket[_S0Inv, _B0Inv],
+    wavepacket: Wavepacket[_B0Inv, _B1Inv],
     axes: tuple[int, int] = (0, 1),
     idx: SingleStackedIndexLike | None = None,
     *,
@@ -496,7 +502,7 @@ def plot_wavepacket_2d_x(
 
 
 def plot_all_wavepacket_states_2d_x(
-    wavepacket: Wavepacket[_S0Inv, _B0Inv],
+    wavepacket: Wavepacket[_B0Inv, _B1Inv],
     axes: tuple[int, int] = (0, 1),
     idx: SingleStackedIndexLike | None = None,
     *,
@@ -533,7 +539,7 @@ def plot_all_wavepacket_states_2d_x(
 
 
 def plot_wavepacket_2d_x_max(
-    wavepacket: Wavepacket[_S0Inv, _B0Inv],
+    wavepacket: Wavepacket[_B0Inv, _B1Inv],
     axes: tuple[int, int] = (0, 1),
     *,
     ax: Axes | None = None,
@@ -567,7 +573,7 @@ def plot_wavepacket_2d_x_max(
 
 
 def plot_all_wavepacket_states_2d_x_max(
-    wavepacket: Wavepacket[_S0Inv, _B0Inv],
+    wavepacket: Wavepacket[_B0Inv, _B1Inv],
     axes: tuple[int, int] = (0, 1),
     *,
     ax: Axes | None = None,
@@ -596,7 +602,7 @@ def plot_all_wavepacket_states_2d_x_max(
     -------
     Generator[tuple[Figure, Axes, QuadMesh], None, None]
     """
-    states = get_all_states(wavepacket)
+    states = get_all_bloch_states(wavepacket)
     return (
         plot_state_2d_x_max(state, axes, ax=ax, measure=measure, scale=scale)
         for state in states
@@ -604,7 +610,7 @@ def plot_all_wavepacket_states_2d_x_max(
 
 
 def plot_wavepacket_x0x1(
-    wavepacket: Wavepacket[_S03dInv, _B3d0Inv],
+    wavepacket: Wavepacket[_B03dInv, _B3d0Inv],
     x2_idx: SingleFlatIndexLike,
     *,
     ax: Axes | None = None,
@@ -637,7 +643,7 @@ def plot_wavepacket_x0x1(
 
 
 def plot_wavepacket_x1x2(
-    wavepacket: Wavepacket[_S03dInv, _B3d0Inv],
+    wavepacket: Wavepacket[_B03dInv, _B3d0Inv],
     x0_idx: SingleFlatIndexLike,
     *,
     ax: Axes | None = None,
@@ -670,7 +676,7 @@ def plot_wavepacket_x1x2(
 
 
 def plot_wavepacket_x2x0(
-    wavepacket: Wavepacket[_S03dInv, _B3d0Inv],
+    wavepacket: Wavepacket[_B03dInv, _B3d0Inv],
     x1_idx: SingleFlatIndexLike,
     *,
     ax: Axes | None = None,
@@ -703,8 +709,8 @@ def plot_wavepacket_x2x0(
 
 
 def plot_wavepacket_difference_2d_x(
-    wavepacket_0: Wavepacket[_S0Inv, _B0Inv],
-    wavepacket_1: Wavepacket[_S0Inv, _B0Inv],
+    wavepacket_0: Wavepacket[_B0Inv, _B1Inv],
+    wavepacket_1: Wavepacket[_B0Inv, _B1Inv],
     axes: tuple[int, int] = (0, 1),
     idx: SingleStackedIndexLike | None = None,
     *,
@@ -743,7 +749,7 @@ def plot_wavepacket_difference_2d_x(
 
 
 def animate_wavepacket_3d_x(
-    wavepacket: Wavepacket[_S0Inv, _B0Inv],
+    wavepacket: Wavepacket[_B0Inv, _B1Inv],
     axes: tuple[int, int, int],
     idx: SingleStackedIndexLike | None = None,
     *,
@@ -775,7 +781,7 @@ def animate_wavepacket_3d_x(
 
 
 def animate_wavepacket_x0x1(
-    wavepacket: Wavepacket[_S03dInv, _B3d0Inv],
+    wavepacket: Wavepacket[_B03dInv, _B3d0Inv],
     *,
     ax: Axes | None = None,
     measure: Measure = "abs",
@@ -804,7 +810,7 @@ def animate_wavepacket_x0x1(
 
 
 def animate_wavepacket_x1x2(
-    wavepacket: Wavepacket[_S03dInv, _B3d0Inv],
+    wavepacket: Wavepacket[_B03dInv, _B3d0Inv],
     *,
     ax: Axes | None = None,
     measure: Measure = "abs",
@@ -833,7 +839,7 @@ def animate_wavepacket_x1x2(
 
 
 def animate_wavepacket_x2x0(
-    wavepacket: Wavepacket[_S03dInv, _B3d0Inv],
+    wavepacket: Wavepacket[_B03dInv, _B3d0Inv],
     *,
     ax: Axes | None = None,
     measure: Measure = "abs",
@@ -862,7 +868,7 @@ def animate_wavepacket_x2x0(
 
 
 def plot_wavepacket_along_path(
-    wavepacket: Wavepacket[_S0Inv, _B0Inv],
+    wavepacket: Wavepacket[_B0Inv, _B1Inv],
     path: np.ndarray[tuple[int, int], np.dtype[np.int_]],
     *,
     ax: Axes | None = None,

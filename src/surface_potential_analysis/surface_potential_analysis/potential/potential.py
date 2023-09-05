@@ -205,7 +205,7 @@ def load_uneven_potential_json(
             "basis": (
                 FundamentalPositionAxis2d(np.array(out["delta_x0"]), points.shape[0]),
                 FundamentalPositionAxis2d(np.array(out["delta_x1"]), points.shape[1]),
-                np.array(out["z_points"]),
+                UnevenPotential3dZAxis(np.array(out["z_points"])),
             ),
             "vector": points,
         }

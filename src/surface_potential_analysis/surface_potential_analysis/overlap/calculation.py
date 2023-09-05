@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING, Any, TypeVar
 
 import numpy as np
 
+from surface_potential_analysis.axis.axis import FundamentalAxis
 from surface_potential_analysis.state_vector.conversion import (
     convert_state_vector_to_position_basis,
 )
@@ -28,7 +29,10 @@ _L0Inv = TypeVar("_L0Inv", bound=int)
 _L1Inv = TypeVar("_L1Inv", bound=int)
 _L2Inv = TypeVar("_L2Inv", bound=int)
 
-_S03dInv = TypeVar("_S03dInv", bound=tuple[int, int, int])
+_S03dInv = TypeVar(
+    "_S03dInv",
+    bound=tuple[FundamentalAxis[int], FundamentalAxis[int], FundamentalAxis[int]],
+)
 
 
 def calculate_overlap_momentum_eigenstate(

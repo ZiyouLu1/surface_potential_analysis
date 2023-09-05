@@ -4,11 +4,13 @@ from typing import TYPE_CHECKING, Any, TypeVar
 
 import numpy as np
 
+from surface_potential_analysis.basis.build import fundamental_basis_from_shape
 from surface_potential_analysis.basis.conversion import (
     basis_as_fundamental_momentum_basis,
     basis_as_fundamental_position_basis,
     convert_vector,
 )
+from surface_potential_analysis.basis.util import BasisUtil
 
 if TYPE_CHECKING:
     from surface_potential_analysis.axis.axis import (
@@ -17,22 +19,23 @@ if TYPE_CHECKING:
     )
     from surface_potential_analysis.basis.basis import (
         AxisWithLengthBasis,
+        Basis,
     )
     from surface_potential_analysis.wavepacket.wavepacket import (
         Wavepacket,
     )
 
+    _B0Inv = TypeVar("_B0Inv", bound=Basis)
     _S0Inv = TypeVar("_S0Inv", bound=tuple[int, ...])
 
-    _B0Inv = TypeVar("_B0Inv", bound=AxisWithLengthBasis[Any])
-    _B1Inv = TypeVar("_B1Inv", bound=AxisWithLengthBasis[Any])
-    _S1Inv = TypeVar("_S1Inv", bound=tuple[int, ...])
+    _B2Inv = TypeVar("_B2Inv", bound=AxisWithLengthBasis[Any])
+    _B3Inv = TypeVar("_B3Inv", bound=AxisWithLengthBasis[Any])
 
 
 def convert_wavepacket_to_basis(
-    wavepacket: Wavepacket[_S0Inv, _B0Inv],
-    basis: _B1Inv,
-) -> Wavepacket[_S0Inv, _B1Inv]:
+    wavepacket: Wavepacket[_B0Inv, _B2Inv],
+    basis: _B3Inv,
+) -> Wavepacket[_B0Inv, _B3Inv]:
     """
     Given a wavepacket convert it to the given basis.
 
@@ -54,8 +57,8 @@ def convert_wavepacket_to_basis(
 
 
 def convert_wavepacket_to_position_basis(
-    wavepacket: Wavepacket[_S0Inv, _B0Inv]
-) -> Wavepacket[_S0Inv, tuple[FundamentalPositionAxis[Any, Any], ...]]:
+    wavepacket: Wavepacket[_B0Inv, _B2Inv]
+) -> Wavepacket[_B0Inv, tuple[FundamentalPositionAxis[Any, Any], ...]]:
     """
     Convert a wavepacket to the fundamental position basis.
 
@@ -73,8 +76,8 @@ def convert_wavepacket_to_position_basis(
 
 
 def convert_wavepacket_to_fundamental_momentum_basis(
-    wavepacket: Wavepacket[_S0Inv, _B0Inv]
-) -> Wavepacket[_S0Inv, tuple[FundamentalTransformedPositionAxis[Any, Any], ...]]:
+    wavepacket: Wavepacket[_B0Inv, _B2Inv]
+) -> Wavepacket[_B0Inv, tuple[FundamentalTransformedPositionAxis[Any, Any], ...]]:
     """
     Convert a wavepacket to the fundamental position basis.
 
@@ -92,8 +95,8 @@ def convert_wavepacket_to_fundamental_momentum_basis(
 
 
 def convert_wavepacket_to_shape(
-    wavepacket: Wavepacket[_S0Inv, _B0Inv], shape: _S1Inv
-) -> Wavepacket[_S1Inv, _B0Inv]:
+    wavepacket: Wavepacket[_B0Inv, _B2Inv], shape: _S0Inv
+) -> Wavepacket[Any, _B2Inv]:
     """
     Convert the wavepacket to the given shape.
 
@@ -108,18 +111,18 @@ def convert_wavepacket_to_shape(
     -------
     Wavepacket[_S1Inv, _B0Inv]
     """
+    old_shape = BasisUtil(wavepacket["list_basis"]).shape
     slices = tuple(
-        slice(None, None, s0 // s1)
-        for (s0, s1) in zip(wavepacket["shape"], shape, strict=True)
+        slice(None, None, s0 // s1) for (s0, s1) in zip(old_shape, shape, strict=True)
     )
     np.testing.assert_array_almost_equal(
-        wavepacket["shape"],
+        old_shape,
         [s.step * s1 for (s, s1) in zip(slices, shape, strict=True)],
     )
     return {
         "basis": wavepacket["basis"],
-        "shape": shape,
+        "list_basis": fundamental_basis_from_shape(shape),
         "vectors": wavepacket["vectors"]
-        .reshape(*wavepacket["shape"], -1)[*slices, :]
+        .reshape(*old_shape, -1)[*slices, :]
         .reshape(np.prod(shape), -1),
     }

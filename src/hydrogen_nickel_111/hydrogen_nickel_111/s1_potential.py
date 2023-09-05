@@ -298,14 +298,18 @@ def get_interpolated_potential(
 def extrapolate_uneven_potential(
     potential: UnevenPotential3d[Any, Any, Any]
 ) -> UnevenPotential3d[Any, Any, Any]:
+    util = BasisUtil(potential["basis"])
+
     old_z_points = potential["basis"][2].z_points
+    old_potential = potential["vector"].reshape(util.shape)
+
     z_range = old_z_points[-1] - old_z_points[0]
     z_points = np.linspace(
         old_z_points[0] - z_range,
         old_z_points[0] + 2 * z_range,
         4 * potential["basis"][2].n,
     )
-    util = BasisUtil(potential["basis"])
+
     return {
         "basis": (
             potential["basis"][0],
@@ -314,7 +318,7 @@ def extrapolate_uneven_potential(
         ),
         "vector": scipy.interpolate.interp1d(
             old_z_points,
-            potential["vector"].reshape(util.shape),
+            old_potential,
             axis=2,
             kind="slinear",
             fill_value="extrapolate",

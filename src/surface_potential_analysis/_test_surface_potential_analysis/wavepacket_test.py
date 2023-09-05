@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING, Any
 import numpy as np
 
 from surface_potential_analysis.basis.build import (
+    fundamental_basis_from_shape,
     momentum_basis_3d_from_resolution,
     position_basis_3d_from_shape,
 )
@@ -17,7 +18,7 @@ from surface_potential_analysis.wavepacket.localization._tight_binding import (
     _get_global_phases,
 )
 from surface_potential_analysis.wavepacket.localization._wannier90 import (
-    _parse_nnkpts_file,
+    _parse_nnkpts_file,  # cSpell:disable-line
     _parse_u_mat_file,
 )
 from surface_potential_analysis.wavepacket.wavepacket import (
@@ -46,7 +47,7 @@ class WavepacketTest(unittest.TestCase):
             "basis": position_basis_3d_from_shape(resolution),
             "vectors": np.zeros((ns0 * ns1, np.prod(resolution))),
             "eigenvalues": np.zeros(ns0 * ns1),
-            "shape": (ns0, ns1, 1),
+            "list_basis": fundamental_basis_from_shape((ns0, ns1, 1)),  # type: ignore[typeddict-item]
         }
 
         idx = rng.integers(0, np.prod(resolution).item())
@@ -67,7 +68,7 @@ class WavepacketTest(unittest.TestCase):
     def test_unfurl_wavepacket(self) -> None:
         wavepacket: MomentumBasisWavepacket3d[int, int, int, int, int] = {
             "basis": momentum_basis_3d_from_resolution((3, 3, 3)),
-            "shape": (3, 2, 1),
+            "list_basis": fundamental_basis_from_shape((3, 2, 1)),  # type: ignore[typeddict-item]
             "vectors": np.zeros((3, 2, 27)),
             "eigenvalues": np.zeros((3, 2)),
         }
@@ -93,7 +94,7 @@ class WavepacketTest(unittest.TestCase):
         wavepacket: MomentumBasisWavepacket3d[int, int, int, int, int] = {
             "basis": momentum_basis_3d_from_resolution((3, 3, 3)),
             "vectors": np.array(rng.random((3, 2, 27)), dtype=complex),
-            "shape": (3, 2, 1),
+            "list_basis": fundamental_basis_from_shape((3, 2, 1)),  # type: ignore[typeddict-item]
             "eigenvalues": np.zeros((3, 2)),
         }
         eigenstate = unfurl_wavepacket(wavepacket)
@@ -121,7 +122,7 @@ class WavepacketTest(unittest.TestCase):
         )
         expected = np.array([x.ravel() for x in meshgrid])
         np.testing.assert_array_almost_equal(expected, actual)
-
+    # ! cSpell:disable
     def test_parse_nnkpts_block(self) -> None:
         block = """
 File written on 18Aug2023 at 07:15:55

@@ -31,15 +31,20 @@ if TYPE_CHECKING:
         SingleIndexLike,
         SingleStackedIndexLike,
     )
-    from surface_potential_analysis.basis.basis import AxisWithLengthBasis, Basis3d
+    from surface_potential_analysis.axis.axis import FundamentalAxis
+    from surface_potential_analysis.basis.basis import (
+        AxisWithLengthBasis,
+        Basis,
+        Basis3d,
+    )
 
-    _B3d0Inv = TypeVar("_B3d0Inv", bound=Basis3d[Any, Any, Any])
-    _B0Inv = TypeVar("_B0Inv", bound=AxisWithLengthBasis[Any])
+    _B3d1Inv = TypeVar("_B3d1Inv", bound=Basis3d[Any, Any, Any])
+    _B1Inv = TypeVar("_B1Inv", bound=AxisWithLengthBasis[Any])
 
     _NS0Inv = TypeVar("_NS0Inv", bound=int)
     _NS1Inv = TypeVar("_NS1Inv", bound=int)
 
-    _S0Inv = TypeVar("_S0Inv", bound=tuple[int, ...])
+    _B0Inv = TypeVar("_B0Inv", bound=Basis)
     _S1Inv = TypeVar("_S1Inv", bound=tuple[int, ...])
 
     _WInv = TypeVar("_WInv", bound=Wavepacket[Any, Any])
@@ -91,12 +96,12 @@ def _get_global_phases(  # type: ignore[misc]
     nx_points = idx if isinstance(idx, tuple) else util.get_stacked_index(idx)
     nx_fractions = tuple(a / ni for (a, ni) in zip(nx_points, util.shape, strict=True))
 
-    nk_fractions = get_wavepacket_sample_fractions(wavepacket["shape"])
+    nk_fractions = get_wavepacket_sample_fractions(wavepacket["list_basis"])
     return 2 * np.pi * np.tensordot(nk_fractions, nx_fractions, axes=(0, 0))  # type: ignore[no-any-return]
 
 
 def _get_bloch_wavefunction_phases(
-    wavepacket: Wavepacket[_S0Inv, _B0Inv],
+    wavepacket: Wavepacket[_B0Inv, _B1Inv],
     idx: SingleIndexLike = 0,
 ) -> np.ndarray[tuple[int], np.dtype[np.float_]]:
     """
@@ -123,10 +128,10 @@ def _get_bloch_wavefunction_phases(
 
 @timed
 def localize_tightly_bound_wavepacket_idx(
-    wavepacket: Wavepacket[_S0Inv, _B0Inv],
+    wavepacket: Wavepacket[_B0Inv, _B1Inv],
     idx: SingleIndexLike = 0,
     angle: float = 0,
-) -> Wavepacket[_S0Inv, _B0Inv]:
+) -> Wavepacket[_B0Inv, _B1Inv]:
     """
     localize a wavepacket in momentum basis.
 
@@ -153,13 +158,20 @@ def localize_tightly_bound_wavepacket_idx(
 
     return {
         "basis": wavepacket["basis"],
-        "shape": wavepacket["shape"],
+        "list_basis": wavepacket["list_basis"],
         "vectors": fixed_eigenvectors,
     }
 
 
 def get_wavepacket_two_points(
-    wavepacket: Wavepacket[tuple[_NS0Inv, _NS1Inv, Literal[1]], _B3d0Inv],
+    wavepacket: Wavepacket[
+        tuple[
+            FundamentalAxis[_NS0Inv],
+            FundamentalAxis[_NS1Inv],
+            FundamentalAxis[Literal[1]],
+        ],
+        _B3d1Inv,
+    ],
     offset: tuple[int, int] = (0, 0),
 ) -> tuple[SingleStackedIndexLike, SingleStackedIndexLike]:
     """
@@ -197,10 +209,22 @@ def _wrap_phases(
 
 @timed
 def localize_tightly_bound_wavepacket_two_point_max(
-    wavepacket: Wavepacket[tuple[_NS0Inv, _NS1Inv, Literal[1]], _B3d0Inv],
+    wavepacket: Wavepacket[
+        tuple[
+            FundamentalAxis[_NS0Inv],
+            FundamentalAxis[_NS1Inv],
+            FundamentalAxis[Literal[1]],
+        ],
+        _B3d1Inv,
+    ],
     offset: tuple[int, int] = (0, 0),
     angle: float = 0,
-) -> Wavepacket[tuple[_NS0Inv, _NS1Inv, Literal[1]], _B3d0Inv]:
+) -> Wavepacket[
+    tuple[
+        FundamentalAxis[_NS0Inv], FundamentalAxis[_NS1Inv], FundamentalAxis[Literal[1]]
+    ],
+    _B3d1Inv,
+]:
     """
     Normalize a wavepacket using a 'two-point' calculation.
 
@@ -275,7 +299,7 @@ def localize_tightly_bound_wavepacket_two_point_max(
 
     return {
         "basis": wavepacket["basis"],
-        "shape": wavepacket["shape"],
+        "list_basis": wavepacket["list_basis"],
         "vectors": fixed_eigenvectors,
     }
 
@@ -317,5 +341,5 @@ def localize_tightly_bound_wavepacket_max_point(
     return {  # type: ignore[return-value]
         "basis": wavepacket["basis"],
         "vectors": fixed_eigenvectors,
-        "shape": wavepacket["shape"],
+        "list_basis": wavepacket["list_basis"],
     }

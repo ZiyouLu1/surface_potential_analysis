@@ -12,6 +12,7 @@ from surface_potential_analysis.axis.axis_like import (
     AxisWithLengthLike,
 )
 from surface_potential_analysis.util.interpolation import pad_ft_points
+from surface_potential_analysis.util.util import slice_along_axis
 
 _NF0_co = TypeVar("_NF0_co", bound=int, covariant=True)
 _N0_co = TypeVar("_N0_co", bound=int, covariant=True)
@@ -80,6 +81,45 @@ class ExplicitAxis2d(ExplicitAxis[_NF0Inv, _N0Inv, Literal[2]]):
 
 class ExplicitAxis3d(ExplicitAxis[_NF0Inv, _N0Inv, Literal[3]]):
     """An axis with vectors given as explicit states with a 3d basis vector."""
+
+
+class EvenlySpacedAxis(AsFundamentalAxis[_NF0_co, _N0_co], AxisLike[_NF0_co, _N0_co]):
+    """A axis with vectors that are the fundamental position states."""
+
+    def __init__(self, n: _N0_co, step: int) -> None:
+        self._n = n
+        self._step = step
+        super().__init__()
+
+    @property
+    def n(self) -> _N0_co:
+        return self._n
+
+    @property
+    def fundamental_n(self) -> _NF0_co:
+        return self.n * self._step  # type: ignore[return-value]
+
+    @property
+    def step(self) -> float:
+        return self._step
+
+    def __as_fundamental__(  # type: ignore[override]
+        self,
+        vectors: np.ndarray[_S0Inv, np.dtype[np.complex_ | np.float_]],
+        axis: int = -1,
+    ) -> np.ndarray[_S0Inv, np.dtype[np.complex_]]:
+        shape = list(vectors.shape)
+        shape[axis] = self.fundamental_n
+        ret = np.zeros(shape, np.complex_)
+        ret[slice_along_axis(slice(None, None, self._step), axis)] = vectors
+        return ret  # type: ignore[no-any-return]
+
+    def __from_fundamental__(  # type: ignore[override]
+        self,
+        vectors: np.ndarray[_S0Inv, np.dtype[np.complex_ | np.float_]],
+        axis: int = -1,
+    ) -> np.ndarray[_S0Inv, np.dtype[np.complex_]]:
+        return vectors[slice_along_axis(slice(None, None, self._step), axis)].astype(np.complex_, copy=False)  # type: ignore[no-any-return]
 
 
 class FundamentalAxis(AsFundamentalAxis[_NF0_co, _NF0_co], AxisLike[_NF0_co, _NF0_co]):

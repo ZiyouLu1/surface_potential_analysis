@@ -25,7 +25,7 @@ def plot_copper_wavepacket_eigenvalues() -> None:
     input()
 
 
-def load_copper_eigenvalues() -> np.ndarray[tuple[int, int, int], np.dtype[np.float_]]:
+def get_copper_eigenvalues() -> np.ndarray[tuple[int, int, int], np.dtype[np.float_]]:
     out = np.zeros((10, 12, 12))
     for i in range(10):
         wavepacket = get_wavepacket_hydrogen(i)
@@ -34,7 +34,7 @@ def load_copper_eigenvalues() -> np.ndarray[tuple[int, int, int], np.dtype[np.fl
 
 
 def plot_copper_bands_occupation() -> None:
-    eigenvalues = load_copper_eigenvalues()[:, 0, 0]
+    eigenvalues = get_copper_eigenvalues()[:, 0, 0]
     # Plot the eigenstate occupation. Need to think about there 'mu' is
     # i.e. we have more than one hydrogen adsorbed on the surface
     # And interaction between hydrogen would also ruin things
@@ -54,7 +54,7 @@ def list_first_copper_band_with_widths() -> None:
     print("----------------------------------------")  # noqa: T201
     print("Not relaxed data")  # noqa: T201
 
-    eigenvalues = load_copper_eigenvalues()
+    eigenvalues = get_copper_eigenvalues()
     center_eigenvalues = eigenvalues[:, 0, 0]
     max_eigenvalues = np.max(eigenvalues, axis=0)
     print("k=(0,0)")  # noqa: T201
@@ -77,7 +77,7 @@ def find_band_with_1mev_bandwidth() -> None:
     print("----------------------------------------")  # noqa: T201
     print("Relaxed data")  # noqa: T201
 
-    eigenvalues = load_copper_eigenvalues()
+    eigenvalues = get_copper_eigenvalues()
     center_eigenvalues = eigenvalues[:, 0, 0]
     max_eigenvalues = np.max(eigenvalues, axis=0)
 
@@ -103,7 +103,7 @@ def find_band_with_relevant_energy() -> None:
     print("----------------------------------------")  # noqa: T201
     print("Relaxed data")  # noqa: T201
 
-    eigenvalues = load_copper_eigenvalues()
+    eigenvalues = get_copper_eigenvalues()
     eigenvalues_origin = eigenvalues[:, 0, 0]
 
     eigenvalues_max = np.max(eigenvalues, axis=0)
@@ -160,7 +160,7 @@ def calculate_tst_rate(
 
 
 def plot_tst_rate_arrhenius() -> None:
-    eigenvalues = load_copper_eigenvalues()
+    eigenvalues = get_copper_eigenvalues()
 
     temperatures = np.linspace(60, 150, 20)
     rates = [calculate_tst_rate(t, eigenvalues) for t in temperatures]

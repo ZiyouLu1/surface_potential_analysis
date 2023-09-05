@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, Literal
 
 import numpy as np
-from surface_potential_analysis.util.decorators import npy_cached
+from surface_potential_analysis.util.decorators import npy_cached, timed
 from surface_potential_analysis.wavepacket.localization import (
     localize_single_point_projection,
     localize_tight_binding_projection,
@@ -28,6 +28,7 @@ if TYPE_CHECKING:
 
     from surface_potential_analysis.axis.axis import (
         ExplicitAxis,
+        FundamentalAxis,
         TransformedPositionAxis,
     )
     from surface_potential_analysis.basis.basis import (
@@ -36,7 +37,11 @@ if TYPE_CHECKING:
     from surface_potential_analysis.operator import SingleBasisOperator
 
     _HydrogenNickelWavepacketWithEigenvalues = WavepacketWithEigenvalues[
-        tuple[Literal[12], Literal[12], Literal[1]],
+        tuple[
+            FundamentalAxis[Literal[12]],
+            FundamentalAxis[Literal[12]],
+            FundamentalAxis[Literal[1]],
+        ],
         Basis3d[
             TransformedPositionAxis[Literal[29], Literal[29], Literal[3]],
             TransformedPositionAxis[Literal[29], Literal[29], Literal[3]],
@@ -44,7 +49,11 @@ if TYPE_CHECKING:
         ],
     ]
     _HydrogenNickelWavepacket = Wavepacket[
-        tuple[Literal[12], Literal[12], Literal[1]],
+        tuple[
+            FundamentalAxis[Literal[12]],
+            FundamentalAxis[Literal[12]],
+            FundamentalAxis[Literal[1]],
+        ],
         Basis3d[
             TransformedPositionAxis[Literal[29], Literal[29], Literal[3]],
             TransformedPositionAxis[Literal[29], Literal[29], Literal[3]],
@@ -53,15 +62,23 @@ if TYPE_CHECKING:
     ]
 
     _HydrogenNickelWavepacketExtrapolated = WavepacketWithEigenvalues[
-        tuple[Literal[6], Literal[6], Literal[1]],
+        tuple[
+            FundamentalAxis[Literal[6]],
+            FundamentalAxis[Literal[6]],
+            FundamentalAxis[Literal[4]],
+        ],
         Basis3d[
             TransformedPositionAxis[Literal[27], Literal[27], Literal[3]],
             TransformedPositionAxis[Literal[27], Literal[27], Literal[3]],
-            ExplicitAxis[Literal[250], Literal[15], Literal[3]],
+            ExplicitAxis[Literal[250], Literal[16], Literal[3]],
         ],
     ]
     _DeuteriumNickelWavepacketWithEigenvalues = WavepacketWithEigenvalues[
-        tuple[Literal[12], Literal[12], Literal[1]],
+        tuple[
+            FundamentalAxis[Literal[12]],
+            FundamentalAxis[Literal[12]],
+            FundamentalAxis[Literal[1]],
+        ],
         Basis3d[
             TransformedPositionAxis[Literal[27], Literal[27], Literal[3]],
             TransformedPositionAxis[Literal[27], Literal[27], Literal[3]],
@@ -69,7 +86,11 @@ if TYPE_CHECKING:
         ],
     ]
     _DeuteriumNickelWavepacket = Wavepacket[
-        tuple[Literal[12], Literal[12], Literal[1]],
+        tuple[
+            FundamentalAxis[Literal[12]],
+            FundamentalAxis[Literal[12]],
+            FundamentalAxis[Literal[1]],
+        ],
         Basis3d[
             TransformedPositionAxis[Literal[27], Literal[27], Literal[3]],
             TransformedPositionAxis[Literal[27], Literal[27], Literal[3]],
@@ -80,6 +101,7 @@ if TYPE_CHECKING:
 
 @npy_cached(get_data_path("wavepacket/wavepacket_hydrogen.npy"), load_pickle=True)
 def get_all_wavepackets_hydrogen() -> list[_HydrogenNickelWavepacketWithEigenvalues]:
+    @timed
     def _hamiltonian_generator(
         bloch_fraction: np.ndarray[tuple[Literal[3]], np.dtype[np.float_]]
     ) -> SingleBasisOperator[Any]:
@@ -96,23 +118,24 @@ def get_all_wavepackets_hydrogen() -> list[_HydrogenNickelWavepacketWithEigenval
 
 
 @npy_cached(
-    get_data_path("wavepacket/wavepacket_hydrogen_extrapolated_2.npy"), load_pickle=True
+    get_data_path("wavepacket/wavepacket_hydrogen_extrapolated_7.npy"), load_pickle=True
 )
 def get_all_wavepackets_hydrogen_extrapolated() -> (
     list[_HydrogenNickelWavepacketExtrapolated]
 ):
+    @timed
     def _hamiltonian_generator(
         bloch_fraction: np.ndarray[tuple[Literal[3]], np.dtype[np.float_]]
     ) -> SingleBasisOperator[Any]:
         return get_hamiltonian_hydrogen_extrapolated(
-            shape=(250, 250, 250),
+            shape=(12, 12, 50),
             bloch_fraction=bloch_fraction,
-            resolution=(27, 27, 15),
+            resolution=(6, 6, 4),
         )
 
     save_bands = np.arange(10)
     return generate_wavepacket(
-        _hamiltonian_generator, shape=(6, 6, 1), save_bands=save_bands
+        _hamiltonian_generator, shape=(60, 60, 1), save_bands=save_bands
     )
 
 

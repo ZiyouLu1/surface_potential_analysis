@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import matplotlib.pyplot as plt
 import numpy as np
+from surface_potential_analysis.basis.util import BasisUtil
 from surface_potential_analysis.state_vector.plot import (
     plot_state_2d_x,
     plot_state_difference_2d_x,
@@ -110,7 +111,7 @@ def calculate_eigenstate_cross_product() -> None:
     eigenstates = get_wavepacket_hydrogen(0)
     normalized = localize_tightly_bound_wavepacket_idx(eigenstates)
 
-    (ns0, ns1, _) = normalized["shape"]
+    (ns0, ns1, _) = BasisUtil(normalized["list_basis"]).shape
     state_0 = get_state_vector(normalized, (ns0 // 2, ns1 // 2))
     state_1 = get_state_vector(normalized, (0, 0))
 

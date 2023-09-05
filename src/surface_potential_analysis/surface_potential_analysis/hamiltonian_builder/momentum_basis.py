@@ -20,7 +20,6 @@ from surface_potential_analysis.operator.operator import (
     add_operator,
 )
 from surface_potential_analysis.potential.conversion import convert_potential_to_basis
-from surface_potential_analysis.util.decorators import timed
 
 if TYPE_CHECKING:
     from surface_potential_analysis.basis.basis import (
@@ -96,7 +95,6 @@ def hamiltonian_from_mass(
     return convert_operator_to_basis(hamiltonian, basis, basis)
 
 
-@timed
 def total_surface_hamiltonian(
     potential: Potential[_B0Inv],
     mass: float,

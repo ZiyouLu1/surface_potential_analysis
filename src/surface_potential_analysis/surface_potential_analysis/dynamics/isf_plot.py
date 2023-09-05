@@ -1,38 +1,40 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, TypeVar
+from typing import TYPE_CHECKING, Any, TypeVar
 
-import numpy as np
-from matplotlib import pyplot as plt
-
-from surface_potential_analysis.dynamics.incoherent_propagation.isf import (
+from surface_potential_analysis.dynamics.isf import (
     ISF4VariableFit,
     ISFFeyModelFit,
-    RateDecomposition,
     get_isf_from_4_variable_fit,
     get_isf_from_fey_model_fit_110,
     get_isf_from_fey_model_fit_112bar,
 )
+from surface_potential_analysis.state_vector.eigenvalue_list import average_eigenvalues
 from surface_potential_analysis.state_vector.eigenvalue_list_plot import (
-    plot_eigenvalue_against_x,
+    plot_eigenvalue_against_time,
 )
 
 if TYPE_CHECKING:
+    import numpy as np
     from matplotlib.axes import Axes
     from matplotlib.figure import Figure
     from matplotlib.lines import Line2D
 
+    from surface_potential_analysis.axis.axis_like import AxisLike
+    from surface_potential_analysis.axis.time_axis_like import AxisWithTimeLike
     from surface_potential_analysis.state_vector.eigenvalue_list import EigenvalueList
     from surface_potential_analysis.util.plot import Scale
     from surface_potential_analysis.util.util import Measure
 
-_N0Inv = TypeVar("_N0Inv", bound=int)
-_L0Inv = TypeVar("_L0Inv", bound=int)
+    _B0Inv = TypeVar("_B0Inv", bound=tuple[AxisWithTimeLike[Any, Any]])
+    _N0Inv = TypeVar("_N0Inv", bound=int)
+    _B0StackedInv = TypeVar(
+        "_B0StackedInv", bound=tuple[AxisLike[Any, Any], AxisWithTimeLike[Any, Any]]
+    )
 
 
 def plot_isf_against_time(
-    eigenvalues: EigenvalueList[_N0Inv],
-    times: np.ndarray[tuple[_N0Inv], np.dtype[np.float_]],
+    eigenvalues: EigenvalueList[_B0Inv],
     *,
     ax: Axes | None = None,
     measure: Measure = "abs",
@@ -58,14 +60,42 @@ def plot_isf_against_time(
     -------
     tuple[Figure, Axes, Line2D]
     """
-    (fig, ax, line) = plot_eigenvalue_against_x(
-        eigenvalues, times, ax=ax, measure=measure, scale=scale
+    (fig, ax, line) = plot_eigenvalue_against_time(
+        eigenvalues, ax=ax, measure=measure, scale=scale
     )
     ax.set_ylabel("ISF")
     ax.set_ylim(0, 1)
-    ax.set_xlabel("time /s")
-    ax.set_xlim(times[0], times[-1])
     return fig, ax, line
+
+
+def plot_average_isf_against_time(
+    eigenvalues: EigenvalueList[_B0StackedInv],
+    *,
+    ax: Axes | None = None,
+    measure: Measure = "abs",
+    scale: Scale = "linear",
+) -> tuple[Figure, Axes, Line2D]:
+    """
+    Plot the average ISF against time.
+
+    Parameters
+    ----------
+    eigenvalues : EigenvalueList[_B0StackedInv]
+        _description_
+    ax : Axes | None, optional
+        _description_, by default None
+    measure : Measure, optional
+        _description_, by default "abs"
+    scale : Scale, optional
+        _description_, by default "linear"
+
+    Returns
+    -------
+    tuple[Figure, Axes, Line2D]
+        _description_
+    """
+    averaged = average_eigenvalues(eigenvalues, (0,))
+    return plot_isf_against_time(averaged, ax=ax, measure=measure, scale=scale)
 
 
 def plot_isf_4_variable_fit_against_time(
@@ -97,7 +127,7 @@ def plot_isf_4_variable_fit_against_time(
     tuple[Figure, Axes, Line2D]
     """
     isf = get_isf_from_4_variable_fit(fit, times)
-    return plot_isf_against_time(isf, times, ax=ax, measure=measure, scale=scale)
+    return plot_isf_against_time(isf, ax=ax, measure=measure, scale=scale)
 
 
 def plot_isf_fey_model_fit_112bar_against_time(
@@ -129,7 +159,7 @@ def plot_isf_fey_model_fit_112bar_against_time(
     tuple[Figure, Axes, Line2D]
     """
     isf = get_isf_from_fey_model_fit_112bar(fit, times)
-    return plot_isf_against_time(isf, times, ax=ax, measure=measure, scale=scale)
+    return plot_isf_against_time(isf, ax=ax, measure=measure, scale=scale)
 
 
 def plot_isf_fey_model_fit_110_against_time(
@@ -161,37 +191,4 @@ def plot_isf_fey_model_fit_110_against_time(
     tuple[Figure, Axes, Line2D]
     """
     isf = get_isf_from_fey_model_fit_110(fit, times)
-    return plot_isf_against_time(isf, times, ax=ax, measure=measure, scale=scale)
-
-
-def plot_rate_decomposition_against_temperature(
-    rates: list[RateDecomposition[_L0Inv]],
-    temperatures: np.ndarray[tuple[_N0Inv], np.dtype[np.float_]],
-    *,
-    ax: Axes | None = None,
-) -> tuple[Figure, Axes]:
-    """
-    Plot the individual rates in the simulation against temperature.
-
-    Parameters
-    ----------
-    rates : list[RateDecomposition[_L0Inv]]
-    temperatures : np.ndarray[tuple[_N0Inv], np.dtype[np.float_]]
-    ax : Axes | None, optional
-        plot axis, by default None
-
-    Returns
-    -------
-    tuple[Figure, Axes]
-    """
-    fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
-
-    rate_constants = -np.real([rate.eigenvalues for rate in rates])
-    coefficients = np.abs([rate.coefficients for rate in rates])
-    relevant_rates = np.argsort(coefficients, axis=-1)
-    sorted_rates = np.take_along_axis(rate_constants, relevant_rates, axis=-1)[:, ::-1]
-
-    coefficients = np.abs([rate.coefficients for rate in rates])
-    for i in range(50):
-        ax.plot(temperatures, sorted_rates[:, i])
-    return fig, ax
+    return plot_isf_against_time(isf, ax=ax, measure=measure, scale=scale)

@@ -6,6 +6,7 @@ import numpy as np
 
 from surface_potential_analysis.axis.axis import (
     ExplicitAxis1d,
+    FundamentalAxis,
     FundamentalPositionAxis,
     FundamentalPositionAxis1d,
 )
@@ -22,8 +23,8 @@ if TYPE_CHECKING:
     from surface_potential_analysis.potential.potential import (
         Potential,
     )
-    from surface_potential_analysis.state_vector.eigenstate_calculation import (
-        EigenvectorList,
+    from surface_potential_analysis.state_vector.eigenstate_collection import (
+        EigenstateList,
     )
 
 _B1d0_co = TypeVar("_B1d0_co", covariant=True, bound=Basis1d[Any])
@@ -46,7 +47,9 @@ _N0Inv = TypeVar("_N0Inv", bound=int)
 
 def get_potential_basis_config_eigenstates(
     config: PotentialBasisConfig[_B1d0Inv, _N0Inv],
-) -> EigenvectorList[_B1d0Inv, _N0Inv]:
+    *,
+    bloch_fraction: float | None = None,
+) -> EigenstateList[tuple[FundamentalAxis[_N0Inv]], _B1d0Inv]:
     """
     Get the eigenstates of the potential, as used in the final basis.
 
@@ -58,8 +61,9 @@ def get_potential_basis_config_eigenstates(
     -------
     EigenstateList[PositionBasis3d[_L0Inv, Literal[1], Literal[1]]]
     """
+    bloch_fraction = 0 if bloch_fraction is None else bloch_fraction
     hamiltonian = total_surface_hamiltonian(
-        config["potential"], config["mass"], np.array([0])
+        config["potential"], config["mass"], np.array([bloch_fraction])
     )
     return calculate_eigenvectors_hermitian(  # type: ignore[return-value]
         hamiltonian, subset_by_index=(0, config["n"] - 1)

@@ -16,7 +16,11 @@ if TYPE_CHECKING:
     from pathlib import Path
 
     from surface_potential_analysis.axis.axis import (
+        FundamentalAxis,
         FundamentalTransformedPositionAxis1d,
+    )
+    from surface_potential_analysis.axis.block_fraction_axis import (
+        ExplicitBlockFractionAxis,
     )
     from surface_potential_analysis.operator.operator import SingleBasisOperator
 
@@ -31,9 +35,10 @@ def _get_eigenstate_collection_cache(shape: tuple[_L0Inv]) -> Path:
 def get_eigenstate_collection(
     shape: tuple[_L0Inv],
 ) -> EigenstateColllection[
-    tuple[FundamentalTransformedPositionAxis1d[_L0Inv]], Literal[5]
+    tuple[ExplicitBlockFractionAxis[Literal[11]], FundamentalAxis[Literal[99]]],
+    tuple[FundamentalTransformedPositionAxis1d[_L0Inv]],
 ]:
-    bloch_fractions = np.linspace(-0.5, 0.5, 11).reshape(-1, 1)
+    bloch_fractions = np.linspace(-0.5, 0.5, 11)
 
     def hamiltonian_generator(
         bloch_fraction: np.ndarray[tuple[Literal[1]], np.dtype[np.float_]]
@@ -41,5 +46,5 @@ def get_eigenstate_collection(
         return get_hamiltonian(shape=shape, bloch_fraction=bloch_fraction)
 
     return calculate_eigenstate_collection(
-        hamiltonian_generator, bloch_fractions, subset_by_index=(0, 99)  # type: ignore[arg-type]
+        hamiltonian_generator, bloch_fractions, subset_by_index=(0, 99)  # type: ignore[arg-type,return-value]
     )

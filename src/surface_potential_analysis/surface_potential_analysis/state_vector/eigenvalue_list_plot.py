@@ -1,27 +1,26 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, TypeVar
+from typing import TYPE_CHECKING, Any, TypeVar
 
 import matplotlib.pyplot as plt
 
 from surface_potential_analysis.util.util import Measure, get_measured_data
 
 if TYPE_CHECKING:
-    import numpy as np
     from matplotlib.axes import Axes
     from matplotlib.figure import Figure
     from matplotlib.lines import Line2D
 
+    from surface_potential_analysis.axis.time_axis_like import AxisWithTimeLike
     from surface_potential_analysis.util.plot import Scale
 
     from .eigenvalue_list import EigenvalueList
 
-_N0Inv = TypeVar("_N0Inv", bound=int)
+    _B0Inv = TypeVar("_B0Inv", bound=tuple[AxisWithTimeLike[Any, Any]])
 
 
-def plot_eigenvalue_against_x(
-    eigenvalues: EigenvalueList[_N0Inv],
-    x_values: np.ndarray[tuple[_N0Inv], np.dtype[np.float_]],
+def plot_eigenvalue_against_time(
+    eigenvalues: EigenvalueList[_B0Inv],
     *,
     ax: Axes | None = None,
     measure: Measure = "abs",
@@ -50,7 +49,10 @@ def plot_eigenvalue_against_x(
     fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
 
     data = get_measured_data(eigenvalues["eigenvalues"], measure)
-    (line,) = ax.plot(x_values, data)
+    times = eigenvalues["list_basis"][0].times
+    (line,) = ax.plot(times, data)
     ax.set_ylabel("Eigenvalue")
     ax.set_yscale(scale)
+    ax.set_xlabel("time /s")
+    ax.set_xlim(times[0], times[-1])
     return fig, ax, line

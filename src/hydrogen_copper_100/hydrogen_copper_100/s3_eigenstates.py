@@ -14,6 +14,11 @@ from .surface_data import get_data_path
 if TYPE_CHECKING:
     from pathlib import Path
 
+    from surface_potential_analysis.axis.axis import FundamentalAxis
+    from surface_potential_analysis.axis.block_fraction_axis import (
+        ExplicitBlockFractionAxis,
+    )
+
     _L0 = TypeVar("_L0", bound=int)
     _L1 = TypeVar("_L1", bound=int)
     _L2 = TypeVar("_L2", bound=int)
@@ -37,12 +42,12 @@ def _get_eigenstate_collection_cache(shape: tuple[_L0, _L1, _L2]) -> Path:
 def get_eigenstate_collection(
     shape: tuple[_L0, _L1, _L2],
 ) -> EigenstateColllection[
+    tuple[ExplicitBlockFractionAxis[Literal[11]], FundamentalAxis[Literal[10]]],
     tuple[
         TransformedPositionAxis[_L0, _L0, Literal[3]],
         TransformedPositionAxis[_L1, _L1, Literal[3]],
         ExplicitAxis[Literal[250], _L2, Literal[3]],
     ],
-    Literal[11],
 ]:
     bloch_fractions_x = np.linspace(-0.5, 0.5, 11)
     bloch_fractions = np.array([[f, 0, 0] for f in bloch_fractions_x])
@@ -63,7 +68,7 @@ def get_eigenstate_collection(
         )
 
     return calculate_eigenstate_collection(
-        hamiltonian_generator, bloch_fractions, subset_by_index=(0, 10)  # type: ignore[arg-type]
+        hamiltonian_generator, bloch_fractions, subset_by_index=(0, 10)  # type: ignore[arg-type,return-value]
     )
 
 
@@ -77,12 +82,12 @@ def _get_eigenstate_collection_relaxed_cache(shape: tuple[_L0, _L1, _L2]) -> Pat
 def get_eigenstate_collection_relaxed(
     shape: tuple[_L0, _L1, _L2],
 ) -> EigenstateColllection[
+    tuple[ExplicitBlockFractionAxis[Literal[11]], FundamentalAxis[Literal[10]]],
     tuple[
         TransformedPositionAxis[_L0, _L0, Literal[3]],
         TransformedPositionAxis[_L1, _L1, Literal[3]],
         ExplicitAxis[Literal[250], _L2, Literal[3]],
     ],
-    Literal[11],
 ]:
     bloch_fractions_x = np.linspace(-0.5, 0.5, 11)
     bloch_fractions = np.array([[f, 0, 0] for f in bloch_fractions_x])
@@ -103,5 +108,5 @@ def get_eigenstate_collection_relaxed(
         )
 
     return calculate_eigenstate_collection(
-        hamiltonian_generator, bloch_fractions, subset_by_index=(0, 10)  # type: ignore[arg-type]
+        hamiltonian_generator, bloch_fractions, subset_by_index=(0, 10)  # type: ignore[arg-type,return-value]
     )

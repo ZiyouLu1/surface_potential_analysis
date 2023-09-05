@@ -7,8 +7,6 @@ import numpy as np
 import scipy.fft
 import scipy.interpolate
 
-from surface_potential_analysis.util.decorators import timed
-
 from .util import slice_along_axis
 
 if TYPE_CHECKING:
@@ -18,7 +16,6 @@ _DT = TypeVar("_DT", bound=np.dtype[Any])
 _S0Inv = TypeVar("_S0Inv", bound=tuple[int, ...])
 
 
-@timed
 def pad_ft_points(
     array: np.ndarray[_S0Inv, _DT], s: Sequence[int], axes: Sequence[int]
 ) -> np.ndarray[tuple[int, ...], _DT]:

@@ -95,7 +95,7 @@ class StackedHamiltonian3d(TypedDict, Generic[_B3d0_co]):
     """Represents an operator with it's array of points 'stacked'."""
 
     basis: _B3d0_co
-    # We need higher kinded types to do this properly
+    # We need higher kinded types to do this properly # cspell:disable-line
     array: _StackedHamiltonianPoints[int, int, int]
 
 

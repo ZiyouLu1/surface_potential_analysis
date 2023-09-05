@@ -10,7 +10,6 @@ from surface_potential_analysis.axis.conversion import (
     axis_as_fundamental_position_axis,
     axis_as_n_point_axis,
 )
-from surface_potential_analysis.util.decorators import timed
 
 from .util import BasisUtil
 
@@ -132,7 +131,6 @@ def convert_vector(
     ...
 
 
-@timed
 def convert_vector(
     vector: np.ndarray[_S0Inv, np.dtype[np.complex_] | np.dtype[np.float_]],
     initial_basis: _B0Inv,

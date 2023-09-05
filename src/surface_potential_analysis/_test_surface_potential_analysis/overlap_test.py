@@ -5,9 +5,7 @@ from typing import TYPE_CHECKING, Any
 
 import numpy as np
 
-from surface_potential_analysis.basis.build import (
-    position_basis_3d_from_shape,
-)
+from surface_potential_analysis.basis.build import position_basis_3d_from_shape
 from surface_potential_analysis.basis.util import (
     AxisWithLengthBasisUtil,
 )

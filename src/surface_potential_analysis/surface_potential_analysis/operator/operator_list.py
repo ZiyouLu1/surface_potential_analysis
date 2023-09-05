@@ -16,23 +16,24 @@ if TYPE_CHECKING:
         DiagonalOperator,
         Operator,
     )
-_B1Inv = TypeVar("_B1Inv", bound=Basis)
 _B0Inv = TypeVar("_B0Inv", bound=Basis)
-_L0Inv = TypeVar("_L0Inv", bound=int)
+_B1Inv = TypeVar("_B1Inv", bound=Basis)
+_B2Inv = TypeVar("_B2Inv", bound=Basis)
 
 
-class OperatorList(TypedDict, Generic[_B0Inv, _B1Inv, _L0Inv]):
+class OperatorList(TypedDict, Generic[_B0Inv, _B1Inv, _B2Inv]):
     """Represents a list of eigenstates, each with the same basis and bloch wavevector."""
 
-    basis: _B0Inv
-    dual_basis: _B1Inv
-    arrays: np.ndarray[tuple[_L0Inv, int, int], np.dtype[np.complex_]]
+    list_basis: _B0Inv
+    basis: _B1Inv
+    dual_basis: _B2Inv
+    arrays: np.ndarray[tuple[int, int, int], np.dtype[np.complex_]]
     """A list of state vectors"""
 
 
 def get_operator(
-    operator_list: OperatorList[_B0Inv, _B1Inv, _L0Inv], idx: SingleFlatIndexLike
-) -> Operator[_B0Inv, _B1Inv]:
+    operator_list: OperatorList[_B0Inv, _B1Inv, _B2Inv], idx: SingleFlatIndexLike
+) -> Operator[_B1Inv, _B2Inv]:
     """
     Get a single state vector from a list of states.
 
@@ -52,19 +53,20 @@ def get_operator(
     }
 
 
-class DiagonalOperatorList(TypedDict, Generic[_B0Inv, _B1Inv, _L0Inv]):
+class DiagonalOperatorList(TypedDict, Generic[_B0Inv, _B1Inv, _B2Inv]):
     """Represents a list of eigenstates, each with the same basis and bloch wavevector."""
 
-    basis: _B0Inv
-    dual_basis: _B1Inv
-    vectors: np.ndarray[tuple[_L0Inv, int], np.dtype[np.complex_]]
+    list_basis: _B0Inv
+    basis: _B1Inv
+    dual_basis: _B2Inv
+    vectors: np.ndarray[tuple[int, int], np.dtype[np.complex_]]
     """A list of state vectors"""
 
 
 def get_diagonal_operator(
-    operator_list: DiagonalOperatorList[_B0Inv, _B1Inv, _L0Inv],
+    operator_list: DiagonalOperatorList[_B0Inv, _B1Inv, _B2Inv],
     idx: SingleFlatIndexLike,
-) -> DiagonalOperator[_B0Inv, _B1Inv]:
+) -> DiagonalOperator[_B1Inv, _B2Inv]:
     """
     Get a single state vector from a list of states.
 
@@ -85,8 +87,8 @@ def get_diagonal_operator(
 
 
 def sum_diagonal_operator_list_over_axes(
-    states: DiagonalOperatorList[Any, Any, _L0Inv], axes: tuple[int, ...]
-) -> DiagonalOperatorList[Any, Any, _L0Inv]:
+    states: DiagonalOperatorList[_B0Inv, Any, Any], axes: tuple[int, ...]
+) -> DiagonalOperatorList[_B0Inv, Any, Any]:
     """
     given a diagonal operator list, sum the states over axes.
 
@@ -102,6 +104,7 @@ def sum_diagonal_operator_list_over_axes(
     util = BasisUtil(states["basis"])
     traced_basis = tuple(b for (i, b) in enumerate(states["basis"]) if i not in axes)
     return {
+        "list_basis": states["basis"],
         "basis": traced_basis,
         "dual_basis": traced_basis,
         "vectors": np.sum(

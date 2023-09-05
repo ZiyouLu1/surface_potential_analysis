@@ -32,19 +32,19 @@ if TYPE_CHECKING:
         SingleStackedIndexLike,
     )
     from surface_potential_analysis.axis.axis import FundamentalPositionAxis
-    from surface_potential_analysis.basis.basis import AxisWithLengthBasis
+    from surface_potential_analysis.basis.basis import AxisWithLengthBasis, Basis
     from surface_potential_analysis.wavepacket.wavepacket import (
         Wavepacket,
     )
 
-    _B0Inv = TypeVar("_B0Inv", bound=AxisWithLengthBasis[Any])
     _B1Inv = TypeVar("_B1Inv", bound=AxisWithLengthBasis[Any])
+    _B2Inv = TypeVar("_B2Inv", bound=AxisWithLengthBasis[Any])
 
-    _S0Inv = TypeVar("_S0Inv", bound=tuple[int, ...])
+    _B0Inv = TypeVar("_B0Inv", bound=Basis)
 
 
 def get_projection_coefficients(
-    projection: StateVector[_B0Inv], states: Sequence[StateVector[_B1Inv]]
+    projection: StateVector[_B1Inv], states: Sequence[StateVector[_B2Inv]]
 ) -> np.ndarray[tuple[int], np.dtype[np.complex_]]:
     """
     Given a projection and a set of states, calculate the coefficients.
@@ -68,7 +68,7 @@ def get_projection_coefficients(
 
 
 def _get_normalized_projection_coefficients(
-    projection: StateVector[_B0Inv], states: Sequence[StateVector[_B1Inv]]
+    projection: StateVector[_B1Inv], states: Sequence[StateVector[_B2Inv]]
 ) -> np.ndarray[tuple[int], np.dtype[np.complex_]]:
     coefficients = get_projection_coefficients(projection, states)
     # Normalize the coefficients.
@@ -78,20 +78,20 @@ def _get_normalized_projection_coefficients(
 
 
 def localize_wavepacket_projection(
-    wavepacket: Wavepacket[_S0Inv, _B0Inv],
-    projection: StateVector[_B1Inv],
-) -> Wavepacket[_S0Inv, _B0Inv]:
+    wavepacket: Wavepacket[_B0Inv, _B1Inv],
+    projection: StateVector[_B2Inv],
+) -> Wavepacket[_B0Inv, _B1Inv]:
     """
     Given a wavepacket, localize using the given projection.
 
     Parameters
     ----------
-    wavepacket : Wavepacket[_S0Inv, _B0Inv]
+    wavepacket : Wavepacket[_B0Inv, _B0Inv]
     projection : StateVector[_B1Inv]
 
     Returns
     -------
-    Wavepacket[_S0Inv, _B0Inv]
+    Wavepacket[_B0Inv, _B0Inv]
     """
     coefficients = _get_normalized_projection_coefficients(
         projection, get_all_states(wavepacket)
@@ -99,24 +99,24 @@ def localize_wavepacket_projection(
 
     return {
         "basis": wavepacket["basis"],
-        "shape": wavepacket["shape"],
+        "list_basis": wavepacket["list_basis"],
         "vectors": wavepacket["vectors"] / coefficients[:, np.newaxis],
     }
 
 
 def localize_tight_binding_projection(
-    wavepacket: Wavepacket[_S0Inv, _B0Inv]
-) -> Wavepacket[_S0Inv, _B0Inv]:
+    wavepacket: Wavepacket[_B0Inv, _B1Inv]
+) -> Wavepacket[_B0Inv, _B1Inv]:
     """
     Given a wavepacket, localize using a tight binding projection.
 
     Parameters
     ----------
-    wavepacket : Wavepacket[_S0Inv, _B0Inv]
+    wavepacket : Wavepacket[_B0Inv, _B0Inv]
 
     Returns
     -------
-    Wavepacket[_S0Inv, _B0Inv]
+    Wavepacket[_B0Inv, _B0Inv]
     """
     # Initial guess is that the localized state is just the state of some eigenstate
     # truncated at the edge of the first
@@ -128,7 +128,7 @@ def localize_tight_binding_projection(
 
 
 def _get_single_point_state(
-    wavepacket: Wavepacket[_S0Inv, _B0Inv],
+    wavepacket: Wavepacket[_B0Inv, _B1Inv],
     idx: SingleIndexLike = 0,
     origin: SingleStackedIndexLike | None = None,
 ) -> StateVector[tuple[FundamentalPositionAxis[Any, Any], ...]]:
@@ -149,18 +149,18 @@ def _get_single_point_state(
 
 
 def localize_single_point_projection(
-    wavepacket: Wavepacket[_S0Inv, _B0Inv]
-) -> Wavepacket[_S0Inv, _B0Inv]:
+    wavepacket: Wavepacket[_B0Inv, _B1Inv]
+) -> Wavepacket[_B0Inv, _B1Inv]:
     """
     Given a wavepacket, localize using a tight binding projection.
 
     Parameters
     ----------
-    wavepacket : Wavepacket[_S0Inv, _B0Inv]
+    wavepacket : Wavepacket[_B0Inv, _B0Inv]
 
     Returns
     -------
-    Wavepacket[_S0Inv, _B0Inv]
+    Wavepacket[_B0Inv, _B0Inv]
     """
     # Initial guess is that the localized state is just the state of some eigenstate
     # truncated at the edge of the first
@@ -171,14 +171,14 @@ def localize_single_point_projection(
 
 
 def get_exponential_state(
-    wavepacket: Wavepacket[_S0Inv, _B0Inv]
+    wavepacket: Wavepacket[_B0Inv, _B1Inv]
 ) -> StateVector[tuple[FundamentalPositionAxis[Any, Any], ...]]:
     """
     Given a wavepacket, get the state decaying exponentially from the maximum.
 
     Parameters
     ----------
-    wavepacket : Wavepacket[_S0Inv, _B0Inv]
+    wavepacket : Wavepacket[_B0Inv, _B0Inv]
         The initial wavepacket
     idx : SingleIndexLike, optional
         The index of the state vector to use as reference, by default 0
@@ -214,7 +214,7 @@ def get_exponential_state(
 
 
 def _get_exponential_decay_state(
-    wavepacket: Wavepacket[_S0Inv, _B0Inv]
+    wavepacket: Wavepacket[_B0Inv, _B1Inv]
 ) -> StateVector[tuple[FundamentalPositionAxis[Any, Any], ...]]:
     exponential = get_exponential_state(wavepacket)
     tight_binding = convert_state_vector_to_position_basis(
@@ -229,18 +229,18 @@ def _get_exponential_decay_state(
 
 
 def localize_exponential_decay_projection(
-    wavepacket: Wavepacket[_S0Inv, _B0Inv]
-) -> Wavepacket[_S0Inv, _B0Inv]:
+    wavepacket: Wavepacket[_B0Inv, _B1Inv]
+) -> Wavepacket[_B0Inv, _B1Inv]:
     """
     Given a wavepacket, localize using a tight binding projection.
 
     Parameters
     ----------
-    wavepacket : Wavepacket[_S0Inv, _B0Inv]
+    wavepacket : Wavepacket[_B0Inv, _B0Inv]
 
     Returns
     -------
-    Wavepacket[_S0Inv, _B0Inv]
+    Wavepacket[_B0Inv, _B0Inv]
     """
     # Initial guess is that the localized state is the tight binding state
     # multiplied by an exponential

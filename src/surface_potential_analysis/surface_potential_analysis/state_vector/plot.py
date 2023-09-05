@@ -214,6 +214,42 @@ def plot_state_2d_k(
     return fig, ax, mesh
 
 
+def plot_state_2d_k_max(
+    state: StateVector[_B0Inv],
+    axes: tuple[int, int] = (0, 1),
+    *,
+    ax: Axes | None = None,
+    measure: Measure = "abs",
+    scale: Scale = "linear",
+) -> tuple[Figure, Axes, QuadMesh]:
+    """
+    Plot the state in momentum basis, along axes.
+
+    Parameters
+    ----------
+    state : StateVector[_B0Inv]
+        state vector to plot
+    axes : tuple[int, int], optional
+        axis to plot, by default (0, 1)
+    ax : Axes | None, optional
+        plot axis, by default None
+    measure : Measure, optional
+        measure, by default "abs"
+    scale : Scale, optional
+        scale, by default "linear"
+
+    Returns
+    -------
+    tuple[Figure, Axes, QuadMesh]
+    """
+    converted = convert_state_vector_to_momentum_basis(state)
+    util = BasisUtil(converted["basis"])
+    max_idx = util.get_stacked_index(np.argmax(np.abs(converted["vector"])))
+    idx = tuple(x for (i, x) in enumerate(max_idx) if i not in axes)
+
+    return plot_state_2d_k(converted, axes, idx, ax=ax, measure=measure, scale=scale)
+
+
 def plot_state_k0k1(
     state: StateVector3d[_B3d0Inv],
     k2_idx: SingleFlatIndexLike,
@@ -342,7 +378,7 @@ def plot_state_2d_x(
     """
     fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
     converted = convert_state_vector_to_position_basis(state)
-    util = AxisWithLengthBasisUtil(converted["basis"])
+    util = BasisUtil(converted["basis"])
     idx = tuple(0 for _ in range(util.ndim - 2)) if idx is None else idx
 
     coordinates = get_x_coordinates_in_axes(converted["basis"], axes, idx)

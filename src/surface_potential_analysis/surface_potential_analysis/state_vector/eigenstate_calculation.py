@@ -5,18 +5,17 @@ from typing import TYPE_CHECKING, TypeVar
 import numpy as np
 import scipy.linalg
 
+from surface_potential_analysis.axis.axis import FundamentalAxis
 from surface_potential_analysis.basis.basis import Basis
 from surface_potential_analysis.util.decorators import timed
-
-from .eigenvalue_list import (
-    EigenvalueList,
-)
-from .state_vector_list import StateVectorList
 
 if TYPE_CHECKING:
     from surface_potential_analysis.operator.operator import (
         Operator,
         SingleBasisOperator,
+    )
+    from surface_potential_analysis.state_vector.eigenstate_collection import (
+        EigenstateList,
     )
 
     from .state_vector import (
@@ -26,23 +25,19 @@ if TYPE_CHECKING:
 
 _B0Inv = TypeVar("_B0Inv", bound=Basis)
 _B1Inv = TypeVar("_B1Inv", bound=Basis)
-_L0Inv = TypeVar("_L0Inv", bound=int)
-
-
-class EigenvectorList(StateVectorList[_B0Inv, _L0Inv], EigenvalueList[_L0Inv]):
-    """Represents a list of eigenvectors, each with the same basis."""
 
 
 @timed
 def calculate_eigenvectors_hermitian(
     hamiltonian: SingleBasisOperator[_B0Inv],
     subset_by_index: tuple[int, int] | None = None,
-) -> EigenvectorList[_B0Inv, int]:
+) -> EigenstateList[tuple[FundamentalAxis[int]], _B0Inv]:
     """Get a list of eigenstates for a given operator, assuming it is hermitian."""
     eigenvalues, vectors = scipy.linalg.eigh(
         hamiltonian["array"], subset_by_index=subset_by_index
     )
     return {
+        "list_basis": (FundamentalAxis(eigenvalues.size),),
         "basis": hamiltonian["basis"],
         "vectors": vectors.T,
         "eigenvalues": eigenvalues,

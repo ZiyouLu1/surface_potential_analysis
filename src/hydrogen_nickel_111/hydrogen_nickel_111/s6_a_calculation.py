@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from functools import cache
-from typing import TYPE_CHECKING, TypeVar
+from typing import TYPE_CHECKING, Literal, TypeVar
 
 import numpy as np
 from scipy.constants import Boltzmann
@@ -10,13 +10,16 @@ from surface_potential_analysis.dynamics.hermitian_gamma_integral import (
     calculate_hermitian_gamma_occupation_integral,
     calculate_hermitian_gamma_potential_integral,
 )
-from surface_potential_analysis.dynamics.incoherent_propagation.tunnelling_basis import (
-    TunnellingSimulationBandsAxis,
-)
 from surface_potential_analysis.dynamics.incoherent_propagation.tunnelling_matrix import (
     TunnellingAMatrix,
-    get_tunnelling_a_matrix_from_function,
+    TunnellingJumpMatrix,
+    get_a_matrix_from_jump_matrix,
+    get_jump_matrix_from_function,
 )
+from surface_potential_analysis.dynamics.tunnelling_basis import (
+    TunnellingSimulationBandsAxis,
+)
+from surface_potential_analysis.dynamics.util import get_hop_shift
 from surface_potential_analysis.overlap.interpolation import (
     get_angle_averaged_diagonal_overlap_function,
     get_overlap_momentum_interpolator_flat,
@@ -184,15 +187,29 @@ def a_function_deuterium(
     ) * calculate_gamma_potential_integral_deuterium_diagonal(i, j, offset_i, offset_j)
 
 
-def _get_get_tunnelling_a_matrix_hydrogen_cache(
-    shape: tuple[_L0Inv, _L1Inv], n_bands: _L2Inv, temperature: float
+def _get_get_tunnelling_jump_matrix_hydrogen_cache(
+    n_bands: _L2Inv, temperature: float
 ) -> Path:
-    return get_data_path(
-        f"dynamics/a_matrix_hydrogen_{shape[0]}_{shape[1]}_{n_bands}_{temperature}k.npy"
+    return get_data_path(f"dynamics/jump_matrix_hydrogen_{n_bands}_{temperature}k.npy")
+
+
+@npy_cached(_get_get_tunnelling_jump_matrix_hydrogen_cache, load_pickle=True)  # type: ignore[misc]
+def get_jump_matrix_hydrogen(
+    n_bands: _L2Inv, temperature: float
+) -> TunnellingJumpMatrix[_L2Inv]:
+    def jump_function(i: int, j: int, hop: int) -> float:
+        offset_j = get_hop_shift(hop, 2)
+        return a_function_hydrogen(
+            i, j, (0, 0), (offset_j[0], offset_j[1]), temperature
+        )
+
+    axis = TunnellingSimulationBandsAxis[_L2Inv].from_wavepackets(
+        get_all_wavepackets_hydrogen()[0:n_bands]
     )
 
+    return get_jump_matrix_from_function(axis, jump_function)
 
-@npy_cached(_get_get_tunnelling_a_matrix_hydrogen_cache, load_pickle=True)  # type: ignore[misc]
+
 def get_tunnelling_a_matrix_hydrogen(
     shape: tuple[_L0Inv, _L1Inv],
     n_bands: _L2Inv,
@@ -204,26 +221,60 @@ def get_tunnelling_a_matrix_hydrogen(
         TunnellingSimulationBandsAxis[_L2Inv],
     ]
 ]:
-    def a_function(
-        i: int, j: int, offset_i: tuple[int, int], offset_j: tuple[int, int]
-    ) -> float:
-        return a_function_hydrogen(i, j, offset_i, offset_j, temperature)
+    jump_matrix = get_jump_matrix_hydrogen(n_bands, temperature)
+    return get_a_matrix_from_jump_matrix(jump_matrix, shape, n_bands=n_bands)
 
-    bands_axis = TunnellingSimulationBandsAxis[_L2Inv].from_wavepackets(
-        get_all_wavepackets_hydrogen()[0:n_bands]
+
+def get_fey_jump_matrix_hydrogen() -> TunnellingJumpMatrix[Literal[2]]:
+    """
+    Get an A matrix compatible with fey's formula.
+
+    Parameters
+    ----------
+    shape : tuple[_L0Inv, _L1Inv]
+    temperature : float
+
+    Returns
+    -------
+    TunnellingAMatrix[tuple[ FundamentalAxis[_L0Inv], FundamentalAxis[_L1Inv], TunnellingSimulationBandsAxis[Literal[2]]]]
+    """
+
+    def jump_function(i: int, j: int, hop: int) -> float:
+        if i == 0 and j == 1 and (hop in [0, 2, 6]):
+            return 3.02959631e08
+
+        if i == 1 and j == 0 and (hop in [0, 1, 3]):
+            return 6.55978349e08
+        return 0
+
+    axis = TunnellingSimulationBandsAxis[Literal[2]].from_wavepackets(
+        get_all_wavepackets_hydrogen()[0:2]
     )
-    return get_tunnelling_a_matrix_from_function(shape, bands_axis, a_function)
+
+    return get_jump_matrix_from_function(axis, jump_function)
 
 
-def _get_get_tunnelling_a_matrix_deuterium_cache(
-    shape: tuple[_L0Inv, _L1Inv], n_bands: _L2Inv, temperature: float
-) -> Path:
-    return get_data_path(
-        f"dynamics/a_matrix_deuterium_{shape[0]}_{shape[1]}_{n_bands}_{temperature}k.npy"
+def _get_jump_matrix_deuterium_cache(n_bands: _L2Inv, temperature: float) -> Path:
+    return get_data_path(f"dynamics/jump_matrix_deuterium_{n_bands}_{temperature}k.npy")
+
+
+@npy_cached(_get_jump_matrix_deuterium_cache, load_pickle=True)  # type: ignore[misc]
+def get_jump_matrix_deuterium(
+    n_bands: _L2Inv, temperature: float
+) -> TunnellingJumpMatrix[_L2Inv]:
+    def jump_function(i: int, j: int, hop: int) -> float:
+        offset_j = get_hop_shift(hop, 2)
+        return a_function_deuterium(
+            i, j, (0, 0), (offset_j[0], offset_j[1]), temperature
+        )
+
+    axis = TunnellingSimulationBandsAxis[_L2Inv].from_wavepackets(
+        get_all_wavepackets_deuterium()[0:n_bands]
     )
 
+    return get_jump_matrix_from_function(axis, jump_function)
 
-@npy_cached(_get_get_tunnelling_a_matrix_deuterium_cache, load_pickle=True)  # type: ignore[misc]
+
 def get_tunnelling_a_matrix_deuterium(
     shape: tuple[_L0Inv, _L1Inv],
     n_bands: _L2Inv,
@@ -235,12 +286,5 @@ def get_tunnelling_a_matrix_deuterium(
         TunnellingSimulationBandsAxis[_L2Inv],
     ]
 ]:
-    def a_function(
-        i: int, j: int, offset_i: tuple[int, int], offset_j: tuple[int, int]
-    ) -> float:
-        return a_function_deuterium(i, j, offset_i, offset_j, temperature)
-
-    bands_axis = TunnellingSimulationBandsAxis[_L2Inv].from_wavepackets(
-        get_all_wavepackets_deuterium()[0:n_bands]
-    )
-    return get_tunnelling_a_matrix_from_function(shape, bands_axis, a_function)
+    jump_matrix = get_jump_matrix_deuterium(n_bands, temperature)
+    return get_a_matrix_from_jump_matrix(jump_matrix, shape, n_bands=n_bands)

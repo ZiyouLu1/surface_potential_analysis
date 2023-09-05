@@ -238,7 +238,7 @@ def decrement_brillouin_zone_3d(
     """
     tolerance = _get_decrement_tolerance(basis)
     # Transpose used - we want the new axis to appear as the last axis not the first
-    out = np.atleast_2d(np.transpose(coordinate)).T
+    out = np.atleast_2d(np.transpose(coordinate)).T  # cSpell:disable-line
     coordinate_points = AxisWithLengthBasisUtil(basis).get_k_points_at_index(tuple(out))  # type: ignore[arg-type]
     bragg_points = get_all_brag_point(basis, n_bands=1)
 
@@ -304,7 +304,7 @@ def decrement_brillouin_zone(
     """
     tolerance = _get_decrement_tolerance(basis)
     # Transpose used - we want the new axis to appear as the last axis not the first
-    out = np.atleast_2d(np.transpose(coordinate)).T
+    out = np.atleast_2d(np.transpose(coordinate)).T  # cSpell:disable-line
     coordinate_points = AxisWithLengthBasisUtil(basis).get_k_points_at_index(tuple(out))  # type: ignore[arg-type]
     bragg_points = get_all_brag_point(basis, n_bands=1)
 

@@ -4,10 +4,11 @@ from typing import TYPE_CHECKING, Any, Literal, TypeVar, overload
 
 import numpy as np
 
+from surface_potential_analysis.basis.build import fundamental_basis_from_shape
 from surface_potential_analysis.basis.conversion import (
     basis_as_fundamental_momentum_basis,
 )
-from surface_potential_analysis.basis.util import AxisWithLengthBasisUtil
+from surface_potential_analysis.basis.util import BasisUtil
 from surface_potential_analysis.wavepacket.conversion import convert_wavepacket_to_basis
 from surface_potential_analysis.wavepacket.wavepacket import (
     Wavepacket,
@@ -17,10 +18,15 @@ from surface_potential_analysis.wavepacket.wavepacket import (
 
 if TYPE_CHECKING:
     from surface_potential_analysis.axis.axis import (
+        FundamentalAxis,
         FundamentalTransformedPositionAxis,
     )
     from surface_potential_analysis.axis.axis_like import AxisWithLengthLike3d
-    from surface_potential_analysis.basis.basis import AxisWithLengthBasis, Basis3d
+    from surface_potential_analysis.basis.basis import (
+        AxisWithLengthBasis,
+        Basis,
+        Basis3d,
+    )
     from surface_potential_analysis.state_vector.state_vector import (
         StateVector,
         StateVector3d,
@@ -31,13 +37,16 @@ if TYPE_CHECKING:
 
     _A3d2Inv = TypeVar("_A3d2Inv", bound=AxisWithLengthLike3d[Any, Any])
 
-    _B0Inv = TypeVar("_B0Inv", bound=AxisWithLengthBasis[Any])
+    _B1Inv = TypeVar("_B1Inv", bound=AxisWithLengthBasis[Any])
     _BM0Inv = TypeVar(
         "_BM0Inv", bound=tuple[FundamentalTransformedPositionAxis[Any, Any], ...]
     )
-    _S0Inv = TypeVar("_S0Inv", bound=tuple[int, ...])
+    _B0Inv = TypeVar("_B0Inv", bound=Basis)
 
-    _S3d0Inv = TypeVar("_S3d0Inv", bound=tuple[int, int, int])
+    _S3d0Inv = TypeVar(
+        "_S3d0Inv",
+        bound=tuple[FundamentalAxis[int], FundamentalAxis[int], FundamentalAxis[int]],
+    )
     _B3d0Inv = TypeVar("_B3d0Inv", bound=Basis3d[Any, Any, Any])
 
     _L0Inv = TypeVar("_L0Inv", bound=int)
@@ -54,7 +63,9 @@ def furl_eigenstate(
     ],
     shape: tuple[_NS0Inv, _NS1Inv, Literal[1]],
 ) -> Wavepacket[
-    tuple[_NS0Inv, _NS1Inv, Literal[1]],
+    tuple[
+        FundamentalAxis[_NS0Inv], FundamentalAxis[_NS1Inv], FundamentalAxis[Literal[1]]
+    ],
     tuple[
         FundamentalTransformedPositionAxis[_L0Inv, Literal[3]],
         FundamentalTransformedPositionAxis[_L1Inv, Literal[3]],
@@ -78,7 +89,7 @@ def furl_eigenstate(
         The wavepacket with a smaller unit cell
     """
     (ns0, ns1, _) = shape
-    (nx0_old, nx1_old, nx2) = AxisWithLengthBasisUtil(eigenstate["basis"]).shape
+    (nx0_old, nx1_old, nx2) = BasisUtil(eigenstate["basis"]).shape
     (nx0, nx1) = (nx0_old // ns0, nx1_old // ns1)
 
     # We do the opposite to unfurl wavepacket at each step
@@ -92,27 +103,27 @@ def furl_eigenstate(
     basis = get_furled_basis(eigenstate["basis"], shape)
     return {
         "basis": basis_as_fundamental_momentum_basis(basis),  # type: ignore[typeddict-item]
-        "shape": shape,
+        "list_basis": fundamental_basis_from_shape(shape),  # type: ignore[typeddict-item]
         "vectors": flattened * np.sqrt(ns0 * ns1),
         "eigenvalues": np.zeros(flattened.shape[0:2]),
     }
 
 
 def _unfurl_momentum_basis_wavepacket(
-    wavepacket: Wavepacket[_S0Inv, _BM0Inv]
+    wavepacket: Wavepacket[_B0Inv, _BM0Inv]
 ) -> StateVector[tuple[FundamentalTransformedPositionAxis[Any, Any], ...]]:
-    sample_shape = wavepacket["shape"]
-    states_shape = AxisWithLengthBasisUtil(wavepacket["basis"]).shape
+    list_shape = BasisUtil(wavepacket["list_basis"]).shape
+    states_shape = BasisUtil(wavepacket["basis"]).shape
     final_shape = tuple(
-        ns * nx for (ns, nx) in zip(sample_shape, states_shape, strict=True)
+        ns * nx for (ns, nx) in zip(list_shape, states_shape, strict=True)
     )
-    stacked = wavepacket["vectors"].reshape(*sample_shape, *states_shape)
+    stacked = wavepacket["vectors"].reshape(*list_shape, *states_shape)
 
     # Shift negative frequency componets to the start, so we can
     # add the frequencies when we unravel
     shifted = np.fft.fftshift(stacked)
     # The list of axis index n,0,n+1,1,...,2n-1,n-1
-    nd = len(sample_shape)
+    nd = len(list_shape)
     locations = [
         x for y in zip(range(nd, 2 * nd), range(0, nd), strict=True) for x in y
     ]
@@ -125,10 +136,10 @@ def _unfurl_momentum_basis_wavepacket(
     unshifted = np.fft.ifftshift(ravelled)
     flattened = unshifted.reshape(-1)
 
-    basis = get_unfurled_basis(wavepacket["basis"], wavepacket["shape"])
+    basis = get_unfurled_basis(wavepacket["list_basis"], wavepacket["basis"])
     return {
         "basis": basis_as_fundamental_momentum_basis(basis),
-        "vector": flattened / np.sqrt(np.prod(sample_shape)),
+        "vector": flattened / np.sqrt(np.prod(list_shape)),
     }
 
 
@@ -147,7 +158,7 @@ def unfurl_wavepacket(
 
 @overload
 def unfurl_wavepacket(
-    wavepacket: Wavepacket[_S0Inv, _B0Inv]
+    wavepacket: Wavepacket[_B0Inv, _B1Inv]
 ) -> (
     StateVector[tuple[FundamentalTransformedPositionAxis[Any, Any], ...]]
     | StateVector[
@@ -161,7 +172,7 @@ def unfurl_wavepacket(
     ...
 
 
-def unfurl_wavepacket(wavepacket: Wavepacket[_S0Inv, _B0Inv]) -> StateVector[Any]:
+def unfurl_wavepacket(wavepacket: Wavepacket[_B0Inv, _B1Inv]) -> StateVector[Any]:
     """
     Convert a wavepacket into an eigenstate of the irreducible unit cell.
 

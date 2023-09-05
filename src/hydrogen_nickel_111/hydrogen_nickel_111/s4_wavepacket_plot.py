@@ -7,18 +7,30 @@ from matplotlib import pyplot as plt
 from surface_potential_analysis.basis.plot import (
     plot_fundamental_x_at_index_projected_2d,
 )
+from surface_potential_analysis.basis.util import BasisUtil
+from surface_potential_analysis.state_vector.conversion import (
+    convert_state_vector_to_position_basis,
+)
 from surface_potential_analysis.state_vector.plot import (
     animate_state_x1x2,
+    plot_state_2d_k_max,
     plot_state_2d_x,
     plot_state_2d_x_max,
     plot_state_along_path,
+    plot_state_difference_2d_x,
 )
+from surface_potential_analysis.util.decorators import npy_cached
+from surface_potential_analysis.util.interpolation import pad_ft_points
 from surface_potential_analysis.wavepacket.conversion import convert_wavepacket_to_shape
+from surface_potential_analysis.wavepacket.eigenstate_conversion import (
+    unfurl_wavepacket,
+)
 from surface_potential_analysis.wavepacket.get_eigenstate import (
     get_state_vector,
     get_tight_binding_state,
 )
 from surface_potential_analysis.wavepacket.localization import (
+    localize_single_point_projection,
     localize_wavepacket_wannier90_many_band,
 )
 from surface_potential_analysis.wavepacket.localization._tight_binding import (
@@ -33,21 +45,28 @@ from surface_potential_analysis.wavepacket.plot import (
     plot_wavepacket_x0x1,
 )
 from surface_potential_analysis.wavepacket.wavepacket import (
+    Wavepacket,
     get_unfurled_basis,
     get_wavepacket_sample_fractions,
 )
 
 from .s4_wavepacket import (
+    get_all_wavepackets_hydrogen_extrapolated,
     get_single_point_projection_localized_wavepacket_hydrogen,
     get_tight_binding_projection_localized_wavepacket_hydrogen,
     get_two_point_localized_wavepacket_hydrogen,
     get_wannier90_localized_wavepacket_hydrogen,
     get_wavepacket_hydrogen,
 )
-from .surface_data import save_figure
+from .surface_data import get_data_path, save_figure
 
 if TYPE_CHECKING:
-    from surface_potential_analysis.basis.basis import AxisWithLengthBasis
+    from surface_potential_analysis.axis.axis import (
+        ExplicitAxis,
+        FundamentalAxis,
+        TransformedPositionAxis,
+    )
+    from surface_potential_analysis.basis.basis import AxisWithLengthBasis, Basis3d
 
 
 def plot_nickel_wavepacket_points() -> None:
@@ -169,7 +188,7 @@ def plot_two_point_wavepacket_with_idx() -> None:
 
         idx0, idx1 = get_wavepacket_two_points(normalized, offset)
         unfurled_basis: AxisWithLengthBasis[Literal[3]] = get_unfurled_basis(
-            normalized["basis"], normalized["shape"]
+            normalized["list_basis"], normalized["basis"]
         )
         plot_fundamental_x_at_index_projected_2d(unfurled_basis, idx0, (0, 1), ax=ax)
         plot_fundamental_x_at_index_projected_2d(unfurled_basis, idx1, (0, 1), ax=ax)
@@ -254,6 +273,86 @@ def plot_single_point_projection_localized_wavepacket_hydrogen() -> None:
         input()
 
 
+@npy_cached(get_data_path("wavepacket/many_band_localized_test4.npy"), load_pickle=True)
+def get_localized_extrapolated() -> (
+    Wavepacket[
+        tuple[
+            FundamentalAxis[Literal[6]],
+            FundamentalAxis[Literal[6]],
+            FundamentalAxis[Literal[4]],
+        ],
+        Basis3d[
+            TransformedPositionAxis[Literal[27], Literal[27], Literal[3]],
+            TransformedPositionAxis[Literal[27], Literal[27], Literal[3]],
+            ExplicitAxis[Literal[250], Literal[16], Literal[3]],
+        ],
+    ]
+):
+    wavepacket_0 = get_all_wavepackets_hydrogen_extrapolated()[3]
+    return localize_single_point_projection(wavepacket_0)
+
+
+@npy_cached(
+    get_data_path("wavepacket/many_band_localized_test4_0.npy"), load_pickle=True
+)
+def get_localized_extrapolated_0() -> (
+    Wavepacket[
+        tuple[
+            FundamentalAxis[Literal[6]],
+            FundamentalAxis[Literal[6]],
+            FundamentalAxis[Literal[4]],
+        ],
+        Basis3d[
+            TransformedPositionAxis[Literal[27], Literal[27], Literal[3]],
+            TransformedPositionAxis[Literal[27], Literal[27], Literal[3]],
+            ExplicitAxis[Literal[250], Literal[16], Literal[3]],
+        ],
+    ]
+):
+    wavepacket_0 = get_all_wavepackets_hydrogen_extrapolated()[0]
+    return localize_single_point_projection(wavepacket_0)
+
+
+def plot_compare_point_projection_localized_wavepacket_hydrogen() -> None:
+    for _band in [3]:
+        wavepacket_0 = get_localized_extrapolated_0()
+        localized_0 = unfurl_wavepacket(wavepacket_0)
+        converted_0 = convert_state_vector_to_position_basis(localized_0)
+
+        wavepacket_1 = convert_wavepacket_to_shape(
+            get_localized_extrapolated(), (12, 12, 1)
+        )
+        localized_1 = unfurl_wavepacket(wavepacket_1)
+        converted_1 = convert_state_vector_to_position_basis(localized_1)
+        util_1 = BasisUtil(converted_1["basis"])
+
+        util_0 = BasisUtil(converted_0["basis"])
+        converted_0["vector"] = pad_ft_points(
+            converted_0["vector"].reshape(util_0.shape), util_1.shape, (0, 1, 2)
+        ).reshape(-1)
+        converted_0["basis"] = converted_1["basis"]
+
+        max_idx = util_1.get_stacked_index(np.argmax(np.abs(converted_1["vector"])))
+
+        fig, ax, _ = plot_state_2d_x(converted_0, (0, 1), (max_idx[2],), scale="symlog")
+        fig.show()
+        fig, ax, _ = plot_state_2d_k_max(localized_0, (1, 0), scale="symlog")
+        fig.show()
+
+        fig, ax, _ = plot_state_2d_x(converted_1, (0, 1), (max_idx[2],), scale="symlog")
+        fig.show()
+        fig, ax, _ = plot_state_difference_2d_x(
+            converted_0,
+            converted_1,
+            (0, 1),
+            (max_idx[2],),
+            scale="symlog",
+            measure="real",
+        )
+        fig.show()
+        input()
+
+
 def plot_wannier90_localized_wavepacket_hydrogen() -> None:
     for band in [0, 1, 2, 3, 4, 5]:
         wavepacket = get_wannier90_localized_wavepacket_hydrogen(band)
@@ -265,23 +364,34 @@ def plot_wannier90_localized_wavepacket_hydrogen() -> None:
         input()
 
 
-def plot_wannier90_many_band_localized_wavepacket_hydrogen() -> None:
-    wavepackets = [
-        convert_wavepacket_to_shape(get_wavepacket_hydrogen(2), (4, 4, 1)),
-        convert_wavepacket_to_shape(get_wavepacket_hydrogen(3), (4, 4, 1)),
-        convert_wavepacket_to_shape(get_wavepacket_hydrogen(6), (4, 4, 1)),
+# @npy_cached(get_data_path("wavepacket/many_band_localized_test2.npy"), load_pickle=True)
+def get_many_band_localized() -> (
+    list[
+        Wavepacket[
+            tuple[
+                FundamentalAxis[Literal[6]],
+                FundamentalAxis[Literal[6]],
+                FundamentalAxis[Literal[4]],
+            ],
+            Basis3d[
+                TransformedPositionAxis[Literal[27], Literal[27], Literal[3]],
+                TransformedPositionAxis[Literal[27], Literal[27], Literal[3]],
+                ExplicitAxis[Literal[250], Literal[16], Literal[3]],
+            ],
+        ]
     ]
-    localized = localize_wavepacket_wannier90_many_band(wavepackets)
+):
+    wavepackets = get_all_wavepackets_hydrogen_extrapolated()[3:4]
+    return localize_wavepacket_wannier90_many_band(wavepackets)
 
-    fig, _, _ = plot_wavepacket_2d_x_max(localized[0], (0, 1), scale="symlog")
-    fig.show()
 
-    fig, _, _ = plot_wavepacket_2d_x_max(localized[0], (1, 2), scale="symlog")
-    fig.show()
+def plot_wannier90_many_band_localized_wavepacket_hydrogen() -> None:
+    localized = get_many_band_localized()
 
-    fig, _, _ = plot_wavepacket_2d_x_max(localized[1], (0, 1), scale="symlog")
-    fig.show()
+    for wavepacket in localized:
+        fig, _, _ = plot_wavepacket_2d_x_max(wavepacket, (0, 1), scale="symlog")
+        fig.show()
 
-    fig, _, _ = plot_wavepacket_2d_x_max(localized[1], (1, 2), scale="symlog")
-    fig.show()
+        fig, _, _ = plot_wavepacket_2d_x_max(wavepacket, (1, 2), scale="symlog")
+        fig.show()
     input()
