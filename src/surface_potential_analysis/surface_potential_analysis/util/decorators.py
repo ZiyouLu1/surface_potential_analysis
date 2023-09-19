@@ -96,7 +96,7 @@ def npy_cached(
             except FileNotFoundError:
                 arr = f(*args, **kw)
                 # Saving pickeld
-                np.save(cache_path, arr, allow_pickle=save_pickle)
+                np.save(cache_path, arr, allow_pickle=save_pickle)  # type: ignore must be SupportsArray
 
             return arr
 

@@ -18,13 +18,14 @@ if TYPE_CHECKING:
     from pathlib import Path
 
     from surface_potential_analysis.axis.axis import (
-        ExplicitAxis,
-        FundamentalAxis,
-        TransformedPositionAxis,
+        ExplicitBasis,
+        FundamentalBasis,
+        TransformedPositionBasis,
     )
     from surface_potential_analysis.axis.block_fraction_axis import (
         ExplicitBlockFractionAxis,
     )
+    from surface_potential_analysis.axis.stacked_axis import StackedBasisLike
     from surface_potential_analysis.operator.operator import SingleBasisOperator
     from surface_potential_analysis.state_vector.eigenstate_collection import (
         EigenstateColllection,
@@ -45,11 +46,13 @@ def _get_eigenstate_collection_h_cache(shape: tuple[_L0, _L1, _L2]) -> Path:
 def get_eigenstate_collection_hydrogen(
     shape: tuple[_L0, _L1, _L2],
 ) -> EigenstateColllection[
-    tuple[ExplicitBlockFractionAxis[Literal[11]], FundamentalAxis[Literal[10]]],
-    tuple[
-        TransformedPositionAxis[_L0, _L0, Literal[3]],
-        TransformedPositionAxis[_L1, _L1, Literal[3]],
-        ExplicitAxis[Literal[250], _L2, Literal[3]],
+    StackedBasisLike[
+        ExplicitBlockFractionAxis[Literal[11]], FundamentalBasis[Literal[10]]
+    ],
+    StackedBasisLike[
+        TransformedPositionBasis[_L0, _L0, Literal[3]],
+        TransformedPositionBasis[_L1, _L1, Literal[3]],
+        ExplicitBasis[Literal[250], _L2, Literal[3]],
     ],
 ]:
     bloch_fractions_x = np.linspace(-0.5, 0.5, 11)
@@ -58,10 +61,10 @@ def get_eigenstate_collection_hydrogen(
     def hamiltonian_generator(
         bloch_fraction: np.ndarray[tuple[Literal[3]], np.dtype[np.float_]]
     ) -> SingleBasisOperator[
-        tuple[
-            TransformedPositionAxis[_L0, _L0, Literal[3]],
-            TransformedPositionAxis[_L1, _L1, Literal[3]],
-            ExplicitAxis[Literal[250], _L2, Literal[3]],
+        StackedBasisLike[
+            TransformedPositionBasis[_L0, _L0, Literal[3]],
+            TransformedPositionBasis[_L1, _L1, Literal[3]],
+            ExplicitBasis[Literal[250], _L2, Literal[3]],
         ]
     ]:
         return get_hamiltonian_hydrogen(
@@ -85,11 +88,13 @@ def _get_eigenstate_collection_d_cache(shape: tuple[_L0, _L1, _L2]) -> Path:
 def get_eigenstate_collection_deuterium(
     shape: tuple[_L0, _L1, _L2],
 ) -> EigenstateColllection[
-    tuple[ExplicitBlockFractionAxis[Literal[11]], FundamentalAxis[Literal[99]]],
-    tuple[
-        TransformedPositionAxis[_L0, _L0, Literal[3]],
-        TransformedPositionAxis[_L1, _L1, Literal[3]],
-        ExplicitAxis[Literal[250], _L2, Literal[3]],
+    StackedBasisLike[
+        ExplicitBlockFractionAxis[Literal[11]], FundamentalBasis[Literal[99]]
+    ],
+    StackedBasisLike[
+        TransformedPositionBasis[_L0, _L0, Literal[3]],
+        TransformedPositionBasis[_L1, _L1, Literal[3]],
+        ExplicitBasis[Literal[250], _L2, Literal[3]],
     ],
 ]:
     bloch_fractions_x = np.linspace(-0.5, 0.5, 11)
@@ -98,10 +103,10 @@ def get_eigenstate_collection_deuterium(
     def hamiltonian_generator(
         bloch_fraction: np.ndarray[tuple[Literal[3]], np.dtype[np.float_]]
     ) -> SingleBasisOperator[
-        tuple[
-            TransformedPositionAxis[_L0, _L0, Literal[3]],
-            TransformedPositionAxis[_L1, _L1, Literal[3]],
-            ExplicitAxis[Literal[250], _L2, Literal[3]],
+        StackedBasisLike[
+            TransformedPositionBasis[_L0, _L0, Literal[3]],
+            TransformedPositionBasis[_L1, _L1, Literal[3]],
+            ExplicitBasis[Literal[250], _L2, Literal[3]],
         ]
     ]:
         return get_hamiltonian_deuterium(

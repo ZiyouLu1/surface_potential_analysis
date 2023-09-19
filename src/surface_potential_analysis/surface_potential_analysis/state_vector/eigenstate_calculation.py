@@ -1,12 +1,13 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, TypeVar
+from typing import TYPE_CHECKING, Any, TypeVar
 
 import numpy as np
 import scipy.linalg
 
-from surface_potential_analysis.axis.axis import FundamentalAxis
-from surface_potential_analysis.basis.basis import Basis
+from surface_potential_analysis.axis.axis import FundamentalBasis
+from surface_potential_analysis.axis.axis_like import BasisLike
+from surface_potential_analysis.axis.stacked_axis import StackedBasis
 from surface_potential_analysis.util.decorators import timed
 
 if TYPE_CHECKING:
@@ -17,30 +18,33 @@ if TYPE_CHECKING:
     from surface_potential_analysis.state_vector.eigenstate_collection import (
         EigenstateList,
     )
+    from surface_potential_analysis.types import IntLike_co
 
     from .state_vector import (
         StateDualVector,
         StateVector,
     )
 
-_B0Inv = TypeVar("_B0Inv", bound=Basis)
-_B1Inv = TypeVar("_B1Inv", bound=Basis)
+_B0Inv = TypeVar("_B0Inv", bound=BasisLike[Any, Any])
+_B1Inv = TypeVar("_B1Inv", bound=BasisLike[Any, Any])
 
 
 @timed
 def calculate_eigenvectors_hermitian(
     hamiltonian: SingleBasisOperator[_B0Inv],
-    subset_by_index: tuple[int, int] | None = None,
-) -> EigenstateList[tuple[FundamentalAxis[int]], _B0Inv]:
+    subset_by_index: tuple[IntLike_co, IntLike_co] | None = None,
+) -> EigenstateList[FundamentalBasis[int], _B0Inv]:
     """Get a list of eigenstates for a given operator, assuming it is hermitian."""
     eigenvalues, vectors = scipy.linalg.eigh(
-        hamiltonian["array"], subset_by_index=subset_by_index
+        hamiltonian["data"].reshape(hamiltonian["basis"].shape),
+        subset_by_index=subset_by_index,
     )
     return {
-        "list_basis": (FundamentalAxis(eigenvalues.size),),
-        "basis": hamiltonian["basis"],
-        "vectors": vectors.T,
-        "eigenvalues": eigenvalues,
+        "basis": StackedBasis(
+            FundamentalBasis(np.size(eigenvalues)), hamiltonian["basis"][0]
+        ),
+        "data": np.transpose(vectors).reshape(-1),
+        "eigenvalue": np.array(eigenvalues),
     }
 
 
@@ -61,7 +65,7 @@ def calculate_expectation(
         The energy of the Eigenvector given Hamiltonian
     """
     return np.linalg.multi_dot(  # type: ignore[no-any-return]
-        [np.conj(eigenstate["vector"]), hamiltonian["array"], eigenstate["vector"]]
+        [np.conj(eigenstate["data"]), hamiltonian["array"], eigenstate["data"]]
     )
 
 
@@ -84,5 +88,5 @@ def calculate_operator_inner_product(
         The energy of the Eigenvector given Hamiltonian
     """
     return np.linalg.multi_dot(  # type:ignore[no-any-return]
-        [dual_vector["vector"], operator["array"], vector["vector"]]
+        [dual_vector["data"], operator["array"], vector["data"]]
     )

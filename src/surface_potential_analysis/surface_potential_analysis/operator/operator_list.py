@@ -4,30 +4,27 @@ from typing import TYPE_CHECKING, Any, Generic, TypedDict, TypeVar
 
 import numpy as np
 
-from surface_potential_analysis.basis.basis import (
-    Basis,
-)
-from surface_potential_analysis.basis.util import BasisUtil
+from surface_potential_analysis.axis.axis_like import BasisLike
+from surface_potential_analysis.axis.stacked_axis import StackedBasis
 
 if TYPE_CHECKING:
-    from surface_potential_analysis._types import SingleFlatIndexLike
+    from surface_potential_analysis.axis.stacked_axis import StackedBasisLike
+    from surface_potential_analysis.types import SingleFlatIndexLike
 
     from .operator import (
         DiagonalOperator,
         Operator,
     )
-_B0Inv = TypeVar("_B0Inv", bound=Basis)
-_B1Inv = TypeVar("_B1Inv", bound=Basis)
-_B2Inv = TypeVar("_B2Inv", bound=Basis)
+_B0Inv = TypeVar("_B0Inv", bound=BasisLike[Any, Any])
+_B1Inv = TypeVar("_B1Inv", bound=BasisLike[Any, Any])
+_B2Inv = TypeVar("_B2Inv", bound=BasisLike[Any, Any])
 
 
 class OperatorList(TypedDict, Generic[_B0Inv, _B1Inv, _B2Inv]):
     """Represents a list of eigenstates, each with the same basis and bloch wavevector."""
 
-    list_basis: _B0Inv
-    basis: _B1Inv
-    dual_basis: _B2Inv
-    arrays: np.ndarray[tuple[int, int, int], np.dtype[np.complex_]]
+    basis: StackedBasisLike[_B0Inv, _B1Inv, _B2Inv]
+    data: np.ndarray[tuple[int], np.dtype[np.complex_]]
     """A list of state vectors"""
 
 
@@ -47,19 +44,18 @@ def get_operator(
     Eigenstate[_B0Inv]
     """
     return {
-        "basis": operator_list["basis"],
-        "dual_basis": operator_list["dual_basis"],
-        "array": operator_list["arrays"][idx],
+        "basis": StackedBasis(operator_list["basis"][1], operator_list["basis"][2]),
+        "data": operator_list["data"]
+        .reshape(operator_list["basis"].shape)[idx]
+        .reshape(-1),
     }
 
 
 class DiagonalOperatorList(TypedDict, Generic[_B0Inv, _B1Inv, _B2Inv]):
     """Represents a list of eigenstates, each with the same basis and bloch wavevector."""
 
-    list_basis: _B0Inv
-    basis: _B1Inv
-    dual_basis: _B2Inv
-    vectors: np.ndarray[tuple[int, int], np.dtype[np.complex_]]
+    basis: StackedBasisLike[_B0Inv, StackedBasisLike[_B1Inv, _B2Inv]]
+    data: np.ndarray[tuple[int], np.dtype[np.complex_]]
     """A list of state vectors"""
 
 
@@ -80,9 +76,10 @@ def get_diagonal_operator(
     Eigenstate[_B0Inv]
     """
     return {
-        "basis": operator_list["basis"],
-        "dual_basis": operator_list["dual_basis"],
-        "vector": operator_list["vectors"][idx],
+        "basis": operator_list["basis"][1],
+        "data": operator_list["data"]
+        .reshape(operator_list["basis"][0].n, -1)[idx]
+        .reshape(-1),
     }
 
 
@@ -101,14 +98,12 @@ def sum_diagonal_operator_list_over_axes(
     -------
     DiagonalOperatorList[Any, Any, _L0Inv]
     """
-    util = BasisUtil(states["basis"])
     traced_basis = tuple(b for (i, b) in enumerate(states["basis"]) if i not in axes)
+    # TODO: just wrong
     return {
-        "list_basis": states["basis"],
         "basis": traced_basis,
-        "dual_basis": traced_basis,
-        "vectors": np.sum(
-            states["vectors"].reshape(-1, *util.shape),
+        "data": np.sum(
+            states["data"].reshape(-1, states["basis"].shape),
             axis=tuple(1 + np.array(axes)),
-        ).reshape(states["vectors"].shape[0], -1),
+        ).reshape(states["data"].shape[0], -1),
     }

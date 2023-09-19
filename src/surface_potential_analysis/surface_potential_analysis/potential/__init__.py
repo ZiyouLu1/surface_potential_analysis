@@ -9,15 +9,11 @@ from __future__ import annotations
 
 from .point_potential import PointPotential3d, load_point_potential_json
 from .potential import (
-    FundamentalPositionBasisPotential3d,
-    PotentialPoints,
     UnevenPotential3d,
     interpolate_uneven_potential,
     load_potential,
     load_uneven_potential,
     normalize_potential,
-    save_potential,
-    save_uneven_potential,
     truncate_potential,
     undo_truncate_potential,
 )
@@ -27,15 +23,11 @@ __all__ = [
     "PointPotential3d",
     "load_point_potential_json",
     # potential
-    "FundamentalPositionBasisPotential3d",
-    "PotentialPoints",
     "UnevenPotential3d",
     "interpolate_uneven_potential",
     "load_potential",
     "load_uneven_potential",
     "normalize_potential",
-    "save_potential",
-    "save_uneven_potential",
     "truncate_potential",
     "undo_truncate_potential",
 ]

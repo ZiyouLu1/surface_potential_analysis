@@ -5,8 +5,7 @@ from typing import TYPE_CHECKING, Literal, TypeVar
 import numpy as np
 from matplotlib import pyplot as plt
 
-from surface_potential_analysis.basis.util import (
-    AxisWithLengthBasisUtil,
+from surface_potential_analysis.stacked_basis.util import (
     calculate_cumulative_k_distances_along_path,
     get_k_coordinates_in_axes,
     get_x_coordinates_in_axes,
@@ -24,17 +23,41 @@ if TYPE_CHECKING:
     from matplotlib.figure import Figure
     from matplotlib.lines import Line2D
 
-    from surface_potential_analysis._types import (
+    from surface_potential_analysis.axis.axis import (
+        FundamentalPositionBasis,
+        FundamentalTransformedPositionBasis,
+    )
+    from surface_potential_analysis.axis.stacked_axis import StackedBasisLike
+    from surface_potential_analysis.types import (
         SingleFlatIndexLike,
         SingleStackedIndexLike,
     )
     from surface_potential_analysis.util.plot import Scale
 
-    from .overlap import FundamentalMomentumOverlap, FundamentalPositionOverlap
+    from .overlap import Overlap3d
 
-_L0Inv = TypeVar("_L0Inv", bound=int)
-_L1Inv = TypeVar("_L1Inv", bound=int)
-_L2Inv = TypeVar("_L2Inv", bound=int)
+    _L0Inv = TypeVar("_L0Inv", bound=int)
+    _L1Inv = TypeVar("_L1Inv", bound=int)
+    _L2Inv = TypeVar("_L2Inv", bound=int)
+
+    FundamentalPositionOverlap = Overlap3d[
+        StackedBasisLike[
+            tuple[
+                FundamentalPositionBasis[_L0Inv, Literal[3]],
+                FundamentalPositionBasis[_L1Inv, Literal[3]],
+                FundamentalPositionBasis[_L2Inv, Literal[3]],
+            ]
+        ]
+    ]
+    FundamentalMomentumOverlap = Overlap3d[
+        StackedBasisLike[
+            tuple[
+                FundamentalTransformedPositionBasis[_L0Inv, Literal[3]],
+                FundamentalTransformedPositionBasis[_L1Inv, Literal[3]],
+                FundamentalTransformedPositionBasis[_L2Inv, Literal[3]],
+            ]
+        ]
+    ]
 
 
 # ruff: noqa: PLR0913
@@ -71,11 +94,12 @@ def plot_overlap_2d_x(
     tuple[Figure, Axes, QuadMesh]
     """
     fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
-    idx = tuple(0 for _ in range(len(overlap["basis"]) - 2)) if idx is None else idx
+    idx = tuple(0 for _ in range(overlap["basis"].ndim - 2)) if idx is None else idx
 
     coordinates = get_x_coordinates_in_axes(overlap["basis"], axes, idx).swapaxes(1, 2)
-    util = AxisWithLengthBasisUtil(overlap["basis"])
-    points = get_data_in_axes(overlap["vector"].reshape(*util.shape), axes, idx)
+    points = get_data_in_axes(
+        overlap["data"].reshape(overlap["basis"].shape), axes, idx
+    )
     data = get_measured_data(points, measure)
 
     mesh = ax.pcolormesh(*coordinates, data, shading="nearest")
@@ -121,11 +145,10 @@ def plot_overlap_2d_k(
     tuple[Figure, Axes, QuadMesh]
     """
     fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
-    idx = tuple(0 for _ in range(len(overlap["basis"]) - 2)) if idx is None else idx
+    idx = tuple(0 for _ in range(overlap["basis"].ndim - 2)) if idx is None else idx
 
     coordinates = get_k_coordinates_in_axes(overlap["basis"], axes, idx).swapaxes(1, 2)
-    util = AxisWithLengthBasisUtil(overlap["basis"])
-    data = get_data_in_axes(overlap["vector"].reshape(*util.shape), axes, idx)
+    data = get_data_in_axes(overlap["data"].reshape(overlap["basis"].shape), axes, idx)
     data = np.fft.ifftshift(get_measured_data(data, measure))
     shifted_coordinates = np.fft.ifftshift(coordinates)
 
@@ -266,8 +289,7 @@ def plot_overlap_along_path_k(
     """
     fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
 
-    util = AxisWithLengthBasisUtil(overlap["basis"])
-    points = overlap["vector"].reshape(util.shape)[*path]
+    points = overlap["data"].reshape(overlap["basis"].shape)[*path]
     data = get_measured_data(points, measure)
     distances = calculate_cumulative_k_distances_along_path(
         overlap["basis"], path, wrap_distances=wrap_distances
@@ -303,8 +325,7 @@ def plot_overlap_along_k_diagonal(
     -------
     tuple[Figure, Axes, Line2D]
     """
-    util = AxisWithLengthBasisUtil(overlap["basis"])
-    path = np.array([[i, i, k2_ind] for i in range(util.shape[0])]).T
+    path = np.array([[i, i, k2_ind] for i in range(overlap["basis"].shape[0])]).T
 
     return plot_overlap_along_path_k(overlap, path, measure=measure, scale=scale, ax=ax)
 
@@ -337,7 +358,6 @@ def plot_overlap_along_k0(
     -------
     tuple[Figure, Axes, Line2D]
     """
-    util = AxisWithLengthBasisUtil(overlap["basis"])
-    path = np.array([[i, k1_ind, k2_ind] for i in range(util.shape[0])]).T
+    path = np.array([[i, k1_ind, k2_ind] for i in range(overlap["basis"].shape[0])]).T
 
     return plot_overlap_along_path_k(overlap, path, measure=measure, scale=scale, ax=ax)

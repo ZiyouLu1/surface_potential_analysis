@@ -20,7 +20,7 @@ def get_out_path(filename: str | Path) -> Path:
 
 def save_figure(fig: Figure, filename: str | Path) -> None:
     path = get_out_path(filename)
-    fig.savefig(path)
+    fig.savefig(path)  # type: ignore doesn't support PathLike
 
 
 def get_data_path(filename: str | Path) -> Path:

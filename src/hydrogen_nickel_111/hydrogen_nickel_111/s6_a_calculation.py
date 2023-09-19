@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Literal, TypeVar
 
 import numpy as np
 from scipy.constants import Boltzmann
-from surface_potential_analysis.basis.util import BasisUtil
+from surface_potential_analysis.axis.util import BasisUtil
 from surface_potential_analysis.dynamics.hermitian_gamma_integral import (
     calculate_hermitian_gamma_occupation_integral,
     calculate_hermitian_gamma_potential_integral,
@@ -42,7 +42,7 @@ if TYPE_CHECKING:
     from collections.abc import Callable
     from pathlib import Path
 
-    from surface_potential_analysis.axis.axis import FundamentalAxis
+    from surface_potential_analysis.axis.axis import FundamentalBasis
 
     _S0Inv = TypeVar("_S0Inv", bound=tuple[int, ...])
 _L0Inv = TypeVar("_L0Inv", bound=int)
@@ -216,8 +216,8 @@ def get_tunnelling_a_matrix_hydrogen(
     temperature: float,
 ) -> TunnellingAMatrix[
     tuple[
-        FundamentalAxis[_L0Inv],
-        FundamentalAxis[_L1Inv],
+        FundamentalBasis[_L0Inv],
+        FundamentalBasis[_L1Inv],
         TunnellingSimulationBandsAxis[_L2Inv],
     ]
 ]:
@@ -281,8 +281,8 @@ def get_tunnelling_a_matrix_deuterium(
     temperature: float,
 ) -> TunnellingAMatrix[
     tuple[
-        FundamentalAxis[_L0Inv],
-        FundamentalAxis[_L1Inv],
+        FundamentalBasis[_L0Inv],
+        FundamentalBasis[_L1Inv],
         TunnellingSimulationBandsAxis[_L2Inv],
     ]
 ]:

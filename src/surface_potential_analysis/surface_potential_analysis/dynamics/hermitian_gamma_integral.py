@@ -9,7 +9,7 @@ from scipy.constants import electron_mass, elementary_charge, epsilon_0, hbar
 if TYPE_CHECKING:
     from collections.abc import Callable
 
-    from surface_potential_analysis._types import _FloatLike_co
+    from surface_potential_analysis.types import FloatLike_co
 
 _S0Inv = TypeVar("_S0Inv", bound=tuple[int, ...])
 
@@ -17,14 +17,14 @@ _S0Inv = TypeVar("_S0Inv", bound=tuple[int, ...])
 @overload
 def _get_delta_e(
     k_0: np.ndarray[_S0Inv, np.dtype[np.float_]],
-    k_1: np.ndarray[_S0Inv, np.dtype[np.float_]] | _FloatLike_co,
+    k_1: np.ndarray[_S0Inv, np.dtype[np.float_]] | FloatLike_co,
 ) -> np.ndarray[_S0Inv, np.dtype[np.float_]]:
     ...
 
 
 @overload
 def _get_delta_e(
-    k_0: np.ndarray[_S0Inv, np.dtype[np.float_]] | _FloatLike_co,
+    k_0: np.ndarray[_S0Inv, np.dtype[np.float_]] | FloatLike_co,
     k_1: np.ndarray[_S0Inv, np.dtype[np.float_]],
 ) -> np.ndarray[_S0Inv, np.dtype[np.float_]]:
     ...
@@ -32,16 +32,16 @@ def _get_delta_e(
 
 @overload
 def _get_delta_e(
-    k_0: _FloatLike_co,
-    k_1: _FloatLike_co,
-) -> _FloatLike_co:
+    k_0: FloatLike_co,
+    k_1: FloatLike_co,
+) -> FloatLike_co:
     ...
 
 
 def _get_delta_e(
-    k_0: np.ndarray[_S0Inv, np.dtype[np.float_]] | _FloatLike_co,
-    k_1: np.ndarray[_S0Inv, np.dtype[np.float_]] | _FloatLike_co,
-) -> np.ndarray[_S0Inv, np.dtype[np.float_]] | _FloatLike_co:
+    k_0: np.ndarray[_S0Inv, np.dtype[np.float_]] | FloatLike_co,
+    k_1: np.ndarray[_S0Inv, np.dtype[np.float_]] | FloatLike_co,
+) -> np.ndarray[_S0Inv, np.dtype[np.float_]] | FloatLike_co:
     e_0 = (hbar * k_0) ** 2 / (2 * electron_mass)
     e_1 = (hbar * k_1) ** 2 / (2 * electron_mass)
     return e_0 - e_1  # type: ignore[no-any-return]
@@ -50,8 +50,8 @@ def _get_delta_e(
 def _get_fermi_occupation(
     k: np.ndarray[_S0Inv, np.dtype[np.float_]],
     *,
-    k_f: _FloatLike_co,
-    boltzmann_energy: _FloatLike_co,
+    k_f: FloatLike_co,
+    boltzmann_energy: FloatLike_co,
 ) -> np.ndarray[_S0Inv, np.dtype[np.float_]]:
     return 1 / (1 + np.exp((_get_delta_e(k, k_f)) / boltzmann_energy))  # type: ignore[no-any-return]
 
@@ -59,9 +59,9 @@ def _get_fermi_occupation(
 def get_hermitian_gamma_occupation_integrand(
     k: np.ndarray[_S0Inv, np.dtype[np.float_]],
     *,
-    omega: _FloatLike_co,
-    k_f: _FloatLike_co,
-    boltzmann_energy: _FloatLike_co,
+    omega: FloatLike_co,
+    k_f: FloatLike_co,
+    boltzmann_energy: FloatLike_co,
 ) -> np.ndarray[_S0Inv, np.dtype[np.float_]]:
     """
     Get the integrand of the hermitian_gamma_occupation_integral.
@@ -85,7 +85,7 @@ def get_hermitian_gamma_occupation_integrand(
 
 
 def calculate_hermitian_gamma_occupation_integral(
-    omega: _FloatLike_co, k_f: _FloatLike_co, boltzmann_energy: _FloatLike_co
+    omega: FloatLike_co, k_f: FloatLike_co, boltzmann_energy: FloatLike_co
 ) -> float:
     """
     Calculate int_k1 N1(1-N3) dk1.
@@ -140,7 +140,7 @@ def _get_hopping_potential_integrand(
     k_f: float,
     overlap: Callable[
         [np.ndarray[_S0Inv, np.dtype[np.float_]]],
-        np.ndarray[_S0Inv, np.dtype[np.complex_ | np.float_]],
+        np.ndarray[_S0Inv, np.dtype[np.complex_] | np.dtype[np.float_]],
     ],
 ) -> np.ndarray[_S0Inv, np.dtype[np.complex_]]:
     q = k_f * np.sin(phi / 2)
@@ -167,7 +167,7 @@ def calculate_hermitian_gamma_potential_integral(
     k_f: float,
     overlap: Callable[
         [np.ndarray[_S0Inv, np.dtype[np.float_]]],
-        np.ndarray[_S0Inv, np.dtype[np.complex_ | np.float_]],
+        np.ndarray[_S0Inv, np.dtype[np.complex_] | np.dtype[np.float_]],
     ],
 ) -> np.complex_:
     """

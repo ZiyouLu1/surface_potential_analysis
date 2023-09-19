@@ -5,35 +5,34 @@ from typing import TYPE_CHECKING, Any, TypeVar
 import numpy as np
 from scipy.constants import hbar
 
-from surface_potential_analysis.axis.conversion import axis_as_fundamental_momentum_axis
-from surface_potential_analysis.basis.conversion import (
-    basis_as_fundamental_position_basis,
-)
-from surface_potential_analysis.basis.util import (
-    AxisWithLengthBasisUtil,
+from surface_potential_analysis.axis.stacked_axis import StackedBasis
+from surface_potential_analysis.axis.util import (
+    BasisUtil,
 )
 from surface_potential_analysis.operator.conversion import (
+    add_operator,
     convert_operator_to_basis,
 )
-from surface_potential_analysis.operator.operator import (
-    SingleBasisOperator,
-    add_operator,
-)
 from surface_potential_analysis.potential.conversion import convert_potential_to_basis
+from surface_potential_analysis.stacked_basis.conversion import (
+    stacked_basis_as_fundamental_momentum_basis,
+    stacked_basis_as_fundamental_position_basis,
+)
 
 if TYPE_CHECKING:
-    from surface_potential_analysis.basis.basis import (
-        AxisWithLengthBasis,
+    from surface_potential_analysis.axis.stacked_axis import StackedBasisLike
+    from surface_potential_analysis.operator.operator import (
+        SingleBasisOperator,
     )
     from surface_potential_analysis.potential.potential import Potential
 
     _L0 = TypeVar("_L0", bound=int)
-    _B0Inv = TypeVar("_B0Inv", bound=AxisWithLengthBasis[Any])
+    _SB0 = TypeVar("_SB0", bound=StackedBasisLike[*tuple[Any, ...]])
 
 
 def hamiltonian_from_potential(
-    potential: Potential[_B0Inv],
-) -> SingleBasisOperator[_B0Inv]:
+    potential: Potential[_SB0],
+) -> SingleBasisOperator[_SB0]:
     """
     Given a potential in some basis get the hamiltonian in the same basis.
 
@@ -46,25 +45,23 @@ def hamiltonian_from_potential(
     Hamiltonian[_B0Inv]
     """
     converted = convert_potential_to_basis(
-        potential, basis_as_fundamental_position_basis(potential["basis"])
+        potential, stacked_basis_as_fundamental_position_basis(potential["basis"])
     )
 
     return convert_operator_to_basis(
         {
-            "basis": converted["basis"],
-            "dual_basis": converted["basis"],
-            "array": np.diag(converted["vector"]),
+            "basis": StackedBasis(converted["basis"], converted["basis"]),
+            "data": np.diag(converted["data"]).reshape(-1),
         },
-        potential["basis"],
-        potential["basis"],
+        StackedBasis(potential["basis"], potential["basis"]),
     )
 
 
 def hamiltonian_from_mass(
-    basis: _B0Inv,
+    basis: _SB0,
     mass: float,
     bloch_fraction: np.ndarray[tuple[_L0], np.dtype[np.float_]] | None = None,
-) -> SingleBasisOperator[_B0Inv]:
+) -> SingleBasisOperator[_SB0]:
     """
     Given a mass and a basis calculate the kinetic part of the Hamiltonian.
 
@@ -79,27 +76,26 @@ def hamiltonian_from_mass(
     -------
     Hamiltonian[_B0Inv]
     """
-    bloch_fraction = np.zeros(len(basis)) if bloch_fraction is None else bloch_fraction
-    util = AxisWithLengthBasisUtil(basis)
+    bloch_fraction = np.zeros(basis.ndim) if bloch_fraction is None else bloch_fraction
+    util = BasisUtil(basis)
 
-    bloch_phase = np.tensordot(util.fundamental_dk, bloch_fraction, axes=(0, 0))
-    k_points = util.fundamental_k_points + bloch_phase[:, np.newaxis]
+    bloch_phase = np.tensordot(util.fundamental_dk_stacked, bloch_fraction, axes=(0, 0))
+    k_points = util.fundamental_stacked_k_points + bloch_phase[:, np.newaxis]
     energy = np.sum(np.square(hbar * k_points) / (2 * mass), axis=0, dtype=np.complex_)
-    momentum_basis = tuple(axis_as_fundamental_momentum_axis(ax) for ax in basis)
+    momentum_basis = stacked_basis_as_fundamental_momentum_basis(basis)
 
     hamiltonian: SingleBasisOperator[Any] = {
-        "basis": momentum_basis,
-        "dual_basis": momentum_basis,
-        "array": np.diag(energy),
+        "basis": StackedBasis(momentum_basis, momentum_basis),
+        "data": np.diag(energy).reshape(-1),
     }
-    return convert_operator_to_basis(hamiltonian, basis, basis)
+    return convert_operator_to_basis(hamiltonian, StackedBasis(basis, basis))
 
 
 def total_surface_hamiltonian(
-    potential: Potential[_B0Inv],
+    potential: Potential[_SB0],
     mass: float,
     bloch_fraction: np.ndarray[tuple[_L0], np.dtype[np.float_]] | None = None,
-) -> SingleBasisOperator[_B0Inv]:
+) -> SingleBasisOperator[_SB0]:
     """
     Calculate the total hamiltonian in momentum basis for a given potential and mass.
 
@@ -115,7 +111,7 @@ def total_surface_hamiltonian(
     """
     potential_hamiltonian = hamiltonian_from_potential(potential)
     kinetic_hamiltonian = hamiltonian_from_mass(
-        potential["basis"], mass, bloch_fraction
+        potential_hamiltonian["basis"][0], mass, bloch_fraction
     )
 
     return add_operator(kinetic_hamiltonian, potential_hamiltonian)

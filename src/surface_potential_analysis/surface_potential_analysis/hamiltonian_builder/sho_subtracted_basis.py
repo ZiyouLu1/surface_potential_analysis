@@ -8,28 +8,28 @@ import numpy as np
 from scipy.constants import hbar
 
 from surface_potential_analysis.axis.axis import (
-    ExplicitAxis3d,
-    FundamentalPositionAxis3d,
-    TransformedPositionAxis3d,
+    ExplicitBasis3d,
+    FundamentalPositionBasis3d,
+    TransformedPositionBasis,
+    TransformedPositionBasis3d,
+)
+from surface_potential_analysis.axis.stacked_axis import (
+    StackedBasis,
+    StackedBasisLike,
 )
 from surface_potential_analysis.axis.util import (
-    AxisWithLengthLikeUtil,
+    BasisUtil,
 )
-from surface_potential_analysis.basis.sho_basis import (
+from surface_potential_analysis.stacked_basis.sho_basis import (
     SHOBasisConfig,
     calculate_x_distances,
     infinate_sho_axis_3d_from_config,
 )
-from surface_potential_analysis.basis.util import AxisWithLengthBasisUtil
 
 if TYPE_CHECKING:
-    from surface_potential_analysis.basis.basis import (
-        Basis3d,
-    )
     from surface_potential_analysis.operator import SingleBasisOperator
-    from surface_potential_analysis.potential import (
-        FundamentalPositionBasisPotential3d,
-    )
+    from surface_potential_analysis.potential.potential import Potential
+
 
 _N0Inv = TypeVar("_N0Inv", bound=int)
 _N1Inv = TypeVar("_N1Inv", bound=int)
@@ -42,7 +42,13 @@ _NF2Inv = TypeVar("_NF2Inv", bound=int)
 class _SurfaceHamiltonianUtil(
     Generic[_N0Inv, _N1Inv, _N2Inv, _NF0Inv, _NF1Inv, _NF2Inv]
 ):
-    _potential: FundamentalPositionBasisPotential3d[_NF0Inv, _NF1Inv, _NF2Inv]
+    _potential: Potential[
+        StackedBasisLike[
+            FundamentalPositionBasis3d[_NF0Inv],
+            FundamentalPositionBasis3d[_NF1Inv],
+            FundamentalPositionBasis3d[_NF2Inv],
+        ]
+    ]
 
     _config: SHOBasisConfig
 
@@ -50,7 +56,13 @@ class _SurfaceHamiltonianUtil(
 
     def __init__(
         self,
-        potential: FundamentalPositionBasisPotential3d[_NF0Inv, _NF1Inv, _NF2Inv],
+        potential: Potential[
+            StackedBasisLike[
+                FundamentalPositionBasis3d[_NF0Inv],
+                FundamentalPositionBasis3d[_NF1Inv],
+                FundamentalPositionBasis3d[_NF2Inv],
+            ]
+        ],
         config: SHOBasisConfig,
         resolution: tuple[_N0Inv, _N1Inv, _N2Inv],
     ) -> None:
@@ -72,9 +84,7 @@ class _SurfaceHamiltonianUtil(
         self,
     ) -> np.ndarray[tuple[_NF0Inv, _NF1Inv, _NF2Inv], np.dtype[np.float_]]:
         return np.real(  # type: ignore[no-any-return]
-            self._potential["vector"].reshape(
-                AxisWithLengthBasisUtil(self._potential["basis"]).shape
-            )
+            self._potential["data"].reshape(BasisUtil(self._potential["basis"]).shape)
         )
 
     @property
@@ -95,7 +105,7 @@ class _SurfaceHamiltonianUtil(
 
     @property
     def dz(self) -> float:
-        util = AxisWithLengthLikeUtil(self._potential["basis"][2])
+        util = BasisUtil(self._potential["basis"][2])
         return np.linalg.norm(util.fundamental_dx)  # type: ignore[return-value]
 
     @property
@@ -107,24 +117,24 @@ class _SurfaceHamiltonianUtil(
     @property
     def basis(
         self,
-    ) -> Basis3d[
-        TransformedPositionAxis3d[_NF0Inv, _N0Inv],
-        TransformedPositionAxis3d[_NF1Inv, _N1Inv],
-        ExplicitAxis3d[_NF2Inv, _N2Inv],
+    ) -> StackedBasis[
+        TransformedPositionBasis3d[_NF0Inv, _N0Inv],
+        TransformedPositionBasis3d[_NF1Inv, _N1Inv],
+        ExplicitBasis3d[_NF2Inv, _N2Inv],
     ]:
-        return (
-            TransformedPositionAxis3d(
+        return StackedBasis(
+            TransformedPositionBasis(
                 self._potential["basis"][0].delta_x,
                 self._resolution[0],
                 self._potential["basis"][0].n,
             ),
-            TransformedPositionAxis3d(
+            TransformedPositionBasis(
                 self._potential["basis"][1].delta_x,
                 self._resolution[1],
                 self._potential["basis"][1].n,
             ),
             infinate_sho_axis_3d_from_config(
-                FundamentalPositionAxis3d(
+                FundamentalPositionBasis3d(
                     self._potential["basis"][2].delta_x,
                     self._potential["basis"][2].n,
                 ),
@@ -136,10 +146,10 @@ class _SurfaceHamiltonianUtil(
     def hamiltonian(
         self, bloch_phase: np.ndarray[tuple[Literal[3]], np.dtype[np.float_]]
     ) -> SingleBasisOperator[
-        tuple[
-            TransformedPositionAxis3d[_NF0Inv, _N0Inv],
-            TransformedPositionAxis3d[_NF1Inv, _N1Inv],
-            ExplicitAxis3d[_NF2Inv, _N2Inv],
+        StackedBasisLike[
+            TransformedPositionBasis3d[_NF0Inv, _N0Inv],
+            TransformedPositionBasis3d[_NF1Inv, _N1Inv],
+            ExplicitBasis3d[_NF2Inv, _N2Inv],
         ]
     ]:
         diagonal_energies = np.diag(self._calculate_diagonal_energy(bloch_phase))
@@ -147,13 +157,16 @@ class _SurfaceHamiltonianUtil(
 
         energies = diagonal_energies + other_energies
 
-        return {"array": energies, "basis": self.basis, "dual_basis": self.basis}
+        return {
+            "data": energies.reshape(-1),
+            "basis": StackedBasis(self.basis, self.basis),
+        }
 
     @cached_property
     def eigenstate_indexes(
         self,
     ) -> np.ndarray[tuple[Literal[3], int], np.dtype[np.int_]]:
-        util = AxisWithLengthBasisUtil(self.basis)
+        util = BasisUtil(self.basis)
 
         x0t, x1t, zt = np.meshgrid(
             util._utils[0].nk_points,  # type: ignore[misc] # noqa: SLF001
@@ -168,10 +181,10 @@ class _SurfaceHamiltonianUtil(
     ) -> np.ndarray[tuple[int], np.dtype[np.float_]]:
         k0_coords, k1_coords, nkz_coords = self.eigenstate_indexes
 
-        util = AxisWithLengthBasisUtil(self.basis)
+        util = BasisUtil(self.basis)
 
-        dk0 = util.dk[0]
-        dk1 = util.dk[1]
+        dk0 = util.dk_stacked[0]
+        dk1 = util.dk_stacked[1]
         mass = self._config["mass"]
         sho_omega = self._config["sho_omega"]
 
@@ -219,8 +232,8 @@ class _SurfaceHamiltonianUtil(
     ) -> float:
         """Calculate the off diagonal energy using the 'folded' points ndk0, ndk1."""
         ft_pot_points = self.get_ft_potential()[ndk0, ndk1]
-        hermite1 = AxisWithLengthLikeUtil(self.basis[2]).vectors[nz1]
-        hermite2 = AxisWithLengthLikeUtil(self.basis[2]).vectors[nz2]
+        hermite1 = BasisUtil(self.basis[2]).vectors[nz1]
+        hermite2 = BasisUtil(self.basis[2]).vectors[nz2]
 
         fourier_transform = float(np.sum(hermite1 * hermite2 * ft_pot_points))
 
@@ -253,15 +266,21 @@ class _SurfaceHamiltonianUtil(
 
 
 def total_surface_hamiltonian(
-    potential: FundamentalPositionBasisPotential3d[_NF0Inv, _NF1Inv, _NF2Inv],
+    potential: Potential[
+        StackedBasisLike[
+            FundamentalPositionBasis3d[_NF0Inv],
+            FundamentalPositionBasis3d[_NF1Inv],
+            FundamentalPositionBasis3d[_NF2Inv],
+        ]
+    ],
     config: SHOBasisConfig,
     bloch_fraction: np.ndarray[tuple[Literal[3]], np.dtype[np.float_]],
     resolution: tuple[_N0Inv, _N1Inv, _N2Inv],
 ) -> SingleBasisOperator[
-    tuple[
-        TransformedPositionAxis3d[_NF0Inv, _N0Inv],
-        TransformedPositionAxis3d[_NF1Inv, _N1Inv],
-        ExplicitAxis3d[_NF2Inv, _N2Inv],
+    StackedBasisLike[
+        TransformedPositionBasis3d[_NF0Inv, _N0Inv],
+        TransformedPositionBasis3d[_NF1Inv, _N1Inv],
+        ExplicitBasis3d[_NF2Inv, _N2Inv],
     ]
 ]:
     """
@@ -280,7 +299,7 @@ def total_surface_hamiltonian(
     """
     util = _SurfaceHamiltonianUtil(potential, config, resolution)
     bloch_phase = np.tensordot(
-        AxisWithLengthBasisUtil(util.basis).fundamental_dk,
+        BasisUtil(util.basis).fundamental_dk_stacked,
         bloch_fraction,
         axes=(0, 0),
     )

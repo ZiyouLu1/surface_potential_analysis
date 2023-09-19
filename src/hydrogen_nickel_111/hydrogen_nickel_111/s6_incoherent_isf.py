@@ -7,7 +7,7 @@ import scipy.optimize
 from matplotlib import pyplot as plt
 from matplotlib.scale import FuncScale
 from scipy.constants import Boltzmann
-from surface_potential_analysis.basis.util import AxisWithLengthBasisUtil
+from surface_potential_analysis.axis.util import BasisUtil
 from surface_potential_analysis.dynamics.hermitian_gamma_integral import (
     calculate_hermitian_gamma_occupation_integral,
 )
@@ -58,30 +58,32 @@ _L0Inv = TypeVar("_L0Inv", bound=int)
 def get_jianding_isf_110() -> np.ndarray[tuple[Literal[2]], np.dtype[np.float_]]:
     basis = get_wavepacket_hydrogen(0)["basis"]
 
-    util = AxisWithLengthBasisUtil(basis)
-    dk = util.delta_x[0] / np.linalg.norm(util.delta_x[0])
-    dk *= 2 / np.linalg.norm(util.delta_x[0])
+    util = BasisUtil(basis)
+    dk = util.delta_x_stacked[0] / np.linalg.norm(util.delta_x_stacked[0])
+    dk *= 2 / np.linalg.norm(util.delta_x_stacked[0])
     return dk[:2]  # type: ignore[no-any-return]
 
 
 def get_jianding_isf_112bar() -> np.ndarray[tuple[Literal[2]], np.dtype[np.float_]]:
     basis = get_wavepacket_hydrogen(0)["basis"]
 
-    util = AxisWithLengthBasisUtil(basis)
-    dk_0_norm = util.delta_x[0] / np.linalg.norm(util.delta_x[0])
-    dk = util.delta_x[1] - dk_0_norm * np.dot(dk_0_norm, util.delta_x[1])
+    util = BasisUtil(basis)
+    dk_0_norm = util.delta_x_stacked[0] / np.linalg.norm(util.delta_x_stacked[0])
+    dk = util.delta_x_stacked[1] - dk_0_norm * np.dot(
+        dk_0_norm, util.delta_x_stacked[1]
+    )
     dk /= np.linalg.norm(dk)
-    dk *= 2 / np.linalg.norm(util.delta_x[0])
+    dk *= 2 / np.linalg.norm(util.delta_x_stacked[0])
     return dk[:2]  # type: ignore[no-any-return]
 
 
 def get_jianding_isf_diagonal() -> np.ndarray[tuple[Literal[2]], np.dtype[np.float_]]:
     basis = get_wavepacket_hydrogen(0)["basis"]
 
-    util = AxisWithLengthBasisUtil(basis)
-    dk = util.delta_x[0] + util.delta_x[1]
+    util = BasisUtil(basis)
+    dk = util.delta_x_stacked[0] + util.delta_x_stacked[1]
     dk /= np.linalg.norm(dk)
-    dk *= 2 / np.linalg.norm(util.delta_x[0])
+    dk *= 2 / np.linalg.norm(util.delta_x_stacked[0])
     return dk[:2]  # type: ignore[no-any-return]
 
 

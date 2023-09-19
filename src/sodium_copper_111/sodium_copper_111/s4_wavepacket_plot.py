@@ -1,48 +1,78 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
-
-import numpy as np
 from matplotlib import pyplot as plt
-from surface_potential_analysis.basis.util import BasisUtil
-from surface_potential_analysis.state_vector.conversion import (
-    convert_state_vector_to_position_basis,
+from surface_potential_analysis.probability_vector.plot import plot_probability_1d_k
+from surface_potential_analysis.probability_vector.probability_vector import (
+    average_probabilities,
+    from_state_vector_list,
 )
-from surface_potential_analysis.state_vector.plot import plot_state_1d_x
-from surface_potential_analysis.util.decorators import npy_cached
 from surface_potential_analysis.wavepacket.eigenstate_conversion import (
-    unfurl_wavepacket,
+    unfurl_wavepacket_list,
 )
 from surface_potential_analysis.wavepacket.localization import (
     localize_position_operator,
-    localize_position_operator_many_band_individual,
-    localize_tightly_bound_wavepacket_idx,
 )
-from surface_potential_analysis.wavepacket.plot import plot_wavepacket_1d_x
+from surface_potential_analysis.wavepacket.plot import (
+    plot_wavepacket_1d_k,
+    plot_wavepacket_1d_x,
+)
+from surface_potential_analysis.wavepacket.wavepacket import (
+    get_wavepackets,
+    wavepacket_list_into_iter,
+)
 
 from sodium_copper_111.s4_wavepacket import (
     get_all_wavepackets,
-    get_localized_wavepackets,
+    get_localized_wavepackets_projection,
+    get_localized_wavepackets_wannier_90,
     get_wavepacket,
 )
-from sodium_copper_111.surface_data import get_data_path
-
-if TYPE_CHECKING:
-    from surface_potential_analysis.state_vector.state_vector import StateVector
 
 
-def plot_first_six_wavepackets() -> None:
+def plot_wavepacket_average_occupation_probability() -> None:
+    wavepackets = get_all_wavepackets((21,), (60,))
+
     fig, ax = plt.subplots()
+    for n_bands in [5, 10, 15, 20, 25]:
+        unfurled = unfurl_wavepacket_list(get_wavepackets(wavepackets, slice(n_bands)))
+        probabilities = from_state_vector_list(unfurled)
+        averaged = average_probabilities(probabilities)
 
-    for i in range(0, 13):
-        wavepacket = get_wavepacket((12,), (600,), i)
-        localized = localize_tightly_bound_wavepacket_idx(wavepacket, idx=(0,))
-        _, _, ln = plot_wavepacket_1d_x(localized, ax=ax)
+        _, _, line = plot_probability_1d_k(averaged, ax=ax, measure="abs")
+        line.set_label(f"{n_bands} bands")
+    fig.show()
+    input()
+
+
+def plot_projection_localized_wavepacket() -> None:
+    wavepackets = get_localized_wavepackets_projection((21,), (60,), 25)
+
+    fig0, ax0 = plt.subplots()
+    fig1, ax1 = plt.subplots()
+    for i, wavepacket in enumerate(wavepacket_list_into_iter(wavepackets)):
+        _, _, ln = plot_wavepacket_1d_x(wavepacket, ax=ax0)
         ln.set_label(f"n={i}")
 
-    ax.legend()
-    ax.set_title("Plot of the six lowest energy wavepackets")
-    fig.show()
+        _, _, ln = plot_wavepacket_1d_k(wavepacket, ax=ax1, measure="abs")
+        ln.set_label(f"n={i}")
+    fig0.show()
+    fig1.show()
+    input()
+
+
+def plot_wannier90_localized_wavepacket() -> None:
+    wavepackets = get_localized_wavepackets_wannier_90((5,), (60,), 25)
+
+    fig0, ax0 = plt.subplots()
+    fig1, ax1 = plt.subplots()
+    for i, wavepacket in enumerate(wavepacket_list_into_iter(wavepackets)):
+        _, _, ln = plot_wavepacket_1d_x(wavepacket, ax=ax0)
+        ln.set_label(f"n={i}")
+
+        _, _, ln = plot_wavepacket_1d_k(wavepacket, ax=ax1, measure="abs")
+        ln.set_label(f"n={i}")
+    fig0.show()
+    fig1.show()
     input()
 
 
@@ -59,77 +89,3 @@ def plot_operator_localized_states_large_band_increasing_resolution() -> None:
     ax.set_title("Plot of the six lowest energy wavepackets")
     fig.show()
     input()
-
-
-def plot_operator_localized_states_single_band() -> None:
-    wavepackets = get_localized_wavepackets((8,), (100,), 3)
-
-    fig, ax = plt.subplots()
-    for i, wavepacket in enumerate(wavepackets):
-        _, _, ln = plot_wavepacket_1d_x(wavepacket, ax=ax)
-        ln.set_label(f"n={i}")
-    fig.show()
-
-    wavepackets = get_localized_wavepackets((10,), (100,), 15)
-    fig, ax = plt.subplots()
-    for i, wavepacket in enumerate(wavepackets):
-        _, _, ln = plot_wavepacket_1d_x(wavepacket, ax=ax)
-        ln.set_label(f"n={i}")
-
-    ax.legend()
-    fig.show()
-    input()
-
-
-@npy_cached(
-    get_data_path("wavepacket/localized_states_14_band_2.npy"), load_pickle=True
-)
-def get_many_band_localized_states() -> list[StateVector[Any]]:
-    wavepackets = get_all_wavepackets((40,), (100,))
-    return localize_position_operator_many_band_individual(wavepackets[0:16])
-
-
-def plot_operator_localized_states_many_band() -> None:
-    eigenstates = get_many_band_localized_states()
-
-    fig, ax = plt.subplots()
-    for i, eigenstate in enumerate(eigenstates):
-        _, _, ln = plot_state_1d_x(eigenstate, ax=ax)
-        ln.set_label(f"n={i}")
-
-    ax.set_xlim(3.2e-9, 3.7e-9)
-    fig.show()
-    input()
-
-
-def test_wavepacket_normalization() -> None:
-    # Does the wavepacket remain normalized no matter which index we choose
-    # to normalize onto. The answer is yes, as long as we dont choose
-    # to sit on a node exactly!
-    fig, ax = plt.subplots()
-
-    for idx in [0, 250, 500, 750, 1000]:
-        wavepacket = get_wavepacket((12,), (600,), 0)
-        normalized = localize_tightly_bound_wavepacket_idx(wavepacket, idx=(idx,))
-        _, _, ln = plot_wavepacket_1d_x(normalized, ax=ax)
-        ln.set_label(f"{idx}")
-
-    ax.legend()
-    ax.set_title("Plot of wavepackets of Na, showing incorrect localization")
-    fig.show()
-    input()
-
-
-def test_wavepacket_zero_at_next_unit_cell() -> None:
-    wavepacket = get_wavepacket((12,), (600,), 0)
-    offset = 50
-    size = BasisUtil(wavepacket["basis"]).size
-    sample_size = BasisUtil(wavepacket["list_basis"]).size
-
-    normalized = localize_tightly_bound_wavepacket_idx(wavepacket, idx=(offset,))
-    unfurled = unfurl_wavepacket(normalized)
-    unfurled_position = convert_state_vector_to_position_basis(unfurled)  # type: ignore[arg-type]
-    np.testing.assert_array_almost_equal(
-        unfurled_position["vector"][offset + size :: size],
-        np.zeros_like(sample_size - 1),
-    )

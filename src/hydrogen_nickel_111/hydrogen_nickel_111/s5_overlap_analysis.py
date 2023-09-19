@@ -7,8 +7,7 @@ from typing import TYPE_CHECKING, Any, Literal, TypeVar, Unpack
 import numpy as np
 from matplotlib import pyplot as plt
 from scipy.constants import Boltzmann
-from surface_potential_analysis.basis.util import (
-    AxisWithLengthBasisUtil,
+from surface_potential_analysis.axis.util import (
     BasisUtil,
 )
 from surface_potential_analysis.dynamics.hermitian_gamma_integral import (
@@ -42,28 +41,23 @@ if TYPE_CHECKING:
     from collections.abc import Callable
     from pathlib import Path
 
-    from surface_potential_analysis._types import SingleIndexLike3d
-    from surface_potential_analysis.basis.basis import (
-        Basis3d,
-        FundamentalMomentumBasis3d,
-        FundamentalPositionBasis3d,
-    )
     from surface_potential_analysis.overlap.overlap import (
         FundamentalMomentumOverlap,
         Overlap3d,
     )
+    from surface_potential_analysis.types import SingleIndexLike3d
 
     _L0Inv = TypeVar("_L0Inv", bound=int)
     _L1Inv = TypeVar("_L1Inv", bound=int)
     _L2Inv = TypeVar("_L2Inv", bound=int)
     _S0Inv = TypeVar("_S0Inv", bound=tuple[int, ...])
-    _B0Inv = TypeVar("_B0Inv", bound=Basis3d[Any, Any, Any])
+    _B0Inv = TypeVar("_B0Inv", bound=StackedAxisLike[Any])
 
 
 def get_max_point(
     overlap: FundamentalMomentumOverlap[_L0Inv, _L1Inv, _L2Inv]
 ) -> tuple[int, int, int]:
-    points = overlap["vector"]
+    points = overlap["data"]
     (ik0, ik1, inz) = np.unravel_index(np.argmax(np.abs(points)), shape=points.shape)
     return (int(ik0), int(ik1), int(inz))
 
@@ -89,12 +83,12 @@ def make_overlap_real_at(
     OverlapMomentum
         A new overlap, which is real at the given point
     """
-    util = AxisWithLengthBasisUtil(overlap["basis"])
-    idx = int(np.argmax(np.abs(overlap["vector"]))) if idx is None else idx
+    util = BasisUtil(overlap["basis"])
+    idx = int(np.argmax(np.abs(overlap["data"]))) if idx is None else idx
     idx = util.get_flat_index(idx) if isinstance(idx, tuple) else idx
 
-    new_points = overlap["vector"] * np.exp(-1j * np.angle(overlap["vector"][idx]))
-    return {"basis": overlap["basis"], "vector": new_points}
+    new_points = overlap["data"] * np.exp(-1j * np.angle(overlap["data"][idx]))
+    return {"basis": overlap["basis"], "data": new_points}
 
 
 def calculate_average_overlap_nickel(
@@ -208,8 +202,8 @@ def plot_fcc_hcp_overlap_momentum() -> None:
     fig.show()
 
     x1_max = np.unravel_index(
-        np.argmax(overlap["vector"]),
-        AxisWithLengthBasisUtil(overlap_momentum["basis"]).shape,
+        np.argmax(overlap["data"]),
+        BasisUtil(overlap_momentum["basis"]).shape,
     )[1]
     fig, ax, _ = plot_overlap_2d_k(overlap_momentum, (0, 2), (x1_max,))
     ax.set_title(
@@ -247,7 +241,7 @@ def plot_fcc_hcp_overlap_momentum_along_diagonal() -> None:
 def plot_fcc_hcp_overlap() -> None:
     overlap = get_overlap_hydrogen(0, 1)
     x2_max = np.unravel_index(
-        np.argmax(overlap["vector"]), AxisWithLengthBasisUtil(overlap["basis"]).shape
+        np.argmax(overlap["data"]), BasisUtil(overlap["basis"]).shape
     )[2]
 
     fig, ax, _ = plot_overlap_2d_x(overlap, (0, 1), (x2_max,), measure="abs")
@@ -273,7 +267,7 @@ def plot_fcc_hcp_overlap() -> None:
 def plot_fcc_hcp_overlap_offset() -> None:
     overlap = get_overlap_hydrogen(0, 1, (1, 0))
     x2_max = np.unravel_index(
-        np.argmax(overlap["vector"]), AxisWithLengthBasisUtil(overlap["basis"]).shape
+        np.argmax(overlap["data"]), BasisUtil(overlap["basis"]).shape
     )[2]
 
     fig, ax, _ = plot_overlap_2d_x(overlap, (0, 1), (x2_max,), measure="abs")
@@ -281,7 +275,7 @@ def plot_fcc_hcp_overlap_offset() -> None:
 
     overlap = get_overlap_hydrogen(0, 1, (0, 0), (-1, 0))
     x2_max = np.unravel_index(
-        np.argmax(overlap["vector"]), AxisWithLengthBasisUtil(overlap["basis"]).shape
+        np.argmax(overlap["data"]), BasisUtil(overlap["basis"]).shape
     )[2]
 
     fig, ax, _ = plot_overlap_2d_x(overlap, (0, 1), (x2_max,), measure="abs")
@@ -375,8 +369,10 @@ def get_gamma_1(
     offset = shift_offset_0_to_origin(offset)
     offset, displacement = shift_relative_offset(offset)
 
-    util = AxisWithLengthBasisUtil(get_wavepacket_hydrogen(0)["basis"])
-    displacement_r = np.tensordot(displacement, util.delta_x[0:2], axes=(0, 0))[:2]
+    util = BasisUtil(get_wavepacket_hydrogen(0)["basis"])
+    displacement_r = np.tensordot(displacement, util.delta_x_stacked[0:2], axes=(0, 0))[
+        :2
+    ]
     interpolator_0 = get_overlap_interpolator_cached(
         idx.item(0), idx.item(1), tuple(offset[1])
     )
@@ -574,21 +570,25 @@ def plot_temperature_dependent_integral() -> None:
 
 
 def calculate_max_overlap(
-    overlap: Overlap3d[FundamentalPositionBasis3d[_L0Inv, _L1Inv, _L2Inv]],
+    overlap: Overlap3d[
+        FundamentalPositionStackedAxisLike[tuple[_L0Inv, _L1Inv, _L2Inv]]
+    ],
 ) -> tuple[complex, np.ndarray[tuple[Literal[3]], np.dtype[np.float_]]]:
-    points = overlap["vector"]
-    util = AxisWithLengthBasisUtil(overlap["basis"])
+    points = overlap["data"]
+    util = BasisUtil(overlap["basis"])
     arg_max = np.argmax(np.abs(points))
-    x_point = util.fundamental_x_points[:, arg_max]
+    x_point = util.fundamental_x_points_stacked[:, arg_max]
 
     return points[arg_max], x_point
 
 
 def calculate_max_overlap_momentum(
-    overlap: Overlap3d[FundamentalMomentumBasis3d[_L0Inv, _L1Inv, _L2Inv]],
+    overlap: Overlap3d[
+        FundamentalMomentumStackedAxisLike[tuple[_L0Inv, _L1Inv, _L2Inv]]
+    ],
 ) -> tuple[complex, np.ndarray[tuple[Literal[3]], np.dtype[np.float_]]]:
-    points = overlap["vector"]
-    util = AxisWithLengthBasisUtil(overlap["basis"])
+    points = overlap["data"]
+    util = BasisUtil(overlap["basis"])
     arg_max = np.argmax(np.abs(points))
     k_point = util.fundamental_k_points[:, arg_max]
 
@@ -598,27 +598,27 @@ def calculate_max_overlap_momentum(
 def print_max_overlap_momentum() -> None:
     overlap = get_overlap_hydrogen(0, 1)
     overlap_momentum = convert_overlap_to_momentum_basis(overlap)
-    print(overlap_momentum["vector"][0])  # noqa: T201
+    print(overlap_momentum["data"][0])  # noqa: T201
     print(calculate_max_overlap_momentum(overlap_momentum))  # noqa: T201
 
     overlap = get_overlap_hydrogen(0, 0, (0, 0))
     overlap_momentum = convert_overlap_to_momentum_basis(overlap)
-    print(overlap_momentum["vector"][0])  # noqa: T201
+    print(overlap_momentum["data"][0])  # noqa: T201
     print(calculate_max_overlap_momentum(overlap_momentum))  # noqa: T201
 
     overlap = get_overlap_hydrogen(1, 1, (0, 0))
     overlap_momentum = convert_overlap_to_momentum_basis(overlap)
-    print(overlap_momentum["vector"][0])  # noqa: T201
+    print(overlap_momentum["data"][0])  # noqa: T201
     print(calculate_max_overlap_momentum(overlap_momentum))  # noqa: T201
 
     overlap = get_overlap_hydrogen(0, 0, (1, 0))
     overlap_momentum = convert_overlap_to_momentum_basis(overlap)
-    print(overlap_momentum["vector"][0])  # noqa: T201
+    print(overlap_momentum["data"][0])  # noqa: T201
     print(calculate_max_overlap_momentum(overlap_momentum))  # noqa: T201
 
     overlap = get_overlap_hydrogen(1, 1, (1, 0))
     overlap_momentum = convert_overlap_to_momentum_basis(overlap)
-    print(overlap_momentum["vector"][0])  # noqa: T201
+    print(overlap_momentum["data"][0])  # noqa: T201
     print(calculate_max_overlap_momentum(overlap_momentum))  # noqa: T201
 
 
@@ -631,7 +631,7 @@ def print_max_and_min_overlap() -> None:
             max_overlap = calculate_max_overlap_momentum(overlap_momentum)
             print(max_overlap)  # noqa: T201
             print(np.abs(max_overlap[0]), np.linalg.norm(max_overlap[1]))  # noqa: T201
-            k0_momentum = overlap_momentum["vector"][0]
+            k0_momentum = overlap_momentum["data"][0]
             print(k0_momentum)  # noqa: T201
             print(np.abs(k0_momentum))  # noqa: T201
 

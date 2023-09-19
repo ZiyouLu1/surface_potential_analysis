@@ -1,23 +1,27 @@
 from __future__ import annotations
 
 import json
-from typing import TYPE_CHECKING, Any, Generic, TypedDict, TypeVar, overload
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Generic,
+    Literal,
+    TypedDict,
+    TypeVar,
+)
 
 import numpy as np
 
 from surface_potential_analysis.axis.axis import (
-    FundamentalAxis,
-    FundamentalPositionAxis2d,
-    FundamentalPositionAxis3d,
-)
-from surface_potential_analysis.basis.basis import (
-    AxisWithLengthBasis,
-    Basis1d,
-    Basis2d,
-    Basis3d,
+    FundamentalBasis,
+    FundamentalPositionBasis2d,
     FundamentalPositionBasis3d,
 )
-from surface_potential_analysis.basis.util import BasisUtil
+from surface_potential_analysis.axis.stacked_axis import (
+    StackedBasis,
+    StackedBasisLike,
+)
+from surface_potential_analysis.axis.util import BasisUtil
 from surface_potential_analysis.util.interpolation import (
     interpolate_points_along_axis_spline,
     interpolate_points_rfftn,
@@ -25,6 +29,10 @@ from surface_potential_analysis.util.interpolation import (
 
 if TYPE_CHECKING:
     from pathlib import Path
+
+    from surface_potential_analysis.axis.axis_like import (
+        BasisWithLengthLike,
+    )
 
 
 _L0_co = TypeVar("_L0_co", bound=int, covariant=True)
@@ -35,45 +43,15 @@ _L0Inv = TypeVar("_L0Inv", bound=int)
 _L1Inv = TypeVar("_L1Inv", bound=int)
 _L2Inv = TypeVar("_L2Inv", bound=int)
 
-
-PotentialPoints = np.ndarray[tuple[int], np.dtype[np.complex_]]
-
-_B0_co = TypeVar("_B0_co", bound=AxisWithLengthBasis[Any], covariant=True)
-_B0Inv = TypeVar("_B0Inv", bound=AxisWithLengthBasis[Any])
-_B1d0_co = TypeVar("_B1d0_co", bound=Basis1d[Any], covariant=True)
-_B2d0_co = TypeVar("_B2d0_co", bound=Basis2d[Any, Any], covariant=True)
-_B3d0_co = TypeVar("_B3d0_co", bound=Basis3d[Any, Any, Any], covariant=True)
+# TODO: report bug in pylance - not possible to use StackedBasisLike[*tuple[Any, ...]]
+_SB0 = TypeVar("_SB0", bound=StackedBasisLike)  # type: ignore use StackedBasisLike[*tuple[Any, ...]]
 
 
-class Potential(TypedDict, Generic[_B0_co]):
+class Potential(TypedDict, Generic[_SB0]):
     """Represents a potential in an evenly spaced grid of points."""
 
-    basis: _B0_co
-    vector: PotentialPoints
-
-
-Potential1d = Potential[_B1d0_co]
-
-Potential2d = Potential[_B2d0_co]
-
-Potential3d = Potential[_B3d0_co]
-
-
-FundamentalPositionBasisPotential3d = Potential3d[
-    FundamentalPositionBasis3d[_L0Inv, _L1Inv, _L2Inv]
-]
-
-
-def save_potential(path: Path, potential: Potential[Any]) -> None:
-    """
-    Save a potential in the npy format.
-
-    Parameters
-    ----------
-    path : Path
-    potential : Potential[Any, Any, Any]
-    """
-    np.save(path, potential)
+    basis: _SB0
+    data: np.ndarray[tuple[int], np.dtype[np.complex_]]
 
 
 def load_potential(path: Path) -> Potential[Any]:
@@ -94,7 +72,13 @@ def load_potential(path: Path) -> Potential[Any]:
 
 def load_potential_grid_json(
     path: Path,
-) -> Potential3d[FundamentalPositionBasis3d[Any, Any, Any]]:
+) -> Potential[
+    StackedBasisLike[
+        BasisWithLengthLike[Any, Any, Literal[3]],
+        BasisWithLengthLike[Any, Any, Literal[3]],
+        BasisWithLengthLike[Any, Any, Literal[3]],
+    ]
+]:
     """
     Load a potential from the JSON format.
 
@@ -117,16 +101,16 @@ def load_potential_grid_json(
         out: SurfacePotentialRaw = json.load(f)
         points = np.array(out["points"])
         return {
-            "basis": (
-                FundamentalPositionAxis3d(np.array(out["delta_x0"]), points.shape[0]),
-                FundamentalPositionAxis3d(np.array(out["delta_x1"]), points.shape[1]),
-                FundamentalPositionAxis3d(np.array(out["delta_x2"]), points.shape[2]),
+            "basis": StackedBasis(
+                FundamentalPositionBasis3d(np.array(out["delta_x0"]), points.shape[0]),
+                FundamentalPositionBasis3d(np.array(out["delta_x1"]), points.shape[1]),
+                FundamentalPositionBasis3d(np.array(out["delta_x2"]), points.shape[2]),
             ),
-            "vector": np.array(out["points"]),
+            "data": np.array(out["points"]),
         }
 
 
-class UnevenPotential3dZAxis(FundamentalAxis[_L2_co]):
+class UnevenPotential3dZBasis(FundamentalBasis[_L2_co]):
     """Represents the z axis of an uneven potential."""
 
     def __init__(
@@ -139,26 +123,12 @@ class UnevenPotential3dZAxis(FundamentalAxis[_L2_co]):
 class UnevenPotential3d(TypedDict, Generic[_L0_co, _L1_co, _L2_co]):
     """Represents a potential unevenly spaced in the z direction."""
 
-    basis: tuple[
-        FundamentalPositionAxis2d[_L0_co],
-        FundamentalPositionAxis2d[_L1_co],
-        UnevenPotential3dZAxis[_L2_co],
+    basis: StackedBasisLike[
+        FundamentalPositionBasis2d[_L0_co],
+        FundamentalPositionBasis2d[_L1_co],
+        UnevenPotential3dZBasis[_L2_co],
     ]
-    vector: PotentialPoints
-
-
-def save_uneven_potential(
-    path: Path, potential: UnevenPotential3d[Any, Any, Any]
-) -> None:
-    """
-    Save an uneven potential in the npy format.
-
-    Parameters
-    ----------
-    path : Path
-    potential : UnevenPotential[Any, Any, Any]
-    """
-    np.save(path, potential)
+    data: np.ndarray[tuple[int], np.dtype[np.complex_]]
 
 
 def load_uneven_potential(path: Path) -> UnevenPotential3d[Any, Any, Any]:
@@ -202,34 +172,16 @@ def load_uneven_potential_json(
         points = np.array(out["points"])
 
         return {
-            "basis": (
-                FundamentalPositionAxis2d(np.array(out["delta_x0"]), points.shape[0]),
-                FundamentalPositionAxis2d(np.array(out["delta_x1"]), points.shape[1]),
-                UnevenPotential3dZAxis(np.array(out["z_points"])),
+            "basis": StackedBasis(
+                FundamentalPositionBasis2d(np.array(out["delta_x0"]), points.shape[0]),
+                FundamentalPositionBasis2d(np.array(out["delta_x1"]), points.shape[1]),
+                UnevenPotential3dZBasis(np.array(out["z_points"])),
             ),
-            "vector": points,
+            "data": points,
         }
 
 
-_GenericPotential = Potential[_B0Inv] | UnevenPotential3d[_L0Inv, _L1Inv, _L2Inv]
-_GPInv = TypeVar("_GPInv", bound=_GenericPotential[Any, Any, Any, Any])
-
-
-@overload
-def normalize_potential(data: Potential[_B0Inv]) -> Potential[_B0Inv]:
-    ...
-
-
-@overload
-def normalize_potential(
-    data: UnevenPotential3d[_L0Inv, _L1Inv, _L2Inv]
-) -> UnevenPotential3d[_L0Inv, _L1Inv, _L2Inv]:
-    ...
-
-
-def normalize_potential(
-    data: _GenericPotential[_B0Inv, _L0Inv, _L1Inv, _L2Inv]
-) -> _GenericPotential[_B0Inv, _L0Inv, _L1Inv, _L2Inv]:
+def normalize_potential(data: Potential[_SB0]) -> Potential[_SB0]:
     """
     Set the minimum of the potential to 0.
 
@@ -241,40 +193,18 @@ def normalize_potential(
     -------
     _GPInv
     """
-    points = data["vector"]
+    points = data["data"]
     normalized_points = points - points.min()
-    return {"vector": normalized_points, "basis": data["basis"]}  # type: ignore[return-value,misc]
+    return {"data": normalized_points, "basis": data["basis"]}  # type: ignore[return-value,misc]
 
 
-@overload
 def truncate_potential(
-    data: Potential[_B0Inv],
+    data: Potential[_SB0],
     *,
     cutoff: float = 2e-17,
     n: int = 1,
     offset: float = 2e-18,
-) -> Potential[_B0Inv]:
-    ...
-
-
-@overload
-def truncate_potential(
-    data: UnevenPotential3d[_L0Inv, _L1Inv, _L2Inv],
-    *,
-    cutoff: float = 2e-17,
-    n: int = 1,
-    offset: float = 2e-18,
-) -> UnevenPotential3d[_L0Inv, _L1Inv, _L2Inv]:
-    ...
-
-
-def truncate_potential(
-    data: _GenericPotential[_B0Inv, _L0Inv, _L1Inv, _L2Inv],
-    *,
-    cutoff: float = 2e-17,
-    n: int = 1,
-    offset: float = 2e-18,
-) -> _GenericPotential[_B0Inv, _L0Inv, _L1Inv, _L2Inv]:
+) -> Potential[_SB0]:
     """
     Reduce the maximum energy by taking the transformation.
 
@@ -284,25 +214,28 @@ def truncate_potential(
     prevent the energy interpolation process from producing rabid oscillations
     """
     points = (
-        cutoff * np.log(1 + ((data["vector"] + offset) / cutoff) ** n) ** (1 / n)
-        - offset
+        cutoff * np.log(1 + ((data["data"] + offset) / cutoff) ** n) ** (1 / n) - offset
     )
-    return {"vector": points, "basis": data["basis"]}  # type: ignore[return-value,misc]
+    return {"data": points, "basis": data["basis"]}  # type: ignore[return-value,misc]
 
 
 def undo_truncate_potential(
-    data: _GPInv, *, cutoff: float = 2e-17, n: int = 1, offset: float = 2e-18
-) -> _GPInv:
+    data: Potential[_SB0], *, cutoff: float = 2e-17, n: int = 1, offset: float = 2e-18
+) -> Potential[_SB0]:
     """Reverses truncate_potential."""
-    points = (
-        cutoff * (np.exp((data["vector"] + offset) / cutoff) - 1) ** (1 / n) - offset
-    )
-    return {"vector": points, "basis": data["basis"]}  # type: ignore[return-value]
+    points = cutoff * (np.exp((data["data"] + offset) / cutoff) - 1) ** (1 / n) - offset
+    return {"data": points, "basis": data["basis"]}  # type: ignore[return-value]
 
 
 def interpolate_uneven_potential(
     data: UnevenPotential3d[int, int, int], shape: tuple[_L0Inv, _L1Inv, _L2Inv]
-) -> Potential3d[FundamentalPositionBasis3d[_L0Inv, _L1Inv, _L2Inv]]:
+) -> Potential[
+    StackedBasisLike[
+        FundamentalPositionBasis3d[_L0Inv],
+        FundamentalPositionBasis3d[_L1Inv],
+        FundamentalPositionBasis3d[_L2Inv],
+    ]
+]:
     """
     Interpolate an energy grid using the fourier method.
 
@@ -311,7 +244,7 @@ def interpolate_uneven_potential(
     """
     util = BasisUtil(data["basis"])
     xy_interpolated = interpolate_points_rfftn(
-        data["vector"].reshape(util.shape).astype(np.float_),
+        data["data"].reshape(util.shape).astype(np.float_),
         s=(shape[0], shape[1]),
         axes=(0, 1),
     )
@@ -321,23 +254,33 @@ def interpolate_uneven_potential(
     delta_x_0 = np.concatenate([data["basis"][0].delta_x, [0]])
     delta_x_1 = np.concatenate([data["basis"][1].delta_x, [0]])
     return {
-        "basis": (
-            FundamentalPositionAxis3d(delta_x_0, shape[0]),
-            FundamentalPositionAxis3d(delta_x_1, shape[1]),
-            FundamentalPositionAxis3d(
+        "basis": StackedBasis(
+            FundamentalPositionBasis3d(delta_x_0, shape[0]),
+            FundamentalPositionBasis3d(delta_x_1, shape[1]),
+            FundamentalPositionBasis3d(
                 np.array(
-                    [0, 0, data["basis"][2].z_points[-1] - data["basis"][2].z_points[0]]
+                    [
+                        0,
+                        0,
+                        data["basis"][2].z_points[-1] - data["basis"][2].z_points[0],
+                    ]
                 ),
                 shape[2],
             ),
         ),
-        "vector": interpolated.reshape(-1),  # type: ignore[typeddict-item]
+        "data": interpolated.reshape(-1),  # type: ignore[typeddict-item]
     }
 
 
 def mock_even_potential(
     uneven: UnevenPotential3d[_L0Inv, _L1Inv, _L2Inv]
-) -> Potential3d[FundamentalPositionBasis3d[_L0Inv, _L1Inv, _L2Inv]]:
+) -> Potential[
+    StackedBasisLike[
+        FundamentalPositionBasis3d[_L0Inv],
+        FundamentalPositionBasis3d[_L1Inv],
+        FundamentalPositionBasis3d[_L2Inv],
+    ]
+]:
     """
     Generate a fake even potential from an uneven potential.
 
@@ -350,17 +293,17 @@ def mock_even_potential(
     Potential[_L0Inv, _L1Inv, _L2Inv]
     """
     return {
-        "basis": (
-            FundamentalPositionAxis3d(
+        "basis": StackedBasis(
+            FundamentalPositionBasis3d(
                 np.array([*uneven["basis"][0].delta_x, 0]), uneven["basis"][0].n
             ),
-            FundamentalPositionAxis3d(
+            FundamentalPositionBasis3d(
                 np.array([*uneven["basis"][1].delta_x, 0]), uneven["basis"][1].n
             ),
-            FundamentalPositionAxis3d(
+            FundamentalPositionBasis3d(
                 np.array([0, 0, 1], dtype=float),
                 uneven["basis"][2].fundamental_n,  # type:ignore[arg-type]
             ),
         ),
-        "vector": uneven["vector"].reshape(-1),
+        "data": uneven["data"].reshape(-1),
     }

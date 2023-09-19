@@ -27,5 +27,5 @@ def calculate_normalization(wavepacket: _WInv) -> float:
     float
     """
     n_states = np.prod(wavepacket["eigenvalues"].shape)
-    total_norm: complex = np.sum(np.conj(wavepacket["vectors"]) * wavepacket["vectors"])
+    total_norm: complex = np.sum(np.conj(wavepacket["data"]) * wavepacket["data"])
     return float(total_norm / n_states)

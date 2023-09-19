@@ -7,8 +7,7 @@ from matplotlib import pyplot as plt
 from matplotlib.animation import ArtistAnimation
 from matplotlib.colors import Normalize, SymLogNorm
 
-from surface_potential_analysis.basis.util import (
-    AxisWithLengthBasisUtil,
+from surface_potential_analysis.stacked_basis.util import (
     get_x_coordinates_in_axes,
 )
 
@@ -22,10 +21,8 @@ if TYPE_CHECKING:
     from matplotlib.figure import Figure
     from matplotlib.image import AxesImage
 
-    from surface_potential_analysis._types import SingleStackedIndexLike
-    from surface_potential_analysis.basis.basis import AxisWithLengthBasis
-
-    _B0Inv = TypeVar("_B0Inv", bound=AxisWithLengthBasis[Any])
+    from surface_potential_analysis.axis.stacked_axis import StackedBasisLike
+    from surface_potential_analysis.types import SingleStackedIndexLike
 
 
 Scale = Literal["symlog", "linear"]
@@ -51,10 +48,13 @@ def get_norm_with_clim(
         case "linear":
             return Normalize(vmin=clim[0], vmax=clim[1])
         case "symlog":
+            abs_0 = -1 if clim[0] is None else np.abs(clim[0])
+            abs_1 = -1 if clim[1] is None else np.abs(clim[1])
+            max_abs = max([abs_0, abs_1])
             return SymLogNorm(
                 vmin=clim[0],
                 vmax=clim[1],
-                linthresh=None if clim[1] is None else 1e-4 * clim[1],
+                linthresh=1 if max([abs_0, abs_1]) <= 0 else np.abs(1e-4 * max_abs),  # type: ignore No parameter named "linthresh"
             )
 
 
@@ -92,10 +92,14 @@ def build_animation(
     frames = [[build_frame(d, ax)] for d in range(n)]
 
     c_max: float = (
-        np.max([i[0].get_clim()[1] for i in frames]) if clim[1] is None else clim[1]
+        float(np.max([i[0].get_clim()[1] for i in frames]))  # type: ignore np.min returns float
+        if clim[1] is None
+        else clim[1]
     )
     c_min: float = (
-        np.min([i[0].get_clim()[0] for i in frames]) if clim[0] is None else clim[0]
+        float(np.min([i[0].get_clim()[0] for i in frames]))  # type: ignore np.min returns float
+        if clim[0] is None
+        else clim[0]
     )
     norm = get_norm_with_clim(scale, (c_min, c_max))
     for (mesh,) in frames:
@@ -114,7 +118,7 @@ _L0Inv = TypeVar("_L0Inv", bound=int)
 
 
 def animate_through_surface_x(
-    basis: _B0Inv,
+    basis: StackedBasisLike[*tuple[Any, ...]],
     points: np.ndarray[tuple[_L0Inv], np.dtype[np.complex_ | np.float_ | np.bool_]],
     axes: tuple[int, int, int] = (0, 1, 2),
     idx: SingleStackedIndexLike | None = None,
@@ -144,8 +148,7 @@ def animate_through_surface_x(
     -------
     tuple[Figure, Axes, ArtistAnimation]
     """
-    util = AxisWithLengthBasisUtil(basis)
-    idx = tuple(0 for _ in range(util.ndim - 3)) if idx is None else idx
+    idx = tuple(0 for _ in range(basis.ndim - 3)) if idx is None else idx
     clim = (0.0, clim[1]) if clim[0] is None and measure == "abs" else clim
 
     coordinates = get_x_coordinates_in_axes(basis, axes, idx)
@@ -163,7 +166,7 @@ def animate_through_surface_x(
         clim=clim,
     )
     ax.set_aspect("equal", adjustable="box")
-    fig.colorbar(ax.collections[0], ax=ax, format="%4.1e")
+    fig.colorbar(ax.collections[0], ax=ax, format="%4.1e")  # type: ignore Type of "collections" is unknown
 
     ax.set_xlabel(f"x{axes[0]} axis")
     ax.set_ylabel(f"x{axes[1]} axis")

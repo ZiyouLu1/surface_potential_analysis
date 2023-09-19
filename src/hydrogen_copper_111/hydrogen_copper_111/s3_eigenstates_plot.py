@@ -13,8 +13,6 @@ from hydrogen_copper_111.s3_eigenstates import (
 
 
 def plot_lowest_band_energy_deuterium() -> None:
-    fig, ax = plt.subplots()
-
     shapes = [
         (21, 21, 8),
         (21, 21, 10),

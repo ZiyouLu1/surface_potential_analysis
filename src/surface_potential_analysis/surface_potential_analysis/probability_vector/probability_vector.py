@@ -1,43 +1,44 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Generic, TypedDict, TypeVar
+from typing import TYPE_CHECKING, Any, Generic, TypedDict, TypeVar, cast, overload
 
 import numpy as np
 
-from surface_potential_analysis.basis.basis import Basis
-from surface_potential_analysis.basis.util import BasisUtil
+from surface_potential_analysis.axis.axis_like import BasisLike
+from surface_potential_analysis.axis.stacked_axis import StackedBasis, StackedBasisLike
+from surface_potential_analysis.axis.util import BasisUtil
 from surface_potential_analysis.util.util import get_data_in_axes
 
 if TYPE_CHECKING:
-    from surface_potential_analysis._types import (
-        SingleIndexLike,
-        SingleStackedIndexLike,
-    )
     from surface_potential_analysis.state_vector.state_vector import StateVector
     from surface_potential_analysis.state_vector.state_vector_list import (
         StateVectorList,
     )
+    from surface_potential_analysis.types import (
+        SingleIndexLike,
+        SingleStackedIndexLike,
+    )
 
-_B0Inv = TypeVar("_B0Inv", bound=Basis)
-_B1Inv = TypeVar("_B1Inv", bound=Basis)
+_B0 = TypeVar("_B0", bound=BasisLike[Any, Any])
+_B1 = TypeVar("_B1", bound=BasisLike[Any, Any])
+_SB0 = TypeVar("_SB0", bound=StackedBasisLike[*tuple[Any, ...]])
 
 
-class ProbabilityVector(TypedDict, Generic[_B0Inv]):
+class ProbabilityVector(TypedDict, Generic[_B0]):
     """represents a state vector in a basis."""
 
-    basis: _B0Inv
-    vector: np.ndarray[tuple[int], np.dtype[np.float_]]
+    basis: _B0
+    data: np.ndarray[tuple[int], np.dtype[np.complex_]]
 
 
-class ProbabilityVectorList(TypedDict, Generic[_B0Inv, _B1Inv]):
+class ProbabilityVectorList(TypedDict, Generic[_B0, _B1]):
     """represents a list of probabilities in a basis."""
 
-    list_basis: _B0Inv
-    basis: _B1Inv
-    vectors: np.ndarray[tuple[int, int], np.dtype[np.float_]]
+    basis: StackedBasisLike[_B0, _B1]
+    data: np.ndarray[tuple[int, int], np.dtype[np.complex_]]
 
 
-def from_state_vector(state: StateVector[_B0Inv]) -> ProbabilityVector[_B0Inv]:
+def from_state_vector(state: StateVector[_B0]) -> ProbabilityVector[_B0]:
     """
     Get a probability vector for a given state vector.
 
@@ -49,12 +50,12 @@ def from_state_vector(state: StateVector[_B0Inv]) -> ProbabilityVector[_B0Inv]:
     -------
     ProbabilityVector[_B0Inv]
     """
-    return {"basis": state["basis"], "vector": np.abs(state["vector"]) ** 2}
+    return {"basis": state["basis"], "data": np.square(np.abs(state["data"]))}
 
 
 def from_state_vector_list(
-    states: StateVectorList[_B0Inv, _B1Inv],
-) -> ProbabilityVectorList[_B0Inv, _B1Inv]:
+    states: StateVectorList[_B0, _B1],
+) -> ProbabilityVectorList[_B0, _B1]:
     """
     Get a probability vector list for a given state vector list.
 
@@ -66,17 +67,13 @@ def from_state_vector_list(
     -------
     ProbabilityVectorList[_B0Inv, _L0Inv]
     """
-    return {
-        "list_basis": states["list_basis"],
-        "basis": states["basis"],
-        "vectors": np.abs(states["vectors"]) ** 2,
-    }
+    return {"basis": states["basis"], "data": np.square(np.abs(states["data"]))}
 
 
 def get_probability(
-    probabilities: ProbabilityVectorList[_B0Inv, _B1Inv],
+    probabilities: ProbabilityVectorList[_SB0, _B1],
     idx: SingleIndexLike | None = None,
-) -> ProbabilityVector[_B1Inv]:
+) -> ProbabilityVector[_B1]:
     """
     Get Probability from the list.
 
@@ -90,19 +87,17 @@ def get_probability(
     ProbabilityVector[_B0Inv]
     """
     idx = 0 if idx is None else idx
-    util = BasisUtil(probabilities["list_basis"])
-    idx_flat = util.get_flat_index(idx) if isinstance(idx, tuple) else idx
-    return {
-        "basis": probabilities["basis"],
-        "vector": probabilities["vectors"][idx_flat],
-    }
+    util = BasisUtil(probabilities["basis"][0])
+    idx = util.get_flat_index(idx) if isinstance(idx, tuple) else idx
+    data = probabilities["data"].reshape(probabilities["basis"].shape)[idx]
+    return {"basis": probabilities["basis"][1], "data": data}
 
 
 def get_probability_along_axis(
-    probabilities: ProbabilityVectorList[_B0Inv, _B1Inv],
+    probabilities: ProbabilityVectorList[_SB0, _B1],
     axes: tuple[int, ...] = (0,),
     idx: SingleStackedIndexLike | None = None,
-) -> ProbabilityVectorList[Any, _B1Inv]:
+) -> ProbabilityVectorList[Any, _B1]:
     """
     Get Probability from the list.
 
@@ -115,22 +110,25 @@ def get_probability_along_axis(
     -------
     ProbabilityVector[_B0Inv]
     """
-    util = BasisUtil(probabilities["list_basis"])
-    idx = tuple(0 for _ in range(util.ndim - 2)) if idx is None else idx
-    final_basis = tuple(b for (i, b) in enumerate(probabilities["basis"]) if i in axes)
+    ndim = probabilities["basis"][0].ndim
+    idx = tuple(0 for _ in range(ndim - 2)) if idx is None else idx
+    final_basis = StackedBasis(
+        *tuple(b for (i, b) in enumerate(probabilities["basis"][0]) if i in axes)
+    )
 
-    vector = get_data_in_axes(  # type: ignore[call-overload]
-        probabilities["vectors"].reshape(*util.shape, -1), (*axes, util.ndim), idx
-    ).reshape(BasisUtil(final_basis).shape, -1)
+    vector = get_data_in_axes(
+        probabilities["data"].reshape(probabilities["basis"].shape),
+        (*axes, ndim),
+        idx,
+    ).reshape(*final_basis.shape, -1)
     return {
-        "list_basis": final_basis,
-        "basis": probabilities["basis"],
-        "vectors": vector,
+        "basis": StackedBasis(final_basis, probabilities["basis"][1]),
+        "data": vector,
     }
 
 
-def sum_probability_over_axis(
-    probability: ProbabilityVector[_B0Inv], axis: tuple[int, ...] | None
+def sum_probability(
+    probability: ProbabilityVector[_SB0], axis: tuple[int, ...] | None
 ) -> ProbabilityVector[Any]:
     """
     Sum the probabilities over the given axis.
@@ -144,21 +142,22 @@ def sum_probability_over_axis(
     -------
     ProbabilityVector[Any]
     """
-    axis = tuple(range(len(probability["basis"]))) if axis is None else axis
-    util = BasisUtil(probability["basis"])
+    axis = tuple(range(probability["basis"].ndim)) if axis is None else axis
     basis = tuple(b for (i, b) in enumerate(probability["basis"]) if i not in axis)
     return {
         "basis": basis,
-        "vector": (
-            np.sum(probability["vector"].reshape(*util.shape), axis=axis).reshape(-1)
+        "data": (
+            np.sum(
+                probability["data"].reshape(probability["basis"].shape), axis=axis
+            ).reshape(-1)
         ),
     }
 
 
-def sum_probabilities_over_axis(
-    probabilities: ProbabilityVectorList[_B0Inv, _B1Inv],
+def sum_probabilities(
+    probabilities: ProbabilityVectorList[_B0, _SB0],
     axis: tuple[int, ...] | None = None,
-) -> ProbabilityVectorList[_B0Inv, Any]:
+) -> ProbabilityVectorList[_B0, Any]:
     """
     Sum the probabilities over the given axis.
 
@@ -171,25 +170,43 @@ def sum_probabilities_over_axis(
     -------
     ProbabilityVectorList[Any, _L0Inv]
     """
-    axis = tuple(range(len(probabilities["basis"]))) if axis is None else axis
-    util = BasisUtil(probabilities["basis"])
-    basis = tuple(b for (i, b) in enumerate(probabilities["basis"]) if i not in axis)
+    axis = tuple(range(probabilities["basis"].ndim)) if axis is None else axis
+    basis = tuple(b for (i, b) in enumerate(probabilities["basis"][1]) if i not in axis)
     return {
-        "list_basis": probabilities["list_basis"],
-        "basis": basis,
-        "vectors": np.sum(
-            probabilities["vectors"].reshape(-1, *util.shape),
+        "basis": StackedBasis(probabilities["basis"][0], basis),
+        "data": np.sum(
+            probabilities["data"].reshape(*probabilities["basis"].shape),
             axis=tuple(ax + 1 for ax in axis),
-        ).reshape(probabilities["vectors"].shape[0], -1),
+        ).reshape(-1),
     }
 
 
+@overload
 def average_probabilities(
-    probabilities: ProbabilityVectorList[_B0Inv, _B1Inv],
+    probabilities: ProbabilityVectorList[_SB0, _B1],
+    axis: tuple[int, ...],
+    *,
+    weights: np.ndarray[tuple[int], np.dtype[np.float_]] | None = None,
+) -> ProbabilityVectorList[Any, _B1]:
+    ...
+
+
+@overload
+def average_probabilities(
+    probabilities: ProbabilityVectorList[_B0, _B1],
+    axis: None = None,
+    *,
+    weights: np.ndarray[tuple[int], np.dtype[np.float_]] | None = None,
+) -> ProbabilityVector[_B1]:
+    ...
+
+
+def average_probabilities(
+    probabilities: ProbabilityVectorList[_B0, _B1],
     axis: tuple[int, ...] | None = None,
     *,
     weights: np.ndarray[tuple[int], np.dtype[np.float_]] | None = None,
-) -> ProbabilityVectorList[Any, _B1Inv]:
+) -> ProbabilityVectorList[Any, _B1] | ProbabilityVector[_B1]:
     """
     Average probabilities over several repeats.
 
@@ -201,17 +218,24 @@ def average_probabilities(
     -------
     ProbabilityVectorList[_B0Inv, _L0Inv]
     """
-    axis = tuple(range(len(probabilities["list_basis"]))) if axis is None else axis
-    util = BasisUtil(probabilities["list_basis"])
-    basis = tuple(
-        b for (i, b) in enumerate(probabilities["list_basis"]) if i not in axis
-    )
+    if axis is None:
+        if weights is not None:
+            raise NotImplementedError
+        return {
+            "basis": probabilities["basis"][1],
+            "data": np.average(
+                probabilities["data"].reshape(*probabilities["basis"].shape),
+                axis=0,
+            ).reshape(-1),
+        }
+
+    old_basis = cast(StackedBasisLike[*tuple[Any, ...]], probabilities["basis"][0])
+    basis = StackedBasis(*tuple(b for (i, b) in enumerate(old_basis) if i not in axis))
     return {
-        "list_basis": basis,
-        "basis": probabilities["basis"],
-        "vectors": np.average(
-            probabilities["vectors"].reshape(*util.shape, -1),
+        "basis": StackedBasis(basis, probabilities["basis"][1]),
+        "data": np.average(
+            probabilities["data"].reshape(*old_basis.shape, -1),
             axis=tuple(ax for ax in axis),
             weights=weights,
-        ).reshape(-1, probabilities["vectors"].shape[1]),
+        ).reshape(-1),
     }

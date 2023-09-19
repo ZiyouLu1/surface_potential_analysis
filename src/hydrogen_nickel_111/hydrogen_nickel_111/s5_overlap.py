@@ -15,7 +15,6 @@ from .surface_data import get_data_path
 if TYPE_CHECKING:
     from pathlib import Path
 
-    from surface_potential_analysis.basis.basis import FundamentalPositionBasis3d
     from surface_potential_analysis.overlap.overlap import Overlap3d
 
 
@@ -37,7 +36,7 @@ def _get_overlap_inner_hydrogen(
     j: int,
     offset_i: tuple[int, int] = (0, 0),
     offset_j: tuple[int, int] = (0, 0),
-) -> Overlap3d[FundamentalPositionBasis3d[int, int, Literal[250]]]:
+) -> Overlap3d[FundamentalPositionStackedAxisLike[tuple[int, int, Literal[250]]]]:
     wavepacket_i = get_two_point_localized_wavepacket_hydrogen(i, offset_i)
     wavepacket_j = get_two_point_localized_wavepacket_hydrogen(j, offset_j)
     return calculate_wavepacket_overlap(wavepacket_i, wavepacket_j)  # type: ignore[return-value]
@@ -48,7 +47,7 @@ def get_overlap_hydrogen(
     j: int,
     offset_i: tuple[int, int] = (0, 0),
     offset_j: tuple[int, int] = (0, 0),
-) -> Overlap3d[FundamentalPositionBasis3d[int, int, Literal[250]]]:
+) -> Overlap3d[FundamentalPositionStackedAxisLike[tuple[int, int, Literal[250]]]]:
     offset_i, offset_j = (offset_i, offset_j) if i < j else (offset_j, offset_i)
     i, j = (i, j) if i < j else (j, i)
     return _get_overlap_inner_hydrogen(i, j, offset_i, offset_j)
@@ -72,7 +71,7 @@ def _get_overlap_inner_deuterium(
     j: int,
     offset_i: tuple[int, int] = (0, 0),
     offset_j: tuple[int, int] = (0, 0),
-) -> Overlap3d[FundamentalPositionBasis3d[int, int, Literal[200]]]:
+) -> Overlap3d[FundamentalPositionStackedAxisLike[tuple[int, int, Literal[200]]]]:
     wavepacket_i = get_two_point_normalized_wavepacket_deuterium(i, offset_i)
     wavepacket_j = get_two_point_normalized_wavepacket_deuterium(j, offset_j)
     return calculate_wavepacket_overlap(wavepacket_i, wavepacket_j)  # type: ignore[return-value]
@@ -83,7 +82,7 @@ def get_overlap_deuterium(
     j: int,
     offset_i: tuple[int, int] = (0, 0),
     offset_j: tuple[int, int] = (0, 0),
-) -> Overlap3d[FundamentalPositionBasis3d[int, int, Literal[200]]]:
+) -> Overlap3d[FundamentalPositionStackedAxisLike[tuple[int, int, Literal[200]]]]:
     offset_i, offset_j = (offset_i, offset_j) if i < j else (offset_j, offset_i)
     i, j = (i, j) if i < j else (j, i)
     return _get_overlap_inner_deuterium(i, j, offset_i, offset_j)

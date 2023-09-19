@@ -9,56 +9,60 @@ from scipy.constants import hbar
 
 from _test_surface_potential_analysis.utils import get_random_explicit_axis
 from surface_potential_analysis.axis.axis import (
-    ExplicitAxis3d,
-    FundamentalPositionAxis3d,
-    TransformedPositionAxis3d,
+    ExplicitBasis3d,
+    FundamentalPositionBasis3d,
+    TransformedPositionBasis3d,
 )
-from surface_potential_analysis.basis.sho_basis import (
+from surface_potential_analysis.axis.stacked_axis import (
+    StackedBasis,
+    StackedBasisLike,
+)
+from surface_potential_analysis.axis.util import BasisUtil
+from surface_potential_analysis.stacked_basis.sho_basis import (
     SHOBasisConfig,
     infinate_sho_axis_3d_from_config,
 )
-from surface_potential_analysis.basis.util import AxisWithLengthBasisUtil
 from surface_potential_analysis.state_vector.conversion import (
     convert_state_vector_to_basis,
 )
 
 if TYPE_CHECKING:
-    from surface_potential_analysis.state_vector.state_vector import StateVector3d
-
-    pass
+    from surface_potential_analysis.state_vector.state_vector import StateVector
 
 _rng = np.random.default_rng()
 
 
 def _get_random_sho_eigenstate(
     resolution: tuple[int, int, int], fundamental_resolution: tuple[int, int, int]
-) -> StateVector3d[
-    tuple[
-        TransformedPositionAxis3d[Any, Any],
-        TransformedPositionAxis3d[Any, Any],
-        ExplicitAxis3d[int, Any],
+) -> StateVector[
+    StackedBasisLike[
+        tuple[
+            TransformedPositionBasis3d[Any, Any],
+            TransformedPositionBasis3d[Any, Any],
+            ExplicitBasis3d[int, Any],
+        ]
     ]
 ]:
     vector = np.array(_rng.random(np.prod(resolution)), dtype=complex)
     vector /= np.linalg.norm(vector)
 
-    x2_basis = x2_basis = ExplicitAxis3d(
+    x2_basis = x2_basis = ExplicitBasis3d(
         np.array([0, 0, 20]),
         get_random_explicit_axis(
             3, fundamental_n=fundamental_resolution[2], n=resolution[2]
         ).vectors,
     )
     return {
-        "basis": (
-            TransformedPositionAxis3d(
+        "basis": StackedBasis(
+            TransformedPositionBasis3d(
                 np.array([1, 0, 0]), resolution[0], fundamental_resolution[0]
             ),
-            TransformedPositionAxis3d(
+            TransformedPositionBasis3d(
                 np.array([0, 1, 0]), resolution[1], fundamental_resolution[1]
             ),
             x2_basis,
         ),
-        "vector": vector,
+        "data": vector,
     }
 
 
@@ -72,7 +76,7 @@ class EigenstateConversionTest(unittest.TestCase):
             "x_origin": np.array([0, 0, -10]),
         }
 
-        eigenstate["basis"] = (
+        eigenstate["basis"] = StackedBasis(
             eigenstate["basis"][0],
             eigenstate["basis"][1],
             infinate_sho_axis_3d_from_config(
@@ -80,35 +84,37 @@ class EigenstateConversionTest(unittest.TestCase):
             ),
         )
 
-        util = AxisWithLengthBasisUtil(eigenstate["basis"])
+        util = BasisUtil(eigenstate["basis"])
 
         for i in range(resolution[2]):
-            vector = np.zeros_like(eigenstate["vector"])
+            vector = np.zeros_like(eigenstate["data"])
             vector[np.ravel_multi_index((0, 0, i), resolution)] = 1
-            eigenstate["vector"] = vector
+            eigenstate["data"] = vector
 
-            points = util.fundamental_x_points + config["x_origin"][:, np.newaxis]
+            points = (
+                util.fundamental_x_points_stacked + config["x_origin"][:, np.newaxis]
+            )
 
             actual = hamiltonian_generator.get_eigenstate_wavefunction(
                 resolution,
-                (util.delta_x[0].item(0), 0),
-                (util.delta_x[1].item(0), util.delta_x[1].item(1)),
+                (util.delta_x_stacked[0].item(0), 0),
+                (util.delta_x_stacked[1].item(0), util.delta_x_stacked[1].item(1)),
                 config["mass"],
                 config["sho_omega"],
                 0,
                 0,
-                eigenstate["vector"].tolist(),
+                eigenstate["data"].tolist(),
                 points.T.tolist(),
             )
 
-            basis = (
-                FundamentalPositionAxis3d(util.delta_x[0], util.fundamental_shape[0]),  # type: ignore[misc]
-                FundamentalPositionAxis3d(util.delta_x[1], util.fundamental_shape[1]),  # type: ignore[misc]
-                FundamentalPositionAxis3d(util.delta_x[2], util.fundamental_shape[2]),  # type: ignore[misc]
+            basis = StackedBasis[Any](
+                FundamentalPositionBasis3d(util.delta_x_stacked[0], util.fundamental_shape[0]),  # type: ignore[misc]
+                FundamentalPositionBasis3d(util.delta_x_stacked[1], util.fundamental_shape[1]),  # type: ignore[misc]
+                FundamentalPositionBasis3d(util.delta_x_stacked[2], util.fundamental_shape[2]),  # type: ignore[misc]
             )
             expected = convert_state_vector_to_basis(eigenstate, basis)
             np.testing.assert_allclose(
-                expected["vector"], np.array(actual) / np.linalg.norm(actual)
+                expected["data"], np.array(actual) / np.linalg.norm(actual)
             )
 
     def test_convert_sho_eigenstate_rust(self) -> None:
@@ -120,7 +126,7 @@ class EigenstateConversionTest(unittest.TestCase):
             "x_origin": np.array([0, 0, -10]),
         }
 
-        eigenstate["basis"] = (
+        eigenstate["basis"] = StackedBasis(
             eigenstate["basis"][0],
             eigenstate["basis"][1],
             infinate_sho_axis_3d_from_config(
@@ -128,27 +134,27 @@ class EigenstateConversionTest(unittest.TestCase):
             ),
         )
 
-        util = AxisWithLengthBasisUtil(eigenstate["basis"])
+        util = BasisUtil(eigenstate["basis"])
 
-        points = util.fundamental_x_points + config["x_origin"][:, np.newaxis]
+        points = util.fundamental_x_points_stacked + config["x_origin"][:, np.newaxis]
         actual = hamiltonian_generator.get_eigenstate_wavefunction(
             resolution,
-            (util.delta_x[0].item(0), 0),
-            (util.delta_x[1].item(0), util.delta_x[1].item(1)),
+            (util.delta_x_stacked[0].item(0), 0),
+            (util.delta_x_stacked[1].item(0), util.delta_x_stacked[1].item(1)),
             config["mass"],
             config["sho_omega"],
             0,
             0,
-            eigenstate["vector"].tolist(),
+            eigenstate["data"].tolist(),
             points.T.tolist(),
         )
 
-        basis = (
-            FundamentalPositionAxis3d(util.delta_x[0], util.fundamental_shape[0]),  # type: ignore[misc]
-            FundamentalPositionAxis3d(util.delta_x[1], util.fundamental_shape[1]),  # type: ignore[misc]
-            FundamentalPositionAxis3d(util.delta_x[2], util.fundamental_shape[2]),  # type: ignore[misc]
+        basis = StackedBasis[Any](
+            FundamentalPositionBasis3d(util.delta_x_stacked[0], util.fundamental_shape[0]),  # type: ignore[misc]
+            FundamentalPositionBasis3d(util.delta_x_stacked[1], util.fundamental_shape[1]),  # type: ignore[misc]
+            FundamentalPositionBasis3d(util.delta_x_stacked[2], util.fundamental_shape[2]),  # type: ignore[misc]
         )
         expected = convert_state_vector_to_basis(eigenstate, basis)
         np.testing.assert_allclose(
-            expected["vector"], np.array(actual) / np.linalg.norm(actual)
+            expected["data"], np.array(actual) / np.linalg.norm(actual)
         )

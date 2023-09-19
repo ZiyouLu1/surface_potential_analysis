@@ -5,9 +5,7 @@ from typing import TYPE_CHECKING, Any, TypeVar
 import numpy as np
 from matplotlib import pyplot as plt
 from scipy.constants import Boltzmann
-from surface_potential_analysis.axis.time_axis_like import FundamentalTimeAxis
-from surface_potential_analysis.basis.build import fundamental_basis_from_shape
-from surface_potential_analysis.basis.util import BasisUtil
+from surface_potential_analysis.axis.time_axis_like import FundamentalTimeBasis
 from surface_potential_analysis.dynamics.incoherent_propagation.eigenstates import (
     calculate_tunnelling_simulation_state,
 )
@@ -59,15 +57,10 @@ def build_hamiltonian_from_wavepackets(
     wavepackets: list[WavepacketWithEigenvalues[Any, Any]],
     basis: _B0Inv,
 ) -> SingleBasisOperator[_B0Inv]:
-    wavepackets = [
-        {"list_basis": fundamental_basis_from_shape(w["shape"]), **w}
-        for w in wavepackets
-    ]
-    util = BasisUtil(basis)
-    (n_x1, n_x2, _) = util.shape
-    array = np.zeros((*util.shape, *util.shape), np.complex_)
+    (n_x1, n_x2, _) = basis.shape
+    array = np.zeros((*basis.shape, *basis.shape), np.complex_)
     for i, wavepacket in enumerate(wavepackets):
-        sample_shape = BasisUtil(wavepacket["list_basis"]).shape
+        sample_shape = wavepacket["basis"][0].shape
         h = pad_ft_points(
             np.fft.fftn(
                 wavepacket["eigenvalues"].reshape(sample_shape),
@@ -79,9 +72,8 @@ def build_hamiltonian_from_wavepackets(
         for hop, hop_val in enumerate(h.ravel()):
             array[:, :, i, :, :, i] += hop_val * build_hop_operator(hop, (n_x1, n_x2))
     return {
-        "array": array.reshape(util.size, util.size),
-        "basis": basis,
-        "dual_basis": basis,
+        "array": array.reshape(-1),
+        "basis": StackedBasis(basis, basis),
     }
 
 
@@ -131,10 +123,10 @@ def plot_occupation_on_surface_hydrogen() -> None:
 
     initial_state: StateVector[Any] = {
         "basis": resampled["basis"],
-        "vector": np.zeros(hamiltonian["array"].shape[0]),
+        "data": np.zeros(hamiltonian["array"].shape[0]),
     }
-    initial_state["vector"][0] = 1
-    times = FundamentalTimeAxis(20000, 5e-10)
+    initial_state["data"][0] = 1
+    times = FundamentalTimeBasis(20000, 5e-10)
     states = solve_stochastic_schrodinger_equation(
         initial_state, times, hamiltonian, collapse_operators, n_trajectories=20
     )
@@ -170,10 +162,10 @@ def plot_incoherent_occupation_comparison_hydrogen() -> None:
 
     initial_state: StateVector[Any] = {
         "basis": resampled["basis"],
-        "vector": np.zeros(hamiltonian["array"].shape[0]),
+        "data": np.zeros(hamiltonian["array"].shape[0]),
     }
-    initial_state["vector"][0] = 1
-    times = FundamentalTimeAxis(20000, 5e-10)
+    initial_state["data"][0] = 1
+    times = FundamentalTimeBasis(20000, 5e-10)
     states = solve_stochastic_schrodinger_equation(
         initial_state, times, hamiltonian, collapse_operators, n_trajectories=20
     )

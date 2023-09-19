@@ -42,10 +42,6 @@ def plot_lowest_bands_hydrogen() -> None:
             collection, np.array([1, 0, 0]), band=band, ax=ax
         )
 
-    print(  # noqa: T201
-        np.min(collection["eigenvalues"], axis=0) - np.min(collection["eigenvalues"])
-    )
-
     fig.show()
     input()
 
@@ -81,10 +77,6 @@ def plot_lowest_bands_deuterium() -> None:
         plot_eigenvalues_against_bloch_phase_1d(
             collection, np.array([1, 0, 0]), band=band, ax=ax
         )
-
-    print(  # noqa: T201
-        np.min(collection["eigenvalues"], axis=0) - np.min(collection["eigenvalues"])
-    )
 
     fig.show()
     input()

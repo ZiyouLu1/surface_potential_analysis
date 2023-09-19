@@ -1,76 +1,85 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Literal, TypeVar
+from typing import TYPE_CHECKING, Any, TypeVar
 
 import numpy as np
 
 from surface_potential_analysis.axis.axis import (
-    FundamentalAxis,
-    FundamentalPositionAxis,
+    FundamentalBasis,
+    FundamentalPositionBasis,
 )
-from surface_potential_analysis.basis.basis import (
-    AxisWithLengthBasis,
-    Basis,
-    FundamentalMomentumBasis3d,
-    FundamentalPositionBasis3d,
+from surface_potential_analysis.axis.axis_like import (
+    AxisVector,
+    BasisLike,
+    BasisWithLengthLike,
+    convert_vector,
 )
-from surface_potential_analysis.basis.brillouin_zone import decrement_brillouin_zone
-from surface_potential_analysis.basis.build import fundamental_basis_from_shape
-from surface_potential_analysis.basis.util import AxisWithLengthBasisUtil, BasisUtil
+from surface_potential_analysis.axis.evenly_spaced_basis import EvenlySpacedBasis
+from surface_potential_analysis.axis.stacked_axis import (
+    StackedBasis,
+    StackedBasisLike,
+)
+from surface_potential_analysis.axis.util import (
+    BasisUtil,
+)
+from surface_potential_analysis.stacked_basis.conversion import (
+    stacked_basis_as_fundamental_basis,
+)
 from surface_potential_analysis.state_vector.eigenstate_calculation import (
     calculate_eigenvectors_hermitian,
 )
-from surface_potential_analysis.state_vector.eigenstate_collection import EigenstateList
+from surface_potential_analysis.state_vector.eigenstate_collection import (
+    EigenstateList,
+    get_eigenvalues_list,
+)
+from surface_potential_analysis.state_vector.eigenvalue_list import (
+    EigenvalueList,
+    average_eigenvalues,
+)
 from surface_potential_analysis.state_vector.state_vector_list import StateVectorList
 
 if TYPE_CHECKING:
-    from collections.abc import Callable
+    from collections.abc import Callable, Iterable
 
     from surface_potential_analysis.operator.operator import SingleBasisOperator
+    from surface_potential_analysis.types import ShapeLike, SingleFlatIndexLike
 
 _L0Inv = TypeVar("_L0Inv", bound=int)
 _L1Inv = TypeVar("_L1Inv", bound=int)
-_L2Inv = TypeVar("_L2Inv", bound=int)
 _ND0Inv = TypeVar("_ND0Inv", bound=int)
 
-_B0Inv = TypeVar("_B0Inv", bound=Basis)
-_B1Inv = TypeVar("_B1Inv", bound=AxisWithLengthBasis[Any])
+
+_B0 = TypeVar("_B0", bound=BasisLike[Any, Any])
+_ESB0 = TypeVar("_ESB0", bound=EvenlySpacedBasis[Any, Any, Any])
+_BL0 = TypeVar("_BL0", bound=BasisWithLengthLike[Any, Any, Any])
+
+_SB0 = TypeVar("_SB0", bound=StackedBasisLike[*tuple[Any, ...]])
+_SB1 = TypeVar("_SB1", bound=StackedBasisLike[*tuple[Any, ...]])
 
 
-_S0Inv = TypeVar("_S0Inv", bound=tuple[int, ...])
-_NS0Inv = TypeVar("_NS0Inv", bound=int)
-_NS1Inv = TypeVar("_NS1Inv", bound=int)
+WavepacketBasis = StackedBasisLike[_SB0, _SB1]
+
+Wavepacket = StateVectorList[_SB0, _SB1]
+"""represents an approximation of a Wannier function."""
 
 
-class Wavepacket(StateVectorList[_B0Inv, _B1Inv]):
+class WavepacketWithEigenvalues(StateVectorList[_SB0, _SB1]):
     """represents an approximation of a Wannier function."""
 
-
-class WavepacketWithEigenvalues(  # type: ignore[misc]
-    EigenstateList[_B0Inv, _B1Inv], Wavepacket[_B0Inv, _B1Inv]
-):
-    """represents an approximation of a Wannier function."""
+    eigenvalues: np.ndarray[tuple[int], np.dtype[np.complex_]]
 
 
-PositionBasisWavepacket3d = WavepacketWithEigenvalues[
-    tuple[
-        FundamentalAxis[_NS0Inv], FundamentalAxis[_NS1Inv], FundamentalAxis[Literal[1]]
-    ],
-    FundamentalPositionBasis3d[_L0Inv, _L1Inv, _L2Inv],
-]
+WavepacketList = StateVectorList[StackedBasisLike[_B0, _SB0], _SB1]
+"""represents a list of wavefunctions."""
 
-MomentumBasisWavepacket3d = WavepacketWithEigenvalues[
-    tuple[
-        FundamentalAxis[_NS0Inv], FundamentalAxis[_NS1Inv], FundamentalAxis[Literal[1]]
-    ],
-    FundamentalMomentumBasis3d[_L0Inv, _L1Inv, _L2Inv],
-]
+
+WavepacketWithEigenvaluesList = EigenstateList[StackedBasisLike[_B0, _SB0], _SB1]
+"""Represents a list of WavepacketWithEigenvalues."""
 
 
 def get_sample_basis(
-    list_basis: _B0Inv,
-    basis: AxisWithLengthBasis[_ND0Inv],
-) -> AxisWithLengthBasis[_ND0Inv]:
+    basis: WavepacketBasis[_SB0, StackedBasisLike[*tuple[_BL0, ...]]],
+) -> StackedBasis[*tuple[BasisWithLengthLike[Any, Any, Any], ...]]:
     """
     Given the basis for a wavepacket, get the basis used to sample the packet.
 
@@ -83,16 +92,28 @@ def get_sample_basis(
     -------
     Basis[_ND0Inv]
     """
-    return tuple(
-        FundamentalPositionAxis(ax.delta_x * list_ax.n, list_ax.n)
-        for (list_ax, ax) in zip(list_basis, basis, strict=True)
+    # TODO: currently only supports fundamental list_basis ...
+    return StackedBasis(
+        *tuple(
+            FundamentalPositionBasis(b1.delta_x * b0.n, b0.n)
+            for (b0, b1) in zip(basis[0], basis[1], strict=True)
+        )
     )
 
 
+class UnfurledBasisAxis(
+    StackedBasis[_B0, BasisWithLengthLike[_L0Inv, _L1Inv, _ND0Inv]]
+):
+    @property
+    def delta_x(self) -> AxisVector[_ND0Inv]:
+        return self[1].delta_x * self[0].n  # type: ignore[no-any-return]
+
+
 def get_unfurled_basis(
-    list_basis: _B0Inv,
-    basis: AxisWithLengthBasis[_ND0Inv],
-) -> AxisWithLengthBasis[_ND0Inv]:
+    basis: WavepacketBasis[
+        StackedBasisLike[*tuple[_B0, ...]], StackedBasisLike[*tuple[_BL0, ...]]
+    ],
+) -> StackedBasisLike[*tuple[UnfurledBasisAxis[Any, Any, Any, Any], ...]]:
     """
     Given the basis for a wavepacket, get the basis for the unfurled wavepacket.
 
@@ -105,15 +126,18 @@ def get_unfurled_basis(
     -------
     Basis[_ND0Inv]
     """
-    return tuple(
-        FundamentalPositionAxis(ax.delta_x * list_ax.n, ax.n * list_ax.n)
-        for (list_ax, ax) in zip(list_basis, basis, strict=True)
+    return StackedBasis(
+        *tuple(
+            UnfurledBasisAxis(list_ax, ax)
+            for (list_ax, ax) in zip(basis[0], basis[1], strict=True)
+        )
     )
 
 
 def get_furled_basis(
-    basis: AxisWithLengthBasis[_ND0Inv], shape: _S0Inv
-) -> AxisWithLengthBasis[_ND0Inv]:
+    basis: StackedBasisLike[*tuple[_BL0, ...]],
+    shape: ShapeLike,
+) -> StackedBasis[*tuple[BasisWithLengthLike[Any, Any, Any], ...]]:
     """
     Given the basis for an eigenstate, get the basis used for the furled wavepacket.
 
@@ -126,14 +150,16 @@ def get_furled_basis(
     -------
     Basis[_ND0Inv]
     """
-    return tuple(
-        FundamentalPositionAxis(ax.delta_x // n, ax.n // n)
-        for (ax, n) in zip(basis, shape, strict=True)
+    return StackedBasis(
+        *tuple(
+            FundamentalPositionBasis(ax.delta_x // n, ax.n // n)
+            for (ax, n) in zip(basis, shape, strict=True)
+        )
     )
 
 
 def get_wavepacket_sample_fractions(
-    list_basis: _B0Inv,
+    list_basis: StackedBasisLike[*tuple[_B0, ...]],
 ) -> np.ndarray[tuple[int, int], np.dtype[np.float_]]:
     """
     Get the frequencies of the samples in a wavepacket, as a fraction of dk.
@@ -147,12 +173,19 @@ def get_wavepacket_sample_fractions(
     np.ndarray[tuple[Literal[_NDInv], int], np.dtype[np.float_]]
     """
     util = BasisUtil(list_basis)
-    return util.fundamental_nk_points / np.array(util.shape)[:, np.newaxis]  # type: ignore[no-any-return]
+    fundamental_fractions = (
+        util.fundamental_stacked_nk_points
+        / np.array(util.fundamental_shape, dtype=np.int_)[:, np.newaxis]
+    )
+    fundamental_basis = stacked_basis_as_fundamental_basis(list_basis)
+    return convert_vector(fundamental_fractions, fundamental_basis, list_basis).astype(
+        np.float_
+    )
 
 
 def get_wavepacket_sample_frequencies(
-    list_basis: _B0Inv, basis: AxisWithLengthBasis[_ND0Inv]
-) -> np.ndarray[tuple[_ND0Inv, int], np.dtype[np.float_]]:
+    basis: WavepacketBasis[_SB0, StackedBasisLike[*tuple[_BL0, ...]]],
+) -> np.ndarray[tuple[int, int], np.dtype[np.float_]]:
     """
     Get the frequencies used in a given wavepacket.
 
@@ -165,43 +198,20 @@ def get_wavepacket_sample_frequencies(
     -------
     np.ndarray[tuple[_ND0Inv, int], np.dtype[np.float_]]
     """
-    sample_basis = get_sample_basis(list_basis, basis)
-    util = AxisWithLengthBasisUtil(sample_basis)
-    return util.fundamental_k_points  # type: ignore[return-value]
-
-
-def get_wavepacket_sample_frequencies_first_brillouin_zone(
-    list_basis: _B0Inv, basis: AxisWithLengthBasis[_ND0Inv]
-) -> np.ndarray[tuple[_ND0Inv, int], np.dtype[np.float_]]:
-    """
-    Get the frequencies used in the wavepacket wrapped to the first brillouin zone.
-
-    Parameters
-    ----------
-    basis : Basis[_ND0Inv]
-    shape : _S0Inv
-
-    Returns
-    -------
-    np.ndarray[tuple[_ND0Inv, int], np.dtype[np.float_]]
-    """
-    sample_basis = get_sample_basis(list_basis, basis)
-    util = AxisWithLengthBasisUtil(sample_basis)
-    nk_points = util.nk_points
-    for _ in util.shape:
-        nk_points = decrement_brillouin_zone(basis, nk_points)
-    return util.get_k_points_at_index(nk_points)  # type: ignore[return-value]
+    # TODO: currently only supports fundamental list_basis ...
+    sample_basis = get_sample_basis(basis)
+    util = BasisUtil(sample_basis)
+    return util.fundamental_stacked_k_points
 
 
 def generate_wavepacket(
     hamiltonian_generator: Callable[
         [np.ndarray[tuple[_ND0Inv], np.dtype[np.float_]]],
-        SingleBasisOperator[_B1Inv],
+        SingleBasisOperator[_SB1],
     ],
-    shape: _S0Inv,
-    *,
-    save_bands: np.ndarray[tuple[int], np.dtype[np.int_]] | None = None,
-) -> list[WavepacketWithEigenvalues[Any, _B1Inv]]:
+    list_basis: _SB0,
+    save_bands: _ESB0,
+) -> WavepacketWithEigenvaluesList[_ESB0, _SB0, _SB1]:
     """
     Generate a wavepacket with the given number of samples.
 
@@ -215,32 +225,91 @@ def generate_wavepacket(
     -------
     np.ndarray[tuple[int], np.dtype[Wavepacket[_NS0Inv, _NS1Inv, _B3d0Inv]]]
     """
-    list_basis = fundamental_basis_from_shape(shape)
     bloch_fractions = get_wavepacket_sample_fractions(list_basis)
     h = hamiltonian_generator(bloch_fractions[:, 0])
-    basis_size = AxisWithLengthBasisUtil(h["basis"]).size
-    save_bands = np.array([0]) if save_bands is None else save_bands
-    subset_by_index: tuple[int, int] = (np.min(save_bands), np.max(save_bands))
+    assert list_basis.ndim == h["basis"][0].ndim
+    basis_size = h["basis"][0].n
 
-    n_samples = np.prod(shape)
-    vectors = np.empty((n_samples, basis_size), dtype=np.complex128)
-    energies = np.empty(n_samples, dtype=np.float_)
-    out: list[WavepacketWithEigenvalues[Any, _B1Inv]] = [
-        {
-            "basis": h["basis"],
-            "vectors": vectors.copy(),
-            "eigenvalues": energies.copy(),
-            "list_basis": list_basis,
-        }
-        for _ in save_bands
-    ]
+    subset_by_index = (
+        save_bands.offset,
+        save_bands.offset + save_bands.step * (save_bands.n - 1),
+    )
 
-    for i in range(np.prod(shape)):
+    n_samples = list_basis.n
+    vectors = np.empty((save_bands.n, n_samples, basis_size), dtype=np.complex_)
+    energies = np.empty((save_bands.n, n_samples), dtype=np.complex_)
+
+    for i in range(list_basis.n):
         h = hamiltonian_generator(bloch_fractions[:, i])
         eigenstates = calculate_eigenvectors_hermitian(h, subset_by_index)
 
-        for b, band in enumerate(save_bands):
-            band_idx = band - subset_by_index[0]
-            out[b]["vectors"][i] = eigenstates["vectors"][band_idx]
-            out[b]["eigenvalues"][i] = eigenstates["eigenvalues"][band_idx]
-    return out
+        for b in range(save_bands.n):
+            band_idx = save_bands.step * b
+            vectors[b][i] = eigenstates["data"].reshape(-1, basis_size)[band_idx]
+            energies[b][i] = eigenstates["eigenvalue"][band_idx]
+    return {
+        "basis": StackedBasis(StackedBasis(save_bands, list_basis), h["basis"][0]),
+        "data": vectors.reshape(-1),
+        "eigenvalue": energies.reshape(-1),
+    }
+
+
+def get_wavepacket_basis(
+    wavepackets: WavepacketList[_B0, _SB0, _SB1]
+) -> WavepacketBasis[_SB0, _SB1]:
+    return StackedBasis(wavepackets["basis"][0][1], wavepackets["basis"][1])
+
+
+def get_wavepacket(
+    wavepackets: WavepacketList[_B0, _SB0, _SB1],
+    idx: SingleFlatIndexLike,
+) -> Wavepacket[_SB0, _SB1]:
+    return {
+        "basis": get_wavepacket_basis(wavepackets),
+        "data": wavepackets["data"].reshape(wavepackets["basis"][0][0].n, -1)[idx],
+    }
+
+
+def get_wavepackets(
+    wavepackets: WavepacketList[_B0, _SB0, _SB1],
+    idx: slice,
+) -> WavepacketList[BasisLike[Any, Any], _SB0, _SB1]:
+    stacked = wavepackets["data"].reshape(wavepackets["basis"][0][0].n, -1)
+    stacked = stacked[idx]
+    return {
+        "basis": StackedBasis(
+            StackedBasis(FundamentalBasis(len(stacked)), wavepackets["basis"][0][1]),
+            wavepackets["basis"][1],
+        ),
+        "data": stacked.reshape(-1),
+    }
+
+
+def as_wavepacket_list(
+    wavepackets: Iterable[Wavepacket[_SB0, _SB1]]
+) -> WavepacketList[FundamentalBasis[int], _SB0, _SB1]:
+    wavepacket_0 = next(wavepackets.__iter__())
+    vectors = np.array([w["data"] for w in wavepackets])
+    return {
+        "basis": StackedBasis(
+            StackedBasis(FundamentalBasis(len(vectors)), wavepacket_0["basis"][0]),
+            wavepacket_0["basis"][1],
+        ),
+        "data": vectors.reshape(-1),
+    }
+
+
+def wavepacket_list_into_iter(
+    wavepackets: WavepacketList[Any, _SB0, _SB1]
+) -> Iterable[Wavepacket[_SB0, _SB1]]:
+    stacked = wavepackets["data"].reshape(wavepackets["basis"][0][0].n, -1)
+    basis = get_wavepacket_basis(wavepackets)
+    return [{"basis": basis, "data": data} for data in stacked]
+
+
+def get_average_eigenvalues(
+    wavepackets: WavepacketWithEigenvaluesList[_B0, Any, Any]
+) -> EigenvalueList[_B0]:
+    eigenvalues = get_eigenvalues_list(wavepackets)
+    averaged = average_eigenvalues(eigenvalues, axis=(1,))
+    return {"basis": averaged["basis"][0], "data": averaged["data"]}

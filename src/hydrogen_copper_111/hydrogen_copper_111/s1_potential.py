@@ -1,16 +1,18 @@
 from __future__ import annotations
 
-from typing import TypeVar
+from typing import TYPE_CHECKING, TypeVar
 
 import numpy as np
-from surface_potential_analysis.axis.axis import FundamentalPositionAxis2d
+from surface_potential_analysis.axis.axis import FundamentalPositionBasis
+from surface_potential_analysis.axis.stacked_axis import StackedBasis, StackedBasisLike
 from surface_potential_analysis.potential.point_potential import (
     PointPotential3d,
     load_point_potential_json,
 )
 from surface_potential_analysis.potential.potential import (
-    FundamentalPositionBasisPotential3d,
+    Potential,
     UnevenPotential3d,
+    UnevenPotential3dZBasis,
     interpolate_uneven_potential,
     normalize_potential,
     truncate_potential,
@@ -19,6 +21,11 @@ from surface_potential_analysis.potential.potential import (
 from surface_potential_analysis.util.decorators import npy_cached
 
 from .surface_data import get_data_path
+
+if TYPE_CHECKING:
+    from surface_potential_analysis.axis.axis import (
+        FundamentalPositionBasis3d,
+    )
 
 _L0Inv = TypeVar("_L0Inv", bound=int)
 _L1Inv = TypeVar("_L1Inv", bound=int)
@@ -158,12 +165,12 @@ def map_irreducible_points_into_unit_cell(
             f"{delta_x1[1]} not close to {y_height / 2 + diagonal_length}"  # noqa: EM102
         )
     return {
-        "basis": (
-            FundamentalPositionAxis2d(delta_x0, final_grid.shape[0]),
-            FundamentalPositionAxis2d(delta_x1, final_grid.shape[1]),
-            z_points,
+        "basis": StackedBasis(
+            FundamentalPositionBasis(delta_x0, final_grid.shape[0]),
+            FundamentalPositionBasis(delta_x1, final_grid.shape[1]),
+            UnevenPotential3dZBasis(z_points),
         ),
-        "vector": final_grid.ravel(),
+        "data": final_grid.ravel(),
     }
 
 
@@ -175,7 +182,13 @@ def get_reflected_potential() -> UnevenPotential3d[int, int, int]:
 
 def get_interpolated_potential(
     shape: tuple[_L0Inv, _L1Inv, _L2Inv]
-) -> FundamentalPositionBasisPotential3d[_L0Inv, _L1Inv, _L2Inv]:
+) -> Potential[
+    StackedBasisLike[
+        FundamentalPositionBasis3d[_L0Inv],
+        FundamentalPositionBasis3d[_L1Inv],
+        FundamentalPositionBasis3d[_L2Inv],
+    ]
+]:
     potential = get_reflected_potential()
     normalized = normalize_potential(potential)
 

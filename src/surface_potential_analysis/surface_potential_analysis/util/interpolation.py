@@ -10,14 +10,16 @@ import scipy.interpolate
 from .util import slice_along_axis
 
 if TYPE_CHECKING:
-    from collections.abc import Sequence
+    from collections.abc import Iterable, Sequence
+
+    from surface_potential_analysis.types import IntLike_co
 
 _DT = TypeVar("_DT", bound=np.dtype[Any])
 _S0Inv = TypeVar("_S0Inv", bound=tuple[int, ...])
 
 
 def pad_ft_points(
-    array: np.ndarray[_S0Inv, _DT], s: Sequence[int], axes: Sequence[int]
+    array: np.ndarray[_S0Inv, _DT], s: Iterable[IntLike_co], axes: Iterable[int]
 ) -> np.ndarray[tuple[int, ...], _DT]:
     """
     Pad the points in the fourier transform with zeros.
@@ -44,7 +46,7 @@ def pad_ft_points(
 
     padded_shape = shape_arr.copy()
     padded_shape[axes_arr] = s
-    padded: np.ndarray[tuple[int, ...], _DT] = np.zeros(
+    padded: np.ndarray[tuple[int, ...], _DT] = np.zeros(  # type: ignore can't infer dtype
         shape=padded_shape, dtype=array.dtype
     )
 
@@ -103,7 +105,7 @@ def interpolate_points_fftn(
     # We use the forward norm here, as otherwise we would also need to
     # scale the ft_potential by a factor of n / shape[axis]
     # when we pad or truncate it
-    ft_points = scipy.fft.fftn(points, axes=axes_arr, norm="forward")
+    ft_points = np.fft.fftn(points, axes=axes_arr, norm="forward")  # type: ignore doesn't like axes type
     # pad (or truncate) for the new lengths s
     padded = pad_ft_points(ft_points, s, axes_arr)
     return scipy.fft.ifftn(  # type: ignore[no-any-return]
@@ -140,7 +142,7 @@ def pad_ft_points_real_axis(
     padded_shape[axis] = n // 2 + 1
 
     padded: np.ndarray[tuple[int, ...], _DT] = np.zeros(
-        shape=padded_shape, dtype=array.dtype
+        shape=padded_shape, dtype=array.dtype  # type: ignore can't infer dtype
     )
     relevant_slice = slice(min(padded.shape[axis], array.shape[axis]))
     padded[slice_along_axis(relevant_slice, axis)] = array[
@@ -173,7 +175,7 @@ def interpolate_points_rfftn(
     np.ndarray[tuple, np.dtype[np.float_]]
     """
     axes_arr = np.arange(-1, -1 - len(s), -1) if axes is None else np.array(axes)
-    ft_points = scipy.fft.rfftn(points, axes=axes_arr, norm="forward")
+    ft_points = np.fft.rfftn(points, axes=axes_arr, norm="forward")  # type: ignore Argument of type "NDArray[signedinteger[Any]] | NDArray[Any]" cannot be assigned to parameter "axes" of type "Sequence[int] | None"
     # pad (or truncate) for the new lengths s
     # we don't need to pad the last axis here, as it is handled correctly by irfftn
     padded = pad_ft_points(ft_points, s[:-1], axes_arr[:-1])
@@ -212,9 +214,9 @@ def interpolate_points_rfft(
     # We use the forward norm here, as otherwise we would also need to
     # scale the ft_potential by a factor of n / shape[axis]
     # when we pad or truncate it
-    ft_potential = scipy.fft.rfft(points, axis=axis, norm="forward")
+    ft_potential = np.fft.rfft(points, axis=axis, norm="forward")
     # Invert the rfft, padding (or truncating) for the new length n
-    interpolated_potential = scipy.fft.irfft(ft_potential, n, axis=axis, norm="forward")
+    interpolated_potential = np.fft.irfft(ft_potential, n, axis=axis, norm="forward")
 
     if np.all(np.isreal(ft_potential)):
         # Force the symmetric potential to stay symmetric

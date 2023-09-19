@@ -85,16 +85,13 @@ def plot_hydrogen_lowest_band_energy() -> None:
 def plot_hydrogen_lowest_bands() -> None:
     fig, ax = plt.subplots()
 
-    colors = plt.rcParams["axes.prop_cycle"].by_key()["color"]
-
     collection = get_eigenstate_collection_hydrogen((24, 24, 10))
-    collection["eigenvalues"] -= np.min(collection["eigenvalues"])
+    collection["eigenvalue"] -= np.min(collection["eigenvalue"])
     for band in range(8):
         _, _, ln = plot_eigenvalues_against_bloch_phase_1d(
             collection, np.array([1, 0, 0]), band=band, ax=ax
         )
         ln.set_label(f"band={band}")
-        ln.set_color(colors[0])
 
     ax.legend()
     ax.set_title("Plot of eight lowest band energies")
@@ -103,21 +100,18 @@ def plot_hydrogen_lowest_bands() -> None:
     input()
 
 
-def plot_state_vector_difference_hydrogen() -> None:
+def plot_state_difference_hydrogen() -> None:
     collection_0 = get_eigenstate_collection_hydrogen((24, 24, 12))
     collection_1 = get_eigenstate_collection_hydrogen((26, 26, 12))
 
     state_0 = interpolate_state_vector_momentum(
         select_eigenstate(collection_0, 0, 0), (26, 26), (0, 1)
     )
-    state_0["vector"] *= np.exp(-1j * np.angle(state_0["vector"][0]))
     state_1 = select_eigenstate(collection_1, 0, 0)
-    state_1["vector"] *= np.exp(-1j * np.angle(state_1["vector"][0]))
 
     fig, _, _ = plot_state_difference_2d_k(state_0, state_1, (1, 0))
     fig.show()
 
-    z_max = np.argmax(collection_1["basis"][2].vectors[0])
-    fig, _, _ = plot_state_difference_2d_x(state_0, state_1, axes=(0, 1), idx=(z_max,))
+    fig, _, _ = plot_state_difference_2d_x(state_0, state_1, axes=(0, 1))
     fig.show()
     input()

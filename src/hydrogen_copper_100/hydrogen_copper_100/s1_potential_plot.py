@@ -4,17 +4,10 @@ import matplotlib.pyplot as plt
 import numpy as np
 import scipy.constants
 from surface_potential_analysis.axis.plot import plot_explicit_basis_states_x
-from surface_potential_analysis.basis.plot import (
-    plot_fundamental_x_in_plane_projected_2d,
-)
-from surface_potential_analysis.basis.sho_basis import (
-    infinate_sho_axis_3d_from_config,
-)
-from surface_potential_analysis.basis.util import BasisUtil
+from surface_potential_analysis.axis.util import BasisUtil
 from surface_potential_analysis.potential.plot import (
-    animate_potential_x0x1,
     plot_potential_1d_x2_comparison_100,
-    plot_potential_x0x1,
+    plot_potential_2d_x,
 )
 from surface_potential_analysis.potential.plot_uneven_potential import (
     plot_uneven_potential_z_comparison_100,
@@ -22,6 +15,12 @@ from surface_potential_analysis.potential.plot_uneven_potential import (
 from surface_potential_analysis.potential.potential import (
     mock_even_potential,
     normalize_potential,
+)
+from surface_potential_analysis.stacked_basis.plot import (
+    plot_fundamental_x_in_plane_projected_2d,
+)
+from surface_potential_analysis.stacked_basis.sho_basis import (
+    infinate_sho_axis_3d_from_config,
 )
 
 from .s1_potential import (
@@ -44,7 +43,7 @@ def plot_copper_raw_data() -> None:
     fig.show()
     save_figure(fig, "copper_raw_data_z_direction.png")
 
-    fig, _, _ = plot_potential_x0x1(mock_even_potential(data), 0)
+    fig, _, _ = plot_potential_2d_x(mock_even_potential(data))
     fig.show()
     input()
 
@@ -102,11 +101,11 @@ def plot_copper_relaxed_interpolated_data() -> None:
     fig.show()
     save_figure(fig, "relaxed_interpolated_data_comparison.png")
 
-    fig, ax, _ = plot_potential_x0x1(data, 0)
+    fig, ax, _ = plot_potential_2d_x(data)
     fig.show()
     save_figure(fig, "relaxed_interpolated_data_xy.png")
 
-    fig, ax, _ani0 = animate_potential_x0x1(data)
+    fig, ax, _ani0 = plot_potential_2d_x(data)
     plot_fundamental_x_in_plane_projected_2d(
         mock_even_potential(raw_data)["basis"], (0, 1), (0,), ax=ax
     )
@@ -114,7 +113,7 @@ def plot_copper_relaxed_interpolated_data() -> None:
 
     raw_data = normalize_potential(load_relaxed_copper_potential())
 
-    fig, ax, _ani1 = animate_potential_x0x1(data)
+    fig, ax, _ani1 = plot_potential_2d_x(data)
     plot_fundamental_x_in_plane_projected_2d(
         mock_even_potential(raw_data)["basis"], (0, 1), (0,), ax=ax
     )
@@ -134,7 +133,7 @@ def plot_copper_interpolated_data() -> None:
     fig.show()
     save_figure(fig, "copper_interpolated_data_comparison.png")
 
-    fig, ax, _ = plot_potential_x0x1(data, 0)
+    fig, ax, _ = plot_potential_2d_x(data)
     fig.show()
     input()
     save_figure(fig, "copper_interpolated_data_xy.png")
@@ -174,7 +173,7 @@ def compare_bridge_hollow_energy() -> None:
     print("--------------------------------------")  # noqa: T201
     print("Non-relaxed")  # noqa: T201
     data = get_interpolated_potential((50, 50, 100))
-    points = np.array(data["vector"])
+    points = np.array(data["data"])
     print(points.shape)  # noqa: T201
 
     print("Bridge ", np.min(points[points.shape[0] // 2, 0, :]))  # noqa: T201
@@ -195,7 +194,7 @@ def compare_bridge_hollow_energy() -> None:
 
     raw_data = normalize_potential(load_raw_copper_potential())
     util = BasisUtil(raw_data["basis"])
-    points = np.array(raw_data["vector"]).reshape(util.shape)
+    points = np.array(raw_data["data"]).reshape(util.shape)
 
     print(points.shape)  # noqa: T201
 
@@ -220,7 +219,7 @@ def compare_bridge_hollow_energy() -> None:
     print("Relaxed")  # noqa: T201
     data = get_interpolated_potential_relaxed((50, 50, 100))
     util2 = BasisUtil(data["basis"])
-    points = np.array(data["vector"]).reshape(util2.shape)
+    points = np.array(data["data"]).reshape(util2.shape)
     print(points.shape)  # noqa: T201
 
     print("Bridge ", np.min(points[points.shape[0] // 2, 0, :]))  # noqa: T201
@@ -242,7 +241,7 @@ def compare_bridge_hollow_energy() -> None:
     relaxed_data = normalize_potential(load_relaxed_copper_potential())
 
     util3 = BasisUtil(relaxed_data["basis"][0:2])
-    points = np.array(relaxed_data["vector"]).reshape(util3.shape)
+    points = np.array(relaxed_data["data"]).reshape(util3.shape)
     print(points.shape)  # noqa: T201
 
     print("Bridge ", np.min(points[points.shape[0] // 2, 0, :]))  # noqa: T201
@@ -267,7 +266,7 @@ def calculate_hollow_free_energy_jump() -> None:
     data = load_relaxed_copper_potential()
     util = BasisUtil(data["basis"])
 
-    points = data["vector"].reshape(util.shape)
+    points = data["data"].reshape(util.shape)
     middle_x_index = points.shape[0] // 2
     middle_y_index = points.shape[1] // 2
     hollow_points = points[middle_x_index, middle_y_index]

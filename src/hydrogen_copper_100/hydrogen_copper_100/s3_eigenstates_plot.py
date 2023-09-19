@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, Any
 
 import matplotlib.pyplot as plt
 import numpy as np
-from surface_potential_analysis.basis.util import BasisUtil
+from surface_potential_analysis.axis.util import BasisUtil
 from surface_potential_analysis.state_vector.eigenstate_collection import (
     select_eigenstate,
 )
@@ -12,10 +12,10 @@ from surface_potential_analysis.state_vector.eigenstate_collection_plot import (
     plot_eigenvalues_against_bloch_phase_1d,
 )
 from surface_potential_analysis.state_vector.plot import (
-    animate_state_x0x1,
+    animate_state_3d_x,
+    plot_state_2d_x,
     plot_state_along_path,
     plot_state_difference_2d_x,
-    plot_state_x2x0,
 )
 
 from .s3_eigenstates import get_eigenstate_collection, get_eigenstate_collection_relaxed
@@ -25,7 +25,7 @@ if TYPE_CHECKING:
     from matplotlib.axes import Axes
     from matplotlib.figure import Figure
     from matplotlib.lines import Line2D
-    from surface_potential_analysis.state_vector.state_vector import StateVector3d
+    from surface_potential_analysis.state_vector.state_vector import StateVector
     from surface_potential_analysis.util.util import Measure
 
 
@@ -108,13 +108,13 @@ def plot_lowest_eigenstate_3d_xy() -> None:
     collection = get_eigenstate_collection_relaxed((10, 10, 14))
     eigenstate = select_eigenstate(collection, 0, 0)
 
-    fig, _, _anim = animate_state_x0x1(eigenstate, measure="real")
+    fig, _, _anim = animate_state_3d_x(eigenstate, measure="real")
     fig.show()
     input()
 
 
 def plot_eigenstate_z_hollow_site(
-    eigenstate: StateVector3d[Any],
+    eigenstate: StateVector[Any],
     *,
     ax: Axes | None = None,
     measure: Measure = "abs",
@@ -148,7 +148,7 @@ def analyze_eigenvector_convergence_z() -> None:
 
 
 def plot_eigenstate_through_bridge(
-    eigenstate: StateVector3d[Any],
+    eigenstate: StateVector[Any],
     *,
     ax: Axes | None = None,
     measure: Measure = "abs",
@@ -190,13 +190,13 @@ def plot_bloch_wavefunction_difference_at_boundary() -> None:
     collection = get_eigenstate_collection((23, 23, 16))
     eigenstate_0 = select_eigenstate(collection, 0, 0)
 
-    fig, ax, _ = plot_state_x2x0(eigenstate_0, 0)
+    fig, ax, _ = plot_state_2d_x(eigenstate_0)
     fig.show()
 
     collection = get_eigenstate_collection((25, 25, 16))
     eigenstate_1 = select_eigenstate(collection, 0, 0)
 
-    fig, ax, _ = plot_state_x2x0(eigenstate_1, 0)
+    fig, ax, _ = plot_state_2d_x(eigenstate_1)
     fig.show()
 
     fig, ax, _ = plot_state_difference_2d_x(

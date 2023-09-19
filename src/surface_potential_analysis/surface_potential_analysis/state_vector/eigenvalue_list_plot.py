@@ -11,16 +11,20 @@ if TYPE_CHECKING:
     from matplotlib.figure import Figure
     from matplotlib.lines import Line2D
 
-    from surface_potential_analysis.axis.time_axis_like import AxisWithTimeLike
+    from surface_potential_analysis.axis.time_axis_like import BasisWithTimeLike
     from surface_potential_analysis.util.plot import Scale
 
     from .eigenvalue_list import EigenvalueList
 
-    _B0Inv = TypeVar("_B0Inv", bound=tuple[AxisWithTimeLike[Any, Any]])
+    _B0_co = TypeVar(
+        "_B0_co",
+        bound=BasisWithTimeLike[Any, Any],
+        covariant=True,
+    )
 
 
 def plot_eigenvalue_against_time(
-    eigenvalues: EigenvalueList[_B0Inv],
+    eigenvalues: EigenvalueList[_B0_co],
     *,
     ax: Axes | None = None,
     measure: Measure = "abs",
@@ -48,8 +52,8 @@ def plot_eigenvalue_against_time(
     """
     fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
 
-    data = get_measured_data(eigenvalues["eigenvalues"], measure)
-    times = eigenvalues["list_basis"][0].times
+    data = get_measured_data(eigenvalues["data"], measure)
+    times = eigenvalues["basis"].times
     (line,) = ax.plot(times, data)
     ax.set_ylabel("Eigenvalue")
     ax.set_yscale(scale)

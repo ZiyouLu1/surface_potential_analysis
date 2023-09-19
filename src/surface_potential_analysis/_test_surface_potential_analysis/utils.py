@@ -6,7 +6,7 @@ import numpy as np
 from scipy.stats import special_ortho_group
 
 from surface_potential_analysis.axis.axis import (
-    ExplicitAxis,
+    ExplicitBasis,
 )
 
 if TYPE_CHECKING:
@@ -19,7 +19,7 @@ def get_random_explicit_axis(
     nd: _L0Inv,
     fundamental_n: int | None = None,
     n: int | None = None,
-) -> ExplicitAxis[int, int, _L0Inv]:
+) -> ExplicitBasis[int, int, _L0Inv]:
     fundamental_n = (
         rng.integers(2 if n is None else n, 5)
         if fundamental_n is None
@@ -29,4 +29,4 @@ def get_random_explicit_axis(
     vectors = special_ortho_group.rvs(fundamental_n)[:n]
     delta_x = np.zeros(nd)
     delta_x[0] = 1
-    return ExplicitAxis(delta_x, vectors)
+    return ExplicitBasis(delta_x, vectors)

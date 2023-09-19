@@ -79,7 +79,7 @@ def plot_overlap() -> None:
 def fit_overlap_momentum() -> None:
     overlap = get_overlap_hydrogen(0, 0, (0, 1))
     overlap_momentum = convert_overlap_to_momentum_basis(overlap)
-    points = overlap_momentum["vector"]
+    points = overlap_momentum["data"]
 
     print(points[0, 0, 0])  # noqa: T201
     print(points.shape)  # noqa: T201

@@ -3,17 +3,19 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, TypeVar
 
 import numpy as np
-import scipy
+import scipy.interpolate
 from surface_potential_analysis.axis.axis import (
-    FundamentalPositionAxis2d,
-    FundamentalPositionAxis3d,
+    FundamentalPositionBasis,
+    FundamentalPositionBasis3d,
 )
-from surface_potential_analysis.basis.build import (
-    position_basis_3d_from_shape,
+from surface_potential_analysis.axis.stacked_axis import (
+    StackedBasis,
+    StackedBasisLike,
 )
-from surface_potential_analysis.basis.util import AxisWithLengthBasisUtil, BasisUtil
+from surface_potential_analysis.axis.util import (
+    BasisUtil,
+)
 from surface_potential_analysis.potential import (
-    FundamentalPositionBasisPotential3d,
     PointPotential3d,
     UnevenPotential3d,
     interpolate_uneven_potential,
@@ -22,7 +24,13 @@ from surface_potential_analysis.potential import (
     truncate_potential,
     undo_truncate_potential,
 )
-from surface_potential_analysis.potential.potential import UnevenPotential3dZAxis
+from surface_potential_analysis.potential.potential import (
+    Potential,
+    UnevenPotential3dZBasis,
+)
+from surface_potential_analysis.stacked_basis.build import (
+    position_basis_3d_from_shape,
+)
 from surface_potential_analysis.util.decorators import npy_cached
 from surface_potential_analysis.util.interpolation import (
     interpolate_points_along_axis_spline,
@@ -32,9 +40,6 @@ from .surface_data import get_data_path
 
 if TYPE_CHECKING:
     from surface_potential_analysis.axis.axis_like import AxisVector2d
-    from surface_potential_analysis.basis.basis import (
-        FundamentalPositionBasis3d,
-    )
 
 
 def load_raw_potential_points() -> PointPotential3d[Any]:
@@ -96,17 +101,17 @@ def get_raw_potential_reciprocal_grid() -> UnevenPotential3d[Any, Any, Any]:
 
     length = np.max(y_points) - np.min(y_points)  # type: ignore[operator]
     return {
-        "basis": (
-            FundamentalPositionAxis2d(
+        "basis": StackedBasis(
+            FundamentalPositionBasis(
                 np.array([3 * length * (np.sqrt(3) / 2), 3 * length * (1 / 2)]),
                 reciprocal_points.shape[0],
             ),
-            FundamentalPositionAxis2d(
+            FundamentalPositionBasis(
                 np.array([0, 3 * length]), reciprocal_points.shape[1]
             ),
-            UnevenPotential3dZAxis(z_c),
+            UnevenPotential3dZBasis(z_c),
         ),
-        "vector": reciprocal_points.reshape(-1),
+        "data": reciprocal_points.reshape(-1),
     }
 
 
@@ -148,27 +153,27 @@ def interpolate_points_fourier_nickel(  # noqa: PLR0913
     a grid of points with the given shape into the real spacing using the fourier transform.
     """
     ft_potential = np.fft.fft2(points, axes=(0, 1), norm="forward")
-    old_basis: FundamentalPositionBasis3d[int, int, int] = position_basis_3d_from_shape(
-        shape=(*points.shape, 1)  # type: ignore[arg-type]
+    old_basis = position_basis_3d_from_shape(
+        shape=(points.shape[0], points.shape[1], 1)  # type: ignore[arg-type]
     )
     old_basis_util = BasisUtil(old_basis)
-    nk_points_stacked = np.array(old_basis_util.fundamental_nk_points).reshape(
+    nk_points_stacked = np.array(old_basis_util.fundamental_stacked_nk_points).reshape(
         3, *old_basis_util.shape
     )[0:2, :, :, 0]
     ft_phases = 2 * np.pi * np.moveaxis(nk_points_stacked, 0, -1)
     # List of [x1_frac, x2_frac] for the interpolated grid
-    basis: FundamentalPositionBasis3d[Any, Any, Any] = (
-        FundamentalPositionAxis3d(
+    basis = StackedBasis(
+        FundamentalPositionBasis(
             np.array([delta_x0_real[0], delta_x0_real[1], 1]), shape[0]
         ),
-        FundamentalPositionAxis3d(
+        FundamentalPositionBasis(
             np.array([delta_x1_real[0], delta_x1_real[1], 1]),
             shape[1],
         ),
-        FundamentalPositionAxis3d(np.array([0, 0, 1]), 1),
+        FundamentalPositionBasis(np.array([0, 0, 1]), 1),
     )
-    util = AxisWithLengthBasisUtil(basis)
-    coordinates = util.fundamental_x_points[0:2].T
+    util = BasisUtil(basis)
+    coordinates = util.fundamental_x_points_stacked[0:2].T
 
     fractions = get_coordinate_fractions(
         (delta_x0_reciprocal.item(0), delta_x0_reciprocal.item(1)),
@@ -201,7 +206,7 @@ def interpolate_energy_grid_xy_fourier_nickel(
     shape: tuple[_L0Inv, _L1Inv] = (40, 40),  # type: ignore[assignment]
 ) -> UnevenPotential3d[_L0Inv, _L1Inv, Any]:
     """Make use of a fourier transform to increase the number of points in the xy plane of the energy grid."""
-    old_points = np.array(data["vector"]).reshape(
+    old_points = np.array(data["data"]).reshape(
         data["basis"][0].n, data["basis"][1].n, -1
     )
     points = np.empty((shape[0], shape[1], old_points.shape[2]))
@@ -216,16 +221,16 @@ def interpolate_energy_grid_xy_fourier_nickel(
             shape,
         )
     return {
-        "basis": (
-            FundamentalPositionAxis2d(
+        "basis": StackedBasis(
+            FundamentalPositionBasis(
                 np.array([delta_x0_real[0], delta_x0_real[1]]), shape[0]
             ),
-            FundamentalPositionAxis2d(
+            FundamentalPositionBasis(
                 np.array([delta_x1_real[0], delta_x1_real[1]]), shape[1]
             ),
             data["basis"][2],
         ),
-        "vector": points.reshape(-1),
+        "data": points.reshape(-1),
     }
 
 
@@ -234,7 +239,13 @@ def interpolate_energy_grid_fourier_nickel(
     delta_x0_real: tuple[float, float],
     delta_x1_real: tuple[float, float],
     shape: tuple[_L0Inv, _L1Inv, _L2Inv],
-) -> FundamentalPositionBasisPotential3d[_L0Inv, _L1Inv, _L2Inv]:
+) -> Potential[
+    StackedBasisLike[
+        FundamentalPositionBasis3d[_L0Inv],
+        FundamentalPositionBasis3d[_L1Inv],
+        FundamentalPositionBasis3d[_L2Inv],
+    ]
+]:
     """
     Interpolate an energy grid using the fourier method.
 
@@ -244,7 +255,7 @@ def interpolate_energy_grid_fourier_nickel(
         data, delta_x0_real, delta_x1_real, (shape[0], shape[1])
     )
     interpolated = interpolate_points_along_axis_spline(
-        xy_interpolation["vector"].reshape((shape[0], shape[1], -1)),  # type: ignore[arg-type]
+        xy_interpolation["data"].reshape((shape[0], shape[1], -1)),  # type: ignore[arg-type]
         xy_interpolation["basis"][2].z_points,
         shape[2],
         -1,
@@ -252,33 +263,42 @@ def interpolate_energy_grid_fourier_nickel(
 
     return {
         "basis": (
-            FundamentalPositionAxis3d(
+            FundamentalPositionBasis(
                 np.array([*xy_interpolation["basis"][0].delta_x, 0]),
                 xy_interpolation["basis"][0].n,
             ),
-            FundamentalPositionAxis3d(
+            FundamentalPositionBasis(
                 np.array([*xy_interpolation["basis"][1].delta_x, 0]),
                 xy_interpolation["basis"][1].n,
             ),
-            FundamentalPositionAxis3d(
+            FundamentalPositionBasis(
                 np.array(
                     [0, 0, data["basis"][2].z_points[-1] - data["basis"][2].z_points[0]]
                 ),
                 shape[2],
             ),
         ),
-        "vector": interpolated.ravel(),  # type: ignore[typeddict-item]
+        "data": interpolated.ravel(),  # type: ignore[typeddict-item]
     }
 
 
 def interpolate_nickel_potential(
     potential: UnevenPotential3d[Any, Any, Any], shape: tuple[_L0Inv, _L1Inv, _L2Inv]
-) -> FundamentalPositionBasisPotential3d[_L0Inv, _L1Inv, _L2Inv]:
+) -> Potential[
+    StackedBasisLike[
+        FundamentalPositionBasis3d[_L0Inv],
+        FundamentalPositionBasis3d[_L1Inv],
+        FundamentalPositionBasis3d[_L2Inv],
+    ]
+]:
     raw_data = load_raw_potential_points()
     x_width = np.max(raw_data["x_points"]) - np.min(raw_data["x_points"])  # type: ignore[operator]
 
-    delta_x0_real = (2 * x_width, 0)
-    delta_x1_real = (0.5 * delta_x0_real[0], np.sqrt(3) * delta_x0_real[0] / 2)
+    delta_x0_real = (float(2 * x_width), 0)
+    delta_x1_real = (
+        float(0.5 * delta_x0_real[0]),
+        float(np.sqrt(3) * delta_x0_real[0] / 2),
+    )
 
     normalized = normalize_potential(potential)
     truncated = truncate_potential(normalized, cutoff=0.4e-18, n=1, offset=1e-20)
@@ -290,7 +310,13 @@ def interpolate_nickel_potential(
 
 def get_interpolated_potential(
     shape: tuple[_L0Inv, _L1Inv, _L2Inv]
-) -> FundamentalPositionBasisPotential3d[_L0Inv, _L1Inv, _L2Inv]:
+) -> Potential[
+    StackedBasisLike[
+        FundamentalPositionBasis3d[_L0Inv],
+        FundamentalPositionBasis3d[_L1Inv],
+        FundamentalPositionBasis3d[_L2Inv],
+    ]
+]:
     potential = get_raw_potential_reciprocal_grid()
     return interpolate_nickel_potential(potential, shape)
 
@@ -301,7 +327,7 @@ def extrapolate_uneven_potential(
     util = BasisUtil(potential["basis"])
 
     old_z_points = potential["basis"][2].z_points
-    old_potential = potential["vector"].reshape(util.shape)
+    old_potential = potential["data"].reshape(util.shape)
 
     z_range = old_z_points[-1] - old_z_points[0]
     z_points = np.linspace(
@@ -311,12 +337,12 @@ def extrapolate_uneven_potential(
     )
 
     return {
-        "basis": (
+        "basis": StackedBasis(
             potential["basis"][0],
             potential["basis"][1],
-            UnevenPotential3dZAxis(z_points),
+            UnevenPotential3dZBasis(z_points),
         ),
-        "vector": scipy.interpolate.interp1d(
+        "data": scipy.interpolate.interp1d(
             old_z_points,
             old_potential,
             axis=2,
@@ -328,13 +354,25 @@ def extrapolate_uneven_potential(
 
 def get_interpolated_extrapolated_potential(
     shape: tuple[_L0Inv, _L1Inv, _L2Inv]
-) -> FundamentalPositionBasisPotential3d[_L0Inv, _L1Inv, _L2Inv]:
+) -> Potential[
+    StackedBasisLike[
+        FundamentalPositionBasis3d[_L0Inv],
+        FundamentalPositionBasis3d[_L1Inv],
+        FundamentalPositionBasis3d[_L2Inv],
+    ]
+]:
     potential = extrapolate_uneven_potential(get_raw_potential_reciprocal_grid())
     return interpolate_nickel_potential(potential, shape)
 
 
 def get_interpolated_potential_john_grid() -> (
-    FundamentalPositionBasisPotential3d[Any, Any, Any]
+    Potential[
+        StackedBasisLike[
+            FundamentalPositionBasis3d[Any],
+            FundamentalPositionBasis3d[Any],
+            FundamentalPositionBasis3d[Any],
+        ]
+    ]
 ):
     potential = get_raw_potential_reciprocal_grid()
     normalized = normalize_potential(potential)
@@ -344,8 +382,8 @@ def get_interpolated_potential_john_grid() -> (
     x_width = np.max(raw_data["x_points"]) - np.min(raw_data["x_points"])  # type: ignore[operator]
     y_width = np.max(raw_data["y_points"]) - np.min(raw_data["y_points"])  # type: ignore[operator]
 
-    delta_x0_real = (2 * x_width, 0)
-    delta_x1_real = (0, 3 * y_width)
+    delta_x0_real = (float(2 * x_width), 0)
+    delta_x1_real = (0, float(3 * y_width))
 
     data = interpolate_energy_grid_fourier_nickel(
         truncated, delta_x0_real, delta_x1_real, (60, 60, 100)
@@ -354,7 +392,13 @@ def get_interpolated_potential_john_grid() -> (
 
 
 def get_interpolated_potential_reciprocal_grid() -> (
-    FundamentalPositionBasisPotential3d[Any, Any, Any]
+    Potential[
+        StackedBasisLike[
+            FundamentalPositionBasis3d[int],
+            FundamentalPositionBasis3d[int],
+            FundamentalPositionBasis3d[int],
+        ]
+    ]
 ):
     potential = get_raw_potential_reciprocal_grid()
     normalized = normalize_potential(potential)

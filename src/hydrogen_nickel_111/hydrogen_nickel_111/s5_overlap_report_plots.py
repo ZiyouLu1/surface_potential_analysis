@@ -6,7 +6,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib.scale import FuncScale
 from scipy.constants import Boltzmann, electron_mass, hbar
-from surface_potential_analysis.basis.util import AxisWithLengthBasisUtil
+from surface_potential_analysis.axis.util import BasisUtil
 from surface_potential_analysis.dynamics.hermitian_gamma_integral import (
     calculate_hermitian_gamma_occupation_integral,
     calculate_hermitian_gamma_potential_integral,
@@ -256,8 +256,8 @@ def plot_rate_equation() -> None:
 def plot_overlap_2d_comparison() -> None:
     overlap = get_overlap_hydrogen(0, 0)
     overlap_momentum = convert_overlap_to_momentum_basis(overlap)
-    util = AxisWithLengthBasisUtil(overlap["basis"])
-    k1_max = util.get_stacked_index(np.argmax(overlap["vector"]))[1]
+    util = BasisUtil(overlap["basis"])
+    k1_max = util.get_stacked_index(np.argmax(overlap["data"]))[1]
     fig, ax, _ = plot_overlap_2d_k(overlap_momentum, (0, 2), (k1_max,), measure="abs")
     fig.show()
     ax.set_xlim(-2e11, 2e11)
@@ -281,8 +281,8 @@ def plot_overlap_2d_comparison() -> None:
     input()
 
     overlap = get_overlap_hydrogen(0, 1, (1, 1), (1, 1))
-    util = AxisWithLengthBasisUtil(overlap["basis"])
-    x2_max = util.get_stacked_index(np.argmax(overlap["vector"]))[2]
+    util = BasisUtil(overlap["basis"])
+    x2_max = util.get_stacked_index(np.argmax(overlap["data"]))[2]
 
     fig, ax, _ = plot_overlap_2d_x(overlap, (0, 1), (x2_max,), measure="abs")
     ax.set_xlim(3e-10, 6e-10)

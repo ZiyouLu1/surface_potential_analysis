@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import numpy as np
 from matplotlib import pyplot as plt
-from surface_potential_analysis.basis.util import AxisWithLengthBasisUtil
+from surface_potential_analysis.axis.util import BasisUtil
 from surface_potential_analysis.overlap.conversion import (
     convert_overlap_to_momentum_basis,
 )
@@ -65,10 +65,10 @@ def plot_overlap() -> None:
 def print_max_overlap_momentum() -> None:
     overlap = get_overlap_hydrogen(0, 1)
     overlap_momentum = convert_overlap_to_momentum_basis(overlap)
-    util = AxisWithLengthBasisUtil(overlap["basis"])
+    util = BasisUtil(overlap["basis"])
 
-    print(overlap_momentum["vector"][0])  # noqa: T201
+    print(overlap_momentum["data"][0])  # noqa: T201
     print(  # noqa: T201
-        np.max(np.abs(overlap_momentum["vector"].reshape(*util.shape)[:, :, 0]))
+        np.max(np.abs(overlap_momentum["data"].reshape(*util.shape)[:, :, 0]))
     )
-    print(np.max(np.abs(overlap_momentum["vector"])))  # noqa: T201
+    print(np.max(np.abs(overlap_momentum["data"])))  # noqa: T201

@@ -51,13 +51,13 @@ def get_equilibrium_state_on_surface_hydrogen() -> None:
     a_matrix = get_tunnelling_a_matrix_hydrogen((5, 5), 6, 150)
     m_matrix = get_tunnelling_m_matrix(a_matrix)
     state = calculate_equilibrium_state(m_matrix)
-    print(state["vector"])  # noqa: T201
-    print(sum_diagonal_operator_over_axes(state, (0, 1))["vector"])  # noqa: T201
+    print(state["data"])  # noqa: T201
+    print(sum_diagonal_operator_over_axes(state, (0, 1))["data"])  # noqa: T201
 
     m_matrix = get_tunnelling_m_matrix(a_matrix, 2)
     state = calculate_equilibrium_state(m_matrix)
-    print(state["vector"])  # noqa: T201
-    print(sum_diagonal_operator_over_axes(state, (0, 1))["vector"])  # noqa: T201
+    print(state["data"])  # noqa: T201
+    print(sum_diagonal_operator_over_axes(state, (0, 1))["data"])  # noqa: T201
 
 
 def plot_occupation_on_surface_hydrogen() -> None:

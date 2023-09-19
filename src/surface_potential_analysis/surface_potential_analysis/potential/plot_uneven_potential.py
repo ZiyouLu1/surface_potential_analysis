@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, TypeVar
 
 from matplotlib import pyplot as plt
 
-from surface_potential_analysis.basis.util import BasisUtil
+from surface_potential_analysis.axis.util import BasisUtil
 
 from ._comparison_points import (
     get_100_comparison_points_x2,
@@ -52,7 +52,7 @@ def plot_uneven_potential_z(
 
     coordinates = potential["basis"][2].z_points
     util = BasisUtil(potential["basis"])
-    data = potential["vector"].reshape(util.shape)[*idx, :]
+    data = potential["data"].reshape(util.shape)[*idx, :]
 
     (line,) = ax.plot(coordinates, data)
     ax.set_xlabel("Z axis")

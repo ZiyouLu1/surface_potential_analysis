@@ -8,7 +8,7 @@ from surface_potential_analysis.probability_vector.plot import (
 from surface_potential_analysis.probability_vector.probability_vector import (
     ProbabilityVectorList,
     average_probabilities,
-    sum_probabilities_over_axis,
+    sum_probabilities,
 )
 
 if TYPE_CHECKING:
@@ -16,10 +16,11 @@ if TYPE_CHECKING:
     from matplotlib.figure import Figure
     from matplotlib.lines import Line2D
 
-    from surface_potential_analysis.axis.axis_like import AxisLike
+    from surface_potential_analysis.axis.axis_like import BasisLike
+    from surface_potential_analysis.axis.stacked_axis import StackedBasisLike
     from surface_potential_analysis.axis.time_axis_like import (
-        AxisWithTimeLike,
-        FundamentalTimeAxis,
+        BasisWithTimeLike,
+        FundamentalTimeBasis,
     )
     from surface_potential_analysis.dynamics.tunnelling_basis import (
         TunnellingSimulationBasis,
@@ -27,9 +28,10 @@ if TYPE_CHECKING:
     from surface_potential_analysis.util.plot import Scale
 
     _B1Inv = TypeVar("_B1Inv", bound=TunnellingSimulationBasis[Any, Any, Any])
-    _B0Inv = TypeVar("_B0Inv", bound=tuple[AxisWithTimeLike[int, int]])
+    _B0Inv = TypeVar("_B0Inv", bound=BasisWithTimeLike[int, int])
     _B0StackedInv = TypeVar(
-        "_B0StackedInv", bound=tuple[AxisLike[Any, Any], FundamentalTimeAxis[int]]
+        "_B0StackedInv",
+        bound=StackedBasisLike[BasisLike[Any, Any], FundamentalTimeBasis[int]],
     )
 
 
@@ -55,7 +57,7 @@ def plot_probability_per_band(
     -------
     tuple[Figure, Axes, list[Line2D]]
     """
-    probability_per_band = sum_probabilities_over_axis(probability, (2,))
+    probability_per_band = sum_probabilities(probability, (2,))
     fig, ax, lines = plot_probability_against_time(
         probability_per_band, ax=ax, scale=scale
     )
@@ -122,7 +124,7 @@ def plot_probability_per_site(
     -------
     tuple[Figure, Axes, list[Line2D]]
     """
-    probability_per_site = sum_probabilities_over_axis(probability, (0, 1))
+    probability_per_site = sum_probabilities(probability, (0, 1))
     fig, ax, lines = plot_probability_against_time(
         probability_per_site, ax=ax, scale=scale
     )

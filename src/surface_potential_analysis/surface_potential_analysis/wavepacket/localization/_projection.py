@@ -1,15 +1,29 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, TypeVar
+from typing import TYPE_CHECKING, Any, Literal, TypeVar
 
 import numpy as np
+import scipy.linalg
 
-from surface_potential_analysis.basis.util import (
-    BasisUtil,
-    wrap_index_around_origin,
+from surface_potential_analysis.axis.axis import (
+    FundamentalBasis,
 )
+from surface_potential_analysis.axis.axis_like import BasisLike
+from surface_potential_analysis.axis.stacked_axis import (
+    StackedBasis,
+    StackedBasisLike,
+)
+from surface_potential_analysis.axis.util import (
+    BasisUtil,
+)
+from surface_potential_analysis.stacked_basis.conversion import (
+    stacked_basis_as_fundamental_momentum_basis,
+    stacked_basis_as_fundamental_position_basis,
+)
+from surface_potential_analysis.stacked_basis.util import wrap_index_around_origin
 from surface_potential_analysis.state_vector.conversion import (
     convert_state_dual_vector_to_basis,
+    convert_state_vector_list_to_basis,
     convert_state_vector_to_momentum_basis,
     convert_state_vector_to_position_basis,
 )
@@ -18,36 +32,65 @@ from surface_potential_analysis.state_vector.state_vector import (
     as_dual_vector,
     calculate_inner_product,
 )
-from surface_potential_analysis.wavepacket.get_eigenstate import (
+from surface_potential_analysis.state_vector.state_vector_list import (
+    calculate_inner_product as calculate_inner_product_states,
+)
+from surface_potential_analysis.state_vector.state_vector_list import (
     get_all_states,
     get_state_vector,
+)
+from surface_potential_analysis.state_vector.util import (
+    get_single_point_state_vector_excact,
+)
+from surface_potential_analysis.wavepacket.get_eigenstate import (
+    get_all_wavepacket_states,
+    get_states_at_bloch_idx,
     get_tight_binding_state,
+    get_wavepacket_state_vector,
+)
+from surface_potential_analysis.wavepacket.wavepacket import (
+    WavepacketList,
+    get_unfurled_basis,
 )
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
-    from surface_potential_analysis._types import (
+    from surface_potential_analysis.axis.axis import (
+        FundamentalPositionBasis,
+    )
+    from surface_potential_analysis.state_vector.eigenvalue_list import EigenvalueList
+    from surface_potential_analysis.state_vector.state_vector_list import (
+        StateVectorList,
+    )
+    from surface_potential_analysis.types import (
         SingleIndexLike,
         SingleStackedIndexLike,
     )
-    from surface_potential_analysis.axis.axis import FundamentalPositionAxis
-    from surface_potential_analysis.basis.basis import AxisWithLengthBasis, Basis
     from surface_potential_analysis.wavepacket.wavepacket import (
         Wavepacket,
     )
 
-    _B1Inv = TypeVar("_B1Inv", bound=AxisWithLengthBasis[Any])
-    _B2Inv = TypeVar("_B2Inv", bound=AxisWithLengthBasis[Any])
+_SB0 = TypeVar("_SB0", bound=StackedBasisLike[*tuple[Any, ...]])
+_SB1 = TypeVar("_SB1", bound=StackedBasisLike[*tuple[Any, ...]])
 
-    _B0Inv = TypeVar("_B0Inv", bound=Basis)
+_SBL0 = TypeVar("_SBL0", bound=StackedBasisLike[*tuple[Any, ...]])
+_SBL1 = TypeVar("_SBL1", bound=StackedBasisLike[*tuple[Any, ...]])
+
+_B0 = TypeVar("_B0Inv", bound=BasisLike[Any, Any])
+_B1 = TypeVar("_B1Inv", bound=BasisLike[Any, Any])
+_B2 = TypeVar("_B2Inv", bound=BasisLike[Any, Any])
+_B3Inv = TypeVar("_B3Inv", bound=BasisLike[Any, Any])
 
 
-def get_projection_coefficients(
-    projection: StateVector[_B1Inv], states: Sequence[StateVector[_B2Inv]]
-) -> np.ndarray[tuple[int], np.dtype[np.complex_]]:
+def get_projection_matrix(
+    projections: StateVectorList[_SB0, _SBL0],
+    states: StateVectorList[_SB1, _SBL0],
+) -> EigenvalueList[StackedBasisLike[*tuple[_SB1, _SB0]]]:
     """
     Given a projection and a set of states, calculate the coefficients.
+
+    calculates A_m,n = <phi_m|g_n> where g is the projection state
 
     Parameters
     ----------
@@ -58,19 +101,21 @@ def get_projection_coefficients(
     -------
     np.ndarray[tuple[int], np.dtype[np.complex_]]
     """
-    coefficients = np.zeros(len(states), dtype=np.complex_)
-    projection_dual = as_dual_vector(projection)
-    for i, state in enumerate(states):
-        converted = convert_state_dual_vector_to_basis(projection_dual, state["basis"])
-        coefficients[i] = calculate_inner_product(state, converted)
+    coefficients = np.zeros((len(states), len(projections)), dtype=np.complex_)
+    input(projections["basis"], states["basis"])
+    for j, projection in enumerate(get_all_states(projections)):
+        projection_dual = as_dual_vector(projection)
+        converted = convert_state_dual_vector_to_basis(projection_dual, states["basis"])
+        for i, state in enumerate(get_all_states(states)):
+            coefficients[i, j] = calculate_inner_product(state, converted)
 
-    return coefficients  # type: ignore[no-any-return]
+    return np.conj(coefficients)  # type: ignore[no-any-return]
 
 
-def _get_normalized_projection_coefficients(
-    projection: StateVector[_B1Inv], states: Sequence[StateVector[_B2Inv]]
+def _get_projection_coefficients(
+    projection: StateVector[_SBL0], states: Sequence[StateVector[_SBL1]]
 ) -> np.ndarray[tuple[int], np.dtype[np.complex_]]:
-    coefficients = get_projection_coefficients(projection, states)
+    coefficients = get_projection_matrix([projection], states)[:, 0]
     # Normalize the coefficients.
     # This means that the product between the projection and the eigenstates
     # all have the same phase
@@ -78,9 +123,9 @@ def _get_normalized_projection_coefficients(
 
 
 def localize_wavepacket_projection(
-    wavepacket: Wavepacket[_B0Inv, _B1Inv],
-    projection: StateVector[_B2Inv],
-) -> Wavepacket[_B0Inv, _B1Inv]:
+    wavepacket: Wavepacket[_SB0, _SBL0],
+    projection: StateVector[_SBL1],
+) -> Wavepacket[_SB0, _SBL0]:
     """
     Given a wavepacket, localize using the given projection.
 
@@ -93,20 +138,98 @@ def localize_wavepacket_projection(
     -------
     Wavepacket[_B0Inv, _B0Inv]
     """
-    coefficients = _get_normalized_projection_coefficients(
-        projection, get_all_states(wavepacket)
+    coefficients = _get_projection_coefficients(
+        projection, get_all_wavepacket_states(wavepacket)
     )
 
     return {
         "basis": wavepacket["basis"],
-        "list_basis": wavepacket["list_basis"],
-        "vectors": wavepacket["vectors"] / coefficients[:, np.newaxis],
+        "data": wavepacket["data"] * coefficients[:, np.newaxis],
+    }
+
+
+def get_state_projections_many_band(
+    states: StateVectorList[_B0, _B2],
+    projections: StateVectorList[_B1, _B3Inv],
+) -> EigenvalueList[StackedBasisLike[*tuple[_B0, _B1]]]:
+    converted = convert_state_vector_list_to_basis(projections, states["basis"][1])
+    return calculate_inner_product_states(states, converted)
+
+
+def _get_orthogonal_projected_states_many_band(
+    projections: StateVectorList[_B0, _B2],
+    states: StateVectorList[_B1, _SBL1],
+) -> StateVectorList[_B0, _SBL1]:
+    projected = get_state_projections_many_band(states, projections)
+    # Use SVD to generate orthogonal matrix u v_dagger
+    u, _s, v_dagger = scipy.linalg.svd(
+        projected["data"].reshape(projected["basis"].shape),
+        full_matrices=False,
+        compute_uv=True,
+        overwrite_a=False,
+        check_finite=True,
+    )
+    orthonormal_a = np.tensordot(u, v_dagger, axes=(1, 0))
+    q, r = scipy.linalg.qr(
+        projected["data"].reshape(projected["basis"].shape),
+        overwrite_a=False,
+        check_finite=True,
+        mode="economic",
+    )
+    # ! cq, r = scipy.linalg.qr_multiply(
+    # !     projected["data"].reshape(projected["basis"].shape),
+    # !     states["data"].reshape(states["basis"].shape),
+    # !     mode="left",
+    # ! )
+    return {
+        "basis": StackedBasis(projections["basis"][0], states["basis"][1]),
+        "data": np.tensordot(
+            orthonormal_a, states["data"].reshape(states["basis"].shape), axes=(0, 0)
+        ).reshape(-1),
+    }
+
+
+def localize_wavepacket_projection_many_band(
+    wavepackets: WavepacketList[_B0, _SB0, _SBL0],
+    projections: StateVectorList[_B1, _B2],
+) -> WavepacketList[_B1, _SB0, _SBL0]:
+    """
+    Given a wavepacket, localize using the given projection.
+
+    Parameters
+    ----------
+    wavepacket : Wavepacket[_B0Inv, _B0Inv]
+    projection : StateVector[_B1Inv]
+
+    Returns
+    -------
+    Wavepacket[_B0Inv, _B0Inv]
+    """
+    converted = convert_state_vector_list_to_basis(
+        wavepackets,
+        stacked_basis_as_fundamental_momentum_basis(wavepackets["basis"][1]),
+    )
+    states = [
+        get_states_at_bloch_idx(converted, idx)
+        for idx in range(converted["basis"][0][1].n)
+    ]
+    # block idx, projection idx, wavefunction idx
+    projected = [
+        _get_orthogonal_projected_states_many_band(projections, s) for s in states
+    ]
+    final_list_basis = StackedBasis(projections["basis"][0], converted["basis"][0][1])
+    vectors = np.transpose(
+        [w["data"].reshape(w["basis"].shape) for w in projected], axes=(1, 0, 2)
+    )
+    return {
+        "basis": StackedBasis(final_list_basis, converted["basis"][1]),
+        "data": vectors.reshape(-1),
     }
 
 
 def localize_tight_binding_projection(
-    wavepacket: Wavepacket[_B0Inv, _B1Inv]
-) -> Wavepacket[_B0Inv, _B1Inv]:
+    wavepacket: Wavepacket[_SB0, _SBL0]
+) -> Wavepacket[_SB0, _SBL0]:
     """
     Given a wavepacket, localize using a tight binding projection.
 
@@ -127,30 +250,29 @@ def localize_tight_binding_projection(
     return localize_wavepacket_projection(wavepacket, transformed)
 
 
-def _get_single_point_state(
-    wavepacket: Wavepacket[_B0Inv, _B1Inv],
+def _get_single_point_state_for_wavepacket(
+    wavepacket: Wavepacket[_SB0, _SBL0],
     idx: SingleIndexLike = 0,
     origin: SingleStackedIndexLike | None = None,
-) -> StateVector[tuple[FundamentalPositionAxis[Any, Any], ...]]:
-    state_0 = convert_state_vector_to_position_basis(get_state_vector(wavepacket, idx))
+) -> StateVector[StackedBasisLike[*tuple[FundamentalPositionBasis[Any, Any], ...]]]:
+    state_0 = convert_state_vector_to_position_basis(
+        get_wavepacket_state_vector(wavepacket, idx)
+    )
     util = BasisUtil(state_0["basis"])
     if origin is None:
         idx_0: SingleStackedIndexLike = util.get_stacked_index(
-            np.argmax(np.abs(state_0["vector"]), axis=-1)
+            np.argmax(np.abs(state_0["data"]), axis=-1)
         )
-        origin = wrap_index_around_origin(wavepacket["basis"], idx_0, (0, 0, 0), (0, 1))
-
-    out: StateVector[tuple[FundamentalPositionAxis[Any, Any], ...]] = {
-        "basis": state_0["basis"],
-        "vector": np.zeros_like(state_0["vector"]),
-    }
-    out["vector"][util.get_flat_index(origin, mode="wrap")] = 1
-    return out
+        origin = wrap_index_around_origin(state_0["basis"], idx_0, (0, 0, 0), (0, 1))
+    return get_single_point_state_vector_excact(
+        state_0["basis"], util.get_flat_index(origin, mode="wrap")
+    )
 
 
 def localize_single_point_projection(
-    wavepacket: Wavepacket[_B0Inv, _B1Inv]
-) -> Wavepacket[_B0Inv, _B1Inv]:
+    wavepacket: Wavepacket[_SB0, _SBL0],
+    idx: SingleIndexLike = 0,
+) -> Wavepacket[_SB0, _SBL0]:
     """
     Given a wavepacket, localize using a tight binding projection.
 
@@ -165,14 +287,16 @@ def localize_single_point_projection(
     # Initial guess is that the localized state is just the state of some eigenstate
     # truncated at the edge of the first
     # unit cell, centered at the two point max of the wavefunction
-    projection = _get_single_point_state(wavepacket)
+    projection = _get_single_point_state_for_wavepacket(wavepacket, idx)
     # Will have better performace if we provide it in a truncated position basis
     return localize_wavepacket_projection(wavepacket, projection)
 
 
 def get_exponential_state(
-    wavepacket: Wavepacket[_B0Inv, _B1Inv]
-) -> StateVector[tuple[FundamentalPositionAxis[Any, Any], ...]]:
+    wavepacket: Wavepacket[_SB0, _SBL0],
+    idx: SingleIndexLike = 0,
+    origin: SingleIndexLike | None = None,
+) -> StateVector[StackedBasisLike[*tuple[FundamentalPositionBasis[Any, Any], ...]]]:
     """
     Given a wavepacket, get the state decaying exponentially from the maximum.
 
@@ -190,47 +314,62 @@ def get_exponential_state(
     StateVector[tuple[FundamentalPositionAxis[Any, Any], ...]]
         The localized state under the tight binding approximation
     """
-    state_0 = convert_state_vector_to_position_basis(get_state_vector(wavepacket, 0))
+    state_0 = convert_state_vector_to_position_basis(
+        get_wavepacket_state_vector(wavepacket, idx)
+    )
 
     util = BasisUtil(state_0["basis"])
-    idx_0: SingleStackedIndexLike = util.get_stacked_index(
-        np.argmax(np.abs(state_0["vector"]), axis=-1)
+    origin = (
+        util.get_stacked_index(np.argmax(np.abs(state_0["data"]), axis=-1))
+        if origin is None
+        else origin
     )
-    origin = wrap_index_around_origin(wavepacket["basis"], idx_0, (0, 0, 0), (0, 1))
+    origin_stacked = (
+        origin if isinstance(origin, tuple) else util.get_stacked_index(origin)
+    )
+    origin_stacked = wrap_index_around_origin(
+        wavepacket["basis"], origin_stacked, (0, 0, 0), (0, 1)
+    )
 
-    coordinates = wrap_index_around_origin(state_0["basis"], util.nx_points, origin)
+    coordinates = wrap_index_around_origin(
+        state_0["basis"], util.stacked_nx_points, origin_stacked
+    )
     unit_cell_util = BasisUtil(wavepacket["basis"])
-    dx0 = coordinates[0] - origin[0] / unit_cell_util.fundamental_shape[0]
-    dx1 = coordinates[1] - origin[1] / unit_cell_util.fundamental_shape[1]
-    dx2 = coordinates[2] - origin[2] / unit_cell_util.fundamental_shape[2]
+    dx0 = coordinates[0] - origin_stacked[0] / unit_cell_util.fundamental_shape[0]
+    dx1 = coordinates[1] - origin_stacked[1] / unit_cell_util.fundamental_shape[1]
+    dx2 = coordinates[2] - origin_stacked[2] / unit_cell_util.fundamental_shape[2]
 
-    out: StateVector[tuple[FundamentalPositionAxis[Any, Any], ...]] = {
+    out: StateVector[
+        StackedBasisLike[*tuple[FundamentalPositionBasis[Any, Any], ...]]
+    ] = {
         "basis": state_0["basis"],
-        "vector": np.zeros_like(state_0["vector"]),
+        "data": np.zeros_like(state_0["data"]),
     }
-    out["vector"] = np.exp(-(dx0**2 + dx1**2 + dx2**2))
-    out["vector"] /= np.linalg.norm(out["vector"])
+    out["data"] = np.exp(-(dx0**2 + dx1**2 + dx2**2))
+    out["data"] /= np.linalg.norm(out["data"])
     return out
 
 
 def _get_exponential_decay_state(
-    wavepacket: Wavepacket[_B0Inv, _B1Inv]
-) -> StateVector[tuple[FundamentalPositionAxis[Any, Any], ...]]:
+    wavepacket: Wavepacket[_SB0, _SBL0]
+) -> StateVector[StackedBasisLike[*tuple[FundamentalPositionBasis[Any, Any], ...]]]:
     exponential = get_exponential_state(wavepacket)
     tight_binding = convert_state_vector_to_position_basis(
-        get_state_vector(wavepacket, 0)
+        get_wavepacket_state_vector(wavepacket, 0)
     )
-    out: StateVector[tuple[FundamentalPositionAxis[Any, Any], ...]] = {
+    out: StateVector[
+        StackedBasisLike[*tuple[FundamentalPositionBasis[Any, Any], ...]]
+    ] = {
         "basis": exponential["basis"],
-        "vector": exponential["vector"] * tight_binding["vector"],
+        "data": exponential["data"] * tight_binding["data"],
     }
-    out["vector"] /= np.linalg.norm(out["vector"])
+    out["data"] /= np.linalg.norm(out["data"])
     return out
 
 
 def localize_exponential_decay_projection(
-    wavepacket: Wavepacket[_B0Inv, _B1Inv]
-) -> Wavepacket[_B0Inv, _B1Inv]:
+    wavepacket: Wavepacket[_SB0, _SBL0]
+) -> Wavepacket[_SB0, _SBL0]:
     """
     Given a wavepacket, localize using a tight binding projection.
 
@@ -245,4 +384,82 @@ def localize_exponential_decay_projection(
     # Initial guess is that the localized state is the tight binding state
     # multiplied by an exponential
     projection = _get_exponential_decay_state(wavepacket)
+    return localize_wavepacket_projection(wavepacket, projection)
+
+
+def get_gaussian_states(
+    wavepacket: Wavepacket[_SB0, _SBL0],
+    origin: SingleIndexLike = 0,
+) -> StateVectorList[
+    FundamentalBasis[Literal[1]],
+    StackedBasisLike[*tuple[FundamentalPositionBasis[Any, Any], ...]],
+]:
+    """
+    Given a wavepacket, get the state decaying exponentially from the maximum.
+
+    Parameters
+    ----------
+    wavepacket : Wavepacket[_B0Inv, _B0Inv]
+        The initial wavepacket
+    idx : SingleIndexLike, optional
+        The index of the state vector to use as reference, by default 0
+    origin : SingleIndexLike | None, optional
+        The origin about which to produce the localized state, by default the maximum of the wavefunction
+
+    Returns
+    -------
+    StateVector[tuple[FundamentalPositionAxis[Any, Any], ...]]
+        The localized state under the tight binding approximation
+    """
+    basis = stacked_basis_as_fundamental_position_basis(
+        get_unfurled_basis(wavepacket["basis"])
+    )
+    util = BasisUtil(basis)
+    origin_stacked = (
+        origin if isinstance(origin, tuple) else util.get_stacked_index(origin)
+    )
+    origin_stacked = wrap_index_around_origin(
+        wavepacket["basis"], origin_stacked, (0, 0, 0), (0, 1)
+    )
+
+    coordinates = wrap_index_around_origin(
+        basis, util.stacked_nx_points, origin_stacked
+    )
+    unit_cell_shape = (wavepacket["basis"]).shape
+    dx = tuple(
+        (c - o) / w
+        for (c, o, w) in zip(coordinates, origin_stacked, unit_cell_shape, strict=True)
+    )
+
+    out: StateVectorList[
+        FundamentalBasis[Literal[1]],
+        StackedBasisLike[*tuple[FundamentalPositionBasis[Any, Any], ...]],
+    ] = {
+        "basis": StackedBasis(FundamentalBasis(1), basis),
+        "data": np.zeros(basis.n, dtype=np.complex_),
+    }
+    out["data"] = np.exp(-0.5 * np.sum(np.square(dx), axis=(0)))
+    out["data"] /= np.linalg.norm(out["data"])
+    return out
+
+
+def localize_wavepacket_gaussian_projection(
+    wavepacket: Wavepacket[_SB0, _SBL0]
+) -> Wavepacket[_SB0, _SBL0]:
+    """
+    Given a wavepacket, localize using a tight binding projection.
+
+    Parameters
+    ----------
+    wavepacket : Wavepacket[_B0Inv, _B0Inv]
+
+    Returns
+    -------
+    Wavepacket[_B0Inv, _B0Inv]
+    """
+    # Initial guess is that the localized state is the tight binding state
+    # multiplied by an exponential
+    projection = get_state_vector(get_gaussian_states(wavepacket), 0)
+    # Better performace if we provide the projection in transformed basis
+    convert_state_vector_to_momentum_basis(projection)
     return localize_wavepacket_projection(wavepacket, projection)

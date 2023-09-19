@@ -8,11 +8,11 @@ import numpy as np
 from scipy.constants import hbar
 
 from surface_potential_analysis.axis.axis import (
-    ExplicitAxis3d,
-    FundamentalPositionAxis3d,
+    ExplicitBasis3d,
+    FundamentalPositionBasis3d,
 )
-from surface_potential_analysis.axis.util import AxisWithLengthLikeUtil
-from surface_potential_analysis.basis.sho_basis import (
+from surface_potential_analysis.axis.util import BasisUtil
+from surface_potential_analysis.stacked_basis.sho_basis import (
     SHOBasisConfig,
     calculate_sho_wavefunction,
     infinate_sho_axis_3d_from_config,
@@ -22,7 +22,7 @@ from surface_potential_analysis.basis.sho_basis import (
 rng = np.random.default_rng()
 
 
-def _normalize_sho_basis(basis: ExplicitAxis3d[int, int]) -> ExplicitAxis3d[int, int]:
+def _normalize_sho_basis(basis: ExplicitBasis3d[int, int]) -> ExplicitBasis3d[int, int]:
     vectors = basis.vectors
     turning_point = vectors[
         np.arange(vectors.shape[0]),
@@ -30,7 +30,7 @@ def _normalize_sho_basis(basis: ExplicitAxis3d[int, int]) -> ExplicitAxis3d[int,
     ]
 
     normalized = np.exp(-1j * np.angle(turning_point))[:, np.newaxis] * vectors
-    return ExplicitAxis3d(basis.delta_x, normalized)
+    return ExplicitBasis3d(basis.delta_x, normalized)
 
 
 class SHOBasisTest(unittest.TestCase):
@@ -107,12 +107,10 @@ class SHOBasisTest(unittest.TestCase):
             "sho_omega": 1 / hbar,
             "x_origin": np.array([0, 0, -10]),
         }
-        parent: FundamentalPositionAxis3d[Literal[1001]] = FundamentalPositionAxis3d(
+        parent: FundamentalPositionBasis3d[Literal[1001]] = FundamentalPositionBasis3d(
             np.array([0, 0, 20]), 1001
         )
-        basis = AxisWithLengthLikeUtil(
-            infinate_sho_axis_3d_from_config(parent, config, 12)
-        )
+        basis = BasisUtil(infinate_sho_axis_3d_from_config(parent, config, 12))
         np.testing.assert_almost_equal(
             np.ones((nz,)), np.sum(basis.vectors * np.conj(basis.vectors), axis=1)
         )
@@ -123,9 +121,9 @@ class SHOBasisTest(unittest.TestCase):
             "sho_omega": 1 / hbar,
             "x_origin": np.array([0, 0, -5 * np.pi]),
         }
-        parent = FundamentalPositionAxis3d(np.array([0, 0, 10 * np.pi]), 1001)
+        parent = FundamentalPositionBasis3d(np.array([0, 0, 10 * np.pi]), 1001)
 
-        axis = AxisWithLengthLikeUtil(sho_axis_3d_from_config(parent, config, 12))
+        axis = BasisUtil(sho_axis_3d_from_config(parent, config, 12))
 
         norm = np.linalg.norm(axis.vectors, axis=1)
         np.testing.assert_array_almost_equal(norm, np.ones_like(norm))
@@ -139,13 +137,13 @@ class SHOBasisTest(unittest.TestCase):
             "sho_omega": 1 / hbar,
             "x_origin": np.array([0, 0, -5 * np.pi]),
         }
-        parent = FundamentalPositionAxis3d(np.array([0, 0, 10 * np.pi]), 1001)
+        parent = FundamentalPositionBasis3d(np.array([0, 0, 10 * np.pi]), 1001)
 
         basis1 = _normalize_sho_basis(
             infinate_sho_axis_3d_from_config(parent, config, 16)
         )
         basis2 = _normalize_sho_basis(sho_axis_3d_from_config(parent, config, 16))
         np.testing.assert_array_almost_equal(
-            AxisWithLengthLikeUtil(basis1).vectors,
-            AxisWithLengthLikeUtil(basis2).vectors,
+            BasisUtil(basis1).vectors,
+            BasisUtil(basis2).vectors,
         )

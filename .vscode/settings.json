@@ -1,6 +1,10 @@
 {
-  "python.analysis.typeCheckingMode": "off",
-  "python.analysis.diagnosticMode": "openFilesOnly",
+  "python.analysis.typeCheckingMode": "strict",
+  "python.analysis.include": [
+    "src"
+  ],
+  "python.analysis.diagnosticMode": "workspace",
+  "python.analysis.reportUnknownMemberType": false,
   "python.linting.mypyEnabled": false,
   "python.linting.enabled": false,
   // "python.linting.flake8Enabled": true,

@@ -1,36 +1,50 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Generic, TypedDict, TypeVar
+from typing import TYPE_CHECKING, Any, Generic, TypedDict, TypeVar
 
 import numpy as np
 
-from surface_potential_analysis.basis.basis import (
-    Basis,
+from surface_potential_analysis.axis.axis import FundamentalBasis
+from surface_potential_analysis.axis.axis_like import (
+    BasisLike,
 )
+from surface_potential_analysis.axis.stacked_axis import StackedBasis
 
 if TYPE_CHECKING:
-    from surface_potential_analysis._types import SingleFlatIndexLike
+    from collections.abc import Iterable
+
+    from surface_potential_analysis.axis.stacked_axis import StackedBasisLike
+    from surface_potential_analysis.operator.operator import Operator
     from surface_potential_analysis.state_vector.state_vector import (
         StateDualVector,
         StateVector,
     )
+    from surface_potential_analysis.types import SingleFlatIndexLike
 
-_B0Inv = TypeVar("_B0Inv", bound=Basis)
-_B1Inv = TypeVar("_B1Inv", bound=Basis)
+    _B0 = TypeVar("_B0", bound=BasisLike[Any, Any])
+    _B1 = TypeVar("_B1", bound=BasisLike[Any, Any])
+
+    _SB0 = TypeVar("_SB0", bound=StackedBasisLike[*tuple[Any, ...]])
+
+_B0_co = TypeVar("_B0_co", bound=BasisLike[Any, Any], covariant=True)
+_B1_co = TypeVar("_B1_co", bound=BasisLike[Any, Any], covariant=True)
 
 
-class StateVectorList(TypedDict, Generic[_B0Inv, _B1Inv]):
-    """Represents a list of eigenstates, each with the same basis and bloch wavevector."""
+class StateVectorList(TypedDict, Generic[_B0_co, _B1_co]):
+    """
+    Represents a list of states.
 
-    list_basis: _B0Inv
-    basis: _B1Inv
-    vectors: np.ndarray[tuple[int, int], np.dtype[np.complex_]]
+    The first axis represents the basis of the list, and the second the basis of the states
+    """
+
+    basis: StackedBasisLike[_B0_co, _B1_co]
+    data: np.ndarray[tuple[int], np.dtype[np.complex_]]
     """A list of state vectors"""
 
 
 def get_state_vector(
-    state_list: StateVectorList[_B0Inv, _B1Inv], idx: SingleFlatIndexLike
-) -> StateVector[_B1Inv]:
+    state_list: StateVectorList[_B0, _B1], idx: SingleFlatIndexLike
+) -> StateVector[_B1]:
     """
     Get a single state vector from a list of states.
 
@@ -43,12 +57,15 @@ def get_state_vector(
     -------
     Eigenstate[_B0Inv]
     """
-    return {"basis": state_list["basis"], "vector": state_list["vectors"][idx]}
+    return {
+        "basis": state_list["basis"][1],
+        "data": state_list["data"].reshape(state_list["basis"].shape)[idx],
+    }
 
 
 def get_state_dual_vector(
-    state_list: StateVectorList[_B0Inv, _B1Inv], idx: SingleFlatIndexLike
-) -> StateDualVector[_B1Inv]:
+    state_list: StateVectorList[_B0, _B1], idx: SingleFlatIndexLike
+) -> StateDualVector[_B1]:
     """
     Get a single state dual vector from a list of states.
 
@@ -62,14 +79,14 @@ def get_state_dual_vector(
     Eigenstate[_B0Inv]
     """
     return {
-        "basis": state_list["basis"],
-        "vector": np.conj(state_list["vectors"][idx]),
+        "basis": state_list["basis"][1],
+        "data": np.conj(state_list["data"].reshape(state_list["basis"].shape)[idx]),
     }
 
 
 def get_all_states(
-    states: StateVectorList[_B0Inv, _B1Inv],
-) -> list[StateVector[_B1Inv]]:
+    states: StateVectorList[_B0, _B1],
+) -> list[StateVector[_B1]]:
     """
     Select an eigenstate from an eigenstate collection.
 
@@ -84,6 +101,79 @@ def get_all_states(
     Eigenstate[_B0_co]
     """
     return [
-        {"basis": states["basis"], "vector": states["vectors"][idx]}
-        for idx in range(states["vectors"].shape[0])
+        {
+            "basis": states["basis"][1],
+            "data": states["data"].reshape(states["basis"].shape)[idx],
+        }
+        for idx in range(states["basis"].shape[0])
     ]
+
+
+def as_state_vector_list(
+    states: Iterable[StateVector[_B1]],
+) -> StateVectorList[FundamentalBasis[int], _B1]:
+    states = list(states)
+    return {
+        "basis": StackedBasis(FundamentalBasis(len(states)), states[0]["basis"]),
+        "data": np.array([w["data"] for w in states]).reshape(-1),
+    }
+
+
+_B2Inv = TypeVar("_B2Inv", bound=BasisLike[Any, Any])
+
+
+def calculate_inner_product(
+    state_0: StateVectorList[_B0, _B2Inv],
+    state_1: StateVectorList[_B1, _B2Inv],
+) -> Operator[_B0, _B1]:
+    """
+    Calculate the inner product of two states.
+
+    Parameters
+    ----------
+    state_0 : StateVector[_B0Inv]
+    state_1 : StateDualVector[_B0Inv]
+
+    Returns
+    -------
+    np.complex_
+    """
+    return {
+        "basis": StackedBasis(state_0["basis"][0], state_1["basis"][0]),
+        "data": np.tensordot(
+            np.conj(state_0["data"]).reshape(state_0["basis"].shape),
+            state_1["data"].reshape(state_1["basis"].shape),
+            axes=(1, 1),
+        ).reshape(-1),
+    }
+
+
+def average_state_vector(
+    probabilities: StateVectorList[_SB0, _B1],
+    axis: tuple[int, ...] | None = None,
+    *,
+    weights: np.ndarray[tuple[int], np.dtype[np.float_]] | None = None,
+) -> StateVectorList[Any, _B1]:
+    """
+    Average probabilities over several repeats.
+
+    Parameters
+    ----------
+    probabilities : list[ProbabilityVectorList[_B0Inv, _L0Inv]]
+
+    Returns
+    -------
+    ProbabilityVectorList[_B0Inv, _L0Inv]
+    """
+    axis = tuple(range(probabilities["basis"][0].ndim)) if axis is None else axis
+    basis = StackedBasis(
+        *tuple(b for (i, b) in enumerate(probabilities["basis"][0]) if i not in axis)
+    )
+    return {
+        "basis": StackedBasis(basis, probabilities["basis"][1]),
+        "data": np.average(
+            probabilities["data"].reshape(*probabilities["basis"][0].shape, -1),
+            axis=tuple(ax for ax in axis),
+            weights=weights,
+        ).reshape(-1),
+    }

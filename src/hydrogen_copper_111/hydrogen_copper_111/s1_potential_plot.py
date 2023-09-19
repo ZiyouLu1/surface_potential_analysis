@@ -3,15 +3,9 @@ from __future__ import annotations
 import numpy as np
 from matplotlib import pyplot as plt
 from surface_potential_analysis.axis.plot import plot_explicit_basis_states_x
-from surface_potential_analysis.basis.plot import (
-    plot_fundamental_x_in_plane_projected_2d,
-)
-from surface_potential_analysis.basis.sho_basis import (
-    infinate_sho_axis_3d_from_config,
-)
-from surface_potential_analysis.basis.util import AxisWithLengthBasisUtil
+from surface_potential_analysis.axis.util import BasisUtil
 from surface_potential_analysis.potential.plot import (
-    animate_potential_x0x1,
+    animate_potential_3d_x,
     plot_potential_1d_x2_comparison_111,
     plot_potential_minimum_along_path,
 )
@@ -28,6 +22,12 @@ from surface_potential_analysis.potential.potential import (
     normalize_potential,
     truncate_potential,
 )
+from surface_potential_analysis.stacked_basis.plot import (
+    plot_fundamental_x_in_plane_projected_2d,
+)
+from surface_potential_analysis.stacked_basis.sho_basis import (
+    infinate_sho_axis_3d_from_config,
+)
 
 from .s1_potential import (
     get_interpolated_potential,
@@ -42,7 +42,7 @@ def plot_raw_data_points() -> None:
     fig, ax, _ = plot_point_potential_location_xy(data)
 
     locations = get_point_potential_xy_locations(data)
-    e_min: list[float] = []
+    e_min: list[np.float_] = []
     for x, y in locations.T:
         idx = np.argwhere(
             np.logical_and(
@@ -93,7 +93,7 @@ def plot_raw_potential_points() -> None:
     fig, ax, _ = plot_potential_1d_x2_comparison_111(mocked)
     fig.show()
 
-    fig, _, _ani = animate_potential_x0x1(mocked)
+    fig, _, _ = animate_potential_3d_x(mocked)
     fig.show()
 
     truncated = truncate_potential(potential, cutoff=2e-19, n=1, offset=1e-20)
@@ -118,9 +118,9 @@ def plot_interpolated_energy_grid_points() -> None:
     plot_potential_1d_x2_comparison_111(potential, ax=ax)
     fig.show()
 
-    fig, ax, _ani = animate_potential_x0x1(potential, clim=(0, 0.2e-18))
+    fig, ax, _ani = animate_potential_3d_x(potential, clim=(0, 0.2e-18))
     z_energies = np.min(
-        potential["vector"].reshape(AxisWithLengthBasisUtil(potential["basis"]).shape),
+        potential["data"].reshape(BasisUtil(potential["basis"]).shape),
         axis=2,
     )
     xy_min = np.unravel_index(np.argmin(z_energies), z_energies.shape)
@@ -191,7 +191,7 @@ def plot_potential_minimum_along_diagonal() -> None:
     fig, ax = plt.subplots()
 
     interpolation = get_interpolated_potential((70, 70, 100))
-    shape = AxisWithLengthBasisUtil(interpolation["basis"]).shape
+    shape = BasisUtil(interpolation["basis"]).shape
     path = np.array([(x, x) for x in range(shape[0])]).T
     _, _, _ = plot_potential_minimum_along_path(interpolation, path, ax=ax)
     fig.show()
@@ -203,7 +203,7 @@ def plot_potential_minimum_along_diagonal() -> None:
 def plot_potential_minimum_along_edge() -> None:
     interpolation = get_interpolated_potential((70, 70, 100))
     fig, ax = plt.subplots()
-    shape = AxisWithLengthBasisUtil(interpolation["basis"]).shape
+    shape = BasisUtil(interpolation["basis"]).shape
     path = np.array([(shape[0] - (x), x) for x in range(shape[0])]).T
     # Add a fake point here so they line up. path[0] is not included in the unit cell
     path[:, 0] = path[:, 2]

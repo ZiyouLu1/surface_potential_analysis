@@ -1,9 +1,9 @@
 from __future__ import annotations
 
 from surface_potential_analysis.wavepacket.plot import (
-    animate_wavepacket_x0x1,
+    animate_wavepacket_3d_x,
+    plot_wavepacket_2d_x,
     plot_wavepacket_sample_frequencies,
-    plot_wavepacket_x0x1,
 )
 
 from .s4_wavepacket import (
@@ -24,11 +24,11 @@ def plot_wavepacket_points() -> None:
 
 def animate_copper_111_wavepacket() -> None:
     wavepacket = get_two_point_normalized_wavepacket_hydrogen(0)
-    fig, _, _anim0 = animate_wavepacket_x0x1(wavepacket)
+    fig, _, _anim0 = animate_wavepacket_3d_x(wavepacket)
     fig.show()
 
     wavepacket = get_two_point_normalized_wavepacket_hydrogen(1)
-    fig, _, _anim1 = animate_wavepacket_x0x1(wavepacket)
+    fig, _, _anim1 = animate_wavepacket_3d_x(wavepacket)
     fig.show()
     input()
 
@@ -36,34 +36,34 @@ def animate_copper_111_wavepacket() -> None:
 def plot_wavepacket_at_z_origin() -> None:
     normalized = get_two_point_normalized_wavepacket_hydrogen(0)
 
-    fig, ax, _ = plot_wavepacket_x0x1(normalized, 102, measure="abs")
+    fig, ax, _ = plot_wavepacket_2d_x(normalized, measure="abs")
     fig.show()
     ax.set_title("Plot of abs(wavefunction) for z=0")
     save_figure(fig, "wavepacket_grid_z_origin.png")
 
-    fig, ax, _ = plot_wavepacket_x0x1(normalized, 102, measure="real")
+    fig, ax, _ = plot_wavepacket_2d_x(normalized, measure="real")
     fig.show()
     ax.set_title("Plot of real(wavefunction) for z=0")
     save_figure(fig, "wavepacket_grid_z_origin_real.png")
 
-    fig, ax, _ = plot_wavepacket_x0x1(normalized, 102, measure="imag")
+    fig, ax, _ = plot_wavepacket_2d_x(normalized, measure="imag")
     fig.show()
     ax.set_title("Plot of imag(wavefunction) for z=0")
     save_figure(fig, "wavepacket_grid_z_origin_imag.png")
 
     normalized = get_two_point_normalized_wavepacket_hydrogen(1)
 
-    fig, ax, _ = plot_wavepacket_x0x1(normalized, 103, measure="abs")
+    fig, ax, _ = plot_wavepacket_2d_x(normalized, measure="abs")
     fig.show()
     ax.set_title("Plot of abs(wavefunction) for z=0")
     save_figure(fig, "wavepacket_grid_z_origin.png")
 
-    fig, ax, _ = plot_wavepacket_x0x1(normalized, 103, measure="real")
+    fig, ax, _ = plot_wavepacket_2d_x(normalized, measure="real")
     fig.show()
     ax.set_title("Plot of real(wavefunction) for z=0")
     save_figure(fig, "wavepacket_grid_z_origin_real.png")
 
-    fig, ax, _ = plot_wavepacket_x0x1(normalized, 103, measure="imag")
+    fig, ax, _ = plot_wavepacket_2d_x(normalized, measure="imag")
     fig.show()
     ax.set_title("Plot of imag(wavefunction) for z=0")
 
@@ -74,7 +74,7 @@ def plot_wavepacket_at_maximum_points() -> None:
     for band in range(20):
         normalized = get_two_point_normalized_wavepacket_hydrogen(band)
 
-        fig, ax, _ = plot_wavepacket_x0x1(normalized, 103, measure="abs")
+        fig, ax, _ = plot_wavepacket_2d_x(normalized, measure="abs")
         fig.show()
         ax.set_title("Plot of abs(wavefunction) for z=z max")
         save_figure(fig, f"wavepacket_grid_{band}.png")

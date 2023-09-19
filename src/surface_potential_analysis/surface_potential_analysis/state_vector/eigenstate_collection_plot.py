@@ -6,7 +6,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 from scipy.constants import Boltzmann
 
-from surface_potential_analysis.basis.util import AxisWithLengthBasisUtil
+from surface_potential_analysis.axis.util import BasisUtil
 from surface_potential_analysis.state_vector.state_vector_list import (
     get_all_states,
 )
@@ -18,48 +18,49 @@ if TYPE_CHECKING:
     from matplotlib.figure import Figure
     from matplotlib.lines import Line2D
 
-    from surface_potential_analysis._types import SingleStackedIndexLike
-    from surface_potential_analysis.axis.axis import FundamentalAxis
+    from surface_potential_analysis.axis.axis_like import BasisLike
     from surface_potential_analysis.axis.block_fraction_axis import (
         AxisWithBlockFractionLike,
     )
-    from surface_potential_analysis.basis.basis import AxisWithLengthBasis, Basis
+    from surface_potential_analysis.axis.stacked_axis import (
+        StackedBasisLike,
+    )
     from surface_potential_analysis.state_vector.eigenstate_collection import (
         EigenstateColllection,
     )
     from surface_potential_analysis.state_vector.state_vector_list import (
         StateVectorList,
     )
+    from surface_potential_analysis.types import SingleStackedIndexLike
     from surface_potential_analysis.util.plot import Scale
     from surface_potential_analysis.util.util import Measure
 
-    _B0Inv = TypeVar("_B0Inv", bound=Basis)
-    _B0CInv = TypeVar(
-        "_B0CInv",
-        bound=tuple[AxisWithBlockFractionLike[Any, Any], FundamentalAxis[Any]],
-    )
-    _B1Inv = TypeVar("_B1Inv", bound=AxisWithLengthBasis[Any])
-    _L1Inv = TypeVar("_L1Inv", bound=int)
+    _B0 = TypeVar("_B0", bound=BasisLike[Any, Any])
+    _SB0 = TypeVar("_SB0", bound=StackedBasisLike[*tuple[Any, ...]])
+    _L0 = TypeVar("_L0", bound=int)
+    _BF0 = TypeVar("_BF0", bound=AxisWithBlockFractionLike[Any, Any])
 
 
 # ruff: noqa: PLR0913
 
 
 def _get_projected_bloch_phases(
-    collection: EigenstateColllection[_B0CInv, _B1Inv],
-    direction: np.ndarray[tuple[_L1Inv], np.dtype[np.float_]],
+    collection: EigenstateColllection[StackedBasisLike[_BF0, Any], Any],
+    direction: np.ndarray[tuple[_L0], np.dtype[np.float_]],
 ) -> np.ndarray[tuple[int], np.dtype[np.float_]]:
-    util = AxisWithLengthBasisUtil(collection["basis"])
+    util = BasisUtil(collection["basis"][1])
     bloch_phases = np.tensordot(
-        collection["list_basis"][0].bloch_fractions, util.fundamental_dk, axes=(1, 0)  # type: ignore[attr-defined]
+        collection["basis"][0][0].bloch_fractions,
+        util.fundamental_dk_stacked,
+        axes=(1, 0),
     )
     normalized_direction = direction / np.linalg.norm(direction)
-    return np.dot(bloch_phases, normalized_direction)  # type: ignore[no-any-return]
+    return np.dot(bloch_phases, normalized_direction)
 
 
 def plot_states_1d_x(
-    states: StateVectorList[_B0Inv, _B1Inv],
-    axis: int = 0,
+    states: StateVectorList[_B0, _SB0],
+    axes: tuple[int] = (0,),
     idx: SingleStackedIndexLike | None = None,
     *,
     ax: Axes | None = None,
@@ -90,12 +91,12 @@ def plot_states_1d_x(
     fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
 
     for state in get_all_states(states):
-        plot_state_1d_x(state, axis, idx, ax=ax, measure=measure, scale=scale)
+        plot_state_1d_x(state, axes, idx, ax=ax, measure=measure, scale=scale)
     return fig, ax
 
 
 def plot_eigenvalues_against_bloch_phase_1d(
-    collection: EigenstateColllection[_B0CInv, _B1Inv],
+    collection: EigenstateColllection[StackedBasisLike[_BF0, Any], Any],
     direction: np.ndarray[tuple[int], np.dtype[np.float_]],
     band: int = 0,
     *,
@@ -120,14 +121,17 @@ def plot_eigenvalues_against_bloch_phase_1d(
     fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
 
     projected = _get_projected_bloch_phases(collection, direction)
-    (line,) = ax.plot(projected, collection["eigenvalues"][band])
+    (line,) = ax.plot(
+        projected,
+        collection["eigenvalue"].reshape(*collection["basis"][0].shape)[:, band],
+    )
     ax.set_xlabel("Bloch Phase")
     ax.set_ylabel("Energy / J")
     return fig, ax, line
 
 
 def plot_occupation_against_bloch_phase_1d(
-    collection: EigenstateColllection[_B0CInv, _B1Inv],
+    collection: EigenstateColllection[StackedBasisLike[_BF0, Any], Any],
     direction: np.ndarray[tuple[int], np.dtype[np.float_]],
     temperature: float,
     band: int = 0,
@@ -153,7 +157,9 @@ def plot_occupation_against_bloch_phase_1d(
     fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
 
     projected = _get_projected_bloch_phases(collection, direction)
-    eigenvalues = collection["eigenvalues"][:, band]
+    eigenvalues = collection["eigenvalue"].reshape(*collection["basis"][0].shape, -1)[
+        :, band
+    ]
     occupations = np.exp(-eigenvalues / (temperature * Boltzmann))
     (line,) = ax.plot(projected, occupations)
     ax.set_xlabel("Bloch Phase / $m^{-1}$")
@@ -162,7 +168,7 @@ def plot_occupation_against_bloch_phase_1d(
 
 
 def plot_lowest_band_eigenvalues_against_bloch_k(
-    collection: EigenstateColllection[_B0CInv, _B1Inv],
+    collection: EigenstateColllection[StackedBasisLike[_BF0, Any], Any],
     *,
     ax: Axes | None = None,
 ) -> tuple[Figure, Axes, Line2D]:
@@ -179,6 +185,6 @@ def plot_lowest_band_eigenvalues_against_bloch_k(
     -------
     tuple[Figure, Axes, Line2D]
     """
-    direction = np.zeros(len(collection["basis"]))
+    direction = np.zeros(collection["basis"].n)
     direction[0] = 1
     return plot_eigenvalues_against_bloch_phase_1d(collection, direction, 0, ax=ax)

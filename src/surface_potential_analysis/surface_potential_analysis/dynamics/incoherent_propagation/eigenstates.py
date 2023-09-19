@@ -5,9 +5,10 @@ from typing import TYPE_CHECKING, Any, TypeVar
 import numpy as np
 import scipy
 
-from surface_potential_analysis.axis.axis import FundamentalAxis
+from surface_potential_analysis.axis.axis import FundamentalBasis
+from surface_potential_analysis.axis.stacked_axis import StackedBasis
 from surface_potential_analysis.axis.time_axis_like import (
-    ExplicitTimeAxis,
+    ExplicitTimeBasis,
 )
 from surface_potential_analysis.util.decorators import timed
 
@@ -35,7 +36,7 @@ if TYPE_CHECKING:
 @timed
 def calculate_tunnelling_eigenstates(
     matrix: TunnellingMMatrix[_B0Inv],
-) -> EigenstateList[tuple[FundamentalAxis[int]], _B0Inv]:
+) -> EigenstateList[FundamentalBasis[int], _B0Inv]:
     """
     Given a tunnelling matrix, find the eigenstates.
 
@@ -49,16 +50,15 @@ def calculate_tunnelling_eigenstates(
     """
     eigenvalues, vectors = scipy.linalg.eig(matrix["array"])
     return {
-        "list_basis": (FundamentalAxis(eigenvalues.size),),
-        "basis": matrix["basis"],
-        "eigenvalues": eigenvalues - np.max(eigenvalues),
-        "vectors": vectors.T,
+        "basis": StackedBasis(FundamentalBasis(eigenvalues.size), matrix["basis"][0]),
+        "eigenvalue": eigenvalues - np.max(eigenvalues),
+        "data": vectors.T,
     }
 
 
 def get_operator_state_vector_decomposition(
     density_matrix: DiagonalOperator[_B0Inv, _B0Inv],
-    eigenstates: StateVectorList[tuple[FundamentalAxis[_L0Inv]], _B0Inv],
+    eigenstates: StateVectorList[FundamentalBasis[_L0Inv], _B0Inv],
 ) -> np.ndarray[tuple[_L0Inv], np.dtype[np.complex_]]:
     """
     Given a state and a set of TunnellingEigenstates decompose the state into the eigenstates.
@@ -73,18 +73,18 @@ def get_operator_state_vector_decomposition(
     Returns
     -------
     np.ndarray[tuple[int], np.dtype[np.float_]]
-        A list of coefficients for each vector such that a[i] eigenstates["vectors"][i,:] = vector[:]
+        A list of coefficients for each vector such that a[i] eigenstates["data"][i,:] = vector[:]
     """
-    # eigenstates["vectors"] is the matrix such that the ith vector is
-    # eigenstates["vectors"][i,:].
+    # eigenstates["data"] is the matrix such that the ith vector is
+    # eigenstates["data"][i,:].
     # linalg.solve(a, b) = x where np.dot(a, x) == b, which is the sum
     # of the product over the last axis of x, so a[i] x[:, i] = b[:]
     # ie solved is the decomposition of b into the eigenvectors
-    return scipy.linalg.solve(eigenstates["vectors"].T, density_matrix["vector"])  # type: ignore[no-any-return]
+    return scipy.linalg.solve(eigenstates["data"].T, density_matrix["data"])  # type: ignore[no-any-return]
 
 
 def get_equilibrium_state(
-    eigenstates: EigenstateList[tuple[FundamentalAxis[_L0Inv]], _B0Inv],
+    eigenstates: EigenstateList[FundamentalBasis[_L0Inv], _B0Inv],
 ) -> DiagonalOperator[_B0Inv, _B0Inv]:
     """
     Select the equilibrium tunnelling state from a list of eigenstates.
@@ -102,17 +102,16 @@ def get_equilibrium_state(
     """
     # We assume the surface is 'well connected', ie all initial states
     # end up in the equilibrium configuration
-    initial = get_initial_pure_density_matrix_for_basis(eigenstates["basis"])
+    initial = get_initial_pure_density_matrix_for_basis(eigenstates["basis"][1])
     coefficients = get_operator_state_vector_decomposition(initial, eigenstates)
 
-    state_idx = np.argmax(eigenstates["eigenvalues"])
-    # eigenstates["vectors"][state_idx] is not necessarily normalized,
+    state_idx = np.argmax(eigenstates["eigenvalue"])
+    # eigenstates["data"][state_idx] is not necessarily normalized,
     # and could contain negative or imaginary 'probabilities'
-    vector = coefficients[state_idx] * eigenstates["vectors"][state_idx]
+    vector = coefficients[state_idx] * eigenstates["data"][state_idx]
     return {
-        "basis": eigenstates["basis"],
-        "dual_basis": eigenstates["basis"],
-        "vector": vector,
+        "basis": StackedBasis(eigenstates["basis"][1], eigenstates["basis"][1]),
+        "data": vector,
     }
 
 
@@ -138,10 +137,10 @@ def calculate_equilibrium_state(
 
 
 def get_tunnelling_simulation_state(
-    eigenstates: EigenstateList[tuple[FundamentalAxis[int]], _B0Inv],
+    eigenstates: EigenstateList[FundamentalBasis[int], _B0Inv],
     initial: DiagonalOperator[_B0Inv, _B0Inv],
     times: np.ndarray[tuple[_L0Inv], np.dtype[np.float_]],
-) -> DiagonalOperatorList[tuple[ExplicitTimeAxis[_L0Inv]], _B0Inv, _B0Inv]:
+) -> DiagonalOperatorList[ExplicitTimeBasis[_L0Inv], _B0Inv, _B0Inv]:
     """
     Get the StateVector given an initial state, and a list of eigenstates.
 
@@ -160,14 +159,15 @@ def get_tunnelling_simulation_state(
     """
     coefficients = get_operator_state_vector_decomposition(initial, eigenstates)
     constants = coefficients[np.newaxis, :] * np.exp(
-        eigenstates["eigenvalues"][np.newaxis, :] * times[:, np.newaxis]
+        eigenstates["eigenvalue"][np.newaxis, :] * times[:, np.newaxis]
     )
-    vectors = np.tensordot(constants, eigenstates["vectors"], axes=(1, 0))
+    vectors = np.tensordot(constants, eigenstates["data"], axes=(1, 0))
     return {
-        "list_basis": (ExplicitTimeAxis(times),),
-        "basis": eigenstates["basis"],
-        "dual_basis": eigenstates["basis"],
-        "vectors": vectors,
+        "basis": StackedBasis(
+            ExplicitTimeBasis(times),
+            StackedBasis(eigenstates["basis"][1], eigenstates["basis"][1]),
+        ),
+        "data": vectors,
     }
 
 
@@ -175,7 +175,7 @@ def calculate_tunnelling_simulation_state(
     matrix: TunnellingMMatrix[_B0Inv],
     initial: DiagonalOperator[_B0Inv, _B0Inv],
     times: np.ndarray[tuple[_L0Inv], np.dtype[np.float_]],
-) -> DiagonalOperatorList[tuple[ExplicitTimeAxis[_L0Inv]], _B0Inv, _B0Inv]:
+) -> DiagonalOperatorList[ExplicitTimeBasis[_L0Inv], _B0Inv, _B0Inv]:
     """
     Get the StateVector given an initial state, and a tunnelling matrix.
 

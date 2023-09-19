@@ -1,16 +1,24 @@
 from __future__ import annotations
 
 import unittest
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 import numpy as np
 
-from surface_potential_analysis.basis.build import (
-    fundamental_basis_from_shape,
+from surface_potential_analysis.axis.axis import (
+    FundamentalBasis,
+    FundamentalTransformedPositionBasis,
+)
+from surface_potential_analysis.axis.stacked_axis import (
+    StackedBasis,
+)
+from surface_potential_analysis.stacked_basis.build import (
+    fundamental_stacked_basis_from_shape,
     momentum_basis_3d_from_resolution,
     position_basis_3d_from_shape,
 )
 from surface_potential_analysis.wavepacket.eigenstate_conversion import (
+    _unfurl_momentum_basis_wavepacket,
     furl_eigenstate,
     unfurl_wavepacket,
 )
@@ -22,14 +30,9 @@ from surface_potential_analysis.wavepacket.localization._wannier90 import (
     _parse_u_mat_file,
 )
 from surface_potential_analysis.wavepacket.wavepacket import (
+    Wavepacket,
     get_wavepacket_sample_fractions,
 )
-
-if TYPE_CHECKING:
-    from surface_potential_analysis.wavepacket.wavepacket import (
-        MomentumBasisWavepacket3d,
-        PositionBasisWavepacket3d,
-    )
 
 rng = np.random.default_rng()
 
@@ -43,11 +46,10 @@ class WavepacketTest(unittest.TestCase):
             rng.integers(1, 10),
             rng.integers(1, 10),
         )
-        wavepacket: PositionBasisWavepacket3d[Any, Any, Any, Any, Any] = {
+        wavepacket: Wavepacket[Any, Any] = {
             "basis": position_basis_3d_from_shape(resolution),
-            "vectors": np.zeros((ns0 * ns1, np.prod(resolution))),
-            "eigenvalues": np.zeros(ns0 * ns1),
-            "list_basis": fundamental_basis_from_shape((ns0, ns1, 1)),  # type: ignore[typeddict-item]
+            "data": np.zeros((ns0 * ns1, np.prod(resolution))),
+            "list_basis": fundamental_stacked_basis_from_shape((ns0, ns1, 1)),  # type: ignore[typeddict-item]
         }
 
         idx = rng.integers(0, np.prod(resolution).item())
@@ -66,18 +68,17 @@ class WavepacketTest(unittest.TestCase):
         np.testing.assert_equal(actual_large[:, idx_array == 0], 0)
 
     def test_unfurl_wavepacket(self) -> None:
-        wavepacket: MomentumBasisWavepacket3d[int, int, int, int, int] = {
+        wavepacket: Wavepacket[Any, Any] = {
             "basis": momentum_basis_3d_from_resolution((3, 3, 3)),
-            "list_basis": fundamental_basis_from_shape((3, 2, 1)),  # type: ignore[typeddict-item]
-            "vectors": np.zeros((3, 2, 27)),
-            "eigenvalues": np.zeros((3, 2)),
+            "list_basis": fundamental_stacked_basis_from_shape((3, 2, 1)),  # type: ignore[typeddict-item]
+            "data": np.zeros((3, 2, 27)),
         }
-        wavepacket["vectors"][0][0][0] = 1
-        wavepacket["vectors"][1][0][0] = 2
-        wavepacket["vectors"][2][0][0] = 3
-        wavepacket["vectors"][0][1][0] = 4
-        wavepacket["vectors"][1][1][0] = 5
-        wavepacket["vectors"][2][1][0] = 6
+        wavepacket["data"][0][0][0] = 1
+        wavepacket["data"][1][0][0] = 2
+        wavepacket["data"][2][0][0] = 3
+        wavepacket["data"][0][1][0] = 4
+        wavepacket["data"][1][1][0] = 5
+        wavepacket["data"][2][1][0] = 6
 
         expected = np.zeros(162)
         expected[np.ravel_multi_index((0, 0, 0), (9, 6, 3))] = 1
@@ -88,19 +89,18 @@ class WavepacketTest(unittest.TestCase):
         expected[np.ravel_multi_index((8, 5, 0), (9, 6, 3))] = 6
 
         eigenstate = unfurl_wavepacket(wavepacket)
-        np.testing.assert_array_equal(eigenstate["vector"], expected / np.sqrt(2 * 3))
+        np.testing.assert_array_equal(eigenstate["data"], expected / np.sqrt(2 * 3))
 
     def test_furl_eigenstate(self) -> None:
-        wavepacket: MomentumBasisWavepacket3d[int, int, int, int, int] = {
+        wavepacket: Wavepacket[Any, Any] = {
             "basis": momentum_basis_3d_from_resolution((3, 3, 3)),
-            "vectors": np.array(rng.random((3, 2, 27)), dtype=complex),
-            "list_basis": fundamental_basis_from_shape((3, 2, 1)),  # type: ignore[typeddict-item]
-            "eigenvalues": np.zeros((3, 2)),
+            "data": np.array(rng.random((3, 2, 27)), dtype=complex),
+            "list_basis": fundamental_stacked_basis_from_shape((3, 2, 1)),  # type: ignore[typeddict-item]
         }
         eigenstate = unfurl_wavepacket(wavepacket)
-        actual = furl_eigenstate(eigenstate, (3, 2, 1))
+        actual = furl_eigenstate(eigenstate, (3, 2, 1))  # type: ignore[arg-type,var-annotated]
 
-        np.testing.assert_array_almost_equal(wavepacket["vectors"], actual["vectors"])
+        np.testing.assert_array_almost_equal(wavepacket["data"], actual["data"])
 
         np.testing.assert_array_almost_equal(
             wavepacket["basis"][0].delta_x, actual["basis"][0].delta_x
@@ -115,13 +115,16 @@ class WavepacketTest(unittest.TestCase):
     def test_get_wavepacket_sample_fractions(self) -> None:
         shape = tuple(rng.integers(1, 10, size=rng.integers(1, 5)))
 
-        actual = get_wavepacket_sample_fractions(shape)
+        actual = get_wavepacket_sample_fractions(
+            fundamental_stacked_basis_from_shape(shape)
+        )
         meshgrid = np.meshgrid(
             *[np.fft.fftfreq(s, 1) for s in shape],
             indexing="ij",
         )
         expected = np.array([x.ravel() for x in meshgrid])
         np.testing.assert_array_almost_equal(expected, actual)
+
     # ! cSpell:disable
     def test_parse_nnkpts_block(self) -> None:
         block = """
@@ -334,3 +337,21 @@ end nnkpts
         actual = _parse_u_mat_file(block)
         np.testing.assert_array_equal(expected, actual)
         np.testing.assert_array_almost_equal(np.abs(expected), np.ones_like(expected))
+
+    def test_unfurl_momentum_basis_wavepacket(self) -> None:
+        ns = rng.integers(1, 5)
+        nf = rng.integers(1, 5)
+        vectors = np.zeros((ns, nf))
+        vectors[0, 0] = 1
+        actual = _unfurl_momentum_basis_wavepacket(
+            {
+                "basis": StackedBasis(
+                    FundamentalTransformedPositionBasis(np.array([2]), nf)
+                ),
+                "list_basis": StackedBasis(FundamentalBasis(ns)),
+                "data": vectors,
+            }
+        )
+        expected = np.zeros(ns * nf)
+        expected[0] = 1 / np.sqrt(ns)
+        np.testing.assert_equal(actual["data"], expected)

@@ -7,8 +7,9 @@ import qutip
 import qutip.ui
 import scipy.sparse
 
-from surface_potential_analysis.axis.axis import FundamentalAxis
-from surface_potential_analysis.basis.util import BasisUtil
+from surface_potential_analysis.axis.axis import FundamentalBasis
+from surface_potential_analysis.axis.stacked_axis import StackedBasis, StackedBasisLike
+from surface_potential_analysis.axis.util import BasisUtil
 from surface_potential_analysis.dynamics.tunnelling_basis import (
     get_basis_from_shape,
 )
@@ -17,7 +18,7 @@ from surface_potential_analysis.dynamics.util import build_hop_operator, get_hop
 if TYPE_CHECKING:
     from collections.abc import Callable
 
-    from surface_potential_analysis.axis.time_axis_like import EvenlySpacedTimeAxis
+    from surface_potential_analysis.axis.time_axis_like import EvenlySpacedTimeBasis
     from surface_potential_analysis.dynamics.incoherent_propagation.tunnelling_matrix import (
         TunnellingAMatrix,
     )
@@ -37,7 +38,7 @@ if TYPE_CHECKING:
     _L0Inv = TypeVar("_L0Inv", bound=int)
     _L1Inv = TypeVar("_L1Inv", bound=int)
     _L2Inv = TypeVar("_L2Inv", bound=int)
-    _AX0Inv = TypeVar("_AX0Inv", bound=EvenlySpacedTimeAxis[Any, Any])
+    _AX0Inv = TypeVar("_AX0Inv", bound=EvenlySpacedTimeBasis[Any, Any, Any])
 
 
 def get_collapse_operators_from_a_matrix(
@@ -59,12 +60,14 @@ def get_collapse_operators_from_a_matrix(
     np.fill_diagonal(matrix["array"], 0)
     return [
         {
-            "basis": matrix["basis"],
-            "dual_basis": matrix["basis"],
-            "array": scipy.sparse.coo_array(
-                ([matrix["array"][idx]], ([np.int32(idx[0])], [np.int32(idx[1])])),
-                shape=matrix["array"].shape,
-            ).toarray(),
+            "basis": StackedBasis(matrix["basis"], matrix["basis"]),
+            "data": np.array(
+                scipy.sparse.coo_array(
+                    ([matrix["array"][idx]], ([np.int32(idx[0])], [np.int32(idx[1])])),
+                    shape=matrix["array"].shape,
+                ).toarray(),
+                dtype=np.float_,
+            ),
         }
         for idx in zip(*np.nonzero(matrix["array"]), strict=True)
     ]
@@ -99,13 +102,12 @@ def get_simplified_collapse_operators_from_a_matrix(
                     continue
 
                 operator = np.sqrt(hop_val) * build_hop_operator(hop, (n_x1, n_x2))
-                array = np.zeros((*util.shape, *util.shape))
+                array = np.zeros((*util.shape, *util.shape), dtype=np.complex_)
                 array[:, :, n_1, :, :, n_0] = operator
                 out.append(
                     {
-                        "basis": matrix["basis"],
-                        "dual_basis": matrix["basis"],
-                        "array": array.reshape(matrix["array"].shape),
+                        "basis": StackedBasis(matrix["basis"], matrix["basis"]),
+                        "data": array.reshape(-1),
                     }
                 )
 
@@ -126,9 +128,9 @@ def get_collapse_operators_from_function(
     ],
 ) -> list[
     SingleBasisOperator[
-        tuple[
-            FundamentalAxis[_L0Inv],
-            FundamentalAxis[_L1Inv],
+        StackedBasisLike[
+            FundamentalBasis[_L0Inv],
+            FundamentalBasis[_L1Inv],
             TunnellingSimulationBandsAxis[_L2Inv],
         ]
     ]
@@ -148,9 +150,9 @@ def get_collapse_operators_from_function(
     """
     operators: list[
         SingleBasisOperator[
-            tuple[
-                FundamentalAxis[_L0Inv],
-                FundamentalAxis[_L1Inv],
+            StackedBasisLike[
+                FundamentalBasis[_L0Inv],
+                FundamentalBasis[_L1Inv],
                 TunnellingSimulationBandsAxis[_L2Inv],
             ]
         ]
@@ -171,8 +173,7 @@ def get_collapse_operators_from_function(
                 data = a_function(int(n0), n1, (0, 0), (d1_stacked[0], d1_stacked[1]))
                 operators.append(
                     {
-                        "basis": basis,
-                        "dual_basis": basis,
+                        "basis": StackedBasis(basis, basis),
                         "array": scipy.sparse.coo_array((data, (i, j)), shape=shape),
                     }
                 )
@@ -187,7 +188,7 @@ def solve_stochastic_schrodinger_equation(
     collapse_operators: list[SingleBasisOperator[_B0Inv]],
     *,
     n_trajectories: _L1Inv,
-) -> StateVectorList[tuple[FundamentalAxis[_L1Inv], _AX0Inv], _B0Inv]:
+) -> StateVectorList[StackedBasisLike[FundamentalBasis[_L1Inv], _AX0Inv], _B0Inv]:
     ...
 
 
@@ -199,7 +200,7 @@ def solve_stochastic_schrodinger_equation(
     collapse_operators: list[SingleBasisOperator[_B0Inv]],
     *,
     n_trajectories: Literal[1] = 1,
-) -> StateVectorList[tuple[FundamentalAxis[Literal[1]], _AX0Inv], _B0Inv]:
+) -> StateVectorList[StackedBasisLike[FundamentalBasis[Literal[1]], _AX0Inv], _B0Inv]:
     ...
 
 
@@ -211,8 +212,8 @@ def solve_stochastic_schrodinger_equation(
     *,
     n_trajectories: _L1Inv | Literal[1] = 1,
 ) -> (
-    StateVectorList[tuple[FundamentalAxis[Literal[1]], _AX0Inv], _B0Inv]
-    | StateVectorList[tuple[FundamentalAxis[_L1Inv], _AX0Inv], _B0Inv]
+    StateVectorList[StackedBasisLike[FundamentalBasis[Literal[1]], _AX0Inv], _B0Inv]
+    | StateVectorList[StackedBasisLike[FundamentalBasis[_L1Inv], _AX0Inv], _B0Inv]
 ):
     """
     Given an initial state, use the stochastic schrodinger equation to solve the dynamics of the system.
@@ -228,12 +229,16 @@ def solve_stochastic_schrodinger_equation(
     -------
     StateVectorList[_B0Inv, _L0Inv]
     """
-    hamiltonian_qobj = qutip.Qobj(hamiltonian["array"])
+    hamiltonian_qobj = qutip.Qobj(
+        hamiltonian["data"].reshape(hamiltonian["basis"].shape)
+    )
     initial_state_qobj = qutip.Qobj(
-        initial_state["vector"], shape=initial_state["vector"].shape
+        initial_state["data"], shape=initial_state["data"].shape
     )
 
-    sc_ops = [qutip.Qobj(op["array"]) for op in collapse_operators]
+    sc_ops = [
+        qutip.Qobj(op["data"].reshape(op["basis"].shape)) for op in collapse_operators
+    ]
     result = qutip.ssesolve(
         hamiltonian_qobj,
         initial_state_qobj,
@@ -247,9 +252,9 @@ def solve_stochastic_schrodinger_equation(
         progress_bar=qutip.ui.EnhancedTextProgressBar(),
     )
     return {  # type: ignore[return-value]
-        "list_basis": (FundamentalAxis(n_trajectories), times),
+        "list_basis": StackedBasis(FundamentalBasis(n_trajectories), times),
         "basis": hamiltonian["basis"],
-        "vectors": np.array(
+        "data": np.array(
             [
                 np.asarray([state.data.toarray().reshape(-1) for state in trajectory])
                 for trajectory in result.states

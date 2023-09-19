@@ -2,11 +2,13 @@ from __future__ import annotations
 
 import numpy as np
 from matplotlib import pyplot as plt
-from surface_potential_analysis.basis.util import AxisWithLengthBasisUtil
+from surface_potential_analysis.axis.util import BasisUtil
 from surface_potential_analysis.state_vector.conversion import (
     convert_state_vector_to_position_basis,
 )
-from surface_potential_analysis.wavepacket.get_eigenstate import get_state_vector
+from surface_potential_analysis.wavepacket.get_eigenstate import (
+    get_wavepacket_state_vector,
+)
 from surface_potential_analysis.wavepacket.localization import (
     localize_tightly_bound_wavepacket_idx,
 )
@@ -19,9 +21,11 @@ def plot_wavepacket_localization() -> None:
     fig, ax = plt.subplots()
 
     wavepacket = get_wavepacket_hydrogen(0)
-    converted = convert_state_vector_to_position_basis(get_state_vector(wavepacket, 0))
-    idx_flat = np.argmax(np.abs(converted["vector"]), axis=-1)
-    util = AxisWithLengthBasisUtil(converted["basis"])
+    converted = convert_state_vector_to_position_basis(
+        get_wavepacket_state_vector(wavepacket, 0)
+    )
+    idx_flat = np.argmax(np.abs(converted["data"]), axis=-1)
+    util = BasisUtil(converted["basis"])
     idx_max = util.get_stacked_index(idx_flat)
 
     normalized = localize_tightly_bound_wavepacket_idx(

@@ -2,37 +2,27 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, Generic, TypedDict, TypeVar
 
-from surface_potential_analysis.basis.basis import (
-    Basis3d,
-    FundamentalMomentumBasis3d,
-    FundamentalPositionBasis3d,
-)
+from surface_potential_analysis.axis.axis_like import AxisWithLengthLike3d
+from surface_potential_analysis.axis.stacked_axis import StackedBasisLike
 
 if TYPE_CHECKING:
     import numpy as np
 
     pass
 
-_B3d0_co = TypeVar("_B3d0_co", bound=Basis3d[Any, Any, Any], covariant=True)
+Overlap3dBasis = StackedBasisLike[
+    AxisWithLengthLike3d[Any, Any],
+    AxisWithLengthLike3d[Any, Any],
+    AxisWithLengthLike3d[Any, Any],
+]
+_B3d0 = TypeVar("_B3d0", bound=StackedBasisLike[*tuple[Any, ...]])
 
 
-class Overlap3d(TypedDict, Generic[_B3d0_co]):
+class Overlap3d(TypedDict, Generic[_B3d0]):
     """Represents the result of an overlap calculation of two wavepackets."""
 
-    basis: _B3d0_co
-    vector: np.ndarray[tuple[int], np.dtype[np.complex_]]
-
-
-_L0Inv = TypeVar("_L0Inv", bound=int)
-_L1Inv = TypeVar("_L1Inv", bound=int)
-_L2Inv = TypeVar("_L2Inv", bound=int)
-
-FundamentalMomentumOverlap = Overlap3d[
-    FundamentalMomentumBasis3d[_L0Inv, _L1Inv, _L2Inv]
-]
-FundamentalPositionOverlap = Overlap3d[
-    FundamentalPositionBasis3d[_L0Inv, _L1Inv, _L2Inv]
-]
+    basis: _B3d0
+    data: np.ndarray[tuple[int], np.dtype[np.complex_]]
 
 
 def get_overlap_cache_filename(

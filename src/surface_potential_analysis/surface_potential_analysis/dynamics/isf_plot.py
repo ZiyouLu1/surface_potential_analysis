@@ -20,16 +20,18 @@ if TYPE_CHECKING:
     from matplotlib.figure import Figure
     from matplotlib.lines import Line2D
 
-    from surface_potential_analysis.axis.axis_like import AxisLike
-    from surface_potential_analysis.axis.time_axis_like import AxisWithTimeLike
+    from surface_potential_analysis.axis.axis_like import BasisLike
+    from surface_potential_analysis.axis.stacked_axis import StackedBasisLike
+    from surface_potential_analysis.axis.time_axis_like import BasisWithTimeLike
     from surface_potential_analysis.state_vector.eigenvalue_list import EigenvalueList
     from surface_potential_analysis.util.plot import Scale
     from surface_potential_analysis.util.util import Measure
 
-    _B0Inv = TypeVar("_B0Inv", bound=tuple[AxisWithTimeLike[Any, Any]])
+    _B0Inv = TypeVar("_B0Inv", bound=BasisWithTimeLike[Any, Any])
     _N0Inv = TypeVar("_N0Inv", bound=int)
     _B0StackedInv = TypeVar(
-        "_B0StackedInv", bound=tuple[AxisLike[Any, Any], AxisWithTimeLike[Any, Any]]
+        "_B0StackedInv",
+        bound=StackedBasisLike[BasisLike[Any, Any], BasisWithTimeLike[Any, Any]],
     )
 
 
@@ -95,7 +97,12 @@ def plot_average_isf_against_time(
         _description_
     """
     averaged = average_eigenvalues(eigenvalues, (0,))
-    return plot_isf_against_time(averaged, ax=ax, measure=measure, scale=scale)
+    return plot_isf_against_time(
+        {"basis": averaged["basis"][0], "data": averaged["data"]},
+        ax=ax,
+        measure=measure,
+        scale=scale,
+    )
 
 
 def plot_isf_4_variable_fit_against_time(

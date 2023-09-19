@@ -29,7 +29,7 @@ def get_copper_eigenvalues() -> np.ndarray[tuple[int, int, int], np.dtype[np.flo
     out = np.zeros((10, 12, 12))
     for i in range(10):
         wavepacket = get_wavepacket_hydrogen(i)
-        out[i] = wavepacket["eigenvalues"]
+        out[i] = wavepacket["eigenvalue"]
     return out  # type: ignore[no-any-return]
 
 

@@ -4,17 +4,17 @@ from typing import Any
 
 import numpy as np
 from surface_potential_analysis.axis.plot import plot_explicit_basis_states_x
-from surface_potential_analysis.basis.potential_basis import (
-    PotentialBasisConfig,
-    get_potential_basis_config_eigenstates,
-    select_minimum_potential_3d,
-)
 from surface_potential_analysis.potential.plot import (
     plot_potential_1d_x,
 )
 from surface_potential_analysis.potential.potential import (
     normalize_potential,
     truncate_potential,
+)
+from surface_potential_analysis.stacked_basis.potential_basis import (
+    PotentialBasisConfig,
+    get_potential_basis_config_eigenstates,
+    select_minimum_potential_3d,
 )
 from surface_potential_analysis.state_vector.eigenstate_collection_plot import (
     plot_states_1d_x,
@@ -41,11 +41,11 @@ def plot_deuterium_basis() -> None:
         bloch_fraction=np.array([0, 0, 0]),
         resolution=(2, 2, 12),
     )
-    fig, ax, _ = plot_explicit_basis_states_x(hamiltonian["basis"][2])
+    fig, ax, _ = plot_explicit_basis_states_x(hamiltonian["basis"][0][2])
 
     potential = get_interpolated_potential(shape)
     minimum = select_minimum_potential_3d(potential)
-    _, _, _ = plot_potential_1d_x(minimum, 0, (), ax=ax.twinx())
+    _, _, _ = plot_potential_1d_x(minimum, (0,), (), ax=ax.twinx())
 
     fig.show()
     input()
@@ -58,11 +58,11 @@ def plot_hydrogen_basis() -> None:
         bloch_fraction=np.array([0, 0, 0]),
         resolution=(2, 2, 12),
     )
-    fig, ax, _ = plot_explicit_basis_states_x(hamiltonian["basis"][2])
+    fig, ax, _ = plot_explicit_basis_states_x(hamiltonian["basis"][0][2])
 
     potential = get_interpolated_potential(shape)
     minimum = select_minimum_potential_3d(potential)
-    _, _, _ = plot_potential_1d_x(minimum, 0, (), ax=ax.twinx())
+    _, _, _ = plot_potential_1d_x(minimum, (0,), (), ax=ax.twinx())
 
     fig.show()
     input()
@@ -73,9 +73,9 @@ def plot_hydrogen_basis_extrapolated() -> None:
     potential = normalize_potential(get_raw_potential_reciprocal_grid())
     potential = extrapolate_uneven_potential(potential)
     interpolated = interpolate_nickel_potential(potential, shape)
-    interpolated["vector"] = 0.5 * (
-        interpolated["vector"]
-        + interpolated["vector"].reshape(shape).swapaxes(0, 1).ravel()
+    interpolated["data"] = 0.5 * (
+        interpolated["data"]
+        + interpolated["data"].reshape(shape).swapaxes(0, 1).ravel()
     )
     config: PotentialBasisConfig[Any, Any] = {
         "n": 16,
@@ -83,26 +83,19 @@ def plot_hydrogen_basis_extrapolated() -> None:
         "potential": select_minimum_potential_3d(interpolated),
     }
     states = get_potential_basis_config_eigenstates(config)
-    print(states["eigenvalues"])
-    a_max = np.argmax(np.abs(states["vectors"]), axis=1)
-    states["vectors"] = np.array(
-        [
-            vector * np.exp(-1j * np.angle(vector[a]))
-            for (a, vector) in zip(a_max, states["vectors"])
-        ]
-    )
-    fig, ax = plot_states_1d_x(states)
+
+    fig, _ = plot_states_1d_x(states)
     fig.show()
-    fig, ax = plot_states_1d_x(states, measure="imag")
+    fig, _ = plot_states_1d_x(states, measure="imag")
     fig.show()
-    fig, ax = plot_states_1d_x(states, measure="angle")
+    fig, _ = plot_states_1d_x(states, measure="angle")
     fig.show()
 
     potential = truncate_potential(potential, cutoff=3.5e-19, n=5, offset=1e-20)
     interpolated = interpolate_nickel_potential(potential, shape)
-    interpolated["vector"] = 0.5 * (
-        interpolated["vector"]
-        + interpolated["vector"].reshape(shape).swapaxes(0, 1).ravel()
+    interpolated["data"] = 0.5 * (
+        interpolated["data"]
+        + interpolated["data"].reshape(shape).swapaxes(0, 1).ravel()
     )
     config_1: PotentialBasisConfig[Any, Any] = {
         "n": 16,
@@ -110,18 +103,11 @@ def plot_hydrogen_basis_extrapolated() -> None:
         "potential": select_minimum_potential_3d(interpolated),
     }
     states = get_potential_basis_config_eigenstates(config_1)
-    a_max = np.argmax(np.abs(states["vectors"]), axis=1)
-    states["vectors"] = np.array(
-        [
-            vector * np.exp(-1j * np.angle(vector[a]))
-            for (a, vector) in zip(a_max, states["vectors"])
-        ]
-    )
 
-    fig, ax = plot_states_1d_x(states)
+    fig, _ = plot_states_1d_x(states)
     fig.show()
-    fig, ax = plot_states_1d_x(states, measure="imag")
+    fig, _ = plot_states_1d_x(states, measure="imag")
     fig.show()
-    fig, ax = plot_states_1d_x(states, measure="angle")
+    fig, _ = plot_states_1d_x(states, measure="angle")
     fig.show()
     input()

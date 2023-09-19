@@ -11,9 +11,12 @@ from .s1_potential import get_interpolated_potential
 if TYPE_CHECKING:
     import numpy as np
     from surface_potential_analysis.axis.axis import (
-        FundamentalTransformedPositionAxis1d,
+        FundamentalTransformedPositionBasis,
     )
-    from surface_potential_analysis.operator.operator import Operator
+    from surface_potential_analysis.axis.stacked_axis import (
+        StackedBasisLike,
+    )
+    from surface_potential_analysis.operator.operator import SingleBasisOperator
 
 _L0Inv = TypeVar("_L0Inv", bound=int)
 
@@ -23,9 +26,8 @@ SODIUM_MASS = 3.8175458e-26
 def get_hamiltonian(
     shape: tuple[_L0Inv],
     bloch_fraction: np.ndarray[tuple[Literal[1]], np.dtype[np.float_]] | None = None,
-) -> Operator[
-    tuple[FundamentalTransformedPositionAxis1d[_L0Inv]],
-    tuple[FundamentalTransformedPositionAxis1d[_L0Inv]],
+) -> SingleBasisOperator[
+    StackedBasisLike[FundamentalTransformedPositionBasis[_L0Inv, Literal[1]]],
 ]:
     potential = get_interpolated_potential(shape)
     return total_surface_hamiltonian(potential, SODIUM_MASS, bloch_fraction)

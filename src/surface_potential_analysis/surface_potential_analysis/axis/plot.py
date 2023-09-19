@@ -1,34 +1,32 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, TypeVar
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
 from matplotlib import pyplot as plt
 
 from surface_potential_analysis.util.util import Measure, get_measured_data
 
-from .util import AxisWithLengthLikeUtil
+from .util import BasisUtil
 
 if TYPE_CHECKING:
     from matplotlib.axes import Axes
     from matplotlib.figure import Figure
     from matplotlib.lines import Line2D
 
-    from surface_potential_analysis._types import SingleFlatIndexLike
-    from surface_potential_analysis.axis.axis_like import AxisWithLengthLike
-
-    _A0Inv = TypeVar("_A0Inv", bound=AxisWithLengthLike[int, int, Any])
+    from surface_potential_analysis.axis.axis_like import BasisWithLengthLike
+    from surface_potential_analysis.types import SingleFlatIndexLike
 
 
 def plot_explicit_basis_states_x(
-    basis: _A0Inv,
+    basis: BasisWithLengthLike[Any, Any, Any],
     *,
     ax: Axes | None = None,
     measure: Measure = "abs",
 ) -> tuple[Figure, Axes, list[Line2D]]:
     """Plot basis states against position."""
     fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
-    util = AxisWithLengthLikeUtil(basis)
+    util = BasisUtil(basis)
 
     x_points = np.linalg.norm(util.fundamental_x_points, axis=0)
     lines: list[Line2D] = []
@@ -45,7 +43,7 @@ def plot_explicit_basis_states_x(
 
 
 def plot_explicit_basis_state_x(
-    basis: _A0Inv,
+    basis: BasisWithLengthLike[Any, Any, Any],
     idx: SingleFlatIndexLike = 0,
     *,
     ax: Axes | None = None,
@@ -53,7 +51,7 @@ def plot_explicit_basis_state_x(
 ) -> tuple[Figure, Axes, Line2D]:
     """Plot basis states against position."""
     fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
-    util = AxisWithLengthLikeUtil(basis)
+    util = BasisUtil(basis)
 
     x_points = np.linalg.norm(util.fundamental_x_points, axis=0)
     data = get_measured_data(util.vectors[idx], measure)

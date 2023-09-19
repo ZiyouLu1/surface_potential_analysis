@@ -4,11 +4,11 @@ from typing import TYPE_CHECKING, Any, Literal, ParamSpec, TypeVar
 
 import numpy as np
 
-from surface_potential_analysis._types import SingleStackedIndexLike, _IntLike_co
-
 if TYPE_CHECKING:
     from collections.abc import Sequence
     from types import EllipsisType
+
+    from surface_potential_analysis.types import IntLike_co, SingleStackedIndexLike
 
     P = ParamSpec("P")
     R = TypeVar("R")
@@ -17,10 +17,10 @@ if TYPE_CHECKING:
 
 
 def slice_along_axis(
-    slice_at_axis: slice | _IntLike_co | None, axis: int = -1
+    slice_at_axis: slice | IntLike_co | None, axis: IntLike_co = -1
 ) -> (
-    tuple[EllipsisType | slice | _IntLike_co | None, ...]
-    | tuple[slice | _IntLike_co | None, ...]
+    tuple[EllipsisType | slice | IntLike_co | None, ...]
+    | tuple[slice | IntLike_co | None, ...]
 ):
     """Return a slice such that the 1d slice provided by slice_at_axis, slices along the dimension provided."""
     from_end = False
@@ -35,12 +35,9 @@ def slice_along_axis(
     return (*slice_padding, slice_at_axis)
 
 
-_AX0Inv = TypeVar("_AX0Inv", bound=tuple[_IntLike_co, ...])
-
-
 def slice_ignoring_axes(
-    old_slice: Sequence[slice | _IntLike_co | None], axes: _AX0Inv
-) -> tuple[slice | _IntLike_co | None, ...]:
+    old_slice: Sequence[slice | IntLike_co | None], axes: tuple[IntLike_co, ...]
+) -> tuple[slice | IntLike_co | None, ...]:
     """
     Given a slice, insert slice(None) everywhere given in axes.
 
@@ -57,12 +54,12 @@ def slice_ignoring_axes(
         _description_
     """
     old_slice = list(old_slice)
-    for axis in sorted(axes):
+    for axis in sorted(int(a) for a in axes):
         old_slice.insert(axis, slice(None))
     return tuple(old_slice)
 
 
-def get_position_in_sorted(axes: _AX0Inv) -> tuple[_IntLike_co, ...]:
+def get_position_in_sorted(axes: tuple[IntLike_co, ...]) -> tuple[IntLike_co, ...]:
     """
     Given a list of axes get the index in the sorted list.
 
@@ -76,12 +73,12 @@ def get_position_in_sorted(axes: _AX0Inv) -> tuple[_IntLike_co, ...]:
     -------
     _AX0Inv
     """
-    return tuple(np.argsort(np.argsort(axes)))
+    return tuple(np.argsort(np.argsort(axes)))  # type: ignore Tuple is an array-like
 
 
 def get_data_in_axes(
     data: np.ndarray[_S0Inv, _DTInv],
-    axes: _AX0Inv,
+    axes: tuple[IntLike_co, ...],
     idx: SingleStackedIndexLike,
 ) -> np.ndarray[tuple[int, ...], _DTInv]:
     """
