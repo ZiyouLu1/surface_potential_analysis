@@ -26,8 +26,8 @@ from surface_potential_analysis.wavepacket.localization._tight_binding import (
     _get_global_phases,
 )
 from surface_potential_analysis.wavepacket.localization._wannier90 import (
+    _get_localization_operator_from_u_mat_file,
     _parse_nnkpts_file,  # cSpell:disable-line
-    _parse_u_mat_file,
 )
 from surface_potential_analysis.wavepacket.wavepacket import (
     Wavepacket,
@@ -334,7 +334,7 @@ end nnkpts
                 -0.1269297494 + 0.9919117091j,
             ]
         )
-        actual = _parse_u_mat_file(block)
+        actual = _get_localization_operator_from_u_mat_file(block)
         np.testing.assert_array_equal(expected, actual)
         np.testing.assert_array_almost_equal(np.abs(expected), np.ones_like(expected))
 

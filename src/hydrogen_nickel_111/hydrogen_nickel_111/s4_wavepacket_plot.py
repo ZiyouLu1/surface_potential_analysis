@@ -45,7 +45,6 @@ from surface_potential_analysis.wavepacket.plot import (
 from surface_potential_analysis.wavepacket.wavepacket import (
     Wavepacket,
     get_unfurled_basis,
-    get_wavepacket_sample_fractions,
 )
 
 from .s4_wavepacket import (
@@ -153,21 +152,6 @@ def plot_wavepacket_points_john() -> None:
     save_figure(fig, "john_wavepacket_points.png")
 
 
-def plot_wavepacket_points_me() -> None:
-    fractions = get_wavepacket_sample_fractions(np.array([10, 10]))
-    fig, ax = plt.subplots()
-    (line,) = ax.plot(*fractions[0:2])
-    line.set_linestyle("")
-    line.set_marker("x")
-    ax.set_title("Plot of points as chosen by Me")
-    ax.set_aspect("equal", adjustable="box")
-    ax.set_ylabel("ky")
-    ax.set_xlabel("kx")
-    fig.show()
-    input()
-    save_figure(fig, "my_wavepacket_points.png")
-
-
 def animate_nickel_wavepacket() -> None:
     wavepacket = get_two_point_localized_wavepacket_hydrogen(0)
     fig, _, _anim0 = animate_wavepacket_3d_x(wavepacket, scale="symlog")
@@ -187,9 +171,7 @@ def plot_two_point_wavepacket_with_idx() -> None:
         fig, ax = plt.subplots()
 
         idx0, idx1 = get_wavepacket_two_points(normalized, offset)
-        unfurled_basis: StackedBasisLike = get_unfurled_basis(
-            normalized["list_basis"], normalized["basis"]
-        )
+        unfurled_basis = get_unfurled_basis(normalized["basis"])
         plot_fundamental_x_at_index_projected_2d(unfurled_basis, idx0, (0, 1), ax=ax)
         plot_fundamental_x_at_index_projected_2d(unfurled_basis, idx1, (0, 1), ax=ax)
 

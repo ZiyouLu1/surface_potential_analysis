@@ -61,8 +61,8 @@ def get_most_localized_free_state_vectors(
     basis: WavepacketBasis[_SB0Inv, _SBL0Inv],
     shape: tuple[IntLike_co, ...],
 ) -> StateVectorList[
-    StackedBasis[*tuple[FundamentalBasis[int], ...]],
-    StackedBasis[*tuple[TransformedPositionBasis[Any, Any, Any], ...]],
+    StackedBasisLike[*tuple[FundamentalBasis[int], ...]],
+    StackedBasisLike[*tuple[TransformedPositionBasis[Any, Any, Any], ...]],
 ]:
     """
     Get the most localized free states on the surface.

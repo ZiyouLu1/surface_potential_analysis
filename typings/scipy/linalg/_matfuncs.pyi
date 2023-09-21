@@ -6,7 +6,7 @@ __all__ = ['expm', 'cosm', 'sinm', 'tanm', 'coshm', 'sinhm', 'tanhm', 'logm', 'f
 eps = ...
 feps = ...
 _array_precision = ...
-def fractional_matrix_power(A, t): # -> NDArray[Any] | Any | NDArray[Unknown] | ndarray[Any, Any]:
+def fractional_matrix_power(A, t):
     """
     Compute the fractional power of a matrix.
 
@@ -47,7 +47,7 @@ def fractional_matrix_power(A, t): # -> NDArray[Any] | Any | NDArray[Unknown] | 
     """
     ...
 
-def logm(A, disp=...): # -> Any | ndarray[Any, _dtype] | tuple[Unknown | Any | ndarray[Any, _dtype], Unknown | floating[Any]]:
+def logm(A, disp=...): # -> tuple[Unknown, Unknown | floating[Any]]:
     """
     Compute matrix logarithm.
 

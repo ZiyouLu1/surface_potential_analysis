@@ -20,6 +20,7 @@ if TYPE_CHECKING:
     from surface_potential_analysis.axis.axis import (
         ExplicitBasis,
         FundamentalBasis,
+        FundamentalTransformedPositionBasis,
         TransformedPositionBasis,
     )
     from surface_potential_analysis.axis.block_fraction_axis import (
@@ -62,8 +63,8 @@ def get_eigenstate_collection_hydrogen(
         bloch_fraction: np.ndarray[tuple[Literal[3]], np.dtype[np.float_]]
     ) -> SingleBasisOperator[
         StackedBasisLike[
-            TransformedPositionBasis[_L0, _L0, Literal[3]],
-            TransformedPositionBasis[_L1, _L1, Literal[3]],
+            FundamentalTransformedPositionBasis[_L0, Literal[3]],
+            FundamentalTransformedPositionBasis[_L1, Literal[3]],
             ExplicitBasis[Literal[250], _L2, Literal[3]],
         ]
     ]:
@@ -104,8 +105,8 @@ def get_eigenstate_collection_deuterium(
         bloch_fraction: np.ndarray[tuple[Literal[3]], np.dtype[np.float_]]
     ) -> SingleBasisOperator[
         StackedBasisLike[
-            TransformedPositionBasis[_L0, _L0, Literal[3]],
-            TransformedPositionBasis[_L1, _L1, Literal[3]],
+            FundamentalTransformedPositionBasis[_L0, Literal[3]],
+            FundamentalTransformedPositionBasis[_L1, Literal[3]],
             ExplicitBasis[Literal[250], _L2, Literal[3]],
         ]
     ]:

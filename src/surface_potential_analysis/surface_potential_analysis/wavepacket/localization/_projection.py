@@ -48,6 +48,10 @@ from surface_potential_analysis.wavepacket.get_eigenstate import (
     get_tight_binding_state,
     get_wavepacket_state_vector,
 )
+from surface_potential_analysis.wavepacket.localization.localization_operator import (
+    LocalizationOperator,
+    get_localized_wavepackets,
+)
 from surface_potential_analysis.wavepacket.wavepacket import (
     WavepacketList,
     get_unfurled_basis,
@@ -59,6 +63,7 @@ if TYPE_CHECKING:
     from surface_potential_analysis.axis.axis import (
         FundamentalPositionBasis,
     )
+    from surface_potential_analysis.operator.operator import Operator
     from surface_potential_analysis.state_vector.eigenvalue_list import EigenvalueList
     from surface_potential_analysis.state_vector.state_vector_list import (
         StateVectorList,
@@ -77,10 +82,10 @@ _SB1 = TypeVar("_SB1", bound=StackedBasisLike[*tuple[Any, ...]])
 _SBL0 = TypeVar("_SBL0", bound=StackedBasisLike[*tuple[Any, ...]])
 _SBL1 = TypeVar("_SBL1", bound=StackedBasisLike[*tuple[Any, ...]])
 
-_B0 = TypeVar("_B0Inv", bound=BasisLike[Any, Any])
-_B1 = TypeVar("_B1Inv", bound=BasisLike[Any, Any])
-_B2 = TypeVar("_B2Inv", bound=BasisLike[Any, Any])
-_B3Inv = TypeVar("_B3Inv", bound=BasisLike[Any, Any])
+_B0 = TypeVar("_B0", bound=BasisLike[Any, Any])
+_B1 = TypeVar("_B1", bound=BasisLike[Any, Any])
+_B2 = TypeVar("_B2", bound=BasisLike[Any, Any])
+_B3 = TypeVar("_B3", bound=BasisLike[Any, Any])
 
 
 def get_projection_matrix(
@@ -102,7 +107,6 @@ def get_projection_matrix(
     np.ndarray[tuple[int], np.dtype[np.complex_]]
     """
     coefficients = np.zeros((len(states), len(projections)), dtype=np.complex_)
-    input(projections["basis"], states["basis"])
     for j, projection in enumerate(get_all_states(projections)):
         projection_dual = as_dual_vector(projection)
         converted = convert_state_dual_vector_to_basis(projection_dual, states["basis"])
@@ -150,16 +154,16 @@ def localize_wavepacket_projection(
 
 def get_state_projections_many_band(
     states: StateVectorList[_B0, _B2],
-    projections: StateVectorList[_B1, _B3Inv],
-) -> EigenvalueList[StackedBasisLike[*tuple[_B0, _B1]]]:
+    projections: StateVectorList[_B1, _B3],
+) -> Operator[_B0, _B1]:
     converted = convert_state_vector_list_to_basis(projections, states["basis"][1])
     return calculate_inner_product_states(states, converted)
 
 
 def _get_orthogonal_projected_states_many_band(
-    projections: StateVectorList[_B0, _B2],
-    states: StateVectorList[_B1, _SBL1],
-) -> StateVectorList[_B0, _SBL1]:
+    states: StateVectorList[_B0, _SBL0],
+    projections: StateVectorList[_B1, _B2],
+) -> Operator[_B1, _B0]:
     projected = get_state_projections_many_band(states, projections)
     # Use SVD to generate orthogonal matrix u v_dagger
     u, _s, v_dagger = scipy.linalg.svd(
@@ -170,22 +174,34 @@ def _get_orthogonal_projected_states_many_band(
         check_finite=True,
     )
     orthonormal_a = np.tensordot(u, v_dagger, axes=(1, 0))
-    q, r = scipy.linalg.qr(
-        projected["data"].reshape(projected["basis"].shape),
-        overwrite_a=False,
-        check_finite=True,
-        mode="economic",
-    )
-    # ! cq, r = scipy.linalg.qr_multiply(
-    # !     projected["data"].reshape(projected["basis"].shape),
-    # !     states["data"].reshape(states["basis"].shape),
-    # !     mode="left",
-    # ! )
     return {
-        "basis": StackedBasis(projections["basis"][0], states["basis"][1]),
-        "data": np.tensordot(
-            orthonormal_a, states["data"].reshape(states["basis"].shape), axes=(0, 0)
-        ).reshape(-1),
+        "basis": StackedBasis(projections["basis"][0], states["basis"][0]),
+        "data": orthonormal_a.T.reshape(-1),  # Maybe this should be .conj().T ??
+    }
+
+
+def get_localization_operator_for_projections(
+    wavepackets: WavepacketList[_B0, _SB0, _SBL0],
+    projections: StateVectorList[_B1, _B2],
+) -> LocalizationOperator[_SB0, _B1, _B0]:
+    converted = convert_state_vector_list_to_basis(
+        wavepackets,
+        stacked_basis_as_fundamental_momentum_basis(wavepackets["basis"][1]),
+    )
+    states = [
+        get_states_at_bloch_idx(converted, idx)
+        for idx in range(converted["basis"][0][1].n)
+    ]
+    data = [
+        _get_orthogonal_projected_states_many_band(s, projections)["data"]
+        for s in states
+    ]
+    return {
+        "basis": StackedBasis(
+            wavepackets["basis"][0][1],
+            StackedBasis(projections["basis"][0], wavepackets["basis"][0][0]),
+        ),
+        "data": np.array(data, dtype=np.complex_).reshape(-1),
     }
 
 
@@ -205,26 +221,8 @@ def localize_wavepacket_projection_many_band(
     -------
     Wavepacket[_B0Inv, _B0Inv]
     """
-    converted = convert_state_vector_list_to_basis(
-        wavepackets,
-        stacked_basis_as_fundamental_momentum_basis(wavepackets["basis"][1]),
-    )
-    states = [
-        get_states_at_bloch_idx(converted, idx)
-        for idx in range(converted["basis"][0][1].n)
-    ]
-    # block idx, projection idx, wavefunction idx
-    projected = [
-        _get_orthogonal_projected_states_many_band(projections, s) for s in states
-    ]
-    final_list_basis = StackedBasis(projections["basis"][0], converted["basis"][0][1])
-    vectors = np.transpose(
-        [w["data"].reshape(w["basis"].shape) for w in projected], axes=(1, 0, 2)
-    )
-    return {
-        "basis": StackedBasis(final_list_basis, converted["basis"][1]),
-        "data": vectors.reshape(-1),
-    }
+    operator = get_localization_operator_for_projections(wavepackets, projections)
+    return get_localized_wavepackets(wavepackets, operator)
 
 
 def localize_tight_binding_projection(

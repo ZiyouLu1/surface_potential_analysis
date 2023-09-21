@@ -25,6 +25,10 @@ from surface_potential_analysis.wavepacket.plot import (
     plot_wavepacket_2d_x,
     plot_wavepacket_sample_frequencies,
 )
+from surface_potential_analysis.wavepacket.wavepacket import (
+    get_wavepackets,
+    wavepacket_list_into_iter,
+)
 
 from .s4_wavepacket import (
     get_all_wavepackets_hydrogen,
@@ -85,7 +89,9 @@ def plot_tight_binding_projection_localized_wavepacket_hydrogen() -> None:
 
 def plot_energies() -> None:
     fig, ax = plt.subplots()
-    for wavepacket in get_all_wavepackets_hydrogen()[4:6]:
+    for wavepacket in wavepacket_list_into_iter(
+        get_wavepackets(get_all_wavepackets_hydrogen(), slice(4, 6))
+    ):
         plot_eigenvalues_1d_x(wavepacket, ax=ax)
     fig.show()
     input()

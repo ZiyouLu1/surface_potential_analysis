@@ -34,9 +34,13 @@ _B0 = TypeVarTuple("_B0")
 _B1 = TypeVarTuple("_B1")
 _B0Inv = TypeVar("_B0Inv", bound=BasisLike[Any, Any])
 
+# ruff: noqa: D102
+
 
 @runtime_checkable
 class StackedBasisLike(BasisLike[Any, Any], Protocol[*_B0]):
+    """Represents a basis formed from two disjoint basis."""
+
     @property
     def ndim(self: StackedBasisLike[*tuple[_B0Inv, ...]]) -> int:
         return len(self.fundamental_shape)
@@ -90,7 +94,7 @@ class StackedBasisLike(BasisLike[Any, Any], Protocol[*_B0]):
     def __getitem__(self: StackedBasisLike[*tuple[_B0Inv, ...]], index: int) -> _B0Inv:
         ...
 
-    @overload  # TODO: return StackedAxisLike?
+    @overload
     def __getitem__(self, index: slice) -> StackedBasisLike[*tuple[Union[*_B0], ...]]:
         ...
 
@@ -129,6 +133,8 @@ def _convert_stacked_vector(
 
 
 class StackedBasis(StackedBasisLike[Unpack[_B0]]):
+    """Represents a basis formed from two disjoint basis."""
+
     _axes: tuple[Unpack[_B0]]
 
     def __init__(self, *args: Unpack[_B0]) -> None:
@@ -215,7 +221,7 @@ class StackedBasis(StackedBasisLike[Unpack[_B0]]):
     def __getitem__(self: StackedBasisLike[*tuple[_B0Inv, ...]], index: int) -> _B0Inv:
         ...
 
-    @overload  # TODO: return StackedAxisLike?
+    @overload
     def __getitem__(self, index: slice) -> StackedBasisLike[*tuple[Union[*_B0], ...]]:
         ...
 

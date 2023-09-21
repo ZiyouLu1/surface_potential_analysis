@@ -21,7 +21,7 @@ if TYPE_CHECKING:
     from surface_potential_analysis.axis.axis import (
         ExplicitBasis,
         FundamentalPositionBasis1d,
-        TransformedPositionBasis,
+        FundamentalTransformedPositionBasis,
     )
     from surface_potential_analysis.axis.stacked_axis import StackedBasisLike
     from surface_potential_analysis.operator import SingleBasisOperator
@@ -43,8 +43,8 @@ def get_hamiltonian_hydrogen(
     resolution: tuple[_L3, _L4, _L5],
 ) -> SingleBasisOperator[
     StackedBasisLike[
-        TransformedPositionBasis[_L3, _L3, Literal[3]],
-        TransformedPositionBasis[_L4, _L4, Literal[3]],
+        FundamentalTransformedPositionBasis[_L3, Literal[3]],
+        FundamentalTransformedPositionBasis[_L4, Literal[3]],
         ExplicitBasis[_L2, _L5, Literal[3]],
     ]
 ]:
@@ -85,8 +85,8 @@ def get_hamiltonian_hydrogen_extrapolated(
     resolution: tuple[_L3, _L4, _L5],
 ) -> SingleBasisOperator[
     StackedBasisLike[
-        TransformedPositionBasis[_L3, _L3, Literal[3]],
-        TransformedPositionBasis[_L4, _L4, Literal[3]],
+        FundamentalTransformedPositionBasis[_L3, Literal[3]],
+        FundamentalTransformedPositionBasis[_L4, Literal[3]],
         ExplicitBasis[_L2, _L5, Literal[3]],
     ]
 ]:
@@ -128,8 +128,8 @@ def get_hamiltonian_hydrogen_extrapolated_flipped(
     resolution: tuple[_L3, _L4, _L5],
 ) -> SingleBasisOperator[
     StackedBasisLike[
-        TransformedPositionBasis[_L3, _L3, Literal[3]],
-        TransformedPositionBasis[_L4, _L4, Literal[3]],
+        FundamentalTransformedPositionBasis[_L3, Literal[3]],
+        FundamentalTransformedPositionBasis[_L4, Literal[3]],
         ExplicitBasis[_L2, _L5, Literal[3]],
     ]
 ]:
@@ -172,8 +172,8 @@ def get_hamiltonian_deuterium(
     resolution: tuple[_L3, _L4, _L5],
 ) -> SingleBasisOperator[
     StackedBasisLike[
-        TransformedPositionBasis[_L3, _L3, Literal[3]],
-        TransformedPositionBasis[_L4, _L4, Literal[3]],
+        FundamentalTransformedPositionBasis[_L3, Literal[3]],
+        FundamentalTransformedPositionBasis[_L4, Literal[3]],
         ExplicitBasis[_L2, _L5, Literal[3]],
     ]
 ]:

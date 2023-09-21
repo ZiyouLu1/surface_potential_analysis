@@ -254,11 +254,7 @@ class TestBasisConfig(unittest.TestCase):
         np.testing.assert_array_equal(expected_y, actual[1])
         np.testing.assert_array_equal(expected_z, actual[2])
 
-        delta_x = (
-            np.array([0, 1, 0], dtype=float),
-            np.array([3, 0, 0], dtype=float),
-            np.array([0, 0, 5], dtype=float),
-        )
+        delta_x = np.array([[0, 1, 0], [3, 0, 0], [0, 0, 5]], dtype=float)
         basis = position_basis_3d_from_shape((3, 3, 3), delta_x)
         util = BasisUtil(basis)
         actual = util.fundamental_x_points_stacked
@@ -306,7 +302,7 @@ class TestBasisConfig(unittest.TestCase):
         np.testing.assert_array_equal(expected_y, actual[1])
         np.testing.assert_array_equal(expected_z, actual[2])
 
-        actual_k = util.fundamental_k_points
+        actual_k = util.fundamental_stacked_k_points
         expected_kx = 2 * np.pi * expected_y / 3.0
         expected_ky = 2 * np.pi * expected_x / 1.0
         expected_kz = 2 * np.pi * expected_z / 5.0
@@ -317,16 +313,16 @@ class TestBasisConfig(unittest.TestCase):
 
     def test_wrap_distance(self) -> None:
         expected = [0, 1, -1, 0, 1, -1, 0]
-        distances = np.array([-3, -2, -1, 0, 1, 2, 3])
+        distances = [-3, -2, -1, 0, 1, 2, 3]
         for e, d in zip(expected, distances, strict=True):
             np.testing.assert_equal(_wrap_distance(d, 3), e, f"d={d}, l=3")
-        np.testing.assert_array_equal(_wrap_distance(distances, 3), expected)
+        np.testing.assert_array_equal(_wrap_distance(np.array(distances), 3), expected)
 
         expected = [0, 1, -2, -1, 0, 1, -2, -1, 0]
-        distances = np.array([-4, -3, -2, -1, 0, 1, 2, 3, 4])
+        distances = [-4, -3, -2, -1, 0, 1, 2, 3, 4]
         for e, d in zip(expected, distances, strict=True):
             np.testing.assert_equal(_wrap_distance(d, 4), e, f"d={d}, l=4")
-        np.testing.assert_array_equal(_wrap_distance(distances, 4), expected)
+        np.testing.assert_array_equal(_wrap_distance(np.array(distances), 4), expected)
 
     def test_wrap_nx_point_around_origin(self) -> None:
         delta_x = np.array([[3, 0, 0], [0, 3, 0], [0, 0, 3]], dtype=float)
@@ -351,7 +347,7 @@ class TestBasisConfig(unittest.TestCase):
             wrap_index_around_origin(basis, util.fundamental_stacked_nx_points)
         )
         np.testing.assert_array_almost_equal(actual, expected)
-        expected = util.get_x_points_at_index(util.fundamental_x_points_stacked)
+        expected = util.get_x_points_at_index(util.fundamental_stacked_nx_points)
         np.testing.assert_array_almost_equal(actual, expected)
 
         delta_x = np.array([[3, 0, 0], [1, 3, 0], [0, 0, 4]], dtype=float)
@@ -423,7 +419,7 @@ class TestBasisConfig(unittest.TestCase):
 
         actual = decrement_brillouin_zone_3d(basis, (0, 0, 0))
         expected = (0, 0, 0)
-        np.testing.assert_array_equal(actual, expected)
+        np.testing.assert_array_equal(np.asarray(actual), expected)
 
         actual_arr = decrement_brillouin_zone_3d(
             basis, (np.array(0), np.array(0), np.array(0))
@@ -443,7 +439,7 @@ class TestBasisConfig(unittest.TestCase):
         actual = decrement_brillouin_zone_3d(basis, util.fundamental_stacked_nk_points)  # type: ignore[arg-type,var-annotated]
 
         expected = util.fundamental_stacked_nk_points
-        np.testing.assert_array_equal(actual, expected)
+        np.testing.assert_array_equal(np.array(actual, dtype=float), expected)
 
         basis = position_basis_3d_from_shape((6, 6, 6))
         util = BasisUtil(position_basis_3d_from_shape((6, 6, 1)))
@@ -454,7 +450,7 @@ class TestBasisConfig(unittest.TestCase):
         expected[0][21] = 3
         expected[1][21] = 3
         expected[2][21] = 0
-        np.testing.assert_array_equal(actual, expected)
+        np.testing.assert_array_equal(np.array(actual, dtype=float), expected)
 
     def test_get_all_brag_point(self) -> None:
         delta_x = np.array([[2 * np.pi, 0, 0], [0, 2 * np.pi, 0], [0, 0, 2 * np.pi]])
@@ -473,21 +469,21 @@ class TestBasisConfig(unittest.TestCase):
     def test_project_k_points_along_axis(self) -> None:
         basis = position_basis_3d_from_shape((3, 3, 3))
 
-        points = BasisUtil(basis).fundamental_k_points
+        points = BasisUtil(basis).fundamental_stacked_k_points
         actual = project_k_points_along_axes(points, basis, axes=(1, 2))
         expected = get_fundamental_stacked_k_points_projected_along_axes(
             basis, axes=(1, 2)
         )
         np.testing.assert_array_equal(actual, expected)
 
-        points = BasisUtil(basis).fundamental_k_points
+        points = BasisUtil(basis).fundamental_stacked_k_points
         actual = project_k_points_along_axes(points, basis, axes=(2, 0))
         expected = get_fundamental_stacked_k_points_projected_along_axes(
             basis, axes=(2, 0)
         )
         np.testing.assert_array_equal(actual, expected)
 
-        points = BasisUtil(basis).fundamental_k_points
+        points = BasisUtil(basis).fundamental_stacked_k_points
         actual = project_k_points_along_axes(points, basis, axes=(0, 1))
         expected = get_fundamental_stacked_k_points_projected_along_axes(
             basis, axes=(0, 1)

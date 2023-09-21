@@ -1,14 +1,17 @@
 from __future__ import annotations
 
+from typing import cast
+
 import matplotlib.pyplot as plt
 import numpy as np
+from matplotlib.colors import Color
 from surface_potential_analysis.state_vector.eigenstate_collection_plot import (
     plot_eigenvalues_against_bloch_phase_1d,
 )
 
 from .s3_eigenstates import get_eigenstate_collection, get_eigenstate_collection_relaxed
 
-PLOT_COLOURS = plt.rcParams["axes.prop_cycle"].by_key()["color"]
+PLOT_COLOURS = cast(list[Color], plt.rcParams["axes.prop_cycle"].by_key()["color"])  # type: ignore  poorly typed api
 
 
 def plot_lowest_bands_comparison() -> None:
@@ -17,7 +20,7 @@ def plot_lowest_bands_comparison() -> None:
     shape = (23, 23, 14)
     for band in range(5):
         collection = get_eigenstate_collection(shape)
-        collection["eigenvalues"] -= np.min(collection["eigenvalues"])
+        collection["eigenvalue"] -= np.min(collection["eigenvalue"])
         _, _, ln = plot_eigenvalues_against_bloch_phase_1d(
             collection, np.array([1, 0, 0]), band=band, ax=ax
         )
@@ -25,7 +28,7 @@ def plot_lowest_bands_comparison() -> None:
 
     for band in range(5):
         collection = get_eigenstate_collection_relaxed(shape)
-        collection["eigenvalues"] -= np.min(collection["eigenvalues"])
+        collection["eigenvalue"] -= np.min(collection["eigenvalue"])
         _, _, ln = plot_eigenvalues_against_bloch_phase_1d(
             collection, np.array([1, 0, 0]), band=band, ax=ax
         )

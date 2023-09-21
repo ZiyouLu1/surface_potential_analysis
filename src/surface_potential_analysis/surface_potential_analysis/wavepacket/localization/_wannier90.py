@@ -7,7 +7,10 @@ from typing import TYPE_CHECKING, Any, TypeVar
 
 import numpy as np
 
-from surface_potential_analysis.axis.stacked_axis import StackedBasis
+from surface_potential_analysis.axis.stacked_axis import (
+    StackedBasis,
+    StackedBasisLike,
+)
 from surface_potential_analysis.axis.util import (
     BasisUtil,
 )
@@ -28,6 +31,9 @@ from surface_potential_analysis.wavepacket.get_eigenstate import (
     get_bloch_state_vector,
     get_states_at_bloch_idx,
 )
+from surface_potential_analysis.wavepacket.localization.localization_operator import (
+    get_localized_wavepackets,
+)
 from surface_potential_analysis.wavepacket.wavepacket import (
     WavepacketList,
     get_wavepacket_sample_fractions,
@@ -45,12 +51,12 @@ if TYPE_CHECKING:
         FundamentalTransformedPositionBasis,
     )
     from surface_potential_analysis.axis.axis_like import BasisLike
-    from surface_potential_analysis.axis.stacked_axis import (
-        StackedBasisLike,
-    )
     from surface_potential_analysis.state_vector.state_vector import StateVector
     from surface_potential_analysis.state_vector.state_vector_list import (
         StateVectorList,
+    )
+    from surface_potential_analysis.wavepacket.localization.localization_operator import (
+        LocalizationOperator,
     )
 
     _SBL0 = TypeVar(
@@ -283,9 +289,11 @@ def _parse_u_mat_file_block(
     return np.array([float(s[0]) + 1j * float(s[1]) for s in variables])  # type: ignore[no-any-return]
 
 
-def _parse_u_mat_file(
+def _get_localization_operator_from_u_mat_file(
+    wavepackets_basis: StackedBasisLike[_B0, _SB0],
+    projection_basis: _B1,
     u_matrix_file: str,
-) -> np.ndarray[tuple[int, int, int], np.dtype[np.complex_]]:
+) -> LocalizationOperator[_SB0, _B1, _B0]:
     """
     Get the u_mat coefficients, indexed such that U_{m,n}^k === out[n, m, k].
 
@@ -300,7 +308,7 @@ def _parse_u_mat_file(
     lines = u_matrix_file.splitlines()
     n_wavefunctions = int(lines[1].strip().split()[1])
     n_bands = int(lines[1].strip().split()[2])
-    return np.array(  # type: ignore[no-any-return]
+    a = np.array(
         [
             [
                 _parse_u_mat_file_block(
@@ -313,39 +321,11 @@ def _parse_u_mat_file(
             for m in range(n_bands)
         ]
     )
-
-
-def localize_wavepacket_from_u_matrix_file(
-    wavepackets: WavepacketList[_B0, _SB0, _SBL0],
-    projection_basis: _B1,
-    u_matrix_file: str,
-) -> WavepacketList[_B1, _SB0, _SBL0]:
-    """
-    Given a _u.mat file, localize the wavepacket.
-
-    Parameters
-    ----------
-    wavepacket : Wavepacket[_B0Inv, _B0Inv]
-    file : str
-
-    Returns
-    -------
-    Wavepacket[_B0Inv, _B0Inv]
-    """
-    coefficients = _parse_u_mat_file(u_matrix_file).reshape(
-        wavepackets["basis"][0][0].n, wavepackets["basis"][0][0].n, -1
-    )
-    vectors = wavepackets["data"].reshape(
-        wavepackets["basis"][0][0].n, wavepackets["basis"][0][1].n, -1
-    )
     return {
         "basis": StackedBasis(
-            StackedBasis(projection_basis, wavepackets["basis"][0][1]),
-            wavepackets["basis"][1],
+            wavepackets_basis[1], StackedBasis(projection_basis, wavepackets_basis[0])
         ),
-        "data": np.sum(
-            coefficients[:, :, :, np.newaxis] * vectors[np.newaxis, :, :, :], axis=(1)
-        ).reshape(-1),
+        "data": np.moveaxis(a, -1, 0).reshape(-1),
     }
 
 
@@ -381,10 +361,10 @@ def _write_localization_files_wannier90(
         f.write(_build_amn_file(converted, projections))
 
 
-def localize_wavepacket_wannier90_many_band(
+def get_localization_operator_wannier90(
     wavepackets: WavepacketList[_B0, _SB0, _SBL0],
     projections: StateVectorList[_B1, _B2],
-) -> WavepacketList[_B1, _SB0, _SBL0]:
+) -> LocalizationOperator[_SB0, _B1, _B0]:
     """
     Localizes a set of wavepackets using wannier 90, with a single point projection as an initial guess.
 
@@ -428,9 +408,37 @@ def localize_wavepacket_wannier90_many_band(
         with u_mat_filename.open("r") as f:
             u_mat_file = f.read()
 
-    return localize_wavepacket_from_u_matrix_file(
-        wavepackets, projections["basis"][0], u_mat_file
+    return _get_localization_operator_from_u_mat_file(
+        wavepackets["basis"][0], projections["basis"][0], u_mat_file
     )
+
+
+def localize_wavepacket_wannier90_many_band(
+    wavepackets: WavepacketList[_B0, _SB0, _SBL0],
+    projections: StateVectorList[_B1, _B2],
+) -> WavepacketList[_B1, _SB0, _SBL0]:
+    """
+    Localizes a set of wavepackets using wannier 90, with a single point projection as an initial guess.
+
+    Note this requires a user to manually run wannier90 and input the resulting wannier90 nnkpts and _umat file
+    into the temporary directory created by the function.
+
+    Also requires the wavepackets to have their samples in the fundamental basis
+
+    Parameters
+    ----------
+    wavepackets : WavepacketList[_B0, _SB0, _SBL0]
+        Wavepackets to localize
+    projections : StateVectorList[_B1, _B2]
+        Projections used in the localization procedure
+
+    Returns
+    -------
+    WavepacketList[_B1, _SB0, _SBL0]
+        Localized wavepackets, with each wavepacket correspondign to a different projection
+    """
+    operator = get_localization_operator_wannier90(wavepackets, projections)
+    return get_localized_wavepackets(wavepackets, operator)
 
 
 def localize_wavepacket_wannier90_sp_projections(

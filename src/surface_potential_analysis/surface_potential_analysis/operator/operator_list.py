@@ -5,7 +5,6 @@ from typing import TYPE_CHECKING, Any, Generic, TypedDict, TypeVar
 import numpy as np
 
 from surface_potential_analysis.axis.axis_like import BasisLike
-from surface_potential_analysis.axis.stacked_axis import StackedBasis
 
 if TYPE_CHECKING:
     from surface_potential_analysis.axis.stacked_axis import StackedBasisLike
@@ -23,7 +22,7 @@ _B2Inv = TypeVar("_B2Inv", bound=BasisLike[Any, Any])
 class OperatorList(TypedDict, Generic[_B0Inv, _B1Inv, _B2Inv]):
     """Represents a list of eigenstates, each with the same basis and bloch wavevector."""
 
-    basis: StackedBasisLike[_B0Inv, _B1Inv, _B2Inv]
+    basis: StackedBasisLike[_B0Inv, StackedBasisLike[_B1Inv, _B2Inv]]
     data: np.ndarray[tuple[int], np.dtype[np.complex_]]
     """A list of state vectors"""
 
@@ -44,7 +43,7 @@ def get_operator(
     Eigenstate[_B0Inv]
     """
     return {
-        "basis": StackedBasis(operator_list["basis"][1], operator_list["basis"][2]),
+        "basis": operator_list["basis"][1],
         "data": operator_list["data"]
         .reshape(operator_list["basis"].shape)[idx]
         .reshape(-1),
@@ -103,7 +102,7 @@ def sum_diagonal_operator_list_over_axes(
     return {
         "basis": traced_basis,
         "data": np.sum(
-            states["data"].reshape(-1, states["basis"].shape),
+            states["data"].reshape(-1, states["basis"][1].shape),
             axis=tuple(1 + np.array(axes)),
         ).reshape(states["data"].shape[0], -1),
     }

@@ -15,13 +15,13 @@ Overlap3dBasis = StackedBasisLike[
     AxisWithLengthLike3d[Any, Any],
     AxisWithLengthLike3d[Any, Any],
 ]
-_B3d0 = TypeVar("_B3d0", bound=StackedBasisLike[*tuple[Any, ...]])
+_B3d0_co = TypeVar("_B3d0_co", bound=StackedBasisLike[*tuple[Any, ...]], covariant=True)
 
 
-class Overlap3d(TypedDict, Generic[_B3d0]):
+class Overlap3d(TypedDict, Generic[_B3d0_co]):
     """Represents the result of an overlap calculation of two wavepackets."""
 
-    basis: _B3d0
+    basis: _B3d0_co
     data: np.ndarray[tuple[int], np.dtype[np.complex_]]
 
 

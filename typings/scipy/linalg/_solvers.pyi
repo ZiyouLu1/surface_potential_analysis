@@ -111,7 +111,7 @@ def solve_continuous_lyapunov(a, q):
     ...
 
 solve_lyapunov = ...
-def solve_discrete_lyapunov(a, q, method=...): # -> NDArray[float_]:
+def solve_discrete_lyapunov(a, q, method=...): # -> NDArray[Unknown]:
     """
     Solves the discrete Lyapunov equation :math:`AXA^H - X + Q = 0`.
 

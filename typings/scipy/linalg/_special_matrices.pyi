@@ -613,7 +613,7 @@ def invhilbert(n, exact=...): # -> NDArray[Any]:
     """
     ...
 
-def pascal(n, kind=..., exact=...): # -> NDArray[Any] | NDArray[uint64] | ndarray[Unknown, Unknown] | float64 | Any:
+def pascal(n, kind=..., exact=...): # -> NDArray[Any] | NDArray[uint64] | Any:
     """
     Returns the n x n Pascal matrix.
 
@@ -674,7 +674,7 @@ def pascal(n, kind=..., exact=...): # -> NDArray[Any] | NDArray[uint64] | ndarra
     """
     ...
 
-def invpascal(n, kind=..., exact=...): # -> NDArray[Any] | NDArray[floating[Any]] | Any | NDArray[floating[Unknown]]:
+def invpascal(n, kind=..., exact=...): # -> NDArray[Any] | NDArray[signedinteger[_64Bit]] | Any | NDArray[signedinteger[Any]]:
     """
     Returns the inverse of the n x n Pascal matrix.
 

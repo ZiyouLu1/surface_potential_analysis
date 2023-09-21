@@ -24,7 +24,7 @@ if TYPE_CHECKING:
         ExplicitBasis,
         ExplicitBasis3d,
         FundamentalPositionBasis1d,
-        TransformedPositionBasis,
+        FundamentalTransformedPositionBasis,
         TransformedPositionBasis3d,
     )
     from surface_potential_analysis.axis.stacked_axis import StackedBasisLike
@@ -88,8 +88,8 @@ def get_hamiltonian(
     resolution: tuple[_L3, _L4, _L5],
 ) -> SingleBasisOperator[
     StackedBasisLike[
-        TransformedPositionBasis[_L3, _L3, Literal[3]],
-        TransformedPositionBasis[_L4, _L4, Literal[3]],
+        FundamentalTransformedPositionBasis[_L3, Literal[3]],
+        FundamentalTransformedPositionBasis[_L4, Literal[3]],
         ExplicitBasis[_L2, _L5, Literal[3]],
     ]
 ]:
@@ -137,8 +137,8 @@ def get_hamiltonian_relaxed(
     resolution: tuple[_L3, _L4, _L5],
 ) -> SingleBasisOperator[
     StackedBasisLike[
-        TransformedPositionBasis[_L3, _L3, Literal[3]],
-        TransformedPositionBasis[_L4, _L4, Literal[3]],
+        FundamentalTransformedPositionBasis[_L3, Literal[3]],
+        FundamentalTransformedPositionBasis[_L4, Literal[3]],
         ExplicitBasis[_L2, _L5, Literal[3]],
     ]
 ]:

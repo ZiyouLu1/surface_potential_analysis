@@ -28,7 +28,7 @@ if TYPE_CHECKING:
     from surface_potential_analysis.axis.axis import (
         ExplicitBasis,
         FundamentalBasis,
-        TransformedPositionBasis,
+        FundamentalTransformedPositionBasis,
     )
     from surface_potential_analysis.axis.stacked_axis import StackedBasisLike
     from surface_potential_analysis.operator import SingleBasisOperator
@@ -41,8 +41,8 @@ if TYPE_CHECKING:
             FundamentalBasis[Literal[1]],
         ],
         StackedBasisLike[
-            TransformedPositionBasis[Literal[23], Literal[23], Literal[3]],
-            TransformedPositionBasis[Literal[23], Literal[23], Literal[3]],
+            FundamentalTransformedPositionBasis[Literal[23], Literal[3]],
+            FundamentalTransformedPositionBasis[Literal[23], Literal[3]],
             ExplicitBasis[Literal[250], Literal[10], Literal[3]],
         ],
     ]
@@ -54,8 +54,8 @@ if TYPE_CHECKING:
             FundamentalBasis[Literal[1]],
         ],
         StackedBasisLike[
-            TransformedPositionBasis[Literal[23], Literal[23], Literal[3]],
-            TransformedPositionBasis[Literal[23], Literal[23], Literal[3]],
+            FundamentalTransformedPositionBasis[Literal[23], Literal[3]],
+            FundamentalTransformedPositionBasis[Literal[23], Literal[3]],
             ExplicitBasis[Literal[250], Literal[10], Literal[3]],
         ],
     ]
@@ -68,8 +68,8 @@ if TYPE_CHECKING:
             FundamentalBasis[Literal[1]],
         ],
         StackedBasisLike[
-            TransformedPositionBasis[Literal[33], Literal[33], Literal[3]],
-            TransformedPositionBasis[Literal[33], Literal[33], Literal[3]],
+            FundamentalTransformedPositionBasis[Literal[33], Literal[3]],
+            FundamentalTransformedPositionBasis[Literal[33], Literal[3]],
             ExplicitBasis[Literal[250], Literal[10], Literal[3]],
         ],
     ]
@@ -80,8 +80,8 @@ if TYPE_CHECKING:
             FundamentalBasis[Literal[1]],
         ],
         StackedBasisLike[
-            TransformedPositionBasis[Literal[33], Literal[33], Literal[3]],
-            TransformedPositionBasis[Literal[33], Literal[33], Literal[3]],
+            FundamentalTransformedPositionBasis[Literal[33], Literal[3]],
+            FundamentalTransformedPositionBasis[Literal[33], Literal[3]],
             ExplicitBasis[Literal[250], Literal[10], Literal[3]],
         ],
     ]
@@ -93,8 +93,8 @@ def get_all_wavepackets_hydrogen() -> _HydrogenPlatinumWavepacketList:
         bloch_fraction: np.ndarray[tuple[Literal[3]], np.dtype[np.float_]]
     ) -> SingleBasisOperator[
         StackedBasisLike[
-            TransformedPositionBasis[Literal[23], Literal[23], Literal[3]],
-            TransformedPositionBasis[Literal[23], Literal[23], Literal[3]],
+            FundamentalTransformedPositionBasis[Literal[23], Literal[3]],
+            FundamentalTransformedPositionBasis[Literal[23], Literal[3]],
             ExplicitBasis[Literal[250], Literal[10], Literal[3]],
         ]
     ]:
@@ -136,8 +136,8 @@ def get_all_wavepackets_deuterium() -> _DeuteriumPlatinumWavepacketList:
         bloch_fraction: np.ndarray[tuple[Literal[3]], np.dtype[np.float_]]
     ) -> SingleBasisOperator[
         StackedBasisLike[
-            TransformedPositionBasis[Literal[33], Literal[33], Literal[3]],
-            TransformedPositionBasis[Literal[33], Literal[33], Literal[3]],
+            FundamentalTransformedPositionBasis[Literal[33], Literal[3]],
+            FundamentalTransformedPositionBasis[Literal[33], Literal[3]],
             ExplicitBasis[Literal[250], Literal[10], Literal[3]],
         ]
     ]:

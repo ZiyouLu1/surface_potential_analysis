@@ -15,7 +15,7 @@ class SqrtmError(np.linalg.LinAlgError):
     ...
 
 
-def sqrtm(A, disp=..., blocksize=...): # -> Any | NDArray[float_] | NDArray[Unknown] | tuple[Any | Unknown | NDArray[float_] | NDArray[Unknown], Unknown | floating[Any] | float]:
+def sqrtm(A, disp=..., blocksize=...): # -> Any | tuple[Any | Unknown, Unknown | floating[Any] | float]:
     """
     Matrix square root.
 

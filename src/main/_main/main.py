@@ -1,12 +1,16 @@
 from __future__ import annotations
 
-from hydrogen_copper_100.s4_wavepacket import get_all_wavepackets_hydrogen
+from sodium_copper_111.s4_wavepacket_plot import (
+    plot_projection_localized_wavepacket,
+    plot_wannier90_localized_wavepacket,
+)
 from surface_potential_analysis.util.decorators import timed
 
 
 @timed
 def main() -> None:
-    get_all_wavepackets_hydrogen()
+    plot_projection_localized_wavepacket()
+    plot_wannier90_localized_wavepacket()
 
 
 if __name__ == "__main__":

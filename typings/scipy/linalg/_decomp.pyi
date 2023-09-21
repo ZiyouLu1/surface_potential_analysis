@@ -829,7 +829,7 @@ def eigh_tridiagonal(d, e, eigvals_only=..., select=..., select_range=..., check
     """
     ...
 
-def hessenberg(a, calc_q=..., overwrite_a=..., check_finite=...): # -> tuple[NDArray[float_] | NDArray[Unknown], NDArray[float64]] | NDArray[float_] | NDArray[Unknown] | tuple[NDArray[Unknown], Unknown]:
+def hessenberg(a, calc_q=..., overwrite_a=..., check_finite=...): # -> tuple[Unknown, NDArray[float64]] | NDArray[Unknown] | tuple[NDArray[Unknown], Unknown]:
     """
     Compute Hessenberg form of a matrix.
 
@@ -878,7 +878,7 @@ def hessenberg(a, calc_q=..., overwrite_a=..., check_finite=...): # -> tuple[NDA
     """
     ...
 
-def cdf2rdf(w, v): # -> tuple[NDArray[float_], Any]:
+def cdf2rdf(w, v): # -> tuple[NDArray[float64], Any]:
     """
     Converts complex eigenvalues ``w`` and eigenvectors ``v`` to real
     eigenvalues in a block diagonal form ``wr`` and the associated real

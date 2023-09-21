@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, TypeVar
 
 import numpy as np
-import scipy
+import scipy.linalg
 
 from surface_potential_analysis.axis.axis import FundamentalBasis
 from surface_potential_analysis.axis.stacked_axis import StackedBasis

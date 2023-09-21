@@ -39,6 +39,8 @@ from surface_potential_analysis.util.interpolation import (
 from .surface_data import get_data_path
 
 if TYPE_CHECKING:
+    from pathlib import Path
+
     from surface_potential_analysis.axis.axis_like import AxisVector2d
 
 
@@ -139,7 +141,7 @@ _L2Inv = TypeVar("_L2Inv", bound=int)
 
 
 def interpolate_points_fourier_nickel(  # noqa: PLR0913
-    points: np.ndarray[tuple[int, int], np.dtype[np.float_]],
+    points: np.ndarray[tuple[int, int], np.dtype[np.complex_]],
     delta_x0_reciprocal: AxisVector2d,
     delta_x1_reciprocal: AxisVector2d,
     delta_x0_real: tuple[float, float],
@@ -206,9 +208,7 @@ def interpolate_energy_grid_xy_fourier_nickel(
     shape: tuple[_L0Inv, _L1Inv] = (40, 40),  # type: ignore[assignment]
 ) -> UnevenPotential3d[_L0Inv, _L1Inv, Any]:
     """Make use of a fourier transform to increase the number of points in the xy plane of the energy grid."""
-    old_points = np.array(data["data"]).reshape(
-        data["basis"][0].n, data["basis"][1].n, -1
-    )
+    old_points = np.array(data["data"]).reshape(data["basis"].shape)
     points = np.empty((shape[0], shape[1], old_points.shape[2]))
 
     for iz in range(old_points.shape[2]):
@@ -230,7 +230,7 @@ def interpolate_energy_grid_xy_fourier_nickel(
             ),
             data["basis"][2],
         ),
-        "data": points.reshape(-1),
+        "data": points.reshape(-1).astype(np.complex_),
     }
 
 
@@ -262,7 +262,7 @@ def interpolate_energy_grid_fourier_nickel(
     )
 
     return {
-        "basis": (
+        "basis": StackedBasis(
             FundamentalPositionBasis(
                 np.array([*xy_interpolation["basis"][0].delta_x, 0]),
                 xy_interpolation["basis"][0].n,
@@ -278,7 +278,7 @@ def interpolate_energy_grid_fourier_nickel(
                 shape[2],
             ),
         ),
-        "data": interpolated.ravel(),  # type: ignore[typeddict-item]
+        "data": interpolated.ravel().astype(np.complex_),
     }
 
 
@@ -352,8 +352,15 @@ def extrapolate_uneven_potential(
     }
 
 
+def _interpolated_potential_cache(shape: tuple[_L0Inv, _L1Inv, _L2Inv]) -> Path:
+    return get_data_path(
+        f"potential/interpolated_potential_{shape[0]}_{shape[1]}_{shape[2]}.npy"
+    )
+
+
+@npy_cached(_interpolated_potential_cache, load_pickle=True)
 def get_interpolated_extrapolated_potential(
-    shape: tuple[_L0Inv, _L1Inv, _L2Inv]
+    shape: tuple[_L0Inv, _L1Inv, _L2Inv],
 ) -> Potential[
     StackedBasisLike[
         FundamentalPositionBasis3d[_L0Inv],

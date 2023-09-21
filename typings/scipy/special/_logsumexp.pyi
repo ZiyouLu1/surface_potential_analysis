@@ -184,7 +184,7 @@ def softmax(x, axis=...): # -> Any:
     """
     ...
 
-def log_softmax(x, axis=...): # -> Any:
+def log_softmax(x, axis=...):
     r"""Compute the logarithm of the softmax function.
 
     In principle::

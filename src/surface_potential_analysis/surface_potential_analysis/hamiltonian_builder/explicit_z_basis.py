@@ -19,7 +19,7 @@ from surface_potential_analysis.axis.stacked_axis import (
 )
 from surface_potential_analysis.axis.util import BasisUtil
 from surface_potential_analysis.hamiltonian_builder.momentum_basis import (
-    hamiltonian_from_mass,
+    hamiltonian_from_mass_in_basis,
 )
 from surface_potential_analysis.operator.conversion import add_operator
 from surface_potential_analysis.stacked_basis.potential_basis import (
@@ -62,15 +62,11 @@ def _get_xy_hamiltonian(
     bloch_fraction: np.ndarray[tuple[Literal[2]], np.dtype[np.float_]],
 ) -> SingleBasisOperator[_B0Inv]:
     xy_basis = StackedBasis[Any, Any](
-        TransformedPositionBasis(
-            basis[0].delta_x[:2], basis[0].n, basis[0].fundamental_n
-        ),
-        TransformedPositionBasis(
-            basis[1].delta_x[:2], basis[1].n, basis[1].fundamental_n
-        ),
+        TransformedPositionBasis(basis[0].delta_x[:2], basis[0].n, basis[0].n),
+        TransformedPositionBasis(basis[1].delta_x[:2], basis[1].n, basis[1].n),
     )
 
-    xy_hamiltonian = hamiltonian_from_mass(xy_basis, mass, bloch_fraction)
+    xy_hamiltonian = hamiltonian_from_mass_in_basis(xy_basis, mass, bloch_fraction)
 
     xy_energies = np.diag(
         np.broadcast_to(

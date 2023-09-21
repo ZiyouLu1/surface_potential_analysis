@@ -5,7 +5,7 @@ from collections.abc import Callable
 from typing import Any, TypedDict, TypeVar
 
 import numpy as np
-import scipy
+import scipy.optimize
 
 from .surface_data import get_data_path
 
@@ -26,10 +26,10 @@ def get_experiment_data() -> ExperimentData:
     with path.open("r") as f:
         out = json.load(f)
         return {
-            "temperature": np.array(out["temperature"]),
-            "lower_error": np.array(out["lower_error"]) * 10**10,
-            "rate": np.array(out["rate"]) * 10**10,
-            "upper_error": np.array(out["upper_error"]) * 10**10,
+            "temperature": np.array(out["temperature"], dtype=np.float_),
+            "lower_error": np.array(out["lower_error"], dtype=np.float_) * 10**10,
+            "rate": np.array(out["rate"], dtype=np.float_) * 10**10,
+            "upper_error": np.array(out["upper_error"], dtype=np.float_) * 10**10,
         }
 
 

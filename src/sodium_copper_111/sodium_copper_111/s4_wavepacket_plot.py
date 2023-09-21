@@ -6,6 +6,11 @@ from surface_potential_analysis.probability_vector.probability_vector import (
     average_probabilities,
     from_state_vector_list,
 )
+from surface_potential_analysis.state_vector.plot import plot_state_1d_k
+from surface_potential_analysis.state_vector.state_vector_list import get_state_vector
+from surface_potential_analysis.state_vector.util import (
+    get_most_localized_free_state_vectors,
+)
 from surface_potential_analysis.wavepacket.eigenstate_conversion import (
     unfurl_wavepacket_list,
 )
@@ -17,6 +22,7 @@ from surface_potential_analysis.wavepacket.plot import (
     plot_wavepacket_1d_x,
 )
 from surface_potential_analysis.wavepacket.wavepacket import (
+    get_wavepacket_basis,
     get_wavepackets,
     wavepacket_list_into_iter,
 )
@@ -40,6 +46,11 @@ def plot_wavepacket_average_occupation_probability() -> None:
 
         _, _, line = plot_probability_1d_k(averaged, ax=ax, measure="abs")
         line.set_label(f"{n_bands} bands")
+
+    projections = get_most_localized_free_state_vectors(
+        get_wavepacket_basis(wavepackets), (30,)
+    )
+    _, _, line = plot_state_1d_k(get_state_vector(projections, 0), ax=ax.twinx())
     fig.show()
     input()
 
@@ -61,7 +72,8 @@ def plot_projection_localized_wavepacket() -> None:
 
 
 def plot_wannier90_localized_wavepacket() -> None:
-    wavepackets = get_localized_wavepackets_wannier_90((5,), (60,), 25)
+    # only converges when n_bands is even
+    wavepackets = get_localized_wavepackets_wannier_90((10,), (61,), 26)
 
     fig0, ax0 = plt.subplots()
     fig1, ax1 = plt.subplots()
@@ -69,7 +81,7 @@ def plot_wannier90_localized_wavepacket() -> None:
         _, _, ln = plot_wavepacket_1d_x(wavepacket, ax=ax0)
         ln.set_label(f"n={i}")
 
-        _, _, ln = plot_wavepacket_1d_k(wavepacket, ax=ax1, measure="abs")
+        _, _, ln = plot_wavepacket_1d_k(wavepacket, ax=ax1, measure="real")
         ln.set_label(f"n={i}")
     fig0.show()
     fig1.show()

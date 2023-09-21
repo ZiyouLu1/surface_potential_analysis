@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Literal, TypeVar, Unpack
+from typing import TYPE_CHECKING, Literal, TypeVar, TypeVarTuple
 
 import numpy as np
 
@@ -30,6 +30,7 @@ if TYPE_CHECKING:
             FundamentalPositionBasis[_L2Inv, Literal[3]],
         ]
     ]
+    Ts = TypeVarTuple("Ts")
 
 
 _S0Inv = TypeVar("_S0Inv", bound=tuple[int, ...])
@@ -81,8 +82,8 @@ def get_overlap_momentum_interpolator_k_fractions(
 def get_overlap_momentum_interpolator(
     overlap: FundamentalPositionOverlap[_L0Inv, _L1Inv, _L2Inv]
 ) -> Callable[
-    [np.ndarray[tuple[Literal[3], Unpack[_S0Inv]], np.dtype[np.float_]]],
-    np.ndarray[_S0Inv, np.dtype[np.complex_]],
+    [np.ndarray[tuple[Literal[3], *Ts], np.dtype[np.float_]]],
+    np.ndarray[tuple[*Ts], np.dtype[np.complex_]],
 ]:
     """
     Given the overlap create an interpolator to calculate th interpolation in momentum basis.
@@ -103,10 +104,8 @@ def get_overlap_momentum_interpolator(
     x_points = util.get_x_points_at_index(nx_points_wrapped)
 
     def _interpolator(
-        k_coordinates: np.ndarray[
-            tuple[Literal[3], Unpack[_S0Inv]], np.dtype[np.float_]
-        ]
-    ) -> np.ndarray[_S0Inv, np.dtype[np.complex_]]:
+        k_coordinates: np.ndarray[tuple[Literal[3], *Ts], np.dtype[np.float_]]
+    ) -> np.ndarray[tuple[*Ts], np.dtype[np.complex_]]:
         phi = np.tensordot(x_points, k_coordinates, axes=(0, 0))
         return np.tensordot(overlap["data"], np.exp(1j * phi), axes=(0, 0))  # type: ignore[no-any-return]
 
@@ -118,8 +117,8 @@ def get_overlap_momentum_interpolator_flat(
     overlap: FundamentalPositionOverlap[_L0Inv, _L1Inv, _L2Inv],
     n_points: IntLike_co | None = None,
 ) -> Callable[
-    [np.ndarray[tuple[Literal[2], Unpack[_S0Inv]], np.dtype[np.float_]]],
-    np.ndarray[_S0Inv, np.dtype[np.complex_]],
+    [np.ndarray[tuple[Literal[2], *Ts], np.dtype[np.float_]]],
+    np.ndarray[tuple[*Ts], np.dtype[np.complex_]],
 ]:
     """
     Given the overlap create an interpolator to calculate the interpolation in momentum basis.
@@ -155,10 +154,8 @@ def get_overlap_momentum_interpolator_flat(
     relevant_vector = vector_transformed[relevant_slice]
 
     def _interpolator(
-        k_coordinates: np.ndarray[
-            tuple[Literal[2], Unpack[_S0Inv]], np.dtype[np.float_]
-        ]
-    ) -> np.ndarray[_S0Inv, np.dtype[np.complex_]]:
+        k_coordinates: np.ndarray[tuple[Literal[2], *Ts], np.dtype[np.float_]]
+    ) -> np.ndarray[tuple[*Ts], np.dtype[np.complex_]]:
         phi = np.tensordot(relevant_x_points, k_coordinates, axes=(0, 0))
         return np.tensordot(relevant_vector, np.exp(1j * phi), axes=(0, 0))  # type: ignore[no-any-return]
 
