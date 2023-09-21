@@ -14,9 +14,6 @@ from surface_potential_analysis.stacked_basis.conversion import (
 )
 from surface_potential_analysis.stacked_basis.util import (
     calculate_cumulative_x_distances_along_path,
-    get_k_coordinates_in_axes,
-    get_max_idx,
-    get_x_coordinates_in_axes,
 )
 from surface_potential_analysis.state_vector.conversion import (
     convert_state_vector_to_basis,
@@ -24,12 +21,14 @@ from surface_potential_analysis.state_vector.conversion import (
     convert_state_vector_to_position_basis,
 )
 from surface_potential_analysis.util.plot import (
-    animate_through_surface_x,
-    get_norm_with_clim,
+    animate_data_through_surface_x,
+    plot_data_1d_k,
+    plot_data_1d_x,
+    plot_data_2d_k,
+    plot_data_2d_x,
 )
 from surface_potential_analysis.util.util import (
     Measure,
-    get_data_in_axes,
     get_measured_data,
 )
 
@@ -79,22 +78,18 @@ def plot_state_1d_k(
     -------
     tuple[Figure, Axes, Line2D]
     """
-    fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
-
     converted = convert_state_vector_to_momentum_basis(state)
-    idx = get_max_idx(converted, axes) if idx is None else idx
-    data_slice: list[slice | int | np.integer[Any]] = list(idx)
-    data_slice.insert(axes[0], slice(None))
 
-    util = BasisUtil(converted["basis"])
-    coordinates = util.fundamental_stacked_nk_points[0]
-    points = get_data_in_axes(converted["data"].reshape(util.shape), axes, idx)
-    data = get_measured_data(points, measure)
-
-    (line,) = ax.plot(np.fft.fftshift(coordinates), np.fft.fftshift(data))
-    ax.set_xlabel(f"k{axes[0]} axis")
+    fig, ax, line = plot_data_1d_k(
+        converted["basis"],
+        converted["data"],
+        axes,
+        idx,
+        ax=ax,
+        scale=scale,
+        measure=measure,
+    )
     ax.set_ylabel("State /Au")
-    ax.set_yscale(scale)
     return fig, ax, line
 
 
@@ -128,21 +123,18 @@ def plot_state_1d_x(
     -------
     tuple[Figure, Axes, Line2D]
     """
-    fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
-
     converted = convert_state_vector_to_position_basis(state)
-    idx = get_max_idx(converted, axes) if idx is None else idx
 
-    util = BasisUtil(converted["basis"])
-    fundamental_x_points = util.fundamental_x_points_stacked
-    coordinates = np.linalg.norm(fundamental_x_points, axis=0)
-    points = get_data_in_axes(converted["data"].reshape(util.shape), axes, idx)
-    data = get_measured_data(points, measure)
-
-    (line,) = ax.plot(coordinates, data)
-    ax.set_xlabel(f"x{(axes[0] % 3)} axis")
-    ax.set_ylabel("Eigenstate /Au")
-    ax.set_yscale(scale)
+    fig, ax, line = plot_data_1d_x(
+        converted["basis"],
+        converted["data"],
+        axes,
+        idx,
+        ax=ax,
+        scale=scale,
+        measure=measure,
+    )
+    ax.set_ylabel("State /Au")
     return fig, ax, line
 
 
@@ -176,34 +168,17 @@ def plot_state_2d_k(
     -------
     tuple[Figure, Axes, QuadMesh]
     """
-    fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
     converted = convert_state_vector_to_momentum_basis(state)
-    util = BasisUtil(converted["basis"])
 
-    idx = get_max_idx(converted, axes) if idx is None else idx
-    coordinates = get_k_coordinates_in_axes(converted["basis"], axes, idx)
-    points = get_data_in_axes(converted["data"].reshape(util.shape), axes, idx)
-
-    data = np.fft.fftshift(get_measured_data(points, measure))
-    coordinates = np.fft.fftshift(coordinates, axes=(1, 2))
-
-    mesh = ax.pcolormesh(*coordinates, data, shading="nearest")
-    norm = get_norm_with_clim(scale, mesh.get_clim())  # type: ignore Type of "get_clim" is partially unknown
-    mesh.set_norm(norm)
-    ax.set_aspect("equal", adjustable="box")
-    fig.colorbar(mesh, ax=ax, format="%4.1e")
-
-    ax.set_xlabel(f"k{axes[0]} axis")
-    ax.set_ylabel(f"k{axes[1]} axis")
-    ax.text(
-        0.05,
-        0.95,
-        f"k = {idx}",
-        transform=ax.transAxes,
-        verticalalignment="top",
-        bbox={"boxstyle": "round", "facecolor": "wheat", "alpha": 0.5},
+    return plot_data_2d_k(
+        converted["basis"],
+        converted["data"],
+        axes,
+        idx,
+        ax=ax,
+        scale=scale,
+        measure=measure,
     )
-    return fig, ax, mesh
 
 
 def plot_state_difference_2d_k(
@@ -280,33 +255,17 @@ def plot_state_2d_x(
     -------
     tuple[Figure, Axes, QuadMesh]
     """
-    fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
     converted = convert_state_vector_to_position_basis(state)
-    idx = get_max_idx(converted, axes) if idx is None else idx
 
-    coordinates = get_x_coordinates_in_axes(converted["basis"], axes, idx)
-    points = get_data_in_axes(
-        converted["data"].reshape(converted["basis"].shape), axes, idx
+    return plot_data_2d_x(
+        converted["basis"],
+        converted["data"],
+        axes,
+        idx,
+        ax=ax,
+        scale=scale,
+        measure=measure,
     )
-    data = get_measured_data(points, measure)
-
-    mesh = ax.pcolormesh(*coordinates, data, shading="nearest")
-    norm = get_norm_with_clim(scale, mesh.get_clim())  # type: ignore Type of "get_clim" is partially unknown
-    mesh.set_norm(norm)
-    ax.set_aspect("equal", adjustable="box")
-    fig.colorbar(mesh, ax=ax, format="%4.1e")
-
-    ax.set_xlabel(f"x{axes[0]} axis")
-    ax.set_ylabel(f"x{axes[1]} axis")
-    ax.text(
-        0.05,
-        0.95,
-        f"x = {idx}",
-        transform=ax.transAxes,
-        verticalalignment="top",
-        bbox={"boxstyle": "round", "facecolor": "wheat", "alpha": 0.5},
-    )
-    return fig, ax, mesh
 
 
 def plot_state_difference_1d_k(
@@ -430,7 +389,7 @@ def animate_state_3d_x(
     util = BasisUtil(converted["basis"])
     points = converted["data"].reshape(*util.shape)
 
-    return animate_through_surface_x(
+    return animate_data_through_surface_x(
         converted["basis"],
         points,
         axes,

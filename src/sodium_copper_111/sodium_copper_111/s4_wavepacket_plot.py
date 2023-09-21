@@ -51,6 +51,7 @@ def plot_wavepacket_average_occupation_probability() -> None:
         get_wavepacket_basis(wavepackets), (30,)
     )
     _, _, line = plot_state_1d_k(get_state_vector(projections, 0), ax=ax.twinx())
+    line.set_label("Projections")
     fig.show()
     input()
 

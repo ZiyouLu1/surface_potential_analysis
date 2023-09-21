@@ -41,7 +41,7 @@ from surface_potential_analysis.wavepacket.wavepacket import (
 )
 
 from ._projection import (
-    _get_single_point_state_for_wavepacket,
+    get_single_point_state_for_wavepacket,
     get_state_projections_many_band,
 )
 
@@ -460,7 +460,7 @@ def localize_wavepacket_wannier90_sp_projections(
         The localized wavepacket
     """
     projections = as_state_vector_list(
-        _get_single_point_state_for_wavepacket(wavepacket)
+        get_single_point_state_for_wavepacket(wavepacket)
         for wavepacket in wavepacket_list_into_iter(wavepackets)
     )
     return localize_wavepacket_wannier90_many_band(wavepackets, projections)

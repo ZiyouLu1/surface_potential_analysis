@@ -15,7 +15,7 @@ from surface_potential_analysis.axis.util import (
 )
 from surface_potential_analysis.potential.plot import (
     animate_potential_3d_x,
-    animate_potential_difference_2d_x,
+    animate_potential_difference_3d_x,
     plot_potential_1d_x2_comparison_111,
     plot_potential_2d_x,
     plot_potential_difference_2d_x,
@@ -195,7 +195,7 @@ def plot_nickel_energy_grid_symmetry() -> None:
     fig, _, _ani0 = animate_potential_3d_x(reflected_potential, clim=(0, 2e-19))
     fig.show()
 
-    fig, _, _ani1 = animate_potential_difference_2d_x(
+    fig, _, _ani1 = animate_potential_difference_3d_x(
         potential, reflected_potential, (0, 1, 2)
     )
     fig.show()

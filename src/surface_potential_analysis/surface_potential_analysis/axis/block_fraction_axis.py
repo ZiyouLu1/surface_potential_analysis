@@ -34,7 +34,7 @@ class ExplicitBlockFractionAxis(
     """A axis with vectors that are the fundamental position states."""
 
     def __init__(
-        self, bloch_fractions: np.ndarray[tuple[int, _NF0_co], np.dtype[np.float_]]
+        self, bloch_fractions: np.ndarray[tuple[Any, _NF0_co], np.dtype[np.float_]]
     ) -> None:
         self._bloch_fractions = bloch_fractions
         super().__init__(cast(_NF0_co, bloch_fractions.shape[1]))

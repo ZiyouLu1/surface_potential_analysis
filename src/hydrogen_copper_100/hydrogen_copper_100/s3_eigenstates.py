@@ -14,7 +14,10 @@ from .surface_data import get_data_path
 if TYPE_CHECKING:
     from pathlib import Path
 
-    from surface_potential_analysis.axis.axis import FundamentalBasis
+    from surface_potential_analysis.axis.axis import (
+        FundamentalBasis,
+        FundamentalTransformedPositionBasis,
+    )
     from surface_potential_analysis.axis.block_fraction_axis import (
         ExplicitBlockFractionAxis,
     )
@@ -25,7 +28,6 @@ if TYPE_CHECKING:
     _L2 = TypeVar("_L2", bound=int)
     from surface_potential_analysis.axis.axis import (
         ExplicitBasis,
-        TransformedPositionBasis,
     )
     from surface_potential_analysis.operator.operator import SingleBasisOperator
     from surface_potential_analysis.state_vector.eigenstate_collection import (
@@ -47,8 +49,8 @@ def get_eigenstate_collection(
         ExplicitBlockFractionAxis[Literal[11]], FundamentalBasis[Literal[10]]
     ],
     StackedBasisLike[
-        TransformedPositionBasis[_L0, _L0, Literal[3]],
-        TransformedPositionBasis[_L1, _L1, Literal[3]],
+        FundamentalTransformedPositionBasis[_L0, Literal[3]],
+        FundamentalTransformedPositionBasis[_L1, Literal[3]],
         ExplicitBasis[Literal[250], _L2, Literal[3]],
     ],
 ]:
@@ -59,8 +61,8 @@ def get_eigenstate_collection(
         bloch_fraction: np.ndarray[tuple[Literal[3]], np.dtype[np.float_]]
     ) -> SingleBasisOperator[
         StackedBasisLike[
-            TransformedPositionBasis[_L0, _L0, Literal[3]],
-            TransformedPositionBasis[_L1, _L1, Literal[3]],
+            FundamentalTransformedPositionBasis[_L0, Literal[3]],
+            FundamentalTransformedPositionBasis[_L1, Literal[3]],
             ExplicitBasis[Literal[250], _L2, Literal[3]],
         ]
     ]:
@@ -89,8 +91,8 @@ def get_eigenstate_collection_relaxed(
         ExplicitBlockFractionAxis[Literal[11]], FundamentalBasis[Literal[10]]
     ],
     StackedBasisLike[
-        TransformedPositionBasis[_L0, _L0, Literal[3]],
-        TransformedPositionBasis[_L1, _L1, Literal[3]],
+        FundamentalTransformedPositionBasis[_L0, Literal[3]],
+        FundamentalTransformedPositionBasis[_L1, Literal[3]],
         ExplicitBasis[Literal[250], _L2, Literal[3]],
     ],
 ]:
@@ -101,8 +103,8 @@ def get_eigenstate_collection_relaxed(
         bloch_fraction: np.ndarray[tuple[Literal[3]], np.dtype[np.float_]]
     ) -> SingleBasisOperator[
         StackedBasisLike[
-            TransformedPositionBasis[_L0, _L0, Literal[3]],
-            TransformedPositionBasis[_L1, _L1, Literal[3]],
+            FundamentalTransformedPositionBasis[_L0, Literal[3]],
+            FundamentalTransformedPositionBasis[_L1, Literal[3]],
             ExplicitBasis[Literal[250], _L2, Literal[3]],
         ]
     ]:

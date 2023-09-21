@@ -8,6 +8,8 @@ from matplotlib.animation import ArtistAnimation
 from matplotlib.colors import Normalize, SymLogNorm
 
 from surface_potential_analysis.stacked_basis.util import (
+    get_k_coordinates_in_axes,
+    get_max_idx,
     get_x_coordinates_in_axes,
 )
 
@@ -20,6 +22,7 @@ if TYPE_CHECKING:
     from matplotlib.collections import QuadMesh
     from matplotlib.figure import Figure
     from matplotlib.image import AxesImage
+    from matplotlib.lines import Line2D
 
     from surface_potential_analysis.axis.stacked_axis import StackedBasisLike
     from surface_potential_analysis.types import SingleStackedIndexLike
@@ -56,6 +59,220 @@ def get_norm_with_clim(
                 vmax=clim[1],
                 linthresh=1 if max([abs_0, abs_1]) <= 0 else np.abs(1e-4 * max_abs),  # type: ignore No parameter named "linthresh"
             )
+
+
+def plot_data_1d_k(
+    basis: StackedBasisLike[*tuple[Any, ...]],
+    data: np.ndarray[tuple[_L0Inv], np.dtype[np.complex_]],
+    axes: tuple[int,] = (0,),
+    idx: SingleStackedIndexLike | None = None,
+    *,
+    ax: Axes | None = None,
+    scale: Scale = "linear",
+    measure: Measure = "abs",
+) -> tuple[Figure, Axes, Line2D]:
+    """
+    Plot data along axes in the k basis.
+
+    Parameters
+    ----------
+    basis : StackedBasisLike
+    data : np.ndarray[tuple[_L0Inv], np.dtype[np.complex_]]
+    axes : tuple[int, int], optional
+        axes to plot in, by default (0, 1)
+    idx : SingleStackedIndexLike | None, optional
+        index to plot, by default None
+    ax : Axes | None, optional
+        plot axis, by default None
+    scale : Scale, optional
+        scale, by default "linear"
+    measure : Measure, optional
+        measure, by default "abs"
+
+    Returns
+    -------
+    tuple[Figure, Axes, Line2D]
+    """
+    fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
+    idx = get_max_idx(basis, data, axes) if idx is None else idx
+
+    coordinates = get_k_coordinates_in_axes(basis, axes, idx)
+    data_in_axis = get_data_in_axes(data.reshape(basis.shape), axes, idx)
+    measured_data = get_measured_data(data_in_axis, measure)
+
+    shifted_data = np.fft.fftshift(measured_data)
+    shifted_coordinates = np.fft.fftshift(coordinates)
+
+    (line,) = ax.plot(shifted_coordinates[0], shifted_data)
+    ax.set_xlabel(f"k{(axes[0] % 3)} axis")
+    ax.set_yscale(scale)
+    return fig, ax, line
+
+
+def plot_data_1d_x(
+    basis: StackedBasisLike[*tuple[Any, ...]],
+    data: np.ndarray[tuple[_L0Inv], np.dtype[np.complex_]],
+    axes: tuple[int,] = (0,),
+    idx: SingleStackedIndexLike | None = None,
+    *,
+    ax: Axes | None = None,
+    scale: Scale = "linear",
+    measure: Measure = "abs",
+) -> tuple[Figure, Axes, Line2D]:
+    """
+    Plot data along axes in the x basis.
+
+    Parameters
+    ----------
+    basis : StackedBasisLike
+    data : np.ndarray[tuple[_L0Inv], np.dtype[np.complex_]]
+    axes : tuple[int, int], optional
+        axes to plot in, by default (0, 1)
+    idx : SingleStackedIndexLike | None, optional
+        index to plot, by default None
+    ax : Axes | None, optional
+        plot axis, by default None
+    scale : Scale, optional
+        scale, by default "linear"
+    measure : Measure, optional
+        measure, by default "abs"
+
+    Returns
+    -------
+    tuple[Figure, Axes, Line2D]
+    """
+    fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
+    idx = get_max_idx(basis, data, axes) if idx is None else idx
+
+    coordinates = get_x_coordinates_in_axes(basis, axes, idx)
+    data_in_axis = get_data_in_axes(data.reshape(basis.shape), axes, idx)
+    measured_data = get_measured_data(data_in_axis, measure)
+
+    (line,) = ax.plot(coordinates[0], measured_data)
+    ax.set_xlabel(f"x{(axes[0] % 3)} axis")
+    ax.set_yscale(scale)
+    return fig, ax, line
+
+
+def plot_data_2d_k(
+    basis: StackedBasisLike[*tuple[Any, ...]],
+    data: np.ndarray[tuple[_L0Inv], np.dtype[np.complex_]],
+    axes: tuple[int, int] = (0, 1),
+    idx: SingleStackedIndexLike | None = None,
+    *,
+    ax: Axes | None = None,
+    scale: Scale = "linear",
+    measure: Measure = "abs",
+) -> tuple[Figure, Axes, QuadMesh]:
+    """
+    Plot the data in a 2d slice in k along the given axis.
+
+    Parameters
+    ----------
+    basis : StackedBasisLike
+    data : np.ndarray[tuple[_L0Inv], np.dtype[np.complex_]]
+    axes : tuple[int, int], optional
+        axes to plot in, by default (0, 1)
+    idx : SingleStackedIndexLike | None, optional
+        index to plot, by default None
+    ax : Axes | None, optional
+        plot axis, by default None
+    scale : Scale, optional
+        scale, by default "linear"
+    measure : Measure, optional
+        measure, by default "abs"
+
+    Returns
+    -------
+    tuple[Figure, Axes, QuadMesh]
+    """
+    fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
+    idx = get_max_idx(basis, data, axes) if idx is None else idx
+
+    coordinates = get_k_coordinates_in_axes(basis, axes, idx)
+    data_in_axis = get_data_in_axes(data.reshape(basis.shape), axes, idx)
+    measured_data = get_measured_data(data_in_axis, measure)
+
+    shifted_data = np.fft.fftshift(measured_data)
+    shifted_coordinates = np.fft.fftshift(coordinates, axes=(1, 2))
+
+    mesh = ax.pcolormesh(*shifted_coordinates, shifted_data, shading="nearest")
+    norm = get_norm_with_clim(scale, mesh.get_clim())
+    mesh.set_norm(norm)
+    ax.set_aspect("equal", adjustable="box")
+    fig.colorbar(mesh, ax=ax, format="%4.1e")
+
+    ax.set_xlabel(f"k{axes[0]} axis")
+    ax.set_ylabel(f"k{axes[1]} axis")
+    ax.text(
+        0.05,
+        0.95,
+        f"k = {idx}",
+        transform=ax.transAxes,
+        verticalalignment="top",
+        bbox={"boxstyle": "round", "facecolor": "wheat", "alpha": 0.5},
+    )
+    return fig, ax, mesh
+
+
+def plot_data_2d_x(
+    basis: StackedBasisLike[*tuple[Any, ...]],
+    data: np.ndarray[tuple[_L0Inv], np.dtype[np.complex_]],
+    axes: tuple[int, int] = (0, 1),
+    idx: SingleStackedIndexLike | None = None,
+    *,
+    ax: Axes | None = None,
+    scale: Scale = "linear",
+    measure: Measure = "abs",
+) -> tuple[Figure, Axes, QuadMesh]:
+    """
+    Plot the data in 2d along the x axis in the given basis.
+
+    Parameters
+    ----------
+    basis : StackedBasisLike
+        basis to interpret the data in
+    data : np.ndarray[tuple[_L0Inv], np.dtype[np.complex_]]
+        plot data
+    axes : tuple[int, int, int], optional
+        axes to plot in, by default (0, 1, 2)
+    idx : SingleStackedIndexLike | None, optional
+        index to plot, by default None
+    ax : Axes | None, optional
+        plot axis, by default None
+    scale : Scale, optional
+        scale, by default "linear"
+    measure : Measure, optional
+        measure, by default "abs"
+
+    Returns
+    -------
+    tuple[Figure, Axes, QuadMesh]
+    """
+    fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
+    idx = get_max_idx(basis, data, axes) if idx is None else idx
+
+    coordinates = get_x_coordinates_in_axes(basis, axes, idx)
+    data_in_axis = get_data_in_axes(data.reshape(basis.shape), axes, idx)
+    measured_data = get_measured_data(data_in_axis, measure)
+
+    mesh = ax.pcolormesh(*coordinates, measured_data, shading="nearest")
+    norm = get_norm_with_clim(scale, mesh.get_clim())
+    mesh.set_norm(norm)
+    ax.set_aspect("equal", adjustable="box")
+    fig.colorbar(mesh, ax=ax, format="%4.1e")
+
+    ax.set_xlabel(f"x{axes[0]} axis")
+    ax.set_ylabel(f"x{axes[1]} axis")
+    ax.text(
+        0.05,
+        0.95,
+        f"x = {idx}",
+        transform=ax.transAxes,
+        verticalalignment="top",
+        bbox={"boxstyle": "round", "facecolor": "wheat", "alpha": 0.5},
+    )
+    return fig, ax, mesh
 
 
 def build_animation(
@@ -117,9 +334,9 @@ _L0Inv = TypeVar("_L0Inv", bound=int)
 # ruff: noqa: PLR0913
 
 
-def animate_through_surface_x(
+def animate_data_through_surface_x(
     basis: StackedBasisLike[*tuple[Any, ...]],
-    points: np.ndarray[tuple[_L0Inv], np.dtype[np.complex_ | np.float_ | np.bool_]],
+    data: np.ndarray[tuple[_L0Inv], np.dtype[np.complex_]],
     axes: tuple[int, int, int] = (0, 1, 2),
     idx: SingleStackedIndexLike | None = None,
     *,
@@ -152,12 +369,13 @@ def animate_through_surface_x(
     clim = (0.0, clim[1]) if clim[0] is None and measure == "abs" else clim
 
     coordinates = get_x_coordinates_in_axes(basis, axes, idx)
-    data = get_measured_data(get_data_in_axes(points, axes, idx), measure)
+    data_in_axis = get_data_in_axes(data.reshape(basis.shape), axes, idx)
+    measured_data = get_measured_data(data_in_axis, measure)
 
     fig, ax, ani = build_animation(
         lambda i, ax: ax.pcolormesh(
-            *coordinates[:, :, :, i],
-            data[:, :, i],
+            *coordinates[:2, :, :, i],
+            measured_data[:, :, i],
             shading="nearest",
         ),
         data.shape[2],

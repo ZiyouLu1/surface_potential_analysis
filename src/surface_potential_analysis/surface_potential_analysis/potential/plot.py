@@ -12,15 +12,14 @@ from surface_potential_analysis.potential.conversion import (
 )
 from surface_potential_analysis.stacked_basis.util import (
     calculate_cumulative_x_distances_along_path,
-    get_x_coordinates_in_axes,
 )
 from surface_potential_analysis.util.plot import (
-    animate_through_surface_x,
-    get_norm_with_clim,
+    animate_data_through_surface_x,
+    plot_data_1d_x,
+    plot_data_2d_x,
 )
 from surface_potential_analysis.util.util import (
     Measure,
-    get_data_in_axes,
     get_measured_data,
 )
 
@@ -82,22 +81,12 @@ def plot_potential_1d_x(
     -------
     tuple[Figure, Axes, Line2D]
     """
-    fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
     converted = convert_potential_to_position_basis(potential)
-    idx = tuple(0 for _ in range(converted["basis"].ndim - 1)) if idx is None else idx
 
-    util = BasisUtil(converted["basis"][axes[0]])
-    coordinates = np.linalg.norm(util.fundamental_x_points, axis=0)
-    data = get_data_in_axes(
-        converted["data"].reshape(converted["basis"].shape),
-        axes,
-        idx,
+    fig, ax, line = plot_data_1d_x(
+        converted["basis"], converted["data"], axes, idx, ax=ax, scale=scale
     )
-
-    (line,) = ax.plot(coordinates, data)
-    ax.set_xlabel(f"x{axes[0]} axis")
     ax.set_ylabel("Energy /J")
-    ax.set_yscale(scale)
     return fig, ax, line
 
 
@@ -240,28 +229,17 @@ def plot_potential_2d_x(
     -------
     tuple[Figure, Axes, QuadMesh]
     """
-    fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
-
     converted = convert_potential_to_position_basis(potential)
-    idx = tuple(0 for _ in range(potential["basis"].ndim - 2)) if idx is None else idx
 
-    coordinates = get_x_coordinates_in_axes(converted["basis"], axes, idx)
-    data = get_data_in_axes(
-        converted["data"].reshape(potential["basis"].shape), axes, idx
+    return plot_data_2d_x(
+        converted["basis"],
+        converted["data"],
+        axes,
+        idx,
+        ax=ax,
+        scale=scale,
+        measure="abs",
     )
-    points = get_measured_data(data, "real")
-
-    mesh = ax.pcolormesh(*coordinates, points, shading="nearest")
-    mesh.set_clim(0, 1e-18)
-    norm = get_norm_with_clim(scale, mesh.get_clim())  # type: ignore unknown
-    mesh.set_norm(norm)
-    ax.set_aspect("equal", adjustable="box")
-    fig.colorbar(mesh, ax=ax, format="%4.1e")
-
-    ax.set_xlabel(f"x{axes[0]} axis")
-    ax.set_ylabel(f"x{axes[1]} axis")
-
-    return fig, ax, mesh
 
 
 def plot_potential_difference_2d_x(
@@ -332,7 +310,7 @@ def animate_potential_3d_x(
     """
     converted = convert_potential_to_position_basis(potential)
     points = potential["data"].reshape(converted["basis"].shape)
-    fig, ax, ani = animate_through_surface_x(  # type: ignore[misc]
+    fig, ax, ani = animate_data_through_surface_x(  # type: ignore[misc]
         potential["basis"],
         points,
         axes,
@@ -347,7 +325,7 @@ def animate_potential_3d_x(
     return fig, ax, ani
 
 
-def animate_potential_difference_2d_x(
+def animate_potential_difference_3d_x(
     potential0: Potential[StackedBasisLike[*tuple[_BL0, ...]]],
     potential1: Potential[StackedBasisLike[*tuple[_BL1, ...]]],
     axes: tuple[int, int, int] = (0, 1, 2),

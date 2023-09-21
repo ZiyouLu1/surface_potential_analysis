@@ -235,7 +235,7 @@ def interpolate_points_along_axis_spline(
     axis: int = -1,
 ) -> np.ndarray[tuple[int, ...], np.dtype[np.float_]]:
     """Use a spline interpolation to increase the Z resolution, spacing z linearly."""
-    new_coords = list(np.linspace(old_coords[0], old_coords[-1], n))
+    new_coords = list(np.linspace(old_coords[0], old_coords[-1], n))  # type: ignore bad type inference
 
     new_shape = list(data.shape)
     new_shape[axis] = n
@@ -247,8 +247,8 @@ def interpolate_points_along_axis_spline(
 
     for i in range(flat_data.shape[0]):
         old_energies = flat_data[i]
-        tck = scipy.interpolate.splrep(old_coords, old_energies, s=0)
-        new_energy = scipy.interpolate.splev(new_coords, tck, der=0)
-        swapped_points[i] = new_energy
+        tck = scipy.interpolate.splrep(old_coords, old_energies, s=0)  # type: ignore bad type inference
+        new_energy = scipy.interpolate.splev(new_coords, tck, der=0)  # type: ignore bad type inference
+        swapped_points[i] = new_energy  # type: ignore bad type inference
 
     return points  # type: ignore[no-any-return]

@@ -7,7 +7,6 @@ from typing import (
     TypeVar,
     TypeVarTuple,
     Unpack,
-    cast,
     overload,
 )
 
@@ -16,11 +15,9 @@ import numpy as np
 from surface_potential_analysis.axis.axis import (
     FundamentalPositionBasis,
 )
-from surface_potential_analysis.axis.stacked_axis import StackedBasisLike
 from surface_potential_analysis.axis.util import (
     BasisUtil,
 )
-from surface_potential_analysis.types import SingleStackedIndexLike
 from surface_potential_analysis.util.util import (
     get_position_in_sorted,
     slice_ignoring_axes,
@@ -31,7 +28,6 @@ if TYPE_CHECKING:
     from surface_potential_analysis.axis.stacked_axis import (
         StackedBasisLike,
     )
-    from surface_potential_analysis.state_vector.state_vector import StateVector
     from surface_potential_analysis.types import (
         ArrayStackedIndexLike,
         FloatLike_co,
@@ -52,8 +48,8 @@ if TYPE_CHECKING:
 def project_k_points_along_axes(
     points: np.ndarray[tuple[_NDInv, Unpack[_TS]], np.dtype[np.float_]],
     basis: StackedBasisLike[Unpack[tuple[_BL0Inv, ...]]],
-    axes: tuple[int, int],
-) -> np.ndarray[tuple[Literal[2], Unpack[_TS]], np.dtype[np.float_]]:
+    axes: tuple[int, ...],
+) -> np.ndarray[tuple[int, Unpack[_TS]], np.dtype[np.float_]]:
     """
     Get the list of k points projected onto the plane including both axes.
 
@@ -69,23 +65,21 @@ def project_k_points_along_axes(
     """
     util = BasisUtil(basis)
 
-    ax_0 = util.delta_k_stacked[axes[0]] / np.linalg.norm(util.delta_k_stacked[axes[0]])
-    # Subtract off parallel componet
-    ax_1 = util.delta_k_stacked[axes[1]] - np.tensordot(
-        ax_0, util.delta_k_stacked[axes[1]], 1
-    )
-    ax_1 /= np.linalg.norm(ax_1)
+    projected_axes = np.zeros((len(axes), util.ndim))
+    for i, ax in enumerate(axes):
+        projected = util.delta_k_stacked[ax]
+        for j in range(i):
+            projected -= projected_axes[j] * np.dot(projected_axes[j], projected)
 
-    projected_0 = cast(np.ndarray[Any, np.float_], np.tensordot(ax_0, points, axes=(0, 0)))  # type: ignore bad type inference
-    projected_1 = cast(np.ndarray[Any, np.float_], np.tensordot(ax_1, points, axes=(0, 0)))  # type: ignore bad type inference
+        projected_axes[i] = projected / np.linalg.norm(projected)
 
-    return np.array([projected_0, projected_1])  # type: ignore[no-any-return]
+    return np.tensordot(projected_axes, points, axes=(1, 0))
 
 
 def get_fundamental_stacked_k_points_projected_along_axes(
     basis: StackedBasisLike[Unpack[tuple[_BL0Inv, ...]]],
-    axes: tuple[int, int],
-) -> np.ndarray[tuple[Literal[2], int], np.dtype[np.float_]]:
+    axes: tuple[int, ...],
+) -> np.ndarray[tuple[int, int], np.dtype[np.float_]]:
     """
     Get the fundamental_k_points projected onto the plane including both axes.
 
@@ -107,7 +101,7 @@ def get_k_coordinates_in_axes(
     basis: StackedBasisLike[Unpack[tuple[_BL0Inv, ...]]],
     axes: tuple[int, ...],
     idx: SingleStackedIndexLike | None,
-) -> np.ndarray[tuple[Literal[2], int], np.dtype[np.float_]]:
+) -> np.ndarray[tuple[int, int], np.dtype[np.float_]]:
     """
     Get the fundamental_k_points projected onto the plane including both axes.
 
@@ -120,20 +114,19 @@ def get_k_coordinates_in_axes(
     -------
     np.ndarray[tuple[Literal[2], int], np.dtype[np.float_]]
     """
-    util = BasisUtil(basis)
-    idx = tuple(0 for _ in range(util.ndim - len(axes))) if idx is None else idx
-    points = get_fundamental_stacked_k_points_projected_along_axes(basis, axes[:2])  # type: ignore[arg-type]
-    _slice = slice_ignoring_axes(idx, axes)
-    return np.transpose(points.reshape(2, *util.shape)[:, *_slice], (0, *(1 + np.array(get_position_in_sorted(axes)))))  # type: ignore[no-any-return]
+    idx = tuple(0 for _ in range(basis.ndim - len(axes))) if idx is None else idx
+    points = get_fundamental_stacked_k_points_projected_along_axes(basis, axes)
+    slice_ = slice_ignoring_axes(idx, axes)
+    return np.transpose(points.reshape(-1, *basis.shape)[:, *slice_], (0, *(1 + np.array(get_position_in_sorted(axes)))))  # type: ignore[no-any-return]
 
 
 def project_x_points_along_axes(
     points: np.ndarray[tuple[_NDInv, Unpack[_TS]], np.dtype[np.float_]],
     basis: StackedBasisLike[Unpack[tuple[_BL0Inv, ...]]],
-    axes: tuple[int, int],
-) -> np.ndarray[tuple[Literal[2], Unpack[_TS]], np.dtype[np.float_]]:
+    axes: tuple[int, ...],
+) -> np.ndarray[tuple[int, Unpack[_TS]], np.dtype[np.float_]]:
     """
-    Get the list of x points projected onto the plane including both axes.
+    Get the list of x points projected onto the plane including all axes.
 
     Parameters
     ----------
@@ -147,23 +140,21 @@ def project_x_points_along_axes(
     """
     util = BasisUtil(basis)
 
-    ax_0 = util.delta_x_stacked[axes[0]] / np.linalg.norm(util.delta_x_stacked[axes[0]])
-    # Subtract off parallel componet
-    ax_1 = util.delta_x_stacked[axes[1]] - (
-        ax_0 * np.dot(ax_0, util.delta_x_stacked[axes[1]])
-    )
-    ax_1 /= np.linalg.norm(ax_1)
+    projected_axes = np.zeros((len(axes), basis.ndim))
+    for i, ax in enumerate(axes):
+        projected = util.delta_x_stacked[ax]
+        for j in range(i):
+            projected -= projected_axes[j] * np.dot(projected_axes[j], projected)
 
-    projected_0 = cast(np.ndarray[Any, np.float_], np.tensordot(ax_0, points, axes=(0, 0)))  # type: ignore bad type inference
-    projected_1 = cast(np.ndarray[Any, np.float_], np.tensordot(ax_1, points, axes=(0, 0)))  # type: ignore bad type inference
+        projected_axes[i] = projected / np.linalg.norm(projected)
 
-    return np.array([projected_0, projected_1])
+    return np.tensordot(projected_axes, points, axes=(1, 0))
 
 
 def get_fundamental_stacked_x_points_projected_along_axes(
     basis: StackedBasisLike[Unpack[tuple[_BL0Inv, ...]]],
-    axes: tuple[int, int],
-) -> np.ndarray[tuple[Literal[2], int], np.dtype[np.float_]]:
+    axes: tuple[int, ...],
+) -> np.ndarray[tuple[int, int], np.dtype[np.float_]]:
     """
     Get the fundamental_x_points projected onto the plane including both axes.
 
@@ -185,7 +176,7 @@ def get_x_coordinates_in_axes(
     basis: StackedBasisLike[Unpack[tuple[_BL0Inv, ...]]],
     axes: tuple[int, ...],
     idx: SingleStackedIndexLike | None,
-) -> np.ndarray[tuple[Literal[2], int], np.dtype[np.float_]]:
+) -> np.ndarray[tuple[int, int], np.dtype[np.float_]]:
     """
     Get the fundamental_x_points projected onto the plane including both axes.
 
@@ -198,11 +189,10 @@ def get_x_coordinates_in_axes(
     -------
     np.ndarray[tuple[Literal[2], int], np.dtype[np.float_]]
     """
-    util = BasisUtil(basis)
-    idx = tuple(0 for _ in range(util.ndim - len(axes))) if idx is None else idx
-    points = get_fundamental_stacked_x_points_projected_along_axes(basis, axes[:2])  # type: ignore[arg-type]
-    _slice = slice_ignoring_axes(idx, axes)
-    return np.transpose(points.reshape(2, *util.shape)[:, *_slice], (0, *(1 + np.array(get_position_in_sorted(axes)))))  # type: ignore[no-any-return]
+    idx = tuple(0 for _ in range(basis.ndim - len(axes))) if idx is None else idx
+    points = get_fundamental_stacked_x_points_projected_along_axes(basis, axes)
+    slice_ = slice_ignoring_axes(idx, axes)
+    return np.transpose(points.reshape(-1, *basis.shape)[:, *slice_], (0, *(1 + np.array(get_position_in_sorted(axes)))))  # type: ignore[no-any-return]
 
 
 @overload
@@ -496,8 +486,23 @@ def get_single_point_basis(
 
 
 def get_max_idx(
-    state: StateVector[StackedBasisLike[*tuple[Any, ...]]], axes: tuple[int, ...]
+    basis: StackedBasisLike[*tuple[Any, ...]],
+    data: np.ndarray[tuple[Any], np.dtype[np.complex_]],
+    axes: tuple[int, ...],
 ) -> SingleStackedIndexLike:
-    util = BasisUtil(state["basis"])
-    max_idx = util.get_stacked_index(np.argmax(np.abs(state["data"])))
+    """
+    Get the max index of data in the given axes.
+
+    Parameters
+    ----------
+    basis : StackedBasisLike
+    data : np.ndarray[tuple[int], np.dtype[np.complex_]]
+    axes : tuple[int, ...]
+
+    Returns
+    -------
+    SingleStackedIndexLike
+    """
+    util = BasisUtil(basis)
+    max_idx = util.get_stacked_index(np.argmax(np.abs(data)))
     return tuple(x for (i, x) in enumerate(max_idx) if i not in axes)

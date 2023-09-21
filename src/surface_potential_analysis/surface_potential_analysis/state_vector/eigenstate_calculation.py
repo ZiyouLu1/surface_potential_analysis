@@ -65,7 +65,11 @@ def calculate_expectation(
         The energy of the Eigenvector given Hamiltonian
     """
     return np.linalg.multi_dot(  # type: ignore[no-any-return]
-        [np.conj(eigenstate["data"]), hamiltonian["array"], eigenstate["data"]]
+        [
+            np.conj(eigenstate["data"]),
+            hamiltonian["data"].reshape(hamiltonian["basis"].shape),
+            eigenstate["data"],
+        ]
     )
 
 
@@ -88,5 +92,9 @@ def calculate_operator_inner_product(
         The energy of the Eigenvector given Hamiltonian
     """
     return np.linalg.multi_dot(  # type:ignore[no-any-return]
-        [dual_vector["data"], operator["array"], vector["data"]]
+        [
+            dual_vector["data"],
+            operator["data"].reshape(operator["basis"].shape),
+            vector["data"],
+        ]
     )

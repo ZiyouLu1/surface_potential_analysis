@@ -22,28 +22,21 @@ from surface_potential_analysis.stacked_basis.conversion import (
 )
 from surface_potential_analysis.stacked_basis.util import wrap_index_around_origin
 from surface_potential_analysis.state_vector.conversion import (
-    convert_state_dual_vector_to_basis,
     convert_state_vector_list_to_basis,
     convert_state_vector_to_momentum_basis,
     convert_state_vector_to_position_basis,
 )
-from surface_potential_analysis.state_vector.state_vector import (
-    StateVector,
-    as_dual_vector,
-    calculate_inner_product,
+from surface_potential_analysis.state_vector.state_vector_list import (
+    as_state_vector_list,
+    get_state_vector,
 )
 from surface_potential_analysis.state_vector.state_vector_list import (
     calculate_inner_product as calculate_inner_product_states,
-)
-from surface_potential_analysis.state_vector.state_vector_list import (
-    get_all_states,
-    get_state_vector,
 )
 from surface_potential_analysis.state_vector.util import (
     get_single_point_state_vector_excact,
 )
 from surface_potential_analysis.wavepacket.get_eigenstate import (
-    get_all_wavepacket_states,
     get_states_at_bloch_idx,
     get_tight_binding_state,
     get_wavepacket_state_vector,
@@ -54,17 +47,19 @@ from surface_potential_analysis.wavepacket.localization.localization_operator im
 )
 from surface_potential_analysis.wavepacket.wavepacket import (
     WavepacketList,
+    as_wavepacket_list,
     get_unfurled_basis,
+    get_wavepacket,
 )
 
 if TYPE_CHECKING:
-    from collections.abc import Sequence
-
     from surface_potential_analysis.axis.axis import (
         FundamentalPositionBasis,
     )
     from surface_potential_analysis.operator.operator import Operator
-    from surface_potential_analysis.state_vector.eigenvalue_list import EigenvalueList
+    from surface_potential_analysis.state_vector.state_vector import (
+        StateVector,
+    )
     from surface_potential_analysis.state_vector.state_vector_list import (
         StateVectorList,
     )
@@ -77,7 +72,6 @@ if TYPE_CHECKING:
     )
 
 _SB0 = TypeVar("_SB0", bound=StackedBasisLike[*tuple[Any, ...]])
-_SB1 = TypeVar("_SB1", bound=StackedBasisLike[*tuple[Any, ...]])
 
 _SBL0 = TypeVar("_SBL0", bound=StackedBasisLike[*tuple[Any, ...]])
 _SBL1 = TypeVar("_SBL1", bound=StackedBasisLike[*tuple[Any, ...]])
@@ -86,70 +80,6 @@ _B0 = TypeVar("_B0", bound=BasisLike[Any, Any])
 _B1 = TypeVar("_B1", bound=BasisLike[Any, Any])
 _B2 = TypeVar("_B2", bound=BasisLike[Any, Any])
 _B3 = TypeVar("_B3", bound=BasisLike[Any, Any])
-
-
-def get_projection_matrix(
-    projections: StateVectorList[_SB0, _SBL0],
-    states: StateVectorList[_SB1, _SBL0],
-) -> EigenvalueList[StackedBasisLike[*tuple[_SB1, _SB0]]]:
-    """
-    Given a projection and a set of states, calculate the coefficients.
-
-    calculates A_m,n = <phi_m|g_n> where g is the projection state
-
-    Parameters
-    ----------
-    projection : StateVector[_B0Inv]
-    states : Sequence[StateVector[_B1Inv]]
-
-    Returns
-    -------
-    np.ndarray[tuple[int], np.dtype[np.complex_]]
-    """
-    coefficients = np.zeros((len(states), len(projections)), dtype=np.complex_)
-    for j, projection in enumerate(get_all_states(projections)):
-        projection_dual = as_dual_vector(projection)
-        converted = convert_state_dual_vector_to_basis(projection_dual, states["basis"])
-        for i, state in enumerate(get_all_states(states)):
-            coefficients[i, j] = calculate_inner_product(state, converted)
-
-    return np.conj(coefficients)  # type: ignore[no-any-return]
-
-
-def _get_projection_coefficients(
-    projection: StateVector[_SBL0], states: Sequence[StateVector[_SBL1]]
-) -> np.ndarray[tuple[int], np.dtype[np.complex_]]:
-    coefficients = get_projection_matrix([projection], states)[:, 0]
-    # Normalize the coefficients.
-    # This means that the product between the projection and the eigenstates
-    # all have the same phase
-    return coefficients / np.abs(coefficients)  # type: ignore[no-any-return]
-
-
-def localize_wavepacket_projection(
-    wavepacket: Wavepacket[_SB0, _SBL0],
-    projection: StateVector[_SBL1],
-) -> Wavepacket[_SB0, _SBL0]:
-    """
-    Given a wavepacket, localize using the given projection.
-
-    Parameters
-    ----------
-    wavepacket : Wavepacket[_B0Inv, _B0Inv]
-    projection : StateVector[_B1Inv]
-
-    Returns
-    -------
-    Wavepacket[_B0Inv, _B0Inv]
-    """
-    coefficients = _get_projection_coefficients(
-        projection, get_all_wavepacket_states(wavepacket)
-    )
-
-    return {
-        "basis": wavepacket["basis"],
-        "data": wavepacket["data"] * coefficients[:, np.newaxis],
-    }
 
 
 def get_state_projections_many_band(
@@ -189,7 +119,7 @@ def get_localization_operator_for_projections(
         stacked_basis_as_fundamental_momentum_basis(wavepackets["basis"][1]),
     )
     states = [
-        get_states_at_bloch_idx(converted, idx)
+        get_states_at_bloch_idx(converted, idx)  # type: ignore can't ensure WavepacketList is a stacked fundamental basis, and still have the right return type
         for idx in range(converted["basis"][0][1].n)
     ]
     data = [
@@ -205,7 +135,7 @@ def get_localization_operator_for_projections(
     }
 
 
-def localize_wavepacket_projection_many_band(
+def localize_wavepacket_projection(
     wavepackets: WavepacketList[_B0, _SB0, _SBL0],
     projections: StateVectorList[_B1, _B2],
 ) -> WavepacketList[_B1, _SB0, _SBL0]:
@@ -223,6 +153,28 @@ def localize_wavepacket_projection_many_band(
     """
     operator = get_localization_operator_for_projections(wavepackets, projections)
     return get_localized_wavepackets(wavepackets, operator)
+
+
+def localize_single_band_wavepacket_projection(
+    wavepacket: Wavepacket[_SB0, _SBL0],
+    projection: StateVector[_SBL1],
+) -> Wavepacket[_SB0, _SBL0]:
+    """
+    Given a wavepacket, localize using the given projection.
+
+    Parameters
+    ----------
+    wavepacket : Wavepacket[_B0Inv, _B0Inv]
+    projection : StateVector[_B1Inv]
+
+    Returns
+    -------
+    Wavepacket[_B0Inv, _B0Inv]
+    """
+    wavepackets = as_wavepacket_list([wavepacket])
+    projections = as_state_vector_list([projection])
+
+    return get_wavepacket(localize_wavepacket_projection(wavepackets, projections), 0)
 
 
 def localize_tight_binding_projection(
@@ -245,10 +197,10 @@ def localize_tight_binding_projection(
     projection = get_tight_binding_state(wavepacket)
     # Better performace if we provide the projection in transformed basis
     transformed = convert_state_vector_to_momentum_basis(projection)
-    return localize_wavepacket_projection(wavepacket, transformed)
+    return localize_single_band_wavepacket_projection(wavepacket, transformed)
 
 
-def _get_single_point_state_for_wavepacket(
+def get_single_point_state_for_wavepacket(
     wavepacket: Wavepacket[_SB0, _SBL0],
     idx: SingleIndexLike = 0,
     origin: SingleStackedIndexLike | None = None,
@@ -285,9 +237,9 @@ def localize_single_point_projection(
     # Initial guess is that the localized state is just the state of some eigenstate
     # truncated at the edge of the first
     # unit cell, centered at the two point max of the wavefunction
-    projection = _get_single_point_state_for_wavepacket(wavepacket, idx)
+    projection = get_single_point_state_for_wavepacket(wavepacket, idx)
     # Will have better performace if we provide it in a truncated position basis
-    return localize_wavepacket_projection(wavepacket, projection)
+    return localize_single_band_wavepacket_projection(wavepacket, projection)
 
 
 def get_exponential_state(
@@ -382,7 +334,7 @@ def localize_exponential_decay_projection(
     # Initial guess is that the localized state is the tight binding state
     # multiplied by an exponential
     projection = _get_exponential_decay_state(wavepacket)
-    return localize_wavepacket_projection(wavepacket, projection)
+    return localize_single_band_wavepacket_projection(wavepacket, projection)
 
 
 def get_gaussian_states(
@@ -460,4 +412,4 @@ def localize_wavepacket_gaussian_projection(
     projection = get_state_vector(get_gaussian_states(wavepacket), 0)
     # Better performace if we provide the projection in transformed basis
     convert_state_vector_to_momentum_basis(projection)
-    return localize_wavepacket_projection(wavepacket, projection)
+    return localize_single_band_wavepacket_projection(wavepacket, projection)

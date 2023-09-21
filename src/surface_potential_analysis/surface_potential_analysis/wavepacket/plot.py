@@ -6,10 +6,6 @@ import numpy as np
 from matplotlib import pyplot as plt
 
 from surface_potential_analysis.axis.util import BasisUtil
-from surface_potential_analysis.stacked_basis.util import (
-    get_k_coordinates_in_axes,
-    get_x_coordinates_in_axes,
-)
 from surface_potential_analysis.state_vector.plot import (
     animate_state_3d_x,
     plot_state_1d_k,
@@ -19,11 +15,13 @@ from surface_potential_analysis.state_vector.plot import (
     plot_state_along_path,
     plot_state_difference_2d_x,
 )
-from surface_potential_analysis.util.plot import get_norm_with_clim
+from surface_potential_analysis.util.plot import (
+    plot_data_2d_k,
+    plot_data_2d_x,
+)
 from surface_potential_analysis.util.util import (
     Measure,
     get_data_in_axes,
-    get_measured_data,
     slice_ignoring_axes,
 )
 from surface_potential_analysis.wavepacket.eigenstate_conversion import (
@@ -58,13 +56,16 @@ if TYPE_CHECKING:
     )
     from surface_potential_analysis.util.plot import Scale
 
-    _B0Inv = TypeVar("_B0Inv", bound=StackedBasisLike)
-    _B1Inv = TypeVar("_B1Inv", bound=StackedBasisLike)
+    _B0Inv = TypeVar("_B0Inv", bound=StackedBasisLike[*tuple[Any, ...]])
+    _B1Inv = TypeVar("_B1Inv", bound=StackedBasisLike[*tuple[Any, ...]])
 # ruff: noqa: PLR0913
 
 
 def plot_wavepacket_sample_frequencies(
-    wavepacket: Wavepacket[_B0Inv, _B1Inv],
+    wavepacket: Wavepacket[
+        StackedBasisLike[*tuple[Any, ...]],
+        StackedBasisLike[*tuple[Any, ...]],
+    ],
     axes: tuple[int, int] = (0, 1),
     idx: SingleStackedIndexLike | None = None,
     *,
@@ -87,9 +88,9 @@ def plot_wavepacket_sample_frequencies(
     util = BasisUtil(wavepacket["basis"])
     idx = tuple(0 for _ in range(util.ndim - len(axes))) if idx is None else idx
 
-    frequencies = get_wavepacket_sample_frequencies(
-        wavepacket["list_basis"], wavepacket["basis"]
-    ).reshape(-1, *wavepacket["list_basis"].shape)
+    frequencies = get_wavepacket_sample_frequencies(wavepacket["basis"]).reshape(
+        -1, *wavepacket["basis"][0].shape
+    )
     frequencies = frequencies[list(axes), slice_ignoring_axes(idx, axes)]
     (line,) = ax.plot(*frequencies.reshape(2, -1))
     line.set_marker("x")
@@ -103,11 +104,15 @@ def plot_wavepacket_sample_frequencies(
 
 
 def plot_wavepacket_eigenvalues_2d_k(
-    wavepacket: WavepacketWithEigenvalues[_B0Inv, _B1Inv],
+    wavepacket: WavepacketWithEigenvalues[
+        StackedBasisLike[*tuple[Any, ...]],
+        StackedBasisLike[*tuple[Any, ...]],
+    ],
     axes: tuple[int, int] = (0, 1),
     idx: SingleStackedIndexLike | None = None,
     *,
     ax: Axes | None = None,
+    measure: Measure = "abs",
     scale: Scale = "linear",
 ) -> tuple[Figure, Axes, QuadMesh]:
     """
@@ -125,30 +130,21 @@ def plot_wavepacket_eigenvalues_2d_k(
     -------
     tuple[Figure, Axes, QuadMesh]
     """
-    fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
+    basis = get_sample_basis(wavepacket["basis"])
+    data = np.fft.ifftshift(wavepacket["eigenvalues"])
 
-    basis = get_sample_basis(wavepacket["list_basis"], wavepacket["basis"])
-
-    coordinates = get_k_coordinates_in_axes(basis, axes, idx)
-    points = np.fft.ifftshift(wavepacket["eigenvalues"])
-
-    shifted_coordinates = np.fft.ifftshift(coordinates, axes=(1, 2))
-
-    mesh = ax.pcolormesh(*shifted_coordinates, points, shading="nearest")
-    norm = get_norm_with_clim(scale, mesh.get_clim())
-    mesh.set_norm(norm)
-    ax.set_aspect("equal", adjustable="box")
-    fig.colorbar(mesh, ax=ax, format="%4.1e")
-
-    ax.set_xlabel("kx axis")
-    ax.set_ylabel("ky axis")
+    fig, ax, mesh = plot_data_2d_k(
+        basis, data, axes, idx, ax=ax, scale=scale, measure=measure
+    )
     ax.set_title("Plot of the band energies against momentum")
-
     return fig, ax, mesh
 
 
 def plot_wavepacket_eigenvalues_2d_x(
-    wavepacket: WavepacketWithEigenvalues[_B0Inv, _B1Inv],
+    wavepacket: WavepacketWithEigenvalues[
+        StackedBasisLike[*tuple[Any, ...]],
+        StackedBasisLike[*tuple[Any, ...]],
+    ],
     axes: tuple[int, int] = (0, 1),
     idx: SingleStackedIndexLike | None = None,
     *,
@@ -173,30 +169,22 @@ def plot_wavepacket_eigenvalues_2d_x(
     -------
     tuple[Figure, Axes, QuadMesh]
     """
-    fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
-
-    basis = get_sample_basis(wavepacket["list_basis"], wavepacket["basis"])
-    coordinates = get_x_coordinates_in_axes(basis, axes, idx)
+    basis = get_sample_basis(wavepacket["basis"])
 
     data = np.fft.ifft2(wavepacket["eigenvalues"])
     data[0, 0] = 0
-    points = get_measured_data(data, measure)
 
-    mesh = ax.pcolormesh(*coordinates, points, shading="nearest")
-    norm = get_norm_with_clim(scale, mesh.get_clim())
-    mesh.set_norm(norm)
-    ax.set_aspect("equal", adjustable="box")
-    fig.colorbar(mesh, ax=ax, format="%4.1e")
-
-    ax.set_xlabel("x axis")
-    ax.set_ylabel("y axis")
+    fig, ax, mesh = plot_data_2d_x(
+        basis, data, axes, idx, ax=ax, scale=scale, measure=measure
+    )
     ax.set_title("Plot of the fourier transform of the band energies against position")
-
     return fig, ax, mesh
 
 
 def plot_eigenvalues_1d_x(
-    wavepacket: WavepacketWithEigenvalues[_B0Inv, _B1Inv],
+    wavepacket: WavepacketWithEigenvalues[
+        StackedBasisLike[*tuple[Any, ...]], StackedBasisLike[*tuple[Any, ...]]
+    ],
     axes: tuple[int,] = (0,),
     idx: SingleStackedIndexLike | None = None,
     *,
@@ -220,11 +208,11 @@ def plot_eigenvalues_1d_x(
     tuple[Figure, Axes, Line2D]
     """
     fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
-    util = BasisUtil(wavepacket["list_basis"])
+    util = BasisUtil(wavepacket["basis"][0])
     idx = tuple(0 for _ in range(util.ndim - 1)) if idx is None else idx
 
     eigenvalues = get_data_in_axes(
-        wavepacket["eigenvalues"].reshape(wavepacket["list_basis"].shape), axes, idx
+        wavepacket["eigenvalues"].reshape(wavepacket["basis"][0].shape), axes, idx
     )
     (line,) = ax.plot(eigenvalues)
     ax.set_yscale(scale)
@@ -234,7 +222,9 @@ def plot_eigenvalues_1d_x(
 
 
 def plot_wavepacket_1d_x(
-    wavepacket: Wavepacket[_B0Inv, _B1Inv],
+    wavepacket: Wavepacket[
+        StackedBasisLike[*tuple[Any, ...]], StackedBasisLike[*tuple[Any, ...]]
+    ],
     axes: tuple[int] = (0,),
     idx: tuple[int, ...] | None = None,
     *,
@@ -268,7 +258,9 @@ def plot_wavepacket_1d_x(
 
 
 def plot_wavepacket_1d_k(
-    wavepacket: Wavepacket[_B0Inv, _B1Inv],
+    wavepacket: Wavepacket[
+        StackedBasisLike[*tuple[Any, ...]], StackedBasisLike[*tuple[Any, ...]]
+    ],
     axes: tuple[int] = (0,),
     idx: tuple[int, ...] | None = None,
     *,
@@ -302,7 +294,9 @@ def plot_wavepacket_1d_k(
 
 
 def plot_wavepacket_2d_k(
-    wavepacket: Wavepacket[_B0Inv, _B1Inv],
+    wavepacket: Wavepacket[
+        StackedBasisLike[*tuple[Any, ...]], StackedBasisLike[*tuple[Any, ...]]
+    ],
     axes: tuple[int, int] = (0, 1),
     idx: SingleStackedIndexLike | None = None,
     *,
@@ -337,7 +331,9 @@ def plot_wavepacket_2d_k(
 
 
 def plot_all_wavepacket_states_2d_k(
-    wavepacket: Wavepacket[_B0Inv, _B1Inv],
+    wavepacket: Wavepacket[
+        StackedBasisLike[*tuple[Any, ...]], StackedBasisLike[*tuple[Any, ...]]
+    ],
     axes: tuple[int, int] = (0, 1),
     idx: SingleStackedIndexLike | None = None,
     *,
@@ -374,7 +370,9 @@ def plot_all_wavepacket_states_2d_k(
 
 
 def plot_wavepacket_2d_x(
-    wavepacket: Wavepacket[_B0Inv, _B1Inv],
+    wavepacket: Wavepacket[
+        StackedBasisLike[*tuple[Any, ...]], StackedBasisLike[*tuple[Any, ...]]
+    ],
     axes: tuple[int, int] = (0, 1),
     idx: SingleStackedIndexLike | None = None,
     *,
@@ -409,7 +407,9 @@ def plot_wavepacket_2d_x(
 
 
 def plot_all_wavepacket_states_2d_x(
-    wavepacket: Wavepacket[_B0Inv, _B1Inv],
+    wavepacket: Wavepacket[
+        StackedBasisLike[*tuple[Any, ...]], StackedBasisLike[*tuple[Any, ...]]
+    ],
     axes: tuple[int, int] = (0, 1),
     idx: SingleStackedIndexLike | None = None,
     *,
@@ -486,7 +486,9 @@ def plot_wavepacket_difference_2d_x(
 
 
 def animate_wavepacket_3d_x(
-    wavepacket: Wavepacket[_B0Inv, _B1Inv],
+    wavepacket: Wavepacket[
+        StackedBasisLike[*tuple[Any, ...]], StackedBasisLike[*tuple[Any, ...]]
+    ],
     axes: tuple[int, int, int] = (0, 1, 2),
     idx: SingleStackedIndexLike | None = None,
     *,
@@ -518,7 +520,9 @@ def animate_wavepacket_3d_x(
 
 
 def plot_wavepacket_along_path(
-    wavepacket: Wavepacket[_B0Inv, _B1Inv],
+    wavepacket: Wavepacket[
+        StackedBasisLike[*tuple[Any, ...]], StackedBasisLike[*tuple[Any, ...]]
+    ],
     path: np.ndarray[tuple[int, int], np.dtype[np.int_]],
     *,
     ax: Axes | None = None,

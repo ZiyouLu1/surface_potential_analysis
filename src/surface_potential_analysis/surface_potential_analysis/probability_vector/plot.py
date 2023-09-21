@@ -2,10 +2,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, TypeVar
 
-import numpy as np
 from matplotlib import pyplot as plt
 
-from surface_potential_analysis.axis.util import BasisUtil
 from surface_potential_analysis.probability_vector.conversion import (
     convert_probability_vector_to_momentum_basis,
     convert_probability_vector_to_position_basis,
@@ -14,11 +12,16 @@ from surface_potential_analysis.probability_vector.probability_vector import (
     ProbabilityVector,
     sum_probabilities,
 )
-from surface_potential_analysis.stacked_basis.util import get_max_idx
-from surface_potential_analysis.util.util import get_data_in_axes, get_measured_data
+from surface_potential_analysis.util.plot import (
+    plot_data_1d_k,
+    plot_data_1d_x,
+    plot_data_2d_k,
+    plot_data_2d_x,
+)
 
 if TYPE_CHECKING:
     from matplotlib.axes import Axes
+    from matplotlib.collections import QuadMesh
     from matplotlib.figure import Figure
     from matplotlib.lines import Line2D
 
@@ -134,22 +137,18 @@ def plot_probability_1d_k(
     -------
     tuple[Figure, Axes, Line2D]
     """
-    fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
-
     converted = convert_probability_vector_to_momentum_basis(state)
-    idx = get_max_idx(converted, axes) if idx is None else idx
-    data_slice: list[slice | int | np.integer[Any]] = list(idx)
-    data_slice.insert(axes[0], slice(None))
 
-    util = BasisUtil(converted["basis"])
-    coordinates = util.fundamental_stacked_nk_points[0]
-    points = get_data_in_axes(converted["data"].reshape(util.shape), axes, idx)
-    data = get_measured_data(points, measure)
-
-    (line,) = ax.plot(np.fft.fftshift(coordinates), np.fft.fftshift(data))
-    ax.set_xlabel(f"k{axes[0]} axis")
+    fig, ax, line = plot_data_1d_k(
+        converted["basis"],
+        converted["data"],
+        axes,
+        idx,
+        ax=ax,
+        scale=scale,
+        measure=measure,
+    )
     ax.set_ylabel("Probability")
-    ax.set_yscale(scale)
     return fig, ax, line
 
 
@@ -183,19 +182,106 @@ def plot_probability_1d_x(
     -------
     tuple[Figure, Axes, Line2D]
     """
-    fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
-
     converted = convert_probability_vector_to_position_basis(state)
-    idx = get_max_idx(converted, axes) if idx is None else idx
 
-    util = BasisUtil(converted["basis"])
-    fundamental_x_points = util.fundamental_x_points_stacked
-    coordinates = np.linalg.norm(fundamental_x_points, axis=0)
-    points = get_data_in_axes(converted["data"].reshape(util.shape), axes, idx)
-    data = get_measured_data(points, measure)
-
-    (line,) = ax.plot(coordinates, data)
-    ax.set_xlabel(f"x{(axes[0] % 3)} axis")
+    fig, ax, line = plot_data_1d_x(
+        converted["basis"],
+        converted["data"],
+        axes,
+        idx,
+        ax=ax,
+        scale=scale,
+        measure=measure,
+    )
     ax.set_ylabel("Probability")
-    ax.set_yscale(scale)
     return fig, ax, line
+
+
+def plot_probability_2d_k(
+    state: ProbabilityVector[StackedBasisLike[*tuple[Any, ...]]],
+    axes: tuple[int, int] = (0, 1),
+    idx: SingleStackedIndexLike | None = None,
+    *,
+    ax: Axes | None = None,
+    measure: Measure = "abs",
+    scale: Scale = "linear",
+) -> tuple[Figure, Axes, QuadMesh]:
+    """
+    Plot the probability in 2D in the k basis.
+
+    Parameters
+    ----------
+    state : ProbabilityVector[StackedBasisLike
+    axes : tuple[int, int], optional
+        axes to plot, by default (0, 1)
+    idx : SingleStackedIndexLike | None, optional
+        index to plot, by default None
+    ax : Axes | None, optional
+        plot axis, by default None
+    measure : Measure, optional
+        measure, by default "abs"
+    scale : Scale, optional
+        scale, by default "linear"
+
+    Returns
+    -------
+    tuple[Figure, Axes, QuadMesh]
+    """
+    converted = convert_probability_vector_to_momentum_basis(state)
+
+    fig, ax, mesh = plot_data_2d_k(
+        converted["basis"],
+        converted["data"],
+        axes,
+        idx,
+        ax=ax,
+        scale=scale,
+        measure=measure,
+    )
+    ax.set_ylabel("Probability")
+    return fig, ax, mesh
+
+
+def plot_probability_2d_x(
+    state: ProbabilityVector[StackedBasisLike[*tuple[Any, ...]]],
+    axes: tuple[int, int] = (0, 1),
+    idx: SingleStackedIndexLike | None = None,
+    *,
+    ax: Axes | None = None,
+    measure: Measure = "abs",
+    scale: Scale = "linear",
+) -> tuple[Figure, Axes, QuadMesh]:
+    """
+     Plot the probability in 2D in the x basis.
+
+    Parameters
+    ----------
+    state : ProbabilityVector[StackedBasisLike
+    axes : tuple[int, int], optional
+        axes to plot, by default (0, 1)
+    idx : SingleStackedIndexLike | None, optional
+        index to plot, by default None
+    ax : Axes | None, optional
+        plot axis, by default None
+    measure : Measure, optional
+        measure, by default "abs"
+    scale : Scale, optional
+        scale, by default "linear"
+
+    Returns
+    -------
+    tuple[Figure, Axes, QuadMesh]
+    """
+    converted = convert_probability_vector_to_position_basis(state)
+
+    fig, ax, mesh = plot_data_2d_x(
+        converted["basis"],
+        converted["data"],
+        axes,
+        idx,
+        ax=ax,
+        scale=scale,
+        measure=measure,
+    )
+    ax.set_ylabel("Probability")
+    return fig, ax, mesh

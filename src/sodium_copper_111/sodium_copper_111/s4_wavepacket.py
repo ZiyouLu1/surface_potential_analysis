@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Literal, TypeVar
+from typing import TYPE_CHECKING, Any, Literal, TypeVar
 
 from surface_potential_analysis.axis.evenly_spaced_basis import (
     EvenlySpacedBasis,
@@ -12,7 +12,7 @@ from surface_potential_analysis.state_vector.util import (
 from surface_potential_analysis.util.decorators import npy_cached
 from surface_potential_analysis.wavepacket.localization import (
     get_localization_operator_wannier90,
-    localize_wavepacket_projection_many_band,
+    localize_wavepacket_projection,
 )
 from surface_potential_analysis.wavepacket.localization.localization_operator import (
     get_localized_wavepackets,
@@ -37,6 +37,7 @@ if TYPE_CHECKING:
         FundamentalBasis,
         FundamentalTransformedPositionBasis1d,
     )
+    from surface_potential_analysis.axis.axis_like import BasisLike
     from surface_potential_analysis.axis.stacked_axis import (
         StackedBasisLike,
     )
@@ -102,13 +103,15 @@ def get_localization_operator_sodium(
 ) -> LocalizationOperator[
     StackedBasisLike[EvenlySpacedBasis[_L0Inv, Literal[1], Literal[0]]],
     StackedBasisLike[*tuple[FundamentalBasis[int], ...]],
-    EvenlySpacedBasis[_L1Inv, Literal[1], Literal[0]],
+    BasisLike[Any, Any],
 ]:
     wavepackets = get_all_wavepackets(shape, resolution)
     projections = get_most_localized_free_state_vectors(
         get_wavepacket_basis(wavepackets), (n_bands,)
     )
-    return get_localization_operator_wannier90(wavepackets, projections)
+    return get_localization_operator_wannier90(
+        get_wavepackets(wavepackets, slice(n_bands)), projections
+    )
 
 
 def get_localized_wavepackets_wannier_90(
@@ -120,7 +123,9 @@ def get_localized_wavepackets_wannier_90(
 ]:
     wavepackets = get_all_wavepackets(shape, resolution)
     operator = get_localization_operator_sodium(shape, resolution, n_bands)
-    return get_localized_wavepackets(wavepackets, operator)
+    return get_localized_wavepackets(
+        get_wavepackets(wavepackets, slice(n_bands)), operator
+    )
 
 
 def get_localized_wavepackets_projection(
@@ -134,6 +139,6 @@ def get_localized_wavepackets_projection(
     projections = get_most_localized_free_state_vectors(
         get_wavepacket_basis(wavepackets), (n_bands,)
     )
-    return localize_wavepacket_projection_many_band(
+    return localize_wavepacket_projection(
         get_wavepackets(wavepackets, slice(n_bands)), projections
     )

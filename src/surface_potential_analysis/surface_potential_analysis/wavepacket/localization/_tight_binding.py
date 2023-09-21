@@ -57,7 +57,7 @@ if TYPE_CHECKING:
 
 @overload
 def _get_global_phases(
-    wavepacket: Wavepacket[Any, Any],
+    wavepacket: Wavepacket[_SB0, _SB1],
     idx: SingleIndexLike,
 ) -> np.ndarray[tuple[int], np.dtype[np.float_]]:
     ...
@@ -65,18 +65,18 @@ def _get_global_phases(
 
 @overload
 def _get_global_phases(
-    wavepacket: Wavepacket[Any, Any],
+    wavepacket: Wavepacket[_SB0, _SB1],
     idx: ArrayIndexLike[*_TS],
 ) -> np.ndarray[tuple[int, *_TS], np.dtype[np.float_]]:
     ...
 
 
-def _get_global_phases(  # type: ignore[misc]
-    wavepacket: Wavepacket[Any, Any],
+def _get_global_phases(
+    wavepacket: Wavepacket[_SB0, _SB1],
     idx: SingleIndexLike | ArrayIndexLike[*_TS],
 ) -> (
     np.ndarray[tuple[int, *_TS], np.dtype[np.float_]]
-    | np.ndarray[int, np.dtype[np.float_]]
+    | np.ndarray[tuple[int], np.dtype[np.float_]]
 ):
     """
     Get the global bloch phase at a given index in the irreducible cell.
@@ -95,11 +95,11 @@ def _get_global_phases(  # type: ignore[misc]
     np.ndarray[tuple[int], np.dtype[np.float_]]
         phases for each sample in the wavepacket
     """
-    basis = stacked_basis_as_fundamental_position_basis(wavepacket["basis"][1])  # type: ignore[arg-type,var-annotated]
+    basis = stacked_basis_as_fundamental_position_basis(wavepacket["basis"][1])
     util = BasisUtil(basis)
 
     nx_points = idx if isinstance(idx, tuple) else util.get_stacked_index(idx)
-    nx_fractions = tuple(a / ni for (a, ni) in zip(nx_points, util.shape, strict=True))
+    nx_fractions = tuple(a / ni for (a, ni) in zip(nx_points, basis.shape, strict=True))
 
     nk_fractions = get_wavepacket_sample_fractions(wavepacket["basis"][0])
     return 2 * np.pi * np.tensordot(nk_fractions, nx_fractions, axes=(0, 0))  # type: ignore[no-any-return]
@@ -128,7 +128,7 @@ def _get_bloch_wavefunction_phases(
     util = BasisUtil(converted["basis"][1])
     idx = util.get_flat_index(idx, mode="wrap") if isinstance(idx, tuple) else idx
 
-    return np.angle(converted["data"][:, idx])  # type: ignore[return-value]
+    return np.angle(converted["data"].reshape(converted["basis"].shape)[:, idx])  # type: ignore[return-value]
 
 
 @timed
@@ -159,9 +159,10 @@ def localize_tightly_bound_wavepacket_idx(
     global_phases = _get_global_phases(wavepacket, idx)
 
     phases = np.exp(-1j * (bloch_angles + global_phases - angle))
-    fixed_eigenvectors = wavepacket["data"] * phases[:, np.newaxis]
+    old_data = wavepacket["data"].reshape(wavepacket["basis"].shape)
+    localized_data = old_data * phases[:, np.newaxis]
 
-    return {"basis": wavepacket["basis"], "data": fixed_eigenvectors}
+    return {"basis": wavepacket["basis"], "data": localized_data.reshape(-1)}
 
 
 def get_wavepacket_two_points(

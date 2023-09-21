@@ -55,7 +55,7 @@ def calculate_eigenstate_collection(
         [np.ndarray[tuple[_L1], np.dtype[np.float_]]],
         SingleBasisOperator[_B0],
     ],
-    bloch_fractions: np.ndarray[tuple[_L0, _L1], np.dtype[np.float_]],
+    bloch_fractions: np.ndarray[tuple[_L1, _L0], np.dtype[np.float_]],
     *,
     subset_by_index: tuple[int, int] | None = None,
 ) -> EigenstateColllection[
@@ -80,14 +80,14 @@ def calculate_eigenstate_collection(
     subset_by_index = (0, 0) if subset_by_index is None else subset_by_index
     n_states = 1 + subset_by_index[1] - subset_by_index[0]
 
-    basis = hamiltonian_generator(bloch_fractions[0])["basis"][0]
+    basis = hamiltonian_generator(bloch_fractions[:, 0])["basis"][0]
 
     vectors = np.zeros(
-        (bloch_fractions.shape[0], n_states * basis.n), dtype=np.complex_
+        (bloch_fractions.shape[1], n_states * basis.n), dtype=np.complex_
     )
-    eigenvalues = np.zeros((bloch_fractions.shape[0], n_states), dtype=np.complex_)
+    eigenvalues = np.zeros((bloch_fractions.shape[1], n_states), dtype=np.complex_)
 
-    for idx, bloch_fraction in enumerate(bloch_fractions):
+    for idx, bloch_fraction in enumerate(bloch_fractions.T):
         h = hamiltonian_generator(bloch_fraction)
         eigenstates = calculate_eigenvectors_hermitian(
             h, subset_by_index=subset_by_index
@@ -99,7 +99,7 @@ def calculate_eigenstate_collection(
     return {
         "basis": StackedBasis(
             StackedBasis(
-                ExplicitBlockFractionAxis(bloch_fractions),
+                ExplicitBlockFractionAxis[_L0](bloch_fractions),
                 FundamentalBasis(n_states),
             ),
             basis,
@@ -142,4 +142,15 @@ def select_eigenstate(
 
 
 def get_eigenvalues_list(states: EigenstateList[_B0, Any]) -> EigenvalueList[_B0]:
+    """
+    Extract eigenvalues from an eigenstate list.
+
+    Parameters
+    ----------
+    states : EigenstateList[_B0, Any]
+
+    Returns
+    -------
+    EigenvalueList[_B0]
+    """
     return {"basis": states["basis"][0], "data": states["eigenvalue"]}

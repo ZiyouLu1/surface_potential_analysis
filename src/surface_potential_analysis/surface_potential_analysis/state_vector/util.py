@@ -49,8 +49,8 @@ def get_single_point_state_vectors(
 ) -> StateVectorList[FundamentalBasis[_L0Inv], StackedBasis[Any]]:
     converted = stacked_basis_as_fundamental_position_basis(get_unfurled_basis(basis))
     data = np.zeros((n_bands, converted.n))
-    for i, _n in enumerate(np.linspace(0, basis[1].n, n_bands, endpoint=False)):
-        data[i, np.random.randint(0, converted.n)] = 1
+    for i, n in enumerate(np.linspace(0, basis[1].n, n_bands, endpoint=False)):
+        data[i, n] = 1
     return {
         "basis": StackedBasis(FundamentalBasis(n_bands), converted),
         "data": data.reshape(-1),

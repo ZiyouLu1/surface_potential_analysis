@@ -212,7 +212,11 @@ def get_all_wavepacket_states(
             ),
             "data": v,
         }
-        for (v, *offset) in zip(converted["data"], *util.stacked_nk_points, strict=True)
+        for (v, *offset) in zip(
+            converted["data"].reshape(converted["basis"].shape),
+            *util.stacked_nk_points,
+            strict=True,
+        )
     ]
 
 

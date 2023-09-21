@@ -327,7 +327,7 @@ def total_surface_hamiltonian_as_fundamental(
             hamiltonian["basis"][0][0].delta_x, hamiltonian["basis"][0][0].n
         ),
         FundamentalTransformedPositionBasis(
-            hamiltonian["basis"][1][0].delta_x, hamiltonian["basis"][0][1].n
+            hamiltonian["basis"][0][1].delta_x, hamiltonian["basis"][0][1].n
         ),
         hamiltonian["basis"][0][2],
     )
