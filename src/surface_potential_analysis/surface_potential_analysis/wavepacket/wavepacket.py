@@ -22,6 +22,10 @@ from surface_potential_analysis.axis.stacked_axis import (
 from surface_potential_analysis.axis.util import (
     BasisUtil,
 )
+from surface_potential_analysis.operator.operator import (
+    SingleBasisDiagonalOperator,
+    average_eigenvalues,
+)
 from surface_potential_analysis.stacked_basis.conversion import (
     stacked_basis_as_fundamental_basis,
 )
@@ -31,10 +35,6 @@ from surface_potential_analysis.state_vector.eigenstate_calculation import (
 from surface_potential_analysis.state_vector.eigenstate_collection import (
     EigenstateList,
     get_eigenvalues_list,
-)
-from surface_potential_analysis.state_vector.eigenvalue_list import (
-    EigenvalueList,
-    average_eigenvalues,
 )
 from surface_potential_analysis.state_vector.state_vector_list import StateVectorList
 
@@ -104,8 +104,10 @@ def get_sample_basis(
 class UnfurledBasisAxis(
     StackedBasis[_B0, BasisWithLengthLike[_L0Inv, _L1Inv, _ND0Inv]]
 ):
+    """Represent the basis of an unfurled wavepacket."""
+
     @property
-    def delta_x(self) -> AxisVector[_ND0Inv]:
+    def delta_x(self) -> AxisVector[_ND0Inv]:  # noqa: D102
         return self[1].delta_x * self[0].n  # type: ignore[no-any-return]
 
 
@@ -257,6 +259,17 @@ def generate_wavepacket(
 def get_wavepacket_basis(
     wavepackets: WavepacketList[_B0, _SB0, _SB1]
 ) -> WavepacketBasis[_SB0, _SB1]:
+    """
+    Get the basis of the wavepacket.
+
+    Parameters
+    ----------
+    wavepackets : WavepacketList[_B0, _SB0, _SB1]
+
+    Returns
+    -------
+    WavepacketBasis[_SB0, _SB1]
+    """
     return StackedBasis(wavepackets["basis"][0][1], wavepackets["basis"][1])
 
 
@@ -264,6 +277,18 @@ def get_wavepacket(
     wavepackets: WavepacketList[_B0, _SB0, _SB1],
     idx: SingleFlatIndexLike,
 ) -> Wavepacket[_SB0, _SB1]:
+    """
+    Get the wavepacket at idx.
+
+    Parameters
+    ----------
+    wavepackets : WavepacketList[_B0, _SB0, _SB1]
+    idx : SingleFlatIndexLike
+
+    Returns
+    -------
+    Wavepacket[_SB0, _SB1]
+    """
     return {
         "basis": get_wavepacket_basis(wavepackets),
         "data": wavepackets["data"].reshape(wavepackets["basis"][0][0].n, -1)[idx],
@@ -274,6 +299,18 @@ def get_wavepackets(
     wavepackets: WavepacketList[_B0, _SB0, _SB1],
     idx: slice,
 ) -> WavepacketList[BasisLike[Any, Any], _SB0, _SB1]:
+    """
+    Get the wavepackets at the given slice.
+
+    Parameters
+    ----------
+    wavepackets : WavepacketList[_B0, _SB0, _SB1]
+    idx : slice
+
+    Returns
+    -------
+    WavepacketList[BasisLike[Any, Any], _SB0, _SB1]
+    """
     stacked = wavepackets["data"].reshape(wavepackets["basis"][0][0].n, -1)
     stacked = stacked[idx]
     return {
@@ -288,6 +325,17 @@ def get_wavepackets(
 def as_wavepacket_list(
     wavepackets: Iterable[Wavepacket[_SB0, _SB1]]
 ) -> WavepacketList[FundamentalBasis[int], _SB0, _SB1]:
+    """
+    Convert an iterable of wavepackets into a wavepacket list.
+
+    Parameters
+    ----------
+    wavepackets : Iterable[Wavepacket[_SB0, _SB1]]
+
+    Returns
+    -------
+    WavepacketList[FundamentalBasis[int], _SB0, _SB1]
+    """
     wavepacket_0 = next(wavepackets.__iter__())
     vectors = np.array([w["data"] for w in wavepackets])
     return {
@@ -302,6 +350,17 @@ def as_wavepacket_list(
 def wavepacket_list_into_iter(
     wavepackets: WavepacketList[Any, _SB0, _SB1]
 ) -> Iterable[Wavepacket[_SB0, _SB1]]:
+    """
+    Iterate over wavepackets in the list.
+
+    Parameters
+    ----------
+    wavepackets : WavepacketList[Any, _SB0, _SB1]
+
+    Returns
+    -------
+    Iterable[Wavepacket[_SB0, _SB1]]
+    """
     stacked = wavepackets["data"].reshape(wavepackets["basis"][0][0].n, -1)
     basis = get_wavepacket_basis(wavepackets)
     return [{"basis": basis, "data": data} for data in stacked]
@@ -309,7 +368,21 @@ def wavepacket_list_into_iter(
 
 def get_average_eigenvalues(
     wavepackets: WavepacketWithEigenvaluesList[_B0, Any, Any]
-) -> EigenvalueList[_B0]:
+) -> SingleBasisDiagonalOperator[_B0]:
+    """
+    Get the band averaged eigenvalues of a wavepacket.
+
+    Parameters
+    ----------
+    wavepackets : WavepacketWithEigenvaluesList[_B0, Any, Any]
+
+    Returns
+    -------
+    SingleBasisDiagonalOperator[_B0]
+    """
     eigenvalues = get_eigenvalues_list(wavepackets)
     averaged = average_eigenvalues(eigenvalues, axis=(1,))
-    return {"basis": averaged["basis"][0], "data": averaged["data"]}
+    return {
+        "basis": StackedBasis(averaged["basis"][0][0], averaged["basis"][0][0]),
+        "data": averaged["data"],
+    }

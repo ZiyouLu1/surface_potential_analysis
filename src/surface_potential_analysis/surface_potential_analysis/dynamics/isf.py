@@ -23,11 +23,13 @@ if TYPE_CHECKING:
         TunnellingSimulationBandsAxis,
         TunnellingSimulationBasis,
     )
+    from surface_potential_analysis.operator.operator import (
+        SingleBasisDiagonalOperator,
+    )
     from surface_potential_analysis.probability_vector.probability_vector import (
         ProbabilityVector,
         ProbabilityVectorList,
     )
-    from surface_potential_analysis.state_vector.eigenvalue_list import EigenvalueList
 
     _AX2Inv = TypeVar("_AX2Inv", bound=TunnellingSimulationBandsAxis[Any])
     _B1Inv = TypeVar("_B1Inv", bound=TunnellingSimulationBasis[Any, Any, Any])
@@ -59,7 +61,7 @@ def calculate_isf_approximate_locations(
     initial_occupation: ProbabilityVector[_B1Inv],
     final_occupation: ProbabilityVectorList[_BT0, _B1Inv],
     dk: np.ndarray[tuple[Literal[2]], np.dtype[np.float_]],
-) -> EigenvalueList[_BT0]:
+) -> SingleBasisDiagonalOperator[_BT0]:
     """
     Calculate the ISF, assuming all states are approximately eigenstates of position.
 
@@ -101,7 +103,9 @@ def calculate_isf_approximate_locations(
     )
     return {
         "data": eigenvalues.astype(np.complex_),
-        "basis": final_occupation["basis"][0],
+        "basis": StackedBasis(
+            final_occupation["basis"][0], final_occupation["basis"][0]
+        ),
     }
 
 
@@ -118,7 +122,7 @@ class ISF4VariableFit:
 
 def get_isf_from_4_variable_fit(
     fit: ISF4VariableFit, times: np.ndarray[tuple[_L0Inv], np.dtype[np.float_]]
-) -> EigenvalueList[ExplicitTimeBasis[_L0Inv]]:
+) -> SingleBasisDiagonalOperator[ExplicitTimeBasis[_L0Inv]]:
     """
     Given an ISF Fit calculate the ISF.
 
@@ -132,15 +136,15 @@ def get_isf_from_4_variable_fit(
     EigenvalueList[_L0Inv]
     """
     return {
-        "basis": ExplicitTimeBasis(times),
-        "data": fit.fast_amplitude * np.exp(-fit.fast_rate * times)
+        "basis": StackedBasis(ExplicitTimeBasis(times), ExplicitTimeBasis(times)),
+        "data": (fit.fast_amplitude * np.exp(-fit.fast_rate * times)
         + fit.slow_amplitude * np.exp(-fit.slow_rate * times)
-        + fit.baseline,
+        + fit.baseline).astype(np.complex_),
     }
 
 
 def fit_isf_to_double_exponential(
-    isf: EigenvalueList[_BT0],
+    isf: SingleBasisDiagonalOperator[_BT0],
     *,
     measure: Measure = "abs",
 ) -> ISF4VariableFit:
@@ -161,7 +165,7 @@ def fit_isf_to_double_exponential(
         lambda t, a, b, c, d: (
             a * np.exp(-(b) * t) + (1 - a - d) * np.exp(-(c) * t) + d
         ),
-        isf["basis"].times,
+        isf["basis"][0].times,
         data,
         p0=(0.5, 2e10, 1e10, 0),
         bounds=([0, 0, 0, 0], [1, np.inf, np.inf, 1]),
@@ -256,7 +260,7 @@ def calculate_isf_fey_model_112bar(
 
 def get_isf_from_fey_model_fit_110(
     fit: ISFFeyModelFit, times: np.ndarray[tuple[_L0Inv], np.dtype[np.float_]]
-) -> EigenvalueList[ExplicitTimeBasis[_L0Inv]]:
+) -> SingleBasisDiagonalOperator[ExplicitTimeBasis[_L0Inv]]:
     """
     Given an ISF Fit calculate the ISF.
 
@@ -270,7 +274,7 @@ def get_isf_from_fey_model_fit_110(
     EigenvalueList[_L0Inv]
     """
     return {
-        "basis": ExplicitTimeBasis(times),
+        "basis": StackedBasis(ExplicitTimeBasis(times), ExplicitTimeBasis(times)),
         "data": calculate_isf_fey_model_110(
             times, fit.fast_rate, fit.slow_rate, a_dk=fit.a_dk
         ).astype(np.complex_),
@@ -279,7 +283,7 @@ def get_isf_from_fey_model_fit_110(
 
 def get_isf_from_fey_model_fit_112bar(
     fit: ISFFeyModelFit, times: np.ndarray[tuple[_L0Inv], np.dtype[np.float_]]
-) -> EigenvalueList[ExplicitTimeBasis[_L0Inv]]:
+) -> SingleBasisDiagonalOperator[ExplicitTimeBasis[_L0Inv]]:
     """
     Given an ISF Fit calculate the ISF.
 
@@ -293,7 +297,7 @@ def get_isf_from_fey_model_fit_112bar(
     EigenvalueList[_L0Inv]
     """
     return {
-        "basis": ExplicitTimeBasis(times),
+        "basis": StackedBasis(ExplicitTimeBasis(times), ExplicitTimeBasis(times)),
         "data": calculate_isf_fey_model_112bar(
             times, fit.fast_rate, fit.slow_rate, a_dk=fit.a_dk
         ).astype(np.complex_),
@@ -301,7 +305,7 @@ def get_isf_from_fey_model_fit_112bar(
 
 
 def fit_isf_to_fey_model_110(
-    isf: EigenvalueList[_BT0],
+    isf: SingleBasisDiagonalOperator[_BT0],
     *,
     measure: Measure = "abs",
     a_dk: float = 2,
@@ -321,7 +325,7 @@ def fit_isf_to_fey_model_110(
     data = get_measured_data(isf["data"], measure)
     params, _ = scipy.optimize.curve_fit(
         lambda t, f, s: calculate_isf_fey_model_110(t, f, s, a_dk=a_dk),
-        isf["basis"].times,
+        isf["basis"][0].times,
         data,
         p0=(1.4e9, 3e8),
         bounds=([0, 0], [np.inf, np.inf]),
@@ -330,7 +334,7 @@ def fit_isf_to_fey_model_110(
 
 
 def fit_isf_to_fey_model_112bar(
-    isf: EigenvalueList[_BT0],
+    isf: SingleBasisDiagonalOperator[_BT0],
     *,
     measure: Measure = "abs",
     a_dk: float = 2,
@@ -350,7 +354,7 @@ def fit_isf_to_fey_model_112bar(
     data = get_measured_data(isf["data"], measure)
     params, _ = scipy.optimize.curve_fit(
         lambda t, f, s: calculate_isf_fey_model_112bar(t, f, s, a_dk=a_dk),
-        isf["basis"].times,
+        isf["basis"][0].times,
         data,
         p0=(2e10, 1e10),
         bounds=([0, 0], [np.inf, np.inf]),

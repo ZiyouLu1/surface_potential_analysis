@@ -25,13 +25,13 @@ from surface_potential_analysis.dynamics.incoherent_propagation.tunnelling_matri
     get_initial_pure_density_matrix_for_basis,
 )
 from surface_potential_analysis.dynamics.isf import calculate_isf_approximate_locations
+from surface_potential_analysis.operator.operator import average_eigenvalues
 from surface_potential_analysis.probability_vector.probability_vector import (
     ProbabilityVector,
     ProbabilityVectorList,
     average_probabilities,
     sum_probability,
 )
-from surface_potential_analysis.state_vector.eigenvalue_list import average_eigenvalues
 
 if TYPE_CHECKING:
     from surface_potential_analysis.dynamics.incoherent_propagation.tunnelling_matrix import (
@@ -40,8 +40,10 @@ if TYPE_CHECKING:
     from surface_potential_analysis.dynamics.tunnelling_basis import (
         TunnellingSimulationBasis,
     )
-    from surface_potential_analysis.operator.operator import DiagonalOperator
-    from surface_potential_analysis.state_vector.eigenvalue_list import EigenvalueList
+    from surface_potential_analysis.operator.operator import (
+        DiagonalOperator,
+        SingleBasisDiagonalOperator,
+    )
 
     _B0Inv = TypeVar("_B0Inv", bound=TunnellingSimulationBasis[Any, Any, Any])
 
@@ -54,7 +56,7 @@ def calculate_isf_at_times(
     initial: DiagonalOperator[_B0Inv, _B0Inv],
     times: np.ndarray[tuple[_L0Inv], np.dtype[np.float_]],
     dk: np.ndarray[tuple[Literal[2]], np.dtype[np.float_]],
-) -> EigenvalueList[ExplicitTimeBasis[_L0Inv]]:
+) -> SingleBasisDiagonalOperator[ExplicitTimeBasis[_L0Inv]]:
     """
     Calculate the ISF, assuming all states are approximately eigenstates of position.
 
@@ -80,7 +82,7 @@ def calculate_equilibrium_state_averaged_isf(
     matrix: TunnellingMMatrix[_B0Inv],
     times: np.ndarray[tuple[_L0Inv], np.dtype[np.float_]],
     dk: np.ndarray[tuple[Literal[2]], np.dtype[np.float_]],
-) -> EigenvalueList[FundamentalTimeBasis[_L0Inv]]:
+) -> SingleBasisDiagonalOperator[FundamentalTimeBasis[_L0Inv]]:
     """
     Calculate the ISF, averaging over the equilibrium occupation of each band.
 
@@ -113,25 +115,26 @@ def calculate_equilibrium_state_averaged_isf(
             initial_probability, final_probabilities, dk
         )
         eigenvalues[band] = isf
-    isf_per_band: EigenvalueList[
+    isf_per_band: SingleBasisDiagonalOperator[
         StackedBasis[FundamentalBasis[int], ExplicitTimeBasis[_L0Inv]]
     ] = {
         "basis": StackedBasis(
-            FundamentalBasis(util.shape[2]), ExplicitTimeBasis(times)
+            StackedBasis(FundamentalBasis(util.shape[2]), ExplicitTimeBasis(times)),
+            StackedBasis(FundamentalBasis(util.shape[2]), ExplicitTimeBasis(times)),
         ),
         "data": eigenvalues.reshape(-1),
     }
     averaged = average_eigenvalues(
         isf_per_band, (0,), weights=occupation_probabilities["data"]
     )
-    return {"basis": averaged["basis"][0], "data": averaged["data"]}
+    return {"basis": averaged["basis"][0][0], "data": averaged["data"]}
 
 
 def calculate_equilibrium_initial_state_isf(
     matrix: TunnellingMMatrix[_B0Inv],
     times: np.ndarray[tuple[_L0Inv], np.dtype[np.float_]],
     dk: np.ndarray[tuple[Literal[2]], np.dtype[np.float_]],
-) -> EigenvalueList[FundamentalTimeBasis[_L0Inv]]:
+) -> SingleBasisDiagonalOperator[FundamentalTimeBasis[_L0Inv]]:
     """
     Calculate the ISF, averaging over the equilibrium occupation of each band.
 
@@ -147,7 +150,9 @@ def calculate_equilibrium_initial_state_isf(
     """
     eigenstates = calculate_tunnelling_eigenstates(matrix)
 
-    vectors = np.zeros((matrix["basis"].shape[2], times.size, matrix["basis"].n))
+    vectors = np.zeros(
+        (matrix["basis"].shape[2], times.size, matrix["basis"].n), dtype=np.complex_
+    )
     for band in range(matrix["basis"].shape[2]):
         initial_state = get_initial_pure_density_matrix_for_basis(
             matrix["basis"], (0, 0, band)
@@ -171,7 +176,7 @@ def calculate_equilibrium_initial_state_isf(
     occupation_probabilities = sum_probability(
         density_matrix_as_probability(equilibrium), (0, 1)
     )
-    vector = np.zeros(matrix["basis"].shape)
+    vector = np.zeros(matrix["basis"].shape, dtype=np.complex_)
     vector[0, 0, :] = occupation_probabilities["data"]
     initial: ProbabilityVector[_B0Inv] = {
         "basis": matrix["basis"],

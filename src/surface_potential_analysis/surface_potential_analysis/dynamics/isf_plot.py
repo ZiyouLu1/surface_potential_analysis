@@ -9,7 +9,7 @@ from surface_potential_analysis.dynamics.isf import (
     get_isf_from_fey_model_fit_110,
     get_isf_from_fey_model_fit_112bar,
 )
-from surface_potential_analysis.state_vector.eigenvalue_list import average_eigenvalues
+from surface_potential_analysis.operator.operator import average_eigenvalues
 from surface_potential_analysis.state_vector.eigenvalue_list_plot import (
     plot_eigenvalue_against_time,
 )
@@ -23,7 +23,9 @@ if TYPE_CHECKING:
     from surface_potential_analysis.axis.axis_like import BasisLike
     from surface_potential_analysis.axis.stacked_axis import StackedBasisLike
     from surface_potential_analysis.axis.time_axis_like import BasisWithTimeLike
-    from surface_potential_analysis.state_vector.eigenvalue_list import EigenvalueList
+    from surface_potential_analysis.operator.operator import (
+        SingleBasisDiagonalOperator,
+    )
     from surface_potential_analysis.util.plot import Scale
     from surface_potential_analysis.util.util import Measure
 
@@ -36,7 +38,7 @@ if TYPE_CHECKING:
 
 
 def plot_isf_against_time(
-    eigenvalues: EigenvalueList[_B0Inv],
+    eigenvalues: SingleBasisDiagonalOperator[_B0Inv],
     *,
     ax: Axes | None = None,
     measure: Measure = "abs",
@@ -71,7 +73,7 @@ def plot_isf_against_time(
 
 
 def plot_average_isf_against_time(
-    eigenvalues: EigenvalueList[_B0StackedInv],
+    eigenvalues: SingleBasisDiagonalOperator[_B0StackedInv],
     *,
     ax: Axes | None = None,
     measure: Measure = "abs",
@@ -98,7 +100,7 @@ def plot_average_isf_against_time(
     """
     averaged = average_eigenvalues(eigenvalues, (0,))
     return plot_isf_against_time(
-        {"basis": averaged["basis"][0], "data": averaged["data"]},
+        {"basis": averaged["basis"][0][0], "data": averaged["data"]},
         ax=ax,
         measure=measure,
         scale=scale,

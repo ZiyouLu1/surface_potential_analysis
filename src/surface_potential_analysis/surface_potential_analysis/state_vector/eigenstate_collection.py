@@ -20,9 +20,9 @@ if TYPE_CHECKING:
     from collections.abc import Callable
 
     from surface_potential_analysis.operator.operator import (
+        SingleBasisDiagonalOperator,
         SingleBasisOperator,
     )
-    from surface_potential_analysis.state_vector.eigenvalue_list import EigenvalueList
 _L0 = TypeVar("_L0", bound=int)
 _L1 = TypeVar("_L1", bound=int)
 _B0_co = TypeVar("_B0_co", bound=BasisLike[Any, Any], covariant=True)
@@ -141,7 +141,9 @@ def select_eigenstate(
     }
 
 
-def get_eigenvalues_list(states: EigenstateList[_B0, Any]) -> EigenvalueList[_B0]:
+def get_eigenvalues_list(
+    states: EigenstateList[_B0, Any]
+) -> SingleBasisDiagonalOperator[_B0]:
     """
     Extract eigenvalues from an eigenstate list.
 
@@ -153,4 +155,7 @@ def get_eigenvalues_list(states: EigenstateList[_B0, Any]) -> EigenvalueList[_B0
     -------
     EigenvalueList[_B0]
     """
-    return {"basis": states["basis"][0], "data": states["eigenvalue"]}
+    return {
+        "basis": StackedBasis(states["basis"][0], states["basis"][0]),
+        "data": states["eigenvalue"],
+    }

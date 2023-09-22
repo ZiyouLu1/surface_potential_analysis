@@ -290,6 +290,18 @@ def get_states_at_bloch_idx(
         *tuple[EvenlySpacedTransformedPositionBasis[Any, Any, Any, Any], ...]
     ],
 ]:
+    """
+    Get all wavepacket states at the given bloch index.
+
+    Returns
+    -------
+    StateVectorList[
+    _B0Inv,
+    StackedBasisLike[
+        *tuple[EvenlySpacedTransformedPositionBasis[Any, Any, Any, Any], ...]
+    ],
+    ]
+    """
     util = BasisUtil(wavepackets["basis"][0][1])
     idx = util.get_flat_index(idx) if isinstance(idx, tuple) else idx
     offset = util.get_stacked_index(idx)

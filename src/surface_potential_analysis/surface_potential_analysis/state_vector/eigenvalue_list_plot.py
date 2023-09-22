@@ -12,9 +12,8 @@ if TYPE_CHECKING:
     from matplotlib.lines import Line2D
 
     from surface_potential_analysis.axis.time_axis_like import BasisWithTimeLike
+    from surface_potential_analysis.operator.operator import SingleBasisDiagonalOperator
     from surface_potential_analysis.util.plot import Scale
-
-    from .eigenvalue_list import EigenvalueList
 
     _B0_co = TypeVar(
         "_B0_co",
@@ -24,7 +23,7 @@ if TYPE_CHECKING:
 
 
 def plot_eigenvalue_against_time(
-    eigenvalues: EigenvalueList[_B0_co],
+    eigenvalues: SingleBasisDiagonalOperator[_B0_co],
     *,
     ax: Axes | None = None,
     measure: Measure = "abs",
@@ -53,7 +52,7 @@ def plot_eigenvalue_against_time(
     fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
 
     data = get_measured_data(eigenvalues["data"], measure)
-    times = eigenvalues["basis"].times
+    times = eigenvalues["basis"][0].times
     (line,) = ax.plot(times, data)
     ax.set_ylabel("Eigenvalue")
     ax.set_yscale(scale)

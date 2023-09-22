@@ -22,6 +22,7 @@ from surface_potential_analysis.wavepacket.localization import (
 )
 from surface_potential_analysis.wavepacket.localization.localization_operator import (
     get_localized_wavepackets,
+    get_wavepacket_hamiltonian,
 )
 from surface_potential_analysis.wavepacket.wavepacket import (
     Wavepacket,
@@ -51,29 +52,33 @@ if TYPE_CHECKING:
     from surface_potential_analysis.axis.stacked_axis import (
         StackedBasisLike,
     )
-    from surface_potential_analysis.operator.operator import SingleBasisOperator
+    from surface_potential_analysis.operator.operator import (
+        DiagonalOperator,
+        SingleBasisOperator,
+    )
     from surface_potential_analysis.wavepacket.localization.localization_operator import (
         LocalizationOperator,
     )
 
+    _HCuBandsBasis = EvenlySpacedBasis[Literal[25], Literal[1], Literal[0]]
     _HCuWavepacketBasis = StackedBasisLike[
         TransformedPositionBasis[Literal[21], Literal[21], Literal[3]],
         TransformedPositionBasis[Literal[21], Literal[21], Literal[3]],
         ExplicitBasis[Literal[250], Literal[15], Literal[3]],
     ]
-    _HCuWavepacketListBasis = StackedBasisLike[
+    _HCuSampleBasis = StackedBasisLike[
         FundamentalBasis[Literal[5]],
         FundamentalBasis[Literal[5]],
         FundamentalBasis[Literal[1]],
     ]
 
     _HydrogenCopperWavepacketList = WavepacketWithEigenvaluesList[
-        EvenlySpacedBasis[Literal[25], Literal[1], Literal[0]],
-        _HCuWavepacketListBasis,
+        _HCuBandsBasis,
+        _HCuSampleBasis,
         _HCuWavepacketBasis,
     ]
     _HydrogenCopperWavepacket = Wavepacket[
-        _HCuWavepacketListBasis,
+        _HCuSampleBasis,
         _HCuWavepacketBasis,
     ]
 
@@ -98,6 +103,16 @@ def get_all_wavepackets_hydrogen() -> _HydrogenCopperWavepacketList:
 
 def get_wavepacket_hydrogen(band: int) -> _HydrogenCopperWavepacket:
     return get_wavepacket(get_all_wavepackets_hydrogen(), band)
+
+
+def get_hamiltonian_hydrogen() -> (
+    DiagonalOperator[
+        StackedBasisLike[_HCuBandsBasis, _HCuSampleBasis],
+        StackedBasisLike[_HCuBandsBasis, _HCuSampleBasis],
+    ]
+):
+    wavepackets = get_all_wavepackets_hydrogen()
+    return get_wavepacket_hamiltonian(wavepackets)
 
 
 def get_two_point_localized_wavepacket_hydrogen(
@@ -137,7 +152,7 @@ def get_projection_localized_wavepackets(
     sample_shape: tuple[int, int, int]
 ) -> WavepacketList[
     StackedBasisLike[*tuple[FundamentalBasis[int], ...]],
-    _HCuWavepacketListBasis,
+    _HCuSampleBasis,
     _HCuWavepacketBasis,
 ]:
     n_samples = sample_shape[0] * sample_shape[1]
@@ -159,11 +174,7 @@ def _get_wavepacket_cache_wannier90_h(sample_shape: tuple[int, int, int]) -> Pat
 @npy_cached(_get_wavepacket_cache_wannier90_h, load_pickle=True)
 def get_localization_operator_hydrogen(
     sample_shape: tuple[int, int, int]
-) -> LocalizationOperator[
-    _HCuWavepacketListBasis,
-    FundamentalBasis[int],
-    BasisLike[Any, Any],
-]:
+) -> LocalizationOperator[_HCuSampleBasis, FundamentalBasis[int], BasisLike[Any, Any]]:
     n_samples = 8  # sample_shape[0] * sample_shape[1]
     wavepackets = get_all_wavepackets_hydrogen()
     projections = get_most_localized_state_vectors_from_probability(
@@ -183,11 +194,7 @@ def get_localization_operator_hydrogen(
 
 def get_wannier90_localized_wavepacket_hydrogen(
     sample_shape: tuple[int, int, int]
-) -> WavepacketList[
-    FundamentalBasis[int],
-    _HCuWavepacketListBasis,
-    _HCuWavepacketBasis,
-]:
+) -> WavepacketList[FundamentalBasis[int], _HCuSampleBasis, _HCuWavepacketBasis]:
     n_samples = 8  # sample_shape[0] * sample_shape[1]
     wavepackets = get_all_wavepackets_hydrogen()
     operator = get_localization_operator_hydrogen(sample_shape)
