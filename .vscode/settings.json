@@ -62,6 +62,7 @@
     "mesolve",
     "ncols",
     "ndarray",
+    "ndenumerate",
     "ndim",
     "ndindex",
     "ndk",

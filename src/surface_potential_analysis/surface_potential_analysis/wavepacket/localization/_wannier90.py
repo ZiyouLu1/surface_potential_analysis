@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import re
 import tempfile
+from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, TypeVar
 
@@ -76,6 +77,13 @@ if TYPE_CHECKING:
     _B2 = TypeVar("_B2", bound=BasisLike[Any, Any])
 
 
+@dataclass
+class Wannier90Options:
+    num_iter: int = 10000
+    conv_window: int = 3
+    use_bloch_phases: bool = False
+
+
 def _build_real_lattice_block(
     delta_x: np.ndarray[tuple[int, int], np.dtype[np.float_]]
 ) -> str:
@@ -90,7 +98,8 @@ def _build_real_lattice_block(
 end unit_cell_cart"""
 
 
-def _build_kpoints_block(
+# ! cSpell:disable
+def _build_k_points_block(
     list_basis: StackedBasisLike[*tuple[BasisLike[Any, Any], ...]]
 ) -> str:
     n_dim = list_basis.ndim
@@ -114,6 +123,7 @@ def _build_win_file(
     wavepackets: WavepacketList[_B0, _SB0, _SBL0],
     *,
     postproc_setup: bool = False,
+    options: Wannier90Options,
 ) -> str:
     """
     Build a postproc setup file.
@@ -129,15 +139,18 @@ def _build_win_file(
     util = BasisUtil(wavepackets["basis"][1])
     return f"""
 {"postproc_setup = .true." if postproc_setup else ""}
-num_iter = 10000
-conv_window = 3
-auto_projections = .true.
+num_iter = {options.num_iter}
+conv_window = {options.conv_window}
 write_u_matrices = .true.
+{"use_bloch_phases = .true."if options.use_bloch_phases else "auto_projections = .true."}
 num_wann = {wavepackets["basis"][0][0].n}
 {_build_real_lattice_block(util.delta_x_stacked)}
-{_build_kpoints_block(wavepackets["basis"][0][1])}
+{_build_k_points_block(wavepackets["basis"][0][1])}
 search_shells = 100
 """
+
+
+# ! cSpell:enable
 
 
 def _get_offset_bloch_state(
@@ -190,12 +203,14 @@ def _build_mmn_file_block(
     return block
 
 
-def _parse_nnkpts_file(
-    nnkpts_file: str,
+def _parse_nnk_points_file(
+    nnk_points_file: str,
 ) -> tuple[int, list[tuple[int, int, int, int, int]]]:
-    block = re.search("begin nnkpts((.|\n)+?)end nnkpts", nnkpts_file)
+    block = re.search(
+        "begin nnkpts((.|\n)+?)end nnkpts", nnk_points_file  # cSpell:disable-line
+    )
     if block is None:
-        msg = "Unable to find nnkpoints block"
+        msg = "Unable to find nnk_points block"
         raise Exception(msg)  # noqa: TRY002
     lines = block.group(1).strip().split("\n")
     first_element = int(lines[0])
@@ -211,10 +226,10 @@ def _parse_nnkpts_file(
 
 def _build_mmn_file(
     wavepackets: WavepacketList[_B0, _SB0, StackedBasisLike[*tuple[_PB1Inv, ...]]],
-    nnkpts_file: str,
+    nnk_points_file: str,
 ) -> str:
     """
-    Given a .nnkp file, generate the mmn file.
+    Given a .nnkp file, generate the mmn file.  # cSpell:disable-line.
 
     Parameters
     ----------
@@ -226,13 +241,13 @@ def _build_mmn_file(
     Wavepacket[_B0Inv, _B0Inv]
     """
     n_wavefunctions = wavepackets["basis"][0][0].n
-    n_kpts = wavepackets["basis"][0][1].n
-    (n_ntot, nnkpts) = _parse_nnkpts_file(nnkpts_file)
+    n_k_points = wavepackets["basis"][0][1].n
+    (n_n_tot, nnk_points) = _parse_nnk_points_file(nnk_points_file)
 
     newline = "\n"
     return f"""
-{n_wavefunctions} {n_kpts} {n_ntot}
-{newline.join(_build_mmn_file_block(wavepackets, k) for k in nnkpts)}"""
+{n_wavefunctions} {n_k_points} {n_n_tot}
+{newline.join(_build_mmn_file_block(wavepackets, k) for k in nnk_points)}"""
 
 
 def _build_amn_file(
@@ -258,23 +273,23 @@ def _build_amn_file(
     """
     n_projections = projections["basis"][0].n
     n_wavefunctions = wavepackets["basis"][0][0].n
-    n_kpts = wavepackets["basis"][0][1].n
+    n_k_points = wavepackets["basis"][0][1].n
     coefficients = np.array(
         [
             get_state_projections_many_band(
                 get_states_at_bloch_idx(wavepackets, idx), projections
             )["data"]
-            for idx in range(n_kpts)
+            for idx in range(n_k_points)
         ]
     )
-    stacked = coefficients.reshape(n_kpts, n_wavefunctions, n_projections)
+    stacked = coefficients.reshape(n_k_points, n_wavefunctions, n_projections)
     newline = "\n"
     newline.join(
         f"{m+1} {n+1} {k+1} {np.real(s)} {np.imag(s)}"
         for ((k, m, n), s) in np.ndenumerate(stacked)
     )
     return f"""
-{n_wavefunctions} {n_kpts} {n_projections}
+{n_wavefunctions} {n_k_points} {n_projections}
 {newline.join(
     f"{m+1} {n+1} {k+1} {np.real(s)} {np.imag(s)}"
     for ((k, m, n), s) in np.ndenumerate(stacked)
@@ -330,22 +345,27 @@ def _get_localization_operator_from_u_mat_file(
 
 
 def _write_setup_files_wannier90(
-    wavepackets: WavepacketList[_B0, _SB0, _SBL0], tmp_dir_path: Path
+    wavepackets: WavepacketList[_B0, _SB0, _SBL0],
+    tmp_dir_path: Path,
+    *,
+    options: Wannier90Options,
 ) -> None:
     win_filename = tmp_dir_path / "spa.win"
     with win_filename.open("w") as f:
-        f.write(_build_win_file(wavepackets, postproc_setup=True))
+        f.write(_build_win_file(wavepackets, postproc_setup=True, options=options))
 
 
 def _write_localization_files_wannier90(
     wavepackets: WavepacketList[_B0, StackedBasisLike[*tuple[_FB0, ...]], _SBL0],
     projections: StateVectorList[_B1, _B2],
     tmp_dir_path: Path,
-    nnkp_file: str,
+    n_nkp_file: str,
+    *,
+    options: Wannier90Options,
 ) -> None:
     win_filename = tmp_dir_path / "spa.win"
     with win_filename.open("w") as f:
-        f.write(_build_win_file(wavepackets))
+        f.write(_build_win_file(wavepackets, options=options))
 
     converted = convert_state_vector_list_to_basis(
         wavepackets,
@@ -354,21 +374,24 @@ def _write_localization_files_wannier90(
 
     mmn_filename = tmp_dir_path / "spa.mmn"
     with mmn_filename.open("w") as f:
-        f.write(_build_mmn_file(converted, nnkp_file))
+        f.write(_build_mmn_file(converted, n_nkp_file))
 
-    amn_filename = tmp_dir_path / "spa.amn"
-    with amn_filename.open("w") as f:
-        f.write(_build_amn_file(converted, projections))
+    if not options.use_bloch_phases:
+        amn_filename = tmp_dir_path / "spa.amn"
+        with amn_filename.open("w") as f:
+            f.write(_build_amn_file(converted, projections))
 
 
 def get_localization_operator_wannier90(
     wavepackets: WavepacketList[_B0, _SB0, _SBL0],
     projections: StateVectorList[_B1, _B2],
+    *,
+    options: Wannier90Options | None = None,
 ) -> LocalizationOperator[_SB0, _B1, _B0]:
     """
     Localizes a set of wavepackets using wannier 90, with a single point projection as an initial guess.
 
-    Note this requires a user to manually run wannier90 and input the resulting wannier90 nnkpts and _umat file
+    Note this requires a user to manually run wannier90 and input the resulting wannier90 nnk_pts and _u.mat file
     into the temporary directory created by the function.
 
     Also requires the wavepackets to have their samples in the fundamental basis
@@ -385,21 +408,22 @@ def get_localization_operator_wannier90(
     WavepacketList[_B1, _SB0, _SBL0]
         Localized wavepackets, with each wavepacket correspondign to a different projection
     """
+    options = Wannier90Options() if options is None else options
     with tempfile.TemporaryDirectory() as tmp_dir:
         tmp_dir_path = Path(tmp_dir)
 
         # Build Files for initial Setup
-        _write_setup_files_wannier90(wavepackets, tmp_dir_path)
+        _write_setup_files_wannier90(wavepackets, tmp_dir_path, options=options)
         input(f"Run Wannier 90 in {tmp_dir_path}")
 
         # Load Setup Files
-        nnkp_filename = tmp_dir_path / "spa.nnkp"
-        with nnkp_filename.open("r") as f:
-            nnkp_file = f.read()
+        n_nkp_filename = tmp_dir_path / "spa.nnkp"  # cSpell:disable-line
+        with n_nkp_filename.open("r") as f:
+            n_nkp_file = f.read()
 
         # Build Files for localisation
         _write_localization_files_wannier90(
-            wavepackets, projections, tmp_dir_path, nnkp_file  # type: ignore should be fundamental basis, but we have no way of ensuring this in the type system
+            wavepackets, projections, tmp_dir_path, n_nkp_file, options=options  # type: ignore should be fundamental basis, but we have no way of ensuring this in the type system
         )
         input(f"Run Wannier 90 in {tmp_dir_path}")
 
@@ -416,11 +440,13 @@ def get_localization_operator_wannier90(
 def localize_wavepacket_wannier90_many_band(
     wavepackets: WavepacketList[_B0, _SB0, _SBL0],
     projections: StateVectorList[_B1, _B2],
+    *,
+    options: Wannier90Options | None = None,
 ) -> WavepacketList[_B1, _SB0, _SBL0]:
     """
     Localizes a set of wavepackets using wannier 90, with a single point projection as an initial guess.
 
-    Note this requires a user to manually run wannier90 and input the resulting wannier90 nnkpts and _umat file
+    Note this requires a user to manually run wannier90 and input the resulting wannier90 nnk_pts and _u.mat file
     into the temporary directory created by the function.
 
     Also requires the wavepackets to have their samples in the fundamental basis
@@ -437,7 +463,9 @@ def localize_wavepacket_wannier90_many_band(
     WavepacketList[_B1, _SB0, _SBL0]
         Localized wavepackets, with each wavepacket correspondign to a different projection
     """
-    operator = get_localization_operator_wannier90(wavepackets, projections)
+    operator = get_localization_operator_wannier90(
+        wavepackets, projections, options=options
+    )
     return get_localized_wavepackets(wavepackets, operator)
 
 
@@ -447,7 +475,7 @@ def localize_wavepacket_wannier90_sp_projections(
     """
     Localizes a wavepacket using wannier 90, with a single point projection as an initial guess.
 
-    Note this requires a user to manually run wannier90 and input the resulting wannier90 nnkpts and _umat file
+    Note this requires a user to manually run wannier90 and input the resulting wannier90 nnk_pts and _u.mat file
     into the temporary directory created by the function.
 
     Parameters

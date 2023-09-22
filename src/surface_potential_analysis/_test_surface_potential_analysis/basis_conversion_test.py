@@ -23,9 +23,6 @@ if TYPE_CHECKING:
     _S0Inv = TypeVar("_S0Inv", bound=tuple[int, ...])
     _NDInv = TypeVar("_NDInv", bound=int)
 
-    _A0Inv = TypeVar("_A0Inv", bound=BasisWithLengthLike[Any, Any, Any])
-    _A1Inv = TypeVar("_A1Inv", bound=BasisWithLengthLike[Any, Any, Any])
-
     _N0Inv = TypeVar("_N0Inv", bound=int)
     _N1Inv = TypeVar("_N1Inv", bound=int)
 
@@ -58,8 +55,8 @@ def get_axis_conversion_matrix(
 
 def convert_vector_simple(
     vector: np.ndarray[_S0Inv, np.dtype[np.complex_]],
-    initial_axis: _A0Inv,
-    final_axis: _A1Inv,
+    initial_axis: BasisWithLengthLike[Any, Any, Any],
+    final_axis: BasisWithLengthLike[Any, Any, Any],
     axis: int = -1,
 ) -> np.ndarray[Any, np.dtype[np.complex_]]:
     matrix = get_axis_conversion_matrix(initial_axis, final_axis)
@@ -68,8 +65,8 @@ def convert_vector_simple(
 
 class BasisConversionTest(unittest.TestCase):
     def test_as_explicit_position_basis_momentum_normalization(self) -> None:
-        fundamental_n = rng.integers(2, 5)
-        n = rng.integers(1, fundamental_n)
+        fundamental_n = rng.integers(2, 5)  # type: ignore bad libary types
+        n = rng.integers(1, fundamental_n)  # type: ignore bad libary types
 
         basis = get_random_explicit_axis(1, fundamental_n=fundamental_n, n=n)
 
@@ -104,14 +101,14 @@ class BasisConversionTest(unittest.TestCase):
             basis,
         )
         expected = convert_vector_simple(
-            np.eye(fundamental_n),
+            np.eye(fundamental_n).astype(np.complex_),
             axis_as_fundamental_position_axis(basis),
             basis,
         )
         np.testing.assert_almost_equal(actual, expected)
 
     def test_as_explicit_position_basis_momentum(self) -> None:
-        n = rng.integers(5, 10)
+        n = rng.integers(5, 10)  # type: ignore bad libary types
 
         basis = FundamentalTransformedPositionBasis(np.array([1]), n)
 
@@ -141,13 +138,15 @@ class BasisConversionTest(unittest.TestCase):
         np.testing.assert_array_almost_equal(
             convert_vector(np.eye(n), basis, axis_as_fundamental_position_axis(basis)),
             convert_vector_simple(
-                np.eye(n), basis, axis_as_fundamental_position_axis(basis)
+                np.eye(n).astype(np.complex_),
+                basis,
+                axis_as_fundamental_position_axis(basis),
             ),
         )
 
     def test_get_basis_conversion_matrix_diagonal(self) -> None:
-        fundamental_n = rng.integers(2, 5)
-        n = rng.integers(1, fundamental_n)
+        fundamental_n = rng.integers(2, 5)  # type: ignore bad libary types
+        n = rng.integers(1, fundamental_n)  # type: ignore bad libary types
 
         basis_0 = BasisUtil(
             get_random_explicit_axis(1, fundamental_n=fundamental_n, n=n)
@@ -163,8 +162,8 @@ class BasisConversionTest(unittest.TestCase):
         np.testing.assert_array_almost_equal(matrix, np.eye(n, n))
 
     def test_basis_conversion_matrix_position(self) -> None:
-        fundamental_n = rng.integers(2, 5)
-        n = rng.integers(1, fundamental_n)
+        fundamental_n = rng.integers(2, 5)  # type: ignore bad libary types
+        n = rng.integers(1, fundamental_n)  # type: ignore bad libary types
         basis_0 = get_random_explicit_axis(1, fundamental_n=fundamental_n, n=n)
 
         matrix = get_axis_conversion_matrix(basis_0, basis_0)

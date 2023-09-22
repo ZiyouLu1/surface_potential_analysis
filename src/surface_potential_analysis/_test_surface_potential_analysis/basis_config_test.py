@@ -20,7 +20,7 @@ from surface_potential_analysis.stacked_basis.conversion import (
     stacked_basis_as_fundamental_position_basis,
 )
 from surface_potential_analysis.stacked_basis.util import (
-    _wrap_distance,
+    _wrap_distance,  # type: ignore this is testing module
     calculate_cumulative_x_distances_along_path,
     get_fundamental_stacked_k_points_projected_along_axes,
     get_fundamental_stacked_x_points_projected_along_axes,
@@ -166,9 +166,9 @@ class TestBasisConfig(unittest.TestCase):
     def test_get_stacked_index(self) -> None:
         delta_x = np.array(([1, 0, 0], [0, 2, 0], [0, 0, 1]))
         resolution = (
-            rng.integers(1, 10),
-            rng.integers(1, 10),
-            rng.integers(1, 10),
+            rng.integers(1, 10),# type: ignore bad libary types
+            rng.integers(1, 10),# type: ignore bad libary types
+            rng.integers(1, 10),# type: ignore bad libary types
         )
         basis = position_basis_3d_from_shape(resolution, delta_x)
         util = BasisUtil(basis)
@@ -193,9 +193,9 @@ class TestBasisConfig(unittest.TestCase):
         np.testing.assert_array_equal(expected, actual)
 
         resolution = (
-            rng.integers(1, 20),
-            rng.integers(1, 20),
-            rng.integers(1, 20),
+            rng.integers(1, 20),# type: ignore bad libary types
+            rng.integers(1, 20),# type: ignore bad libary types
+            rng.integers(1, 20),# type: ignore bad libary types
         )
         basis = position_basis_3d_from_shape(resolution, delta_x)
         util = BasisUtil(basis)
@@ -221,9 +221,9 @@ class TestBasisConfig(unittest.TestCase):
         np.testing.assert_array_equal(expected, actual)
 
         resolution = (
-            rng.integers(1, 20),
-            rng.integers(1, 20),
-            rng.integers(1, 20),
+            rng.integers(1, 20),# type: ignore bad libary types
+            rng.integers(1, 20),# type: ignore bad libary types
+            rng.integers(1, 20),# type: ignore bad libary types
         )
         basis = position_basis_3d_from_shape(resolution, delta_x)
         util = BasisUtil(basis)

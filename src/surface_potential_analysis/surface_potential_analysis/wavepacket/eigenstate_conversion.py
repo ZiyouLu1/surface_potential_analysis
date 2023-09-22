@@ -191,9 +191,7 @@ def unfurl_wavepacket(
 
 
 def unfurl_wavepacket_list(
-    wavepackets: WavepacketList[
-        _B0, StackedBasisLike[*tuple[Any, ...]], StackedBasisLike[*tuple[Any, ...]]
-    ]
+    wavepackets: WavepacketList[_B0, _SB0, _SB1]
 ) -> StateVectorList[
     _B0, StackedBasisLike[*tuple[FundamentalTransformedPositionBasis[Any, Any], ...]]
 ]:

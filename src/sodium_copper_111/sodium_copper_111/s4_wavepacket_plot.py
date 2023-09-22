@@ -1,15 +1,24 @@
 from __future__ import annotations
 
+import numpy as np
 from matplotlib import pyplot as plt
+from surface_potential_analysis.potential.plot import plot_potential_1d_x
 from surface_potential_analysis.probability_vector.plot import plot_probability_1d_k
 from surface_potential_analysis.probability_vector.probability_vector import (
     average_probabilities,
     from_state_vector_list,
 )
-from surface_potential_analysis.state_vector.plot import plot_state_1d_k
-from surface_potential_analysis.state_vector.state_vector_list import get_state_vector
+from surface_potential_analysis.state_vector.plot import (
+    plot_state_1d_k,
+    plot_state_1d_x,
+)
+from surface_potential_analysis.state_vector.state_vector_list import (
+    get_state_vector,
+    state_vector_list_into_iter,
+)
 from surface_potential_analysis.state_vector.util import (
     get_most_localized_free_state_vectors,
+    get_most_localized_state_vectors_from_probability,
 )
 from surface_potential_analysis.wavepacket.eigenstate_conversion import (
     unfurl_wavepacket_list,
@@ -29,10 +38,12 @@ from surface_potential_analysis.wavepacket.wavepacket import (
 
 from sodium_copper_111.s4_wavepacket import (
     get_all_wavepackets,
-    get_localized_wavepackets_projection,
     get_localized_wavepackets_wannier_90,
+    get_projection_localized_wavepackets,
     get_wavepacket,
 )
+
+from .s1_potential import get_interpolated_potential
 
 
 def plot_wavepacket_average_occupation_probability() -> None:
@@ -56,8 +67,22 @@ def plot_wavepacket_average_occupation_probability() -> None:
     input()
 
 
+def plot_get_most_localized_state_vectors_from_probability() -> None:
+    projections = get_most_localized_state_vectors_from_probability(
+        get_all_wavepackets((21,), (60,)), (np.array([0, 1, 0.5]),)
+    )
+    fig, ax = plt.subplots()
+    for state in state_vector_list_into_iter(projections):
+        plot_state_1d_x(state, ax=ax)
+
+    potential = get_interpolated_potential((100,))
+    plot_potential_1d_x(potential, ax=ax.twinx())
+    fig.show()
+    input()
+
+
 def plot_projection_localized_wavepacket() -> None:
-    wavepackets = get_localized_wavepackets_projection((21,), (60,), 25)
+    wavepackets = get_projection_localized_wavepackets((21,), (60,), 25)
 
     fig0, ax0 = plt.subplots()
     fig1, ax1 = plt.subplots()

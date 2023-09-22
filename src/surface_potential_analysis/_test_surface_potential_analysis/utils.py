@@ -21,11 +21,11 @@ def get_random_explicit_axis(
     n: int | None = None,
 ) -> ExplicitBasis[int, int, _L0Inv]:
     fundamental_n = (
-        rng.integers(2 if n is None else n, 5)
+        rng.integers(2 if n is None else n, 5)  # type: ignore bad libary types
         if fundamental_n is None
         else fundamental_n
     )
-    n = rng.integers(1, fundamental_n) if n is None else n
+    n = rng.integers(1, fundamental_n) if n is None else n  # type: ignore bad libary types
     vectors = special_ortho_group.rvs(fundamental_n)[:n]
     delta_x = np.zeros(nd)
     delta_x[0] = 1

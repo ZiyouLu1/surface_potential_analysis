@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, TypeVar
+from typing import TYPE_CHECKING, Any, TypeVar, cast
 
 import numpy as np
 
@@ -34,11 +34,13 @@ from surface_potential_analysis.wavepacket.eigenstate_conversion import (
 )
 from surface_potential_analysis.wavepacket.get_eigenstate import get_all_eigenstates
 from surface_potential_analysis.wavepacket.wavepacket import (
+    WavepacketBasis,
     WavepacketWithEigenvalues,
     get_unfurled_basis,
 )
 
 if TYPE_CHECKING:
+    from surface_potential_analysis.axis.axis_like import BasisLike, BasisWithLengthLike
     from surface_potential_analysis.axis.stacked_axis import (
         StackedBasisLike,
     )
@@ -47,6 +49,9 @@ if TYPE_CHECKING:
     _B1Inv = TypeVar("_B1Inv", bound=StackedBasisLike[*tuple[Any, ...]])
     _B2Inv = TypeVar("_B2Inv", bound=StackedBasisLike[*tuple[Any, ...]])
     _B0Inv = TypeVar("_B0Inv", bound=StackedBasisLike[*tuple[Any, ...]])
+
+    _B0 = TypeVar("_B0", bound=BasisLike[Any, Any])
+    _BL0 = TypeVar("_BL0", bound=BasisWithLengthLike[Any, Any, Any])
 
 
 def _get_position_operator(basis: _B1Inv) -> SingleBasisOperator[_B1Inv]:
@@ -115,14 +120,18 @@ def localize_position_operator(
     list[Wavepacket[_S0Inv, _B0Inv]]
     """
     basis = stacked_basis_as_fundamental_position_basis(
-        get_unfurled_basis(wavepacket["basis"])
+        get_unfurled_basis(cast(WavepacketBasis[Any, Any], wavepacket["basis"]))
     )
     operator_position = _get_position_operator(basis)
     return _localize_operator(wavepacket, operator_position)
 
 
 def localize_position_operator_many_band(
-    wavepackets: list[WavepacketWithEigenvalues[_B0Inv, _B1Inv]]
+    wavepackets: list[
+        WavepacketWithEigenvalues[
+            StackedBasisLike[*tuple[_B0, ...]], StackedBasisLike[*tuple[_BL0, ...]]
+        ]
+    ]
 ) -> list[StateVector[Any]]:
     """
     Given a sequence of wavepackets at each band, get all possible eigenstates of position.
@@ -146,7 +155,7 @@ def localize_position_operator_many_band(
     operator_position = _get_position_operator(basis)
     operator = _get_operator_between_states(states, operator_position)
     eigenstates = calculate_eigenvectors_hermitian(operator)
-    state_vectors = np.array([s["data"] for s in states])
+    state_vectors = np.array([s["data"] for s in states], dtype=np.complex_)
     return [
         {
             "basis": basis,

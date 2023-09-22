@@ -12,8 +12,13 @@ from surface_potential_analysis.probability_vector.probability_vector import (
     from_state_vector_list,
 )
 from surface_potential_analysis.state_vector.plot import (
+    plot_state_1d_k,
     plot_state_2d_k,
     plot_state_2d_x,
+)
+from surface_potential_analysis.state_vector.state_vector_list import get_state_vector
+from surface_potential_analysis.state_vector.util import (
+    get_most_localized_free_state_vectors,
 )
 from surface_potential_analysis.wavepacket.eigenstate_conversion import (
     unfurl_wavepacket_list,
@@ -28,11 +33,13 @@ from surface_potential_analysis.wavepacket.localization import (
 from surface_potential_analysis.wavepacket.plot import (
     animate_wavepacket_3d_x,
     plot_eigenvalues_1d_x,
+    plot_wavepacket_1d_k,
     plot_wavepacket_2d_k,
     plot_wavepacket_2d_x,
     plot_wavepacket_sample_frequencies,
 )
 from surface_potential_analysis.wavepacket.wavepacket import (
+    get_wavepacket_basis,
     get_wavepackets,
     wavepacket_list_into_iter,
 )
@@ -41,6 +48,7 @@ from .s4_wavepacket import (
     get_all_wavepackets_hydrogen,
     get_single_point_projection_localized_wavepacket_hydrogen,
     get_tight_binding_projection_localized_wavepacket_hydrogen,
+    get_wannier90_localized_wavepacket_hydrogen,
     get_wavepacket_hydrogen,
 )
 
@@ -62,21 +70,39 @@ def plot_wavepacket_hydrogen() -> None:
         input()
 
 
+def plot_localized_wavepackets_hydrogen() -> None:
+    wavepackets = get_wannier90_localized_wavepacket_hydrogen((3, 3, 3))
+    for wavepacket in wavepacket_list_into_iter(wavepackets):
+        fig, _, _ = plot_wavepacket_1d_k(wavepacket, scale="symlog", measure="abs")
+        fig.show()
+        fig, _, _ = plot_wavepacket_2d_x(wavepacket, scale="symlog", measure="abs")
+        fig.show()
+    input()
+
+
 def plot_wavepacket_average_occupation_probability() -> None:
     wavepackets = get_all_wavepackets_hydrogen()
 
     fig, ax = plt.subplots()
-    for n_bands in [1, 4, 8, 12]:
+    for n_bands in [1, 4, 8, 16]:
         unfurled = unfurl_wavepacket_list(get_wavepackets(wavepackets, slice(n_bands)))
         probabilities = from_state_vector_list(unfurled)
         averaged = average_probabilities(probabilities)
 
-        _, _, line = plot_probability_1d_k(averaged, idx=(0, 0), ax=ax, measure="abs")
+        _, _, line = plot_probability_1d_k(
+            averaged, idx=(0, 0), ax=ax, measure="abs", scale="symlog"
+        )
         line.set_label(f"{n_bands} bands")
+
+    projections = get_most_localized_free_state_vectors(
+        get_wavepacket_basis(wavepackets), (4, 4, 1)
+    )
+    _, _, line = plot_state_1d_k(get_state_vector(projections, 0), ax=ax.twinx())
+    line.set_label("Projections")
     ax.legend()
     fig.show()
 
-    unfurled = unfurl_wavepacket_list(get_wavepackets(wavepackets, slice(12)))
+    unfurled = unfurl_wavepacket_list(get_wavepackets(wavepackets, slice(8)))
     probabilities = from_state_vector_list(unfurled)
     averaged = average_probabilities(probabilities)
     fig, _, _ = plot_probability_2d_k(averaged, idx=(0,), measure="abs")
@@ -126,7 +152,7 @@ def plot_energies() -> None:
 
 
 def plot_single_point_projection_localized_wavepacket_hydrogen() -> None:
-    for band in [0]:
+    for band in [4]:
         wavepacket = get_single_point_projection_localized_wavepacket_hydrogen(band)
         state = get_bloch_state_vector(wavepacket, 0)
         fig, _, _ = plot_state_2d_k(state, (0, 1), measure="abs", scale="symlog")

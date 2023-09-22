@@ -8,7 +8,7 @@ from scipy.constants import Boltzmann
 
 from surface_potential_analysis.axis.util import BasisUtil
 from surface_potential_analysis.state_vector.state_vector_list import (
-    get_all_states,
+    state_vector_list_into_iter,
 )
 
 from .plot import plot_state_1d_x
@@ -90,7 +90,7 @@ def plot_states_1d_x(
     """
     fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
 
-    for state in get_all_states(states):
+    for state in state_vector_list_into_iter(states):
         plot_state_1d_x(state, axes, idx, ax=ax, measure=measure, scale=scale)
     return fig, ax
 

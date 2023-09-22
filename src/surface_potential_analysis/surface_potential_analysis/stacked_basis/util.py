@@ -320,9 +320,10 @@ def wrap_x_point_around_origin(
             for (distance, origin) in zip(
                 distance_along_axes, origin_along_axes, strict=True
             )
-        ]
+        ],
+        dtype=np.float_,
     )
-    return np.tensordot(util.delta_x_stacked, wrapped_distances, axes=(0, 0))  # type: ignore[no-any-return]
+    return np.tensordot(util.delta_x_stacked, wrapped_distances, axes=(0, 0))
 
 
 _S2d0Inv = TypeVar("_S2d0Inv", bound=tuple[int, int])
@@ -353,8 +354,9 @@ def calculate_distances_along_path(
     out = path[:, :-1] - path[:, 1:]
     if wrap_distances:
         util = BasisUtil(basis)
-        return np.array(  # type: ignore[no-any-return]
-            [_wrap_distance(d, n) for (d, n) in zip(out, util.shape, strict=True)]
+        return np.array(
+            [_wrap_distance(d, n) for (d, n) in zip(out, util.shape, strict=True)],
+            dtype=np.float_,
         )
 
     return out  # type:ignore[no-any-return]

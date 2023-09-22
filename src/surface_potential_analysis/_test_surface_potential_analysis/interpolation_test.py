@@ -17,9 +17,9 @@ from surface_potential_analysis.util.interpolation import (
 def interpolate_real_points_fourier(
     points: np.ndarray[tuple[int, int], Any], shape: tuple[int, int]
 ) -> np.ndarray[tuple[int, int], Any]:
-    x_interp = interpolate_points_rfft(points, shape[0], axis=0)
+    x_interpolation = interpolate_points_rfft(points, shape[0], axis=0)
     return interpolate_points_rfft(  # type: ignore[return-value]
-        x_interp, shape[1], axis=1
+        x_interpolation, shape[1], axis=1
     )
 
 
@@ -35,29 +35,28 @@ rng = np.random.default_rng()
 
 class InterpolationTest(unittest.TestCase):
     def test_pad_ft_points_real_axis(self) -> None:
-        initial_n = rng.integers(1, 100)
+        initial_n = rng.integers(1, 100)  # type: ignore bad libary types
         initial = rng.random((initial_n,))
 
-        n = rng.integers(2 * (initial_n - 1), 2 * (initial_n - 1) + 2)
+        n = rng.integers(2 * (initial_n - 1), 2 * (initial_n - 1) + 2)  # type: ignore bad libary types
         final = pad_ft_points_real_axis(initial, n)
         np.testing.assert_array_equal(initial, final)
 
-        n = rng.integers(2 * (initial_n - 1) + 2, 2 * (initial_n - 1) + 20)
+        n = rng.integers(2 * (initial_n - 1) + 2, 2 * (initial_n - 1) + 20)  # type: ignore bad libary types
         final = pad_ft_points_real_axis(initial, n)
         np.testing.assert_array_equal(initial, final[: initial.shape[0]])
 
-        n = rng.integers(1, 2 * (initial_n - 1))
+        n = rng.integers(1, 2 * (initial_n - 1))  # type: ignore bad libary types
         final = pad_ft_points_real_axis(initial, n)
         np.testing.assert_array_equal(initial[: final.shape[0]], final)
 
     def test_interpolate_points_fourier_double(self) -> None:
         # Note the interpolation that assumes the potential is real will not
         # return the same points if the original data has an even number of points
-        original_shape = tuple(2 * rng.integers(1, 5, size=2) - 1)
+        original_shape = tuple(2 * rng.integers(1, 5, size=2) - 1)  # type: ignore bad libary types
         points = np.random.random(size=original_shape).tolist()
         interpolated_shape = (original_shape[0] * 2, original_shape[1] * 2)
         expected = points
-
         actual = np.array(interpolate_real_points_fourier(points, interpolated_shape))
         np.testing.assert_array_almost_equal(expected, actual[::2, ::2])
 
@@ -68,9 +67,9 @@ class InterpolationTest(unittest.TestCase):
 
     def test_interpolate_points_fourier_flat(self) -> None:
         value = rng.random()
-        shape_in = tuple(rng.integers(1, 10, size=2))
+        shape_in = tuple(rng.integers(1, 10, size=2))  # type: ignore bad libary types
         points = (value * np.ones(shape_in)).tolist()
-        shape_out = tuple(rng.integers(1, 10, size=2))
+        shape_out = tuple(rng.integers(1, 10, size=2))  # type: ignore bad libary types
 
         expected = value * np.ones(shape_out)
         actual = interpolate_real_points_fourier(points, (shape_out[0], shape_out[1]))
@@ -82,7 +81,7 @@ class InterpolationTest(unittest.TestCase):
         np.testing.assert_array_almost_equal(expected, actual)
 
     def test_interpolate_points_fourier_original(self) -> None:
-        shape = tuple(rng.integers(1, 10, size=2))
+        shape = tuple(rng.integers(1, 10, size=2))  # type: ignore bad libary types
         points = np.random.random(size=shape).tolist()
 
         expected = points
@@ -93,7 +92,7 @@ class InterpolationTest(unittest.TestCase):
         np.testing.assert_array_almost_equal(expected, actual)
 
     def test_fourier_transform_of_interpolation(self) -> None:
-        int_shape = (rng.integers(2, 10), rng.integers(2, 10))
+        int_shape = (rng.integers(2, 10), rng.integers(2, 10))  # type: ignore bad libary types
         points = np.random.random(size=(2, 2)).tolist()
 
         expected = np.zeros(int_shape, dtype=complex)
@@ -112,14 +111,14 @@ class InterpolationTest(unittest.TestCase):
         np.testing.assert_array_almost_equal(expected, actual)
 
     def test_interpolate_real_is_real(self) -> None:
-        in_shape = (rng.integers(2, 10), rng.integers(2, 10))
+        in_shape = (rng.integers(2, 10), rng.integers(2, 10))  # type: ignore bad libary types
         points = np.random.random(size=in_shape)
-        out_shape = (rng.integers(2, 10), in_shape[1])
+        out_shape = (rng.integers(2, 10), in_shape[1])  # type: ignore bad libary types
         interpolated = interpolate_points_rfftn(points, out_shape, axes=(0, 1))
         np.testing.assert_array_equal(interpolated, np.real(interpolated))
 
     def test_interpolate_symmetric_is_symmetric(self) -> None:
-        in_shape = (rng.integers(2, 10), rng.integers(2, 10))
+        in_shape = (rng.integers(2, 10), rng.integers(2, 10))  # type: ignore bad libary types
 
         points = np.random.random(size=in_shape)
         points[1:, :] += points[:0:-1, :]
@@ -127,7 +126,7 @@ class InterpolationTest(unittest.TestCase):
         np.testing.assert_array_equal(points[1:, :], points[:0:-1, :])
         np.testing.assert_array_equal(points[:, 1:], points[:, :0:-1])
 
-        out_shape = (rng.integers(2, 10), rng.integers(2, 10))
+        out_shape = (rng.integers(2, 10), rng.integers(2, 10))  # type: ignore bad libary types
         interpolated = interpolate_real_points_fourier(points, out_shape)
         np.testing.assert_array_equal(interpolated[1:, :], interpolated[:0:-1, :])
 

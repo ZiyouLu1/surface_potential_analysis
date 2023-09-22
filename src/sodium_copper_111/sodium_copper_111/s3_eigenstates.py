@@ -39,9 +39,7 @@ def get_eigenstate_collection(
     StackedBasisLike[ExplicitBlockFractionAxis[Literal[11]], FundamentalBasis[int]],
     StackedBasisLike[FundamentalTransformedPositionBasis1d[_L0Inv]],
 ]:
-    bloch_fractions: np.ndarray[
-        tuple[Literal[11], Literal[1]], np.dtype[np.float_]
-    ] = np.linspace(-0.5, 0.5, 11).reshape(11, 1)
+    bloch_fractions = np.linspace(-0.5, 0.5, 11).reshape(1, 11)
 
     def hamiltonian_generator(
         bloch_fraction: np.ndarray[tuple[Literal[1]], np.dtype[np.float_]]

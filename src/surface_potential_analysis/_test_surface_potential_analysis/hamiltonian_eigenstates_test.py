@@ -5,7 +5,9 @@ from typing import TYPE_CHECKING, Any
 
 import numpy as np
 
-from surface_potential_analysis.axis.axis import FundamentalTransformedPositionBasis3d
+from surface_potential_analysis.axis.axis import (
+    FundamentalTransformedPositionBasis,
+)
 from surface_potential_analysis.axis.stacked_axis import (
     StackedBasis,
     StackedBasisLike,
@@ -22,22 +24,21 @@ rng = np.random.default_rng()
 
 class HamiltonianEigenstates(unittest.TestCase):
     def test_calculate_energy_diagonal(self) -> None:
-        basis = StackedBasis[Any](
-            FundamentalTransformedPositionBasis3d(
-                np.array([1, 0, 0]), rng.integers(1, 10)
+        basis = StackedBasis[Any, Any, Any](
+            FundamentalTransformedPositionBasis(
+                np.array([1, 0, 0]), rng.integers(1, 10)  # type: ignore bad libary types
             ),
-            FundamentalTransformedPositionBasis3d(
-                np.array([0, 1, 0]), rng.integers(1, 10)
+            FundamentalTransformedPositionBasis(
+                np.array([0, 1, 0]), rng.integers(1, 10)  # type: ignore bad libary types
             ),
-            FundamentalTransformedPositionBasis3d(
-                np.array([0, 0, 1]), rng.integers(1, 10)
+            FundamentalTransformedPositionBasis(
+                np.array([0, 0, 1]), rng.integers(1, 10)  # type: ignore bad libary types
             ),
         )
         energies = rng.random((basis).n)
-        hamiltonian: SingleBasisOperator[StackedBasisLike] = {
-            "basis": basis,
-            "dual_basis": basis,
-            "array": np.diag(energies),
+        hamiltonian: SingleBasisOperator[StackedBasisLike[Any, Any, Any]] = {
+            "basis": StackedBasis(basis, basis),
+            "data": np.diag(energies),
         }
         actual: list[complex] = []
         for i in range(basis.n):

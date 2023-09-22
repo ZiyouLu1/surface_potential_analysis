@@ -8,7 +8,7 @@ import scipy.linalg
 from surface_potential_analysis.axis.axis import (
     FundamentalBasis,
 )
-from surface_potential_analysis.axis.axis_like import BasisLike
+from surface_potential_analysis.axis.axis_like import BasisLike, BasisWithLengthLike
 from surface_potential_analysis.axis.stacked_axis import (
     StackedBasis,
     StackedBasisLike,
@@ -80,6 +80,8 @@ _B0 = TypeVar("_B0", bound=BasisLike[Any, Any])
 _B1 = TypeVar("_B1", bound=BasisLike[Any, Any])
 _B2 = TypeVar("_B2", bound=BasisLike[Any, Any])
 _B3 = TypeVar("_B3", bound=BasisLike[Any, Any])
+
+_BL0 = TypeVar("_BL0", bound=BasisWithLengthLike[Any, Any, Any])
 
 
 def get_state_projections_many_band(
@@ -201,7 +203,9 @@ def localize_tight_binding_projection(
 
 
 def get_single_point_state_for_wavepacket(
-    wavepacket: Wavepacket[_SB0, _SBL0],
+    wavepacket: Wavepacket[
+        StackedBasisLike[*tuple[_B0, ...]], StackedBasisLike[*tuple[_BL0, ...]]
+    ],
     idx: SingleIndexLike = 0,
     origin: SingleStackedIndexLike | None = None,
 ) -> StateVector[StackedBasisLike[*tuple[FundamentalPositionBasis[Any, Any], ...]]]:
@@ -211,7 +215,7 @@ def get_single_point_state_for_wavepacket(
     util = BasisUtil(state_0["basis"])
     if origin is None:
         idx_0: SingleStackedIndexLike = util.get_stacked_index(
-            np.argmax(np.abs(state_0["data"]), axis=-1)
+            int(np.argmax(np.abs(state_0["data"]), axis=-1))
         )
         origin = wrap_index_around_origin(state_0["basis"], idx_0, (0, 0, 0), (0, 1))
     return get_single_point_state_vector_excact(
@@ -243,7 +247,9 @@ def localize_single_point_projection(
 
 
 def get_exponential_state(
-    wavepacket: Wavepacket[_SB0, _SBL0],
+    wavepacket: Wavepacket[
+        StackedBasisLike[*tuple[_B0, ...]], StackedBasisLike[*tuple[_BL0, ...]]
+    ],
     idx: SingleIndexLike = 0,
     origin: SingleIndexLike | None = None,
 ) -> StateVector[StackedBasisLike[*tuple[FundamentalPositionBasis[Any, Any], ...]]]:
@@ -270,7 +276,7 @@ def get_exponential_state(
 
     util = BasisUtil(state_0["basis"])
     origin = (
-        util.get_stacked_index(np.argmax(np.abs(state_0["data"]), axis=-1))
+        util.get_stacked_index(int(np.argmax(np.abs(state_0["data"]), axis=-1)))
         if origin is None
         else origin
     )
@@ -296,12 +302,14 @@ def get_exponential_state(
         "data": np.zeros_like(state_0["data"]),
     }
     out["data"] = np.exp(-(dx0**2 + dx1**2 + dx2**2))
-    out["data"] /= np.linalg.norm(out["data"])
+    out["data"] /= np.linalg.norm(out["data"])  # type: ignore can be float
     return out
 
 
 def _get_exponential_decay_state(
-    wavepacket: Wavepacket[_SB0, _SBL0]
+    wavepacket: Wavepacket[
+        StackedBasisLike[*tuple[_B0, ...]], StackedBasisLike[*tuple[_BL0, ...]]
+    ]
 ) -> StateVector[StackedBasisLike[*tuple[FundamentalPositionBasis[Any, Any], ...]]]:
     exponential = get_exponential_state(wavepacket)
     tight_binding = convert_state_vector_to_position_basis(
@@ -338,7 +346,9 @@ def localize_exponential_decay_projection(
 
 
 def get_gaussian_states(
-    wavepacket: Wavepacket[_SB0, _SBL0],
+    wavepacket: Wavepacket[
+        StackedBasisLike[*tuple[_B0, ...]], StackedBasisLike[*tuple[_BL0, ...]]
+    ],
     origin: SingleIndexLike = 0,
 ) -> StateVectorList[
     FundamentalBasis[Literal[1]],

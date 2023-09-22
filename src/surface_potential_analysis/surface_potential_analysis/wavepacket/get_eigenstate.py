@@ -154,7 +154,13 @@ def get_bloch_state_vector(
 
 def get_all_eigenstates(
     wavepacket: WavepacketWithEigenvalues[_SB0, _SBL1]
-) -> list[Eigenstate[_SBL1]]:
+) -> list[
+    Eigenstate[
+        StackedBasisLike[
+            *tuple[EvenlySpacedTransformedPositionBasis[Any, Any, Any, Any], ...]
+        ]
+    ]
+]:
     """
     Get the eigenstate of a given wavepacket at a specific index.
 
@@ -173,7 +179,9 @@ def get_all_eigenstates(
     util = BasisUtil(get_sample_basis(converted["basis"]))
     return [
         {
-            "basis": _get_sampled_basis(converted["basis"], offset),
+            "basis": _get_sampled_basis(
+                converted["basis"], cast(tuple[int, ...], offset)
+            ),
             "data": v,
             "eigenvalue": e,
         }
@@ -248,7 +256,7 @@ def get_tight_binding_state(
     util = BasisUtil(state_0["basis"])
     if origin is None:
         idx_0: SingleStackedIndexLike = util.get_stacked_index(
-            np.argmax(np.abs(state_0["data"]), axis=-1)
+            int(np.argmax(np.abs(state_0["data"]), axis=-1))
         )
         origin = wrap_index_around_origin(wavepacket["basis"], idx_0, (0, 0, 0), (0, 1))
     # Under the tight binding approximation all state vectors are equal.

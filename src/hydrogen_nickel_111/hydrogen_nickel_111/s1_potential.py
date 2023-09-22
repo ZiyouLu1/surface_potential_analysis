@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, TypeVar
+from typing import TYPE_CHECKING, Any, TypeVar, cast
 
 import numpy as np
 import scipy.interpolate
@@ -122,13 +122,14 @@ def get_coordinate_fractions(
     vec1: tuple[float, float],
     coordinates: np.ndarray[Any, Any],
 ) -> np.ndarray[tuple[int, ...], np.dtype[np.float_]]:
-    out = []
+    out: list[list[float]] = []
     for coord in coordinates:
         a = np.array(
             [
                 [vec0[0], vec1[0]],
                 [vec0[1], vec1[1]],
-            ]
+            ],
+            dtype=np.float_,
         )
         fraction = np.linalg.solve(a, [coord[0], coord[1]])
         out.append([fraction[0], fraction[1]])
@@ -330,10 +331,13 @@ def extrapolate_uneven_potential(
     old_potential = potential["data"].reshape(util.shape)
 
     z_range = old_z_points[-1] - old_z_points[0]
-    z_points = np.linspace(
-        old_z_points[0] - z_range,
-        old_z_points[0] + 2 * z_range,
-        4 * potential["basis"][2].n,
+    z_points = cast(
+        np.ndarray[Any, Any],
+        np.linspace(
+            old_z_points[0] - z_range,
+            old_z_points[0] + 2 * z_range,
+            4 * potential["basis"][2].n,
+        ),
     )
 
     return {
@@ -342,13 +346,16 @@ def extrapolate_uneven_potential(
             potential["basis"][1],
             UnevenPotential3dZBasis(z_points),
         ),
-        "data": scipy.interpolate.interp1d(
-            old_z_points,
-            old_potential,
-            axis=2,
-            kind="slinear",
-            fill_value="extrapolate",
-        )(z_points).reshape(-1),
+        "data": cast(
+            np.ndarray[Any, Any],
+            scipy.interpolate.interp1d(
+                old_z_points,
+                old_potential,
+                axis=2,
+                kind="slinear",
+                fill_value="extrapolate",
+            )(z_points),
+        ).reshape(-1),
     }
 
 

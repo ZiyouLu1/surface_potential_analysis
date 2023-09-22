@@ -58,7 +58,7 @@ def calculate_sho_wavefunction(
     normalized_x = x_points * norm
 
     prefactor = math.sqrt((norm / (2**n)) / (math.factorial(n) * math.sqrt(math.pi)))
-    hermite = scipy.special.eval_hermite(n, normalized_x)
+    hermite = scipy.special.eval_hermite(n, normalized_x)  # type: ignore bad libary types
     exponential = np.exp(-np.square(normalized_x) / 2)
     return prefactor * hermite * exponential  # type: ignore[no-any-return]
 

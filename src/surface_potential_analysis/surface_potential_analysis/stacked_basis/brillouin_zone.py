@@ -1,6 +1,15 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Literal, TypeVar, TypeVarTuple, Unpack, overload
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Literal,
+    TypeVar,
+    TypeVarTuple,
+    Unpack,
+    cast,
+    overload,
+)
 
 import numpy as np
 
@@ -232,7 +241,7 @@ def decrement_brillouin_zone_3d(
     """
     tolerance = _get_decrement_tolerance(basis)
     # Transpose used - we want the new axis to appear as the last axis not the first
-    out = np.atleast_2d(np.transpose(coordinate)).T  # type: ignore cant spot array like cSpell:disable-line
+    out = cast(np.ndarray[Any, Any], np.atleast_2d(np.transpose(coordinate))).T  # type: ignore cant spot array like cSpell:disable-line
     coordinate_points = BasisUtil(basis).get_k_points_at_index(tuple(out))  # type: ignore[arg-type]
     bragg_points = get_all_brag_point(basis, n_bands=1)
 
@@ -251,7 +260,7 @@ def decrement_brillouin_zone_3d(
     for i, bragg_point in enumerate(np.array(bragg_point_index).T):
         should_fold = closest_points == i
         folded = fold_point_in_bragg_plane(bragg_point, tuple(out[:, should_fold]))  # type: ignore[arg-type,var-annotated]
-        out[:, should_fold] = folded
+        out[:, should_fold] = folded  # type: ignore unknown
 
     if isinstance(coordinate[0], np.ndarray):
         # For 0D arrays we need to drop the additional axis here

@@ -84,9 +84,9 @@ def get_state_dual_vector(
     }
 
 
-def get_all_states(
+def state_vector_list_into_iter(
     states: StateVectorList[_B0, _B1],
-) -> list[StateVector[_B1]]:
+) -> Iterable[StateVector[_B1]]:
     """
     Select an eigenstate from an eigenstate collection.
 

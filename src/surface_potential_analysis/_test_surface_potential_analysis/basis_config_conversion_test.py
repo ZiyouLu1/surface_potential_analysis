@@ -31,7 +31,7 @@ rng = np.random.default_rng()
 
 class BasisConfigConversionTest(unittest.TestCase):
     def test_explicit_basis_vectors(self) -> None:
-        fundamental_n = rng.integers(2, 5)
+        fundamental_n = rng.integers(2, 5)  # type: ignore bad libary types
 
         axis = get_random_explicit_axis(1, fundamental_n=fundamental_n)
 
@@ -43,7 +43,7 @@ class BasisConfigConversionTest(unittest.TestCase):
         np.testing.assert_array_almost_equal(a, np.eye(axis.n))
 
     def test_convert_vector_normalization(self) -> None:
-        fundamental_shape = (rng.integers(2, 5), rng.integers(2, 5), rng.integers(2, 5))
+        fundamental_shape = (rng.integers(2, 5), rng.integers(2, 5), rng.integers(2, 5))  # type: ignore bad libary types
 
         _basis_0 = StackedBasis(
             get_random_explicit_axis(3, fundamental_n=fundamental_shape[0]),
@@ -74,7 +74,7 @@ class BasisConfigConversionTest(unittest.TestCase):
         np.testing.assert_array_almost_equal(actual_reversed, vector)
 
     def test_convert_vector_equivalent(self) -> None:
-        fundamental_shape = (rng.integers(2, 5), rng.integers(2, 5), rng.integers(2, 5))
+        fundamental_shape = (rng.integers(2, 5), rng.integers(2, 5), rng.integers(2, 5))  # type: ignore bad libary types
 
         _basis_0 = StackedBasis(
             get_random_explicit_axis(3, fundamental_n=fundamental_shape[0]),
@@ -90,8 +90,8 @@ class BasisConfigConversionTest(unittest.TestCase):
         np.testing.assert_array_almost_equal(converted, vector)
 
     def test_convert_vector_truncated_momentum(self) -> None:
-        fundamental_n = rng.integers(3, 5)
-        n = rng.integers(2, fundamental_n)
+        fundamental_n = rng.integers(3, 5)  # type: ignore bad libary types
+        n = rng.integers(2, fundamental_n)  # type: ignore bad libary types
 
         basis_0 = TransformedPositionBasis(np.array([1]), n, fundamental_n)
 
@@ -105,8 +105,8 @@ class BasisConfigConversionTest(unittest.TestCase):
         np.testing.assert_array_almost_equal(actual, expected)
 
     def test_convert_vector_truncated(self) -> None:
-        fundamental_n = rng.integers(3, 10)
-        n = rng.integers(2, fundamental_n)
+        fundamental_n = rng.integers(3, 10)  # type: ignore bad libary types
+        n = rng.integers(2, fundamental_n)  # type: ignore bad libary types
 
         basis_0 = FundamentalPositionBasis(np.array([1]), n)
         momentum = axis_as_fundamental_momentum_axis(basis_0)
@@ -133,8 +133,8 @@ class BasisConfigConversionTest(unittest.TestCase):
         np.testing.assert_array_almost_equal(actual, actual_simple)
 
     def test_convert_matrix_truncated(self) -> None:
-        fundamental_n = rng.integers(3, 10)
-        n = rng.integers(2, fundamental_n)
+        fundamental_n = rng.integers(3, 10)  # type: ignore bad libary types
+        n = rng.integers(2, fundamental_n)  # type: ignore bad libary types
 
         truncated_basis = TransformedPositionBasis(np.array([1]), n, fundamental_n)
         final_basis = TransformedPositionBasis(
@@ -149,8 +149,8 @@ class BasisConfigConversionTest(unittest.TestCase):
         np.testing.assert_array_almost_equal(actual, expected)
 
     def test_convert_matrix_round_trip(self) -> None:
-        fundamental_n = rng.integers(3, 10)
-        n = rng.integers(2, fundamental_n)
+        fundamental_n = rng.integers(3, 10)  # type: ignore bad libary types
+        n = rng.integers(2, fundamental_n)  # type: ignore bad libary types
 
         small_basis = TransformedPositionBasis(np.array([1]), n, n)
         truncated_large_basis = TransformedPositionBasis(
@@ -220,8 +220,8 @@ class BasisConfigConversionTest(unittest.TestCase):
         np.testing.assert_array_almost_equal(actual, matrix)
 
     def test_convert_vector_explicit(self) -> None:
-        fundamental_n = rng.integers(3, 10)
-        n = rng.integers(2, fundamental_n)
+        fundamental_n = rng.integers(3, 10)  # type: ignore bad libary types
+        n = rng.integers(2, fundamental_n)  # type: ignore bad libary types
 
         vectors = special_ortho_group.rvs(fundamental_n)[:n]
         axis = ExplicitBasis(np.array([0]), vectors.astype(np.complex_))

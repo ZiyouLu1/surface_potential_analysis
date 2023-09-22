@@ -195,7 +195,7 @@ class _SurfaceHamiltonianUtil(
         z_energy = (hbar * sho_omega) * (nkz_coords + 0.5)
         return x_energy + y_energy + z_energy  # type: ignore[no-any-return]
 
-    def get_sho_potential(self) -> np.ndarray[tuple[int], np.dtype[np.float_]]:
+    def get_sho_potential(self) -> np.ndarray[tuple[int], np.dtype[np.complex_]]:
         mass = self._config["mass"]
         sho_omega = self._config["sho_omega"]
         return 0.5 * mass * sho_omega**2 * np.square(self.z_distances)  # type: ignore[no-any-return]

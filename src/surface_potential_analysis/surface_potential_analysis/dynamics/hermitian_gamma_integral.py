@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, TypeVar, overload
 
 import numpy as np
-import scipy
+import scipy.integrate
 from scipy.constants import electron_mass, elementary_charge, epsilon_0, hbar
 
 if TYPE_CHECKING:
@@ -154,8 +154,8 @@ def _complex_quad(func: Any, *args: Any, **kwargs: Any) -> Any:  # noqa: ANN401
     def imag_func(x: Any) -> Any:  # noqa: ANN401
         return np.imag(func(x))
 
-    real_integral = scipy.integrate.quad(real_func, *args, **kwargs)
-    imag_integral = scipy.integrate.quad(imag_func, *args, **kwargs)
+    real_integral = scipy.integrate.quad(real_func, *args, **kwargs)  # type: ignore bad libary types
+    imag_integral = scipy.integrate.quad(imag_func, *args, **kwargs)  # type: ignore bad libary types
     return (
         real_integral[0] + 1j * imag_integral[0],
         real_integral[1:],

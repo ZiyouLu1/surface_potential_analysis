@@ -9,7 +9,14 @@ from surface_potential_analysis.axis.stacked_axis import StackedBasis, StackedBa
 from surface_potential_analysis.operator.operator_list import OperatorList
 
 if TYPE_CHECKING:
-    from surface_potential_analysis.wavepacket.wavepacket import WavepacketList
+    from surface_potential_analysis.operator.operator import (
+        DiagonalOperator,
+        SingleBasisOperator,
+    )
+    from surface_potential_analysis.wavepacket.wavepacket import (
+        WavepacketList,
+        WavepacketWithEigenvaluesList,
+    )
 
 _B0 = TypeVar("_B0", bound=BasisLike[Any, Any])
 _B1 = TypeVar("_B1", bound=BasisLike[Any, Any])
@@ -54,4 +61,44 @@ def get_localized_wavepackets(
             wavepackets["basis"][1],
         ),
         "data": data.reshape(-1),
+    }
+
+
+def get_wavepacket_hamiltonian(
+    wavepackets: WavepacketWithEigenvaluesList[_B0, _SB1, _SB0]
+) -> DiagonalOperator[StackedBasisLike[_B0, _SB1], StackedBasisLike[_B0, _SB1]]:
+    """
+    Get the Hamiltonian in the Wavepacket basis.
+
+    Parameters
+    ----------
+    wavepackets : WavepacketWithEigenvaluesList[_B0, _SB1, _SB0]
+
+    Returns
+    -------
+    DiagonalOperator[StackedBasisLike[_B0, _SB1], StackedBasisLike[_B0, _SB1]]
+    """
+    return {
+        "basis": StackedBasis(wavepackets["basis"][0], wavepackets["basis"][0]),
+        "data": wavepackets["eigenvalue"],
+    }
+
+
+def get_localized_hamiltonian(
+    wavepackets: WavepacketWithEigenvaluesList[_B2, _SB1, _SB0],
+    operator: LocalizationOperator[_SB1, _B1, _B2],
+) -> SingleBasisOperator[StackedBasis[_B1, _SB1]]:
+    hamiltonian = get_wavepacket_hamiltonian(wavepackets)
+    _converted_dual = hamiltonian["data"].reshape(hamiltonian["basis"].shape)[
+        :, np.newaxis, :
+    ] * np.conj(operator["data"]).reshape(-1, *operator["basis"][1].shape)
+    _converted = (
+        operator["data"].reshape(-1, *operator["basis"][1].shape) * _converted_dual
+    )
+    return {
+        "basis": StackedBasis(
+            StackedBasis(operator["basis"][1][0], hamiltonian["basis"][0][1]),
+            StackedBasis(operator["basis"][1][0], hamiltonian["basis"][0][1]),
+        ),
+        "data": _converted.reshape(-1),
     }

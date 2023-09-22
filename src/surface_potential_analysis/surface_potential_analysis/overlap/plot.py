@@ -10,7 +10,7 @@ from surface_potential_analysis.stacked_basis.util import (
     get_k_coordinates_in_axes,
     get_x_coordinates_in_axes,
 )
-from surface_potential_analysis.util.plot import get_norm_with_clim
+from surface_potential_analysis.util.plot import _get_norm_with_lim
 from surface_potential_analysis.util.util import (
     Measure,
     get_data_in_axes,
@@ -103,7 +103,7 @@ def plot_overlap_2d_x(
     data = get_measured_data(points, measure)
 
     mesh = ax.pcolormesh(*coordinates, data, shading="nearest")
-    norm = get_norm_with_clim(scale, mesh.get_clim())
+    norm = _get_norm_with_lim(scale, mesh.get_clim())
     mesh.set_norm(norm)
     ax.set_aspect("equal", adjustable="box")
     fig.colorbar(mesh, ax=ax, format="%4.1e")
@@ -153,7 +153,7 @@ def plot_overlap_2d_k(
     shifted_coordinates = np.fft.ifftshift(coordinates)
 
     mesh = ax.pcolormesh(*shifted_coordinates, data, shading="nearest")
-    norm = get_norm_with_clim(scale, mesh.get_clim())
+    norm = _get_norm_with_lim(scale, mesh.get_clim())
     mesh.set_norm(norm)
     ax.set_aspect("equal", adjustable="box")
     fig.colorbar(mesh, ax=ax, format="%4.1e")

@@ -153,7 +153,7 @@ def stacked_basis_as_fundamental_position_basis(
 
 @overload
 def stacked_basis_as_fundamental_position_basis(
-    basis: StackedBasisLike[*tuple[_BL0, ...]],
+    basis: StackedBasisLike[*tuple[Any, ...]],
 ) -> StackedBasisLike[*tuple[FundamentalPositionBasis[Any, Any], ...]]:
     ...
 

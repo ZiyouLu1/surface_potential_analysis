@@ -202,7 +202,7 @@ class TransformedPositionBasis(
         self, delta_x: AxisVector[_ND0Inv], n: _N0_co, fundamental_n: _NF0_co
     ) -> None:
         self._delta_x = delta_x
-        TransformedBasis.__init__(self, n, fundamental_n)  # type: ignore: can't infer type
+        TransformedBasis.__init__(self, n, fundamental_n)  # type: ignore can't infer type
 
     @property
     def delta_x(self) -> AxisVector[_ND0Inv]:
@@ -228,7 +228,7 @@ class FundamentalTransformedPositionBasis(
     """An basis with vectors which are the fundamental momentum states."""
 
     def __init__(self, delta_x: AxisVector[_ND0Inv], n: _NF0_co) -> None:
-        TransformedPositionBasis.__init__(self, delta_x, n, n)  # type: ignore: can't infer type
+        TransformedPositionBasis.__init__(self, delta_x, n, n)  # type: ignore can't infer type
 
 
 FundamentalTransformedPositionBasis1d = FundamentalTransformedPositionBasis[

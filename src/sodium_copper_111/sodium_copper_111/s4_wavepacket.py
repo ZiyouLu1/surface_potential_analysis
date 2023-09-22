@@ -128,7 +128,7 @@ def get_localized_wavepackets_wannier_90(
     )
 
 
-def get_localized_wavepackets_projection(
+def get_projection_localized_wavepackets(
     shape: tuple[_L0Inv], resolution: tuple[_L1Inv], n_bands: int = 0
 ) -> WavepacketList[
     StackedBasisLike[*tuple[FundamentalBasis[int], ...]],

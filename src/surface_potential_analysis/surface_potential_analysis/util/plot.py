@@ -6,6 +6,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib.animation import ArtistAnimation
 from matplotlib.colors import Normalize, SymLogNorm
+from matplotlib.scale import LinearScale, ScaleBase, SymmetricalLogScale
 
 from surface_potential_analysis.stacked_basis.util import (
     get_k_coordinates_in_axes,
@@ -31,33 +32,53 @@ if TYPE_CHECKING:
 Scale = Literal["symlog", "linear"]
 
 
-def get_norm_with_clim(
+def _get_default_lim(
+    measure: Measure, data: np.ndarray[Any, np.dtype[np.float_]]
+) -> tuple[float, float]:
+    if measure == "abs":
+        return (0, float(np.max(data)))
+    return (float(np.min(data)), float(np.max(data)))
+
+
+def _get_lim(
+    lim: tuple[float | None, float | None],
+    measure: Measure,
+    data: np.ndarray[Any, np.dtype[np.float_]],
+) -> tuple[float, float]:
+    (default_min, default_max) = _get_default_lim(measure, data)
+    l_max = default_max if lim[1] is None else lim[1]
+    l_min = default_min if lim[0] is None else lim[0]
+    return (l_min, l_max)
+
+
+def _get_norm_with_lim(
     scale: Scale,
-    clim: tuple[float | None, float | None] = (None, None),
+    lim: tuple[float, float],
 ) -> Normalize:
-    """
-    Get the appropriate norm given the scale and clim.
-
-    Parameters
-    ----------
-    scale : Scale
-    clim : tuple[float  |  None, float  |  None], optional
-
-    Returns
-    -------
-    Normalize
-    """
     match scale:
         case "linear":
-            return Normalize(vmin=clim[0], vmax=clim[1])
+            return Normalize(vmin=lim[0], vmax=lim[1])
         case "symlog":
-            abs_0 = -1 if clim[0] is None else np.abs(clim[0])
-            abs_1 = -1 if clim[1] is None else np.abs(clim[1])
-            max_abs = max([abs_0, abs_1])
+            max_abs = max([np.abs(lim[0]), np.abs(lim[0])])
             return SymLogNorm(
-                vmin=clim[0],
-                vmax=clim[1],
-                linthresh=1 if max([abs_0, abs_1]) <= 0 else np.abs(1e-4 * max_abs),  # type: ignore No parameter named "linthresh"
+                vmin=lim[0],
+                vmax=lim[1],
+                linthresh=1 if max_abs <= 0 else 1e-4 * max_abs,  # type: ignore No parameter named "linthresh"
+            )
+
+
+def _get_scale_with_lim(
+    scale: Scale,
+    lim: tuple[float, float],
+) -> ScaleBase:
+    match scale:
+        case "linear":
+            return LinearScale(axis=None)
+        case "symlog":
+            max_abs = max([np.abs(lim[0]), np.abs(lim[0])])
+            return SymmetricalLogScale(
+                axis=None,
+                linthresh=1 if max_abs <= 0 else np.abs(1e-4 * max_abs),
             )
 
 
@@ -105,7 +126,9 @@ def plot_data_1d_k(
 
     (line,) = ax.plot(shifted_coordinates[0], shifted_data)
     ax.set_xlabel(f"k{(axes[0] % 3)} axis")
-    ax.set_yscale(scale)
+    lim = _get_lim((None, None), measure, shifted_data)
+    ax.set_yscale(_get_scale_with_lim(scale, lim))
+    ax.set_ylim(*lim)
     return fig, ax, line
 
 
@@ -150,7 +173,9 @@ def plot_data_1d_x(
 
     (line,) = ax.plot(coordinates[0], measured_data)
     ax.set_xlabel(f"x{(axes[0] % 3)} axis")
-    ax.set_yscale(scale)
+    lim = _get_lim((None, None), measure, measured_data)
+    ax.set_yscale(_get_scale_with_lim(scale, lim))
+    ax.set_ylim(*lim)
     return fig, ax, line
 
 
@@ -197,8 +222,10 @@ def plot_data_2d_k(
     shifted_coordinates = np.fft.fftshift(coordinates, axes=(1, 2))
 
     mesh = ax.pcolormesh(*shifted_coordinates, shifted_data, shading="nearest")
-    norm = get_norm_with_clim(scale, mesh.get_clim())
+    clim = _get_lim((None, None), measure, shifted_data)
+    norm = _get_norm_with_lim(scale, clim)
     mesh.set_norm(norm)
+    mesh.set_clim(*clim)
     ax.set_aspect("equal", adjustable="box")
     fig.colorbar(mesh, ax=ax, format="%4.1e")
 
@@ -257,8 +284,10 @@ def plot_data_2d_x(
     measured_data = get_measured_data(data_in_axis, measure)
 
     mesh = ax.pcolormesh(*coordinates, measured_data, shading="nearest")
-    norm = get_norm_with_clim(scale, mesh.get_clim())
+    clim = _get_lim((None, None), measure, measured_data)
+    norm = _get_norm_with_lim(scale, clim)
     mesh.set_norm(norm)
+    mesh.set_clim(*clim)
     ax.set_aspect("equal", adjustable="box")
     fig.colorbar(mesh, ax=ax, format="%4.1e")
 
@@ -281,6 +310,7 @@ def build_animation(
     *,
     ax: Axes | None = None,
     scale: Scale = "linear",
+    measure: Measure = "abs",
     clim: tuple[float | None, float | None] = (None, None),
 ) -> tuple[Figure, Axes, ArtistAnimation]:
     """
@@ -308,22 +338,13 @@ def build_animation(
     mesh0 = build_frame(0, ax)
     frames = [[build_frame(d, ax)] for d in range(n)]
 
-    c_max: float = (
-        float(np.max([i[0].get_clim()[1] for i in frames]))  # type: ignore np.min returns float
-        if clim[1] is None
-        else clim[1]
-    )
-    c_min: float = (
-        float(np.min([i[0].get_clim()[0] for i in frames]))  # type: ignore np.min returns float
-        if clim[0] is None
-        else clim[0]
-    )
-    norm = get_norm_with_clim(scale, (c_min, c_max))
+    clim = _get_lim(clim, measure, np.array([i[0].get_clim() for i in frames]))
+    norm = _get_norm_with_lim(scale, clim)
     for (mesh,) in frames:
         mesh.set_norm(norm)
-        mesh.set_clim(c_min, c_max)
+        mesh.set_clim(*clim)
     mesh0.set_norm(norm)
-    mesh0.set_clim(c_min, c_max)
+    mesh0.set_clim(*clim)
 
     return (fig, ax, ArtistAnimation(fig, frames))
 

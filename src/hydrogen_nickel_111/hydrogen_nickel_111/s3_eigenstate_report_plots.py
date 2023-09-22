@@ -1,7 +1,10 @@
 from __future__ import annotations
 
+from typing import cast
+
 import numpy as np
 from matplotlib import pyplot as plt
+from matplotlib.colors import Color
 from scipy.constants import electron_volt
 from surface_potential_analysis.state_vector.eigenstate_collection_plot import (
     plot_eigenvalues_against_bloch_phase_1d,
@@ -13,13 +16,13 @@ from hydrogen_nickel_111.s3_eigenstates import get_eigenstate_collection_hydroge
 def generate_bandwidth_table() -> None:
     collection = get_eigenstate_collection_hydrogen((29, 29, 10))
 
-    energies = np.min(collection["eigenvalues"], axis=0) - np.min(
-        collection["eigenvalues"]
+    energies = np.min(collection["eigenvalue"], axis=0) - np.min(
+        collection["eigenvalue"]
     )
     energies_mev = energies * 1000 / (electron_volt)
 
-    bandwidths = np.max(collection["eigenvalues"], axis=0) - np.min(
-        collection["eigenvalues"], axis=0
+    bandwidths = np.max(collection["eigenvalue"], axis=0) - np.min(
+        collection["eigenvalue"], axis=0
     )
     bandwidths_mev = bandwidths * 1000 / (electron_volt)
 
@@ -50,7 +53,7 @@ def generate_bandwidth_table() -> None:
 def plot_band_convergence_diagram() -> None:
     fig, ax = plt.subplots()
 
-    colors = plt.rcParams["axes.prop_cycle"].by_key()["color"]
+    colors = cast(list[Color], plt.rcParams["axes.prop_cycle"].by_key()["color"])  # type: ignore bad types
 
     collection = get_eigenstate_collection_hydrogen((24, 24, 12))
     for band in [0, 2, 3, 6]:

@@ -10,8 +10,9 @@ import scipy.special
 from scipy.constants import hbar
 
 from surface_potential_analysis.axis.axis import (
+    FundamentalPositionBasis,
     FundamentalPositionBasis1d,
-    FundamentalPositionBasis3d,
+    FundamentalTransformedPositionBasis,
     FundamentalTransformedPositionBasis1d,
     TransformedPositionBasis,
 )
@@ -24,7 +25,7 @@ from surface_potential_analysis.hamiltonian_builder import (
     sho_subtracted_basis,
 )
 from surface_potential_analysis.hamiltonian_builder.sho_subtracted_basis import (
-    _SurfaceHamiltonianUtil,
+    _SurfaceHamiltonianUtil,  # type: ignore this is test file
 )
 from surface_potential_analysis.operator.conversion import (
     convert_operator_to_basis,
@@ -81,12 +82,12 @@ def _generate_symmetrical_points(
 class HamiltonianBuilderTest(unittest.TestCase):
     def test_hamiltonian_from_potential_momentum(self) -> None:
         potential: Potential[
-            tuple[FundamentalTransformedPositionBasis1d[Literal[100]]]
+            StackedBasis[FundamentalTransformedPositionBasis1d[Literal[100]]]
         ] = {
             "basis": StackedBasis(
-                FundamentalTransformedPositionBasis1d(np.array([1]), 100)
+                FundamentalTransformedPositionBasis(np.array([1]), 100)
             ),
-            "data": np.array(rng.random(100), dtype=complex),
+            "data": np.array(rng.random(100), dtype=np.complex_),
         }
         actual = momentum_basis.hamiltonian_from_potential(potential)
 
@@ -95,14 +96,12 @@ class HamiltonianBuilderTest(unittest.TestCase):
         )
         expected = convert_operator_to_basis(
             {
-                "basis": converted["basis"],
-                "dual_basis": converted["basis"],
-                "array": np.diag(converted["data"]),
+                "basis": StackedBasis(converted["basis"], converted["basis"]),
+                "data": np.diag(converted["data"]),
             },
-            potential["basis"],
-            potential["basis"],
+            StackedBasis(potential["basis"], potential["basis"]),
         )
-        np.testing.assert_array_almost_equal(expected["array"], actual["array"])
+        np.testing.assert_array_almost_equal(expected["data"], actual["data"])
 
     def test_diagonal_energies(self) -> None:
         resolution = (2, 2, 2)
@@ -112,7 +111,7 @@ class HamiltonianBuilderTest(unittest.TestCase):
             "x_origin": np.array([0, 0, -1]),
         }
         potential: Potential[Any] = {
-            "data": np.zeros(4 * 4 * 3),
+            "data": np.zeros(4 * 4 * 3, dtype=np.complex_),
             "basis": position_basis_3d_from_shape(
                 (4, 4, 3),
                 np.array(
@@ -127,7 +126,7 @@ class HamiltonianBuilderTest(unittest.TestCase):
         hamiltonian = _SurfaceHamiltonianUtil(potential, config, resolution)
 
         expected = np.array([0.5, 1.5, 1.0, 2.0, 1.0, 2.0, 1.5, 2.5])
-        diagonal_energy = hamiltonian._calculate_diagonal_energy(  # noqa: SLF001
+        diagonal_energy = hamiltonian._calculate_diagonal_energy(  # type: ignore this is testing file # noqa: SLF001
             np.array([0, 0, 0])
         )
 
@@ -141,7 +140,7 @@ class HamiltonianBuilderTest(unittest.TestCase):
             "x_origin": np.array([0, 0, -2]),
         }
         potential: Potential[Any] = {
-            "data": np.zeros((4, 4, 5)).ravel(),
+            "data": np.zeros((4, 4, 5), dtype=np.complex_).ravel(),
             "basis": position_basis_3d_from_shape(
                 (4, 4, 5),
                 np.array(
@@ -158,9 +157,9 @@ class HamiltonianBuilderTest(unittest.TestCase):
         np.testing.assert_equal(expected, hamiltonian.get_sho_potential())
 
     def test_get_sho_subtracted_points(self) -> None:
-        nx = rng.integers(2, 20)
-        ny = rng.integers(2, 20)
-        nz = rng.integers(2, 100)
+        nx = rng.integers(2, 20)# type: ignore bad libary types
+        ny = rng.integers(2, 20)# type: ignore bad libary types
+        nz = rng.integers(2, 100)# type: ignore bad libary types
 
         resolution = (nx, ny, 2)
         config: SHOBasisConfig = {
@@ -169,7 +168,7 @@ class HamiltonianBuilderTest(unittest.TestCase):
             "x_origin": np.array([0, 0, -20]),
         }
         potential: Potential[Any] = {
-            "data": np.zeros((2 * nx, 2 * ny, nz)).ravel(),
+            "data": np.zeros((2 * nx, 2 * ny, nz), dtype=np.complex_).ravel(),
             "basis": position_basis_3d_from_shape(
                 (2 * nx, 2 * ny, nz),
                 np.array(
@@ -206,8 +205,8 @@ class HamiltonianBuilderTest(unittest.TestCase):
         np.testing.assert_allclose(expected, actual)
 
     def test_get_fft_is_real(self) -> None:
-        width = rng.integers(1, 10) * 2
-        nz = rng.integers(2, 100)
+        width = rng.integers(1, 10) * 2# type: ignore bad libary types
+        nz = rng.integers(2, 100)# type: ignore bad libary types
 
         points = _generate_symmetrical_points(nz, width)
         resolution = (width // 2, width // 2, 2)
@@ -238,8 +237,8 @@ class HamiltonianBuilderTest(unittest.TestCase):
         np.testing.assert_almost_equal(np.real(ft_potential), ft_potential)
 
     def test_is_almost_hermitian(self) -> None:
-        width = rng.integers(1, 10) * 2
-        nz = rng.integers(2, 100)
+        width = rng.integers(1, 10) * 2# type: ignore bad libary types
+        nz = rng.integers(2, 100)# type: ignore bad libary types
 
         points = _generate_symmetrical_points(nz, width)
         np.testing.assert_allclose(
@@ -269,22 +268,22 @@ class HamiltonianBuilderTest(unittest.TestCase):
         hamiltonian = _SurfaceHamiltonianUtil(potential, config, resolution)
 
         np.testing.assert_allclose(
-            hamiltonian.hamiltonian(np.array([0, 0, 0]))["array"],
-            hamiltonian.hamiltonian(np.array([0, 0, 0]))["array"].conjugate().T,
+            hamiltonian.hamiltonian(np.array([0, 0, 0]))["data"],
+            hamiltonian.hamiltonian(np.array([0, 0, 0]))["data"].conjugate().T,
         )
 
     def test_get_hermite_val_rust(self) -> None:
-        n = rng.integers(1, 10)
+        n = rng.integers(1, 10)# type: ignore bad libary types
         x = (rng.random() * 10) - 5
         self.assertAlmostEqual(
             hamiltonian_generator.get_hermite_val(x, n),
-            scipy.special.eval_hermite(n, [x]).item(0),
+            scipy.special.eval_hermite(n, [x]).item(0),# type: ignore bad libary types
             places=6,
         )
 
     def test_calculate_off_diagonal_energies_rust(self) -> None:
-        nx = rng.integers(2, 20)
-        ny = rng.integers(2, 20)
+        nx = rng.integers(2, 20)# type: ignore bad libary types
+        ny = rng.integers(2, 20)# type: ignore bad libary types
         nz = 100
 
         resolution = (nx // 2, ny // 2, 14)
@@ -294,7 +293,7 @@ class HamiltonianBuilderTest(unittest.TestCase):
             "x_origin": np.array([0, 0, 0]),
         }
         potential: Potential[Any] = {
-            "data": np.zeros(shape=(nx, ny, nz)).ravel(),
+            "data": np.zeros(shape=(nx, ny, nz), dtype=np.complex_).ravel(),
             "basis": position_basis_3d_from_shape(
                 (nx, ny, nz),
                 np.array(
@@ -310,18 +309,18 @@ class HamiltonianBuilderTest(unittest.TestCase):
         hamiltonian = _SurfaceHamiltonianUtil(potential, config, resolution)
 
         np.testing.assert_allclose(
-            hamiltonian._calculate_off_diagonal_energies_fast(),  # noqa: SLF001
-            hamiltonian._calculate_off_diagonal_energies(),  # noqa: SLF001
+            hamiltonian._calculate_off_diagonal_energies_fast(),  # noqa: SLF001 # type: ignore this is test file
+            hamiltonian._calculate_off_diagonal_energies(),  # noqa: SLF001 # type: ignore this is test file
         )
 
     def test_total_surface_hamiltonian_simple(self) -> None:
         shape = np.array([3, 3, 200])  # np.random.randint(1, 2, size=3, dtype=int)
         nz = 6
 
-        expected_basis = StackedBasis[Any](
-            FundamentalPositionBasis3d(np.array([2 * np.pi, 0, 0]), shape.item(0)),
-            FundamentalPositionBasis3d(np.array([0, 2 * np.pi, 0]), shape.item(1)),
-            FundamentalPositionBasis3d(np.array([0, 0, 5 * np.pi]), shape.item(2)),
+        expected_basis = StackedBasis(
+            FundamentalPositionBasis(np.array([2 * np.pi, 0, 0]), shape.item(0)),
+            FundamentalPositionBasis(np.array([0, 2 * np.pi, 0]), shape.item(1)),
+            FundamentalPositionBasis(np.array([0, 0, 5 * np.pi]), shape.item(2)),
         )
         config: SHOBasisConfig = {
             "mass": hbar**2,
@@ -344,7 +343,7 @@ class HamiltonianBuilderTest(unittest.TestCase):
 
         potential: Potential[Any] = {
             "basis": expected_basis,
-            "data": points.ravel(),
+            "data": points.astype(np.complex_).ravel(),
         }
 
         momentum_builder_result = momentum_basis.total_surface_hamiltonian(
@@ -357,13 +356,13 @@ class HamiltonianBuilderTest(unittest.TestCase):
 
         interpolated_potential: Potential[Any] = {
             "basis": StackedBasis(
-                FundamentalPositionBasis3d(
+                FundamentalPositionBasis(
                     potential["basis"][0].delta_x, interpolated_points.shape[0]
                 ),
-                FundamentalPositionBasis3d(
+                FundamentalPositionBasis(
                     potential["basis"][1].delta_x, interpolated_points.shape[1]
                 ),
-                FundamentalPositionBasis3d(
+                FundamentalPositionBasis(
                     potential["basis"][2].delta_x, interpolated_points.shape[2]
                 ),
             ),
@@ -378,19 +377,20 @@ class HamiltonianBuilderTest(unittest.TestCase):
         )
 
         expected = convert_operator_to_basis(
-            momentum_builder_result, actual["basis"], actual["dual_basis"]
+            momentum_builder_result,
+            actual["basis"],
         )
 
-        np.testing.assert_array_almost_equal(actual["array"], expected["array"])
+        np.testing.assert_array_almost_equal(actual["data"], expected["data"])
 
-    def __test_total_surface_hamiltonian(self) -> None:
+    def test_total_surface_hamiltonian(self) -> None:
         shape = np.array([3, 3, 200])
         nz = 6
 
-        expected_basis = StackedBasis[Any](
-            FundamentalPositionBasis3d(np.array([2 * np.pi, 0, 0]), shape.item(0)),
-            FundamentalPositionBasis3d(np.array([0, 2 * np.pi, 0]), shape.item(1)),
-            FundamentalPositionBasis3d(np.array([0, 0, 5 * np.pi]), shape.item(2)),
+        expected_basis = StackedBasis(
+            FundamentalPositionBasis(np.array([2 * np.pi, 0, 0]), shape.item(0)),
+            FundamentalPositionBasis(np.array([0, 2 * np.pi, 0]), shape.item(1)),
+            FundamentalPositionBasis(np.array([0, 0, 5 * np.pi]), shape.item(2)),
         )
         config: SHOBasisConfig = {
             "mass": hbar**2,
@@ -403,7 +403,7 @@ class HamiltonianBuilderTest(unittest.TestCase):
 
         potential: Potential[Any] = {
             "basis": expected_basis,
-            "data": points.ravel(),
+            "data": points.astype(np.complex_).ravel(),
         }
 
         momentum_builder_result = momentum_basis.total_surface_hamiltonian(
@@ -416,13 +416,13 @@ class HamiltonianBuilderTest(unittest.TestCase):
 
         interpolated_potential: Potential[Any] = {
             "basis": StackedBasis(
-                FundamentalPositionBasis3d(
+                FundamentalPositionBasis(
                     potential["basis"][0].delta_x, interpolated_points.shape[0]
                 ),
-                FundamentalPositionBasis3d(
+                FundamentalPositionBasis(
                     potential["basis"][1].delta_x, interpolated_points.shape[1]
                 ),
-                FundamentalPositionBasis3d(
+                FundamentalPositionBasis(
                     potential["basis"][2].delta_x, interpolated_points.shape[2]
                 ),
             ),
@@ -436,23 +436,21 @@ class HamiltonianBuilderTest(unittest.TestCase):
             (points.shape[0], points.shape[1], nz),
         )
 
-        expected = convert_operator_to_basis(
-            momentum_builder_result, actual["basis"], actual["dual_basis"]
-        )
+        expected = convert_operator_to_basis(momentum_builder_result, actual["basis"])
 
-        np.testing.assert_array_almost_equal(actual["array"], expected["array"])
+        np.testing.assert_array_almost_equal(actual["data"], expected["data"])
 
     def test_momentum_builder_sho_hamiltonian(self) -> None:
         mass = hbar**2
         omega = 1 / hbar
-        basis = StackedBasis[Any](FundamentalPositionBasis1d(np.array([30]), 1000))
+        basis = StackedBasis(FundamentalPositionBasis(np.array([30]), 1000))
         util = BasisUtil(basis)
-        potential: Potential[tuple[FundamentalPositionBasis1d[int]]] = {
+        potential: Potential[StackedBasis[FundamentalPositionBasis1d[int]]] = {
             "basis": basis,
             "data": 0.5
             * mass
             * omega**2
-            * np.linalg.norm(util.x_points - 15, axis=0) ** 2,
+            * np.linalg.norm(util.x_points_stacked - 15, axis=0) ** 2,
         }
         hamiltonian = momentum_basis.total_surface_hamiltonian(
             potential, mass, np.array([0])
@@ -461,7 +459,7 @@ class HamiltonianBuilderTest(unittest.TestCase):
             hamiltonian, subset_by_index=(0, 50)
         )
         expected = hbar * omega * (util.stacked_nk_points[0] + 0.5)
-        np.testing.assert_almost_equal(expected[:50], eigenstates["eigenvalues"][:50])
+        np.testing.assert_almost_equal(expected[:50], eigenstates["eigenvalue"][:50])
 
         in_basis = convert_potential_to_basis(
             potential, stacked_basis_as_fundamental_momentum_basis(potential["basis"])
@@ -472,9 +470,9 @@ class HamiltonianBuilderTest(unittest.TestCase):
         eigenstates2 = calculate_eigenvectors_hermitian(
             hamiltonian2, subset_by_index=(0, 50)
         )
-        np.testing.assert_almost_equal(expected[:50], eigenstates2["eigenvalues"][:50])
+        np.testing.assert_almost_equal(expected[:50], eigenstates2["eigenvalue"][:50])
 
-        extended: Potential[tuple[TransformedPositionBasis[int, int, int]]] = {
+        extended: Potential[StackedBasis[TransformedPositionBasis[int, int, int]]] = {
             "basis": StackedBasis(TransformedPositionBasis(np.array([30]), 1000, 2000)),
             "data": in_basis["data"] * np.sqrt(2000 / 1000),
         }
@@ -487,4 +485,4 @@ class HamiltonianBuilderTest(unittest.TestCase):
         eigenstates3 = calculate_eigenvectors_hermitian(
             hamiltonian3, subset_by_index=(0, 50)
         )
-        np.testing.assert_almost_equal(expected[:50], eigenstates3["eigenvalues"][:50])
+        np.testing.assert_almost_equal(expected[:50], eigenstates3["eigenvalue"][:50])

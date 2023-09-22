@@ -9,8 +9,10 @@ from scipy.constants import hbar
 
 from _test_surface_potential_analysis.utils import get_random_explicit_axis
 from surface_potential_analysis.axis.axis import (
+    ExplicitBasis,
     ExplicitBasis3d,
     FundamentalPositionBasis3d,
+    TransformedPositionBasis,
     TransformedPositionBasis3d,
 )
 from surface_potential_analysis.axis.stacked_axis import (
@@ -36,17 +38,15 @@ def _get_random_sho_eigenstate(
     resolution: tuple[int, int, int], fundamental_resolution: tuple[int, int, int]
 ) -> StateVector[
     StackedBasisLike[
-        tuple[
-            TransformedPositionBasis3d[Any, Any],
-            TransformedPositionBasis3d[Any, Any],
-            ExplicitBasis3d[int, Any],
-        ]
+        TransformedPositionBasis3d[Any, Any],
+        TransformedPositionBasis3d[Any, Any],
+        ExplicitBasis3d[int, Any],
     ]
 ]:
-    vector = np.array(_rng.random(np.prod(resolution)), dtype=complex)
+    vector = np.array(_rng.random(np.prod(resolution)), dtype=np.complex_)
     vector /= np.linalg.norm(vector)
 
-    x2_basis = x2_basis = ExplicitBasis3d(
+    x2_basis = x2_basis = ExplicitBasis(
         np.array([0, 0, 20]),
         get_random_explicit_axis(
             3, fundamental_n=fundamental_resolution[2], n=resolution[2]
@@ -54,10 +54,10 @@ def _get_random_sho_eigenstate(
     )
     return {
         "basis": StackedBasis(
-            TransformedPositionBasis3d(
+            TransformedPositionBasis(
                 np.array([1, 0, 0]), resolution[0], fundamental_resolution[0]
             ),
-            TransformedPositionBasis3d(
+            TransformedPositionBasis(
                 np.array([0, 1, 0]), resolution[1], fundamental_resolution[1]
             ),
             x2_basis,

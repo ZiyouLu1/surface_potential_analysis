@@ -191,7 +191,7 @@ class StackedBasis(StackedBasisLike[Unpack[_B0]]):
         if not isinstance(basis, StackedBasisLike):
             return super().__convert_vector_into__(vector, basis, axis)
         # We overload __convert_vector_into__, more likely to get the 'happy path'
-        return _convert_stacked_vector(vector, self, basis, axis)
+        return _convert_stacked_vector(vector, self, basis, axis)  # type: ignore unknown
 
     def __iter__(self) -> Iterator[Union[*_B0]]:
         return self._axes.__iter__()

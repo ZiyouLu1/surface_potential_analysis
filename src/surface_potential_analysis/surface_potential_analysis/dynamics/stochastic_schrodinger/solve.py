@@ -174,7 +174,7 @@ def get_collapse_operators_from_function(
                 operators.append(
                     {
                         "basis": StackedBasis(basis, basis),
-                        "array": scipy.sparse.coo_array((data, (i, j)), shape=shape),
+                        "data": scipy.sparse.coo_array((data, (i, j)), shape=shape),
                     }
                 )
     return operators
