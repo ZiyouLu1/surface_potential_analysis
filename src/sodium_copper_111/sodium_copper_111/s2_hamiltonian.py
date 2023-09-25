@@ -10,10 +10,10 @@ from .s1_potential import get_interpolated_potential
 
 if TYPE_CHECKING:
     import numpy as np
-    from surface_potential_analysis.axis.axis import (
+    from surface_potential_analysis.basis.basis import (
         FundamentalTransformedPositionBasis,
     )
-    from surface_potential_analysis.axis.stacked_axis import (
+    from surface_potential_analysis.basis.stacked_basis import (
         StackedBasisLike,
     )
     from surface_potential_analysis.operator.operator import SingleBasisOperator

@@ -15,10 +15,10 @@ from surface_potential_analysis.potential.potential import (
 from .surface_data import get_data_path
 
 if TYPE_CHECKING:
-    from surface_potential_analysis.axis.axis import (
+    from surface_potential_analysis.basis.basis import (
         FundamentalPositionBasis3d,
     )
-    from surface_potential_analysis.axis.stacked_axis import StackedBasisLike
+    from surface_potential_analysis.basis.stacked_basis import StackedBasisLike
 
 
 def load_raw_copper_potential() -> UnevenPotential3d[Any, Any, Any]:

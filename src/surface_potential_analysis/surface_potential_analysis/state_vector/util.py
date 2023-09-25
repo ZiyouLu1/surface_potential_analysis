@@ -4,16 +4,16 @@ from typing import TYPE_CHECKING, Any, TypeVar
 
 import numpy as np
 
-from surface_potential_analysis.axis.axis import (
+from surface_potential_analysis.basis.basis import (
     FundamentalBasis,
     FundamentalPositionBasis,
     FundamentalTransformedPositionBasis,
     TransformedPositionBasis,
 )
-from surface_potential_analysis.axis.stacked_axis import (
+from surface_potential_analysis.basis.stacked_basis import (
     StackedBasis,
 )
-from surface_potential_analysis.axis.util import BasisUtil
+from surface_potential_analysis.basis.util import BasisUtil
 from surface_potential_analysis.probability_vector.probability_vector import (
     average_probabilities,
     from_state_vector_list,
@@ -31,8 +31,11 @@ from surface_potential_analysis.wavepacket.wavepacket import (
 )
 
 if TYPE_CHECKING:
-    from surface_potential_analysis.axis.axis_like import BasisLike, BasisWithLengthLike
-    from surface_potential_analysis.axis.stacked_axis import (
+    from surface_potential_analysis.basis.basis_like import (
+        BasisLike,
+        BasisWithLengthLike,
+    )
+    from surface_potential_analysis.basis.stacked_basis import (
         StackedBasisLike,
     )
     from surface_potential_analysis.state_vector.state_vector import StateVector

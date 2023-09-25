@@ -7,7 +7,7 @@ import scipy.optimize
 from matplotlib import pyplot as plt
 from matplotlib.scale import FuncScale
 from scipy.constants import Boltzmann
-from surface_potential_analysis.axis.util import BasisUtil
+from surface_potential_analysis.basis.util import BasisUtil
 from surface_potential_analysis.dynamics.hermitian_gamma_integral import (
     calculate_hermitian_gamma_occupation_integral,
 )
@@ -56,7 +56,7 @@ _L0Inv = TypeVar("_L0Inv", bound=int)
 
 
 def get_jianding_isf_110() -> np.ndarray[tuple[Literal[2]], np.dtype[np.float_]]:
-    basis = get_wavepacket_hydrogen(0)["basis"]
+    basis = get_wavepacket_hydrogen(0)["basis"][1]
 
     util = BasisUtil(basis)
     dk = util.delta_x_stacked[0] / np.linalg.norm(util.delta_x_stacked[0])
@@ -65,7 +65,7 @@ def get_jianding_isf_110() -> np.ndarray[tuple[Literal[2]], np.dtype[np.float_]]
 
 
 def get_jianding_isf_112bar() -> np.ndarray[tuple[Literal[2]], np.dtype[np.float_]]:
-    basis = get_wavepacket_hydrogen(0)["basis"]
+    basis = get_wavepacket_hydrogen(0)["basis"][1]
 
     util = BasisUtil(basis)
     dk_0_norm = util.delta_x_stacked[0] / np.linalg.norm(util.delta_x_stacked[0])
@@ -78,7 +78,7 @@ def get_jianding_isf_112bar() -> np.ndarray[tuple[Literal[2]], np.dtype[np.float
 
 
 def get_jianding_isf_diagonal() -> np.ndarray[tuple[Literal[2]], np.dtype[np.float_]]:
-    basis = get_wavepacket_hydrogen(0)["basis"]
+    basis = get_wavepacket_hydrogen(0)["basis"][1]
 
     util = BasisUtil(basis)
     dk = util.delta_x_stacked[0] + util.delta_x_stacked[1]

@@ -4,7 +4,7 @@ import unittest
 
 import numpy as np
 
-from surface_potential_analysis.axis.util import BasisUtil
+from surface_potential_analysis.basis.util import BasisUtil
 from surface_potential_analysis.stacked_basis.brillouin_zone import (
     decrement_brillouin_zone_3d,
     get_all_brag_point,
@@ -166,9 +166,9 @@ class TestBasisConfig(unittest.TestCase):
     def test_get_stacked_index(self) -> None:
         delta_x = np.array(([1, 0, 0], [0, 2, 0], [0, 0, 1]))
         resolution = (
-            rng.integers(1, 10),# type: ignore bad libary types
-            rng.integers(1, 10),# type: ignore bad libary types
-            rng.integers(1, 10),# type: ignore bad libary types
+            rng.integers(1, 10),  # type: ignore bad libary types
+            rng.integers(1, 10),  # type: ignore bad libary types
+            rng.integers(1, 10),  # type: ignore bad libary types
         )
         basis = position_basis_3d_from_shape(resolution, delta_x)
         util = BasisUtil(basis)
@@ -193,9 +193,9 @@ class TestBasisConfig(unittest.TestCase):
         np.testing.assert_array_equal(expected, actual)
 
         resolution = (
-            rng.integers(1, 20),# type: ignore bad libary types
-            rng.integers(1, 20),# type: ignore bad libary types
-            rng.integers(1, 20),# type: ignore bad libary types
+            rng.integers(1, 20),  # type: ignore bad libary types
+            rng.integers(1, 20),  # type: ignore bad libary types
+            rng.integers(1, 20),  # type: ignore bad libary types
         )
         basis = position_basis_3d_from_shape(resolution, delta_x)
         util = BasisUtil(basis)
@@ -221,9 +221,9 @@ class TestBasisConfig(unittest.TestCase):
         np.testing.assert_array_equal(expected, actual)
 
         resolution = (
-            rng.integers(1, 20),# type: ignore bad libary types
-            rng.integers(1, 20),# type: ignore bad libary types
-            rng.integers(1, 20),# type: ignore bad libary types
+            rng.integers(1, 20),  # type: ignore bad libary types
+            rng.integers(1, 20),  # type: ignore bad libary types
+            rng.integers(1, 20),  # type: ignore bad libary types
         )
         basis = position_basis_3d_from_shape(resolution, delta_x)
         util = BasisUtil(basis)

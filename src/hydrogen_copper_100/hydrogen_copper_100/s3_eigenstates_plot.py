@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, Any
 
 import matplotlib.pyplot as plt
 import numpy as np
-from surface_potential_analysis.axis.util import BasisUtil
+from surface_potential_analysis.basis.util import BasisUtil
 from surface_potential_analysis.state_vector.eigenstate_collection import (
     select_eigenstate,
 )

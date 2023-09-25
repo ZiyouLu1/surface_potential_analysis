@@ -4,16 +4,16 @@ from typing import TYPE_CHECKING, Any, Generic, TypedDict, TypeVar
 
 import numpy as np
 
-from surface_potential_analysis.axis.axis import FundamentalBasis
-from surface_potential_analysis.axis.axis_like import (
+from surface_potential_analysis.basis.basis import FundamentalBasis
+from surface_potential_analysis.basis.basis_like import (
     BasisLike,
 )
-from surface_potential_analysis.axis.stacked_axis import StackedBasis
+from surface_potential_analysis.basis.stacked_basis import StackedBasis
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
 
-    from surface_potential_analysis.axis.stacked_axis import StackedBasisLike
+    from surface_potential_analysis.basis.stacked_basis import StackedBasisLike
     from surface_potential_analysis.operator.operator import Operator
     from surface_potential_analysis.state_vector.state_vector import (
         StateDualVector,

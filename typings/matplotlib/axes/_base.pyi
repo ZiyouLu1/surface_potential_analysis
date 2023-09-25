@@ -217,7 +217,7 @@ class _AxesBase(Artist):
     @overload
     def set_xlim(
         self,
-        left: tuple[float | np.datetime64, float | np.datetime64],
+        left: tuple[float | np.datetime64 | None, float | np.datetime64 | None],
         *,
         emit: bool = ...,
         auto: bool | None = ...,
@@ -227,8 +227,8 @@ class _AxesBase(Artist):
     @overload
     def set_xlim(
         self,
-        left: float | np.datetime64 = ...,
-        right: float | np.datetime64 = ...,
+        left: float | np.datetime64 | None = ...,
+        right: float | np.datetime64 | None = ...,
         emit: bool = ...,
         auto: bool | None = ...,
         *,
@@ -266,8 +266,8 @@ class _AxesBase(Artist):
     def get_ylim(self) -> tuple[float, float]: ...
     def set_ylim(
         self,
-        bottom: float = ...,
-        top: float = ...,
+        bottom: float | None = ...,
+        top: float | None = ...,
         emit: bool = ...,
         auto: bool | None = ...,
         *,

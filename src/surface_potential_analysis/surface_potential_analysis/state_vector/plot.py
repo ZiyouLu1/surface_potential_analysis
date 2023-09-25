@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Any
 import numpy as np
 from matplotlib import pyplot as plt
 
-from surface_potential_analysis.axis.util import (
+from surface_potential_analysis.basis.util import (
     BasisUtil,
 )
 from surface_potential_analysis.stacked_basis.conversion import (
@@ -39,7 +39,7 @@ if TYPE_CHECKING:
     from matplotlib.figure import Figure
     from matplotlib.lines import Line2D
 
-    from surface_potential_analysis.axis.stacked_axis import StackedBasisLike
+    from surface_potential_analysis.basis.stacked_basis import StackedBasisLike
     from surface_potential_analysis.state_vector.state_vector import StateVector
     from surface_potential_analysis.types import (
         SingleStackedIndexLike,

@@ -2,14 +2,19 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, Literal
 
-import numpy as np
-from surface_potential_analysis.axis.evenly_spaced_basis import EvenlySpacedBasis
+from surface_potential_analysis.basis.basis import (
+    FundamentalBasis,
+)
+from surface_potential_analysis.basis.evenly_spaced_basis import EvenlySpacedBasis
+from surface_potential_analysis.basis.stacked_basis import (
+    StackedBasis,
+    StackedBasisLike,
+)
 from surface_potential_analysis.stacked_basis.build import (
     fundamental_stacked_basis_from_shape,
 )
 from surface_potential_analysis.state_vector.util import (
     get_most_localized_free_state_vectors,
-    get_most_localized_state_vectors_from_probability,
 )
 from surface_potential_analysis.util.decorators import npy_cached
 from surface_potential_analysis.wavepacket.localization import (
@@ -21,18 +26,21 @@ from surface_potential_analysis.wavepacket.localization import (
     localize_wavepacket_projection,
 )
 from surface_potential_analysis.wavepacket.localization.localization_operator import (
+    get_localized_hamiltonian,
     get_localized_wavepackets,
     get_wavepacket_hamiltonian,
 )
 from surface_potential_analysis.wavepacket.wavepacket import (
     Wavepacket,
     WavepacketList,
+    WavepacketWithEigenvalues,
     WavepacketWithEigenvaluesList,
     generate_wavepacket,
     get_average_eigenvalues,
-    get_wavepacket,
     get_wavepacket_basis,
+    get_wavepacket_with_eigenvalues,
     get_wavepackets,
+    get_wavepackets_with_eigenvalues,
 )
 
 from .s2_hamiltonian import (
@@ -43,19 +51,17 @@ from .surface_data import get_data_path
 if TYPE_CHECKING:
     from pathlib import Path
 
-    from surface_potential_analysis.axis.axis import (
+    import numpy as np
+    from surface_potential_analysis.basis.basis import (
         ExplicitBasis,
-        FundamentalBasis,
         TransformedPositionBasis,
     )
-    from surface_potential_analysis.axis.axis_like import BasisLike
-    from surface_potential_analysis.axis.stacked_axis import (
-        StackedBasisLike,
-    )
+    from surface_potential_analysis.basis.basis_like import BasisLike
     from surface_potential_analysis.operator.operator import (
         DiagonalOperator,
         SingleBasisOperator,
     )
+    from surface_potential_analysis.operator.operator_list import OperatorList
     from surface_potential_analysis.wavepacket.localization.localization_operator import (
         LocalizationOperator,
     )
@@ -101,8 +107,10 @@ def get_all_wavepackets_hydrogen() -> _HydrogenCopperWavepacketList:
     )
 
 
-def get_wavepacket_hydrogen(band: int) -> _HydrogenCopperWavepacket:
-    return get_wavepacket(get_all_wavepackets_hydrogen(), band)
+def get_wavepacket_hydrogen(
+    band: int,
+) -> WavepacketWithEigenvalues[_HCuSampleBasis, _HCuWavepacketBasis]:
+    return get_wavepacket_with_eigenvalues(get_all_wavepackets_hydrogen(), band)
 
 
 def get_hamiltonian_hydrogen() -> (
@@ -165,41 +173,41 @@ def get_projection_localized_wavepackets(
     )
 
 
-def _get_wavepacket_cache_wannier90_h(sample_shape: tuple[int, int, int]) -> Path:
-    return get_data_path(
-        f"wavepacket/localized_wavepacket_operator_{sample_shape[0]}_{sample_shape[1]}_{sample_shape[2]}.npy"
-    )
+def _get_wavepacket_cache_wannier90_h(n_samples: int) -> Path:
+    return get_data_path(f"wavepacket/localized_wavepacket_operator_{n_samples}.npy")
 
 
 @npy_cached(_get_wavepacket_cache_wannier90_h, load_pickle=True)
 def get_localization_operator_hydrogen(
-    sample_shape: tuple[int, int, int]
+    n_samples: int,
 ) -> LocalizationOperator[_HCuSampleBasis, FundamentalBasis[int], BasisLike[Any, Any]]:
-    n_samples = 8  # sample_shape[0] * sample_shape[1]
     wavepackets = get_all_wavepackets_hydrogen()
-    projections = get_most_localized_state_vectors_from_probability(
-        wavepackets,
-        (
-            np.array([-0.5, 0.0, +0.5, 0.0, +0.25, 0.0, -0.25, 0.0]),
-            np.array([0.0, -0.5, 0.0, +0.5, 0.0, +0.25, 0.0, -0.25]),
-            np.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]),
-        ),
-    )
     return get_localization_operator_wannier90(
         get_wavepackets(wavepackets, slice(n_samples)),
-        projections,
-        options=Wannier90Options(num_iter=100000, use_bloch_phases=True),
+        options=Wannier90Options(
+            num_iter=100000,
+            projection={"basis": StackedBasis(FundamentalBasis(n_samples))},
+        ),
     )
 
 
 def get_wannier90_localized_wavepacket_hydrogen(
-    sample_shape: tuple[int, int, int]
+    n_samples: int,
 ) -> WavepacketList[FundamentalBasis[int], _HCuSampleBasis, _HCuWavepacketBasis]:
-    n_samples = 8  # sample_shape[0] * sample_shape[1]
     wavepackets = get_all_wavepackets_hydrogen()
-    operator = get_localization_operator_hydrogen(sample_shape)
+    operator = get_localization_operator_hydrogen(n_samples)
     return get_localized_wavepackets(
         get_wavepackets(wavepackets, slice(n_samples)), operator
+    )
+
+
+def get_localized_hamiltonian_hydrogen(
+    n_samples: int,
+) -> OperatorList[_HCuSampleBasis, FundamentalBasis[int], FundamentalBasis[int]]:
+    wavepackets = get_all_wavepackets_hydrogen()
+    operator = get_localization_operator_hydrogen(n_samples)
+    return get_localized_hamiltonian(
+        get_wavepackets_with_eigenvalues(wavepackets, slice(n_samples)), operator
     )
 
 

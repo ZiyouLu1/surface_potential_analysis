@@ -11,11 +11,11 @@ from surface_potential_analysis.stacked_basis.conversion import (
 from surface_potential_analysis.util.interpolation import pad_ft_points
 
 if TYPE_CHECKING:
-    from surface_potential_analysis.axis.axis import (
+    from surface_potential_analysis.basis.basis import (
         FundamentalPositionBasis,
         FundamentalTransformedPositionBasis,
     )
-    from surface_potential_analysis.axis.stacked_axis import StackedBasisLike
+    from surface_potential_analysis.basis.stacked_basis import StackedBasisLike
     from surface_potential_analysis.overlap.overlap import Overlap3d
 
     _L0Inv = TypeVar("_L0Inv", bound=int)
@@ -43,7 +43,7 @@ def convert_overlap_to_momentum_basis(
 
     Parameters
     ----------
-    overlap : Overlap[PositionStackedAxisLike[tuple[_L0Inv, _L1Inv, _L2Inv]]
+    overlap : Overlap[PositionStackedBasisLike[tuple[_L0Inv, _L1Inv, _L2Inv]]
 
     Returns
     -------
@@ -87,7 +87,7 @@ def convert_overlap_to_position_basis(
 
     Returns
     -------
-    Overlap[PositionStackedAxisLike[tuple[_L0Inv, _L1Inv, _L2Inv]]
+    Overlap[PositionStackedBasisLike[tuple[_L0Inv, _L1Inv, _L2Inv]]
     """
     padded = pad_ft_points(
         overlap["data"].reshape(overlap["basis"].shape),

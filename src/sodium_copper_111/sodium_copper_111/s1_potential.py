@@ -4,12 +4,12 @@ from typing import TYPE_CHECKING, Literal, TypeVar
 
 import numpy as np
 from scipy.constants import electron_volt
-from surface_potential_analysis.axis.axis import (
+from surface_potential_analysis.basis.basis import (
     FundamentalTransformedPositionBasis,
     FundamentalTransformedPositionBasis1d,
     TransformedPositionBasis1d,
 )
-from surface_potential_analysis.axis.stacked_axis import (
+from surface_potential_analysis.basis.stacked_basis import (
     StackedBasis,
     StackedBasisLike,
 )

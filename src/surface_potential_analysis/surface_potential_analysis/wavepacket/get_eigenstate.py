@@ -4,17 +4,17 @@ from typing import TYPE_CHECKING, Any, TypeVar, TypeVarTuple, cast
 
 import numpy as np
 
-from surface_potential_analysis.axis.axis import (
+from surface_potential_analysis.basis.basis import (
     FundamentalBasis,
     FundamentalTransformedPositionBasis,
 )
-from surface_potential_analysis.axis.evenly_spaced_basis import (
+from surface_potential_analysis.basis.evenly_spaced_basis import (
     EvenlySpacedTransformedPositionBasis,
 )
-from surface_potential_analysis.axis.stacked_axis import (
+from surface_potential_analysis.basis.stacked_basis import (
     StackedBasis,
 )
-from surface_potential_analysis.axis.util import BasisUtil
+from surface_potential_analysis.basis.util import BasisUtil
 from surface_potential_analysis.stacked_basis.conversion import (
     stacked_basis_as_fundamental_basis,
     stacked_basis_as_fundamental_momentum_basis,
@@ -43,9 +43,12 @@ from surface_potential_analysis.wavepacket.wavepacket import (
 )
 
 if TYPE_CHECKING:
-    from surface_potential_analysis.axis.axis import FundamentalPositionBasis
-    from surface_potential_analysis.axis.axis_like import BasisLike, BasisWithLengthLike
-    from surface_potential_analysis.axis.stacked_axis import (
+    from surface_potential_analysis.basis.basis import FundamentalPositionBasis
+    from surface_potential_analysis.basis.basis_like import (
+        BasisLike,
+        BasisWithLengthLike,
+    )
+    from surface_potential_analysis.basis.stacked_basis import (
         StackedBasisLike,
     )
     from surface_potential_analysis.state_vector.eigenstate_collection import Eigenstate
@@ -187,7 +190,7 @@ def get_all_eigenstates(
         }
         for (v, e, *offset) in zip(
             converted["data"],
-            wavepacket["eigenvalues"],
+            wavepacket["eigenvalue"],
             *util.stacked_nk_points,
             strict=True,
         )
@@ -247,7 +250,7 @@ def get_tight_binding_state(
 
     Returns
     -------
-    StateVector[tuple[FundamentalPositionAxis[Any, Any], ...]]
+    StateVector[tuple[FundamentalPositionBasis[Any, Any], ...]]
         The localized state under the tight binding approximation
     """
     state_0 = convert_state_vector_to_position_basis(

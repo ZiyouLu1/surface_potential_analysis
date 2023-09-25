@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import numpy as np
-from surface_potential_analysis.axis.util import BasisUtil
+from surface_potential_analysis.basis.util import BasisUtil
 from surface_potential_analysis.potential.plot import (
     plot_potential_1d_x2_comparison_111,
     plot_potential_2d_x,

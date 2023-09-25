@@ -5,15 +5,15 @@ from typing import TYPE_CHECKING, Any, Literal, TypeVar
 import numpy as np
 import scipy.linalg
 
-from surface_potential_analysis.axis.axis import (
+from surface_potential_analysis.basis.basis import (
     FundamentalBasis,
 )
-from surface_potential_analysis.axis.axis_like import BasisLike, BasisWithLengthLike
-from surface_potential_analysis.axis.stacked_axis import (
+from surface_potential_analysis.basis.basis_like import BasisLike, BasisWithLengthLike
+from surface_potential_analysis.basis.stacked_basis import (
     StackedBasis,
     StackedBasisLike,
 )
-from surface_potential_analysis.axis.util import (
+from surface_potential_analysis.basis.util import (
     BasisUtil,
 )
 from surface_potential_analysis.stacked_basis.conversion import (
@@ -53,7 +53,7 @@ from surface_potential_analysis.wavepacket.wavepacket import (
 )
 
 if TYPE_CHECKING:
-    from surface_potential_analysis.axis.axis import (
+    from surface_potential_analysis.basis.basis import (
         FundamentalPositionBasis,
     )
     from surface_potential_analysis.operator.operator import Operator
@@ -267,7 +267,7 @@ def get_exponential_state(
 
     Returns
     -------
-    StateVector[tuple[FundamentalPositionAxis[Any, Any], ...]]
+    StateVector[tuple[FundamentalPositionBasis[Any, Any], ...]]
         The localized state under the tight binding approximation
     """
     state_0 = convert_state_vector_to_position_basis(
@@ -368,7 +368,7 @@ def get_gaussian_states(
 
     Returns
     -------
-    StateVector[tuple[FundamentalPositionAxis[Any, Any], ...]]
+    StateVector[tuple[FundamentalPositionBasis[Any, Any], ...]]
         The localized state under the tight binding approximation
     """
     basis = stacked_basis_as_fundamental_position_basis(

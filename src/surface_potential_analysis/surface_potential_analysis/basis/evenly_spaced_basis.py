@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, Any, Generic, TypeVar
 
 import numpy as np
 
-from surface_potential_analysis.axis.axis_like import (
+from surface_potential_analysis.basis.basis_like import (
     AsFundamentalBasis,
     AsTransformedBasis,
     AxisVector,
@@ -154,7 +154,7 @@ class EvenlySpacedTransformedPositionBasis(
     EvenlySpacedTransformedBasis[_N0_co, _N1_co, _N2_co],
     BasisWithLengthLike[Any, _N0_co, _ND0Inv],
 ):
-    """Axis used to represent a single eigenstate from a wavepacket."""
+    """Basis used to represent a single eigenstate from a wavepacket."""
 
     def __init__(
         self,

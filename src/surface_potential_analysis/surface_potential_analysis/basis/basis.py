@@ -4,7 +4,7 @@ from typing import Literal, TypeVar
 
 import numpy as np
 
-from surface_potential_analysis.axis.axis_like import (
+from surface_potential_analysis.basis.basis_like import (
     AsFundamentalBasis,
     AsTransformedBasis,
     AxisVector,

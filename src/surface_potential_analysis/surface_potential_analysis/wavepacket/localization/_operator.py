@@ -4,11 +4,11 @@ from typing import TYPE_CHECKING, Any, TypeVar, cast
 
 import numpy as np
 
-from surface_potential_analysis.axis.axis import (
+from surface_potential_analysis.basis.basis import (
     FundamentalBasis,
 )
-from surface_potential_analysis.axis.stacked_axis import StackedBasis
-from surface_potential_analysis.axis.util import (
+from surface_potential_analysis.basis.stacked_basis import StackedBasis
+from surface_potential_analysis.basis.util import (
     BasisUtil,
 )
 from surface_potential_analysis.operator.conversion import (
@@ -40,8 +40,11 @@ from surface_potential_analysis.wavepacket.wavepacket import (
 )
 
 if TYPE_CHECKING:
-    from surface_potential_analysis.axis.axis_like import BasisLike, BasisWithLengthLike
-    from surface_potential_analysis.axis.stacked_axis import (
+    from surface_potential_analysis.basis.basis_like import (
+        BasisLike,
+        BasisWithLengthLike,
+    )
+    from surface_potential_analysis.basis.stacked_basis import (
         StackedBasisLike,
     )
     from surface_potential_analysis.operator.operator import SingleBasisOperator
@@ -98,7 +101,7 @@ def _localize_operator(
     return [
         {
             "basis": wavepacket["basis"],
-            "eigenvalues": wavepacket["eigenvalues"],
+            "eigenvalue": wavepacket["eigenvalue"],
             "data": wavepacket["data"] * vector[:, np.newaxis],
         }
         for vector in eigenstates["data"]

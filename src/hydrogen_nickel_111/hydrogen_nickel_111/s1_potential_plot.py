@@ -5,12 +5,12 @@ from typing import TYPE_CHECKING, Any, Literal
 
 import numpy as np
 from matplotlib import pyplot as plt
-from surface_potential_analysis.axis.axis import (
+from surface_potential_analysis.basis.basis import (
     FundamentalPositionBasis,
 )
-from surface_potential_analysis.axis.plot import plot_explicit_basis_states_x
-from surface_potential_analysis.axis.stacked_axis import StackedBasis
-from surface_potential_analysis.axis.util import (
+from surface_potential_analysis.basis.plot import plot_explicit_basis_states_x
+from surface_potential_analysis.basis.stacked_basis import StackedBasis
+from surface_potential_analysis.basis.util import (
     BasisUtil,
 )
 from surface_potential_analysis.potential.plot import (

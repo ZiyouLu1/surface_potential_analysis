@@ -18,12 +18,12 @@ from .s1_potential import (
 
 if TYPE_CHECKING:
     import numpy as np
-    from surface_potential_analysis.axis.axis import (
+    from surface_potential_analysis.basis.basis import (
         ExplicitBasis,
         FundamentalPositionBasis1d,
         FundamentalTransformedPositionBasis,
     )
-    from surface_potential_analysis.axis.stacked_axis import StackedBasisLike
+    from surface_potential_analysis.basis.stacked_basis import StackedBasisLike
     from surface_potential_analysis.operator import SingleBasisOperator
     from surface_potential_analysis.stacked_basis.potential_basis import (
         PotentialBasisConfig,

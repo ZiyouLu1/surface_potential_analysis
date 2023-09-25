@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Any
 
 import numpy as np
-from surface_potential_analysis.axis.plot import plot_explicit_basis_states_x
+from surface_potential_analysis.basis.plot import plot_explicit_basis_states_x
 from surface_potential_analysis.potential.plot import (
     plot_potential_1d_x,
 )

@@ -23,11 +23,11 @@ if TYPE_CHECKING:
     from matplotlib.figure import Figure
     from matplotlib.lines import Line2D
 
-    from surface_potential_analysis.axis.axis import (
+    from surface_potential_analysis.basis.basis import (
         FundamentalPositionBasis,
         FundamentalTransformedPositionBasis,
     )
-    from surface_potential_analysis.axis.stacked_axis import StackedBasisLike
+    from surface_potential_analysis.basis.stacked_basis import StackedBasisLike
     from surface_potential_analysis.types import (
         SingleFlatIndexLike,
         SingleStackedIndexLike,
@@ -42,20 +42,16 @@ if TYPE_CHECKING:
 
     FundamentalPositionOverlap = Overlap3d[
         StackedBasisLike[
-            tuple[
-                FundamentalPositionBasis[_L0Inv, Literal[3]],
-                FundamentalPositionBasis[_L1Inv, Literal[3]],
-                FundamentalPositionBasis[_L2Inv, Literal[3]],
-            ]
+            FundamentalPositionBasis[_L0Inv, Literal[3]],
+            FundamentalPositionBasis[_L1Inv, Literal[3]],
+            FundamentalPositionBasis[_L2Inv, Literal[3]],
         ]
     ]
     FundamentalMomentumOverlap = Overlap3d[
         StackedBasisLike[
-            tuple[
-                FundamentalTransformedPositionBasis[_L0Inv, Literal[3]],
-                FundamentalTransformedPositionBasis[_L1Inv, Literal[3]],
-                FundamentalTransformedPositionBasis[_L2Inv, Literal[3]],
-            ]
+            FundamentalTransformedPositionBasis[_L0Inv, Literal[3]],
+            FundamentalTransformedPositionBasis[_L1Inv, Literal[3]],
+            FundamentalTransformedPositionBasis[_L2Inv, Literal[3]],
         ]
     ]
 

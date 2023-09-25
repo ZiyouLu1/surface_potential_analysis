@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Literal, TypeVar
 
 import numpy as np
 from scipy.constants import Boltzmann
-from surface_potential_analysis.axis.util import BasisUtil
+from surface_potential_analysis.basis.util import BasisUtil
 from surface_potential_analysis.dynamics.hermitian_gamma_integral import (
     calculate_hermitian_gamma_occupation_integral,
     calculate_hermitian_gamma_potential_integral,
@@ -17,7 +17,7 @@ from surface_potential_analysis.dynamics.incoherent_propagation.tunnelling_matri
     get_jump_matrix_from_function,
 )
 from surface_potential_analysis.dynamics.tunnelling_basis import (
-    TunnellingSimulationBandsAxis,
+    TunnellingSimulationBandsBasis,
 )
 from surface_potential_analysis.dynamics.util import get_hop_shift
 from surface_potential_analysis.overlap.interpolation import (
@@ -42,7 +42,7 @@ if TYPE_CHECKING:
     from collections.abc import Callable
     from pathlib import Path
 
-    from surface_potential_analysis.axis.axis import FundamentalBasis
+    from surface_potential_analysis.basis.basis import FundamentalBasis
 
     _S0Inv = TypeVar("_S0Inv", bound=tuple[int, ...])
 _L0Inv = TypeVar("_L0Inv", bound=int)
@@ -203,7 +203,7 @@ def get_jump_matrix_hydrogen(
             i, j, (0, 0), (offset_j[0], offset_j[1]), temperature
         )
 
-    axis = TunnellingSimulationBandsAxis[_L2Inv].from_wavepackets(
+    axis = TunnellingSimulationBandsBasis[_L2Inv].from_wavepackets(
         get_all_wavepackets_hydrogen()[0:n_bands]
     )
 
@@ -218,7 +218,7 @@ def get_tunnelling_a_matrix_hydrogen(
     tuple[
         FundamentalBasis[_L0Inv],
         FundamentalBasis[_L1Inv],
-        TunnellingSimulationBandsAxis[_L2Inv],
+        TunnellingSimulationBandsBasis[_L2Inv],
     ]
 ]:
     jump_matrix = get_jump_matrix_hydrogen(n_bands, temperature)
@@ -236,7 +236,7 @@ def get_fey_jump_matrix_hydrogen() -> TunnellingJumpMatrix[Literal[2]]:
 
     Returns
     -------
-    TunnellingAMatrix[tuple[ FundamentalAxis[_L0Inv], FundamentalAxis[_L1Inv], TunnellingSimulationBandsAxis[Literal[2]]]]
+    TunnellingAMatrix[tuple[ FundamentalBasis[_L0Inv], FundamentalBasis[_L1Inv], TunnellingSimulationBandsBasis[Literal[2]]]]
     """
 
     def jump_function(i: int, j: int, hop: int) -> float:
@@ -247,7 +247,7 @@ def get_fey_jump_matrix_hydrogen() -> TunnellingJumpMatrix[Literal[2]]:
             return 6.55978349e08
         return 0
 
-    axis = TunnellingSimulationBandsAxis[Literal[2]].from_wavepackets(
+    axis = TunnellingSimulationBandsBasis[Literal[2]].from_wavepackets(
         get_all_wavepackets_hydrogen()[0:2]
     )
 
@@ -268,7 +268,7 @@ def get_jump_matrix_deuterium(
             i, j, (0, 0), (offset_j[0], offset_j[1]), temperature
         )
 
-    axis = TunnellingSimulationBandsAxis[_L2Inv].from_wavepackets(
+    axis = TunnellingSimulationBandsBasis[_L2Inv].from_wavepackets(
         get_all_wavepackets_deuterium()[0:n_bands]
     )
 
@@ -283,7 +283,7 @@ def get_tunnelling_a_matrix_deuterium(
     tuple[
         FundamentalBasis[_L0Inv],
         FundamentalBasis[_L1Inv],
-        TunnellingSimulationBandsAxis[_L2Inv],
+        TunnellingSimulationBandsBasis[_L2Inv],
     ]
 ]:
     jump_matrix = get_jump_matrix_deuterium(n_bands, temperature)

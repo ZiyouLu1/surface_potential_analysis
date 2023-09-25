@@ -4,15 +4,15 @@ import re
 import tempfile
 from dataclasses import dataclass
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, TypeVar
+from typing import TYPE_CHECKING, Any, Generic, TypedDict, TypeVar, cast
 
 import numpy as np
 
-from surface_potential_analysis.axis.stacked_axis import (
+from surface_potential_analysis.basis.stacked_basis import (
     StackedBasis,
     StackedBasisLike,
 )
-from surface_potential_analysis.axis.util import (
+from surface_potential_analysis.basis.util import (
     BasisUtil,
 )
 from surface_potential_analysis.stacked_basis.conversion import (
@@ -26,6 +26,7 @@ from surface_potential_analysis.state_vector.state_vector import (
     calculate_inner_product,
 )
 from surface_potential_analysis.state_vector.state_vector_list import (
+    StateVectorList,
     as_state_vector_list,
 )
 from surface_potential_analysis.wavepacket.get_eigenstate import (
@@ -47,15 +48,12 @@ from ._projection import (
 )
 
 if TYPE_CHECKING:
-    from surface_potential_analysis.axis.axis import (
+    from surface_potential_analysis.basis.basis import (
         FundamentalBasis,
         FundamentalTransformedPositionBasis,
     )
-    from surface_potential_analysis.axis.axis_like import BasisLike
+    from surface_potential_analysis.basis.basis_like import BasisLike
     from surface_potential_analysis.state_vector.state_vector import StateVector
-    from surface_potential_analysis.state_vector.state_vector_list import (
-        StateVectorList,
-    )
     from surface_potential_analysis.wavepacket.localization.localization_operator import (
         LocalizationOperator,
     )
@@ -77,11 +75,15 @@ if TYPE_CHECKING:
     _B2 = TypeVar("_B2", bound=BasisLike[Any, Any])
 
 
+class ProjectionsBasis(TypedDict, Generic[_B0]):
+    basis: StackedBasisLike[_B0]
+
+
 @dataclass
-class Wannier90Options:
+class Wannier90Options(Generic[_B0]):
+    projection: ProjectionsBasis[_B0] | StateVectorList[_B0, Any]
     num_iter: int = 10000
     conv_window: int = 3
-    use_bloch_phases: bool = False
 
 
 def _build_real_lattice_block(
@@ -123,7 +125,7 @@ def _build_win_file(
     wavepackets: WavepacketList[_B0, _SB0, _SBL0],
     *,
     postproc_setup: bool = False,
-    options: Wannier90Options,
+    options: Wannier90Options[Any],
 ) -> str:
     """
     Build a postproc setup file.
@@ -137,12 +139,13 @@ def _build_win_file(
     str
     """
     util = BasisUtil(wavepackets["basis"][1])
+    has_projections = options.projection.get("data", None) is not None
     return f"""
 {"postproc_setup = .true." if postproc_setup else ""}
 num_iter = {options.num_iter}
 conv_window = {options.conv_window}
 write_u_matrices = .true.
-{"use_bloch_phases = .true."if options.use_bloch_phases else "auto_projections = .true."}
+{"auto_projections = .true."if has_projections  else "use_bloch_phases = .true."}
 num_wann = {wavepackets["basis"][0][0].n}
 {_build_real_lattice_block(util.delta_x_stacked)}
 {_build_k_points_block(wavepackets["basis"][0][1])}
@@ -348,7 +351,7 @@ def _write_setup_files_wannier90(
     wavepackets: WavepacketList[_B0, _SB0, _SBL0],
     tmp_dir_path: Path,
     *,
-    options: Wannier90Options,
+    options: Wannier90Options[_B1],
 ) -> None:
     win_filename = tmp_dir_path / "spa.win"
     with win_filename.open("w") as f:
@@ -356,12 +359,11 @@ def _write_setup_files_wannier90(
 
 
 def _write_localization_files_wannier90(
-    wavepackets: WavepacketList[_B0, StackedBasisLike[*tuple[_FB0, ...]], _SBL0],
-    projections: StateVectorList[_B1, _B2],
     tmp_dir_path: Path,
     n_nkp_file: str,
+    wavepackets: WavepacketList[_B0, StackedBasisLike[*tuple[_FB0, ...]], _SBL0],
     *,
-    options: Wannier90Options,
+    options: Wannier90Options[_B1],
 ) -> None:
     win_filename = tmp_dir_path / "spa.win"
     with win_filename.open("w") as f:
@@ -376,17 +378,17 @@ def _write_localization_files_wannier90(
     with mmn_filename.open("w") as f:
         f.write(_build_mmn_file(converted, n_nkp_file))
 
-    if not options.use_bloch_phases:
+    if options.projection.get("data", None) is not None:
+        projection = cast(StateVectorList[_B1, Any], options.projection)
         amn_filename = tmp_dir_path / "spa.amn"
         with amn_filename.open("w") as f:
-            f.write(_build_amn_file(converted, projections))
+            f.write(_build_amn_file(converted, projection))
 
 
 def get_localization_operator_wannier90(
     wavepackets: WavepacketList[_B0, _SB0, _SBL0],
-    projections: StateVectorList[_B1, _B2],
     *,
-    options: Wannier90Options | None = None,
+    options: Wannier90Options[_B1],
 ) -> LocalizationOperator[_SB0, _B1, _B0]:
     """
     Localizes a set of wavepackets using wannier 90, with a single point projection as an initial guess.
@@ -408,7 +410,6 @@ def get_localization_operator_wannier90(
     WavepacketList[_B1, _SB0, _SBL0]
         Localized wavepackets, with each wavepacket correspondign to a different projection
     """
-    options = Wannier90Options() if options is None else options
     with tempfile.TemporaryDirectory() as tmp_dir:
         tmp_dir_path = Path(tmp_dir)
 
@@ -423,7 +424,7 @@ def get_localization_operator_wannier90(
 
         # Build Files for localisation
         _write_localization_files_wannier90(
-            wavepackets, projections, tmp_dir_path, n_nkp_file, options=options  # type: ignore should be fundamental basis, but we have no way of ensuring this in the type system
+            wavepackets, tmp_dir_path, n_nkp_file, options=options  # type: ignore should be fundamental basis, but we have no way of ensuring this in the type system
         )
         input(f"Run Wannier 90 in {tmp_dir_path}")
 
@@ -433,15 +434,14 @@ def get_localization_operator_wannier90(
             u_mat_file = f.read()
 
     return _get_localization_operator_from_u_mat_file(
-        wavepackets["basis"][0], projections["basis"][0], u_mat_file
+        wavepackets["basis"][0], options.projection["basis"][0], u_mat_file
     )
 
 
-def localize_wavepacket_wannier90_many_band(
+def localize_wavepacket_wannier90(
     wavepackets: WavepacketList[_B0, _SB0, _SBL0],
-    projections: StateVectorList[_B1, _B2],
     *,
-    options: Wannier90Options | None = None,
+    options: Wannier90Options[_B1],
 ) -> WavepacketList[_B1, _SB0, _SBL0]:
     """
     Localizes a set of wavepackets using wannier 90, with a single point projection as an initial guess.
@@ -463,9 +463,7 @@ def localize_wavepacket_wannier90_many_band(
     WavepacketList[_B1, _SB0, _SBL0]
         Localized wavepackets, with each wavepacket correspondign to a different projection
     """
-    operator = get_localization_operator_wannier90(
-        wavepackets, projections, options=options
-    )
+    operator = get_localization_operator_wannier90(wavepackets, options=options)
     return get_localized_wavepackets(wavepackets, operator)
 
 
@@ -487,8 +485,10 @@ def localize_wavepacket_wannier90_sp_projections(
     Wavepacket[_B0Inv, _B0Inv]
         The localized wavepacket
     """
-    projections = as_state_vector_list(
+    projection = as_state_vector_list(
         get_single_point_state_for_wavepacket(wavepacket)
         for wavepacket in wavepacket_list_into_iter(wavepackets)
     )
-    return localize_wavepacket_wannier90_many_band(wavepackets, projections)
+    return localize_wavepacket_wannier90(
+        wavepackets, options=Wannier90Options(projection)
+    )

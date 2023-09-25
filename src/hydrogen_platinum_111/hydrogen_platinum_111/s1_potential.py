@@ -3,11 +3,14 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, TypeVar
 
 import numpy as np
-from surface_potential_analysis.axis.axis import (
+from surface_potential_analysis.basis.basis import (
     FundamentalPositionBasis,
     FundamentalPositionBasis3d,
 )
-from surface_potential_analysis.axis.stacked_axis import StackedBasis, StackedBasisLike
+from surface_potential_analysis.basis.stacked_basis import (
+    StackedBasis,
+    StackedBasisLike,
+)
 from surface_potential_analysis.potential.point_potential import (
     PointPotential3d,
     load_point_potential_json,

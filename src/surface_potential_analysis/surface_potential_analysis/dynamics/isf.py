@@ -6,9 +6,9 @@ from typing import TYPE_CHECKING, Any, Literal, TypeVar
 import numpy as np
 import scipy.optimize
 
-from surface_potential_analysis.axis.axis import FundamentalPositionBasis
-from surface_potential_analysis.axis.stacked_axis import StackedBasis
-from surface_potential_analysis.axis.time_axis_like import (
+from surface_potential_analysis.basis.basis import FundamentalPositionBasis
+from surface_potential_analysis.basis.stacked_basis import StackedBasis
+from surface_potential_analysis.basis.time_basis_like import (
     BasisWithTimeLike,
     ExplicitTimeBasis,
 )
@@ -20,7 +20,7 @@ from surface_potential_analysis.util.util import Measure, get_measured_data
 
 if TYPE_CHECKING:
     from surface_potential_analysis.dynamics.tunnelling_basis import (
-        TunnellingSimulationBandsAxis,
+        TunnellingSimulationBandsBasis,
         TunnellingSimulationBasis,
     )
     from surface_potential_analysis.operator.operator import (
@@ -31,7 +31,7 @@ if TYPE_CHECKING:
         ProbabilityVectorList,
     )
 
-    _AX2Inv = TypeVar("_AX2Inv", bound=TunnellingSimulationBandsAxis[Any])
+    _AX2Inv = TypeVar("_AX2Inv", bound=TunnellingSimulationBandsBasis[Any])
     _B1Inv = TypeVar("_B1Inv", bound=TunnellingSimulationBasis[Any, Any, Any])
     _S0Inv = TypeVar("_S0Inv", bound=tuple[int, ...])
 
@@ -40,7 +40,7 @@ if TYPE_CHECKING:
 
 
 def _get_location_offsets_per_band(
-    axis: TunnellingSimulationBandsAxis[_L0Inv],
+    axis: TunnellingSimulationBandsBasis[_L0Inv],
 ) -> np.ndarray[tuple[Literal[2], _L0Inv], np.dtype[np.float_]]:
     return np.tensordot(axis.unit_cell, axis.locations, axes=(0, 0))  # type: ignore[no-any-return]
 
@@ -137,9 +137,11 @@ def get_isf_from_4_variable_fit(
     """
     return {
         "basis": StackedBasis(ExplicitTimeBasis(times), ExplicitTimeBasis(times)),
-        "data": (fit.fast_amplitude * np.exp(-fit.fast_rate * times)
-        + fit.slow_amplitude * np.exp(-fit.slow_rate * times)
-        + fit.baseline).astype(np.complex_),
+        "data": (
+            fit.fast_amplitude * np.exp(-fit.fast_rate * times)
+            + fit.slow_amplitude * np.exp(-fit.slow_rate * times)
+            + fit.baseline
+        ).astype(np.complex_),
     }
 
 

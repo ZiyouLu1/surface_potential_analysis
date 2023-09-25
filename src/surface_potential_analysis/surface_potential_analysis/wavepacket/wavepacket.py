@@ -4,22 +4,22 @@ from typing import TYPE_CHECKING, Any, TypeVar
 
 import numpy as np
 
-from surface_potential_analysis.axis.axis import (
+from surface_potential_analysis.basis.basis import (
     FundamentalBasis,
     FundamentalPositionBasis,
 )
-from surface_potential_analysis.axis.axis_like import (
+from surface_potential_analysis.basis.basis_like import (
     AxisVector,
     BasisLike,
     BasisWithLengthLike,
     convert_vector,
 )
-from surface_potential_analysis.axis.evenly_spaced_basis import EvenlySpacedBasis
-from surface_potential_analysis.axis.stacked_axis import (
+from surface_potential_analysis.basis.evenly_spaced_basis import EvenlySpacedBasis
+from surface_potential_analysis.basis.stacked_basis import (
     StackedBasis,
     StackedBasisLike,
 )
-from surface_potential_analysis.axis.util import (
+from surface_potential_analysis.basis.util import (
     BasisUtil,
 )
 from surface_potential_analysis.operator.operator import (
@@ -63,10 +63,8 @@ Wavepacket = StateVectorList[_SB0, _SB1]
 """represents an approximation of a Wannier function."""
 
 
-class WavepacketWithEigenvalues(StateVectorList[_SB0, _SB1]):
-    """represents an approximation of a Wannier function."""
-
-    eigenvalues: np.ndarray[tuple[int], np.dtype[np.complex_]]
+WavepacketWithEigenvalues = EigenstateList[_SB0, _SB1]
+"""represents an approximation of a Wannier function."""
 
 
 WavepacketList = StateVectorList[StackedBasisLike[_B0, _SB0], _SB1]
@@ -101,9 +99,7 @@ def get_sample_basis(
     )
 
 
-class UnfurledBasisAxis(
-    StackedBasis[_B0, BasisWithLengthLike[_L0Inv, _L1Inv, _ND0Inv]]
-):
+class UnfurledBasis(StackedBasis[_B0, BasisWithLengthLike[_L0Inv, _L1Inv, _ND0Inv]]):
     """Represent the basis of an unfurled wavepacket."""
 
     @property
@@ -115,7 +111,7 @@ def get_unfurled_basis(
     basis: WavepacketBasis[
         StackedBasisLike[*tuple[_B0, ...]], StackedBasisLike[*tuple[_BL0, ...]]
     ],
-) -> StackedBasisLike[*tuple[UnfurledBasisAxis[Any, Any, Any, Any], ...]]:
+) -> StackedBasisLike[*tuple[UnfurledBasis[Any, Any, Any, Any], ...]]:
     """
     Given the basis for a wavepacket, get the basis for the unfurled wavepacket.
 
@@ -130,7 +126,7 @@ def get_unfurled_basis(
     """
     return StackedBasis(
         *tuple(
-            UnfurledBasisAxis(list_ax, ax)
+            UnfurledBasis(list_ax, ax)
             for (list_ax, ax) in zip(basis[0], basis[1], strict=True)
         )
     )
@@ -295,6 +291,29 @@ def get_wavepacket(
     }
 
 
+def get_wavepacket_with_eigenvalues(
+    wavepackets: WavepacketWithEigenvaluesList[_B0, _SB0, _SB1],
+    idx: SingleFlatIndexLike,
+) -> WavepacketWithEigenvalues[_SB0, _SB1]:
+    """
+    Get the wavepacket at idx.
+
+    Parameters
+    ----------
+    wavepackets : WavepacketList[_B0, _SB0, _SB1]
+    idx : SingleFlatIndexLike
+
+    Returns
+    -------
+    Wavepacket[_SB0, _SB1]
+    """
+    return {
+        "basis": get_wavepacket_basis(wavepackets),
+        "eigenvalue": wavepackets["eigenvalue"][idx],
+        "data": wavepackets["data"].reshape(wavepackets["basis"][0][0].n, -1)[idx],
+    }
+
+
 def get_wavepackets(
     wavepackets: WavepacketList[_B0, _SB0, _SB1],
     idx: slice,
@@ -319,6 +338,36 @@ def get_wavepackets(
             wavepackets["basis"][1],
         ),
         "data": stacked.reshape(-1),
+    }
+
+
+def get_wavepackets_with_eigenvalues(
+    wavepackets: WavepacketWithEigenvaluesList[_B0, _SB0, _SB1],
+    idx: slice,
+) -> WavepacketWithEigenvaluesList[BasisLike[Any, Any], _SB0, _SB1]:
+    """
+    Get the wavepackets at the given slice.
+
+    Parameters
+    ----------
+    wavepackets : WavepacketList[_B0, _SB0, _SB1]
+    idx : slice
+
+    Returns
+    -------
+    WavepacketList[BasisLike[Any, Any], _SB0, _SB1]
+    """
+    stacked = wavepackets["data"].reshape(wavepackets["basis"][0][0].n, -1)
+    stacked = stacked[idx]
+    return {
+        "basis": StackedBasis(
+            StackedBasis(FundamentalBasis(len(stacked)), wavepackets["basis"][0][1]),
+            wavepackets["basis"][1],
+        ),
+        "data": stacked.reshape(-1),
+        "eigenvalue": wavepackets["eigenvalue"]
+        .reshape(wavepackets["basis"][0][0].n, -1)[idx]
+        .ravel(),
     }
 
 

@@ -4,19 +4,19 @@ from typing import TYPE_CHECKING, Any, Literal, TypeVar, overload
 
 import numpy as np
 
-from surface_potential_analysis.axis.axis import (
+from surface_potential_analysis.basis.basis import (
     FundamentalBasis,
     FundamentalPositionBasis,
     FundamentalTransformedPositionBasis,
     FundamentalTransformedPositionBasis3d,
 )
-from surface_potential_analysis.axis.stacked_axis import (
+from surface_potential_analysis.basis.stacked_basis import (
     StackedBasis,
     StackedBasisLike,
 )
 
 if TYPE_CHECKING:
-    from surface_potential_analysis.axis.axis_like import BasisWithLengthLike
+    from surface_potential_analysis.basis.basis_like import BasisWithLengthLike
 
     _BL0 = TypeVar("_BL0", bound=BasisWithLengthLike[Any, Any, Any])
     _BL1 = TypeVar("_BL1", bound=BasisWithLengthLike[Any, Any, Any])
@@ -47,7 +47,7 @@ def position_basis_3d_from_parent(
 
     Returns
     -------
-    FundamentalPositionStackedAxisLike[tuple[_NF0Inv, _NF1Inv, _NF2Inv]
+    FundamentalPositionStackedBasisLike[tuple[_NF0Inv, _NF1Inv, _NF2Inv]
         _description_
     """
     return StackedBasis(
@@ -102,7 +102,7 @@ def fundamental_stacked_basis_from_shape(
 
     Returns
     -------
-    FundamentalPositionStackedAxisLike[tuple[_NF0Inv, _NF1Inv, _NF2Inv]
+    FundamentalPositionStackedBasisLike[tuple[_NF0Inv, _NF1Inv, _NF2Inv]
     """
     return StackedBasis(*tuple(FundamentalBasis(n) for n in shape))
 
@@ -123,7 +123,7 @@ def position_basis_from_shape(
 
     Returns
     -------
-    FundamentalPositionStackedAxisLike[tuple[_NF0Inv, _NF1Inv, _NF2Inv]
+    FundamentalPositionStackedBasisLike[tuple[_NF0Inv, _NF1Inv, _NF2Inv]
     """
     delta_x = np.eye(len(shape)) if delta_x is None else delta_x
     return StackedBasis(
@@ -154,7 +154,7 @@ def position_basis_3d_from_shape(
 
     Returns
     -------
-    tuple[FundamentalPositionAxis[_NF0Inv, Literal[3]], FundamentalPositionAxis[_NF1Inv, Literal[3]], FundamentalPositionAxis[_NF2Inv, Literal[3]]]
+    tuple[FundamentalPositionBasis[_NF0Inv, Literal[3]], FundamentalPositionBasis[_NF1Inv, Literal[3]], FundamentalPositionBasis[_NF2Inv, Literal[3]]]
     """
     return position_basis_from_shape(shape, delta_x)  # type: ignore[arg-type,return-value]
 
@@ -184,7 +184,7 @@ def momentum_basis_3d_from_resolution(
 
     Returns
     -------
-    FundamentalMomentumStackedAxisLike[tuple[_NF0Inv, _NF1Inv, _NF2Inv]
+    FundamentalMomentumStackedBasisLike[tuple[_NF0Inv, _NF1Inv, _NF2Inv]
     """
     delta_x = (
         (np.array([1, 0, 0]), np.array([0, 1, 0]), np.array([0, 0, 1]))

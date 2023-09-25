@@ -4,9 +4,12 @@ from typing import TYPE_CHECKING, Any, Generic, TypedDict, TypeVar, cast, overlo
 
 import numpy as np
 
-from surface_potential_analysis.axis.axis_like import BasisLike
-from surface_potential_analysis.axis.stacked_axis import StackedBasis, StackedBasisLike
-from surface_potential_analysis.axis.util import BasisUtil
+from surface_potential_analysis.basis.basis_like import BasisLike
+from surface_potential_analysis.basis.stacked_basis import (
+    StackedBasis,
+    StackedBasisLike,
+)
+from surface_potential_analysis.basis.util import BasisUtil
 from surface_potential_analysis.util.util import get_data_in_axes
 
 if TYPE_CHECKING:

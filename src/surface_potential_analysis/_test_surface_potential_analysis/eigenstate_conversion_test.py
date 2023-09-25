@@ -8,18 +8,18 @@ import numpy as np
 from scipy.constants import hbar
 
 from _test_surface_potential_analysis.utils import get_random_explicit_axis
-from surface_potential_analysis.axis.axis import (
+from surface_potential_analysis.basis.basis import (
     ExplicitBasis,
     ExplicitBasis3d,
     FundamentalPositionBasis3d,
     TransformedPositionBasis,
     TransformedPositionBasis3d,
 )
-from surface_potential_analysis.axis.stacked_axis import (
+from surface_potential_analysis.basis.stacked_basis import (
     StackedBasis,
     StackedBasisLike,
 )
-from surface_potential_analysis.axis.util import BasisUtil
+from surface_potential_analysis.basis.util import BasisUtil
 from surface_potential_analysis.stacked_basis.sho_basis import (
     SHOBasisConfig,
     infinate_sho_axis_3d_from_config,

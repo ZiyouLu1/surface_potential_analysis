@@ -2,26 +2,26 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, Literal, TypeVar, overload
 
-from surface_potential_analysis.axis.conversion import (
+from surface_potential_analysis.basis.conversion import (
     axis_as_fundamental_axis,
     axis_as_fundamental_momentum_axis,
     axis_as_fundamental_position_axis,
     axis_as_fundamental_transformed_axis,
     axis_as_n_point_axis,
 )
-from surface_potential_analysis.axis.stacked_axis import (
+from surface_potential_analysis.basis.stacked_basis import (
     StackedBasis,
     StackedBasisLike,
 )
 
 if TYPE_CHECKING:
-    from surface_potential_analysis.axis.axis import (
+    from surface_potential_analysis.basis.basis import (
         FundamentalBasis,
         FundamentalPositionBasis,
         FundamentalTransformedBasis,
         FundamentalTransformedPositionBasis,
     )
-    from surface_potential_analysis.axis.axis_like import (
+    from surface_potential_analysis.basis.basis_like import (
         BasisLike,
         BasisWithLengthLike,
     )
@@ -42,7 +42,7 @@ def stacked_basis_as_fundamental_transformed_basis(
 
     Returns
     -------
-    tuple[FundamentalMomentumAxis[Any, Any], ...]
+    tuple[FundamentalMomentumBasis[Any, Any], ...]
     """
     return StackedBasis(
         *tuple(axis_as_fundamental_transformed_axis(axis) for axis in basis)
@@ -61,7 +61,7 @@ def stacked_basis_as_fundamental_basis(
 
     Returns
     -------
-    tuple[FundamentalMomentumAxis[Any, Any], ...]
+    tuple[FundamentalMomentumBasis[Any, Any], ...]
     """
     return StackedBasis(*tuple(axis_as_fundamental_axis(axis) for axis in basis))
 
@@ -116,7 +116,7 @@ def stacked_basis_as_fundamental_momentum_basis(
 
     Returns
     -------
-    tuple[FundamentalMomentumAxis[Any, Any], ...]
+    tuple[FundamentalMomentumBasis[Any, Any], ...]
     """
     return StackedBasis(
         *tuple(axis_as_fundamental_momentum_axis(axis) for axis in basis)
@@ -173,7 +173,7 @@ def stacked_basis_as_fundamental_position_basis(
 
     Returns
     -------
-    StackedAxisLike[tuple[FundamentalPositionBasis[_LF0Inv], FundamentalPositionBasis[_LF1Inv], FundamentalPositionBasis[_LF2Inv]]
+    StackedBasisLike[tuple[FundamentalPositionBasis[_LF0Inv], FundamentalPositionBasis[_LF1Inv], FundamentalPositionBasis[_LF2Inv]]
     """
     return StackedBasis(
         *tuple(axis_as_fundamental_position_axis(axis) for axis in basis)

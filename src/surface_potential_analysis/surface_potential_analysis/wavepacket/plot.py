@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Any, TypeVar
 import numpy as np
 from matplotlib import pyplot as plt
 
-from surface_potential_analysis.axis.util import BasisUtil
+from surface_potential_analysis.basis.util import BasisUtil
 from surface_potential_analysis.state_vector.plot import (
     animate_state_3d_x,
     plot_state_1d_k,
@@ -47,7 +47,7 @@ if TYPE_CHECKING:
     from matplotlib.figure import Figure
     from matplotlib.lines import Line2D
 
-    from surface_potential_analysis.axis.stacked_axis import (
+    from surface_potential_analysis.basis.stacked_basis import (
         StackedBasisLike,
     )
     from surface_potential_analysis.state_vector.state_vector import StateVector
@@ -120,7 +120,7 @@ def plot_wavepacket_eigenvalues_2d_k(
 
     Parameters
     ----------
-    wavepacket : Wavepacket[_NS0Inv, _NS1Inv, StackedAxisLike[tuple[_A3d0Inv, _A3d1Inv, _A3d2Inv]]
+    wavepacket : Wavepacket[_NS0Inv, _NS1Inv, StackedBasisLike[tuple[_A3d0Inv, _A3d1Inv, _A3d2Inv]]
     ax : Axes | None, optional
         plot axis, by default None
     scale : Literal[&quot;symlog&quot;, &quot;linear&quot;], optional
@@ -131,7 +131,7 @@ def plot_wavepacket_eigenvalues_2d_k(
     tuple[Figure, Axes, QuadMesh]
     """
     basis = get_sample_basis(wavepacket["basis"])
-    data = np.fft.ifftshift(wavepacket["eigenvalues"])
+    data = np.fft.ifftshift(wavepacket["eigenvalue"])
 
     fig, ax, mesh = plot_data_2d_k(
         basis, data, axes, idx, ax=ax, scale=scale, measure=measure
@@ -157,7 +157,7 @@ def plot_wavepacket_eigenvalues_2d_x(
 
     Parameters
     ----------
-    wavepacket : WavepacketWithEigenvalues[_NS0Inv, _NS1Inv, StackedAxisLike[tuple[_A3d0Inv, _A3d1Inv, _A3d2Inv]]
+    wavepacket : WavepacketWithEigenvalues[_NS0Inv, _NS1Inv, StackedBasisLike[tuple[_A3d0Inv, _A3d1Inv, _A3d2Inv]]
     ax : Axes | None, optional
         plot axis, by default None
     measure : Literal[&quot;real&quot;, &quot;imag&quot;, &quot;abs&quot;], optional
@@ -171,7 +171,7 @@ def plot_wavepacket_eigenvalues_2d_x(
     """
     basis = get_sample_basis(wavepacket["basis"])
 
-    data = np.fft.ifft2(wavepacket["eigenvalues"])
+    data = np.fft.ifft2(wavepacket["eigenvalue"])
     data[0, 0] = 0
 
     fig, ax, mesh = plot_data_2d_x(
@@ -212,7 +212,7 @@ def plot_eigenvalues_1d_x(
     idx = tuple(0 for _ in range(util.ndim - 1)) if idx is None else idx
 
     eigenvalues = get_data_in_axes(
-        wavepacket["eigenvalues"].reshape(wavepacket["basis"][0].shape), axes, idx
+        wavepacket["eigenvalue"].reshape(wavepacket["basis"][0].shape), axes, idx
     )
     (line,) = ax.plot(eigenvalues)
     ax.set_yscale(scale)

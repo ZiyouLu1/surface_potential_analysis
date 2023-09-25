@@ -15,7 +15,7 @@ from typing import (
 
 import numpy as np
 
-from .axis_like import AxisVector, BasisLike, BasisWithLengthLike
+from .basis_like import AxisVector, BasisLike, BasisWithLengthLike
 
 if TYPE_CHECKING:
     from collections.abc import Iterator
@@ -31,7 +31,7 @@ if TYPE_CHECKING:
         StackedIndexLike,
     )
 
-    from .stacked_axis import StackedBasisLike
+    from .stacked_basis import StackedBasisLike
 
 
 _NF0Inv = TypeVar("_NF0Inv", bound=int)

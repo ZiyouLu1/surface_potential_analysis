@@ -5,9 +5,9 @@ from typing import TYPE_CHECKING, Any, TypeVar
 import numpy as np
 from matplotlib import pyplot as plt
 
-from surface_potential_analysis.axis.conversion import axis_as_single_point_axis
-from surface_potential_analysis.axis.stacked_axis import StackedBasis
-from surface_potential_analysis.axis.util import BasisUtil
+from surface_potential_analysis.basis.conversion import axis_as_single_point_axis
+from surface_potential_analysis.basis.stacked_basis import StackedBasis
+from surface_potential_analysis.basis.util import BasisUtil
 from surface_potential_analysis.stacked_basis.brillouin_zone import (
     decrement_brillouin_zone,
     get_all_brag_point,
@@ -23,8 +23,8 @@ if TYPE_CHECKING:
     from matplotlib.figure import Figure
     from matplotlib.lines import Line2D
 
-    from surface_potential_analysis.axis.axis_like import BasisWithLengthLike
-    from surface_potential_analysis.axis.stacked_axis import StackedBasisLike
+    from surface_potential_analysis.basis.basis_like import BasisWithLengthLike
+    from surface_potential_analysis.basis.stacked_basis import StackedBasisLike
     from surface_potential_analysis.types import IndexLike, SingleStackedIndexLike
 
     _BL0 = TypeVar("_BL0", bound=BasisWithLengthLike[Any, Any, Any])

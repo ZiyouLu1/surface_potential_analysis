@@ -15,11 +15,11 @@ from typing import (
 
 import numpy as np
 
-from surface_potential_analysis.axis.axis import (
+from surface_potential_analysis.basis.basis import (
     FundamentalBasis,
     FundamentalTransformedBasis,
 )
-from surface_potential_analysis.axis.axis_like import (
+from surface_potential_analysis.basis.basis_like import (
     BasisLike,
     convert_vector,
 )

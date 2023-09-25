@@ -11,7 +11,7 @@ if TYPE_CHECKING:
     from matplotlib.figure import Figure
     from matplotlib.lines import Line2D
 
-    from surface_potential_analysis.axis.time_axis_like import BasisWithTimeLike
+    from surface_potential_analysis.basis.time_basis_like import BasisWithTimeLike
     from surface_potential_analysis.operator.operator import SingleBasisDiagonalOperator
     from surface_potential_analysis.util.plot import Scale
 

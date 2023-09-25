@@ -12,16 +12,17 @@ from typing import (
 
 import numpy as np
 
-from surface_potential_analysis.axis.axis import (
+from surface_potential_analysis.basis.basis import (
     FundamentalBasis,
+    FundamentalPositionBasis,
     FundamentalPositionBasis2d,
     FundamentalPositionBasis3d,
 )
-from surface_potential_analysis.axis.stacked_axis import (
+from surface_potential_analysis.basis.stacked_basis import (
     StackedBasis,
     StackedBasisLike,
 )
-from surface_potential_analysis.axis.util import BasisUtil
+from surface_potential_analysis.basis.util import BasisUtil
 from surface_potential_analysis.util.interpolation import (
     interpolate_points_along_axis_spline,
     interpolate_points_rfftn,
@@ -30,7 +31,7 @@ from surface_potential_analysis.util.interpolation import (
 if TYPE_CHECKING:
     from pathlib import Path
 
-    from surface_potential_analysis.axis.axis_like import (
+    from surface_potential_analysis.basis.basis_like import (
         BasisWithLengthLike,
     )
 
@@ -102,9 +103,9 @@ def load_potential_grid_json(
         points = np.array(out["points"])
         return {
             "basis": StackedBasis(
-                FundamentalPositionBasis3d(np.array(out["delta_x0"]), points.shape[0]),
-                FundamentalPositionBasis3d(np.array(out["delta_x1"]), points.shape[1]),
-                FundamentalPositionBasis3d(np.array(out["delta_x2"]), points.shape[2]),
+                FundamentalPositionBasis(np.array(out["delta_x0"]), points.shape[0]),
+                FundamentalPositionBasis(np.array(out["delta_x1"]), points.shape[1]),
+                FundamentalPositionBasis(np.array(out["delta_x2"]), points.shape[2]),
             ),
             "data": np.array(out["points"]),
         }
@@ -173,8 +174,8 @@ def load_uneven_potential_json(
 
         return {
             "basis": StackedBasis(
-                FundamentalPositionBasis2d(np.array(out["delta_x0"]), points.shape[0]),
-                FundamentalPositionBasis2d(np.array(out["delta_x1"]), points.shape[1]),
+                FundamentalPositionBasis(np.array(out["delta_x0"]), points.shape[0]),
+                FundamentalPositionBasis(np.array(out["delta_x1"]), points.shape[1]),
                 UnevenPotential3dZBasis(np.array(out["z_points"])),
             ),
             "data": points,
@@ -255,9 +256,9 @@ def interpolate_uneven_potential(
     delta_x_1 = np.concatenate([data["basis"][1].delta_x, [0]])
     return {
         "basis": StackedBasis(
-            FundamentalPositionBasis3d(delta_x_0, shape[0]),
-            FundamentalPositionBasis3d(delta_x_1, shape[1]),
-            FundamentalPositionBasis3d(
+            FundamentalPositionBasis(delta_x_0, shape[0]),
+            FundamentalPositionBasis(delta_x_1, shape[1]),
+            FundamentalPositionBasis(
                 np.array(
                     [
                         0,
@@ -294,13 +295,13 @@ def mock_even_potential(
     """
     return {
         "basis": StackedBasis(
-            FundamentalPositionBasis3d(
+            FundamentalPositionBasis(
                 np.array([*uneven["basis"][0].delta_x, 0]), uneven["basis"][0].n
             ),
-            FundamentalPositionBasis3d(
+            FundamentalPositionBasis(
                 np.array([*uneven["basis"][1].delta_x, 0]), uneven["basis"][1].n
             ),
-            FundamentalPositionBasis3d(
+            FundamentalPositionBasis(
                 np.array([0, 0, 1], dtype=float),
                 uneven["basis"][2].fundamental_n,  # type:ignore[arg-type]
             ),

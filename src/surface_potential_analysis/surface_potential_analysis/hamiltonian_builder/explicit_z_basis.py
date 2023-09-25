@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Any, Generic, Literal, TypeVar
 import hamiltonian_generator
 import numpy as np
 
-from surface_potential_analysis.axis.axis import (
+from surface_potential_analysis.basis.basis import (
     ExplicitBasis,
     FundamentalBasis,
     FundamentalPositionBasis1d,
@@ -13,11 +13,11 @@ from surface_potential_analysis.axis.axis import (
     FundamentalTransformedPositionBasis,
     TransformedPositionBasis,
 )
-from surface_potential_analysis.axis.stacked_axis import (
+from surface_potential_analysis.basis.stacked_basis import (
     StackedBasis,
     StackedBasisLike,
 )
-from surface_potential_analysis.axis.util import BasisUtil
+from surface_potential_analysis.basis.util import BasisUtil
 from surface_potential_analysis.hamiltonian_builder.momentum_basis import (
     hamiltonian_from_mass_in_basis,
 )
@@ -225,30 +225,6 @@ class _SurfaceHamiltonianUtil(
         return np.fft.ifft2(self.subtracted_points, axes=(0, 1))  # type: ignore[no-any-return]
 
 
-# !def get_diagonal_xy_energy(
-# !    basis: ,bloch_fraction: np.ndarray[tuple[Literal[2]], np.dtype[np.float_]],
-# !) -> np.ndarray[tuple[int], np.dtype[np.float_]]:
-# !    xy_basis = (
-# !        TransformedPositionAxis2d(
-# !            self.basis[0].delta_x[:2], self.basis[0].n, self.basis[0].fundamental_n
-# !        ),
-# !        TransformedPositionAxis2d(
-# !            self.basis[1].delta_x[:2], self.basis[1].n, self.basis[1].fundamental_n
-# !        ),
-# !    )
-# !    util = StackedAxisWithLengthUtil(xy_basis)
-
-# !    bloch_phase = np.tensordot(util.dk, bloch_fraction, axes=(0, 0))
-# !    k_points = util.k_points + bloch_phase[:, np.newaxis]
-# !    xy_energy = np.sum(
-# !        np.square(hbar * k_points) / (2 * self._config["mass"]),
-# !        axis=0,
-# !        dtype=np.complex_,
-# !    )
-# !    z_energy = self.state_vectors_z["eigenvalues"]
-# !    return (xy_energy[:, np.newaxis] + z_energy[np.newaxis, :]).ravel()  # type: ignore[no-any-return]
-
-
 @timed
 def total_surface_hamiltonian(
     potential: Potential[
@@ -275,7 +251,7 @@ def total_surface_hamiltonian(
     ----------
     potential : Potential[_L0, _L1, _L2]
     bloch_fraction : np.ndarray[tuple[Literal[3]], np.dtype[np.float_]]
-    basis : StackedAxisLike[tuple[TruncatedBasis[_L3, MomentumBasis[_L0]], TruncatedBasis[_L4, MomentumBasis[_L1]], ExplicitBasis[_L5, MomentumBasis[_L2]]]
+    basis : StackedBasisLike[tuple[TruncatedBasis[_L3, MomentumBasis[_L0]], TruncatedBasis[_L4, MomentumBasis[_L1]], ExplicitBasis[_L5, MomentumBasis[_L2]]]
     mass : float
 
     Returns
@@ -312,12 +288,12 @@ def total_surface_hamiltonian_as_fundamental(
     potential : FundamentalPositionBasisPotential3d[_NF0Inv, _NF1Inv, _NF2Inv]
     bloch_fraction : np.ndarray[tuple[Literal[3]], np.dtype[np.float_]]
     resolution : tuple[_N0Inv, _N1Inv]
-    config : PotentialBasisConfig[tuple[FundamentalPositionAxis1d[_NF2Inv]], _N2Inv]
+    config : PotentialBasisConfig[tuple[FundamentalPositionBasis1d[_NF2Inv]], _N2Inv]
 
     Returns
     -------
     SingleBasisOperator[
-        tuple[ MomentumAxis3d[_NF0Inv, _NF0Inv], MomentumAxis3d[_NF1Inv, _NF1Inv], ExplicitAxis3d[_NF2Inv, _N2Inv], ]
+        tuple[ MomentumBasis3d[_NF0Inv, _NF0Inv], MomentumBasis3d[_NF1Inv, _NF1Inv], ExplicitBasis3d[_NF2Inv, _N2Inv], ]
     """
     hamiltonian = total_surface_hamiltonian(
         potential, bloch_fraction, resolution, config

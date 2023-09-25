@@ -9,15 +9,15 @@ import scipy.linalg
 import scipy.special
 from scipy.constants import hbar
 
-from surface_potential_analysis.axis.axis import (
+from surface_potential_analysis.basis.basis import (
     FundamentalPositionBasis,
     FundamentalPositionBasis1d,
     FundamentalTransformedPositionBasis,
     FundamentalTransformedPositionBasis1d,
     TransformedPositionBasis,
 )
-from surface_potential_analysis.axis.stacked_axis import StackedBasis
-from surface_potential_analysis.axis.util import (
+from surface_potential_analysis.basis.stacked_basis import StackedBasis
+from surface_potential_analysis.basis.util import (
     BasisUtil,
 )
 from surface_potential_analysis.hamiltonian_builder import (
@@ -157,9 +157,9 @@ class HamiltonianBuilderTest(unittest.TestCase):
         np.testing.assert_equal(expected, hamiltonian.get_sho_potential())
 
     def test_get_sho_subtracted_points(self) -> None:
-        nx = rng.integers(2, 20)# type: ignore bad libary types
-        ny = rng.integers(2, 20)# type: ignore bad libary types
-        nz = rng.integers(2, 100)# type: ignore bad libary types
+        nx = rng.integers(2, 20)  # type: ignore bad libary types
+        ny = rng.integers(2, 20)  # type: ignore bad libary types
+        nz = rng.integers(2, 100)  # type: ignore bad libary types
 
         resolution = (nx, ny, 2)
         config: SHOBasisConfig = {
@@ -205,8 +205,8 @@ class HamiltonianBuilderTest(unittest.TestCase):
         np.testing.assert_allclose(expected, actual)
 
     def test_get_fft_is_real(self) -> None:
-        width = rng.integers(1, 10) * 2# type: ignore bad libary types
-        nz = rng.integers(2, 100)# type: ignore bad libary types
+        width = rng.integers(1, 10) * 2  # type: ignore bad libary types
+        nz = rng.integers(2, 100)  # type: ignore bad libary types
 
         points = _generate_symmetrical_points(nz, width)
         resolution = (width // 2, width // 2, 2)
@@ -237,8 +237,8 @@ class HamiltonianBuilderTest(unittest.TestCase):
         np.testing.assert_almost_equal(np.real(ft_potential), ft_potential)
 
     def test_is_almost_hermitian(self) -> None:
-        width = rng.integers(1, 10) * 2# type: ignore bad libary types
-        nz = rng.integers(2, 100)# type: ignore bad libary types
+        width = rng.integers(1, 10) * 2  # type: ignore bad libary types
+        nz = rng.integers(2, 100)  # type: ignore bad libary types
 
         points = _generate_symmetrical_points(nz, width)
         np.testing.assert_allclose(
@@ -273,17 +273,17 @@ class HamiltonianBuilderTest(unittest.TestCase):
         )
 
     def test_get_hermite_val_rust(self) -> None:
-        n = rng.integers(1, 10)# type: ignore bad libary types
+        n = rng.integers(1, 10)  # type: ignore bad libary types
         x = (rng.random() * 10) - 5
         self.assertAlmostEqual(
             hamiltonian_generator.get_hermite_val(x, n),
-            scipy.special.eval_hermite(n, [x]).item(0),# type: ignore bad libary types
+            scipy.special.eval_hermite(n, [x]).item(0),  # type: ignore bad libary types
             places=6,
         )
 
     def test_calculate_off_diagonal_energies_rust(self) -> None:
-        nx = rng.integers(2, 20)# type: ignore bad libary types
-        ny = rng.integers(2, 20)# type: ignore bad libary types
+        nx = rng.integers(2, 20)  # type: ignore bad libary types
+        ny = rng.integers(2, 20)  # type: ignore bad libary types
         nz = 100
 
         resolution = (nx // 2, ny // 2, 14)

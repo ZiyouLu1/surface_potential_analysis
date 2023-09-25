@@ -5,13 +5,13 @@ from typing import TYPE_CHECKING, Any, Generic, Literal, TypeVar
 
 import numpy as np
 
-from surface_potential_analysis.axis.axis import FundamentalBasis
-from surface_potential_analysis.axis.stacked_axis import StackedBasis
-from surface_potential_analysis.axis.time_axis_like import (
+from surface_potential_analysis.basis.basis import FundamentalBasis
+from surface_potential_analysis.basis.stacked_basis import StackedBasis
+from surface_potential_analysis.basis.time_basis_like import (
     ExplicitTimeBasis,
     FundamentalTimeBasis,
 )
-from surface_potential_analysis.axis.util import BasisUtil
+from surface_potential_analysis.basis.util import BasisUtil
 from surface_potential_analysis.dynamics.incoherent_propagation.eigenstates import (
     calculate_tunnelling_eigenstates,
     calculate_tunnelling_simulation_state,

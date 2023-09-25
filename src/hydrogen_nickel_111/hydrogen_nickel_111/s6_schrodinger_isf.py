@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, Literal, TypeVar
 
 import numpy as np
-from surface_potential_analysis.axis.time_axis_like import (
+from surface_potential_analysis.basis.time_basis_like import (
     EvenlySpacedTimeBasis,
     FundamentalTimeBasis,
 )
@@ -28,7 +28,7 @@ from hydrogen_nickel_111.s6_schrodinger_dynamics import build_hamiltonian_hydrog
 from .surface_data import get_data_path
 
 if TYPE_CHECKING:
-    from surface_potential_analysis.axis.axis import FundamentalBasis
+    from surface_potential_analysis.basis.basis import FundamentalBasis
     from surface_potential_analysis.state_vector.state_vector import StateVector
     from surface_potential_analysis.state_vector.state_vector_list import (
         StateVectorList,

@@ -4,13 +4,16 @@ from typing import TYPE_CHECKING, Any, TypedDict, TypeVar
 
 import numpy as np
 
-from surface_potential_analysis.axis.axis import FundamentalBasis
-from surface_potential_analysis.axis.axis_like import BasisLike
-from surface_potential_analysis.axis.block_fraction_axis import (
-    AxisWithBlockFractionLike,
-    ExplicitBlockFractionAxis,
+from surface_potential_analysis.basis.basis import FundamentalBasis
+from surface_potential_analysis.basis.basis_like import BasisLike
+from surface_potential_analysis.basis.block_fraction_basis import (
+    BasisWithBlockFractionLike,
+    ExplicitBlockFractionBasis,
 )
-from surface_potential_analysis.axis.stacked_axis import StackedBasis, StackedBasisLike
+from surface_potential_analysis.basis.stacked_basis import (
+    StackedBasis,
+    StackedBasisLike,
+)
 from surface_potential_analysis.state_vector.state_vector import StateVector
 from surface_potential_analysis.state_vector.state_vector_list import StateVectorList
 
@@ -46,7 +49,7 @@ class EigenstateList(
 
 
 _SB0 = TypeVar("_SB0", bound=StackedBasisLike[*tuple[Any, ...]])
-_BF0 = TypeVar("_BF0", bound=AxisWithBlockFractionLike[Any, Any])
+_BF0 = TypeVar("_BF0", bound=BasisWithBlockFractionLike[Any, Any])
 EigenstateColllection = EigenstateList[_SB0, _B0]
 
 
@@ -59,7 +62,7 @@ def calculate_eigenstate_collection(
     *,
     subset_by_index: tuple[int, int] | None = None,
 ) -> EigenstateColllection[
-    StackedBasisLike[ExplicitBlockFractionAxis[_L0], FundamentalBasis[int]], _B0
+    StackedBasisLike[ExplicitBlockFractionBasis[_L0], FundamentalBasis[int]], _B0
 ]:
     """
     Calculate an eigenstate collection with the given bloch phases.
@@ -99,7 +102,7 @@ def calculate_eigenstate_collection(
     return {
         "basis": StackedBasis(
             StackedBasis(
-                ExplicitBlockFractionAxis[_L0](bloch_fractions),
+                ExplicitBlockFractionBasis[_L0](bloch_fractions),
                 FundamentalBasis(n_states),
             ),
             basis,

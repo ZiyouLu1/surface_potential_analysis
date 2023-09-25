@@ -4,15 +4,15 @@ from typing import TYPE_CHECKING, Any, TypeVar, cast
 
 import numpy as np
 import scipy.interpolate
-from surface_potential_analysis.axis.axis import (
+from surface_potential_analysis.basis.basis import (
     FundamentalPositionBasis,
     FundamentalPositionBasis3d,
 )
-from surface_potential_analysis.axis.stacked_axis import (
+from surface_potential_analysis.basis.stacked_basis import (
     StackedBasis,
     StackedBasisLike,
 )
-from surface_potential_analysis.axis.util import (
+from surface_potential_analysis.basis.util import (
     BasisUtil,
 )
 from surface_potential_analysis.potential import (
@@ -41,7 +41,7 @@ from .surface_data import get_data_path
 if TYPE_CHECKING:
     from pathlib import Path
 
-    from surface_potential_analysis.axis.axis_like import AxisVector2d
+    from surface_potential_analysis.basis.basis_like import AxisVector2d
 
 
 def load_raw_potential_points() -> PointPotential3d[Any]:

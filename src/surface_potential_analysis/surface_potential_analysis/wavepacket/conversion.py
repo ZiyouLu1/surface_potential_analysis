@@ -4,12 +4,12 @@ from typing import TYPE_CHECKING, Any, TypeVar, overload
 
 import numpy as np
 
-from surface_potential_analysis.axis.axis_like import (
+from surface_potential_analysis.basis.basis_like import (
     BasisLike,
     BasisWithLengthLike,
     convert_vector,
 )
-from surface_potential_analysis.axis.stacked_axis import StackedBasis
+from surface_potential_analysis.basis.stacked_basis import StackedBasis
 from surface_potential_analysis.stacked_basis.build import (
     fundamental_stacked_basis_from_shape,
 )
@@ -19,11 +19,11 @@ from surface_potential_analysis.stacked_basis.conversion import (
 )
 
 if TYPE_CHECKING:
-    from surface_potential_analysis.axis.axis import (
+    from surface_potential_analysis.basis.basis import (
         FundamentalPositionBasis,
         FundamentalTransformedPositionBasis,
     )
-    from surface_potential_analysis.axis.stacked_axis import (
+    from surface_potential_analysis.basis.stacked_basis import (
         StackedBasisLike,
     )
     from surface_potential_analysis.wavepacket.wavepacket import (
@@ -123,7 +123,7 @@ def convert_wavepacket_to_position_basis(
 
     Returns
     -------
-    Wavepacket[_NS0Inv, _NS1Inv, StackedAxisLike[tuple[PositionBasis[int], PositionBasis[int], PositionBasis[int]]]
+    Wavepacket[_NS0Inv, _NS1Inv, StackedBasisLike[tuple[PositionBasis[int], PositionBasis[int], PositionBasis[int]]]
     """
     stacked_basis_as_fundamental_position_basis(wavepacket["basis"][1])
     return convert_wavepacket_to_basis(
@@ -170,7 +170,7 @@ def convert_wavepacket_to_fundamental_momentum_basis(
 
     Returns
     -------
-    Wavepacket[_NS0Inv, _NS1Inv, StackedAxisLike[tuple[PositionBasis[int], PositionBasis[int], PositionBasis[int]]]
+    Wavepacket[_NS0Inv, _NS1Inv, StackedBasisLike[tuple[PositionBasis[int], PositionBasis[int], PositionBasis[int]]]
     """
     return convert_wavepacket_to_basis(
         wavepacket,

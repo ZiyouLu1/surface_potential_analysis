@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING, Any, Literal, TypeVar, Unpack
 import numpy as np
 from matplotlib import pyplot as plt
 from scipy.constants import Boltzmann
-from surface_potential_analysis.axis.util import (
+from surface_potential_analysis.basis.util import (
     BasisUtil,
 )
 from surface_potential_analysis.dynamics.hermitian_gamma_integral import (
@@ -51,7 +51,7 @@ if TYPE_CHECKING:
     _L1Inv = TypeVar("_L1Inv", bound=int)
     _L2Inv = TypeVar("_L2Inv", bound=int)
     _S0Inv = TypeVar("_S0Inv", bound=tuple[int, ...])
-    _B0Inv = TypeVar("_B0Inv", bound=StackedAxisLike[Any])
+    _B0Inv = TypeVar("_B0Inv", bound=StackedBasisLike[Any])
 
 
 def get_max_point(
@@ -571,7 +571,7 @@ def plot_temperature_dependent_integral() -> None:
 
 def calculate_max_overlap(
     overlap: Overlap3d[
-        FundamentalPositionStackedAxisLike[tuple[_L0Inv, _L1Inv, _L2Inv]]
+        FundamentalPositionStackedBasisLike[tuple[_L0Inv, _L1Inv, _L2Inv]]
     ],
 ) -> tuple[complex, np.ndarray[tuple[Literal[3]], np.dtype[np.float_]]]:
     points = overlap["data"]
@@ -584,7 +584,7 @@ def calculate_max_overlap(
 
 def calculate_max_overlap_momentum(
     overlap: Overlap3d[
-        FundamentalMomentumStackedAxisLike[tuple[_L0Inv, _L1Inv, _L2Inv]]
+        FundamentalMomentumStackedBasisLike[tuple[_L0Inv, _L1Inv, _L2Inv]]
     ],
 ) -> tuple[complex, np.ndarray[tuple[Literal[3]], np.dtype[np.float_]]]:
     points = overlap["data"]
@@ -647,16 +647,6 @@ def plot_all_abs_overlap_k() -> None:
             save_figure(fig, f"overlap/abs_overlap_k0k1_plot_{i}_{j}.png")
             fig.show()
     input()
-
-
-def load_average_band_energies(
-    n_bands: _L0Inv,
-) -> np.ndarray[tuple[_L0Inv], np.dtype[np.float_]]:
-    energies = np.zeros((n_bands,))
-    for band in range(n_bands):
-        wavepacket = get_wavepacket_hydrogen(band)
-        energies[band] = wavepacket["eigenvalues"][0, 0]
-    return energies  # type: ignore[no-any-return]
 
 
 def _build_incoherent_matrix_cache(n_bands: _L0Inv, _temperature: float = 150) -> Path:

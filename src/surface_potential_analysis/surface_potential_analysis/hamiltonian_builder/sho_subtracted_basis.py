@@ -7,17 +7,18 @@ import hamiltonian_generator
 import numpy as np
 from scipy.constants import hbar
 
-from surface_potential_analysis.axis.axis import (
+from surface_potential_analysis.basis.basis import (
     ExplicitBasis3d,
+    FundamentalPositionBasis,
     FundamentalPositionBasis3d,
     TransformedPositionBasis,
     TransformedPositionBasis3d,
 )
-from surface_potential_analysis.axis.stacked_axis import (
+from surface_potential_analysis.basis.stacked_basis import (
     StackedBasis,
     StackedBasisLike,
 )
-from surface_potential_analysis.axis.util import (
+from surface_potential_analysis.basis.util import (
     BasisUtil,
 )
 from surface_potential_analysis.stacked_basis.sho_basis import (
@@ -134,7 +135,7 @@ class _SurfaceHamiltonianUtil(
                 self._potential["basis"][1].n,
             ),
             infinate_sho_axis_3d_from_config(
-                FundamentalPositionBasis3d(
+                FundamentalPositionBasis(
                     self._potential["basis"][2].delta_x,
                     self._potential["basis"][2].n,
                 ),

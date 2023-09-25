@@ -14,7 +14,7 @@ if TYPE_CHECKING:
     from matplotlib.figure import Figure
     from matplotlib.lines import Line2D
 
-    from surface_potential_analysis.axis.axis_like import BasisWithLengthLike
+    from surface_potential_analysis.basis.basis_like import BasisWithLengthLike
     from surface_potential_analysis.types import SingleFlatIndexLike
 
 

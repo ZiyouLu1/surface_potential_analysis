@@ -3,8 +3,11 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, TypeVar
 
 import numpy as np
-from surface_potential_analysis.axis.axis import FundamentalPositionBasis
-from surface_potential_analysis.axis.stacked_axis import StackedBasis, StackedBasisLike
+from surface_potential_analysis.basis.basis import FundamentalPositionBasis
+from surface_potential_analysis.basis.stacked_basis import (
+    StackedBasis,
+    StackedBasisLike,
+)
 from surface_potential_analysis.potential.point_potential import (
     PointPotential3d,
     load_point_potential_json,
@@ -23,7 +26,7 @@ from surface_potential_analysis.util.decorators import npy_cached
 from .surface_data import get_data_path
 
 if TYPE_CHECKING:
-    from surface_potential_analysis.axis.axis import (
+    from surface_potential_analysis.basis.basis import (
         FundamentalPositionBasis3d,
     )
 

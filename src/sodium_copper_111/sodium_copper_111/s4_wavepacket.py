@@ -2,15 +2,16 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, Literal, TypeVar
 
-from surface_potential_analysis.axis.evenly_spaced_basis import (
+from surface_potential_analysis.basis.evenly_spaced_basis import (
     EvenlySpacedBasis,
 )
-from surface_potential_analysis.axis.stacked_axis import StackedBasis
+from surface_potential_analysis.basis.stacked_basis import StackedBasis
 from surface_potential_analysis.state_vector.util import (
     get_most_localized_free_state_vectors,
 )
 from surface_potential_analysis.util.decorators import npy_cached
 from surface_potential_analysis.wavepacket.localization import (
+    Wannier90Options,
     get_localization_operator_wannier90,
     localize_wavepacket_projection,
 )
@@ -33,12 +34,12 @@ if TYPE_CHECKING:
     from pathlib import Path
 
     import numpy as np
-    from surface_potential_analysis.axis.axis import (
+    from surface_potential_analysis.basis.basis import (
         FundamentalBasis,
         FundamentalTransformedPositionBasis1d,
     )
-    from surface_potential_analysis.axis.axis_like import BasisLike
-    from surface_potential_analysis.axis.stacked_axis import (
+    from surface_potential_analysis.basis.basis_like import BasisLike
+    from surface_potential_analysis.basis.stacked_basis import (
         StackedBasisLike,
     )
     from surface_potential_analysis.operator.operator import SingleBasisOperator
@@ -110,7 +111,8 @@ def get_localization_operator_sodium(
         get_wavepacket_basis(wavepackets), (n_bands,)
     )
     return get_localization_operator_wannier90(
-        get_wavepackets(wavepackets, slice(n_bands)), projections
+        get_wavepackets(wavepackets, slice(n_bands)),
+        options=Wannier90Options(projection=projections),
     )
 
 

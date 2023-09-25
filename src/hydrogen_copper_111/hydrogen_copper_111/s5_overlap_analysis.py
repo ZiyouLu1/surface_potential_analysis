@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import numpy as np
 from matplotlib import pyplot as plt
-from surface_potential_analysis.axis.util import BasisUtil
+from surface_potential_analysis.basis.util import BasisUtil
 from surface_potential_analysis.overlap.conversion import (
     convert_overlap_to_momentum_basis,
 )

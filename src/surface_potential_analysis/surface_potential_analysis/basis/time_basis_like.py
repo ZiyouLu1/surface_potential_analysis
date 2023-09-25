@@ -5,9 +5,9 @@ from typing import Any, Literal, Protocol, TypeVar
 
 import numpy as np
 
-from surface_potential_analysis.axis.axis import FundamentalBasis
-from surface_potential_analysis.axis.axis_like import BasisLike
-from surface_potential_analysis.axis.evenly_spaced_basis import EvenlySpacedBasis
+from surface_potential_analysis.basis.basis import FundamentalBasis
+from surface_potential_analysis.basis.basis_like import BasisLike
+from surface_potential_analysis.basis.evenly_spaced_basis import EvenlySpacedBasis
 
 _N0_co = TypeVar("_N0_co", bound=int, covariant=True)
 _N1_co = TypeVar("_N1_co", bound=int, covariant=True)

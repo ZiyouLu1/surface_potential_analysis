@@ -13,14 +13,14 @@ from typing import (
 
 import numpy as np
 
-from surface_potential_analysis.axis.util import BasisUtil
+from surface_potential_analysis.basis.util import BasisUtil
 from surface_potential_analysis.stacked_basis.build import (
     position_basis_from_shape,
 )
 
 if TYPE_CHECKING:
-    from surface_potential_analysis.axis.axis import FundamentalPositionBasis
-    from surface_potential_analysis.axis.stacked_axis import StackedBasisLike
+    from surface_potential_analysis.basis.basis import FundamentalPositionBasis
+    from surface_potential_analysis.basis.stacked_basis import StackedBasisLike
     from surface_potential_analysis.types import (
         ArrayStackedIndexLike,
         ArrayStackedIndexLike3d,
@@ -101,7 +101,7 @@ def get_bragg_point_basis(
 
     Returns
     -------
-    FundamentalPositionStackedAxisLike[tuple[int, int, int]
+    FundamentalPositionStackedBasisLike[tuple[int, int, int]
     """
     width = 2 * n_bands + 1
     util = BasisUtil(basis)

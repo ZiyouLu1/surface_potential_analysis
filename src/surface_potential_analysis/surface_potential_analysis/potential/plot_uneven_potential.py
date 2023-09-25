@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, TypeVar
 
 from matplotlib import pyplot as plt
 
-from surface_potential_analysis.axis.util import BasisUtil
+from surface_potential_analysis.basis.util import BasisUtil
 
 from ._comparison_points import (
     get_100_comparison_points_x2,

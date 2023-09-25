@@ -4,15 +4,15 @@ from typing import TYPE_CHECKING, Any, Generic, Literal, TypedDict, TypeVar
 
 import numpy as np
 
-from surface_potential_analysis.axis.axis import (
+from surface_potential_analysis.basis.basis import (
     ExplicitBasis,
     ExplicitBasis1d,
     FundamentalBasis,
     FundamentalPositionBasis,
     FundamentalPositionBasis1d,
 )
-from surface_potential_analysis.axis.axis_like import BasisWithLengthLike
-from surface_potential_analysis.axis.stacked_axis import (
+from surface_potential_analysis.basis.basis_like import BasisWithLengthLike
+from surface_potential_analysis.basis.stacked_basis import (
     StackedBasis,
     StackedBasisLike,
 )
@@ -62,13 +62,13 @@ def get_potential_basis_config_eigenstates(
 
     Returns
     -------
-    EigenstateList[PositionStackedAxisLike[tuple[_L0Inv, Literal[1], Literal[1]]]
+    EigenstateList[PositionStackedBasisLike[tuple[_L0Inv, Literal[1], Literal[1]]]
     """
     bloch_fraction = 0 if bloch_fraction is None else bloch_fraction
     hamiltonian = total_surface_hamiltonian(
         config["potential"], config["mass"], np.array([bloch_fraction])
     )
-    return calculate_eigenvectors_hermitian(  # type: ignore FundamentalAxis[int] not FundamentalAxis[_N0Inv]
+    return calculate_eigenvectors_hermitian(  # type: ignore FundamentalBasis[int] not FundamentalBasis[_N0Inv]
         hamiltonian, subset_by_index=(0, config["n"] - 1)  # type: ignore cannot infer type of hamiltonian properly
     )
 
@@ -101,11 +101,11 @@ def select_minimum_potential_3d(
 
     Parameters
     ----------
-    potential : Potential[tuple[Any, Any, FundamentalPositionAxis3d[_L0]]]
+    potential : Potential[tuple[Any, Any, FundamentalPositionBasis3d[_L0]]]
 
     Returns
     -------
-    Potential[tuple[FundamentalPositionAxis1d[_L0]]]
+    Potential[tuple[FundamentalPositionBasis1d[_L0]]]
     """
     shape = potential["basis"].shape
     arg_min = np.unravel_index(np.argmin(potential["data"]), shape)

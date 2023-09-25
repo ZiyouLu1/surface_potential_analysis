@@ -6,19 +6,21 @@ from typing import TYPE_CHECKING, Any, TypeVar
 import numpy as np
 
 from _test_surface_potential_analysis.utils import get_random_explicit_axis
-from surface_potential_analysis.axis.axis import (
+from surface_potential_analysis.basis.basis import (
     FundamentalTransformedPositionBasis,
 )
-from surface_potential_analysis.axis.axis_like import (
+from surface_potential_analysis.basis.basis_like import (
     convert_vector,
 )
-from surface_potential_analysis.axis.conversion import axis_as_fundamental_position_axis
-from surface_potential_analysis.axis.util import (
+from surface_potential_analysis.basis.conversion import (
+    axis_as_fundamental_position_axis,
+)
+from surface_potential_analysis.basis.util import (
     BasisUtil,
 )
 
 if TYPE_CHECKING:
-    from surface_potential_analysis.axis.axis_like import BasisWithLengthLike
+    from surface_potential_analysis.basis.basis_like import BasisWithLengthLike
 
     _S0Inv = TypeVar("_S0Inv", bound=tuple[int, ...])
     _NDInv = TypeVar("_NDInv", bound=int)
@@ -41,8 +43,8 @@ def get_axis_conversion_matrix(
 
     Parameters
     ----------
-    axis_0 : AxisLike[_N0Inv, _NF0Inv]
-    axis_1 : AxisLike[_N1Inv, _NF1Inv]
+    axis_0 : BasisLike[_N0Inv, _NF0Inv]
+    axis_1 : BasisLike[_N1Inv, _NF1Inv]
 
     Returns
     -------

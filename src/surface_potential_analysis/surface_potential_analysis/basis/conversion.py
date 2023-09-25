@@ -4,17 +4,17 @@ from typing import TYPE_CHECKING, Literal, TypeVar
 
 import numpy as np
 
-from surface_potential_analysis.axis.axis import (
+from surface_potential_analysis.basis.basis import (
     ExplicitBasis,
     FundamentalBasis,
     FundamentalPositionBasis,
     FundamentalTransformedBasis,
     FundamentalTransformedPositionBasis,
 )
-from surface_potential_analysis.axis.util import BasisUtil
+from surface_potential_analysis.basis.util import BasisUtil
 
 if TYPE_CHECKING:
-    from .axis_like import (
+    from .basis_like import (
         BasisLike,
         BasisWithLengthLike,
     )
@@ -35,11 +35,11 @@ def axis_as_fundamental_position_axis(
 
     Parameters
     ----------
-    axis : AxisLike[_NF0Inv, _N0Inv]
+    axis : BasisLike[_NF0Inv, _N0Inv]
 
     Returns
     -------
-    FundamentalPositionAxis[_NF0Inv]
+    FundamentalPositionBasis[_NF0Inv]
     """
     return FundamentalPositionBasis(axis.delta_x, axis.fundamental_n)
 
@@ -52,11 +52,11 @@ def axis_as_fundamental_momentum_axis(
 
     Parameters
     ----------
-    axis : AxisLike[_NF0Inv, _N0Inv, _NDInv]
+    axis : BasisLike[_NF0Inv, _N0Inv, _NDInv]
 
     Returns
     -------
-    FundamentalMomentumAxis[_NF0Inv, _NDInv]
+    FundamentalMomentumBasis[_NF0Inv, _NDInv]
     """
     return FundamentalTransformedPositionBasis(axis.delta_x, axis.fundamental_n)
 
@@ -69,11 +69,11 @@ def axis_as_fundamental_transformed_axis(
 
     Parameters
     ----------
-    axis : AxisLike[_NF0Inv, _N0Inv, _NDInv]
+    axis : BasisLike[_NF0Inv, _N0Inv, _NDInv]
 
     Returns
     -------
-    FundamentalMomentumAxis[_NF0Inv, _NDInv]
+    FundamentalMomentumBasis[_NF0Inv, _NDInv]
     """
     return FundamentalTransformedBasis(axis.fundamental_n)
 
@@ -86,11 +86,11 @@ def axis_as_fundamental_axis(
 
     Parameters
     ----------
-    axis : AxisLike[_NF0Inv, _N0Inv, _NDInv]
+    axis : BasisLike[_NF0Inv, _N0Inv, _NDInv]
 
     Returns
     -------
-    FundamentalMomentumAxis[_NF0Inv, _NDInv]
+    FundamentalMomentumBasis[_NF0Inv, _NDInv]
     """
     return FundamentalBasis(axis.fundamental_n)
 
@@ -103,11 +103,11 @@ def axis_as_explicit_position_axis(
 
     Parameters
     ----------
-    axis : AxisLike[_NF0Inv, _N0Inv]
+    axis : BasisLike[_NF0Inv, _N0Inv]
 
     Returns
     -------
-    ExplicitAxis[_NF0Inv, _N0Inv]
+    ExplicitBasis[_NF0Inv, _N0Inv]
     """
     util = BasisUtil(axis)
     return ExplicitBasis(axis.delta_x, util.vectors)
@@ -121,11 +121,11 @@ def axis_as_orthonormal_axis(
 
     Parameters
     ----------
-    axis : AxisLike[_NF0Inv, _N0Inv]
+    axis : BasisLike[_NF0Inv, _N0Inv]
 
     Returns
     -------
-    ExplicitAxis[_NF0Inv, _N0Inv]
+    ExplicitBasis[_NF0Inv, _N0Inv]
     """
     vectors = BasisUtil(axis).vectors
     orthonormal_vectors = np.zeros_like(vectors, dtype=vectors.dtype)
@@ -146,12 +146,12 @@ def axis_as_n_point_axis(
 
     Parameters
     ----------
-    axis : AxisLike[_NF0Inv, _N0Inv, _NDInv]
+    axis : BasisLike[_NF0Inv, _N0Inv, _NDInv]
     n : _N1Inv
 
     Returns
     -------
-    FundamentalPositionAxis[_N1Inv, _NDInv]
+    FundamentalPositionBasis[_N1Inv, _NDInv]
     """
     return FundamentalPositionBasis(axis.delta_x, n)
 
@@ -164,10 +164,10 @@ def axis_as_single_point_axis(
 
     Parameters
     ----------
-    axis : AxisLike[_NF0Inv, _N0Inv, _NDInv]
+    axis : BasisLike[_NF0Inv, _N0Inv, _NDInv]
 
     Returns
     -------
-    FundamentalPositionAxis[Literal[1], _NDInv]
+    FundamentalPositionBasis[Literal[1], _NDInv]
     """
     return axis_as_n_point_axis(axis, n=1)

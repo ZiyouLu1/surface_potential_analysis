@@ -150,4 +150,7 @@
   },
   "python.analysis.enablePytestSupport": false,
   "mypy-type-checker.importStrategy": "fromEnvironment",
+  "search.exclude": {
+    "typings/**": true
+  },
 }

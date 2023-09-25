@@ -6,12 +6,12 @@ from typing import Any, Literal, Protocol, TypeVar, cast
 
 import numpy as np
 
-from surface_potential_analysis.axis.axis import FundamentalBasis
-from surface_potential_analysis.axis.evenly_spaced_basis import (
+from surface_potential_analysis.basis.basis import FundamentalBasis
+from surface_potential_analysis.basis.evenly_spaced_basis import (
     EvenlySpacedBasis,
 )
 
-from .axis_like import BasisLike
+from .basis_like import BasisLike
 
 _N0_co = TypeVar("_N0_co", bound=int, covariant=True)
 _NF0_co = TypeVar("_NF0_co", bound=int, covariant=True)
@@ -19,7 +19,7 @@ _N1_co = TypeVar("_N1_co", bound=int, covariant=True)
 _N2_co = TypeVar("_N2_co", bound=int, covariant=True)
 
 
-class AxisWithBlockFractionLike(BasisLike[_NF0_co, _N0_co], Protocol[_NF0_co, _N0_co]):  # type: ignore[misc]
+class BasisWithBlockFractionLike(BasisLike[_NF0_co, _N0_co], Protocol[_NF0_co, _N0_co]):  # type: ignore[misc]
     """A generic object that represents an axis with a corresponding axis vector."""
 
     @property
@@ -28,8 +28,8 @@ class AxisWithBlockFractionLike(BasisLike[_NF0_co, _N0_co], Protocol[_NF0_co, _N
         ...
 
 
-class ExplicitBlockFractionAxis(
-    FundamentalBasis[_NF0_co], AxisWithBlockFractionLike[_NF0_co, _NF0_co]
+class ExplicitBlockFractionBasis(
+    FundamentalBasis[_NF0_co], BasisWithBlockFractionLike[_NF0_co, _NF0_co]
 ):
     """A axis with vectors that are the fundamental position states."""
 
@@ -44,9 +44,9 @@ class ExplicitBlockFractionAxis(
         return self._bloch_fractions
 
 
-class EvenlySpacedBlockFractionAxis(
+class EvenlySpacedBlockFractionBasis(
     EvenlySpacedBasis[_N0_co, _N1_co, _N2_co],
-    AxisWithBlockFractionLike[Any, _N0_co],
+    BasisWithBlockFractionLike[Any, _N0_co],
 ):
     """A axis with vectors that are the fundamental position states."""
 
@@ -60,8 +60,8 @@ class EvenlySpacedBlockFractionAxis(
         )
 
 
-class FundamentalBlockFractionAxis(
-    EvenlySpacedBlockFractionAxis[_NF0_co, Literal[1], Literal[0]]
+class FundamentalBlockFractionBasis(
+    EvenlySpacedBlockFractionBasis[_NF0_co, Literal[1], Literal[0]]
 ):
     """A axis with vectors that are the fundamental position states."""
 

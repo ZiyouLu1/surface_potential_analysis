@@ -5,11 +5,11 @@ from typing import TYPE_CHECKING, Any
 
 import numpy as np
 
-from surface_potential_analysis.axis.axis import FundamentalBasis
-from surface_potential_analysis.axis.block_fraction_axis import (
-    ExplicitBlockFractionAxis,
+from surface_potential_analysis.basis.basis import FundamentalBasis
+from surface_potential_analysis.basis.block_fraction_basis import (
+    ExplicitBlockFractionBasis,
 )
-from surface_potential_analysis.axis.stacked_axis import StackedBasis
+from surface_potential_analysis.basis.stacked_basis import StackedBasis
 from surface_potential_analysis.stacked_basis.build import (
     position_basis_3d_from_shape,
 )
@@ -29,7 +29,7 @@ class EigenstateTest(unittest.TestCase):
         expected = np.array([2 * np.pi, 4 * np.pi, 0.0, -2 * np.pi])
         collection: EigenstateColllection[Any, Any] = {
             "basis": StackedBasis(
-                StackedBasis(ExplicitBlockFractionAxis(phases), FundamentalBasis(0)),
+                StackedBasis(ExplicitBlockFractionBasis(phases), FundamentalBasis(0)),
                 position_basis_3d_from_shape((1, 1, 1)),
             ),
             "eigenvalue": np.array([]),

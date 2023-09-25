@@ -6,7 +6,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 from scipy.constants import Boltzmann
 
-from surface_potential_analysis.axis.util import BasisUtil
+from surface_potential_analysis.basis.util import BasisUtil
 from surface_potential_analysis.state_vector.state_vector_list import (
     state_vector_list_into_iter,
 )
@@ -18,11 +18,11 @@ if TYPE_CHECKING:
     from matplotlib.figure import Figure
     from matplotlib.lines import Line2D
 
-    from surface_potential_analysis.axis.axis_like import BasisLike
-    from surface_potential_analysis.axis.block_fraction_axis import (
-        AxisWithBlockFractionLike,
+    from surface_potential_analysis.basis.basis_like import BasisLike
+    from surface_potential_analysis.basis.block_fraction_basis import (
+        BasisWithBlockFractionLike,
     )
-    from surface_potential_analysis.axis.stacked_axis import (
+    from surface_potential_analysis.basis.stacked_basis import (
         StackedBasisLike,
     )
     from surface_potential_analysis.state_vector.eigenstate_collection import (
@@ -38,7 +38,7 @@ if TYPE_CHECKING:
     _B0 = TypeVar("_B0", bound=BasisLike[Any, Any])
     _SB0 = TypeVar("_SB0", bound=StackedBasisLike[*tuple[Any, ...]])
     _L0 = TypeVar("_L0", bound=int)
-    _BF0 = TypeVar("_BF0", bound=AxisWithBlockFractionLike[Any, Any])
+    _BF0 = TypeVar("_BF0", bound=BasisWithBlockFractionLike[Any, Any])
 
 
 # ruff: noqa: PLR0913

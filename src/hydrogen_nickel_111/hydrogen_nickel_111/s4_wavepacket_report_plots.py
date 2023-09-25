@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import numpy as np
 from matplotlib import pyplot as plt
-from surface_potential_analysis.axis.util import BasisUtil
+from surface_potential_analysis.basis.util import BasisUtil
 from surface_potential_analysis.state_vector.conversion import (
     convert_state_vector_to_position_basis,
 )
@@ -24,16 +24,14 @@ def plot_wavepacket_localization() -> None:
     converted = convert_state_vector_to_position_basis(
         get_wavepacket_state_vector(wavepacket, 0)
     )
-    idx_flat = np.argmax(np.abs(converted["data"]), axis=-1)
+    idx_flat = int(np.argmax(np.abs(converted["data"]), axis=-1))
     util = BasisUtil(converted["basis"])
     idx_max = util.get_stacked_index(idx_flat)
 
     normalized = localize_tightly_bound_wavepacket_idx(
         wavepacket, (24 + idx_max[0], 24 + idx_max[0], idx_max[2])
     )
-    fig, ax, mesh = plot_wavepacket_2d_x(
-        normalized, (0, 1), (idx_max[2],), scale="symlog"
-    )
+    fig, ax, _ = plot_wavepacket_2d_x(normalized, (0, 1), scale="symlog")
     ax.set_xlim(None, 1e-9)
     ax.set_ylim(None, 0.8e-9)
     fig.show()
@@ -42,9 +40,7 @@ def plot_wavepacket_localization() -> None:
     normalized = localize_tightly_bound_wavepacket_idx(
         wavepacket, (24 + 8, 24 + 8, idx_max[2])
     )
-    fig, ax, mesh = plot_wavepacket_2d_x(
-        normalized, (0, 1), (idx_max[2],), scale="symlog"
-    )
+    fig, ax, _ = plot_wavepacket_2d_x(normalized, (0, 1), scale="symlog")
     ax.set_xlim(None, 1e-9)
     ax.set_ylim(None, 0.8e-9)
     fig.show()

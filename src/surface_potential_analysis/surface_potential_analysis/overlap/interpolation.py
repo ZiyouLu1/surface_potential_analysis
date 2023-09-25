@@ -4,8 +4,8 @@ from typing import TYPE_CHECKING, Literal, TypeVar, TypeVarTuple
 
 import numpy as np
 
-from surface_potential_analysis.axis.conversion import axis_as_single_point_axis
-from surface_potential_analysis.axis.util import BasisUtil
+from surface_potential_analysis.basis.conversion import axis_as_single_point_axis
+from surface_potential_analysis.basis.util import BasisUtil
 from surface_potential_analysis.stacked_basis.util import (
     wrap_index_around_origin,
 )
@@ -14,8 +14,8 @@ from surface_potential_analysis.util.decorators import timed
 if TYPE_CHECKING:
     from collections.abc import Callable
 
-    from surface_potential_analysis.axis.axis import FundamentalPositionBasis
-    from surface_potential_analysis.axis.stacked_axis import StackedBasisLike
+    from surface_potential_analysis.basis.basis import FundamentalPositionBasis
+    from surface_potential_analysis.basis.stacked_basis import StackedBasisLike
     from surface_potential_analysis.overlap.overlap import Overlap3d
     from surface_potential_analysis.types import IntLike_co
 

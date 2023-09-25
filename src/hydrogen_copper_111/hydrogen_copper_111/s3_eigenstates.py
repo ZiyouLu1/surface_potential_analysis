@@ -14,15 +14,15 @@ from .surface_data import get_data_path
 if TYPE_CHECKING:
     from pathlib import Path
 
-    from surface_potential_analysis.axis.axis import (
+    from surface_potential_analysis.basis.basis import (
         ExplicitBasis,
         FundamentalBasis,
         FundamentalTransformedPositionBasis,
     )
-    from surface_potential_analysis.axis.block_fraction_axis import (
-        ExplicitBlockFractionAxis,
+    from surface_potential_analysis.basis.block_fraction_basis import (
+        ExplicitBlockFractionBasis,
     )
-    from surface_potential_analysis.axis.stacked_axis import StackedBasisLike
+    from surface_potential_analysis.basis.stacked_basis import StackedBasisLike
     from surface_potential_analysis.operator.operator import SingleBasisOperator
     from surface_potential_analysis.state_vector.eigenstate_collection import (
         EigenstateColllection,
@@ -44,7 +44,7 @@ def get_eigenstate_collection_hydrogen(
     shape: tuple[_L0, _L1, _L2],
 ) -> EigenstateColllection[
     StackedBasisLike[
-        ExplicitBlockFractionAxis[Literal[11]], FundamentalBasis[Literal[10]]
+        ExplicitBlockFractionBasis[Literal[11]], FundamentalBasis[Literal[10]]
     ],
     StackedBasisLike[
         FundamentalTransformedPositionBasis[_L0, Literal[3]],
@@ -86,7 +86,7 @@ def get_eigenstate_collection_deuterium(
     shape: tuple[_L0, _L1, _L2],
 ) -> EigenstateColllection[
     StackedBasisLike[
-        ExplicitBlockFractionAxis[Literal[11]], FundamentalBasis[Literal[10]]
+        ExplicitBlockFractionBasis[Literal[11]], FundamentalBasis[Literal[10]]
     ],
     StackedBasisLike[
         FundamentalTransformedPositionBasis[_L0, Literal[3]],

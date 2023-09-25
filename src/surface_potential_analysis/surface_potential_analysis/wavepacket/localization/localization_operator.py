@@ -4,14 +4,16 @@ from typing import TYPE_CHECKING, Any, TypeVar
 
 import numpy as np
 
-from surface_potential_analysis.axis.axis_like import BasisLike
-from surface_potential_analysis.axis.stacked_axis import StackedBasis, StackedBasisLike
+from surface_potential_analysis.basis.basis_like import BasisLike
+from surface_potential_analysis.basis.stacked_basis import (
+    StackedBasis,
+    StackedBasisLike,
+)
 from surface_potential_analysis.operator.operator_list import OperatorList
 
 if TYPE_CHECKING:
     from surface_potential_analysis.operator.operator import (
         DiagonalOperator,
-        SingleBasisOperator,
     )
     from surface_potential_analysis.wavepacket.wavepacket import (
         WavepacketList,
@@ -87,18 +89,33 @@ def get_wavepacket_hamiltonian(
 def get_localized_hamiltonian(
     wavepackets: WavepacketWithEigenvaluesList[_B2, _SB1, _SB0],
     operator: LocalizationOperator[_SB1, _B1, _B2],
-) -> SingleBasisOperator[StackedBasis[_B1, _SB1]]:
+) -> OperatorList[_SB1, _B1, _B1]:
     hamiltonian = get_wavepacket_hamiltonian(wavepackets)
-    _converted_dual = hamiltonian["data"].reshape(hamiltonian["basis"].shape)[
-        :, np.newaxis, :
-    ] * np.conj(operator["data"]).reshape(-1, *operator["basis"][1].shape)
-    _converted = (
-        operator["data"].reshape(-1, *operator["basis"][1].shape) * _converted_dual
+    hamiltonian_stacked = hamiltonian["data"].reshape(*hamiltonian["basis"][0].shape)
+    operator_stacked = operator["data"].reshape(-1, *operator["basis"][1].shape)
+
+    # Hamiltonian n, k; is diagonal
+    # Operator k n'; n with k just along diagonal
+    # Move k to end, and do tensordot on n and k. Since H is diagonal we dont need to sum
+    converted_front = (
+        np.moveaxis(operator_stacked, 0, -1)[:, :, :]
+        * hamiltonian_stacked[np.newaxis, :, :]
     )
+
+    # converted_front is n'; n, k
+    # Operator k n'; n move axis to get n'; n k and conj to make dual basis
+    # this time we sum over the n axis
+    converted = np.sum(
+        converted_front[:, np.newaxis, :, :]
+        * np.conj(np.moveaxis(operator_stacked, 0, -1))[np.newaxis, :, :, :],
+        axis=(2),
+    )
+    # we now have n'; n' k, so we need to move k to the front
+    # this is why we return an operator list
     return {
         "basis": StackedBasis(
-            StackedBasis(operator["basis"][1][0], hamiltonian["basis"][0][1]),
-            StackedBasis(operator["basis"][1][0], hamiltonian["basis"][0][1]),
+            hamiltonian["basis"][0][1],
+            StackedBasis(operator["basis"][1][0], operator["basis"][1][0]),
         ),
-        "data": _converted.reshape(-1),
+        "data": np.moveaxis(converted, -1, 0).reshape(-1),
     }

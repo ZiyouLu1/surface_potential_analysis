@@ -2,8 +2,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, Generic, TypedDict, TypeVar
 
-from surface_potential_analysis.axis.axis_like import AxisWithLengthLike3d
-from surface_potential_analysis.axis.stacked_axis import StackedBasisLike
+from surface_potential_analysis.basis.basis_like import BasisWithLengthLike3d
+from surface_potential_analysis.basis.stacked_basis import StackedBasisLike
 
 if TYPE_CHECKING:
     import numpy as np
@@ -11,9 +11,9 @@ if TYPE_CHECKING:
     pass
 
 Overlap3dBasis = StackedBasisLike[
-    AxisWithLengthLike3d[Any, Any],
-    AxisWithLengthLike3d[Any, Any],
-    AxisWithLengthLike3d[Any, Any],
+    BasisWithLengthLike3d[Any, Any],
+    BasisWithLengthLike3d[Any, Any],
+    BasisWithLengthLike3d[Any, Any],
 ]
 _B3d0_co = TypeVar("_B3d0_co", bound=StackedBasisLike[*tuple[Any, ...]], covariant=True)
 

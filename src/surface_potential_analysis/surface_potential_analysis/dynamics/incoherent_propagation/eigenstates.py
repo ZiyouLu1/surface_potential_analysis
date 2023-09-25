@@ -5,9 +5,9 @@ from typing import TYPE_CHECKING, Any, TypeVar
 import numpy as np
 import scipy.linalg
 
-from surface_potential_analysis.axis.axis import FundamentalBasis
-from surface_potential_analysis.axis.stacked_axis import StackedBasis
-from surface_potential_analysis.axis.time_axis_like import (
+from surface_potential_analysis.basis.basis import FundamentalBasis
+from surface_potential_analysis.basis.stacked_basis import StackedBasis
+from surface_potential_analysis.basis.time_basis_like import (
     ExplicitTimeBasis,
 )
 from surface_potential_analysis.util.decorators import timed

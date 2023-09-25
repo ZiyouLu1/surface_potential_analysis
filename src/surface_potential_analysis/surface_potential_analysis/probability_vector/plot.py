@@ -25,9 +25,9 @@ if TYPE_CHECKING:
     from matplotlib.figure import Figure
     from matplotlib.lines import Line2D
 
-    from surface_potential_analysis.axis.axis_like import BasisLike
-    from surface_potential_analysis.axis.stacked_axis import StackedBasisLike
-    from surface_potential_analysis.axis.time_axis_like import BasisWithTimeLike
+    from surface_potential_analysis.basis.basis_like import BasisLike
+    from surface_potential_analysis.basis.stacked_basis import StackedBasisLike
+    from surface_potential_analysis.basis.time_basis_like import BasisWithTimeLike
     from surface_potential_analysis.probability_vector.probability_vector import (
         ProbabilityVectorList,
     )

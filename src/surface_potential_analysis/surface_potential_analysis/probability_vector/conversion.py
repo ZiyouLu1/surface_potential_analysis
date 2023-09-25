@@ -2,19 +2,22 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, TypeVar
 
-from surface_potential_analysis.axis.axis_like import (
+from surface_potential_analysis.basis.basis_like import (
     BasisLike,
     BasisWithLengthLike,
     convert_vector,
 )
-from surface_potential_analysis.axis.stacked_axis import StackedBasis, StackedBasisLike
+from surface_potential_analysis.basis.stacked_basis import (
+    StackedBasis,
+    StackedBasisLike,
+)
 from surface_potential_analysis.stacked_basis.conversion import (
     stacked_basis_as_fundamental_momentum_basis,
     stacked_basis_as_fundamental_position_basis,
 )
 
 if TYPE_CHECKING:
-    from surface_potential_analysis.axis.axis import (
+    from surface_potential_analysis.basis.basis import (
         FundamentalPositionBasis,
         FundamentalTransformedPositionBasis,
     )
@@ -90,7 +93,7 @@ def convert_probability_vector_to_position_basis(
 
     Returns
     -------
-    StateVector[tuple[FundamentalPositionAxis[Any, Any], ...]]
+    StateVector[tuple[FundamentalPositionBasis[Any, Any], ...]]
     """
     return convert_probability_vector_to_basis(
         probability_vector,
@@ -112,7 +115,7 @@ def convert_probability_vector_to_momentum_basis(
 
     Returns
     -------
-    StateVector[tuple[FundamentalMomentumAxis[Any, Any], ...]]
+    StateVector[tuple[FundamentalMomentumBasis[Any, Any], ...]]
     """
     return convert_probability_vector_to_basis(
         probability_vector,

@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, Any, Literal, TypeVar
 
 import numpy as np
 
-from surface_potential_analysis.axis.axis_like import BasisLike, BasisWithLengthLike
+from surface_potential_analysis.basis.basis_like import BasisLike, BasisWithLengthLike
 from surface_potential_analysis.state_vector.conversion import (
     convert_state_vector_to_position_basis,
 )
@@ -14,7 +14,7 @@ from surface_potential_analysis.wavepacket.eigenstate_conversion import (
 )
 
 if TYPE_CHECKING:
-    from surface_potential_analysis.axis.stacked_axis import (
+    from surface_potential_analysis.basis.stacked_basis import (
         StackedBasisLike,
     )
     from surface_potential_analysis.overlap.overlap import Overlap3d, Overlap3dBasis
@@ -50,12 +50,12 @@ def calculate_wavepacket_overlap(
 
     Parameters
     ----------
-    wavepacket_0 : Wavepacket[_NS0Inv, _NS1Inv, StackedAxisLike[tuple[MomentumBasis[_L0Inv], MomentumBasis[_L1Inv], _A3d0Inv]]
-    wavepacket_1 : Wavepacket[_NS0Inv, _NS1Inv, StackedAxisLike[tuple[MomentumBasis[_L0Inv], MomentumBasis[_L1Inv], _A3d0Inv]]
+    wavepacket_0 : Wavepacket[_NS0Inv, _NS1Inv, StackedBasisLike[tuple[MomentumBasis[_L0Inv], MomentumBasis[_L1Inv], _A3d0Inv]]
+    wavepacket_1 : Wavepacket[_NS0Inv, _NS1Inv, StackedBasisLike[tuple[MomentumBasis[_L0Inv], MomentumBasis[_L1Inv], _A3d0Inv]]
 
     Returns
     -------
-    Overlap[StackedAxisLike[tuple[PositionBasis[int], PositionBasis[int], _A3d0Inv]]
+    Overlap[StackedBasisLike[tuple[PositionBasis[int], PositionBasis[int], _A3d0Inv]]
     """
     eigenstate_0 = convert_state_vector_to_position_basis(
         unfurl_wavepacket(wavepacket_0)

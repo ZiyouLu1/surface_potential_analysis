@@ -4,10 +4,13 @@ from typing import TYPE_CHECKING, Any, Literal, Self, TypeVar
 
 import numpy as np
 
-from surface_potential_analysis.axis.axis import FundamentalBasis
-from surface_potential_analysis.axis.axis_like import AxisVector2d, BasisLike
-from surface_potential_analysis.axis.stacked_axis import StackedBasis, StackedBasisLike
-from surface_potential_analysis.axis.util import BasisUtil
+from surface_potential_analysis.basis.basis import FundamentalBasis
+from surface_potential_analysis.basis.basis_like import AxisVector2d, BasisLike
+from surface_potential_analysis.basis.stacked_basis import (
+    StackedBasis,
+    StackedBasisLike,
+)
+from surface_potential_analysis.basis.util import BasisUtil
 from surface_potential_analysis.wavepacket.localization._tight_binding import (
     get_wavepacket_two_points,
 )
@@ -26,7 +29,7 @@ _AX0Inv = TypeVar("_AX0Inv", bound=BasisLike[Any, Any])
 _AX1Inv = TypeVar("_AX1Inv", bound=BasisLike[Any, Any])
 
 
-class TunnellingSimulationBandsAxis(FundamentalBasis[_L0_co]):
+class TunnellingSimulationBandsBasis(FundamentalBasis[_L0_co]):
     """
     Represents the bands axis of the simulation.
 
@@ -66,7 +69,7 @@ class TunnellingSimulationBandsAxis(FundamentalBasis[_L0_co]):
         return cls(locations, tuple(util.delta_x_stacked[0:2, 0:2]))  # type: ignore[arg-type]
 
 
-_AX2Inv = TypeVar("_AX2Inv", bound=TunnellingSimulationBandsAxis[Any])
+_AX2Inv = TypeVar("_AX2Inv", bound=TunnellingSimulationBandsBasis[Any])
 
 TunnellingSimulationBasis = StackedBasisLike[_AX0Inv, _AX1Inv, _AX2Inv]
 """
@@ -85,28 +88,28 @@ _L3Inv = TypeVar("_L3Inv", bound=int)
 def get_basis_from_shape(
     shape: tuple[_L0Inv, _L1Inv],
     n_bands: _L2Inv,
-    bands_axis: TunnellingSimulationBandsAxis[_L3Inv],
+    bands_axis: TunnellingSimulationBandsBasis[_L3Inv],
 ) -> StackedBasisLike[
     FundamentalBasis[_L0Inv],
     FundamentalBasis[_L1Inv],
-    TunnellingSimulationBandsAxis[_L2Inv],
+    TunnellingSimulationBandsBasis[_L2Inv],
 ]:
     """
-    Get the simulation basis from the shape and TunnellingSimulationBandsAxis.
+    Get the simulation basis from the shape and TunnellingSimulationBandsBasis.
 
     Parameters
     ----------
     shape : tuple[_L0Inv, _L1Inv]
-    bands_axis : TunnellingSimulationBandsAxis[_L2Inv]
+    bands_axis : TunnellingSimulationBandsBasis[_L2Inv]
 
     Returns
     -------
-    tuple[FundamentalAxis[_L0Inv], FundamentalAxis[_L1Inv], TunnellingSimulationBandsAxis[_L2Inv]]
+    tuple[FundamentalBasis[_L0Inv], FundamentalBasis[_L1Inv], TunnellingSimulationBandsBasis[_L2Inv]]
     """
     return StackedBasis(
         FundamentalBasis(shape[0]),
         FundamentalBasis(shape[1]),
-        TunnellingSimulationBandsAxis(
+        TunnellingSimulationBandsBasis(
             bands_axis.locations[:, :n_bands], bands_axis.unit_cell
         ),
     )

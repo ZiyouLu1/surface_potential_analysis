@@ -41,7 +41,7 @@ def pad_ft_points(
     NDArray
         The padded array
     """
-    shape_arr = np.array(array.shape)
+    shape_arr = np.array(array.shape, dtype=np.int_)
     axes_arr = np.asarray(axes)
 
     padded_shape = shape_arr.copy()

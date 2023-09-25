@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import numpy as np
 from matplotlib import pyplot as plt
-from surface_potential_analysis.axis.util import BasisUtil
+from surface_potential_analysis.basis.util import BasisUtil
 from surface_potential_analysis.probability_vector.plot import (
     plot_probability_1d_k,
     plot_probability_2d_k,
@@ -71,7 +71,7 @@ def plot_wavepacket_hydrogen() -> None:
 
 
 def plot_localized_wavepackets_hydrogen() -> None:
-    wavepackets = get_wannier90_localized_wavepacket_hydrogen((3, 3, 3))
+    wavepackets = get_wannier90_localized_wavepacket_hydrogen(8)
     for wavepacket in wavepacket_list_into_iter(wavepackets):
         fig, _, _ = plot_wavepacket_1d_k(wavepacket, scale="symlog", measure="abs")
         fig.show()
@@ -143,9 +143,9 @@ def plot_tight_binding_projection_localized_wavepacket_hydrogen() -> None:
 
 def plot_energies() -> None:
     fig, ax = plt.subplots()
-    for wavepacket in wavepacket_list_into_iter(
-        get_wavepackets(get_all_wavepackets_hydrogen(), slice(4, 6))
-    ):
+    for band in range(4, 6):
+        wavepacket = get_wavepacket_hydrogen(band)
+
         plot_eigenvalues_1d_x(wavepacket, ax=ax)
     fig.show()
     input()

@@ -23,7 +23,7 @@ _S0Inv = TypeVar("_S0Inv", bound=tuple[int, ...])
 
 # ruff: noqa: D102
 @runtime_checkable
-class FromFundamentalAxis(Protocol[_NF0_co, _N0_co]):
+class FromFundamentalBasis(Protocol[_NF0_co, _N0_co]):
     """Represents an axis which can be converted from the fundamental axis."""
 
     @abc.abstractmethod
@@ -50,7 +50,7 @@ class FromFundamentalAxis(Protocol[_NF0_co, _N0_co]):
 
 
 @runtime_checkable
-class FromTransformedAxis(Protocol[_NF0_co, _N0_co]):
+class FromTransformedBasis(Protocol[_NF0_co, _N0_co]):
     """Represents an axis which can be converted from the transformed axis."""
 
     @abc.abstractmethod
@@ -77,7 +77,7 @@ class FromTransformedAxis(Protocol[_NF0_co, _N0_co]):
 
 
 @runtime_checkable
-class IntoFundamentalAxis(Protocol[_NF0_co, _N0_co]):
+class IntoFundamentalBasis(Protocol[_NF0_co, _N0_co]):
     """Represents an axis which can be converted to fundamental axis."""
 
     @abc.abstractmethod
@@ -90,7 +90,7 @@ class IntoFundamentalAxis(Protocol[_NF0_co, _N0_co]):
 
 
 @runtime_checkable
-class IntoTransformedAxis(Protocol[_NF0_co, _N0_co]):
+class IntoTransformedBasis(Protocol[_NF0_co, _N0_co]):
     """Represents an axis which can be converted to transformed axis."""
 
     @abc.abstractmethod
@@ -104,8 +104,8 @@ class IntoTransformedAxis(Protocol[_NF0_co, _N0_co]):
 
 @runtime_checkable
 class AsFundamentalBasis(
-    IntoFundamentalAxis[_NF0_co, _N0_co],
-    IntoTransformedAxis[_NF0_co, _N0_co],
+    IntoFundamentalBasis[_NF0_co, _N0_co],
+    IntoTransformedBasis[_NF0_co, _N0_co],
     Protocol[_NF0_co, _N0_co],
 ):
     """Represents an axis which can (inexpensively) be converted to fundamental axis."""
@@ -136,8 +136,8 @@ class AsFundamentalBasis(
 
 @runtime_checkable
 class AsTransformedBasis(
-    IntoFundamentalAxis[_NF0_co, _N0_co],
-    IntoTransformedAxis[_NF0_co, _N0_co],
+    IntoFundamentalBasis[_NF0_co, _N0_co],
+    IntoTransformedBasis[_NF0_co, _N0_co],
     Protocol[_NF0_co, _N0_co],
 ):
     """Represents an axis which can (inexpensively) be converted to transformed axis."""
@@ -168,10 +168,10 @@ class AsTransformedBasis(
 
 @runtime_checkable
 class BasisLike(
-    FromFundamentalAxis[_NF0_co, _N0_co],
-    IntoFundamentalAxis[_NF0_co, _N0_co],
-    FromTransformedAxis[_NF0_co, _N0_co],
-    IntoTransformedAxis[_NF0_co, _N0_co],
+    FromFundamentalBasis[_NF0_co, _N0_co],
+    IntoFundamentalBasis[_NF0_co, _N0_co],
+    FromTransformedBasis[_NF0_co, _N0_co],
+    IntoTransformedBasis[_NF0_co, _N0_co],
     Protocol[_NF0_co, _N0_co],
 ):
     """A generic object that represents an axis for a axis."""
@@ -334,6 +334,6 @@ class BasisWithLengthLike(
         ...
 
 
-AxisWithLengthLike1d = BasisWithLengthLike[_NF0Inv, _N0Inv, Literal[1]]
-AxisWithLengthLike2d = BasisWithLengthLike[_NF0Inv, _N0Inv, Literal[2]]
-AxisWithLengthLike3d = BasisWithLengthLike[_NF0Inv, _N0Inv, Literal[3]]
+BasisWithLengthLike1d = BasisWithLengthLike[_NF0Inv, _N0Inv, Literal[1]]
+BasisWithLengthLike2d = BasisWithLengthLike[_NF0Inv, _N0Inv, Literal[2]]
+BasisWithLengthLike3d = BasisWithLengthLike[_NF0Inv, _N0Inv, Literal[3]]

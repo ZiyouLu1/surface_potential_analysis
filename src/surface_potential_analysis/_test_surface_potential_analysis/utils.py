@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, TypeVar
 import numpy as np
 from scipy.stats import special_ortho_group
 
-from surface_potential_analysis.axis.axis import (
+from surface_potential_analysis.basis.basis import (
     ExplicitBasis,
 )
 

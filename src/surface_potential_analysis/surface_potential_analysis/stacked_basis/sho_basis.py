@@ -9,20 +9,20 @@ import scipy
 import scipy.special
 from scipy.constants import hbar
 
-from surface_potential_analysis.axis.axis import (
+from surface_potential_analysis.basis.basis import (
     ExplicitBasis,
     ExplicitBasis3d,
     FundamentalPositionBasis,
 )
-from surface_potential_analysis.axis.stacked_axis import StackedBasis
-from surface_potential_analysis.axis.util import BasisUtil
+from surface_potential_analysis.basis.stacked_basis import StackedBasis
+from surface_potential_analysis.basis.util import BasisUtil
 from surface_potential_analysis.stacked_basis.potential_basis import (
     PotentialBasisConfig,
     get_potential_basis_config_basis,
 )
 
 if TYPE_CHECKING:
-    from surface_potential_analysis.axis.axis_like import AxisWithLengthLike3d
+    from surface_potential_analysis.basis.basis_like import BasisWithLengthLike3d
 
 _L0Inv = TypeVar("_L0Inv", bound=int)
 _L1Inv = TypeVar("_L1Inv", bound=int)
@@ -64,7 +64,7 @@ def calculate_sho_wavefunction(
 
 
 def calculate_x_distances(
-    parent: AxisWithLengthLike3d[_L0Inv, Any],
+    parent: BasisWithLengthLike3d[_L0Inv, Any],
     x_origin: np.ndarray[tuple[Literal[3]], np.dtype[np.float_]],
 ) -> np.ndarray[tuple[_L0Inv], np.dtype[np.complex_]]:
     """Given a basis, calculate x distances with a projected value of zero at x_origin."""
@@ -85,7 +85,7 @@ class SHOBasisConfig(TypedDict):
 
 
 def get_sho_potential_basis_config(
-    parent: AxisWithLengthLike3d[_L0Inv, _LF0Inv], config: SHOBasisConfig, n: _L1Inv
+    parent: BasisWithLengthLike3d[_L0Inv, _LF0Inv], config: SHOBasisConfig, n: _L1Inv
 ) -> PotentialBasisConfig[FundamentalPositionBasis[_LF0Inv, Literal[1]], _L1Inv]:
     """
     Get a potential basis config assuming a SHO oscillator.
@@ -98,7 +98,7 @@ def get_sho_potential_basis_config(
 
     Returns
     -------
-    PotentialStackedAxisLike[tuple[_L0Inv, _L1Inv]
+    PotentialStackedBasisLike[tuple[_L0Inv, _L1Inv]
     """
     delta_x1 = (
         np.array([0, 1, 0])
@@ -124,7 +124,7 @@ def get_sho_potential_basis_config(
 
 
 def sho_axis_3d_from_config(
-    parent: AxisWithLengthLike3d[_LF0Inv, _L0Inv], config: SHOBasisConfig, n: _L0Inv
+    parent: BasisWithLengthLike3d[_LF0Inv, _L0Inv], config: SHOBasisConfig, n: _L0Inv
 ) -> ExplicitBasis3d[_LF0Inv, _L0Inv]:
     """
     Calculate the exact sho basis for a given basis, by directly diagonalizing the sho wavefunction in this basis.
@@ -148,7 +148,7 @@ def sho_axis_3d_from_config(
 
 
 def infinate_sho_axis_3d_from_config(
-    parent: AxisWithLengthLike3d[_LF0Inv, _L1Inv], config: SHOBasisConfig, n: _L0Inv
+    parent: BasisWithLengthLike3d[_LF0Inv, _L1Inv], config: SHOBasisConfig, n: _L0Inv
 ) -> ExplicitBasis3d[_LF0Inv, _L0Inv]:
     """
     Generate an explicit sho basis assuming an infinate extent in the z direction.

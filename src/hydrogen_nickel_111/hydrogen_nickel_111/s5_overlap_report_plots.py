@@ -6,7 +6,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib.scale import FuncScale
 from scipy.constants import Boltzmann, electron_mass, hbar
-from surface_potential_analysis.axis.util import BasisUtil
+from surface_potential_analysis.basis.util import BasisUtil
 from surface_potential_analysis.dynamics.hermitian_gamma_integral import (
     calculate_hermitian_gamma_occupation_integral,
     calculate_hermitian_gamma_potential_integral,

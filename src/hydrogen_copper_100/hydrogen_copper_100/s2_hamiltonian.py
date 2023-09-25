@@ -20,14 +20,14 @@ from .s1_potential import (
 )
 
 if TYPE_CHECKING:
-    from surface_potential_analysis.axis.axis import (
+    from surface_potential_analysis.basis.basis import (
         ExplicitBasis,
         ExplicitBasis3d,
         FundamentalPositionBasis1d,
         FundamentalTransformedPositionBasis,
         TransformedPositionBasis3d,
     )
-    from surface_potential_analysis.axis.stacked_axis import StackedBasisLike
+    from surface_potential_analysis.basis.stacked_basis import StackedBasisLike
     from surface_potential_analysis.operator import SingleBasisOperator
     from surface_potential_analysis.stacked_basis.sho_basis import SHOBasisConfig
 

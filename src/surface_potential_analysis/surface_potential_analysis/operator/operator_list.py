@@ -4,10 +4,11 @@ from typing import TYPE_CHECKING, Any, Generic, TypedDict, TypeVar
 
 import numpy as np
 
-from surface_potential_analysis.axis.axis_like import BasisLike
+from surface_potential_analysis.basis.basis_like import BasisLike
+from surface_potential_analysis.basis.stacked_basis import StackedBasis
 
 if TYPE_CHECKING:
-    from surface_potential_analysis.axis.stacked_axis import StackedBasisLike
+    from surface_potential_analysis.basis.stacked_basis import StackedBasisLike
     from surface_potential_analysis.types import SingleFlatIndexLike
 
     from .operator import (
@@ -97,12 +98,16 @@ def sum_diagonal_operator_list_over_axes(
     -------
     DiagonalOperatorList[Any, Any, _L0Inv]
     """
-    traced_basis = tuple(b for (i, b) in enumerate(states["basis"]) if i not in axes)
+    traced_basis = tuple(
+        b for (i, b) in enumerate(states["basis"][1][0]) if i not in axes
+    )
     # TODO: just wrong
     return {
-        "basis": traced_basis,
+        "basis": StackedBasis(
+            states["basis"][0], StackedBasis(traced_basis, traced_basis)
+        ),
         "data": np.sum(
-            states["data"].reshape(-1, states["basis"][1].shape),
+            states["data"].reshape(-1, *states["basis"][1][0].shape),
             axis=tuple(1 + np.array(axes)),
         ).reshape(states["data"].shape[0], -1),
     }

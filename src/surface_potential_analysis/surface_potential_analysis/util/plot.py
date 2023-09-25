@@ -25,7 +25,7 @@ if TYPE_CHECKING:
     from matplotlib.image import AxesImage
     from matplotlib.lines import Line2D
 
-    from surface_potential_analysis.axis.stacked_axis import StackedBasisLike
+    from surface_potential_analysis.basis.stacked_basis import StackedBasisLike
     from surface_potential_analysis.types import SingleStackedIndexLike
 
 

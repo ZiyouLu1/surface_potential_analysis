@@ -7,12 +7,12 @@ import hamiltonian_generator
 import numpy as np
 from scipy.constants import hbar
 
-from surface_potential_analysis.axis.axis import (
+from surface_potential_analysis.basis.basis import (
     ExplicitBasis3d,
     FundamentalPositionBasis,
     FundamentalPositionBasis3d,
 )
-from surface_potential_analysis.axis.util import BasisUtil
+from surface_potential_analysis.basis.util import BasisUtil
 from surface_potential_analysis.stacked_basis.sho_basis import (
     SHOBasisConfig,
     calculate_sho_wavefunction,

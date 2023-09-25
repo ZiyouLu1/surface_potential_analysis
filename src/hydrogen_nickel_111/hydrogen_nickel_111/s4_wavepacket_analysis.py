@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import numpy as np
-from surface_potential_analysis.axis.util import BasisUtil
+from surface_potential_analysis.basis.util import BasisUtil
 from surface_potential_analysis.state_vector.conversion import (
     convert_state_vector_to_position_basis,
 )

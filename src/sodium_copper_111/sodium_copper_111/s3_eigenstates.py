@@ -15,14 +15,14 @@ from .surface_data import get_data_path
 if TYPE_CHECKING:
     from pathlib import Path
 
-    from surface_potential_analysis.axis.axis import (
+    from surface_potential_analysis.basis.basis import (
         FundamentalBasis,
         FundamentalTransformedPositionBasis1d,
     )
-    from surface_potential_analysis.axis.block_fraction_axis import (
-        ExplicitBlockFractionAxis,
+    from surface_potential_analysis.basis.block_fraction_basis import (
+        ExplicitBlockFractionBasis,
     )
-    from surface_potential_analysis.axis.stacked_axis import StackedBasisLike
+    from surface_potential_analysis.basis.stacked_basis import StackedBasisLike
     from surface_potential_analysis.operator.operator import SingleBasisOperator
 
 _L0Inv = TypeVar("_L0Inv", bound=int)
@@ -36,7 +36,7 @@ def _get_eigenstate_collection_cache(shape: tuple[_L0Inv]) -> Path:
 def get_eigenstate_collection(
     shape: tuple[_L0Inv],
 ) -> EigenstateColllection[
-    StackedBasisLike[ExplicitBlockFractionAxis[Literal[11]], FundamentalBasis[int]],
+    StackedBasisLike[ExplicitBlockFractionBasis[Literal[11]], FundamentalBasis[int]],
     StackedBasisLike[FundamentalTransformedPositionBasis1d[_L0Inv]],
 ]:
     bloch_fractions = np.linspace(-0.5, 0.5, 11).reshape(1, 11)

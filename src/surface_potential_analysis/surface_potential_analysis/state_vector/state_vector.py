@@ -4,7 +4,7 @@ from typing import Any, Generic, TypedDict, TypeVar
 
 import numpy as np
 
-from surface_potential_analysis.axis.axis_like import BasisLike
+from surface_potential_analysis.basis.basis_like import BasisLike
 
 _B0Inv = TypeVar("_B0Inv", bound=BasisLike[Any, Any])
 

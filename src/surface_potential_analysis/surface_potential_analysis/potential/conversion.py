@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, TypeVar
 
-from surface_potential_analysis.axis.axis_like import (
+from surface_potential_analysis.basis.basis_like import (
     BasisWithLengthLike,
     convert_vector,
 )
@@ -11,8 +11,8 @@ from surface_potential_analysis.stacked_basis.conversion import (
 )
 
 if TYPE_CHECKING:
-    from surface_potential_analysis.axis.axis import FundamentalPositionBasis
-    from surface_potential_analysis.axis.stacked_axis import StackedBasisLike
+    from surface_potential_analysis.basis.basis import FundamentalPositionBasis
+    from surface_potential_analysis.basis.stacked_basis import StackedBasisLike
     from surface_potential_analysis.potential.potential import Potential
 
     _SB0 = TypeVar("_SB0", bound=StackedBasisLike[*tuple[Any, ...]])

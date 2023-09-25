@@ -12,10 +12,10 @@ from typing import (
 
 import numpy as np
 
-from surface_potential_analysis.axis.axis import (
+from surface_potential_analysis.basis.basis import (
     FundamentalPositionBasis,
 )
-from surface_potential_analysis.axis.util import (
+from surface_potential_analysis.basis.util import (
     BasisUtil,
 )
 from surface_potential_analysis.util.util import (
@@ -24,8 +24,11 @@ from surface_potential_analysis.util.util import (
 )
 
 if TYPE_CHECKING:
-    from surface_potential_analysis.axis.axis_like import BasisLike, BasisWithLengthLike
-    from surface_potential_analysis.axis.stacked_axis import (
+    from surface_potential_analysis.basis.basis_like import (
+        BasisLike,
+        BasisWithLengthLike,
+    )
+    from surface_potential_analysis.basis.stacked_basis import (
         StackedBasisLike,
     )
     from surface_potential_analysis.types import (

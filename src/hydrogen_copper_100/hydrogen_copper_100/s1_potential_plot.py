@@ -3,8 +3,8 @@ from __future__ import annotations
 import matplotlib.pyplot as plt
 import numpy as np
 import scipy.constants
-from surface_potential_analysis.axis.plot import plot_explicit_basis_states_x
-from surface_potential_analysis.axis.util import BasisUtil
+from surface_potential_analysis.basis.plot import plot_explicit_basis_states_x
+from surface_potential_analysis.basis.util import BasisUtil
 from surface_potential_analysis.potential.plot import (
     plot_potential_1d_x2_comparison_100,
     plot_potential_2d_x,

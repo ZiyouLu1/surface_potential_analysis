@@ -4,11 +4,11 @@ from typing import TYPE_CHECKING, Any, Literal, TypeVar, cast
 
 import numpy as np
 
-from surface_potential_analysis.axis.stacked_axis import (
+from surface_potential_analysis.basis.stacked_basis import (
     StackedBasis,
     StackedBasisLike,
 )
-from surface_potential_analysis.axis.util import BasisUtil
+from surface_potential_analysis.basis.util import BasisUtil
 from surface_potential_analysis.stacked_basis.build import (
     fundamental_stacked_basis_from_shape,
 )
@@ -31,13 +31,13 @@ from surface_potential_analysis.wavepacket.wavepacket import (
 )
 
 if TYPE_CHECKING:
-    from surface_potential_analysis.axis.axis import (
+    from surface_potential_analysis.basis.basis import (
         FundamentalBasis,
         FundamentalTransformedPositionBasis,
     )
-    from surface_potential_analysis.axis.axis_like import (
-        AxisWithLengthLike3d,
+    from surface_potential_analysis.basis.basis_like import (
         BasisLike,
+        BasisWithLengthLike3d,
     )
     from surface_potential_analysis.state_vector.state_vector import (
         StateVector,
@@ -49,7 +49,7 @@ if TYPE_CHECKING:
     _NS0Inv = TypeVar("_NS0Inv", bound=int)
     _NS1Inv = TypeVar("_NS1Inv", bound=int)
 
-    _A3d2Inv = TypeVar("_A3d2Inv", bound=AxisWithLengthLike3d[Any, Any])
+    _A3d2Inv = TypeVar("_A3d2Inv", bound=BasisWithLengthLike3d[Any, Any])
 
     _SB1 = TypeVar("_SB1", bound=StackedBasisLike[*tuple[Any, ...]])
     _MB0 = TypeVar("_MB0", bound=FundamentalTransformedPositionBasis[Any, Any])
@@ -112,10 +112,14 @@ def furl_eigenstate(
 
     basis = get_furled_basis(eigenstate["basis"], shape)
     return {
-        "basis": stacked_basis_as_fundamental_momentum_basis(basis),  # type: ignore[typeddict-item]
-        "list_basis": fundamental_stacked_basis_from_shape(shape),  # type: ignore[typeddict-item]
+        "basis": StackedBasis(
+            fundamental_stacked_basis_from_shape(shape),
+            stacked_basis_as_fundamental_momentum_basis(
+                basis
+            ),  # type: ignore z ax is wrong here
+        ),
         "data": flattened * np.sqrt(ns0 * ns1),
-        "eigenvalues": np.zeros(flattened.shape[0:2]),
+        "eigenvalue": np.zeros(flattened.shape[0:2]),
     }
 
 

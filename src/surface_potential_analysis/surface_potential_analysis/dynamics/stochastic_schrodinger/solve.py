@@ -7,9 +7,12 @@ import qutip
 import qutip.ui
 import scipy.sparse
 
-from surface_potential_analysis.axis.axis import FundamentalBasis
-from surface_potential_analysis.axis.stacked_axis import StackedBasis, StackedBasisLike
-from surface_potential_analysis.axis.util import BasisUtil
+from surface_potential_analysis.basis.basis import FundamentalBasis
+from surface_potential_analysis.basis.stacked_basis import (
+    StackedBasis,
+    StackedBasisLike,
+)
+from surface_potential_analysis.basis.util import BasisUtil
 from surface_potential_analysis.dynamics.tunnelling_basis import (
     get_basis_from_shape,
 )
@@ -18,12 +21,12 @@ from surface_potential_analysis.dynamics.util import build_hop_operator, get_hop
 if TYPE_CHECKING:
     from collections.abc import Callable
 
-    from surface_potential_analysis.axis.time_axis_like import EvenlySpacedTimeBasis
+    from surface_potential_analysis.basis.time_basis_like import EvenlySpacedTimeBasis
     from surface_potential_analysis.dynamics.incoherent_propagation.tunnelling_matrix import (
         TunnellingAMatrix,
     )
     from surface_potential_analysis.dynamics.tunnelling_basis import (
-        TunnellingSimulationBandsAxis,
+        TunnellingSimulationBandsBasis,
         TunnellingSimulationBasis,
     )
     from surface_potential_analysis.operator.operator import SingleBasisOperator
@@ -50,12 +53,12 @@ def get_collapse_operators_from_a_matrix(
     Parameters
     ----------
     shape : tuple[_L0Inv, _L1Inv]
-    bands_axis : TunnellingSimulationBandsAxis[_L2Inv]
+    bands_axis : TunnellingSimulationBandsBasis[_L2Inv]
     a_function : Callable[ [ int, int, tuple[int, int], tuple[int, int], ], float, ]
 
     Returns
     -------
-    list[SingleBasisOperator[ tuple[ FundamentalAxis[_L0Inv], FundamentalAxis[_L1Inv], TunnellingSimulationBandsAxis[_L2Inv]]]]
+    list[SingleBasisOperator[ tuple[ FundamentalBasis[_L0Inv], FundamentalBasis[_L1Inv], TunnellingSimulationBandsBasis[_L2Inv]]]]
     """
     np.fill_diagonal(matrix["array"], 0)
     return [
@@ -82,12 +85,12 @@ def get_simplified_collapse_operators_from_a_matrix(
     Parameters
     ----------
     shape : tuple[_L0Inv, _L1Inv]
-    bands_axis : TunnellingSimulationBandsAxis[_L2Inv]
+    bands_axis : TunnellingSimulationBandsBasis[_L2Inv]
     a_function : Callable[ [ int, int, tuple[int, int], tuple[int, int], ], float, ]
 
     Returns
     -------
-    list[SingleBasisOperator[ tuple[ FundamentalAxis[_L0Inv], FundamentalAxis[_L1Inv], TunnellingSimulationBandsAxis[_L2Inv]]]]
+    list[SingleBasisOperator[ tuple[ FundamentalBasis[_L0Inv], FundamentalBasis[_L1Inv], TunnellingSimulationBandsBasis[_L2Inv]]]]
     """
     util = BasisUtil(matrix["basis"])
     (n_x1, n_x2, n_bands) = util.shape
@@ -116,7 +119,7 @@ def get_simplified_collapse_operators_from_a_matrix(
 
 def get_collapse_operators_from_function(
     shape: tuple[_L0Inv, _L1Inv],
-    bands_axis: TunnellingSimulationBandsAxis[_L2Inv],
+    bands_axis: TunnellingSimulationBandsBasis[_L2Inv],
     a_function: Callable[
         [
             int,
@@ -131,7 +134,7 @@ def get_collapse_operators_from_function(
         StackedBasisLike[
             FundamentalBasis[_L0Inv],
             FundamentalBasis[_L1Inv],
-            TunnellingSimulationBandsAxis[_L2Inv],
+            TunnellingSimulationBandsBasis[_L2Inv],
         ]
     ]
 ]:
@@ -141,19 +144,19 @@ def get_collapse_operators_from_function(
     Parameters
     ----------
     shape : tuple[_L0Inv, _L1Inv]
-    bands_axis : TunnellingSimulationBandsAxis[_L2Inv]
+    bands_axis : TunnellingSimulationBandsBasis[_L2Inv]
     a_function : Callable[ [ int, int, tuple[int, int], tuple[int, int], ], float, ]
 
     Returns
     -------
-    list[SingleBasisOperator[ tuple[ FundamentalAxis[_L0Inv], FundamentalAxis[_L1Inv], TunnellingSimulationBandsAxis[_L2Inv]]]]
+    list[SingleBasisOperator[ tuple[ FundamentalBasis[_L0Inv], FundamentalBasis[_L1Inv], TunnellingSimulationBandsBasis[_L2Inv]]]]
     """
     operators: list[
         SingleBasisOperator[
             StackedBasisLike[
                 FundamentalBasis[_L0Inv],
                 FundamentalBasis[_L1Inv],
-                TunnellingSimulationBandsAxis[_L2Inv],
+                TunnellingSimulationBandsBasis[_L2Inv],
             ]
         ]
     ] = []

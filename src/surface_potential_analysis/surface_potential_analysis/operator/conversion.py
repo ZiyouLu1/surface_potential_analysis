@@ -2,11 +2,11 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, TypeVar
 
-from surface_potential_analysis.axis.axis_like import convert_matrix
+from surface_potential_analysis.basis.basis_like import convert_matrix
 
 if TYPE_CHECKING:
-    from surface_potential_analysis.axis.axis_like import BasisLike
-    from surface_potential_analysis.axis.stacked_axis import StackedBasisLike
+    from surface_potential_analysis.basis.basis_like import BasisLike
+    from surface_potential_analysis.basis.stacked_basis import StackedBasisLike
     from surface_potential_analysis.operator.operator import (
         Operator,
     )

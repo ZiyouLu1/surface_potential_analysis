@@ -4,14 +4,14 @@ from typing import TYPE_CHECKING, Any, Generic, TypedDict, TypeVar
 
 import numpy as np
 
-from surface_potential_analysis.axis.axis_like import (
+from surface_potential_analysis.basis.basis_like import (
     BasisLike,
 )
-from surface_potential_analysis.axis.stacked_axis import (
+from surface_potential_analysis.basis.stacked_basis import (
     StackedBasis,
     StackedBasisLike,
 )
-from surface_potential_analysis.axis.util import (
+from surface_potential_analysis.basis.util import (
     BasisUtil,
 )
 
@@ -102,8 +102,7 @@ def sum_diagonal_operator_over_axes(
     )
     # TODO: this is just wrong
     return {
-        "basis": traced_basis,
-        "dual_basis": traced_basis,
+        "basis": StackedBasis(traced_basis, traced_basis),
         "data": np.sum(
             operator["data"].reshape(operator["basis"].shape), axis=axes
         ).reshape(-1),

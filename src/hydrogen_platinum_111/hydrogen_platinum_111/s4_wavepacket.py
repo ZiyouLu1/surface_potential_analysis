@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Literal
 
-from surface_potential_analysis.axis.evenly_spaced_basis import EvenlySpacedBasis
+from surface_potential_analysis.basis.evenly_spaced_basis import EvenlySpacedBasis
 from surface_potential_analysis.stacked_basis.build import (
     fundamental_stacked_basis_from_shape,
 )
@@ -25,12 +25,12 @@ if TYPE_CHECKING:
     from pathlib import Path
 
     import numpy as np
-    from surface_potential_analysis.axis.axis import (
+    from surface_potential_analysis.basis.basis import (
         ExplicitBasis,
         FundamentalBasis,
         FundamentalTransformedPositionBasis,
     )
-    from surface_potential_analysis.axis.stacked_axis import StackedBasisLike
+    from surface_potential_analysis.basis.stacked_basis import StackedBasisLike
     from surface_potential_analysis.operator import SingleBasisOperator
 
     _HydrogenPlatinumWavepacketList = WavepacketWithEigenvaluesList[

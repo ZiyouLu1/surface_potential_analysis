@@ -5,7 +5,8 @@ from typing import TYPE_CHECKING, Any, TypeVar
 import numpy as np
 from matplotlib import pyplot as plt
 from scipy.constants import Boltzmann
-from surface_potential_analysis.axis.time_axis_like import FundamentalTimeBasis
+from surface_potential_analysis.basis.stacked_basis import StackedBasis
+from surface_potential_analysis.basis.time_basis_like import FundamentalTimeBasis
 from surface_potential_analysis.dynamics.incoherent_propagation.eigenstates import (
     calculate_tunnelling_simulation_state,
 )
@@ -63,7 +64,7 @@ def build_hamiltonian_from_wavepackets(
         sample_shape = wavepacket["basis"][0].shape
         h = pad_ft_points(
             np.fft.fftn(
-                wavepacket["eigenvalues"].reshape(sample_shape),
+                wavepacket["eigenvalue"].reshape(sample_shape),
                 norm="ortho",
             ),
             (3, 3, 1),
@@ -72,7 +73,7 @@ def build_hamiltonian_from_wavepackets(
         for hop, hop_val in enumerate(h.ravel()):
             array[:, :, i, :, :, i] += hop_val * build_hop_operator(hop, (n_x1, n_x2))
     return {
-        "array": array.reshape(-1),
+        "data": array.reshape(-1),
         "basis": StackedBasis(basis, basis),
     }
 
@@ -94,7 +95,7 @@ def plot_expected_occupation_per_band(
     fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
 
     average_energy = np.average(
-        [wavepacket["eigenvalues"] for wavepacket in wavepackets], axis=1
+        [wavepacket["eigenvalue"] for wavepacket in wavepackets], axis=1
     )
     factors = np.exp(-average_energy / (temperature * Boltzmann))
     factors /= np.sum(factors)

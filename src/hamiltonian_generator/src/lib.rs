@@ -224,7 +224,7 @@ impl SurfaceHamiltonian {
     }
 }
 
-trait AxisLike {}
+
 
 struct SurfaceHamiltonian2 {
     resolution: EigenstateResolution,
