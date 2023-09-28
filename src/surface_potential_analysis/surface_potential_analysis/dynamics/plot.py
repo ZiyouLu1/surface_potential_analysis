@@ -16,7 +16,6 @@ if TYPE_CHECKING:
     from matplotlib.figure import Figure
     from matplotlib.lines import Line2D
 
-    from surface_potential_analysis.basis.basis_like import BasisLike
     from surface_potential_analysis.basis.stacked_basis import StackedBasisLike
     from surface_potential_analysis.basis.time_basis_like import (
         BasisWithTimeLike,
@@ -31,7 +30,7 @@ if TYPE_CHECKING:
     _B0Inv = TypeVar("_B0Inv", bound=BasisWithTimeLike[int, int])
     _B0StackedInv = TypeVar(
         "_B0StackedInv",
-        bound=StackedBasisLike[BasisLike[Any, Any], FundamentalTimeBasis[int]],
+        bound=StackedBasisLike[Any, FundamentalTimeBasis[int]],
     )
 
 

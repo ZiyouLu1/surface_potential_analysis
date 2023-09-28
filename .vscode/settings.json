@@ -65,6 +65,7 @@
     "ndarray",
     "ndenumerate",
     "ndim",
+    "ndimage",
     "ndindex",
     "ndk",
     "nrows",

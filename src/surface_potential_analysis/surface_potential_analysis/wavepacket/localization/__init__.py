@@ -22,8 +22,8 @@ from ._tight_binding import (
 from ._wannier90 import (
     Wannier90Options,
     get_localization_operator_wannier90,
+    get_localization_operator_wannier90_individual_bands,
     localize_wavepacket_wannier90,
-    localize_wavepacket_wannier90_sp_projections,
 )
 
 __all__ = [
@@ -40,7 +40,7 @@ __all__ = [
     "localize_tightly_bound_wavepacket_max_point",
     "localize_tightly_bound_wavepacket_two_point_max",
     "get_localization_operator_wannier90",
-    "localize_wavepacket_wannier90_sp_projections",
     "localize_wavepacket_wannier90",
+    "get_localization_operator_wannier90_individual_bands",
     "Wannier90Options",
 ]

@@ -14,6 +14,7 @@ from surface_potential_analysis.operator.operator_list import OperatorList
 if TYPE_CHECKING:
     from surface_potential_analysis.operator.operator import (
         DiagonalOperator,
+        SingleBasisDiagonalOperator,
     )
     from surface_potential_analysis.wavepacket.wavepacket import (
         WavepacketList,
@@ -86,11 +87,10 @@ def get_wavepacket_hamiltonian(
     }
 
 
-def get_localized_hamiltonian(
-    wavepackets: WavepacketWithEigenvaluesList[_B2, _SB1, _SB0],
+def get_localized_hamiltonian_from_eigenvalues(
+    hamiltonian: SingleBasisDiagonalOperator[StackedBasisLike[_B2, _SB1],],
     operator: LocalizationOperator[_SB1, _B1, _B2],
 ) -> OperatorList[_SB1, _B1, _B1]:
-    hamiltonian = get_wavepacket_hamiltonian(wavepackets)
     hamiltonian_stacked = hamiltonian["data"].reshape(*hamiltonian["basis"][0].shape)
     operator_stacked = operator["data"].reshape(-1, *operator["basis"][1].shape)
 
@@ -119,3 +119,11 @@ def get_localized_hamiltonian(
         ),
         "data": np.moveaxis(converted, -1, 0).reshape(-1),
     }
+
+
+def get_localized_wavepacket_hamiltonian(
+    wavepackets: WavepacketWithEigenvaluesList[_B2, _SB1, _SB0],
+    operator: LocalizationOperator[_SB1, _B1, _B2],
+) -> OperatorList[_SB1, _B1, _B1]:
+    hamiltonian = get_wavepacket_hamiltonian(wavepackets)
+    return get_localized_hamiltonian_from_eigenvalues(hamiltonian, operator)

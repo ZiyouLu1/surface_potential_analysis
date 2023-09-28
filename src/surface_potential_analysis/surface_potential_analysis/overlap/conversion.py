@@ -1,14 +1,19 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Literal, TypeVar
+from typing import TYPE_CHECKING, Any, Literal, TypeVar
 
 import numpy as np
 
+from surface_potential_analysis.basis.basis_like import (
+    BasisLike,
+    BasisWithLengthLike,
+    convert_vector,
+)
+from surface_potential_analysis.basis.stacked_basis import StackedBasis
 from surface_potential_analysis.stacked_basis.conversion import (
     stacked_basis_as_fundamental_momentum_basis,
     stacked_basis_as_fundamental_position_basis,
 )
-from surface_potential_analysis.util.interpolation import pad_ft_points
 
 if TYPE_CHECKING:
     from surface_potential_analysis.basis.basis import (
@@ -16,27 +21,54 @@ if TYPE_CHECKING:
         FundamentalTransformedPositionBasis,
     )
     from surface_potential_analysis.basis.stacked_basis import StackedBasisLike
-    from surface_potential_analysis.overlap.overlap import Overlap3d
+    from surface_potential_analysis.overlap.overlap import Overlap
 
-    _L0Inv = TypeVar("_L0Inv", bound=int)
-    _L1Inv = TypeVar("_L1Inv", bound=int)
-    _L2Inv = TypeVar("_L2Inv", bound=int)
+    _B0 = TypeVar("_B0", bound=BasisLike[Any, Any])
+    _B1 = TypeVar("_B1", bound=BasisLike[Any, Any])
+    _B2 = TypeVar("_B2", bound=BasisLike[Any, Any])
+    _B3 = TypeVar("_B3", bound=BasisLike[Any, Any])
+    _BL0 = TypeVar("_BL0", bound=BasisWithLengthLike[Any, Any, Literal[3]])
+
+
+def convert_overlap_to_basis(
+    overlap: Overlap[_B0, _B1, _B2], basis: _B3
+) -> Overlap[_B3, _B1, _B2]:
+    """
+    Convert the overlap to the given basis.
+
+    Note this just converts the list basis (ie not the wavepacket index basis).
+
+    Parameters
+    ----------
+    overlap : Overlap[_B0, _B1, _B2]
+    basis : _B3
+
+    Returns
+    -------
+    Overlap[_B3, _B1, _B2]
+    """
+    converted = convert_vector(
+        overlap["data"].reshape(overlap["basis"].shape),
+        overlap["basis"][0],
+        basis,
+        axis=0,
+    )
+    return {
+        "basis": StackedBasis(basis, overlap["basis"][1]),
+        "data": converted.reshape(-1),
+    }
 
 
 def convert_overlap_to_momentum_basis(
-    overlap: Overlap3d[
-        StackedBasisLike[
-            FundamentalPositionBasis[_L0Inv, Literal[3]],
-            FundamentalPositionBasis[_L1Inv, Literal[3]],
-            FundamentalPositionBasis[_L2Inv, Literal[3]],
-        ]
+    overlap: Overlap[
+        StackedBasisLike[*tuple[_BL0, ...]],
+        _B1,
+        _B2,
     ]
-) -> Overlap3d[
-    StackedBasisLike[
-        FundamentalTransformedPositionBasis[_L0Inv, Literal[3]],
-        FundamentalTransformedPositionBasis[_L1Inv, Literal[3]],
-        FundamentalTransformedPositionBasis[_L2Inv, Literal[3]],
-    ]
+) -> Overlap[
+    StackedBasisLike[*tuple[FundamentalTransformedPositionBasis[Any, Literal[3]], ...]],
+    _B1,
+    _B2,
 ]:
     """
     Convert an overlap from position basis to momentum.
@@ -55,28 +87,23 @@ def convert_overlap_to_momentum_basis(
         s=overlap["basis"].fundamental_shape,
         norm="forward",
     )
-    flattened = transformed.reshape(-1)
+    transformed.reshape(-1)
 
-    return {  # type: ignore fails to infer return type
-        "basis": stacked_basis_as_fundamental_momentum_basis(overlap["basis"]),
-        "data": flattened,
-    }
+    return convert_overlap_to_basis(
+        overlap, stacked_basis_as_fundamental_momentum_basis(overlap["basis"][0])
+    )
 
 
 def convert_overlap_to_position_basis(
-    overlap: Overlap3d[
-        StackedBasisLike[
-            FundamentalTransformedPositionBasis[_L0Inv, Literal[3]],
-            FundamentalTransformedPositionBasis[_L1Inv, Literal[3]],
-            FundamentalTransformedPositionBasis[_L2Inv, Literal[3]],
-        ]
+    overlap: Overlap[
+        StackedBasisLike[*tuple[_BL0, ...]],
+        _B1,
+        _B2,
     ]
-) -> Overlap3d[
-    StackedBasisLike[
-        FundamentalPositionBasis[_L0Inv, Literal[3]],
-        FundamentalPositionBasis[_L1Inv, Literal[3]],
-        FundamentalPositionBasis[_L2Inv, Literal[3]],
-    ]
+) -> Overlap[
+    StackedBasisLike[*tuple[FundamentalPositionBasis[Any, Any], ...]],
+    _B1,
+    _B2,
 ]:
     """
     Convert an overlap from momentum basis to position.
@@ -89,16 +116,6 @@ def convert_overlap_to_position_basis(
     -------
     Overlap[PositionStackedBasisLike[tuple[_L0Inv, _L1Inv, _L2Inv]]
     """
-    padded = pad_ft_points(
-        overlap["data"].reshape(overlap["basis"].shape),
-        s=overlap["basis"].fundamental_shape,
-        axes=(0, 1, 2),
+    return convert_overlap_to_basis(
+        overlap, stacked_basis_as_fundamental_position_basis(overlap["basis"][0])
     )
-    transformed = np.fft.fftn(
-        padded, axes=(0, 1, 2), s=overlap["basis"].fundamental_shape
-    )
-    flattened = transformed.reshape(-1)
-    return {  # type: ignore  fails to infer type
-        "basis": stacked_basis_as_fundamental_position_basis(overlap["basis"]),
-        "data": flattened,
-    }

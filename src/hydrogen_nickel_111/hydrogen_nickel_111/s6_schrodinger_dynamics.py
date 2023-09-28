@@ -1,10 +1,11 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, TypeVar
+from typing import TYPE_CHECKING, Any, Literal, TypeVar
 
 import numpy as np
 from matplotlib import pyplot as plt
 from scipy.constants import Boltzmann
+from surface_potential_analysis.basis.basis import FundamentalBasis
 from surface_potential_analysis.basis.stacked_basis import StackedBasis
 from surface_potential_analysis.basis.time_basis_like import FundamentalTimeBasis
 from surface_potential_analysis.dynamics.incoherent_propagation.eigenstates import (
@@ -26,6 +27,7 @@ from surface_potential_analysis.dynamics.stochastic_schrodinger.solve import (
     solve_stochastic_schrodinger_equation,
 )
 from surface_potential_analysis.dynamics.util import build_hop_operator
+from surface_potential_analysis.operator.operator import average_eigenvalues
 from surface_potential_analysis.probability_vector.plot import (
     plot_total_probability_against_time,
 )
@@ -37,20 +39,29 @@ from surface_potential_analysis.util.interpolation import pad_ft_points
 
 from hydrogen_nickel_111.s6_a_calculation import get_tunnelling_a_matrix_hydrogen
 
-from .s4_wavepacket import get_all_wavepackets_hydrogen
+from .s4_wavepacket import (
+    get_wannier90_localized_split_bands_hamiltonian_hydrogen,
+    get_wavepacket_hamiltonian_hydrogen,
+)
 
 if TYPE_CHECKING:
     from matplotlib.axes import Axes
     from matplotlib.figure import Figure
+    from surface_potential_analysis.basis.basis_like import BasisLike
     from surface_potential_analysis.dynamics.tunnelling_basis import (
         TunnellingSimulationBasis,
     )
-    from surface_potential_analysis.operator.operator import SingleBasisOperator
+    from surface_potential_analysis.operator.operator import (
+        SingleBasisDiagonalOperator,
+        SingleBasisOperator,
+    )
+    from surface_potential_analysis.operator.operator_list import OperatorList
     from surface_potential_analysis.state_vector.state_vector import StateVector
     from surface_potential_analysis.wavepacket.wavepacket import (
         WavepacketWithEigenvalues,
     )
 
+    _B0 = TypeVar("_B0", bound=BasisLike[Any, Any])
     _B0Inv = TypeVar("_B0Inv", bound=TunnellingSimulationBasis[Any, Any, Any])
 
 
@@ -78,26 +89,68 @@ def build_hamiltonian_from_wavepackets(
     }
 
 
-def build_hamiltonian_hydrogen(
+def get_hop_hamiltonian() -> (
+    OperatorList[
+        StackedBasis[
+            FundamentalBasis[Literal[3]],
+            FundamentalBasis[Literal[3]],
+            FundamentalBasis[Literal[1]],
+        ],
+        FundamentalBasis[int],
+        FundamentalBasis[int],
+    ]
+):
+    hamiltonian = get_wannier90_localized_split_bands_hamiltonian_hydrogen()
+    stacked = hamiltonian["data"].reshape(*hamiltonian["basis"][0].shape, -1)
+    # Convert the list basis into 'position basis'
+    transformed = np.fft.ifftn(stacked, norm="ortho")
+    # TODO: check that coherent propagation in next neighbor unit cell is small
+    # ie is this truncation valid??
+    truncated = pad_ft_points(transformed, (3, 3, 1), (0, 1, 2))
+    return {
+        "basis": StackedBasis(
+            StackedBasis(
+                FundamentalBasis[Literal[3]](3),
+                FundamentalBasis[Literal[3]](3),
+                FundamentalBasis[Literal[1]](1),
+            ),
+            hamiltonian["basis"][1],
+        ),
+        "data": truncated.reshape(-1),
+    }
+
+
+def get_coherent_hamiltonian(
     basis: _B0Inv,
 ) -> SingleBasisOperator[_B0Inv]:
-    return build_hamiltonian_from_wavepackets(
-        get_all_wavepackets_hydrogen()[: basis[2].fundamental_n], basis
-    )
+    get_wannier90_localized_split_bands_hamiltonian_hydrogen()
+    hop_hamiltonian = get_hop_hamiltonian()
+    (n_x1, n_x2, n_bands) = basis.shape
+    assert hop_hamiltonian["basis"][1][0].n == n_bands
+
+    hop_hamiltonian_stacked = hop_hamiltonian["data"].reshape(9, n_bands, n_bands)
+    data = np.zeros((*basis.shape, *basis.shape), np.complex_)
+    for n_0 in range(n_bands):
+        for n_1 in range(n_bands):
+            for hop in range(9):
+                hop_val = hop_hamiltonian_stacked[hop, n_0, n_1]
+                data[:, :, n_0, :, :, n_1] += hop_val * build_hop_operator(
+                    hop, (n_x1, n_x2)
+                )
+
+    return {"basis": StackedBasis(basis, basis), "data": data.reshape(-1)}
 
 
 def plot_expected_occupation_per_band(
     temperature: float,
-    wavepackets: list[WavepacketWithEigenvalues[Any, Any]],
+    eigenvalues: SingleBasisDiagonalOperator[_B0],
     *,
     ax: Axes | None = None,
 ) -> tuple[Figure, Axes]:
     fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
 
-    average_energy = np.average(
-        [wavepacket["eigenvalue"] for wavepacket in wavepackets], axis=1
-    )
-    factors = np.exp(-average_energy / (temperature * Boltzmann))
+    energy = eigenvalues["data"]
+    factors = np.exp(-energy / (temperature * Boltzmann))
     factors /= np.sum(factors)
     for factor in factors:
         ax.axhline(y=factor)  # cSpell:disable-line
@@ -109,8 +162,10 @@ def plot_expected_occupation_per_band_hydrogen(
     *,
     ax: Axes | None = None,
 ) -> tuple[Figure, Axes]:
-    wavepackets = get_all_wavepackets_hydrogen()
-    return plot_expected_occupation_per_band(temperature, wavepackets, ax=ax)
+    eigenvalues = get_wavepacket_hamiltonian_hydrogen(8)
+
+    band_average = average_eigenvalues(eigenvalues, axis=(1,))
+    return plot_expected_occupation_per_band(temperature, band_average, ax=ax)
 
 
 def plot_occupation_on_surface_hydrogen() -> None:
@@ -120,11 +175,11 @@ def plot_occupation_on_surface_hydrogen() -> None:
 
     collapse_operators = get_simplified_collapse_operators_from_a_matrix(resampled)
 
-    hamiltonian = build_hamiltonian_hydrogen(resampled["basis"])
+    hamiltonian = get_coherent_hamiltonian(resampled["basis"])
 
     initial_state: StateVector[Any] = {
         "basis": resampled["basis"],
-        "data": np.zeros(hamiltonian["array"].shape[0]),
+        "data": np.zeros((hamiltonian["basis"][0].n,), dtype=np.complex_),
     }
     initial_state["data"][0] = 1
     times = FundamentalTimeBasis(20000, 5e-10)
@@ -158,12 +213,12 @@ def plot_incoherent_occupation_comparison_hydrogen() -> None:
 
     collapse_operators = get_simplified_collapse_operators_from_a_matrix(resampled)
 
-    hamiltonian = build_hamiltonian_hydrogen(resampled["basis"])
-    hamiltonian["array"] = np.zeros_like(hamiltonian["array"])
+    hamiltonian = get_coherent_hamiltonian(resampled["basis"])
+    hamiltonian["data"] = np.zeros_like(hamiltonian["data"])
 
     initial_state: StateVector[Any] = {
         "basis": resampled["basis"],
-        "data": np.zeros(hamiltonian["array"].shape[0]),
+        "data": np.zeros(hamiltonian["basis"][0].n, dtype=np.complex_),
     }
     initial_state["data"][0] = 1
     times = FundamentalTimeBasis(20000, 5e-10)

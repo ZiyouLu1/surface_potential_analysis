@@ -34,7 +34,7 @@ if TYPE_CHECKING:
         StateVectorList,
     )
 
-    _AX0Inv = TypeVar("_AX0Inv", bound=EvenlySpacedTimeBasis[Any, Any])
+    _AX0Inv = TypeVar("_AX0Inv", bound=EvenlySpacedTimeBasis[Any, Any, Any])
 
 
 @npy_cached(

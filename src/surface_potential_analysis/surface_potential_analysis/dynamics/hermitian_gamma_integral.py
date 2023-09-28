@@ -101,13 +101,15 @@ def calculate_hermitian_gamma_occupation_integral(
     float
     """
     d_k = 2 * boltzmann_energy * electron_mass / (hbar**2 * k_f)
-    return scipy.integrate.quad(  # type: ignore[no-any-return]
-        lambda k: get_hermitian_gamma_occupation_integrand(
+
+    def f(
+        k: np.ndarray[_S0Inv, np.dtype[np.float_]]
+    ) -> np.ndarray[_S0Inv, np.dtype[np.float_]]:
+        return get_hermitian_gamma_occupation_integrand(
             k, omega=omega, k_f=k_f, boltzmann_energy=boltzmann_energy
-        ),
-        k_f - 20 * d_k,
-        k_f + 20 * d_k,
-    )[0]
+        )
+
+    return scipy.integrate.quad(f, k_f - 20 * d_k, k_f + 20 * d_k)[0]  # type: ignore unknown return
 
 
 def _calculate_real_gamma_prefactor(k_f: float) -> float:
@@ -182,11 +184,13 @@ def calculate_hermitian_gamma_potential_integral(
     -------
     float
     """
-    return _complex_quad(  # type: ignore[no-any-return]
-        lambda k: _get_hopping_potential_integrand(k, k_f=k_f, overlap=overlap),
-        0,
-        np.pi,
-    )[0]
+
+    def f(
+        k: np.ndarray[_S0Inv, np.dtype[np.float_]]
+    ) -> np.ndarray[_S0Inv, np.dtype[np.complex_]]:
+        return _get_hopping_potential_integrand(k, k_f=k_f, overlap=overlap)
+
+    return _complex_quad(f, 0, np.pi)[0]
 
 
 def calculate_real_gamma_integral(

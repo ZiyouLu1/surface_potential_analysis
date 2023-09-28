@@ -41,6 +41,7 @@ _S0Inv = TypeVar("_S0Inv", bound=tuple[int, ...])
 _B0_co = TypeVar("_B0_co", bound=BasisLike[Any, Any], covariant=True)
 _B0Inv = TypeVar("_B0Inv", bound=BasisLike[Any, Any])
 _BL0Inv = TypeVar("_BL0Inv", bound=BasisWithLengthLike[Any, Any, Any])
+_BL0_co = TypeVar("_BL0_co", bound=BasisWithLengthLike[Any, Any, Any], covariant=True)
 _B = TypeVarTuple("_B")
 _TS = TypeVarTuple("_TS")
 
@@ -339,19 +340,19 @@ class BasisUtil(BasisLike[Any, Any], Generic[_B0_co]):
 
     @overload
     def get_x_points_at_index(
-        self: BasisUtil[StackedBasisLike[*tuple[_BL0Inv, ...]]], idx: SingleIndexLike
+        self: BasisUtil[StackedBasisLike[*tuple[Any, ...]]], idx: SingleIndexLike
     ) -> np.ndarray[tuple[int], np.dtype[np.float_]]:
         ...
 
     @overload
     def get_x_points_at_index(
-        self: BasisUtil[StackedBasisLike[*tuple[_BL0Inv, ...]]],
+        self: BasisUtil[StackedBasisLike[*tuple[Any, ...]]],
         idx: ArrayIndexLike[Unpack[_TS]],
     ) -> np.ndarray[tuple[int, Unpack[_TS]], np.dtype[np.float_]]:
         ...
 
     def get_x_points_at_index(
-        self: BasisUtil[StackedBasisLike[*tuple[_BL0Inv, ...]]],
+        self: BasisUtil[StackedBasisLike[*tuple[_BL0_co, ...]]],
         idx: ArrayIndexLike[Unpack[_TS]] | SingleIndexLike,
     ) -> (
         np.ndarray[tuple[int, Unpack[_TS]], np.dtype[np.float_]]

@@ -26,7 +26,7 @@ from surface_potential_analysis.wavepacket.localization import (
     localize_wavepacket_projection,
 )
 from surface_potential_analysis.wavepacket.localization.localization_operator import (
-    get_localized_hamiltonian,
+    get_localized_wavepacket_hamiltonian,
     get_localized_wavepackets,
     get_wavepacket_hamiltonian,
 )
@@ -206,7 +206,7 @@ def get_localized_hamiltonian_hydrogen(
 ) -> OperatorList[_HCuSampleBasis, FundamentalBasis[int], FundamentalBasis[int]]:
     wavepackets = get_all_wavepackets_hydrogen()
     operator = get_localization_operator_hydrogen(n_samples)
-    return get_localized_hamiltonian(
+    return get_localized_wavepacket_hamiltonian(
         get_wavepackets_with_eigenvalues(wavepackets, slice(n_samples)), operator
     )
 

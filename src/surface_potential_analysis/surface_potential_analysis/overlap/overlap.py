@@ -1,28 +1,57 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Generic, TypedDict, TypeVar
+from typing import TYPE_CHECKING, Any, Literal, TypeVar
 
-from surface_potential_analysis.basis.basis_like import BasisWithLengthLike3d
-from surface_potential_analysis.basis.stacked_basis import StackedBasisLike
+from surface_potential_analysis.basis.basis import FundamentalBasis
+from surface_potential_analysis.basis.basis_like import BasisLike
+from surface_potential_analysis.basis.stacked_basis import StackedBasis
+from surface_potential_analysis.basis.util import BasisUtil
+from surface_potential_analysis.operator.operator_list import OperatorList
 
 if TYPE_CHECKING:
-    import numpy as np
+    from surface_potential_analysis.types import SingleIndexLike
 
     pass
 
-Overlap3dBasis = StackedBasisLike[
-    BasisWithLengthLike3d[Any, Any],
-    BasisWithLengthLike3d[Any, Any],
-    BasisWithLengthLike3d[Any, Any],
+_B0 = TypeVar("_B0", bound=BasisLike[Any, Any])
+_B1 = TypeVar("_B1", bound=BasisLike[Any, Any])
+_B2 = TypeVar("_B2", bound=BasisLike[Any, Any])
+
+Overlap = OperatorList[_B0, _B1, _B2]
+SingleOverlap = Overlap[
+    _B0, BasisLike[Literal[1], Literal[1]], BasisLike[Literal[1], Literal[1]]
 ]
-_B3d0_co = TypeVar("_B3d0_co", bound=StackedBasisLike[*tuple[Any, ...]], covariant=True)
 
 
-class Overlap3d(TypedDict, Generic[_B3d0_co]):
-    """Represents the result of an overlap calculation of two wavepackets."""
+def get_single_overlap(
+    overlap: Overlap[_B0, Any, Any], idx: SingleIndexLike
+) -> SingleOverlap[_B0]:
+    """
+    Select a specific overlap from the overlap operator.
 
-    basis: _B3d0_co
-    data: np.ndarray[tuple[int], np.dtype[np.complex_]]
+    Parameters
+    ----------
+    overlap : Overlap[_B0, Any, Any]
+    idx : SingleIndexLike
+
+    Returns
+    -------
+    SingleOverlap[_B0]
+    """
+    idx = (
+        BasisUtil(overlap["basis"][1]).get_flat_index(idx)
+        if isinstance(idx, tuple)
+        else idx
+    )
+    return {
+        "basis": StackedBasis(
+            overlap["basis"][0],
+            StackedBasis(
+                FundamentalBasis[Literal[1]](1), FundamentalBasis[Literal[1]](1)
+            ),
+        ),
+        "data": overlap["data"].reshape(overlap["basis"].shape)[:, idx],
+    }
 
 
 def get_overlap_cache_filename(

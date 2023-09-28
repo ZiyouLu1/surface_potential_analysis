@@ -17,7 +17,6 @@ from surface_potential_analysis.dynamics.plot import (
 from surface_potential_analysis.operator.operator import sum_diagonal_operator_over_axes
 
 from .s6_a_calculation import (
-    get_tunnelling_a_matrix_deuterium,
     get_tunnelling_a_matrix_hydrogen,
 )
 
@@ -62,38 +61,6 @@ def get_equilibrium_state_on_surface_hydrogen() -> None:
 
 def plot_occupation_on_surface_hydrogen() -> None:
     a_matrix = get_tunnelling_a_matrix_hydrogen((25, 25), 6, 150)
-    m_matrix = get_tunnelling_m_matrix(a_matrix)
-    initial_state = get_initial_pure_density_matrix_for_basis(m_matrix["basis"])
-    times = np.linspace(0, 9e-10, 1000)
-    state = calculate_tunnelling_simulation_state(m_matrix, initial_state, times)
-    probabilities = density_matrix_list_as_probabilities(state)
-
-    fig, _, _ = plot_probability_per_band(probabilities)
-    fig.show()
-
-    fig, _, _ = plot_probability_per_site(probabilities)
-    fig.show()
-
-    m_matrix_2_band = get_tunnelling_m_matrix(a_matrix, 2)
-    initial_state_2_band = get_initial_pure_density_matrix_for_basis(
-        m_matrix_2_band["basis"]
-    )
-    times = np.linspace(0, 9e-10, 1000)
-    state = calculate_tunnelling_simulation_state(
-        m_matrix_2_band, initial_state_2_band, times
-    )
-    probabilities = density_matrix_list_as_probabilities(state)
-
-    fig, _, _ = plot_probability_per_band(probabilities)
-    fig.show()
-
-    fig, _, _ = plot_probability_per_site(probabilities)
-    fig.show()
-    input()
-
-
-def plot_occupation_on_surface_deuterium() -> None:
-    a_matrix = get_tunnelling_a_matrix_deuterium((25, 25), 6, 150)
     m_matrix = get_tunnelling_m_matrix(a_matrix)
     initial_state = get_initial_pure_density_matrix_for_basis(m_matrix["basis"])
     times = np.linspace(0, 9e-10, 1000)

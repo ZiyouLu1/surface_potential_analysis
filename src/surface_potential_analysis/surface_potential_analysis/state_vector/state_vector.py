@@ -77,7 +77,7 @@ def calculate_normalization(
 def calculate_inner_product(
     state_0: StateVector[_B0Inv],
     state_1: StateDualVector[_B0Inv],
-) -> np.complex_:
+) -> complex:
     """
     Calculate the inner product of two states.
 
@@ -90,4 +90,4 @@ def calculate_inner_product(
     -------
     np.complex_
     """
-    return np.tensordot(state_1["data"], state_0["data"], axes=(0, 0))  # type: ignore[no-any-return]
+    return np.tensordot(state_1["data"], state_0["data"], axes=(0, 0)).item(0)

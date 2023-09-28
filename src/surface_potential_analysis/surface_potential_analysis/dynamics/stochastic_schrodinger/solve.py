@@ -174,6 +174,7 @@ def get_collapse_operators_from_function(
                 j = np.ravel_multi_index((i1, j1, n1), (*shape, n_bands), mode="wrap")
 
                 data = a_function(int(n0), n1, (0, 0), (d1_stacked[0], d1_stacked[1]))
+                # TODO: use a single point basis, and a normal np.array...
                 operators.append(
                     {
                         "basis": StackedBasis(basis, basis),
@@ -255,8 +256,9 @@ def solve_stochastic_schrodinger_equation(
         progress_bar=qutip.ui.EnhancedTextProgressBar(),
     )
     return {  # type: ignore[return-value]
-        "list_basis": StackedBasis(FundamentalBasis(n_trajectories), times),
-        "basis": hamiltonian["basis"],
+        "basis": StackedBasis(
+            StackedBasis(FundamentalBasis(n_trajectories), times), hamiltonian["basis"]
+        ),
         "data": np.array(
             [
                 np.asarray([state.data.toarray().reshape(-1) for state in trajectory])

@@ -30,7 +30,6 @@ from hydrogen_nickel_111.s4_wavepacket import (
     get_hydrogen_energy_difference,
 )
 from hydrogen_nickel_111.s5_overlap import (
-    get_overlap_deuterium,
     get_overlap_hydrogen,
 )
 from hydrogen_nickel_111.s5_overlap_analysis import get_angle_averaged_overlap

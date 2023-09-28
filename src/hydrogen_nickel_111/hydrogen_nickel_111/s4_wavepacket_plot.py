@@ -10,28 +10,22 @@ from surface_potential_analysis.state_vector.plot import (
     plot_state_along_path,
 )
 from surface_potential_analysis.wavepacket.get_eigenstate import (
-    get_tight_binding_state,
     get_wavepacket_state_vector,
-)
-from surface_potential_analysis.wavepacket.localization._tight_binding import (
-    get_wavepacket_two_points,
 )
 from surface_potential_analysis.wavepacket.plot import (
     animate_wavepacket_3d_x,
     plot_wavepacket_2d_k,
-    plot_wavepacket_2d_x,
     plot_wavepacket_eigenvalues_2d_k,
     plot_wavepacket_eigenvalues_2d_x,
     plot_wavepacket_sample_frequencies,
 )
 from surface_potential_analysis.wavepacket.wavepacket import (
-    get_unfurled_basis,
+    get_wavepacket,
+    wavepacket_list_into_iter,
 )
 
 from .s4_wavepacket import (
-    get_single_point_projection_localized_wavepacket_hydrogen,
-    get_tight_binding_projection_localized_wavepacket_hydrogen,
-    get_two_point_localized_wavepacket_hydrogen,
+    get_wannier90_localized_split_bands_wavepacket_hydrogen,
     get_wannier90_localized_wavepacket_hydrogen,
     get_wavepacket_hydrogen,
 )
@@ -123,33 +117,14 @@ def plot_wavepacket_points_john() -> None:
 
 
 def animate_nickel_wavepacket() -> None:
-    wavepacket = get_two_point_localized_wavepacket_hydrogen(0)
+    wavepackets = get_wannier90_localized_split_bands_wavepacket_hydrogen()
+    wavepacket = get_wavepacket(wavepackets, 0)
     fig, _, _anim0 = animate_wavepacket_3d_x(wavepacket, scale="symlog")
     fig.show()
 
-    wavepacket = get_two_point_localized_wavepacket_hydrogen(1)
+    wavepacket = get_wavepacket(wavepackets, 1)
     fig, _, _anim1 = animate_wavepacket_3d_x(wavepacket, scale="symlog")
     fig.show()
-    input()
-
-
-def plot_two_point_wavepacket_with_idx() -> None:
-    offset = (2, 1)
-    for band in range(6):
-        normalized = get_two_point_localized_wavepacket_hydrogen(band, offset)
-
-        fig, ax = plt.subplots()
-
-        idx0, idx1 = get_wavepacket_two_points(normalized, offset)
-        unfurled_basis = get_unfurled_basis(normalized["basis"])
-        plot_fundamental_x_at_index_projected_2d(unfurled_basis, idx0, (0, 1), ax=ax)
-        plot_fundamental_x_at_index_projected_2d(unfurled_basis, idx1, (0, 1), ax=ax)
-
-        plot_wavepacket_2d_x(normalized, idx=(idx0[2],), measure="abs", ax=ax)
-
-        fig.show()
-        ax.set_title(f"Plot of abs(wavefunction) for ix2={idx0[2]}")
-        save_figure(fig, f"./wavepacket/wavepacket_{band}.png")
     input()
 
 
@@ -197,66 +172,21 @@ def plot_phase_around_origin() -> None:
     input()
 
 
-def plot_tight_binding_projection_localized_wavepacket_hydrogen() -> None:
-    for band in [4]:
-        wavepacket = get_tight_binding_projection_localized_wavepacket_hydrogen(band)
-        tight_binding_state = get_tight_binding_state(wavepacket)
-        fig, _, _ = plot_state_2d_x(tight_binding_state, (0, 1), scale="symlog")
-        fig.show()
-
-        fig, _, _ = plot_wavepacket_2d_x(wavepacket, (0, 1), scale="symlog")
-        fig.show()
-        input()
-
-
-def plot_two_point_localized_wavepacket_hydrogen() -> None:
-    for band in [0, 3]:
-        wavepacket = get_two_point_localized_wavepacket_hydrogen(band)
-        fig, _, _ = plot_wavepacket_2d_x(wavepacket, (0, 1), scale="symlog")
-        fig.show()
-        input()
-
-
-def plot_single_point_projection_localized_wavepacket_hydrogen() -> None:
-    for band in [3]:
-        wavepacket = get_single_point_projection_localized_wavepacket_hydrogen(band)
-        vectors = wavepacket["data"].reshape(12, 12, 1, -1)
-        vectors[::2, ::] = 0
-        vectors[::, ::2] = 0
-        wavepacket["data"] = vectors.reshape(12 * 12 * 1, -1)
-        fig, _, _ = plot_wavepacket_2d_x(
-            wavepacket, (0, 1), scale="symlog", measure="real"
-        )
-        fig.show()
-
-        fig, _, _ = plot_wavepacket_2d_x(
-            wavepacket, (1, 2), scale="symlog", measure="real"
-        )
-        fig.show()
-
-        fig, _, _ = plot_wavepacket_2d_k(
-            wavepacket, (1, 0), scale="symlog", measure="real"
-        )
-        fig.show()
-
-        fig, _, _ = plot_wavepacket_2d_k(
-            wavepacket, (2, 1), scale="symlog", measure="real"
-        )
-        fig.show()
-
-        fig, _, _ = plot_wavepacket_2d_k(
-            wavepacket, (0, 2), scale="symlog", measure="real"
-        )
-        fig.show()
-        input()
-
-
 def plot_wannier90_localized_wavepacket_hydrogen() -> None:
-    for band in [0, 1, 2, 3, 4, 5]:
-        wavepacket = get_wannier90_localized_wavepacket_hydrogen(band)
-        fig, _, _ = plot_wavepacket_2d_x(wavepacket, (0, 1), scale="symlog")
+    wavepackets = get_wannier90_localized_split_bands_wavepacket_hydrogen()
+    for wavepacket in wavepacket_list_into_iter(wavepackets):
+        fig, _, _ = plot_wavepacket_2d_k(wavepacket, (0, 1), scale="linear")
         fig.show()
 
-        fig, _, _ = plot_wavepacket_2d_x(wavepacket, (1, 2), scale="symlog")
+        fig, _, _ = plot_wavepacket_2d_k(wavepacket, (1, 2), scale="symlog")
         fig.show()
-        input()
+    input()
+
+    wavepackets = get_wannier90_localized_wavepacket_hydrogen(0, 8)
+    for wavepacket in wavepacket_list_into_iter(wavepackets):
+        fig, _, _ = plot_wavepacket_2d_k(wavepacket, (0, 1), scale="linear")
+        fig.show()
+
+        fig, _, _ = plot_wavepacket_2d_k(wavepacket, (1, 2), scale="linear")
+        fig.show()
+    input()

@@ -14,10 +14,11 @@ from surface_potential_analysis.basis.util import BasisUtil
 from surface_potential_analysis.wavepacket.localization._tight_binding import (
     get_wavepacket_two_points,
 )
+from surface_potential_analysis.wavepacket.wavepacket import wavepacket_list_into_iter
 
 if TYPE_CHECKING:
     from surface_potential_analysis.wavepacket.wavepacket import (
-        WavepacketWithEigenvalues,
+        WavepacketWithEigenvaluesList,
     )
 
     pass
@@ -49,8 +50,8 @@ class TunnellingSimulationBandsBasis(FundamentalBasis[_L0_co]):
 
     @classmethod
     def from_wavepackets(
-        cls,  # noqa: ANN102
-        wavepacket_list: list[WavepacketWithEigenvalues[Any, Any]],
+        cls: type[Self],
+        wavepackets: WavepacketWithEigenvaluesList[Any, Any, Any],
     ) -> Self:
         """
         Generate a basis given a list of wavepackets.
@@ -59,10 +60,10 @@ class TunnellingSimulationBandsBasis(FundamentalBasis[_L0_co]):
         -------
         Self
         """
-        util = BasisUtil(wavepacket_list[0]["basis"])
+        util = BasisUtil(wavepackets["basis"][1])
 
-        locations = np.zeros((2, len(wavepacket_list)))
-        for i, w in enumerate(wavepacket_list):
+        locations = np.zeros((2, wavepackets["basis"][0][0].n))
+        for i, w in enumerate(wavepacket_list_into_iter(wavepackets)):
             idx0, idx1 = get_wavepacket_two_points(w)
             location = np.average([idx0, idx1], axis=0)
             locations[:, i] = location[0:2]

@@ -253,7 +253,7 @@ def wrap_index_around_origin(
     basis: StackedBasisLike[*tuple[_B0Inv, ...]],
     idx: ArrayStackedIndexLike[_S0Inv],
     origin: SingleIndexLike | None = None,
-    axes: _S0Inv | None = None,
+    axes: tuple[int, ...] | None = None,
 ) -> ArrayStackedIndexLike[_S0Inv]:
     ...
 

@@ -3,9 +3,9 @@
 from __future__ import annotations
 
 from .overlap import (
-    Overlap3d,
+    Overlap,
 )
 
 __all__ = [
-    "Overlap3d",
+    "Overlap",
 ]

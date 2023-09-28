@@ -163,10 +163,18 @@ def fit_isf_to_double_exponential(
     ISFFit
     """
     data = get_measured_data(isf["data"], measure)
+
+    def f(
+        t: np.ndarray[Any, Any],
+        a: np.ndarray[Any, Any],
+        b: np.ndarray[Any, Any],
+        c: np.ndarray[Any, Any],
+        d: np.ndarray[Any, Any],
+    ) -> np.ndarray[Any, Any]:
+        return a * np.exp(-(b) * t) + (1 - a - d) * np.exp(-(c) * t) + d
+
     params, _ = scipy.optimize.curve_fit(
-        lambda t, a, b, c, d: (
-            a * np.exp(-(b) * t) + (1 - a - d) * np.exp(-(c) * t) + d
-        ),
+        f,
         isf["basis"][0].times,
         data,
         p0=(0.5, 2e10, 1e10, 0),
@@ -325,8 +333,16 @@ def fit_isf_to_fey_model_110(
     ISFFit
     """
     data = get_measured_data(isf["data"], measure)
+
+    def f(
+        t: np.ndarray[Any, Any],
+        f: float,
+        s: float,
+    ) -> np.ndarray[Any, Any]:
+        return calculate_isf_fey_model_110(t, f, s, a_dk=a_dk)
+
     params, _ = scipy.optimize.curve_fit(
-        lambda t, f, s: calculate_isf_fey_model_110(t, f, s, a_dk=a_dk),
+        f,
         isf["basis"][0].times,
         data,
         p0=(1.4e9, 3e8),
@@ -354,8 +370,16 @@ def fit_isf_to_fey_model_112bar(
     ISFFit
     """
     data = get_measured_data(isf["data"], measure)
+
+    def f(
+        t: np.ndarray[Any, Any],
+        f: float,
+        s: float,
+    ) -> np.ndarray[Any, Any]:
+        return calculate_isf_fey_model_112bar(t, f, s, a_dk=a_dk)
+
     params, _ = scipy.optimize.curve_fit(
-        lambda t, f, s: calculate_isf_fey_model_112bar(t, f, s, a_dk=a_dk),
+        f,
         isf["basis"][0].times,
         data,
         p0=(2e10, 1e10),

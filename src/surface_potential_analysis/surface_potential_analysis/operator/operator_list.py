@@ -108,6 +108,6 @@ def sum_diagonal_operator_list_over_axes(
         ),
         "data": np.sum(
             states["data"].reshape(-1, *states["basis"][1][0].shape),
-            axis=tuple(1 + np.array(axes)),
+            axis=tuple(1 + np.array(axes, dtype=np.int_)),
         ).reshape(states["data"].shape[0], -1),
     }

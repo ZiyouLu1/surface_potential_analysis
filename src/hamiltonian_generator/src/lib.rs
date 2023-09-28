@@ -224,8 +224,6 @@ impl SurfaceHamiltonian {
     }
 }
 
-
-
 struct SurfaceHamiltonian2 {
     resolution: EigenstateResolution,
     ft_potential: Vec<Vec<Vec<Complex64>>>,

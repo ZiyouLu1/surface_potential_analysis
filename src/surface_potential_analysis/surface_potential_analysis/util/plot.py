@@ -59,11 +59,11 @@ def _get_norm_with_lim(
         case "linear":
             return Normalize(vmin=lim[0], vmax=lim[1])
         case "symlog":
-            max_abs = max([np.abs(lim[0]), np.abs(lim[0])])
+            max_abs = max([np.abs(lim[0]), np.abs(lim[1])])
             return SymLogNorm(
                 vmin=lim[0],
                 vmax=lim[1],
-                linthresh=1 if max_abs <= 0 else 1e-4 * max_abs,  # type: ignore No parameter named "linthresh"
+                linthresh=1 if max_abs <= 0 else 1e-3 * max_abs,  # type: ignore No parameter named "linthresh"
             )
 
 
@@ -75,10 +75,10 @@ def _get_scale_with_lim(
         case "linear":
             return LinearScale(axis=None)
         case "symlog":
-            max_abs = max([np.abs(lim[0]), np.abs(lim[0])])
+            max_abs = max([np.abs(lim[0]), np.abs(lim[1])])
             return SymmetricalLogScale(
                 axis=None,
-                linthresh=1 if max_abs <= 0 else np.abs(1e-4 * max_abs),
+                linthresh=1 if max_abs <= 0 else 1e-3 * max_abs,
             )
 
 
@@ -128,7 +128,7 @@ def plot_data_1d_k(
     ax.set_xlabel(f"k{(axes[0] % 3)} axis")
     lim = _get_lim((None, None), measure, shifted_data)
     ax.set_yscale(_get_scale_with_lim(scale, lim))
-    ax.set_ylim(*lim)
+    ax.set_ylim(lim[0], (1.01 if scale == "linear" else 2) * lim[1])
     return fig, ax, line
 
 
@@ -175,7 +175,7 @@ def plot_data_1d_x(
     ax.set_xlabel(f"x{(axes[0] % 3)} axis")
     lim = _get_lim((None, None), measure, measured_data)
     ax.set_yscale(_get_scale_with_lim(scale, lim))
-    ax.set_ylim(*lim)
+    ax.set_ylim(lim[0], (1.01 if scale == "linear" else 2) * lim[1])
     return fig, ax, line
 
 

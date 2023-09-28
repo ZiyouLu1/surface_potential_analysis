@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Literal, TypeVar
+from typing import Any, Literal, TypeVar
 
 import numpy as np
 
@@ -52,13 +52,45 @@ class ExplicitBasis(BasisWithLengthLike[_NF0_co, _N0_co, _ND0Inv]):
     def vectors(self) -> np.ndarray[tuple[_N0_co, _NF0_co], np.dtype[np.complex_]]:
         return self._vectors
 
+    @property
+    def _transformed_vectors(
+        self,
+    ) -> np.ndarray[tuple[_N0_co, _NF0_co], np.dtype[np.complex_]]:
+        return np.fft.fft(self.vectors, self.fundamental_n, axis=1, norm="ortho")
+
+    def __from_fundamental__(
+        self,
+        vectors: np.ndarray[_S0Inv, np.dtype[np.complex_] | np.dtype[np.float_]],
+        axis: int = -1,
+    ) -> np.ndarray[tuple[int, ...], np.dtype[np.complex_]]:
+        transformed = np.tensordot(np.conj(self.vectors), vectors, axes=([0], [axis]))
+        return np.moveaxis(transformed, 0, axis)
+
     def __into_fundamental__(
         self,
         vectors: np.ndarray[_S0Inv, np.dtype[np.complex_] | np.dtype[np.float_]],
-        basis: int = -1,
+        axis: int = -1,
     ) -> np.ndarray[tuple[int, ...], np.dtype[np.complex_]]:
-        transformed = np.tensordot(vectors, self.vectors, axes=([basis], [0]))
-        return np.moveaxis(transformed, -1, basis)  # type: ignore[no-any-return]
+        transformed = np.tensordot(vectors, self.vectors, axes=([axis], [0]))
+        return np.moveaxis(transformed, -1, axis)
+
+    def __from_transformed__(
+        self,
+        vectors: np.ndarray[_S0Inv, np.dtype[np.complex_] | np.dtype[np.float_]],
+        axis: int = -1,
+    ) -> np.ndarray[tuple[int, ...], np.dtype[np.complex_]]:
+        transformed_vectors = np.conj(self._transformed_vectors)
+        transformed = np.tensordot(transformed_vectors, vectors, axes=([0], [axis]))
+        return np.moveaxis(transformed, 0, axis)
+
+    def __into_transformed__(
+        self,
+        vectors: np.ndarray[_S0Inv, np.dtype[np.complex_] | np.dtype[np.float_]],
+        axis: int = -1,
+    ) -> np.ndarray[tuple[int, ...], np.dtype[np.complex_]]:
+        transformed_vectors = self._transformed_vectors
+        transformed = np.tensordot(vectors, transformed_vectors, axes=([axis], [0]))
+        return np.moveaxis(transformed, -1, axis)
 
     @classmethod
     def from_momentum_vectors(
@@ -68,6 +100,21 @@ class ExplicitBasis(BasisWithLengthLike[_NF0_co, _N0_co, _ND0Inv]):
     ) -> ExplicitBasis[_NF0_co, _N0_co, _ND0Inv]:
         vectors = np.fft.ifft(vectors, axis=1, norm="ortho")
         return cls(delta_x, vectors)
+
+    def __convert_vector_into__(
+        self,
+        vectors: np.ndarray[_S0Inv, np.dtype[np.complex_] | np.dtype[np.float_]],
+        basis: BasisLike[Any, Any],
+        axis: int = -1,
+    ) -> np.ndarray[Any, np.dtype[np.complex_]]:
+        if isinstance(basis, ExplicitBasis):
+            assert basis.fundamental_n == self.fundamental_n
+            # We dont need to go all the way to fundamental basis here
+            # Instead we can just compute the transformation once
+            matrix = np.tensordot(np.conj(basis.vectors), self.vectors, axes=([1], [1]))
+            transformed = np.tensordot(matrix, vectors, axes=([1], [axis]))
+            return np.moveaxis(transformed, 0, axis)
+        return super().__convert_vector_into__(vectors, basis, axis)
 
 
 ExplicitBasis1d = ExplicitBasis[_NF0Inv, _N0Inv, Literal[1]]
@@ -100,14 +147,14 @@ class FundamentalBasis(
     def __as_fundamental__(  # type: ignore[override]
         self,
         vectors: np.ndarray[_S0Inv, np.dtype[np.complex_] | np.dtype[np.float_]],
-        basis: int = -1,
+        axis: int = -1,
     ) -> np.ndarray[_S0Inv, np.dtype[np.complex_]]:
         return vectors.astype(np.complex_, copy=False)  # type: ignore[no-any-return]
 
     def __from_fundamental__(  # type: ignore[override]
         self,
         vectors: np.ndarray[_S0Inv, np.dtype[np.complex_] | np.dtype[np.float_]],
-        basis: int = -1,
+        axis: int = -1,
     ) -> np.ndarray[_S0Inv, np.dtype[np.complex_]]:
         return vectors.astype(np.complex_, copy=False)  # type: ignore[no-any-return]
 

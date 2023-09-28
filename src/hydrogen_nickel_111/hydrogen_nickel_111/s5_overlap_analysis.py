@@ -25,7 +25,6 @@ from surface_potential_analysis.overlap.plot import (
     plot_overlap_2d_k,
     plot_overlap_2d_x,
     plot_overlap_along_k_diagonal,
-    plot_overlap_k0k1,
 )
 from surface_potential_analysis.util.constants import FERMI_WAVEVECTOR
 from surface_potential_analysis.util.decorators import npy_cached
@@ -41,10 +40,6 @@ if TYPE_CHECKING:
     from collections.abc import Callable
     from pathlib import Path
 
-    from surface_potential_analysis.overlap.overlap import (
-        FundamentalMomentumOverlap,
-        Overlap3d,
-    )
     from surface_potential_analysis.types import SingleIndexLike3d
 
     _L0Inv = TypeVar("_L0Inv", bound=int)
@@ -54,12 +49,40 @@ if TYPE_CHECKING:
     _B0Inv = TypeVar("_B0Inv", bound=StackedBasisLike[Any])
 
 
-def get_max_point(
-    overlap: FundamentalMomentumOverlap[_L0Inv, _L1Inv, _L2Inv]
-) -> tuple[int, int, int]:
-    points = overlap["data"]
-    (ik0, ik1, inz) = np.unravel_index(np.argmax(np.abs(points)), shape=points.shape)
-    return (int(ik0), int(ik1), int(inz))
+def plot_overlap_hydrogen() -> None:
+    overlap = get_overlap_hydrogen(0, 1)
+
+    fig, ax, _ = plot_overlap_2d_x(overlap, (0, 1), measure="abs")
+    ax.set_title(
+        "Plot of the overlap summed over z\n"
+        "showing the FCC and HCP asymmetry\n"
+        "in a small region in the center of the figure"
+    )
+    save_figure(fig, "2d_overlap_kx_ky.png")
+    fig.show()
+
+    fig, ax, _ = plot_overlap_2d_x(overlap, (0, 1), measure="real")
+    ax.set_title(
+        "Plot of the overlap summed over z\n"
+        "showing the FCC and HCP asymmetry\n"
+        "in a small region in the center of the figure"
+    )
+    save_figure(fig, "2d_overlap_real_kx_ky.png")
+    fig.show()
+    input()
+
+
+def plot_offset_overlap_hydrogen() -> None:
+    overlap = get_overlap_hydrogen(0, 1, (1, 0))
+
+    fig, _, _ = plot_overlap_2d_x(overlap, (0, 1), measure="abs")
+    fig.show()
+
+    overlap = get_overlap_hydrogen(0, 1, (0, 0), (-1, 0))
+
+    fig, _, _ = plot_overlap_2d_x(overlap, (0, 1), measure="abs")
+    fig.show()
+    input()
 
 
 def make_overlap_real_at(
@@ -234,51 +257,6 @@ def plot_fcc_hcp_overlap_momentum_along_diagonal() -> None:
     )
 
     save_figure(fig, "diagonal_1d_overlap_fraction.png")
-    fig.show()
-    input()
-
-
-def plot_fcc_hcp_overlap() -> None:
-    overlap = get_overlap_hydrogen(0, 1)
-    x2_max = np.unravel_index(
-        np.argmax(overlap["data"]), BasisUtil(overlap["basis"]).shape
-    )[2]
-
-    fig, ax, _ = plot_overlap_2d_x(overlap, (0, 1), (x2_max,), measure="abs")
-    ax.set_title(
-        "Plot of the overlap summed over z\n"
-        "showing the FCC and HCP asymmetry\n"
-        "in a small region in the center of the figure"
-    )
-    save_figure(fig, "2d_overlap_kx_ky.png")
-    fig.show()
-
-    fig, ax, _ = plot_overlap_2d_x(overlap, (0, 1), (x2_max,), measure="real")
-    ax.set_title(
-        "Plot of the overlap summed over z\n"
-        "showing the FCC and HCP asymmetry\n"
-        "in a small region in the center of the figure"
-    )
-    save_figure(fig, "2d_overlap_real_kx_ky.png")
-    fig.show()
-    input()
-
-
-def plot_fcc_hcp_overlap_offset() -> None:
-    overlap = get_overlap_hydrogen(0, 1, (1, 0))
-    x2_max = np.unravel_index(
-        np.argmax(overlap["data"]), BasisUtil(overlap["basis"]).shape
-    )[2]
-
-    fig, ax, _ = plot_overlap_2d_x(overlap, (0, 1), (x2_max,), measure="abs")
-    fig.show()
-
-    overlap = get_overlap_hydrogen(0, 1, (0, 0), (-1, 0))
-    x2_max = np.unravel_index(
-        np.argmax(overlap["data"]), BasisUtil(overlap["basis"]).shape
-    )[2]
-
-    fig, ax, _ = plot_overlap_2d_x(overlap, (0, 1), (x2_max,), measure="abs")
     fig.show()
     input()
 
@@ -642,20 +620,20 @@ def plot_all_abs_overlap_k() -> None:
             overlap = get_overlap_hydrogen(i, j)
             overlap_transform = convert_overlap_to_momentum_basis(overlap)
 
-            fig, ax, _ = plot_overlap_k0k1(overlap_transform, 0, measure="abs")
+            fig, ax, _ = plot_overlap_2d_k(overlap_transform, measure="abs")
             ax.set_title(f"Plot of the overlap transform for k2=0\nfor i={i} and j={j}")
             save_figure(fig, f"overlap/abs_overlap_k0k1_plot_{i}_{j}.png")
             fig.show()
     input()
 
 
-def _build_incoherent_matrix_cache(n_bands: _L0Inv, _temperature: float = 150) -> Path:
+def _build_incoherent_matrix_cache(n_bands: int, _temperature: float = 150) -> Path:
     return get_data_path(f"incoherent_matrix_{n_bands}_bands_{_temperature}k.npy")
 
 
 @npy_cached(_build_incoherent_matrix_cache)
 def build_incoherent_matrix(
-    n_bands: _L0Inv, _temperature: float = 150
+    n_bands: int, _temperature: float = 150
 ) -> Any:  # noqa: ANN401
     # The coefficients np.ndarray[tuple[_L0Inv, _L0Inv, Literal[9]], np.dtype[np.float_]]
     # represent the total rate R[i,j,dx] from i to j with an offset of dx at the location i.

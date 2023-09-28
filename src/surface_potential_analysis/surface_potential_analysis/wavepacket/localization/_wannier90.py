@@ -2,21 +2,36 @@ from __future__ import annotations
 
 import re
 import tempfile
+from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Generic, TypedDict, TypeVar, cast
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Generic,
+    Literal,
+    TypedDict,
+    TypeVar,
+    TypeVarTuple,
+    cast,
+)
 
 import numpy as np
+import scipy.ndimage
 
+from surface_potential_analysis.basis.basis import (
+    FundamentalBasis,
+)
+from surface_potential_analysis.basis.basis_like import BasisLike
+from surface_potential_analysis.basis.conversion import (
+    axis_as_fundamental_momentum_axis,
+)
 from surface_potential_analysis.basis.stacked_basis import (
     StackedBasis,
     StackedBasisLike,
 )
 from surface_potential_analysis.basis.util import (
     BasisUtil,
-)
-from surface_potential_analysis.stacked_basis.conversion import (
-    stacked_basis_as_fundamental_momentum_basis,
 )
 from surface_potential_analysis.state_vector.conversion import (
     convert_state_vector_list_to_basis,
@@ -27,8 +42,8 @@ from surface_potential_analysis.state_vector.state_vector import (
 )
 from surface_potential_analysis.state_vector.state_vector_list import (
     StateVectorList,
-    as_state_vector_list,
 )
+from surface_potential_analysis.types import ArrayFlatIndexLike, FlatIndexLike
 from surface_potential_analysis.wavepacket.get_eigenstate import (
     get_bloch_state_vector,
     get_states_at_bloch_idx,
@@ -38,21 +53,19 @@ from surface_potential_analysis.wavepacket.localization.localization_operator im
 )
 from surface_potential_analysis.wavepacket.wavepacket import (
     WavepacketList,
+    as_wavepacket_list,
     get_wavepacket_sample_fractions,
     wavepacket_list_into_iter,
 )
 
 from ._projection import (
-    get_single_point_state_for_wavepacket,
     get_state_projections_many_band,
 )
 
 if TYPE_CHECKING:
     from surface_potential_analysis.basis.basis import (
-        FundamentalBasis,
         FundamentalTransformedPositionBasis,
     )
-    from surface_potential_analysis.basis.basis_like import BasisLike
     from surface_potential_analysis.state_vector.state_vector import StateVector
     from surface_potential_analysis.wavepacket.localization.localization_operator import (
         LocalizationOperator,
@@ -70,9 +83,14 @@ if TYPE_CHECKING:
 
     _SB0 = TypeVar("_SB0", bound=StackedBasisLike[*tuple[Any, ...]])
 
-    _B0 = TypeVar("_B0", bound=BasisLike[Any, Any])
     _B1 = TypeVar("_B1", bound=BasisLike[Any, Any])
     _B2 = TypeVar("_B2", bound=BasisLike[Any, Any])
+
+_B0 = TypeVar("_B0", bound=BasisLike[Any, Any])
+Ts = TypeVarTuple("Ts")
+SymmetryOp = Callable[
+    [ArrayFlatIndexLike[*Ts], tuple[int, ...]], ArrayFlatIndexLike[*Ts]
+]
 
 
 class ProjectionsBasis(TypedDict, Generic[_B0]):
@@ -83,7 +101,11 @@ class ProjectionsBasis(TypedDict, Generic[_B0]):
 class Wannier90Options(Generic[_B0]):
     projection: ProjectionsBasis[_B0] | StateVectorList[_B0, Any]
     num_iter: int = 10000
-    conv_window: int = 3
+    convergence_window: int = 3
+    convergence_tolerance: float = 1e-10
+    symmetry_operations: Sequence[SymmetryOp[Any]] | None = None
+    ignore_axes: tuple[int, ...] = ()
+    """Axes which one should assume are tightly bound"""
 
 
 def _build_real_lattice_block(
@@ -117,7 +139,7 @@ def _build_k_points_block(
     newline = "\n"
     return f"""mp_grid : {" ".join(str(x) for x in mp_grid)}
 begin kpoints
-{newline.join([ f"{f0} {f1} {f2}" for (f0,f1,f2) in fractions_padded.T])}
+{newline.join([ f"{f0!r} {f1!r} {f2!r}" for (f0,f1,f2) in fractions_padded.T])}
 end kpoints"""
 
 
@@ -143,7 +165,8 @@ def _build_win_file(
     return f"""
 {"postproc_setup = .true." if postproc_setup else ""}
 num_iter = {options.num_iter}
-conv_window = {options.conv_window}
+conv_tol = {options.convergence_tolerance}
+conv_window = {options.convergence_window}
 write_u_matrices = .true.
 {"auto_projections = .true."if has_projections  else "use_bloch_phases = .true."}
 num_wann = {wavepackets["basis"][0][0].n}
@@ -176,13 +199,34 @@ def _get_offset_bloch_state(
     StateVector[_B0Inv]
         _description_
     """
+    # Note: requires state in k basis
     padded_shape = np.ones(3, dtype=np.int_)
     padded_shape[: state["basis"].ndim] = state["basis"].shape
-    # Should be -offset if psi(k+b) = psi(k)
     vector = np.roll(
         (state["data"]).reshape(padded_shape),
         tuple(-o for o in offset),
         (0, 1, 2),
+    )
+
+    # !f_0 = (vector.shape[0] + 1) // 2
+    # !f_1 = f_0 + offset[0]
+    # !vector[min(f_0, f_1) : max(f_0, f_1) :, :, :] = 0
+
+    # !f_0 = (vector.shape[1] + 1) // 2
+    # !f_1 = f_0 + offset[1]
+    # !vector[:, min(f_0, f_1) : max(f_0, f_1) :, :] = 0
+
+    # !f_0 = (vector.shape[2] + 1) // 2
+    # !f_1 = f_0 + offset[2]
+    # !vector[:, :, min(f_0, f_1) : max(f_0, f_1) :] = 0
+
+    return {"basis": state["basis"], "data": vector.reshape(-1)}
+    # Should be -offset if psi(k+b) = psi(k)
+    vector = scipy.ndimage.shift(
+        (state["data"]).reshape(padded_shape),
+        tuple(-o for o in offset),
+        mode="constant",
+        cval=0,  # cSpell: disable-line
     ).reshape(-1)
     return {"basis": state["basis"], "data": vector}
 
@@ -190,9 +234,13 @@ def _get_offset_bloch_state(
 def _build_mmn_file_block(
     wavepackets: WavepacketList[_B0, _SB0, StackedBasisLike[*tuple[_PB1Inv, ...]]],
     k: tuple[int, int, int, int, int],
+    *,
+    options: Wannier90Options[_B1],
 ) -> str:
     k_0, k_1, *offset = k
     block = f"{k_0} {k_1} {offset[0]} {offset[1]} {offset[2]}"
+    for i in options.ignore_axes:
+        offset[i] = 0
     for wavepacket_n in wavepacket_list_into_iter(wavepackets):
         for wavepacket_m in wavepacket_list_into_iter(wavepackets):
             mat = calculate_inner_product(
@@ -202,7 +250,7 @@ def _build_mmn_file_block(
                 ),
                 as_dual_vector(get_bloch_state_vector(wavepacket_m, k_0 - 1)),
             )
-            block += f"\n{np.real(mat)} {np.imag(mat)}"
+            block += f"\n{np.real(mat)!r} {np.imag(mat)!r}"
     return block
 
 
@@ -230,6 +278,8 @@ def _parse_nnk_points_file(
 def _build_mmn_file(
     wavepackets: WavepacketList[_B0, _SB0, StackedBasisLike[*tuple[_PB1Inv, ...]]],
     nnk_points_file: str,
+    *,
+    options: Wannier90Options[_B1],
 ) -> str:
     """
     Given a .nnkp file, generate the mmn file.  # cSpell:disable-line.
@@ -250,7 +300,7 @@ def _build_mmn_file(
     newline = "\n"
     return f"""
 {n_wavefunctions} {n_k_points} {n_n_tot}
-{newline.join(_build_mmn_file_block(wavepackets, k) for k in nnk_points)}"""
+{newline.join(_build_mmn_file_block(wavepackets, k,options=options) for k in nnk_points)}"""
 
 
 def _build_amn_file(
@@ -261,19 +311,6 @@ def _build_amn_file(
     ],
     projections: StateVectorList[_B1, _B2],
 ) -> str:
-    """
-    Build an amn file from a wavepacket.
-
-    Parameters
-    ----------
-    wavepacket : Wavepacket[_B0Inv, _B0Inv]
-    projection: StateVector[_B1Inv]
-
-    Returns
-    -------
-    str
-        for idx in range(wavepackets["basis"][0][1].n)
-    """
     n_projections = projections["basis"][0].n
     n_wavefunctions = wavepackets["basis"][0][0].n
     n_k_points = wavepackets["basis"][0][1].n
@@ -294,9 +331,74 @@ def _build_amn_file(
     return f"""
 {n_wavefunctions} {n_k_points} {n_projections}
 {newline.join(
-    f"{m+1} {n+1} {k+1} {np.real(s)} {np.imag(s)}"
+    f"{m+1} {n+1} {k+1} {np.real(s)!r} {np.imag(s)!r}"
     for ((k, m, n), s) in np.ndenumerate(stacked)
 )}
+"""
+
+
+def x0_symmetry_op(
+    idx: FlatIndexLike, shape: tuple[int, ...], axis: int
+) -> FlatIndexLike:
+    idx_stacked = list(np.unravel_index(idx, shape))
+    idx_stacked[axis] = -idx_stacked[axis]
+    return np.ravel_multi_index(tuple(idx_stacked), shape, mode="wrap")
+
+
+def x0x1_symmetry_op(
+    idx: FlatIndexLike, shape: tuple[int, ...], axes: tuple[int, int]
+) -> FlatIndexLike:
+    idx_stacked = list(np.unravel_index(idx, shape))
+    idx_0 = idx_stacked[axes[0]]
+    idx_stacked[axes[0]] = idx_stacked[axes[1]]
+    idx_stacked[axes[1]] = idx_0
+    return np.ravel_multi_index(tuple(idx_stacked), shape, mode="wrap")
+
+
+def _get_fundamental_k_points(
+    basis: StackedBasisLike[*tuple[_FB0, ...]], symmetry: Sequence[SymmetryOp[Any]]
+) -> ArrayFlatIndexLike[tuple[int]]:
+    fundamental_idx = np.arange(basis.n)
+    for op in symmetry:
+        b = op(fundamental_idx, basis.shape)
+        fundamental_idx = np.minimum(b, fundamental_idx)
+
+    return fundamental_idx
+
+
+def _build_dmn_file(
+    wavepackets: WavepacketList[
+        _B0,
+        StackedBasisLike[*tuple[_FB0, ...]],
+        StackedBasisLike[*tuple[_PB1Inv, ...]],
+    ],
+    symmetry: Sequence[SymmetryOp[Any]],
+) -> str:
+    n_wavefunctions = wavepackets["basis"][0][0].n
+    n_k_points = wavepackets["basis"][0][1].n
+    n_symmetry = len(symmetry)
+
+    fundamental = _get_fundamental_k_points(wavepackets["basis"][0][1], symmetry)
+    u, idx = np.unique(fundamental, return_inverse=True)
+    n_k_points_irr = u.size
+
+    idx_padded = np.pad(idx, (0, idx.size % 10), "constant", constant_values=-1)
+    u_padded = np.pad(u, (0, idx.size % 10), "constant", constant_values=-1)
+    raise NotImplementedError
+    newline = "\n"
+    return f"""
+{n_wavefunctions} {n_symmetry} {n_k_points_irr} {n_k_points}
+
+{newline.join(
+    " ".join((j+1) for j in i if j!=-1)
+    for i in idx_padded.reshape(10,-1)
+)}
+{
+newline.join(
+    " ".join((j+1) for j in i if j!=-1)
+    for i in u_padded.reshape(10,-1)
+)
+}
 """
 
 
@@ -359,30 +461,41 @@ def _write_setup_files_wannier90(
 
 
 def _write_localization_files_wannier90(
+    wavepackets: WavepacketList[_B0, StackedBasisLike[*tuple[_FB0, ...]], _SBL0],
     tmp_dir_path: Path,
     n_nkp_file: str,
-    wavepackets: WavepacketList[_B0, StackedBasisLike[*tuple[_FB0, ...]], _SBL0],
     *,
     options: Wannier90Options[_B1],
 ) -> None:
     win_filename = tmp_dir_path / "spa.win"
     with win_filename.open("w") as f:
         f.write(_build_win_file(wavepackets, options=options))
-
     converted = convert_state_vector_list_to_basis(
         wavepackets,
-        stacked_basis_as_fundamental_momentum_basis(wavepackets["basis"][1]),
+        StackedBasis(
+            *tuple(
+                axis_as_fundamental_momentum_axis(axis)
+                if idx not in options.ignore_axes
+                else axis
+                for (idx, axis) in enumerate(wavepackets["basis"][1])
+            )
+        ),
     )
 
     mmn_filename = tmp_dir_path / "spa.mmn"
     with mmn_filename.open("w") as f:
-        f.write(_build_mmn_file(converted, n_nkp_file))
+        f.write(_build_mmn_file(converted, n_nkp_file, options=options))
 
     if options.projection.get("data", None) is not None:
         projection = cast(StateVectorList[_B1, Any], options.projection)
         amn_filename = tmp_dir_path / "spa.amn"
         with amn_filename.open("w") as f:
             f.write(_build_amn_file(converted, projection))
+
+    if options.symmetry_operations is not None:
+        dmn_filename = tmp_dir_path / "spa.dmn"
+        with dmn_filename.open("w") as f:
+            f.write(_build_dmn_file(converted, options.symmetry_operations))
 
 
 def get_localization_operator_wannier90(
@@ -391,7 +504,7 @@ def get_localization_operator_wannier90(
     options: Wannier90Options[_B1],
 ) -> LocalizationOperator[_SB0, _B1, _B0]:
     """
-    Localizes a set of wavepackets using wannier 90, with a single point projection as an initial guess.
+    Localizes a set of wavepackets using wannier 90.
 
     Note this requires a user to manually run wannier90 and input the resulting wannier90 nnk_pts and _u.mat file
     into the temporary directory created by the function.
@@ -467,28 +580,31 @@ def localize_wavepacket_wannier90(
     return get_localized_wavepackets(wavepackets, operator)
 
 
-def localize_wavepacket_wannier90_sp_projections(
+def get_localization_operator_wannier90_individual_bands(
     wavepackets: WavepacketList[_B0, _SB0, _SBL0],
-) -> WavepacketList[FundamentalBasis[int], _SB0, _SBL0]:
-    """
-    Localizes a wavepacket using wannier 90, with a single point projection as an initial guess.
-
-    Note this requires a user to manually run wannier90 and input the resulting wannier90 nnk_pts and _u.mat file
-    into the temporary directory created by the function.
-
-    Parameters
-    ----------
-    wavepacket : Wavepacket[_B0Inv, _B0Inv]
-
-    Returns
-    -------
-    Wavepacket[_B0Inv, _B0Inv]
-        The localized wavepacket
-    """
-    projection = as_state_vector_list(
-        get_single_point_state_for_wavepacket(wavepacket)
+) -> LocalizationOperator[_SB0, _B0, _B0]:
+    options = Wannier90Options[FundamentalBasis[Literal[1]]](
+        projection={"basis": StackedBasis(FundamentalBasis(1))},
+        convergence_tolerance=1e-20,
+        ignore_axes=(2,),
+    )
+    operator_data = [
+        get_localization_operator_wannier90(
+            as_wavepacket_list([wavepacket]), options=options
+        )["data"]
         for wavepacket in wavepacket_list_into_iter(wavepackets)
+    ]
+    n_bands = wavepackets["basis"][0][0].n
+    out = np.zeros((wavepackets["basis"][0][1].n, n_bands, n_bands), dtype=np.complex_)
+    out[:, np.arange(n_bands), np.arange(n_bands)] = (
+        np.array(operator_data)
+        .reshape(n_bands, wavepackets["basis"][0][1].n)
+        .swapaxes(0, 1)
     )
-    return localize_wavepacket_wannier90(
-        wavepackets, options=Wannier90Options(projection)
-    )
+    return {
+        "basis": StackedBasis(
+            wavepackets["basis"][0][1],
+            StackedBasis(wavepackets["basis"][0][0], wavepackets["basis"][0][0]),
+        ),
+        "data": out.reshape(-1),
+    }
