@@ -15,7 +15,6 @@ from surface_potential_analysis.dynamics.incoherent_propagation.tunnelling_matri
     density_matrix_list_as_probabilities,
     get_initial_pure_density_matrix_for_basis,
     get_tunnelling_m_matrix,
-    resample_tunnelling_a_matrix,
 )
 from surface_potential_analysis.dynamics.plot import (
     plot_average_probability_per_band,
@@ -169,16 +168,14 @@ def plot_expected_occupation_per_band_hydrogen(
 
 
 def plot_occupation_on_surface_hydrogen() -> None:
-    a_matrix = get_tunnelling_a_matrix_hydrogen((25, 25), 6, 150)
-    np.fill_diagonal(a_matrix["array"], 0)
-    resampled = resample_tunnelling_a_matrix(a_matrix, (3, 3), 6)
+    a_matrix = get_tunnelling_a_matrix_hydrogen((25, 25), 8, 150)
 
-    collapse_operators = get_simplified_collapse_operators_from_a_matrix(resampled)
+    collapse_operators = get_simplified_collapse_operators_from_a_matrix(a_matrix)
 
-    hamiltonian = get_coherent_hamiltonian(resampled["basis"])
+    hamiltonian = get_coherent_hamiltonian(a_matrix["basis"][0])
 
     initial_state: StateVector[Any] = {
-        "basis": resampled["basis"],
+        "basis": a_matrix["basis"][0],
         "data": np.zeros((hamiltonian["basis"][0].n,), dtype=np.complex_),
     }
     initial_state["data"][0] = 1
@@ -207,17 +204,15 @@ def plot_occupation_on_surface_hydrogen() -> None:
 
 
 def plot_incoherent_occupation_comparison_hydrogen() -> None:
-    a_matrix = get_tunnelling_a_matrix_hydrogen((25, 25), 6, 150)
-    np.fill_diagonal(a_matrix["array"], 0)
-    resampled = resample_tunnelling_a_matrix(a_matrix, (3, 3), 6)
+    a_matrix = get_tunnelling_a_matrix_hydrogen((3, 3), 8, 150)
 
-    collapse_operators = get_simplified_collapse_operators_from_a_matrix(resampled)
+    collapse_operators = get_simplified_collapse_operators_from_a_matrix(a_matrix)
 
-    hamiltonian = get_coherent_hamiltonian(resampled["basis"])
+    hamiltonian = get_coherent_hamiltonian(a_matrix["basis"][0])
     hamiltonian["data"] = np.zeros_like(hamiltonian["data"])
 
     initial_state: StateVector[Any] = {
-        "basis": resampled["basis"],
+        "basis": a_matrix["basis"][0],
         "data": np.zeros(hamiltonian["basis"][0].n, dtype=np.complex_),
     }
     initial_state["data"][0] = 1
@@ -229,9 +224,9 @@ def plot_incoherent_occupation_comparison_hydrogen() -> None:
     fig, ax, _ = plot_average_probability_per_band(probabilities)
     plot_expected_occupation_per_band_hydrogen(150, ax=ax)
 
-    m_matrix = get_tunnelling_m_matrix(resampled)
+    m_matrix = get_tunnelling_m_matrix(a_matrix)
     initial_state_incoherent = get_initial_pure_density_matrix_for_basis(
-        m_matrix["basis"]
+        m_matrix["basis"][0]
     )
     state = calculate_tunnelling_simulation_state(
         m_matrix, initial_state_incoherent, times.times

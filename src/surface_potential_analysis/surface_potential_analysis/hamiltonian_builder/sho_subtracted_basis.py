@@ -24,7 +24,7 @@ from surface_potential_analysis.basis.util import (
 from surface_potential_analysis.stacked_basis.sho_basis import (
     SHOBasisConfig,
     calculate_x_distances,
-    infinate_sho_axis_3d_from_config,
+    infinate_sho_basis_3d_from_config,
 )
 
 if TYPE_CHECKING:
@@ -134,7 +134,7 @@ class _SurfaceHamiltonianUtil(
                 self._resolution[1],
                 self._potential["basis"][1].n,
             ),
-            infinate_sho_axis_3d_from_config(
+            infinate_sho_basis_3d_from_config(
                 FundamentalPositionBasis(
                     self._potential["basis"][2].delta_x,
                     self._potential["basis"][2].n,

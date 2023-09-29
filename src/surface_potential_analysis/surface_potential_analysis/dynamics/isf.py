@@ -137,11 +137,12 @@ def get_isf_from_4_variable_fit(
     """
     return {
         "basis": StackedBasis(ExplicitTimeBasis(times), ExplicitTimeBasis(times)),
-        "data": (
+        "data": np.asarray(
             fit.fast_amplitude * np.exp(-fit.fast_rate * times)
             + fit.slow_amplitude * np.exp(-fit.slow_rate * times)
-            + fit.baseline
-        ).astype(np.complex_),
+            + fit.baseline,
+            dtype=np.complex_,
+        ),
     }
 
 

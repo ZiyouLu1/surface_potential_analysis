@@ -100,11 +100,10 @@ def sum_diagonal_operator_over_axes(
     traced_basis = tuple(
         b for (i, b) in enumerate(operator["basis"][0]) if i not in axes
     )
-    # TODO: this is just wrong
     return {
-        "basis": StackedBasis(traced_basis, traced_basis),
+        "basis": StackedBasis(StackedBasis(*traced_basis), StackedBasis(*traced_basis)),
         "data": np.sum(
-            operator["data"].reshape(operator["basis"].shape), axis=axes
+            operator["data"].reshape(operator["basis"][0].shape), axis=axes
         ).reshape(-1),
     }
 
@@ -153,12 +152,11 @@ def average_eigenvalues(
     EigenvalueList[Any]
     """
     axis = tuple(range(eigenvalues["basis"].ndim)) if axis is None else axis
-    util = BasisUtil(eigenvalues["basis"])
     basis = tuple(b for (i, b) in enumerate(eigenvalues["basis"][0]) if i not in axis)
     return {
-        "basis": StackedBasis(*basis),
+        "basis": StackedBasis(StackedBasis(*basis), StackedBasis(*basis)),
         "data": np.average(
-            eigenvalues["data"].reshape(*util.shape),
+            eigenvalues["data"].reshape(*eigenvalues["basis"][0].shape),
             axis=tuple(ax for ax in axis),
             weights=weights,
         ).reshape(-1),

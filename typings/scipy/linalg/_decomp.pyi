@@ -20,15 +20,15 @@ import numpy as np
 _I = ...
 
 def eig(
-    a,
-    b=...,
-    left=...,
-    right=...,
-    overwrite_a=...,
-    overwrite_b=...,
-    check_finite=...,
-    homogeneous_eigvals=...,
-):  # -> NDArray[Unknown] | tuple[NDArray[Unknown] | Unknown, NDArray[Any] | NDArray[Unknown] | Unknown, NDArray[Any] | NDArray[Unknown] | Unknown] | tuple[NDArray[Unknown] | Unknown, NDArray[Any] | NDArray[Unknown] | Unknown]:
+    a: np.ndarray[Any, Any],
+    b: np.ndarray[Any, Any] = ...,
+    right: bool = ...,
+    left: bool = ...,
+    overwrite_a: bool = ...,
+    overwrite_b: bool = ...,
+    check_finite: bool = ...,
+    homogeneous_eigvals: bool = ...,
+) -> tuple[np.ndarray[Any, Any], np.ndarray[Any, Any]]:
     """
     Solve an ordinary or generalized eigenvalue problem of a square matrix.
 

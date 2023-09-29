@@ -1,12 +1,14 @@
 from __future__ import annotations
 
-from hydrogen_nickel_111.s4_wavepacket import get_all_wavepackets_hydrogen
+from hydrogen_nickel_111.s6_schrodinger_dynamics import (
+    plot_incoherent_occupation_comparison_hydrogen,
+)
 from surface_potential_analysis.util.decorators import timed
 
 
 @timed
 def main() -> None:
-    get_all_wavepackets_hydrogen()
+    plot_incoherent_occupation_comparison_hydrogen()
 
 
 if __name__ == "__main__":

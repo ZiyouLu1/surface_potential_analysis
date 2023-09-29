@@ -89,7 +89,7 @@ _L3Inv = TypeVar("_L3Inv", bound=int)
 def get_basis_from_shape(
     shape: tuple[_L0Inv, _L1Inv],
     n_bands: _L2Inv,
-    bands_axis: TunnellingSimulationBandsBasis[_L3Inv],
+    bands_basis: TunnellingSimulationBandsBasis[_L3Inv],
 ) -> StackedBasisLike[
     FundamentalBasis[_L0Inv],
     FundamentalBasis[_L1Inv],
@@ -101,7 +101,7 @@ def get_basis_from_shape(
     Parameters
     ----------
     shape : tuple[_L0Inv, _L1Inv]
-    bands_axis : TunnellingSimulationBandsBasis[_L2Inv]
+    bands_basis : TunnellingSimulationBandsBasis[_L2Inv]
 
     Returns
     -------
@@ -111,6 +111,6 @@ def get_basis_from_shape(
         FundamentalBasis(shape[0]),
         FundamentalBasis(shape[1]),
         TunnellingSimulationBandsBasis(
-            bands_axis.locations[:, :n_bands], bands_axis.unit_cell
+            bands_basis.locations[:, :n_bands], bands_basis.unit_cell
         ),
     )

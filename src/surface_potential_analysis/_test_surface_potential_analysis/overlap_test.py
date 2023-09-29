@@ -1,10 +1,12 @@
 from __future__ import annotations
 
 import unittest
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Literal
 
 import numpy as np
 
+from surface_potential_analysis.basis.basis import FundamentalBasis
+from surface_potential_analysis.basis.stacked_basis import StackedBasis
 from surface_potential_analysis.basis.util import (
     BasisUtil,
 )
@@ -18,7 +20,7 @@ from surface_potential_analysis.overlap.interpolation import (
 from surface_potential_analysis.stacked_basis.build import position_basis_3d_from_shape
 
 if TYPE_CHECKING:
-    from surface_potential_analysis.overlap.overlap import Overlap3d
+    from surface_potential_analysis.overlap.overlap import SingleOverlap
 
 rng = np.random.default_rng()
 
@@ -26,12 +28,17 @@ rng = np.random.default_rng()
 class OverlapTest(unittest.TestCase):
     def test_overlap_interpolation(self) -> None:
         shape = (10, 10, 10)
-        overlap: Overlap3d[Any] = {
-            "basis": position_basis_3d_from_shape(shape),
+        overlap: SingleOverlap[Any] = {
+            "basis": StackedBasis(
+                position_basis_3d_from_shape(shape),
+                StackedBasis(
+                    FundamentalBasis[Literal[1]](1), FundamentalBasis[Literal[1]](1)
+                ),
+            ),
             "data": np.array(rng.random(np.prod(shape)), dtype=complex),
         }
 
-        util = BasisUtil(overlap["basis"])
+        util = BasisUtil(overlap["basis"][0])
         overlap_momentum = convert_overlap_to_momentum_basis(overlap)
         expected = overlap_momentum["data"]
         actual = get_overlap_momentum_interpolator(overlap)(util.k_points)  # type: ignore[var-annotated,arg-type]
@@ -40,8 +47,13 @@ class OverlapTest(unittest.TestCase):
 
     def test_overlap_interpolation_fractions(self) -> None:
         shape = (10, 10, 10)
-        overlap: Overlap3d[Any] = {
-            "basis": position_basis_3d_from_shape(shape),
+        overlap: SingleOverlap[Any] = {
+            "basis": StackedBasis(
+                position_basis_3d_from_shape(shape),
+                StackedBasis(
+                    FundamentalBasis[Literal[1]](1), FundamentalBasis[Literal[1]](1)
+                ),
+            ),
             "data": np.array(rng.random(np.prod(shape)), dtype=complex),
         }
 

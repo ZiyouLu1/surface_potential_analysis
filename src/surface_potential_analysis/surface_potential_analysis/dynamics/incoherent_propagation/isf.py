@@ -106,7 +106,7 @@ def calculate_equilibrium_state_averaged_isf(
     eigenvalues = np.zeros((util.shape[2], times.size), dtype=np.complex_)
     for band in range(util.shape[2]):
         initial = get_initial_pure_density_matrix_for_basis(
-            matrix["basis"], (0, 0, band)
+            matrix["basis"][0], (0, 0, band)
         )
         initial_probability = density_matrix_as_probability(initial)
         final = get_tunnelling_simulation_state(eigenstates, initial, times)
@@ -125,7 +125,7 @@ def calculate_equilibrium_state_averaged_isf(
         "data": eigenvalues.reshape(-1),
     }
     averaged = average_eigenvalues(
-        isf_per_band, (0,), weights=occupation_probabilities["data"]
+        isf_per_band, (0,), weights=np.abs(occupation_probabilities["data"])
     )
     return {"basis": averaged["basis"][0][0], "data": averaged["data"]}
 
@@ -155,7 +155,7 @@ def calculate_equilibrium_initial_state_isf(
     )
     for band in range(matrix["basis"].shape[2]):
         initial_state = get_initial_pure_density_matrix_for_basis(
-            matrix["basis"], (0, 0, band)
+            matrix["basis"][0], (0, 0, band)
         )
         final_state = get_tunnelling_simulation_state(eigenstates, initial_state, times)
         final_probabilities = density_matrix_list_as_probabilities(final_state)
@@ -167,7 +167,7 @@ def calculate_equilibrium_initial_state_isf(
             StackedBasis(
                 FundamentalBasis(matrix["basis"].shape[2]), ExplicitTimeBasis(times)
             ),
-            matrix["basis"],
+            matrix["basis"][0],
         ),
         "data": vectors.reshape(-1),
     }
@@ -179,11 +179,13 @@ def calculate_equilibrium_initial_state_isf(
     vector = np.zeros(matrix["basis"].shape, dtype=np.complex_)
     vector[0, 0, :] = occupation_probabilities["data"]
     initial: ProbabilityVector[_B0Inv] = {
-        "basis": matrix["basis"],
+        "basis": matrix["basis"][0],
         "data": vector.reshape(-1),
     }
     average_probability = average_probabilities(
-        probability_per_band, weights=occupation_probabilities["data"], axis=(0,)
+        probability_per_band,
+        weights=np.abs(occupation_probabilities["data"]),
+        axis=(0,),
     )
     return calculate_isf_approximate_locations(initial, average_probability, dk)
 

@@ -122,10 +122,10 @@ class Axes(_AxesBase):
         **kwargs,
     ) -> Annotation: ...
     def axhline(
-        self, y: float = 0, xmin: float = 0, xmax: float = 1, **kwargs
+        self, y: float = 0, xmin: float = 0, xmax: float = 1, **kwargs: Any
     ) -> Line2D: ...
     def axvline(
-        self, x: float = ..., ymin: float = ..., ymax: float = ..., **kwargs
+        self, x: float = ..., ymin: float = ..., ymax: float = ..., **kwargs: Any
     ) -> Line2D: ...
     def axline(
         self,
@@ -298,7 +298,7 @@ class Axes(_AxesBase):
         xuplims: bool = False,
         errorevery: int = 1,
         capthick: float | None = None,
-        **kwargs,
+        **kwargs: Any,
     ) -> ErrorbarContainer: ...
     def boxplot(
         self,

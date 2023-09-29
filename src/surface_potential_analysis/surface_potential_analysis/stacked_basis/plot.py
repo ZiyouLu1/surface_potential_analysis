@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Any, TypeVar
 import numpy as np
 from matplotlib import pyplot as plt
 
-from surface_potential_analysis.basis.conversion import axis_as_single_point_axis
+from surface_potential_analysis.basis.conversion import basis_as_single_point_basis
 from surface_potential_analysis.basis.stacked_basis import StackedBasis
 from surface_potential_analysis.basis.util import BasisUtil
 from surface_potential_analysis.stacked_basis.brillouin_zone import (
@@ -89,7 +89,7 @@ def plot_brillouin_zone_points_projected_2d(
     tuple[Figure, Axes, Line2D]
     """
     util = BasisUtil(
-        StackedBasis(basis[0], basis[1], axis_as_single_point_axis(basis[2]))
+        StackedBasis(basis[0], basis[1], basis_as_single_point_basis(basis[2]))
     )
     coordinates = decrement_brillouin_zone(basis, util.stacked_nk_points)
     coordinates = decrement_brillouin_zone(basis, coordinates)

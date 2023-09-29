@@ -53,26 +53,27 @@ def get_collapse_operators_from_a_matrix(
     Parameters
     ----------
     shape : tuple[_L0Inv, _L1Inv]
-    bands_axis : TunnellingSimulationBandsBasis[_L2Inv]
+    bands_basis : TunnellingSimulationBandsBasis[_L2Inv]
     a_function : Callable[ [ int, int, tuple[int, int], tuple[int, int], ], float, ]
 
     Returns
     -------
     list[SingleBasisOperator[ tuple[ FundamentalBasis[_L0Inv], FundamentalBasis[_L1Inv], TunnellingSimulationBandsBasis[_L2Inv]]]]
     """
-    np.fill_diagonal(matrix["array"], 0)
+    data = matrix["data"].reshape(matrix["basis"].shape)
+    np.fill_diagonal(data, 0)
     return [
         {
-            "basis": StackedBasis(matrix["basis"], matrix["basis"]),
+            "basis": matrix["basis"],
             "data": np.array(
                 scipy.sparse.coo_array(
-                    ([matrix["array"][idx]], ([np.int32(idx[0])], [np.int32(idx[1])])),
-                    shape=matrix["array"].shape,
+                    ([data[idx]], ([np.int32(idx[0])], [np.int32(idx[1])])),  # type: ignore always idx[1]
+                    shape=data.shape,
                 ).toarray(),
                 dtype=np.float_,
             ),
         }
-        for idx in zip(*np.nonzero(matrix["array"]), strict=True)
+        for idx in zip(*np.nonzero(data), strict=True)
     ]
 
 
@@ -85,19 +86,21 @@ def get_simplified_collapse_operators_from_a_matrix(
     Parameters
     ----------
     shape : tuple[_L0Inv, _L1Inv]
-    bands_axis : TunnellingSimulationBandsBasis[_L2Inv]
+    bands_basis : TunnellingSimulationBandsBasis[_L2Inv]
     a_function : Callable[ [ int, int, tuple[int, int], tuple[int, int], ], float, ]
 
     Returns
     -------
     list[SingleBasisOperator[ tuple[ FundamentalBasis[_L0Inv], FundamentalBasis[_L1Inv], TunnellingSimulationBandsBasis[_L2Inv]]]]
     """
-    util = BasisUtil(matrix["basis"])
+    util = BasisUtil(matrix["basis"][0])
     (n_x1, n_x2, n_bands) = util.shape
-    jump_array = matrix["array"].reshape(*util.shape, *util.shape)[0, 0]
+    jump_array = matrix["data"].reshape(*util.shape, *util.shape)[0, 0]
     out: list[SingleBasisOperator[_B0Inv]] = []
     for n_0 in range(n_bands):
         for n_1 in range(n_bands):
+            if n_0 == n_1:
+                continue
             for hop in range(9):
                 hop_shift = get_hop_shift(hop, 2)
                 hop_val = jump_array[n_0, hop_shift[0], hop_shift[1], n_1]
@@ -107,19 +110,14 @@ def get_simplified_collapse_operators_from_a_matrix(
                 operator = np.sqrt(hop_val) * build_hop_operator(hop, (n_x1, n_x2))
                 array = np.zeros((*util.shape, *util.shape), dtype=np.complex_)
                 array[:, :, n_1, :, :, n_0] = operator
-                out.append(
-                    {
-                        "basis": StackedBasis(matrix["basis"], matrix["basis"]),
-                        "data": array.reshape(-1),
-                    }
-                )
+                out.append({"basis": matrix["basis"], "data": array.reshape(-1)})
 
     return out
 
 
 def get_collapse_operators_from_function(
     shape: tuple[_L0Inv, _L1Inv],
-    bands_axis: TunnellingSimulationBandsBasis[_L2Inv],
+    bands_basis: TunnellingSimulationBandsBasis[_L2Inv],
     a_function: Callable[
         [
             int,
@@ -144,7 +142,7 @@ def get_collapse_operators_from_function(
     Parameters
     ----------
     shape : tuple[_L0Inv, _L1Inv]
-    bands_axis : TunnellingSimulationBandsBasis[_L2Inv]
+    bands_basis : TunnellingSimulationBandsBasis[_L2Inv]
     a_function : Callable[ [ int, int, tuple[int, int], tuple[int, int], ], float, ]
 
     Returns
@@ -161,8 +159,8 @@ def get_collapse_operators_from_function(
         ]
     ] = []
     n_sites = np.prod(shape)
-    n_bands = bands_axis.fundamental_n
-    basis = get_basis_from_shape(shape, n_bands, bands_axis)
+    n_bands = bands_basis.fundamental_n
+    basis = get_basis_from_shape(shape, n_bands, bands_basis)
 
     array = np.zeros((n_sites * n_bands, n_sites * n_bands))
     for i in range(array.shape[0]):
@@ -173,13 +171,13 @@ def get_collapse_operators_from_function(
                 (i1, j1) = (i0 + d1_stacked[0], j0 + d1_stacked[1])
                 j = np.ravel_multi_index((i1, j1, n1), (*shape, n_bands), mode="wrap")
 
-                data = a_function(int(n0), n1, (0, 0), (d1_stacked[0], d1_stacked[1]))
+                data = np.zeros(shape, dtype=np.complex_)
+                data[i, j] = a_function(
+                    int(n0), n1, (0, 0), (d1_stacked[0], d1_stacked[1])
+                )
                 # TODO: use a single point basis, and a normal np.array...
                 operators.append(
-                    {
-                        "basis": StackedBasis(basis, basis),
-                        "data": scipy.sparse.coo_array((data, (i, j)), shape=shape),
-                    }
+                    {"basis": StackedBasis(basis, basis), "data": data.reshape(-1)}
                 )
     return operators
 
@@ -208,7 +206,7 @@ def solve_stochastic_schrodinger_equation(
     ...
 
 
-def solve_stochastic_schrodinger_equation(
+def solve_stochastic_schrodinger_equation(  # type: ignore bad overload
     initial_state: StateVector[_B0Inv],
     times: _AX0Inv,
     hamiltonian: SingleBasisOperator[_B0Inv],
@@ -255,14 +253,16 @@ def solve_stochastic_schrodinger_equation(
         ntraj=n_trajectories,  # cspell:disable-line
         progress_bar=qutip.ui.EnhancedTextProgressBar(),
     )
-    return {  # type: ignore[return-value]
+    return {
         "basis": StackedBasis(
-            StackedBasis(FundamentalBasis(n_trajectories), times), hamiltonian["basis"]
+            StackedBasis(FundamentalBasis(n_trajectories), times),
+            hamiltonian["basis"][0],
         ),
         "data": np.array(
             [
-                np.asarray([state.data.toarray().reshape(-1) for state in trajectory])
-                for trajectory in result.states
-            ]
+                np.asarray([state.data.toarray().reshape(-1) for state in trajectory])  # type: ignore unknown
+                for trajectory in result.states  # type: ignore unknown
+            ],
+            dtype=np.complex_,
         ).reshape(n_trajectories * times.n, -1),
     }

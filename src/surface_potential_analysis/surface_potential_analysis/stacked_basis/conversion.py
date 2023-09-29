@@ -3,11 +3,11 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, Literal, TypeVar, overload
 
 from surface_potential_analysis.basis.conversion import (
-    axis_as_fundamental_axis,
-    axis_as_fundamental_momentum_axis,
-    axis_as_fundamental_position_axis,
-    axis_as_fundamental_transformed_axis,
-    axis_as_n_point_axis,
+    basis_as_fundamental_basis,
+    basis_as_fundamental_momentum_basis,
+    basis_as_fundamental_position_basis,
+    basis_as_fundamental_transformed_basis,
+    basis_as_n_point_basis,
 )
 from surface_potential_analysis.basis.stacked_basis import (
     StackedBasis,
@@ -45,7 +45,7 @@ def stacked_basis_as_fundamental_transformed_basis(
     tuple[FundamentalMomentumBasis[Any, Any], ...]
     """
     return StackedBasis(
-        *tuple(axis_as_fundamental_transformed_axis(axis) for axis in basis)
+        *tuple(basis_as_fundamental_transformed_basis(axis) for axis in basis)
     )
 
 
@@ -63,7 +63,7 @@ def stacked_basis_as_fundamental_basis(
     -------
     tuple[FundamentalMomentumBasis[Any, Any], ...]
     """
-    return StackedBasis(*tuple(axis_as_fundamental_axis(axis) for axis in basis))
+    return StackedBasis(*tuple(basis_as_fundamental_basis(axis) for axis in basis))
 
 
 @overload
@@ -119,7 +119,7 @@ def stacked_basis_as_fundamental_momentum_basis(
     tuple[FundamentalMomentumBasis[Any, Any], ...]
     """
     return StackedBasis(
-        *tuple(axis_as_fundamental_momentum_axis(axis) for axis in basis)
+        *tuple(basis_as_fundamental_momentum_basis(axis) for axis in basis)
     )
 
 
@@ -176,7 +176,7 @@ def stacked_basis_as_fundamental_position_basis(
     StackedBasisLike[tuple[FundamentalPositionBasis[_LF0Inv], FundamentalPositionBasis[_LF1Inv], FundamentalPositionBasis[_LF2Inv]]
     """
     return StackedBasis(
-        *tuple(axis_as_fundamental_position_axis(axis) for axis in basis)
+        *tuple(basis_as_fundamental_position_basis(axis) for axis in basis)
     )
 
 
@@ -198,6 +198,7 @@ def stacked_basis_as_fundamental_with_shape(
     """
     return StackedBasis(
         *tuple(
-            axis_as_n_point_axis(ax, n=n) for (ax, n) in zip(basis, shape, strict=True)
+            basis_as_n_point_basis(ax, n=n)
+            for (ax, n) in zip(basis, shape, strict=True)
         )
     )

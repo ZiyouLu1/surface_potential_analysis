@@ -123,7 +123,7 @@ def get_sho_potential_basis_config(
     }
 
 
-def sho_axis_3d_from_config(
+def sho_basis_3d_from_config(
     parent: BasisWithLengthLike3d[_LF0Inv, _L0Inv], config: SHOBasisConfig, n: _L0Inv
 ) -> ExplicitBasis3d[_LF0Inv, _L0Inv]:
     """
@@ -147,7 +147,7 @@ def sho_axis_3d_from_config(
     return ExplicitBasis(parent.delta_x, axis.vectors)
 
 
-def infinate_sho_axis_3d_from_config(
+def infinate_sho_basis_3d_from_config(
     parent: BasisWithLengthLike3d[_LF0Inv, _L1Inv], config: SHOBasisConfig, n: _L0Inv
 ) -> ExplicitBasis3d[_LF0Inv, _L0Inv]:
     """

@@ -11,7 +11,7 @@ from surface_potential_analysis.basis.basis_like import (
     convert_vector,
 )
 from surface_potential_analysis.basis.conversion import (
-    axis_as_fundamental_momentum_axis,
+    basis_as_fundamental_momentum_basis,
 )
 from surface_potential_analysis.basis.stacked_basis import (
     StackedBasis,
@@ -207,7 +207,7 @@ def interpolate_state_vector_momentum(
     """
     converted_basis = StackedBasis[Any](
         *tuple(
-            axis_as_fundamental_momentum_axis(ax) if iax in axes else ax
+            basis_as_fundamental_momentum_basis(ax) if iax in axes else ax
             for (iax, ax) in enumerate(state_vector["basis"])
         )
     )

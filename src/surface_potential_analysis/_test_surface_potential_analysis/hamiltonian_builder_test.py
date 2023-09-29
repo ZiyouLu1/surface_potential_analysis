@@ -458,7 +458,7 @@ class HamiltonianBuilderTest(unittest.TestCase):
         eigenstates = calculate_eigenvectors_hermitian(
             hamiltonian, subset_by_index=(0, 50)
         )
-        expected = hbar * omega * (util.stacked_nk_points[0] + 0.5)
+        expected = hbar * omega * (util.stacked_nk_points[0].astype(np.float_) + 0.5)
         np.testing.assert_almost_equal(expected[:50], eigenstates["eigenvalue"][:50])
 
         in_basis = convert_potential_to_basis(

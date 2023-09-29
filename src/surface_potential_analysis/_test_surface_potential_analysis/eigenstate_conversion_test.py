@@ -7,7 +7,7 @@ import hamiltonian_generator
 import numpy as np
 from scipy.constants import hbar
 
-from _test_surface_potential_analysis.utils import get_random_explicit_axis
+from _test_surface_potential_analysis.utils import get_random_explicit_basis
 from surface_potential_analysis.basis.basis import (
     ExplicitBasis,
     ExplicitBasis3d,
@@ -22,7 +22,7 @@ from surface_potential_analysis.basis.stacked_basis import (
 from surface_potential_analysis.basis.util import BasisUtil
 from surface_potential_analysis.stacked_basis.sho_basis import (
     SHOBasisConfig,
-    infinate_sho_axis_3d_from_config,
+    infinate_sho_basis_3d_from_config,
 )
 from surface_potential_analysis.state_vector.conversion import (
     convert_state_vector_to_basis,
@@ -48,7 +48,7 @@ def _get_random_sho_eigenstate(
 
     x2_basis = x2_basis = ExplicitBasis(
         np.array([0, 0, 20]),
-        get_random_explicit_axis(
+        get_random_explicit_basis(
             3, fundamental_n=fundamental_resolution[2], n=resolution[2]
         ).vectors,
     )
@@ -79,7 +79,7 @@ class EigenstateConversionTest(unittest.TestCase):
         eigenstate["basis"] = StackedBasis(
             eigenstate["basis"][0],
             eigenstate["basis"][1],
-            infinate_sho_axis_3d_from_config(
+            infinate_sho_basis_3d_from_config(
                 eigenstate["basis"][2], config, resolution[2]
             ),
         )
@@ -129,7 +129,7 @@ class EigenstateConversionTest(unittest.TestCase):
         eigenstate["basis"] = StackedBasis(
             eigenstate["basis"][0],
             eigenstate["basis"][1],
-            infinate_sho_axis_3d_from_config(
+            infinate_sho_basis_3d_from_config(
                 eigenstate["basis"][2], config, resolution[2]
             ),
         )

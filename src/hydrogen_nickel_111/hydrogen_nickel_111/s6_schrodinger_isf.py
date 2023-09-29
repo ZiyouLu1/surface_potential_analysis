@@ -23,12 +23,15 @@ from surface_potential_analysis.util.decorators import npy_cached
 
 from hydrogen_nickel_111.s6_a_calculation import get_tunnelling_a_matrix_hydrogen
 from hydrogen_nickel_111.s6_incoherent_isf import get_jianding_isf_112bar
-from hydrogen_nickel_111.s6_schrodinger_dynamics import build_hamiltonian_hydrogen
+from hydrogen_nickel_111.s6_schrodinger_dynamics import get_coherent_hamiltonian
 
 from .surface_data import get_data_path
 
 if TYPE_CHECKING:
+    from pathlib import Path
+
     from surface_potential_analysis.basis.basis import FundamentalBasis
+    from surface_potential_analysis.basis.stacked_basis import StackedBasisLike
     from surface_potential_analysis.state_vector.state_vector import StateVector
     from surface_potential_analysis.state_vector.state_vector_list import (
         StateVectorList,
@@ -37,23 +40,21 @@ if TYPE_CHECKING:
     _AX0Inv = TypeVar("_AX0Inv", bound=EvenlySpacedTimeBasis[Any, Any, Any])
 
 
-@npy_cached(
-    lambda temperature, times: get_data_path(  # noqa: ARG005
-        f"dynamics/see_simulation_{temperature}K.npy"
-    ),
-    load_pickle=True,
-)
+def _sse_sim_cache(temperature: float, times: Any) -> Path:  # noqa: ARG001,ANN401
+    return get_data_path(f"dynamics/see_simulation_{temperature}K.npy")
+
+
+@npy_cached(_sse_sim_cache, load_pickle=True)
 def get_simulation_at_temperature(
     temperature: float, times: _AX0Inv
-) -> StateVectorList[tuple[FundamentalBasis[Literal[4]], _AX0Inv], Any]:
+) -> StateVectorList[StackedBasisLike[FundamentalBasis[Literal[4]], _AX0Inv], Any]:
     a_matrix = get_tunnelling_a_matrix_hydrogen((12, 12), 6, temperature)
-    np.fill_diagonal(a_matrix["array"], 0)
     collapse_operators = get_simplified_collapse_operators_from_a_matrix(a_matrix)
 
-    hamiltonian = build_hamiltonian_hydrogen(a_matrix["basis"])
+    hamiltonian = get_coherent_hamiltonian(a_matrix["basis"][0])
     initial_state: StateVector[Any] = {
         "basis": a_matrix["basis"],
-        "data": np.zeros(hamiltonian["array"].shape[0]),
+        "data": np.zeros_like(hamiltonian["data"]),
     }
     initial_state["data"][0] = 1
     return solve_stochastic_schrodinger_equation(
@@ -63,16 +64,14 @@ def get_simulation_at_temperature(
 
 def plot_average_isf_against_time() -> None:
     a_matrix = get_tunnelling_a_matrix_hydrogen((6, 6), 6, 150)
-    np.fill_diagonal(a_matrix["array"], 0)
-
     collapse_operators = get_simplified_collapse_operators_from_a_matrix(a_matrix)
 
-    hamiltonian = build_hamiltonian_hydrogen(a_matrix["basis"])
-    hamiltonian["array"] = np.zeros_like(hamiltonian["array"])
+    hamiltonian = get_coherent_hamiltonian(a_matrix["basis"][0])
+    hamiltonian["data"] = np.zeros_like(hamiltonian["data"])
 
     initial_state: StateVector[Any] = {
         "basis": a_matrix["basis"],
-        "data": np.zeros(hamiltonian["array"].shape[0]),
+        "data": np.zeros(hamiltonian["data"].shape[0], dtype=np.complex_),
     }
     initial_state["data"][0] = 1
     times = FundamentalTimeBasis(20000, 8e-10)
@@ -94,7 +93,7 @@ def plot_average_isf_against_time() -> None:
 def plot_average_isf_all_temperatures() -> None:
     temperatures = np.array([100, 125, 150, 175, 200, 225, 250])
     times = [
-        EvenlySpacedTimeBasis[Any, Any](2000, 2000, 0, 6e-8),
+        EvenlySpacedTimeBasis(2000, 2000, 0, 6e-8),
         EvenlySpacedTimeBasis(2000, 200, 0, 20e-9),
         EvenlySpacedTimeBasis(2000, 200, 0, 6e-9),
         EvenlySpacedTimeBasis(2000, 20, 0, 22e-10),

@@ -367,20 +367,24 @@ def animate_data_through_surface_x(
     measure: Measure = "abs",
 ) -> tuple[Figure, Axes, ArtistAnimation]:
     """
-    Given data on a given coordinate grid in 3D, animate through z_axis.
+    Given data on a given coordinate grid in 3D, animate through the surface.
 
     Parameters
     ----------
-    coordinates : np.ndarray[tuple[Literal[3], Unpack[_S0Inv]], np.dtype[np.float_]]
-    data : np.ndarray[_S0Inv, np.dtype[np.float_]]
-    z_axis : Literal[0, 1, 2, -1, -2, -3]
-        axis through which to animate
+    basis : StackedBasisLike
+    data : np.ndarray[tuple[_L0Inv], np.dtype[np.complex_]]
+    axes : tuple[int, int, int], optional
+        plot axes (z, y, z), by default (0, 1, 2)
+    idx : SingleStackedIndexLike | None, optional
+        idx in remaining dimensions, by default None
     ax : Axes | None, optional
-        plot axis, by default None
+        plot ax, by default None
     scale : Scale, optional
         scale, by default "linear"
     clim : tuple[float  |  None, float  |  None], optional
         clim, by default (None, None)
+    measure : Measure, optional
+        measure, by default "abs"
 
     Returns
     -------

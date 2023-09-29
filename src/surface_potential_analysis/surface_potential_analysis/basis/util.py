@@ -169,7 +169,7 @@ class BasisUtil(BasisLike[Any, Any], Generic[_B0_co]):
         self: BasisUtil[StackedBasisLike[*tuple[_B0Inv, ...]]],
     ) -> ArrayStackedIndexLike[tuple[int]]:
         nk_mesh = np.meshgrid(
-            *[BasisUtil(xi_axis).nk_points for xi_axis in self],
+            *[BasisUtil(xi_basis).nk_points for xi_basis in self],
             indexing="ij",
         )
         return tuple(nki.ravel() for nki in nk_mesh)
@@ -179,7 +179,7 @@ class BasisUtil(BasisLike[Any, Any], Generic[_B0_co]):
         self: BasisUtil[StackedBasisLike[*tuple[_B0Inv, ...]]]
     ) -> ArrayStackedIndexLike[tuple[int]]:
         nk_mesh = np.meshgrid(
-            *[BasisUtil(xi_axis).fundamental_nk_points for xi_axis in self],
+            *[BasisUtil(xi_basis).fundamental_nk_points for xi_basis in self],
             indexing="ij",
         )
         return tuple(nki.ravel() for nki in nk_mesh)
@@ -189,7 +189,7 @@ class BasisUtil(BasisLike[Any, Any], Generic[_B0_co]):
         self: BasisUtil[StackedBasisLike[*tuple[_B0Inv, ...]]]
     ) -> ArrayStackedIndexLike[tuple[int]]:
         nx_mesh = np.meshgrid(
-            *[BasisUtil(xi_axis).nx_points for xi_axis in self],
+            *[BasisUtil(xi_basis).nx_points for xi_basis in self],
             indexing="ij",
         )
         return tuple(nxi.ravel() for nxi in nx_mesh)
@@ -199,7 +199,7 @@ class BasisUtil(BasisLike[Any, Any], Generic[_B0_co]):
         self: BasisUtil[StackedBasisLike[*tuple[_B0Inv, ...]]]
     ) -> ArrayStackedIndexLike[tuple[int]]:
         nx_mesh = np.meshgrid(
-            *[BasisUtil(xi_axis).fundamental_nx_points for xi_axis in self],
+            *[BasisUtil(xi_basis).fundamental_nx_points for xi_basis in self],
             indexing="ij",
         )
         return tuple(nxi.ravel() for nxi in nx_mesh)

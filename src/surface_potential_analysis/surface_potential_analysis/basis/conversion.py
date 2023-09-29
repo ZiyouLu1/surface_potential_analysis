@@ -27,7 +27,7 @@ if TYPE_CHECKING:
     _NF0Inv = TypeVar("_NF0Inv", bound=int)
 
 
-def axis_as_fundamental_position_axis(
+def basis_as_fundamental_position_basis(
     axis: BasisWithLengthLike[_NF0Inv, _N0Inv, _NDInv]
 ) -> FundamentalPositionBasis[_NF0Inv, _NDInv]:
     """
@@ -44,7 +44,7 @@ def axis_as_fundamental_position_axis(
     return FundamentalPositionBasis(axis.delta_x, axis.fundamental_n)
 
 
-def axis_as_fundamental_momentum_axis(
+def basis_as_fundamental_momentum_basis(
     axis: BasisWithLengthLike[_NF0Inv, _N0Inv, _NDInv]
 ) -> FundamentalTransformedPositionBasis[_NF0Inv, _NDInv]:
     """
@@ -61,7 +61,7 @@ def axis_as_fundamental_momentum_axis(
     return FundamentalTransformedPositionBasis(axis.delta_x, axis.fundamental_n)
 
 
-def axis_as_fundamental_transformed_axis(
+def basis_as_fundamental_transformed_basis(
     axis: BasisLike[_NF0Inv, _N0Inv]
 ) -> FundamentalTransformedBasis[_NF0Inv]:
     """
@@ -78,7 +78,7 @@ def axis_as_fundamental_transformed_axis(
     return FundamentalTransformedBasis(axis.fundamental_n)
 
 
-def axis_as_fundamental_axis(
+def basis_as_fundamental_basis(
     axis: BasisLike[_NF0Inv, _N0Inv]
 ) -> FundamentalBasis[_NF0Inv]:
     """
@@ -95,7 +95,7 @@ def axis_as_fundamental_axis(
     return FundamentalBasis(axis.fundamental_n)
 
 
-def axis_as_explicit_position_axis(
+def basis_as_explicit_position_basis(
     axis: BasisWithLengthLike[_NF0Inv, _N0Inv, _NDInv]
 ) -> ExplicitBasis[_NF0Inv, _N0Inv, _NDInv]:
     """
@@ -113,7 +113,7 @@ def axis_as_explicit_position_axis(
     return ExplicitBasis(axis.delta_x, util.vectors)
 
 
-def axis_as_orthonormal_axis(
+def basis_as_orthonormal_basis(
     axis: BasisWithLengthLike[_NF0Inv, _N0Inv, _NDInv]
 ) -> ExplicitBasis[_NF0Inv, _N0Inv, _NDInv]:
     """
@@ -138,7 +138,7 @@ def axis_as_orthonormal_axis(
     return ExplicitBasis(axis.delta_x, orthonormal_vectors)
 
 
-def axis_as_n_point_axis(
+def basis_as_n_point_basis(
     axis: BasisWithLengthLike[_NF0Inv, _N0Inv, _NDInv], *, n: _N1Inv
 ) -> FundamentalPositionBasis[_N1Inv, _NDInv]:
     """
@@ -156,7 +156,7 @@ def axis_as_n_point_axis(
     return FundamentalPositionBasis(axis.delta_x, n)
 
 
-def axis_as_single_point_axis(
+def basis_as_single_point_basis(
     axis: BasisWithLengthLike[_NF0Inv, _N0Inv, _NDInv]
 ) -> FundamentalPositionBasis[Literal[1], _NDInv]:
     """
@@ -170,4 +170,4 @@ def axis_as_single_point_axis(
     -------
     FundamentalPositionBasis[Literal[1], _NDInv]
     """
-    return axis_as_n_point_axis(axis, n=1)
+    return basis_as_n_point_basis(axis, n=1)

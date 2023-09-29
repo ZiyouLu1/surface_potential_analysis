@@ -48,7 +48,9 @@ def calculate_tunnelling_eigenstates(
     -------
     TunnellingEigenstates[_S0Inv]
     """
-    eigenvalues, vectors = scipy.linalg.eig(matrix["array"])
+    eigenvalues, vectors = scipy.linalg.eig(
+        matrix["data"].reshape(matrix["basis"].shape)
+    )
     return {
         "basis": StackedBasis(FundamentalBasis(eigenvalues.size), matrix["basis"][0]),
         "eigenvalue": eigenvalues - np.max(eigenvalues),

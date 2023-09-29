@@ -26,15 +26,17 @@ def test_normalization_of_m_matrix_hydrogen() -> None:
     a_matrix = get_tunnelling_a_matrix_hydrogen((5, 5), 2, 150)
     m_matrix = get_tunnelling_m_matrix(a_matrix)
 
-    initial = rng.random(m_matrix["array"].shape[0])
+    stacked = m_matrix["data"].reshape(m_matrix["basis"].shape)
+
+    initial = rng.random(m_matrix["basis"][0].n)
     initial /= np.linalg.norm(initial)
-    actual = np.sum(np.tensordot(m_matrix["array"], initial, (1, 0)))  # type: ignore[var-annotated]
+    actual = np.sum(np.tensordot(stacked, initial, (1, 0)))
     np.testing.assert_array_almost_equal(0, actual)
 
-    np.testing.assert_array_almost_equal(0, np.sum(m_matrix["array"], axis=0))
+    np.testing.assert_array_almost_equal(0, np.sum(stacked, axis=0))
 
-    np.testing.assert_array_equal(1, np.diag(m_matrix["array"]) <= 0)
-    np.testing.assert_array_equal(1, a_matrix["array"] >= 0)
+    np.testing.assert_array_equal(1, np.diag(stacked) <= 0)
+    np.testing.assert_array_equal(1, stacked >= 0)
 
 
 def test_reduced_band_matrix_hydrogen() -> None:
@@ -43,7 +45,7 @@ def test_reduced_band_matrix_hydrogen() -> None:
 
     a_matrix_6 = get_tunnelling_a_matrix_hydrogen((25, 25), 6, 150)
     actual = get_tunnelling_m_matrix(a_matrix_6, 2)
-    np.testing.assert_array_almost_equal(actual["array"], expected["array"])
+    np.testing.assert_array_almost_equal(actual["data"], expected["data"])
 
 
 def get_equilibrium_state_on_surface_hydrogen() -> None:
@@ -62,7 +64,7 @@ def get_equilibrium_state_on_surface_hydrogen() -> None:
 def plot_occupation_on_surface_hydrogen() -> None:
     a_matrix = get_tunnelling_a_matrix_hydrogen((25, 25), 6, 150)
     m_matrix = get_tunnelling_m_matrix(a_matrix)
-    initial_state = get_initial_pure_density_matrix_for_basis(m_matrix["basis"])
+    initial_state = get_initial_pure_density_matrix_for_basis(m_matrix["basis"][0])
     times = np.linspace(0, 9e-10, 1000)
     state = calculate_tunnelling_simulation_state(m_matrix, initial_state, times)
     probabilities = density_matrix_list_as_probabilities(state)
@@ -75,7 +77,7 @@ def plot_occupation_on_surface_hydrogen() -> None:
 
     m_matrix_2_band = get_tunnelling_m_matrix(a_matrix, 2)
     initial_state_2_band = get_initial_pure_density_matrix_for_basis(
-        m_matrix_2_band["basis"]
+        m_matrix_2_band["basis"][0]
     )
     times = np.linspace(0, 9e-10, 1000)
     state = calculate_tunnelling_simulation_state(

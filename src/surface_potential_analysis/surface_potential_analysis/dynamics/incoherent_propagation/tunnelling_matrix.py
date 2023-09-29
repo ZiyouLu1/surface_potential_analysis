@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Generic, Literal, TypedDict, TypeVar, overload
+from typing import TYPE_CHECKING, Any, Literal, TypeVar, overload
 
 import numpy as np
 
@@ -14,6 +14,7 @@ from surface_potential_analysis.dynamics.tunnelling_basis import (
     get_basis_from_shape,
 )
 from surface_potential_analysis.dynamics.util import build_hop_operator, get_hop_shift
+from surface_potential_analysis.operator.operator import SingleBasisOperator
 from surface_potential_analysis.util.decorators import timed
 
 if TYPE_CHECKING:
@@ -46,37 +47,26 @@ _B1Inv = TypeVar(
 )
 
 
-class TunnellingJumpMatrix(TypedDict, Generic[_L0Inv]):
-    """Gives the jump between site n0 to n1 with a hop idx."""
+TunnellingJumpMatrix = SingleBasisOperator[TunnellingSimulationBandsBasis[_L0Inv]]
+"""Gives the jump between site n0 to n1 with a hop idx."""
 
-    axis: TunnellingSimulationBandsBasis[_L0Inv]
-    array: np.ndarray[tuple[int, int, Literal[9]], np.dtype[np.float_]]
+TunnellingAMatrix = SingleBasisOperator[_B1Inv]
+"""
+A_{i,j}.
 
-
+Indexed such that A.reshape(*shape, n_bands, *shape, n_bands)[i0,j0,n0,i1,j1,n1]
+gives a from site i=i0,j0,n0 to site j=i1,j1,n1.
+"""
 # Note A has the reverse convention
-class TunnellingAMatrix(TypedDict, Generic[_B1Inv]):
-    """
-    A_{i,j}.
-
-    Indexed such that A.reshape(*shape, n_bands, *shape, n_bands)[i0,j0,n0,i1,j1,n1]
-    gives a from site i=i0,j0,n0 to site j=i1,j1,n1.
-    """
-
-    basis: _B1Inv
-    array: np.ndarray[tuple[int, int], np.dtype[np.float_]]
 
 
-class TunnellingMMatrix(TypedDict, Generic[_B1Inv]):
-    """
-    M_{i,j}.
+TunnellingMMatrix = SingleBasisOperator[_B1Inv]
+"""
+M_{i,j}.
 
-    Indexed such that A.reshape(*shape, n_bands, *shape, n_bands)[i0,j0,n0,i1,j1,n1]
-    gives a from site i=i0,j0,n0 to site j=i1,j1,n1.
-    """
-
-    basis: _B1Inv
-    array: np.ndarray[tuple[int, int], np.dtype[np.float_]]
-
+Indexed such that A.reshape(*shape, n_bands, *shape, n_bands)[i0,j0,n0,i1,j1,n1]
+gives a from site i=i0,j0,n0 to site j=i1,j1,n1.
+"""
 
 FundamentalTunnellingAMatrixBasis = TunnellingSimulationBasis[
     FundamentalBasis[Literal[3]],
@@ -105,17 +95,20 @@ def get_jump_matrix_from_a_matrix(
     """
     n_bands = matrix["basis"][2].fundamental_n
     util = BasisUtil(matrix["basis"])
-    stacked = matrix["array"].reshape(*util.shape, *util.shape)
-    array = np.zeros((n_bands, n_bands, 9))
+    stacked = matrix["data"].reshape(*util.shape, *util.shape)
+    data = np.zeros((n_bands, n_bands, 9), dtype=np.complex_)
     for n_0 in range(n_bands):
         for n_1 in range(n_bands):
             for hop in range(9):
                 hop_shift = get_hop_shift(hop, 2)
                 # A matrix uses the reverse order
                 hop_val = stacked[0, 0, n_0, hop_shift[0], hop_shift[1], n_1]
-                array[n_0, n_1, hop] = hop_val
+                data[n_0, n_1, hop] = hop_val
 
-    return {"axis": matrix["basis"][2], "array": array}
+    return {
+        "basis": StackedBasis(matrix["basis"][0][2], matrix["basis"][1][2]),
+        "data": data.reshape(-1),
+    }
 
 
 @overload
@@ -176,22 +169,23 @@ def get_a_matrix_from_jump_matrix(
     -------
     TunnellingAMatrix[ tuple[ FundamentalBasis[_L0Inv], FundamentalBasis[_L1Inv], TunnellingSimulationBandsBasis[int], ] ]
     """
-    n_bands = matrix["axis"].fundamental_n if n_bands is None else n_bands
-    final_basis = get_basis_from_shape(shape, n_bands, matrix["axis"])
+    n_bands = matrix["basis"].fundamental_n if n_bands is None else n_bands
+    final_basis = get_basis_from_shape(shape, n_bands, matrix["basis"][0])
     final_util = BasisUtil(final_basis)
 
     (n_x0, n_x1) = shape
-    array = np.zeros((*final_util.shape, *final_util.shape))
+    jump_stacked = matrix["data"].reshape(n_bands, n_bands, 9)
+    array = np.zeros((*final_util.shape, *final_util.shape), dtype=np.complex_)
     for n_0 in range(n_bands):
         for n_1 in range(n_bands):
             for hop in range(9):
-                hop_val = matrix["array"][n_0, n_1, hop]
+                hop_val = jump_stacked[n_0, n_1, hop]
                 operator = hop_val * build_hop_operator(hop, (n_x0, n_x1))
                 array[:, :, n_1, :, :, n_0] += operator
     # A matrix uses the reverse convention for array, ie n_0 first
     return {
-        "basis": final_basis,
-        "array": array.reshape(final_util.n, final_util.n).T,
+        "basis": StackedBasis(final_basis, final_basis),
+        "data": array.reshape(final_util.n, final_util.n).T.reshape(-1),
     }
 
 
@@ -226,7 +220,7 @@ def resample_tunnelling_a_matrix(
 
 @timed
 def get_jump_matrix_from_function(
-    bands_axis: TunnellingSimulationBandsBasis[_L2Inv],
+    bands_basis: TunnellingSimulationBandsBasis[_L2Inv],
     jump_function: Callable[[int, int, int], float],
 ) -> TunnellingJumpMatrix[_L2Inv]:
     r"""
@@ -245,13 +239,13 @@ def get_jump_matrix_from_function(
     -------
     TunnellingAMatrix[_S0Inv]
     """
-    n_bands = bands_axis.fundamental_n
-    array = np.zeros((n_bands, n_bands, 9))
+    n_bands = bands_basis.fundamental_n
+    data = np.zeros((n_bands, n_bands, 9), dtype=np.complex_)
     for n0 in range(n_bands):
         for n1 in range(n_bands):
             for d1 in range(9):
-                array[n0, n1, d1] = jump_function((n0), n1, d1)
-    return {"axis": bands_axis, "array": array}
+                data[n0, n1, d1] = jump_function((n0), n1, d1)
+    return {"basis": StackedBasis(bands_basis, bands_basis), "data": data.reshape(-1)}
 
 
 def get_a_matrix_reduced_bands(
@@ -279,18 +273,19 @@ def get_a_matrix_reduced_bands(
     TunnellingMMatrix[tuple[_AX0Inv, _AX1Inv, TunnellingSimulationBandsBasis[_L1Inv]]]
     """
     util = BasisUtil(matrix["basis"])
-    n_sites = np.prod(util.shape[0:2])
-    return {
-        "basis": StackedBasis(
-            matrix["basis"][0],
-            matrix["basis"][1],
-            TunnellingSimulationBandsBasis(
-                matrix["basis"][2].locations[:, 0:n_bands], matrix["basis"][2].unit_cell
-            ),
+    a_basis = StackedBasis(
+        matrix["basis"][0][0],
+        matrix["basis"][0][1],
+        TunnellingSimulationBandsBasis(
+            matrix["basis"][0][2].locations[:, 0:n_bands],
+            matrix["basis"][0][2].unit_cell,
         ),
-        "array": matrix["array"]
+    )
+    return {
+        "basis": StackedBasis(a_basis, a_basis),
+        "data": matrix["data"]
         .reshape(*util.shape, *util.shape)[:, :, :n_bands, :, :, :n_bands]
-        .reshape(n_bands * n_sites, n_bands * n_sites),
+        .reshape(-1),
     }
 
 
@@ -334,9 +329,10 @@ def get_tunnelling_m_matrix(
     TunnellingMMatrix
     """
     matrix = matrix if n_bands is None else get_a_matrix_reduced_bands(matrix, n_bands)
-    np.fill_diagonal(matrix["array"], 0)
-    array = matrix["array"].T - np.diag(np.sum(matrix["array"], axis=1))
-    return {"basis": matrix["basis"], "array": array}
+    data = matrix["data"].reshape(matrix["basis"].shape)
+    np.fill_diagonal(data, 0)
+    array = data.T - np.diag(np.sum(data, axis=1))
+    return {"basis": matrix["basis"], "data": array}
 
 
 def get_initial_pure_density_matrix_for_basis(

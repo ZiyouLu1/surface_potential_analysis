@@ -41,7 +41,7 @@ from surface_potential_analysis.stacked_basis.plot import (
     plot_x_points_projected_2d,
 )
 from surface_potential_analysis.stacked_basis.sho_basis import (
-    infinate_sho_axis_3d_from_config,
+    infinate_sho_basis_3d_from_config,
 )
 from surface_potential_analysis.util.interpolation import (
     interpolate_points_fftn,
@@ -265,7 +265,7 @@ def plot_interpolation_with_sho_wavefunctions() -> None:
     fig, ax = plt.subplots()
     plot_potential_1d_x2_comparison_111(potential, ax=ax)
     plot_explicit_basis_states_x(
-        infinate_sho_axis_3d_from_config(
+        infinate_sho_basis_3d_from_config(
             potential["basis"][2],
             {
                 "mass": 1.6735575e-27,

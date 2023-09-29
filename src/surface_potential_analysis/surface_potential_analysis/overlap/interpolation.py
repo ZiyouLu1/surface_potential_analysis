@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, Any, Literal, TypeVar, TypeVarTuple
 
 import numpy as np
 
-from surface_potential_analysis.basis.conversion import axis_as_single_point_axis
+from surface_potential_analysis.basis.conversion import basis_as_single_point_basis
 from surface_potential_analysis.basis.stacked_basis import StackedBasis
 from surface_potential_analysis.basis.util import BasisUtil
 from surface_potential_analysis.stacked_basis.util import (
@@ -138,17 +138,16 @@ def get_overlap_momentum_interpolator_flat(
     Callable[[np.ndarray[tuple[Literal[2], Unpack[_S0Inv]], np.dtype[np.float_]]], np.ndarray[_S0Inv, np.dtype[np.complex_]], ]
         Interpolator, which takes a coordinate list in momentum basis ignoring k2 axis
     """
-    basis = StackedBasis(
-        overlap["basis"][0][:-1],
-        axis_as_single_point_axis(overlap["basis"][0][-1]),
+    basis = StackedBasis[Any, Any, Any](
+        *overlap["basis"][0][:-1], basis_as_single_point_basis(overlap["basis"][0][-1])  # type: ignore cannot deal with *
     )
     util = BasisUtil(basis)
     nx_points_wrapped = wrap_index_around_origin(
-        overlap["basis"], util.stacked_nx_points, axes=(0, 1)
+        overlap["basis"][0], util.stacked_nx_points, axes=(0, 1)
     )
     x_points = util.get_x_points_at_index(nx_points_wrapped)[:2, :]
 
-    vector = overlap["data"].reshape(BasisUtil(overlap["basis"]).shape)
+    vector = overlap["data"].reshape(overlap["basis"][0].shape)
     vector_transformed = np.fft.ifft(vector, axis=-1, norm="forward")[..., 0].ravel()
 
     relevant_slice = (
@@ -192,7 +191,7 @@ def get_angle_averaged_diagonal_overlap_function(
     np.ndarray[tuple[int], np.dtype[np.float_]]
     """
     theta = np.linspace(0, 2 * np.pi, theta_samples)
-    averages = []
+    averages = list[np.float_]()
     for q in abs_q.ravel():
         k_points = q * np.array([np.cos(theta), np.sin(theta)])
         interpolated = interpolator(k_points)  # type: ignore[var-annotated]

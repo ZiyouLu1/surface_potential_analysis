@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING, Literal, TypeVar
 
 import numpy as np
 from scipy.constants import Boltzmann
+from surface_potential_analysis.basis.stacked_basis import StackedBasis
 from surface_potential_analysis.basis.util import BasisUtil
 from surface_potential_analysis.dynamics.hermitian_gamma_integral import (
     calculate_hermitian_gamma_occupation_integral,
@@ -23,6 +24,9 @@ from surface_potential_analysis.dynamics.util import get_hop_shift
 from surface_potential_analysis.overlap.interpolation import (
     get_angle_averaged_diagonal_overlap_function,
     get_overlap_momentum_interpolator_flat,
+)
+from surface_potential_analysis.stacked_basis.conversion import (
+    stacked_basis_as_fundamental_with_shape,
 )
 from surface_potential_analysis.util.constants import FERMI_WAVEVECTOR
 from surface_potential_analysis.util.decorators import npy_cached, timed
@@ -60,7 +64,18 @@ def _get_diagonal_overlap_function_hydrogen(
 ]:
     overlap = get_overlap_hydrogen(i, j, (0, 0), offset_j)
     n_points = np.prod(BasisUtil(get_wavepacket_hydrogen(0)["basis"]).shape[0:2])
-    interpolator = get_overlap_momentum_interpolator_flat(overlap, n_points)
+    interpolator = get_overlap_momentum_interpolator_flat(
+        {
+            "basis": StackedBasis(
+                stacked_basis_as_fundamental_with_shape(
+                    overlap["basis"][0], overlap["basis"][0].shape
+                ),
+                overlap["basis"][1],
+            ),
+            "data": overlap["data"],
+        },
+        n_points,
+    )
 
     def overlap_function(
         q: np.ndarray[_S0Inv, np.dtype[np.float_]]
@@ -82,13 +97,12 @@ def _calculate_gamma_potential_integral_hydrogen_diagonal(
 
 @timed
 def calculate_gamma_potential_integral_hydrogen_diagonal(
-    i: int, j: int, offset_i: tuple[int, int], offset_j: tuple[int, int]
+    i: int, j: int, offset_j: tuple[int, int]
 ) -> float:
     if j > i:
         (j, i) = (i, j)
-        (offset_j, offset_i) = (offset_i, offset_j)
+        offset_j = tuple(-i for i in offset_j)  # type: ignore cant determine length
 
-    offset_j = (offset_j[0] - offset_i[0], offset_j[1] - offset_i[1])
     if -2 < offset_j[0] < 2 and -2 < offset_j[1] < 2:  # noqa: PLR2004
         return float(
             np.real_if_close(
@@ -109,20 +123,19 @@ def calculate_gamma_occupation_integral_hydrogen_diagonal(
     )
 
 
-def a_function_hydrogen(
+def jump_function_hydrogen(
     i: int,
     j: int,
-    offset_i: tuple[int, int],
     offset_j: tuple[int, int],
     temperature: float,
 ) -> float:
     return calculate_gamma_occupation_integral_hydrogen_diagonal(
         i, j, temperature
-    ) * calculate_gamma_potential_integral_hydrogen_diagonal(i, j, offset_i, offset_j)
+    ) * calculate_gamma_potential_integral_hydrogen_diagonal(i, j, offset_j)
 
 
 def _get_get_tunnelling_jump_matrix_hydrogen_cache(
-    n_bands: _L2Inv, # type: ignore _L2Inv needs to match get_jump_matrix_hydrogen
+    n_bands: _L2Inv,  # type: ignore _L2Inv needs to match get_jump_matrix_hydrogen
     temperature: float,
 ) -> Path:
     return get_data_path(f"dynamics/jump_matrix_hydrogen_{n_bands}_{temperature}k.npy")
@@ -134,9 +147,7 @@ def get_jump_matrix_hydrogen(
 ) -> TunnellingJumpMatrix[_L2Inv]:
     def jump_function(i: int, j: int, hop: int) -> float:
         offset_j = get_hop_shift(hop, 2)
-        return a_function_hydrogen(
-            i, j, (0, 0), (offset_j[0], offset_j[1]), temperature
-        )
+        return jump_function_hydrogen(i, j, (offset_j[0], offset_j[1]), temperature)
 
     basis = TunnellingSimulationBandsBasis[_L2Inv].from_wavepackets(
         get_wavepackets_with_eigenvalues(get_all_wavepackets_hydrogen(), slice(n_bands))

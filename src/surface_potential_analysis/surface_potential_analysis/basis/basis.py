@@ -181,6 +181,59 @@ FundamentalPositionBasis3d = FundamentalPositionBasis[_NF0Inv, Literal[3]]
 """A basis with vectors that are the fundamental position states with a 3d basis vector."""
 
 
+class TruncatedBasis(
+    AsFundamentalBasis[_NF0_co, _N0_co],
+    BasisLike[_NF0_co, _N0_co],
+):
+    """Basis with the N closest points to the origin."""
+
+    def __init__(self, n: _N0_co, fundamental_n: _NF0_co) -> None:
+        self._n = n
+        self._fundamental_n = fundamental_n
+        assert self._fundamental_n >= self.n
+        super().__init__()
+
+    @property
+    def n(self) -> _N0_co:
+        return self._n
+
+    @property
+    def fundamental_n(self) -> _NF0_co:
+        return self._fundamental_n
+
+    def __as_fundamental__(
+        self,
+        vectors: np.ndarray[_S0Inv, np.dtype[np.complex_] | np.dtype[np.float_]],
+        basis: int = -1,
+    ) -> np.ndarray[tuple[int, ...], np.dtype[np.complex_]]:
+        casted = vectors.astype(np.complex_, copy=False)
+        return pad_ft_points(casted, s=(self.fundamental_n,), axes=(basis,))
+
+    def __from_fundamental__(
+        self,
+        vectors: np.ndarray[_S0Inv, np.dtype[np.complex_] | np.dtype[np.float_]],
+        basis: int = -1,
+    ) -> np.ndarray[tuple[int, ...], np.dtype[np.complex_]]:
+        casted = vectors.astype(np.complex_, copy=False)
+        return pad_ft_points(casted, s=(self.n,), axes=(basis,))
+
+
+class TruncatedPositionBasis(
+    TruncatedBasis[_NF0_co, _N0_co], BasisWithLengthLike[_NF0_co, _N0_co, _ND0Inv]
+):
+    """A basis with vectors that are the truncated position states."""
+
+    def __init__(
+        self, delta_x: AxisVector[_ND0Inv], n: _N0_co, fundamental_n: _NF0_co
+    ) -> None:
+        self._delta_x = delta_x
+        super().__init__(n, fundamental_n)
+
+    @property
+    def delta_x(self) -> AxisVector[_ND0Inv]:
+        return self._delta_x
+
+
 class TransformedBasis(
     AsTransformedBasis[_NF0_co, _N0_co],
     BasisLike[_NF0_co, _N0_co],

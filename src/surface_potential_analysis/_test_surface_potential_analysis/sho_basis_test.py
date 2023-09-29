@@ -16,8 +16,8 @@ from surface_potential_analysis.basis.util import BasisUtil
 from surface_potential_analysis.stacked_basis.sho_basis import (
     SHOBasisConfig,
     calculate_sho_wavefunction,
-    infinate_sho_axis_3d_from_config,
-    sho_axis_3d_from_config,
+    infinate_sho_basis_3d_from_config,
+    sho_basis_3d_from_config,
 )
 
 rng = np.random.default_rng()
@@ -115,7 +115,7 @@ class SHOBasisTest(unittest.TestCase):
         parent: FundamentalPositionBasis3d[Literal[1001]] = FundamentalPositionBasis(
             np.array([0, 0, 20]), 1001
         )
-        basis = BasisUtil(infinate_sho_axis_3d_from_config(parent, config, 12))
+        basis = BasisUtil(infinate_sho_basis_3d_from_config(parent, config, 12))
         np.testing.assert_almost_equal(
             np.ones((nz,)), np.sum(basis.vectors * np.conj(basis.vectors), axis=1)
         )
@@ -128,7 +128,7 @@ class SHOBasisTest(unittest.TestCase):
         }
         parent = FundamentalPositionBasis(np.array([0, 0, 10 * np.pi]), 1001)
 
-        axis = BasisUtil(sho_axis_3d_from_config(parent, config, 12))
+        axis = BasisUtil(sho_basis_3d_from_config(parent, config, 12))
 
         norm = np.linalg.norm(axis.vectors, axis=1)
         np.testing.assert_array_almost_equal(norm, np.ones_like(norm))
@@ -145,9 +145,9 @@ class SHOBasisTest(unittest.TestCase):
         parent = FundamentalPositionBasis(np.array([0, 0, 10 * np.pi]), 1001)
 
         basis1 = _normalize_sho_basis(
-            infinate_sho_axis_3d_from_config(parent, config, 16)
+            infinate_sho_basis_3d_from_config(parent, config, 16)
         )
-        basis2 = _normalize_sho_basis(sho_axis_3d_from_config(parent, config, 16))
+        basis2 = _normalize_sho_basis(sho_basis_3d_from_config(parent, config, 16))
         np.testing.assert_array_almost_equal(
             BasisUtil(basis1).vectors,
             BasisUtil(basis2).vectors,

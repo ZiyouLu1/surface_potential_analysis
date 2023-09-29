@@ -142,7 +142,7 @@ def get_wavepacket_hamiltonian_hydrogen(
 
 
 def _get_wavepacket_cache_wannier90_h(start: int, end: int) -> Path:
-    return get_data_path(f"wavepacket/localized_wavepacket_operator_{start}:{end}.npy")
+    return get_data_path(f"wavepacket/localized_wavepacket_operator_{start}_{end}.npy")
 
 
 @npy_cached(_get_wavepacket_cache_wannier90_h, load_pickle=True)

@@ -312,9 +312,6 @@ def plot_wavepacket_2d_k(
     wavepacket : MomentumBasisWavepacket[_NS0Inv, _NS1Inv, _L0Inv, _L1Inv, _L2Inv]
         Wavepacket in momentum basis
     idx : SingleFlatIndexLike
-        index along z_axis
-    kz_axis : Literal[0, 1, 2]
-        kz_axis, perpendicular to plotted direction
     ax : Axes | None, optional
         plot axis, by default None
     measure : Literal[&quot;real&quot;, &quot;imag&quot;, &quot;abs&quot;], optional
@@ -348,9 +345,6 @@ def plot_all_wavepacket_states_2d_k(
     wavepacket : MomentumBasisWavepacket[_NS0Inv, _NS1Inv, _L0Inv, _L1Inv, _L2Inv]
         Wavepacket in momentum basis
     idx : SingleFlatIndexLike
-        index along z_axis
-    z_axis : Literal[0, 1, 2]
-        z_axis, perpendicular to plotted direction
     ax : Axes | None, optional
         plot axis, by default None
     measure : Literal[&quot;real&quot;, &quot;imag&quot;, &quot;abs&quot;], optional
@@ -388,9 +382,6 @@ def plot_wavepacket_2d_x(
     wavepacket : MomentumBasisWavepacket[_NS0Inv, _NS1Inv, _L0Inv, _L1Inv, _L2Inv]
         Wavepacket in momentum basis
     idx : SingleFlatIndexLike
-        index along z_axis
-    z_axis : Literal[0, 1, 2]
-        z_axis, perpendicular to plotted direction
     ax : Axes | None, optional
         plot axis, by default None
     measure : Literal[&quot;real&quot;, &quot;imag&quot;, &quot;abs&quot;], optional
@@ -424,9 +415,6 @@ def plot_all_wavepacket_states_2d_x(
     wavepacket : MomentumBasisWavepacket[_NS0Inv, _NS1Inv, _L0Inv, _L1Inv, _L2Inv]
         Wavepacket in momentum basis
     idx : SingleFlatIndexLike
-        index along z_axis
-    z_axis : Literal[0, 1, 2]
-        z_axis, perpendicular to plotted direction
     ax : Axes | None, optional
         plot axis, by default None
     measure : Literal[&quot;real&quot;, &quot;imag&quot;, &quot;abs&quot;], optional
@@ -462,10 +450,6 @@ def plot_wavepacket_difference_2d_x(
     ----------
     wavepacket_0 : MomentumBasisWavepacket[_NS0Inv, _NS1Inv, _L0Inv, _L1Inv, _L2Inv]
     wavepacket_1 : MomentumBasisWavepacket[_NS0Inv, _NS1Inv, _L0Inv, _L1Inv, _L2Inv]
-    idx : SingleFlatIndexLike
-        index along z_axis to plot
-    z_axis : Literal[0, 1, 2,
-        direction perpendicular to which to plot
     ax : Axes | None, optional
         plot axis, by default None
     measure : Literal[&quot;real&quot;, &quot;imag&quot;, &quot;abs&quot;], optional
@@ -497,13 +481,11 @@ def animate_wavepacket_3d_x(
     scale: Scale = "linear",
 ) -> tuple[Figure, Axes, ArtistAnimation]:
     """
-    Animate the wavepacket in 3D, perpendicular to z_axis.
+    Animate the wavepacket in 3D, perpendicular to.
 
     Parameters
     ----------
     wavepacket : MomentumBasisWavepacket[_NS0Inv, _NS1Inv, _L0Inv, _L1Inv, _L2Inv]
-    z_axis : Literal[0, 1, 2,
-        direction along which to animate
     ax : Axes | None, optional
         plot axis, by default None
     measure : Literal[&quot;real&quot;, &quot;imag&quot;, &quot;abs&quot;], optional

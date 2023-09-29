@@ -1,22 +1,19 @@
 from __future__ import annotations
 
-from typing import TypeVar
+from typing import TypeVar, cast
 
 import numpy as np
 from matplotlib import pyplot as plt
+from matplotlib.colors import Color
 from matplotlib.scale import FuncScale
 from scipy.constants import Boltzmann, electron_mass, hbar
 from surface_potential_analysis.basis.util import BasisUtil
 from surface_potential_analysis.dynamics.hermitian_gamma_integral import (
     calculate_hermitian_gamma_occupation_integral,
-    calculate_hermitian_gamma_potential_integral,
     get_hermitian_gamma_occupation_integrand,
 )
 from surface_potential_analysis.overlap.conversion import (
     convert_overlap_to_momentum_basis,
-)
-from surface_potential_analysis.overlap.interpolation import (
-    get_overlap_momentum_interpolator_flat,
 )
 from surface_potential_analysis.overlap.plot import plot_overlap_2d_k, plot_overlap_2d_x
 from surface_potential_analysis.util.constants import FERMI_WAVEVECTOR
@@ -32,11 +29,10 @@ from hydrogen_nickel_111.s4_wavepacket import (
 from hydrogen_nickel_111.s5_overlap import (
     get_overlap_hydrogen,
 )
-from hydrogen_nickel_111.s5_overlap_analysis import get_angle_averaged_overlap
 
 _S0Inv = TypeVar("_S0Inv", bound=tuple[int, ...])
 
-PLOT_COLOURS = plt.rcParams["axes.prop_cycle"].by_key()["color"]
+PLOT_COLOURS = cast(list[Color], plt.rcParams["axes.prop_cycle"].by_key()["color"])  # type: ignore unknown
 
 
 def plot_fermi_occupation_intregrand() -> None:
@@ -44,7 +40,9 @@ def plot_fermi_occupation_intregrand() -> None:
 
     dk = 2 * Boltzmann * 100 * electron_mass / (hbar**2 * FERMI_WAVEVECTOR["NICKEL"])
     k1_points = np.linspace(
-        FERMI_WAVEVECTOR["NICKEL"] - 5 * dk, FERMI_WAVEVECTOR["NICKEL"] + 5 * dk
+        FERMI_WAVEVECTOR["NICKEL"] - 5 * dk,
+        FERMI_WAVEVECTOR["NICKEL"] + 5 * dk,
+        dtype=np.float_,
     )
 
     for i, t in enumerate([150, 170, 190]):
@@ -79,7 +77,7 @@ def plot_fermi_occupation_intregrand() -> None:
         line.set_linestyle("--")
         line.set_color(PLOT_COLOURS[i])
 
-    line = ax.axvline(FERMI_WAVEVECTOR["NICKEL"])
+    line = ax.axvline(FERMI_WAVEVECTOR["NICKEL"])  # cspell:disable-line
     line.set_linestyle("--")
     line.set_alpha(0.5)
     line.set_color("black")
@@ -135,22 +133,6 @@ def plot_fermi_occupation_integral() -> None:
     input()
 
 
-def get_hydrogen_fcc_hcp_gamma() -> np.complex_:
-    overlap = get_overlap_hydrogen(0, 1)
-    interpolator_0_1 = get_overlap_momentum_interpolator_flat(overlap)
-
-    def overlap_function(
-        q: np.ndarray[_S0Inv, np.dtype[np.float_]]
-    ) -> np.ndarray[_S0Inv, np.dtype[np.complex_]]:
-        return get_angle_averaged_overlap(
-            interpolator_0_1, interpolator_0_1, q.ravel()
-        ).reshape(q.shape)
-
-    return calculate_hermitian_gamma_potential_integral(
-        FERMI_WAVEVECTOR["NICKEL"], overlap_function
-    )
-
-
 def get_rate_simple_equation_hydrogen(
     temperature: np.ndarray[_S0Inv, np.dtype[np.float_]]
 ) -> np.ndarray[_S0Inv, np.dtype[np.float_]]:
@@ -176,22 +158,6 @@ def get_rate_simple_equation_hydrogen(
     return (  # type: ignore[no-any-return]
         (temperature_dep_integral + temperature_dep_integral2) * (3 * (fcc_hcp_gamma))
     ).reshape(temperature.shape)
-
-
-def get_deuterium_fcc_hcp_gamma() -> np.complex_:
-    overlap = get_overlap_deuterium(0, 1)
-    interpolator_0_1 = get_overlap_momentum_interpolator_flat(overlap)
-
-    def overlap_function(
-        q: np.ndarray[_S0Inv, np.dtype[np.float_]]
-    ) -> np.ndarray[_S0Inv, np.dtype[np.complex_]]:
-        return get_angle_averaged_overlap(
-            interpolator_0_1, interpolator_0_1, q.ravel()
-        ).reshape(q.shape)
-
-    return calculate_hermitian_gamma_potential_integral(
-        FERMI_WAVEVECTOR["NICKEL"], overlap_function
-    )
 
 
 def get_rate_simple_equation_deuterium(
@@ -240,13 +206,13 @@ def plot_rate_equation() -> None:
     rates_deuterium = get_rate_simple_equation_deuterium(temperatures)
     ax.plot(temperatures, rates_deuterium)
 
-    scale = FuncScale(ax, [lambda x: 1 / x, lambda x: 1 / x])
+    scale = FuncScale(ax, [lambda x: 1 / x, lambda x: 1 / x])  # type: ignore unknown
     ax.set_xscale(scale)
     ax.set_yscale("log")
     ax.legend([theory_line, exp_data_plot], ["theoretical rate", "experimental rate"])
     ax.set_ylim(5e8, None)
     ax.set_ylabel("Rate /s")
-    ax.set_xlabel("1/Temperature 1/$\\mathrm{K}^{-1}$")
+    ax.set_xlabel("1/Temperature 1/$\\mathrm{K}^{-1}$")  # cspell:disable-line
 
     fig.show()
     input()

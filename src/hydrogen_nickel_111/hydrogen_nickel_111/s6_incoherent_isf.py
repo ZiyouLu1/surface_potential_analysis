@@ -38,6 +38,7 @@ from surface_potential_analysis.dynamics.isf_plot import (
     plot_isf_fey_model_fit_112bar_against_time,
 )
 from surface_potential_analysis.util.constants import FERMI_WAVEVECTOR
+from surface_potential_analysis.util.decorators import npy_cached
 
 from hydrogen_nickel_111.surface_data import get_data_path
 
@@ -95,7 +96,7 @@ def _calculate_rates_hydrogen_cache(
     return get_data_path(f"dynamics/rates_hydrogen_{n_bands}_band.npy")
 
 
-# @npy_cached(_calculate_rates_hydrogen_cache)
+@npy_cached(_calculate_rates_hydrogen_cache)
 def calculate_rates_hydrogen(
     n_bands: int = 6,
     *,
@@ -166,21 +167,22 @@ def extract_intrinsic_rates(fast_rate: float, slow_rate: float) -> tuple[float, 
             nu * (lam + 1 - y) / (2 * lam) - slow_rate,
         ]
 
-    result, detail, _, _ = scipy.optimize.fsolve(
-        _func, [slow_rate, slow_rate / fast_rate], full_output=True, xtol=1e-15
+    result, detail, _, _ = scipy.optimize.fsolve(  # type: ignore unknown # cSpell: disable-line
+        _func,
+        [slow_rate, slow_rate / fast_rate],
+        full_output=True,
+        xtol=1e-15,  # cSpell: disable-line
     )
-    fey_slow = result[0]
-    fey_fast = result[0] / result[1]
-    np.testing.assert_array_almost_equal(_func(result), 0.0, decimal=5)
+    fey_slow = float(result[0])  # type: ignore unknown
+    fey_fast = float(result[0] / result[1])  # type: ignore unknown
+    np.testing.assert_array_almost_equal(_func(result), 0.0, decimal=5)  # type: ignore unknown
     return fey_fast, fey_slow
 
 
 def calculate_rates_hydrogen_tight_binding(
     temperatures: np.ndarray[tuple[_L0Inv], np.dtype[np.float_]],
 ) -> np.ndarray[tuple[Literal[2], _L0Inv], np.dtype[np.float_]]:
-    prefactor = 3 * calculate_gamma_potential_integral_hydrogen_diagonal(
-        0, 1, (0, 0), (0, 0)
-    )
+    prefactor = 3 * calculate_gamma_potential_integral_hydrogen_diagonal(0, 1, (0, 0))
 
     fast_rates = [
         prefactor
@@ -208,7 +210,7 @@ def plot_tunnelling_rate_hydrogen() -> None:
     fig, ax = plt.subplots()
 
     temperatures, fast_rates, slow_rates = calculate_rates_hydrogen(plot=True)
-    fast_rates_fey, slow_rates_fey = ([], [])
+    (fast_rates_fey, slow_rates_fey) = (list[float](), list[float]())
     for fast, slow in zip(fast_rates, slow_rates, strict=True):
         f, s = extract_intrinsic_rates(fast, slow)
         fast_rates_fey.append(f)
@@ -245,7 +247,7 @@ def plot_tunnelling_rate_hydrogen() -> None:
         yerr=[data["rate"] - data["lower_error"], data["upper_error"] - data["rate"]],
     )
 
-    scale = FuncScale(ax, [lambda x: 1 / x, lambda x: 1 / x])
+    scale = FuncScale(ax, [lambda x: 1 / x, lambda x: 1 / x])  # type: ignore unknown
     ax.set_xscale(scale)
     ax.set_yscale("log")
     ax.legend()
@@ -294,7 +296,7 @@ def plot_fast_slow_rate_ratios() -> None:
     ax.set_xlabel(r"T /k")
     ax.set_ylabel(r"$\lambda$")
     ax.legend()
-    scale = FuncScale(ax, [lambda x: 1 / x, lambda x: 1 / x])
+    scale = FuncScale(ax, [lambda x: 1 / x, lambda x: 1 / x])  # type: ignore unknown
     ax.set_xscale(scale)
     fig.show()
     input()
@@ -308,7 +310,7 @@ def plot_isf_hydrogen() -> None:
     fig, ax = plt.subplots()
 
     m_matrix = get_tunnelling_m_matrix(a_matrix, 6)
-    initial = get_initial_pure_density_matrix_for_basis(m_matrix["basis"])
+    initial = get_initial_pure_density_matrix_for_basis(m_matrix["basis"][0])
     isf = calculate_isf_at_times(m_matrix, initial, times, dk)
     fig, _, _ = plot_isf_against_time(isf, ax=ax)
 
@@ -316,7 +318,7 @@ def plot_isf_hydrogen() -> None:
     fig, _, _ = plot_isf_4_variable_fit_against_time(isf_fit, times, ax=ax)
 
     m_matrix = get_tunnelling_m_matrix(a_matrix, 2)
-    initial = get_initial_pure_density_matrix_for_basis(m_matrix["basis"])
+    initial = get_initial_pure_density_matrix_for_basis(m_matrix["basis"][0])
     isf = calculate_isf_at_times(m_matrix, initial, times, dk)
     fig, _, _ = plot_isf_against_time(isf, ax=ax)
     fig.show()
@@ -375,13 +377,13 @@ def compare_isf_initial_condition() -> None:
     fig, ax = plt.subplots()
     dk = get_jianding_isf_112bar()
 
-    initial = get_initial_pure_density_matrix_for_basis(m_matrix["basis"], (0, 0, 0))
+    initial = get_initial_pure_density_matrix_for_basis(m_matrix["basis"][0], (0, 0, 0))
     times = np.linspace(0, 90e-10, 1000)
     isf = calculate_isf_at_times(m_matrix, initial, times, dk)
     _, _, line = plot_isf_against_time(isf, ax=ax)
     line.set_label("Initially FCC")
 
-    initial = get_initial_pure_density_matrix_for_basis(m_matrix["basis"], (0, 0, 1))
+    initial = get_initial_pure_density_matrix_for_basis(m_matrix["basis"][0], (0, 0, 1))
     isf = calculate_isf_at_times(m_matrix, initial, times, dk)
     _, _, line = plot_isf_against_time(isf, ax=ax)
     line.set_label("Initially HCP")
@@ -394,7 +396,7 @@ def compare_isf_initial_condition() -> None:
 def plot_relevant_rates_hydrogen() -> None:
     a_matrix = get_tunnelling_a_matrix_hydrogen((25, 25), 6, 150)
     m_matrix = get_tunnelling_m_matrix(a_matrix, n_bands=6)
-    initial = get_initial_pure_density_matrix_for_basis(m_matrix["basis"], (0, 0, 0))
+    initial = get_initial_pure_density_matrix_for_basis(m_matrix["basis"][0], (0, 0, 0))
     temperatures = np.array([100, 125, 150, 175, 200, 225, 250])
     rates = [
         get_rate_decomposition(
@@ -414,12 +416,12 @@ def plot_relevant_rates_hydrogen() -> None:
         yerr=[data["rate"] - data["lower_error"], data["upper_error"] - data["rate"]],
     )
 
-    scale = FuncScale(ax, [lambda x: 1 / x, lambda x: 1 / x])
+    scale = FuncScale(ax, [lambda x: 1 / x, lambda x: 1 / x])  # type: ignore unknown
     ax.set_xscale(scale)
     ax.set_yscale("log")
 
     m_matrix = get_tunnelling_m_matrix(a_matrix, n_bands=6)
-    initial = get_initial_pure_density_matrix_for_basis(m_matrix["basis"], (0, 0, 1))
+    initial = get_initial_pure_density_matrix_for_basis(m_matrix["basis"][0], (0, 0, 1))
     temperatures = np.array([100, 125, 150, 175, 200, 225, 250])
     rates = [
         get_rate_decomposition(

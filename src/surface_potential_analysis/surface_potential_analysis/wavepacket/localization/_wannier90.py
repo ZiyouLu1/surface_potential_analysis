@@ -24,7 +24,7 @@ from surface_potential_analysis.basis.basis import (
 )
 from surface_potential_analysis.basis.basis_like import BasisLike
 from surface_potential_analysis.basis.conversion import (
-    axis_as_fundamental_momentum_axis,
+    basis_as_fundamental_momentum_basis,
 )
 from surface_potential_analysis.basis.stacked_basis import (
     StackedBasis,
@@ -474,7 +474,7 @@ def _write_localization_files_wannier90(
         wavepackets,
         StackedBasis(
             *tuple(
-                axis_as_fundamental_momentum_axis(axis)
+                basis_as_fundamental_momentum_basis(axis)
                 if idx not in options.ignore_axes
                 else axis
                 for (idx, axis) in enumerate(wavepackets["basis"][1])

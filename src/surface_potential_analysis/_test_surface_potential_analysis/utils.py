@@ -15,7 +15,7 @@ if TYPE_CHECKING:
 rng = np.random.default_rng()
 
 
-def get_random_explicit_axis(
+def get_random_explicit_basis(
     nd: _L0Inv,
     fundamental_n: int | None = None,
     n: int | None = None,

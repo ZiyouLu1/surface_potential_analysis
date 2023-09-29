@@ -5,7 +5,7 @@ import unittest
 import numpy as np
 from scipy.stats import special_ortho_group
 
-from _test_surface_potential_analysis.utils import get_random_explicit_axis
+from _test_surface_potential_analysis.utils import get_random_explicit_basis
 from surface_potential_analysis.basis.basis import (
     ExplicitBasis,
     FundamentalPositionBasis,
@@ -16,8 +16,8 @@ from surface_potential_analysis.basis.basis_like import (
     convert_vector,
 )
 from surface_potential_analysis.basis.conversion import (
-    axis_as_fundamental_momentum_axis,
-    axis_as_fundamental_position_axis,
+    basis_as_fundamental_momentum_basis,
+    basis_as_fundamental_position_basis,
 )
 from surface_potential_analysis.basis.stacked_basis import StackedBasis
 from surface_potential_analysis.basis.util import BasisUtil
@@ -33,7 +33,7 @@ class BasisConfigConversionTest(unittest.TestCase):
     def test_explicit_basis_vectors(self) -> None:
         fundamental_n = rng.integers(2, 5)  # type: ignore bad libary types
 
-        axis = get_random_explicit_axis(1, fundamental_n=fundamental_n)
+        axis = get_random_explicit_basis(1, fundamental_n=fundamental_n)
 
         expected = axis.vectors
         actual = BasisUtil(axis).vectors
@@ -46,19 +46,19 @@ class BasisConfigConversionTest(unittest.TestCase):
         fundamental_shape = (rng.integers(2, 5), rng.integers(2, 5), rng.integers(2, 5))  # type: ignore bad libary types
 
         _basis_0 = StackedBasis(
-            get_random_explicit_axis(3, fundamental_n=fundamental_shape[0]),
-            get_random_explicit_axis(3, fundamental_n=fundamental_shape[1]),
-            get_random_explicit_axis(3, fundamental_n=fundamental_shape[2]),
+            get_random_explicit_basis(3, fundamental_n=fundamental_shape[0]),
+            get_random_explicit_basis(3, fundamental_n=fundamental_shape[1]),
+            get_random_explicit_basis(3, fundamental_n=fundamental_shape[2]),
         )
         # Note this only holds if the space spanned by _basis_1 contains the space of _basis_0
         _basis_1 = StackedBasis(
-            get_random_explicit_axis(
+            get_random_explicit_basis(
                 3, fundamental_n=fundamental_shape[0], n=fundamental_shape[0]
             ),
-            get_random_explicit_axis(
+            get_random_explicit_basis(
                 3, fundamental_n=fundamental_shape[1], n=fundamental_shape[1]
             ),
-            get_random_explicit_axis(
+            get_random_explicit_basis(
                 3, fundamental_n=fundamental_shape[2], n=fundamental_shape[2]
             ),
         )
@@ -77,9 +77,9 @@ class BasisConfigConversionTest(unittest.TestCase):
         fundamental_shape = (rng.integers(2, 5), rng.integers(2, 5), rng.integers(2, 5))  # type: ignore bad libary types
 
         _basis_0 = StackedBasis(
-            get_random_explicit_axis(3, fundamental_n=fundamental_shape[0]),
-            get_random_explicit_axis(3, fundamental_n=fundamental_shape[1]),
-            get_random_explicit_axis(3, fundamental_n=fundamental_shape[2]),
+            get_random_explicit_basis(3, fundamental_n=fundamental_shape[0]),
+            get_random_explicit_basis(3, fundamental_n=fundamental_shape[1]),
+            get_random_explicit_basis(3, fundamental_n=fundamental_shape[2]),
         )
         _basis_1 = _basis_0
 
@@ -97,7 +97,7 @@ class BasisConfigConversionTest(unittest.TestCase):
 
         actual = convert_vector(
             np.identity(fundamental_n),
-            axis_as_fundamental_momentum_axis(basis_0),
+            basis_as_fundamental_momentum_basis(basis_0),
             basis_0,
         )
         expected = pad_ft_points(np.eye(fundamental_n), s=(n,), axes=(1,))
@@ -109,7 +109,7 @@ class BasisConfigConversionTest(unittest.TestCase):
         n = rng.integers(2, fundamental_n)  # type: ignore bad libary types
 
         basis_0 = FundamentalPositionBasis(np.array([1]), n)
-        momentum = axis_as_fundamental_momentum_axis(basis_0)
+        momentum = basis_as_fundamental_momentum_basis(basis_0)
 
         initial_points = rng.random(n).astype(np.complex_)
         converted = convert_vector(initial_points, basis_0, momentum)
@@ -118,7 +118,7 @@ class BasisConfigConversionTest(unittest.TestCase):
         actual = convert_vector(
             scaled,
             truncated_basis,
-            axis_as_fundamental_momentum_axis(truncated_basis),
+            basis_as_fundamental_momentum_basis(truncated_basis),
         )
         expected = interpolate_points_fftn(
             initial_points, s=(fundamental_n,), axes=(0,)
@@ -128,7 +128,7 @@ class BasisConfigConversionTest(unittest.TestCase):
         actual_simple = convert_vector(
             scaled,
             truncated_basis,
-            axis_as_fundamental_momentum_axis(truncated_basis),
+            basis_as_fundamental_momentum_basis(truncated_basis),
         )
         np.testing.assert_array_almost_equal(actual, actual_simple)
 
@@ -163,43 +163,43 @@ class BasisConfigConversionTest(unittest.TestCase):
         matrix = rng.random((n, n))
         converted = convert_matrix(
             matrix,
-            axis_as_fundamental_position_axis(small_basis),
+            basis_as_fundamental_position_basis(small_basis),
             small_basis,
-            axis_as_fundamental_position_axis(small_basis),
+            basis_as_fundamental_position_basis(small_basis),
             small_basis,
         )
         converted = converted * n / fundamental_n
         converted = convert_matrix(
             converted,
             truncated_large_basis,
-            axis_as_fundamental_position_axis(truncated_large_basis),
+            basis_as_fundamental_position_basis(truncated_large_basis),
             truncated_large_basis,
-            axis_as_fundamental_position_axis(truncated_large_basis),
+            basis_as_fundamental_position_basis(truncated_large_basis),
         )
 
         actual = convert_matrix(
             converted,
-            axis_as_fundamental_position_axis(truncated_large_basis),
+            basis_as_fundamental_position_basis(truncated_large_basis),
             truncated_large_basis,
-            axis_as_fundamental_position_axis(truncated_large_basis),
+            basis_as_fundamental_position_basis(truncated_large_basis),
             truncated_large_basis,
         )
         actual = actual * fundamental_n / n
         actual = convert_matrix(
             actual,
             small_basis,
-            axis_as_fundamental_position_axis(small_basis),
+            basis_as_fundamental_position_basis(small_basis),
             small_basis,
-            axis_as_fundamental_position_axis(small_basis),
+            basis_as_fundamental_position_basis(small_basis),
         )
 
         np.testing.assert_array_almost_equal(actual, matrix)
 
         actual = convert_matrix(
             converted,
-            axis_as_fundamental_position_axis(large_basis),
+            basis_as_fundamental_position_basis(large_basis),
             large_basis,
-            axis_as_fundamental_position_axis(large_basis),
+            basis_as_fundamental_position_basis(large_basis),
             large_basis,
         )
         actual = convert_matrix(
@@ -213,9 +213,9 @@ class BasisConfigConversionTest(unittest.TestCase):
         actual = convert_matrix(
             actual,
             small_basis,
-            axis_as_fundamental_position_axis(small_basis),
+            basis_as_fundamental_position_basis(small_basis),
             small_basis,
-            axis_as_fundamental_position_axis(small_basis),
+            basis_as_fundamental_position_basis(small_basis),
         )
         np.testing.assert_array_almost_equal(actual, matrix)
 
@@ -228,7 +228,7 @@ class BasisConfigConversionTest(unittest.TestCase):
         actual = convert_vector(
             np.eye(n),
             axis,
-            axis_as_fundamental_position_axis(axis),
+            basis_as_fundamental_position_basis(axis),
         )
         expected = axis.vectors
         np.testing.assert_array_almost_equal(actual, expected)

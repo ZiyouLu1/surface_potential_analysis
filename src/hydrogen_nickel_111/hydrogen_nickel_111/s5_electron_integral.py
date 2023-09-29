@@ -10,10 +10,10 @@ from scipy.constants import (
     elementary_charge,
     epsilon_0,
     hbar,
-    physical_constants,
+    physical_constants,  # type: ignore unknown
 )
 
-bohr_radius = physical_constants["Bohr radius"][0]
+bohr_radius = float(physical_constants["Bohr radius"][0])  # type: ignore unknown
 
 fermi_wavevector_nickel = 1.77e10
 fermi_energy_nickel = (hbar * fermi_wavevector_nickel) ** 2 / (2 * electron_mass)
@@ -56,7 +56,9 @@ def overlap_potential(
 
 
 def plot_electron_occupation() -> None:
-    energies = np.linspace(fermi_energy_nickel * 0.99, fermi_energy_nickel * 1.01, 1000)
+    energies = np.linspace(
+        fermi_energy_nickel * 0.99, fermi_energy_nickel * 1.01, 1000, dtype=np.float_
+    )
     fig, ax = plt.subplots()
     ax.plot(energies, electron_occupation(energies, 100))
     ax.set_title("Plot of the electron occupation in Nickel around the fermi surface")
