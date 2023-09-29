@@ -4,7 +4,6 @@ from typing import TypeVar, cast
 
 import numpy as np
 from matplotlib import pyplot as plt
-from matplotlib.colors import Color
 from matplotlib.scale import FuncScale
 from scipy.constants import Boltzmann, electron_mass, hbar
 from surface_potential_analysis.basis.util import BasisUtil
@@ -32,7 +31,7 @@ from hydrogen_nickel_111.s5_overlap import (
 
 _S0Inv = TypeVar("_S0Inv", bound=tuple[int, ...])
 
-PLOT_COLOURS = cast(list[Color], plt.rcParams["axes.prop_cycle"].by_key()["color"])  # type: ignore unknown
+PLOT_COLOURS = cast(list[tuple[float, float, float]], plt.rcParams["axes.prop_cycle"].by_key()["color"])  # type: ignore unknown
 
 
 def plot_fermi_occupation_intregrand() -> None:
