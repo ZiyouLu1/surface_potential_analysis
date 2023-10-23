@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, TypeVar
 
+from surface_potential_analysis.basis.stacked_basis import StackedBasis
 from surface_potential_analysis.probability_vector.plot import (
     plot_probability_against_time,
 )
@@ -92,7 +93,14 @@ def plot_average_probability_per_band(
     tuple[Figure, Axes, list[Line2D]]
     """
     averaged = average_probabilities(probability, axis=(0,))
-    fig, ax, lines = plot_probability_per_band(averaged, ax=ax, scale=scale)
+    fig, ax, lines = plot_probability_per_band(
+        {
+            "basis": StackedBasis(averaged["basis"][0][0], averaged["basis"][1]),
+            "data": averaged["data"],
+        },
+        ax=ax,
+        scale=scale,
+    )
 
     ax.set_title(
         "Plot of occupation of each band against time,\n"

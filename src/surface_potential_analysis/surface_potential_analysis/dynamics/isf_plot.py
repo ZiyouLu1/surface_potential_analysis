@@ -4,8 +4,10 @@ from typing import TYPE_CHECKING, Any, TypeVar
 
 from surface_potential_analysis.dynamics.isf import (
     ISF4VariableFit,
+    ISFFey4VariableFit,
     ISFFeyModelFit,
     get_isf_from_4_variable_fit,
+    get_isf_from_fey_4_variable_model_110,
     get_isf_from_fey_model_fit_110,
     get_isf_from_fey_model_fit_112bar,
 )
@@ -136,6 +138,38 @@ def plot_isf_4_variable_fit_against_time(
     tuple[Figure, Axes, Line2D]
     """
     isf = get_isf_from_4_variable_fit(fit, times)
+    return plot_isf_against_time(isf, ax=ax, measure=measure, scale=scale)
+
+
+def plot_isf_fey_4_variable_fit_against_time(
+    fit: ISFFey4VariableFit,
+    times: np.ndarray[tuple[_N0Inv], np.dtype[np.float_]],
+    *,
+    ax: Axes | None = None,
+    measure: Measure = "abs",
+    scale: Scale = "linear",
+) -> tuple[Figure, Axes, Line2D]:
+    """
+    Plot the ISF fit against time.
+
+    Parameters
+    ----------
+    fit : ISFFit
+        The fit to the ISF
+    times : np.ndarray[tuple[_N0Inv], np.dtype[np.float_]]
+        times to plot
+    ax : Axes | None, optional
+        plot axis, by default None
+    measure : Measure, optional
+        measure, by default "abs"
+    scale : Scale, optional
+        scale, by default "linear"
+
+    Returns
+    -------
+    tuple[Figure, Axes, Line2D]
+    """
+    isf = get_isf_from_fey_4_variable_model_110(fit, times)
     return plot_isf_against_time(isf, ax=ax, measure=measure, scale=scale)
 
 

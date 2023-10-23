@@ -83,10 +83,10 @@ if TYPE_CHECKING:
 
     _SB0 = TypeVar("_SB0", bound=StackedBasisLike[*tuple[Any, ...]])
 
-    _B1 = TypeVar("_B1", bound=BasisLike[Any, Any])
     _B2 = TypeVar("_B2", bound=BasisLike[Any, Any])
 
 _B0 = TypeVar("_B0", bound=BasisLike[Any, Any])
+_B1 = TypeVar("_B1", bound=BasisLike[Any, Any])
 Ts = TypeVarTuple("Ts")
 SymmetryOp = Callable[
     [ArrayFlatIndexLike[*Ts], tuple[int, ...]], ArrayFlatIndexLike[*Ts]

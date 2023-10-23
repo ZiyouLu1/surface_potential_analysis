@@ -15,6 +15,7 @@ from surface_potential_analysis.wavepacket.get_eigenstate import (
 from surface_potential_analysis.wavepacket.plot import (
     animate_wavepacket_3d_x,
     plot_wavepacket_2d_k,
+    plot_wavepacket_2d_x,
     plot_wavepacket_eigenvalues_2d_k,
     plot_wavepacket_eigenvalues_2d_x,
     plot_wavepacket_sample_frequencies,
@@ -175,10 +176,10 @@ def plot_phase_around_origin() -> None:
 def plot_wannier90_localized_wavepacket_hydrogen() -> None:
     wavepackets = get_wannier90_localized_split_bands_wavepacket_hydrogen()
     for wavepacket in wavepacket_list_into_iter(wavepackets):
-        fig, _, _ = plot_wavepacket_2d_k(wavepacket, (0, 1), scale="linear")
+        fig, _, _ = plot_wavepacket_2d_x(wavepacket, (0, 1), scale="linear")
         fig.show()
 
-        fig, _, _ = plot_wavepacket_2d_k(wavepacket, (1, 2), scale="symlog")
+        fig, _, _ = plot_wavepacket_2d_x(wavepacket, (0, 1), scale="symlog")
         fig.show()
     input()
 

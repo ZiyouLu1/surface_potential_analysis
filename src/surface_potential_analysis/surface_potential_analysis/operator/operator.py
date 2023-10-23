@@ -48,6 +48,12 @@ class DiagonalOperator(TypedDict, Generic[_B0_co, _B1_co]):
     data: np.ndarray[tuple[int], np.dtype[np.complex_]]
 
 
+class StatisticalDiagonalOperator(DiagonalOperator[_B0_co, _B1_co]):
+    """Represents a statistical operator in the given basis."""
+
+    standard_deviation: np.ndarray[tuple[int], np.dtype[np.float_]]
+
+
 def as_operator(operator: DiagonalOperator[_B0, _B1]) -> Operator[_B0, _B1]:
     """
     Convert a diagonal operator into an operator.

@@ -19,19 +19,23 @@ from surface_potential_analysis.stacked_basis.util import (
 from surface_potential_analysis.util.util import Measure, get_measured_data
 
 if TYPE_CHECKING:
+    from surface_potential_analysis.basis.basis_like import BasisLike
     from surface_potential_analysis.dynamics.tunnelling_basis import (
         TunnellingSimulationBandsBasis,
         TunnellingSimulationBasis,
     )
     from surface_potential_analysis.operator.operator import (
         SingleBasisDiagonalOperator,
+        StatisticalDiagonalOperator,
     )
     from surface_potential_analysis.probability_vector.probability_vector import (
         ProbabilityVector,
         ProbabilityVectorList,
     )
+    from surface_potential_analysis.types import FloatLike_co
 
     _AX2Inv = TypeVar("_AX2Inv", bound=TunnellingSimulationBandsBasis[Any])
+    _B0 = TypeVar("_B0", bound=BasisLike[Any, Any])
     _B1Inv = TypeVar("_B1Inv", bound=TunnellingSimulationBasis[Any, Any, Any])
     _S0Inv = TypeVar("_S0Inv", bound=tuple[int, ...])
 
@@ -59,9 +63,9 @@ def _calculate_approximate_locations(
 
 def calculate_isf_approximate_locations(
     initial_occupation: ProbabilityVector[_B1Inv],
-    final_occupation: ProbabilityVectorList[_BT0, _B1Inv],
+    final_occupation: ProbabilityVectorList[_B0, _B1Inv],
     dk: np.ndarray[tuple[Literal[2]], np.dtype[np.float_]],
-) -> SingleBasisDiagonalOperator[_BT0]:
+) -> SingleBasisDiagonalOperator[_B0]:
     """
     Calculate the ISF, assuming all states are approximately eigenstates of position.
 
@@ -99,7 +103,9 @@ def calculate_isf_approximate_locations(
 
     mean_phi = np.tensordot(dk, distances_wrapped, axes=(0, 0))
     eigenvalues = np.tensordot(
-        np.exp(1j * mean_phi), final_occupation["data"], axes=(0, 1)
+        np.exp(1j * mean_phi),
+        final_occupation["data"].reshape(final_occupation["basis"].shape),
+        axes=(0, 1),
     )
     return {
         "data": eigenvalues.astype(np.complex_),
@@ -172,17 +178,17 @@ def fit_isf_to_double_exponential(
         c: np.ndarray[Any, Any],
         d: np.ndarray[Any, Any],
     ) -> np.ndarray[Any, Any]:
-        return a * np.exp(-(b) * t) + (1 - a - d) * np.exp(-(c) * t) + d
+        return a * np.exp(-(b) * t) + c * np.exp(-(d) * t) + (1 - a - c)
 
     params, _ = scipy.optimize.curve_fit(
         f,
         isf["basis"][0].times,
         data,
-        p0=(0.5, 2e10, 1e10, 0),
-        bounds=([0, 0, 0, 0], [1, np.inf, np.inf, 1]),
+        p0=(0.5, 2e10, 0.5, 1e10),
+        bounds=([0, 0, 0, 0], [1, np.inf, 1, np.inf]),
     )
     return ISF4VariableFit(
-        params[1], params[0], params[2], 1 - params[3] - params[0], params[3]
+        params[1], params[0], params[3], params[2], 1 - params[0] - params[2]
     )
 
 
@@ -193,6 +199,170 @@ class ISFFeyModelFit:
     fast_rate: float
     slow_rate: float
     a_dk: float = 2
+
+
+def extract_fey_rate_from_4_variables_fit_112bar(
+    fit: ISF4VariableFit,
+) -> ISFFeyModelFit:
+    """
+    Given a 4 variable fit, get the corresponding fey model rates.
+
+    Parameters
+    ----------
+    fit : ISF4VariableFit
+
+    Returns
+    -------
+    ISFFeyModelFit
+    """
+    a_dk = 2
+
+    def _func(x: tuple[float, float]) -> list[float]:
+        nu, lam = x
+        y = np.sqrt(
+            lam**2 + 2 * lam * (8 * np.cos(a_dk * np.sqrt(3) / 2) + 1) / 9 + 1
+        )
+
+        return [
+            nu * (lam + 1 + y) / (2 * lam) - fit.fast_rate,
+            nu * (lam + 1 - y) / (2 * lam) - fit.slow_rate,
+        ]
+
+    result, detail, _, _ = scipy.optimize.fsolve(  # type: ignore unknown # cSpell: disable-line
+        _func,
+        [fit.slow_rate, fit.slow_rate / fit.fast_rate],
+        full_output=True,
+        xtol=1e-15,  # cSpell: disable-line
+    )
+    fey_slow = float(result[0])  # type: ignore unknown
+    fey_fast = float(result[0] / result[1])  # type: ignore unknown
+    try:
+        np.testing.assert_array_almost_equal(_func(result), 0.0, decimal=5)  # type: ignore unknown
+    except AssertionError:
+        print("Warn: bad matching to fey rates")  # noqa: T201
+    return ISFFeyModelFit(fey_fast, fey_slow, a_dk)
+
+
+@dataclass
+class ISFFey4VariableFit:
+    """Result of fitting a double exponential to an ISF."""
+
+    a_dk: float
+    fast_rate: float
+    fast_amplitude: float
+    slow_rate: float
+    slow_amplitude: float
+
+
+def calculate_isf_fey_4_variable_model_110(  # noqa: PLR0913
+    t: np.ndarray[_S0Inv, np.dtype[np.float_]],
+    fast_rate: FloatLike_co,
+    fast_amplitude: FloatLike_co,
+    slow_rate: FloatLike_co,
+    slow_amplitude: FloatLike_co,
+    *,
+    a_dk: float,
+) -> np.ndarray[_S0Inv, np.dtype[np.float_]]:
+    """
+    Use the fey model calculate the ISF as measured in the 112bar direction given dk = 2/a.
+
+    Parameters
+    ----------
+    t : np.ndarray[_S0Inv, np.dtype[np.float_]]
+    fast_rate : float
+    slow_rate : float
+
+    Returns
+    -------
+    np.ndarray[_S0Inv, np.dtype[np.float_]]
+    """
+    lam = slow_rate / fast_rate
+    z = np.sqrt(
+        9 * lam**2
+        + 16 * lam * np.cos(a_dk / 2) ** 2
+        + 16 * lam * np.cos(a_dk / 2)
+        - 14 * lam
+        + 9
+    )
+
+    return (
+        (fast_amplitude * np.exp(-slow_rate * (3 * lam + 3 + z) * t / (6 * lam)))
+        + (slow_amplitude * np.exp(-slow_rate * (3 * lam + 3 - z) * t / (6 * lam)))
+        + (1 - fast_amplitude - slow_amplitude)
+    )
+
+
+def get_isf_from_fey_4_variable_model_110(
+    fit: ISFFey4VariableFit, times: np.ndarray[tuple[_L0Inv], np.dtype[np.float_]]
+) -> SingleBasisDiagonalOperator[ExplicitTimeBasis[_L0Inv]]:
+    """
+    Given an ISF Fit calculate the ISF.
+
+    Parameters
+    ----------
+    fit : ISFFit
+    times : np.ndarray[tuple[int], np.dtype[np.float_]]
+
+    Returns
+    -------
+    EigenvalueList[_L0Inv]
+    """
+    return {
+        "basis": StackedBasis(ExplicitTimeBasis(times), ExplicitTimeBasis(times)),
+        "data": calculate_isf_fey_4_variable_model_110(
+            times,
+            fit.fast_rate,
+            fit.fast_amplitude,
+            fit.slow_rate,
+            fit.slow_amplitude,
+            a_dk=fit.a_dk,
+        ).astype(np.complex_),
+    }
+
+
+def fit_isf_to_fey_4_variable_model_110(
+    isf: SingleBasisDiagonalOperator[_BT0] | StatisticalDiagonalOperator[_BT0, _BT0],
+    lam: FloatLike_co,
+    *,
+    measure: Measure = "abs",
+    a_dk: float = 2,
+) -> ISFFey4VariableFit:
+    """
+    Fit the ISF to a double exponential, and calculate the fast and slow rates.
+
+    Parameters
+    ----------
+    isf : EigenvalueList[_L0Inv]
+    times : np.ndarray[tuple[int], np.dtype[np.float_]]
+
+    Returns
+    -------
+    ISFFit
+    """
+    data = get_measured_data(isf["data"], measure)
+
+    def f(
+        t: np.ndarray[Any, Any], fr: float, fa: float, sa: float
+    ) -> np.ndarray[Any, Any]:
+        return calculate_isf_fey_4_variable_model_110(
+            t, fr, fa, lam * fr, sa, a_dk=a_dk
+        )
+
+    def penalized_f(
+        t: np.ndarray[Any, Any], fr: float, fa: float, sa: float
+    ) -> np.ndarray[Any, Any]:
+        penalization = (max(fa + sa, 1.0) - 1) * 10000
+        return f(t, fr, fa, sa) - penalization
+
+    params, _ = scipy.optimize.curve_fit(
+        penalized_f,
+        isf["basis"][0].times,
+        data,
+        p0=(1.4e9, 1 / (1 + lam), lam / (1 + lam)),
+        bounds=([0, 0, 0], [np.inf, 1, 1]),
+        sigma=isf.get("standard_deviation"),
+    )
+    return ISFFey4VariableFit(a_dk, params[0], params[1], lam * params[0], params[2])
 
 
 def calculate_isf_fey_model_110(

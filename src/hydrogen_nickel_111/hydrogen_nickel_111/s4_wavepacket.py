@@ -11,6 +11,9 @@ from surface_potential_analysis.basis.stacked_basis import StackedBasis
 from surface_potential_analysis.stacked_basis.build import (
     fundamental_stacked_basis_from_shape,
 )
+from surface_potential_analysis.state_vector.util import (
+    get_most_localized_state_vectors_from_probability,
+)
 from surface_potential_analysis.util.decorators import npy_cached, timed
 from surface_potential_analysis.wavepacket.localization import (
     Wannier90Options,
@@ -151,13 +154,22 @@ def get_localization_operator_hydrogen(
     end: int,
 ) -> LocalizationOperator[_HNiSampleBasis, FundamentalBasis[int], BasisLike[Any, Any]]:
     wavepackets = get_all_wavepackets_hydrogen()
+    wavepackets = get_wavepackets(wavepackets, slice(start, end))
+    projections = get_most_localized_state_vectors_from_probability(
+        wavepackets,
+        fractions=(
+            np.array([+1 / 18, 1 / 18, -2 / 18, 7 / 18, 7 / 18, 4 / 18]),
+            np.array([-2 / 18, 1 / 18, +1 / 18, 4 / 18, 7 / 18, 7 / 18]),
+            np.array([0.5, 0.5, 0.5, 0.5, 0.5, 0.5]),
+        ),
+    )
     return get_localization_operator_wannier90(
-        get_wavepackets(wavepackets, slice(start, end)),
+        wavepackets,
         options=Wannier90Options(
             num_iter=100000,
             ignore_axes=(2,),
             convergence_tolerance=1e-20,
-            projection={"basis": StackedBasis(FundamentalBasis(end - start))},
+            projection=projections,
         ),
     )
 
@@ -249,7 +261,7 @@ def get_wannier90_localized_split_bands_hamiltonian_hydrogen() -> (
 
 def get_hydrogen_energy_difference(state_0: int, state_1: int) -> np.float_:
     eigenvalues = get_average_eigenvalues(get_all_wavepackets_hydrogen())["data"]
-    return eigenvalues[state_0] - eigenvalues[state_1]
+    return np.abs(eigenvalues[state_0] - eigenvalues[state_1])
 
 
 @npy_cached(get_data_path("wavepacket/wavepacket_deuterium.npy"), load_pickle=True)

@@ -38,7 +38,7 @@ class ProbabilityVectorList(TypedDict, Generic[_B0, _B1]):
     """represents a list of probabilities in a basis."""
 
     basis: StackedBasisLike[_B0, _B1]
-    data: np.ndarray[tuple[int, int], np.dtype[np.complex_]]
+    data: np.ndarray[tuple[int], np.dtype[np.complex_]]
 
 
 def from_state_vector(state: StateVector[_B0]) -> ProbabilityVector[_B0]:
@@ -178,7 +178,7 @@ def sum_probabilities(
     return {
         "basis": StackedBasis(probabilities["basis"][0], basis),
         "data": np.sum(
-            probabilities["data"].reshape(*probabilities["basis"].shape),
+            probabilities["data"].reshape(-1, *probabilities["basis"][1].shape),
             axis=tuple(ax + 1 for ax in axis),
         ).reshape(-1),
     }

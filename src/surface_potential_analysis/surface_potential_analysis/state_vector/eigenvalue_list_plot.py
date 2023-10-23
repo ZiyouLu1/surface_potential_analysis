@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, TypeVar
 
 import matplotlib.pyplot as plt
+import numpy as np
 
 from surface_potential_analysis.util.util import Measure, get_measured_data
 
@@ -12,7 +13,10 @@ if TYPE_CHECKING:
     from matplotlib.lines import Line2D
 
     from surface_potential_analysis.basis.time_basis_like import BasisWithTimeLike
-    from surface_potential_analysis.operator.operator import SingleBasisDiagonalOperator
+    from surface_potential_analysis.operator.operator import (
+        SingleBasisDiagonalOperator,
+        StatisticalDiagonalOperator,
+    )
     from surface_potential_analysis.util.plot import Scale
 
     _B0_co = TypeVar(
@@ -23,7 +27,8 @@ if TYPE_CHECKING:
 
 
 def plot_eigenvalue_against_time(
-    eigenvalues: SingleBasisDiagonalOperator[_B0_co],
+    eigenvalues: SingleBasisDiagonalOperator[_B0_co]
+    | StatisticalDiagonalOperator[_B0_co, _B0_co],
     *,
     ax: Axes | None = None,
     measure: Measure = "abs",
@@ -53,7 +58,11 @@ def plot_eigenvalue_against_time(
 
     data = get_measured_data(eigenvalues["data"], measure)
     times = eigenvalues["basis"][0].times
-    (line,) = ax.plot(times, data)
+    standard_deviation = eigenvalues.get("standard_deviation", None)
+    if isinstance(standard_deviation, np.ndarray):
+        line = ax.errorbar(times, data, yerr=standard_deviation).lines[0]
+    else:
+        (line,) = ax.plot(times, data)
     ax.set_ylabel("Eigenvalue")
     ax.set_yscale(scale)
     ax.set_xlabel("time /s")
