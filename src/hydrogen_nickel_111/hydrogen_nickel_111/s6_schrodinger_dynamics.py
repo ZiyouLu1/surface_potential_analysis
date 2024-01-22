@@ -69,7 +69,7 @@ def build_hamiltonian_from_wavepackets(
     basis: _B0Inv,
 ) -> SingleBasisOperator[_B0Inv]:
     (n_x1, n_x2, _) = basis.shape
-    array = np.zeros((*basis.shape, *basis.shape), np.complex_)
+    array = np.zeros((*basis.shape, *basis.shape), np.complex128)
     for i, wavepacket in enumerate(wavepackets):
         sample_shape = wavepacket["basis"][0].shape
         h = pad_ft_points(
@@ -127,7 +127,7 @@ def get_coherent_hamiltonian(
     assert hop_hamiltonian["basis"][1][0].n == n_bands
 
     hop_hamiltonian_stacked = hop_hamiltonian["data"].reshape(9, n_bands, n_bands)
-    data = np.zeros((*basis.shape, *basis.shape), np.complex_)
+    data = np.zeros((*basis.shape, *basis.shape), np.complex128)
     for n_0 in range(n_bands):
         for n_1 in range(n_bands):
             for hop in range(9):
@@ -175,7 +175,7 @@ def plot_occupation_on_surface_hydrogen() -> None:
 
     initial_state: StateVector[Any] = {
         "basis": a_matrix["basis"][0],
-        "data": np.zeros((hamiltonian["basis"][0].n,), dtype=np.complex_),
+        "data": np.zeros((hamiltonian["basis"][0].n,), dtype=np.complex128),
     }
     initial_state["data"][0] = 1
     times = FundamentalTimeBasis(20000, 5e-10)
@@ -212,7 +212,7 @@ def plot_incoherent_occupation_comparison_hydrogen() -> None:
 
     initial_state: StateVector[Any] = {
         "basis": a_matrix["basis"][0],
-        "data": np.zeros(hamiltonian["basis"][0].n, dtype=np.complex_),
+        "data": np.zeros(hamiltonian["basis"][0].n, dtype=np.complex128),
     }
     initial_state["data"][0] = 1
     times = FundamentalTimeBasis(20000, 5e-10)

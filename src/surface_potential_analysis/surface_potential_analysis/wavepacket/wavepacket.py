@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from itertools import starmap
 from typing import TYPE_CHECKING, Any, TypeVar
 
 import numpy as np
@@ -126,8 +127,7 @@ def get_unfurled_basis(
     """
     return StackedBasis(
         *tuple(
-            UnfurledBasis(list_ax, ax)
-            for (list_ax, ax) in zip(basis[0], basis[1], strict=True)
+            starmap(UnfurledBasis, zip(basis[0], basis[1], strict=True))
         )
     )
 
@@ -158,7 +158,7 @@ def get_furled_basis(
 
 def get_wavepacket_sample_fractions(
     list_basis: StackedBasisLike[*tuple[_B0, ...]],
-) -> np.ndarray[tuple[int, int], np.dtype[np.float_]]:
+) -> np.ndarray[tuple[int, int], np.dtype[np.float64]]:
     """
     Get the frequencies of the samples in a wavepacket, as a fraction of dk.
 
@@ -177,13 +177,13 @@ def get_wavepacket_sample_fractions(
     )
     fundamental_basis = stacked_basis_as_fundamental_basis(list_basis)
     return convert_vector(fundamental_fractions, fundamental_basis, list_basis).astype(
-        np.float_
+        np.float64
     )
 
 
 def get_wavepacket_sample_frequencies(
     basis: WavepacketBasis[_SB0, StackedBasisLike[*tuple[_BL0, ...]]],
-) -> np.ndarray[tuple[int, int], np.dtype[np.float_]]:
+) -> np.ndarray[tuple[int, int], np.dtype[np.float64]]:
     """
     Get the frequencies used in a given wavepacket.
 
@@ -204,7 +204,7 @@ def get_wavepacket_sample_frequencies(
 
 def generate_wavepacket(
     hamiltonian_generator: Callable[
-        [np.ndarray[tuple[_ND0Inv], np.dtype[np.float_]]],
+        [np.ndarray[tuple[_ND0Inv], np.dtype[np.float64]]],
         SingleBasisOperator[_SB1],
     ],
     list_basis: _SB0,
@@ -234,8 +234,8 @@ def generate_wavepacket(
     )
 
     n_samples = list_basis.n
-    vectors = np.empty((save_bands.n, n_samples, basis_size), dtype=np.complex_)
-    energies = np.empty((save_bands.n, n_samples), dtype=np.complex_)
+    vectors = np.empty((save_bands.n, n_samples, basis_size), dtype=np.complex128)
+    energies = np.empty((save_bands.n, n_samples), dtype=np.complex128)
 
     for i in range(list_basis.n):
         h = hamiltonian_generator(bloch_fractions[:, i])
@@ -385,7 +385,7 @@ def as_wavepacket_list(
     -------
     WavepacketList[FundamentalBasis[int], _SB0, _SB1]
     """
-    wavepacket_0 = next(wavepackets.__iter__())
+    wavepacket_0 = next(iter(wavepackets))
     vectors = np.array([w["data"] for w in wavepackets])
     return {
         "basis": StackedBasis(

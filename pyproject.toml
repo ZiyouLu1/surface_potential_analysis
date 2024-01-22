@@ -51,7 +51,8 @@ reportUnknownMemberType = "information"
 reportMissingTypeStubs = "information"
 include = ["src"]
 
-[tool.ruff]
+[tool.ruff.lint]
+preview = true
 select = ["ALL"]
 ignore = [
     "COM812",
@@ -63,6 +64,7 @@ ignore = [
     "D103",
     "D104",
     "D105",
+    "CPY001",
 ]
 exclude = ["typings/**/*"]
 

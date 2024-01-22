@@ -43,7 +43,7 @@ def _get_random_sho_eigenstate(
         ExplicitBasis3d[int, Any],
     ]
 ]:
-    vector = np.array(_rng.random(np.prod(resolution)), dtype=np.complex_)
+    vector = np.array(_rng.random(np.prod(resolution)), dtype=np.complex128)
     vector /= np.linalg.norm(vector)
 
     x2_basis = x2_basis = ExplicitBasis(

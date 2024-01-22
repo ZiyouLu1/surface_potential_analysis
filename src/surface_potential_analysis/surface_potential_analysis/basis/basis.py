@@ -30,7 +30,7 @@ class ExplicitBasis(BasisWithLengthLike[_NF0_co, _N0_co, _ND0Inv]):
     def __init__(
         self,
         delta_x: AxisVector[_ND0Inv],
-        vectors: np.ndarray[tuple[_N0_co, _NF0_co], np.dtype[np.complex_]],
+        vectors: np.ndarray[tuple[_N0_co, _NF0_co], np.dtype[np.complex128]],
     ) -> None:
         self._delta_x = delta_x
         self._vectors = vectors
@@ -49,45 +49,45 @@ class ExplicitBasis(BasisWithLengthLike[_NF0_co, _N0_co, _ND0Inv]):
         return self.vectors.shape[1]  # type: ignore[no-any-return]
 
     @property
-    def vectors(self) -> np.ndarray[tuple[_N0_co, _NF0_co], np.dtype[np.complex_]]:
+    def vectors(self) -> np.ndarray[tuple[_N0_co, _NF0_co], np.dtype[np.complex128]]:
         return self._vectors
 
     @property
     def _transformed_vectors(
         self,
-    ) -> np.ndarray[tuple[_N0_co, _NF0_co], np.dtype[np.complex_]]:
+    ) -> np.ndarray[tuple[_N0_co, _NF0_co], np.dtype[np.complex128]]:
         return np.fft.fft(self.vectors, self.fundamental_n, axis=1, norm="ortho")
 
     def __from_fundamental__(
         self,
-        vectors: np.ndarray[_S0Inv, np.dtype[np.complex_] | np.dtype[np.float_]],
+        vectors: np.ndarray[_S0Inv, np.dtype[np.complex128] | np.dtype[np.float64]],
         axis: int = -1,
-    ) -> np.ndarray[tuple[int, ...], np.dtype[np.complex_]]:
+    ) -> np.ndarray[tuple[int, ...], np.dtype[np.complex128]]:
         transformed = np.tensordot(np.conj(self.vectors), vectors, axes=([0], [axis]))
         return np.moveaxis(transformed, 0, axis)
 
     def __into_fundamental__(
         self,
-        vectors: np.ndarray[_S0Inv, np.dtype[np.complex_] | np.dtype[np.float_]],
+        vectors: np.ndarray[_S0Inv, np.dtype[np.complex128] | np.dtype[np.float64]],
         axis: int = -1,
-    ) -> np.ndarray[tuple[int, ...], np.dtype[np.complex_]]:
+    ) -> np.ndarray[tuple[int, ...], np.dtype[np.complex128]]:
         transformed = np.tensordot(vectors, self.vectors, axes=([axis], [0]))
         return np.moveaxis(transformed, -1, axis)
 
     def __from_transformed__(
         self,
-        vectors: np.ndarray[_S0Inv, np.dtype[np.complex_] | np.dtype[np.float_]],
+        vectors: np.ndarray[_S0Inv, np.dtype[np.complex128] | np.dtype[np.float64]],
         axis: int = -1,
-    ) -> np.ndarray[tuple[int, ...], np.dtype[np.complex_]]:
+    ) -> np.ndarray[tuple[int, ...], np.dtype[np.complex128]]:
         transformed_vectors = np.conj(self._transformed_vectors)
         transformed = np.tensordot(transformed_vectors, vectors, axes=([0], [axis]))
         return np.moveaxis(transformed, 0, axis)
 
     def __into_transformed__(
         self,
-        vectors: np.ndarray[_S0Inv, np.dtype[np.complex_] | np.dtype[np.float_]],
+        vectors: np.ndarray[_S0Inv, np.dtype[np.complex128] | np.dtype[np.float64]],
         axis: int = -1,
-    ) -> np.ndarray[tuple[int, ...], np.dtype[np.complex_]]:
+    ) -> np.ndarray[tuple[int, ...], np.dtype[np.complex128]]:
         transformed_vectors = self._transformed_vectors
         transformed = np.tensordot(vectors, transformed_vectors, axes=([axis], [0]))
         return np.moveaxis(transformed, -1, axis)
@@ -96,17 +96,17 @@ class ExplicitBasis(BasisWithLengthLike[_NF0_co, _N0_co, _ND0Inv]):
     def from_momentum_vectors(
         cls: type[ExplicitBasis[_NF0_co, _N0_co, _ND0Inv]],
         delta_x: AxisVector[_ND0Inv],
-        vectors: np.ndarray[tuple[_N0_co, _NF0_co], np.dtype[np.complex_]],
+        vectors: np.ndarray[tuple[_N0_co, _NF0_co], np.dtype[np.complex128]],
     ) -> ExplicitBasis[_NF0_co, _N0_co, _ND0Inv]:
         vectors = np.fft.ifft(vectors, axis=1, norm="ortho")
         return cls(delta_x, vectors)
 
     def __convert_vector_into__(
         self,
-        vectors: np.ndarray[_S0Inv, np.dtype[np.complex_] | np.dtype[np.float_]],
+        vectors: np.ndarray[_S0Inv, np.dtype[np.complex128] | np.dtype[np.float64]],
         basis: BasisLike[Any, Any],
         axis: int = -1,
-    ) -> np.ndarray[Any, np.dtype[np.complex_]]:
+    ) -> np.ndarray[Any, np.dtype[np.complex128]]:
         if isinstance(basis, ExplicitBasis):
             assert basis.fundamental_n == self.fundamental_n
             # We dont need to go all the way to fundamental basis here
@@ -146,17 +146,17 @@ class FundamentalBasis(
 
     def __as_fundamental__(  # type: ignore[override]
         self,
-        vectors: np.ndarray[_S0Inv, np.dtype[np.complex_] | np.dtype[np.float_]],
+        vectors: np.ndarray[_S0Inv, np.dtype[np.complex128] | np.dtype[np.float64]],
         axis: int = -1,
-    ) -> np.ndarray[_S0Inv, np.dtype[np.complex_]]:
-        return vectors.astype(np.complex_, copy=False)  # type: ignore[no-any-return]
+    ) -> np.ndarray[_S0Inv, np.dtype[np.complex128]]:
+        return vectors.astype(np.complex128, copy=False)  # type: ignore[no-any-return]
 
     def __from_fundamental__(  # type: ignore[override]
         self,
-        vectors: np.ndarray[_S0Inv, np.dtype[np.complex_] | np.dtype[np.float_]],
+        vectors: np.ndarray[_S0Inv, np.dtype[np.complex128] | np.dtype[np.float64]],
         axis: int = -1,
-    ) -> np.ndarray[_S0Inv, np.dtype[np.complex_]]:
-        return vectors.astype(np.complex_, copy=False)  # type: ignore[no-any-return]
+    ) -> np.ndarray[_S0Inv, np.dtype[np.complex128]]:
+        return vectors.astype(np.complex128, copy=False)  # type: ignore[no-any-return]
 
 
 class FundamentalPositionBasis(
@@ -203,18 +203,18 @@ class TruncatedBasis(
 
     def __as_fundamental__(
         self,
-        vectors: np.ndarray[_S0Inv, np.dtype[np.complex_] | np.dtype[np.float_]],
+        vectors: np.ndarray[_S0Inv, np.dtype[np.complex128] | np.dtype[np.float64]],
         basis: int = -1,
-    ) -> np.ndarray[tuple[int, ...], np.dtype[np.complex_]]:
-        casted = vectors.astype(np.complex_, copy=False)
+    ) -> np.ndarray[tuple[int, ...], np.dtype[np.complex128]]:
+        casted = vectors.astype(np.complex128, copy=False)
         return pad_ft_points(casted, s=(self.fundamental_n,), axes=(basis,))
 
     def __from_fundamental__(
         self,
-        vectors: np.ndarray[_S0Inv, np.dtype[np.complex_] | np.dtype[np.float_]],
+        vectors: np.ndarray[_S0Inv, np.dtype[np.complex128] | np.dtype[np.float64]],
         basis: int = -1,
-    ) -> np.ndarray[tuple[int, ...], np.dtype[np.complex_]]:
-        casted = vectors.astype(np.complex_, copy=False)
+    ) -> np.ndarray[tuple[int, ...], np.dtype[np.complex128]]:
+        casted = vectors.astype(np.complex128, copy=False)
         return pad_ft_points(casted, s=(self.n,), axes=(basis,))
 
 
@@ -256,18 +256,18 @@ class TransformedBasis(
 
     def __as_transformed__(
         self,
-        vectors: np.ndarray[_S0Inv, np.dtype[np.complex_] | np.dtype[np.float_]],
+        vectors: np.ndarray[_S0Inv, np.dtype[np.complex128] | np.dtype[np.float64]],
         basis: int = -1,
-    ) -> np.ndarray[tuple[int, ...], np.dtype[np.complex_]]:
-        casted = vectors.astype(np.complex_, copy=False)
+    ) -> np.ndarray[tuple[int, ...], np.dtype[np.complex128]]:
+        casted = vectors.astype(np.complex128, copy=False)
         return pad_ft_points(casted, s=(self.fundamental_n,), axes=(basis,))
 
     def __from_transformed__(
         self,
-        vectors: np.ndarray[_S0Inv, np.dtype[np.complex_] | np.dtype[np.float_]],
+        vectors: np.ndarray[_S0Inv, np.dtype[np.complex128] | np.dtype[np.float64]],
         basis: int = -1,
-    ) -> np.ndarray[tuple[int, ...], np.dtype[np.complex_]]:
-        casted = vectors.astype(np.complex_, copy=False)
+    ) -> np.ndarray[tuple[int, ...], np.dtype[np.complex128]]:
+        casted = vectors.astype(np.complex128, copy=False)
         return pad_ft_points(casted, s=(self.n,), axes=(basis,))
 
 
@@ -279,17 +279,17 @@ class FundamentalTransformedBasis(TransformedBasis[_NF0_co, _NF0_co]):
 
     def __as_transformed__(  # type: ignore[override]
         self,
-        vectors: np.ndarray[_S0Inv, np.dtype[np.complex_] | np.dtype[np.float_]],
+        vectors: np.ndarray[_S0Inv, np.dtype[np.complex128] | np.dtype[np.float64]],
         basis: int = -1,
-    ) -> np.ndarray[_S0Inv, np.dtype[np.complex_]]:
-        return vectors.astype(np.complex_, copy=False)  # type: ignore[no-any-return]
+    ) -> np.ndarray[_S0Inv, np.dtype[np.complex128]]:
+        return vectors.astype(np.complex128, copy=False)  # type: ignore[no-any-return]
 
     def __from_transformed__(  # type: ignore[override]
         self,
-        vectors: np.ndarray[_S0Inv, np.dtype[np.complex_] | np.dtype[np.float_]],
+        vectors: np.ndarray[_S0Inv, np.dtype[np.complex128] | np.dtype[np.float64]],
         basis: int = -1,
-    ) -> np.ndarray[_S0Inv, np.dtype[np.complex_]]:
-        return vectors.astype(np.complex_, copy=False)  # type: ignore[no-any-return]
+    ) -> np.ndarray[_S0Inv, np.dtype[np.complex128]]:
+        return vectors.astype(np.complex128, copy=False)  # type: ignore[no-any-return]
 
 
 class TransformedPositionBasis(

@@ -83,7 +83,7 @@ class _SurfaceHamiltonianUtil(
     @property
     def points(
         self,
-    ) -> np.ndarray[tuple[_NF0Inv, _NF1Inv, _NF2Inv], np.dtype[np.float_]]:
+    ) -> np.ndarray[tuple[_NF0Inv, _NF1Inv, _NF2Inv], np.dtype[np.float64]]:
         return np.real(  # type: ignore[no-any-return]
             self._potential["data"].reshape(BasisUtil(self._potential["basis"]).shape)
         )
@@ -110,7 +110,7 @@ class _SurfaceHamiltonianUtil(
         return np.linalg.norm(util.fundamental_dx)  # type: ignore[return-value]
 
     @property
-    def z_distances(self) -> np.ndarray[tuple[int], np.dtype[np.float_]]:
+    def z_distances(self) -> np.ndarray[tuple[int], np.dtype[np.float64]]:
         return calculate_x_distances(
             self._potential["basis"][2], self._config["x_origin"]  # type: ignore[arg-type]
         )
@@ -145,7 +145,7 @@ class _SurfaceHamiltonianUtil(
         )
 
     def hamiltonian(
-        self, bloch_phase: np.ndarray[tuple[Literal[3]], np.dtype[np.float_]]
+        self, bloch_phase: np.ndarray[tuple[Literal[3]], np.dtype[np.float64]]
     ) -> SingleBasisOperator[
         StackedBasisLike[
             TransformedPositionBasis3d[_NF0Inv, _N0Inv],
@@ -178,8 +178,8 @@ class _SurfaceHamiltonianUtil(
         return np.array([x0t.ravel(), x1t.ravel(), zt.ravel()])  # type: ignore[no-any-return]
 
     def _calculate_diagonal_energy(
-        self, bloch_phase: np.ndarray[tuple[Literal[3]], np.dtype[np.float_]]
-    ) -> np.ndarray[tuple[int], np.dtype[np.float_]]:
+        self, bloch_phase: np.ndarray[tuple[Literal[3]], np.dtype[np.float64]]
+    ) -> np.ndarray[tuple[int], np.dtype[np.float64]]:
         k0_coords, k1_coords, nkz_coords = self.eigenstate_indexes
 
         util = BasisUtil(self.basis)
@@ -196,14 +196,14 @@ class _SurfaceHamiltonianUtil(
         z_energy = (hbar * sho_omega) * (nkz_coords + 0.5)
         return x_energy + y_energy + z_energy  # type: ignore[no-any-return]
 
-    def get_sho_potential(self) -> np.ndarray[tuple[int], np.dtype[np.complex_]]:
+    def get_sho_potential(self) -> np.ndarray[tuple[int], np.dtype[np.complex128]]:
         mass = self._config["mass"]
         sho_omega = self._config["sho_omega"]
         return 0.5 * mass * sho_omega**2 * np.square(self.z_distances)  # type: ignore[no-any-return]
 
     def get_sho_subtracted_points(
         self,
-    ) -> np.ndarray[tuple[int, int, int], np.dtype[np.float_]]:
+    ) -> np.ndarray[tuple[int, int, int], np.dtype[np.float64]]:
         return np.subtract(self.points, self.get_sho_potential())  # type: ignore[no-any-return]
 
     def get_ft_potential(
@@ -214,7 +214,7 @@ class _SurfaceHamiltonianUtil(
 
     def _calculate_off_diagonal_energies_fast(
         self,
-    ) -> np.ndarray[tuple[int, int], np.dtype[np.complex_]]:
+    ) -> np.ndarray[tuple[int, int], np.dtype[np.complex128]]:
         mass = self._config["mass"]
         sho_omega = self._config["sho_omega"]
         return np.array(  # type: ignore[no-any-return]
@@ -242,7 +242,7 @@ class _SurfaceHamiltonianUtil(
 
     def _calculate_off_diagonal_energies(
         self,
-    ) -> np.ndarray[tuple[int, int], np.dtype[np.complex_]]:
+    ) -> np.ndarray[tuple[int, int], np.dtype[np.complex128]]:
         n_coordinates = len(self.eigenstate_indexes.T)
         hamiltonian = np.zeros(shape=(n_coordinates, n_coordinates))
 
@@ -275,7 +275,7 @@ def total_surface_hamiltonian(
         ]
     ],
     config: SHOBasisConfig,
-    bloch_fraction: np.ndarray[tuple[Literal[3]], np.dtype[np.float_]],
+    bloch_fraction: np.ndarray[tuple[Literal[3]], np.dtype[np.float64]],
     resolution: tuple[_N0Inv, _N1Inv, _N2Inv],
 ) -> SingleBasisOperator[
     StackedBasisLike[

@@ -4,4 +4,4 @@ from __future__ import annotations
 
 from .operator import Operator, SingleBasisOperator
 
-__all__ = ["SingleBasisOperator", "Operator"]
+__all__ = ["Operator", "SingleBasisOperator"]

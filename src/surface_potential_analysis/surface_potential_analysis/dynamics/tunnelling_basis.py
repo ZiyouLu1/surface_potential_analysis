@@ -21,7 +21,6 @@ if TYPE_CHECKING:
         WavepacketWithEigenvaluesList,
     )
 
-    pass
 
 
 _L0_co = TypeVar("_L0_co", bound=int, covariant=True)
@@ -41,7 +40,7 @@ class TunnellingSimulationBandsBasis(FundamentalBasis[_L0_co]):
 
     def __init__(
         self,
-        locations: np.ndarray[tuple[Literal[2], _L0_co], np.dtype[np.float_]],
+        locations: np.ndarray[tuple[Literal[2], _L0_co], np.dtype[np.float64]],
         unit_cell: tuple[AxisVector2d, AxisVector2d],
     ) -> None:
         self.locations = locations

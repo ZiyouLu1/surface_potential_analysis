@@ -31,14 +31,14 @@ class ProbabilityVector(TypedDict, Generic[_B0]):
     """represents a state vector in a basis."""
 
     basis: _B0
-    data: np.ndarray[tuple[int], np.dtype[np.complex_]]
+    data: np.ndarray[tuple[int], np.dtype[np.complex128]]
 
 
 class ProbabilityVectorList(TypedDict, Generic[_B0, _B1]):
     """represents a list of probabilities in a basis."""
 
     basis: StackedBasisLike[_B0, _B1]
-    data: np.ndarray[tuple[int], np.dtype[np.complex_]]
+    data: np.ndarray[tuple[int], np.dtype[np.complex128]]
 
 
 def from_state_vector(state: StateVector[_B0]) -> ProbabilityVector[_B0]:
@@ -191,7 +191,7 @@ def average_probabilities(
     probabilities: ProbabilityVectorList[_SB0, _B1],
     axis: tuple[int, ...],
     *,
-    weights: np.ndarray[tuple[int], np.dtype[np.float_]] | None = None,
+    weights: np.ndarray[tuple[int], np.dtype[np.float64]] | None = None,
 ) -> ProbabilityVectorList[Any, _B1]:
     ...
 
@@ -201,7 +201,7 @@ def average_probabilities(
     probabilities: ProbabilityVectorList[_B0, _B1],
     axis: None = None,
     *,
-    weights: np.ndarray[tuple[int], np.dtype[np.float_]] | None = None,
+    weights: np.ndarray[tuple[int], np.dtype[np.float64]] | None = None,
 ) -> ProbabilityVector[_B1]:
     ...
 
@@ -210,7 +210,7 @@ def average_probabilities(
     probabilities: ProbabilityVectorList[_B0, _B1],
     axis: tuple[int, ...] | None = None,
     *,
-    weights: np.ndarray[tuple[int], np.dtype[np.float_]] | None = None,
+    weights: np.ndarray[tuple[int], np.dtype[np.float64]] | None = None,
 ) -> ProbabilityVectorList[Any, _B1] | ProbabilityVector[_B1]:
     """
     Average probabilities over several repeats.

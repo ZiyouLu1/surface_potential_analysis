@@ -54,8 +54,8 @@ _L0Inv = TypeVar("_L0Inv", bound=int)
 def calculate_isf_at_times(
     matrix: TunnellingMMatrix[_B0Inv],
     initial: DiagonalOperator[_B0Inv, _B0Inv],
-    times: np.ndarray[tuple[_L0Inv], np.dtype[np.float_]],
-    dk: np.ndarray[tuple[Literal[2]], np.dtype[np.float_]],
+    times: np.ndarray[tuple[_L0Inv], np.dtype[np.float64]],
+    dk: np.ndarray[tuple[Literal[2]], np.dtype[np.float64]],
 ) -> SingleBasisDiagonalOperator[ExplicitTimeBasis[_L0Inv]]:
     """
     Calculate the ISF, assuming all states are approximately eigenstates of position.
@@ -80,8 +80,8 @@ def calculate_isf_at_times(
 
 def calculate_equilibrium_state_averaged_isf(
     matrix: TunnellingMMatrix[_B0Inv],
-    times: np.ndarray[tuple[_L0Inv], np.dtype[np.float_]],
-    dk: np.ndarray[tuple[Literal[2]], np.dtype[np.float_]],
+    times: np.ndarray[tuple[_L0Inv], np.dtype[np.float64]],
+    dk: np.ndarray[tuple[Literal[2]], np.dtype[np.float64]],
 ) -> SingleBasisDiagonalOperator[FundamentalTimeBasis[_L0Inv]]:
     """
     Calculate the ISF, averaging over the equilibrium occupation of each band.
@@ -103,7 +103,7 @@ def calculate_equilibrium_state_averaged_isf(
     occupation_probabilities = sum_probability(
         density_matrix_as_probability(equilibrium), (0, 1)
     )
-    eigenvalues = np.zeros((util.shape[2], times.size), dtype=np.complex_)
+    eigenvalues = np.zeros((util.shape[2], times.size), dtype=np.complex128)
     for band in range(util.shape[2]):
         initial = get_initial_pure_density_matrix_for_basis(
             matrix["basis"][0], (0, 0, band)
@@ -132,8 +132,8 @@ def calculate_equilibrium_state_averaged_isf(
 
 def calculate_equilibrium_initial_state_isf(
     matrix: TunnellingMMatrix[_B0Inv],
-    times: np.ndarray[tuple[_L0Inv], np.dtype[np.float_]],
-    dk: np.ndarray[tuple[Literal[2]], np.dtype[np.float_]],
+    times: np.ndarray[tuple[_L0Inv], np.dtype[np.float64]],
+    dk: np.ndarray[tuple[Literal[2]], np.dtype[np.float64]],
 ) -> SingleBasisDiagonalOperator[FundamentalTimeBasis[_L0Inv]]:
     """
     Calculate the ISF, averaging over the equilibrium occupation of each band.
@@ -151,7 +151,7 @@ def calculate_equilibrium_initial_state_isf(
     eigenstates = calculate_tunnelling_eigenstates(matrix)
 
     vectors = np.zeros(
-        (matrix["basis"].shape[2], times.size, matrix["basis"].n), dtype=np.complex_
+        (matrix["basis"].shape[2], times.size, matrix["basis"].n), dtype=np.complex128
     )
     for band in range(matrix["basis"].shape[2]):
         initial_state = get_initial_pure_density_matrix_for_basis(
@@ -176,7 +176,7 @@ def calculate_equilibrium_initial_state_isf(
     occupation_probabilities = sum_probability(
         density_matrix_as_probability(equilibrium), (0, 1)
     )
-    vector = np.zeros(matrix["basis"].shape, dtype=np.complex_)
+    vector = np.zeros(matrix["basis"].shape, dtype=np.complex128)
     vector[0, 0, :] = occupation_probabilities["data"]
     initial: ProbabilityVector[_B0Inv] = {
         "basis": matrix["basis"][0],
@@ -194,8 +194,8 @@ def calculate_equilibrium_initial_state_isf(
 class RateDecomposition(Generic[_L0Inv]):
     """Result of fitting a double exponential to an ISF."""
 
-    eigenvalues: np.ndarray[tuple[_L0Inv], np.dtype[np.complex_]]
-    coefficients: np.ndarray[tuple[_L0Inv], np.dtype[np.complex_]]
+    eigenvalues: np.ndarray[tuple[_L0Inv], np.dtype[np.complex128]]
+    coefficients: np.ndarray[tuple[_L0Inv], np.dtype[np.complex128]]
 
 
 def get_rate_decomposition(

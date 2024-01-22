@@ -88,18 +88,18 @@ class EvenlySpacedBasis(
 
     def __as_fundamental__(
         self,
-        vectors: np.ndarray[_S0Inv, np.dtype[np.complex_] | np.dtype[np.float_]],
+        vectors: np.ndarray[_S0Inv, np.dtype[np.complex128] | np.dtype[np.float64]],
         axis: int = -1,
-    ) -> np.ndarray[tuple[int, ...], np.dtype[np.complex_]]:
-        casted = vectors.astype(np.complex_, copy=False)
+    ) -> np.ndarray[tuple[int, ...], np.dtype[np.complex128]]:
+        casted = vectors.astype(np.complex128, copy=False)
         return _pad_sample_axis(casted, self.step, self.offset, axis)
 
     def __from_fundamental__(
         self,
-        vectors: np.ndarray[_S0Inv, np.dtype[np.complex_] | np.dtype[np.float_]],
+        vectors: np.ndarray[_S0Inv, np.dtype[np.complex128] | np.dtype[np.float64]],
         axis: int = -1,
-    ) -> np.ndarray[tuple[int, ...], np.dtype[np.complex_]]:
-        casted = vectors.astype(np.complex_, copy=False)
+    ) -> np.ndarray[tuple[int, ...], np.dtype[np.complex128]]:
+        casted = vectors.astype(np.complex128, copy=False)
         return _truncate_sample_axis(casted, self.step, self.offset, axis)
 
 
@@ -134,18 +134,18 @@ class EvenlySpacedTransformedBasis(
 
     def __as_transformed__(
         self,
-        vectors: np.ndarray[_S0Inv, np.dtype[np.complex_] | np.dtype[np.float_]],
+        vectors: np.ndarray[_S0Inv, np.dtype[np.complex128] | np.dtype[np.float64]],
         axis: int = -1,
-    ) -> np.ndarray[tuple[int, ...], np.dtype[np.complex_]]:
-        casted = vectors.astype(np.complex_, copy=False)
+    ) -> np.ndarray[tuple[int, ...], np.dtype[np.complex128]]:
+        casted = vectors.astype(np.complex128, copy=False)
         return _pad_sample_axis(casted, self.step, self.offset, axis)
 
     def __from_transformed__(
         self,
-        vectors: np.ndarray[_S0Inv, np.dtype[np.complex_] | np.dtype[np.float_]],
+        vectors: np.ndarray[_S0Inv, np.dtype[np.complex128] | np.dtype[np.float64]],
         axis: int = -1,
-    ) -> np.ndarray[tuple[int, ...], np.dtype[np.complex_]]:
-        casted = vectors.astype(np.complex_, copy=False)
+    ) -> np.ndarray[tuple[int, ...], np.dtype[np.complex128]]:
+        casted = vectors.astype(np.complex128, copy=False)
         return _truncate_sample_axis(casted, self.step, self._offset, axis)
 
 

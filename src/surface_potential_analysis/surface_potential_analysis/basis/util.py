@@ -66,21 +66,21 @@ class BasisUtil(BasisLike[Any, Any], Generic[_B0_co]):
     @property
     def vectors(
         self: BasisUtil[BasisLike[_NF0Inv, _N0Inv]]
-    ) -> np.ndarray[tuple[_N0Inv, _NF0Inv], np.dtype[np.complex_]]:
+    ) -> np.ndarray[tuple[_N0Inv, _NF0Inv], np.dtype[np.complex128]]:
         return self.__into_fundamental__(np.eye(self.n, self.n))  # type: ignore[return-value]
 
     def __into_fundamental__(
         self,
-        vectors: np.ndarray[_S0Inv, np.dtype[np.complex_] | np.dtype[np.float_]],
+        vectors: np.ndarray[_S0Inv, np.dtype[np.complex128] | np.dtype[np.float64]],
         axis: int = -1,
-    ) -> np.ndarray[tuple[int, ...], np.dtype[np.complex_]]:
+    ) -> np.ndarray[tuple[int, ...], np.dtype[np.complex128]]:
         return self._basis.__into_fundamental__(vectors, axis)
 
     def __from_fundamental__(
         self,
-        vectors: np.ndarray[_S0Inv, np.dtype[np.complex_] | np.dtype[np.float_]],
+        vectors: np.ndarray[_S0Inv, np.dtype[np.complex128] | np.dtype[np.float64]],
         axis: int = -1,
-    ) -> np.ndarray[tuple[int, ...], np.dtype[np.complex_]]:
+    ) -> np.ndarray[tuple[int, ...], np.dtype[np.complex128]]:
         return self._basis.__from_fundamental__(vectors, axis)
 
     @property
@@ -294,32 +294,32 @@ class BasisUtil(BasisLike[Any, Any], Generic[_B0_co]):
         return self._basis.__getitem__(index)
 
     @cached_property
-    def volume(self) -> np.float_:
+    def volume(self) -> np.float64:
         return np.linalg.det(self.delta_x_stacked)  # type: ignore[no-any-return]
 
     @cached_property
-    def reciprocal_volume(self) -> np.float_:
+    def reciprocal_volume(self) -> np.float64:
         return np.linalg.det(self.dk_stacked)  # type: ignore[no-any-return]
 
     @overload
     def get_k_points_at_index(
         self: BasisUtil[StackedBasisLike[*tuple[_BL0Inv, ...]]], idx: SingleIndexLike
-    ) -> np.ndarray[tuple[int], np.dtype[np.float_]]:
+    ) -> np.ndarray[tuple[int], np.dtype[np.float64]]:
         ...
 
     @overload
     def get_k_points_at_index(
         self: BasisUtil[StackedBasisLike[*tuple[_BL0Inv, ...]]],
         idx: ArrayIndexLike[Unpack[_TS]],
-    ) -> np.ndarray[tuple[int, Unpack[_TS]], np.dtype[np.float_]]:
+    ) -> np.ndarray[tuple[int, Unpack[_TS]], np.dtype[np.float64]]:
         ...
 
     def get_k_points_at_index(
         self: BasisUtil[StackedBasisLike[*tuple[_BL0Inv, ...]]],
         idx: ArrayIndexLike[Unpack[_TS]] | SingleIndexLike,
     ) -> (
-        np.ndarray[tuple[int, Unpack[_TS]], np.dtype[np.float_]]
-        | np.ndarray[tuple[int], np.dtype[np.float_]]
+        np.ndarray[tuple[int, Unpack[_TS]], np.dtype[np.float64]]
+        | np.ndarray[tuple[int], np.dtype[np.float64]]
     ):
         nk_points = idx if isinstance(idx, tuple) else self.get_stacked_index(idx)
         return np.tensordot(self.dk_stacked, nk_points, axes=(0, 0))  # type: ignore Return type is unknown
@@ -327,13 +327,13 @@ class BasisUtil(BasisLike[Any, Any], Generic[_B0_co]):
     @property
     def k_points(
         self: BasisUtil[StackedBasisLike[*tuple[_BL0Inv, ...]]],
-    ) -> np.ndarray[tuple[int, int], np.dtype[np.float_]]:
+    ) -> np.ndarray[tuple[int, int], np.dtype[np.float64]]:
         return self.get_k_points_at_index(self.stacked_nk_points)
 
     @property
     def fundamental_stacked_k_points(
         self: BasisUtil[StackedBasisLike[*tuple[_BL0Inv, ...]]],
-    ) -> np.ndarray[tuple[int, int], np.dtype[np.float_]]:
+    ) -> np.ndarray[tuple[int, int], np.dtype[np.float64]]:
         return np.tensordot(
             self.fundamental_dk_stacked, self.fundamental_stacked_nk_points, axes=(0, 0)
         )
@@ -341,22 +341,22 @@ class BasisUtil(BasisLike[Any, Any], Generic[_B0_co]):
     @overload
     def get_x_points_at_index(
         self: BasisUtil[StackedBasisLike[*tuple[Any, ...]]], idx: SingleIndexLike
-    ) -> np.ndarray[tuple[int], np.dtype[np.float_]]:
+    ) -> np.ndarray[tuple[int], np.dtype[np.float64]]:
         ...
 
     @overload
     def get_x_points_at_index(
         self: BasisUtil[StackedBasisLike[*tuple[Any, ...]]],
         idx: ArrayIndexLike[Unpack[_TS]],
-    ) -> np.ndarray[tuple[int, Unpack[_TS]], np.dtype[np.float_]]:
+    ) -> np.ndarray[tuple[int, Unpack[_TS]], np.dtype[np.float64]]:
         ...
 
     def get_x_points_at_index(
         self: BasisUtil[StackedBasisLike[*tuple[_BL0_co, ...]]],
         idx: ArrayIndexLike[Unpack[_TS]] | SingleIndexLike,
     ) -> (
-        np.ndarray[tuple[int, Unpack[_TS]], np.dtype[np.float_]]
-        | np.ndarray[tuple[int], np.dtype[np.float_]]
+        np.ndarray[tuple[int, Unpack[_TS]], np.dtype[np.float64]]
+        | np.ndarray[tuple[int], np.dtype[np.float64]]
     ):
         nx_points = idx if isinstance(idx, tuple) else self.get_stacked_index(idx)
         return np.tensordot(self.dx_stacked, nx_points, axes=(0, 0))  # type: ignore Return type is unknown
@@ -364,13 +364,13 @@ class BasisUtil(BasisLike[Any, Any], Generic[_B0_co]):
     @property
     def x_points_stacked(
         self: BasisUtil[StackedBasisLike[*tuple[_BL0Inv, ...]]],
-    ) -> np.ndarray[tuple[int, int], np.dtype[np.float_]]:
+    ) -> np.ndarray[tuple[int, int], np.dtype[np.float64]]:
         return self.get_x_points_at_index(self.stacked_nx_points)
 
     @property
     def fundamental_x_points_stacked(
         self: BasisUtil[StackedBasisLike[*tuple[_BL0Inv, ...]]],
-    ) -> np.ndarray[tuple[int, int], np.dtype[np.float_]]:
+    ) -> np.ndarray[tuple[int, int], np.dtype[np.float64]]:
         return np.tensordot(
             self.fundamental_dx_stacked, self.fundamental_stacked_nx_points, axes=(0, 0)
         )
@@ -378,48 +378,48 @@ class BasisUtil(BasisLike[Any, Any], Generic[_B0_co]):
     @property
     def delta_x_stacked(
         self: BasisUtil[StackedBasisLike[*tuple[_BL0Inv, ...]]]
-    ) -> np.ndarray[tuple[int, int], np.dtype[np.float_]]:
+    ) -> np.ndarray[tuple[int, int], np.dtype[np.float64]]:
         return np.array([axi.delta_x for axi in self])
 
     @property
     def fundamental_delta_x_stacked(
         self: BasisUtil[StackedBasisLike[*tuple[_BL0Inv, ...]]],
-    ) -> np.ndarray[tuple[int, int], np.dtype[np.float_]]:
+    ) -> np.ndarray[tuple[int, int], np.dtype[np.float64]]:
         return np.array([axi.delta_x for axi in self])
 
     @cached_property
     def dx_stacked(
         self: BasisUtil[StackedBasisLike[*tuple[_BL0Inv, ...]]]
-    ) -> np.ndarray[tuple[int, int], np.dtype[np.float_]]:
+    ) -> np.ndarray[tuple[int, int], np.dtype[np.float64]]:
         return np.array([BasisUtil(axi).dx for axi in self])
 
     @cached_property
     def fundamental_dx_stacked(
         self: BasisUtil[StackedBasisLike[*tuple[_BL0Inv, ...]]],
-    ) -> np.ndarray[tuple[int, int], np.dtype[np.float_]]:
+    ) -> np.ndarray[tuple[int, int], np.dtype[np.float64]]:
         return np.array([BasisUtil(axi).fundamental_dx for axi in self])
 
     @property
     def delta_k_stacked(
         self: BasisUtil[StackedBasisLike[*tuple[_BL0Inv, ...]]]
-    ) -> np.ndarray[tuple[int, int], np.dtype[np.float_]]:
+    ) -> np.ndarray[tuple[int, int], np.dtype[np.float64]]:
         return np.array(self.shape)[:, np.newaxis] * self.dk_stacked
 
     @cached_property
     def fundamental_delta_k_stacked(
         self: BasisUtil[StackedBasisLike[*tuple[_BL0Inv, ...]]],
-    ) -> np.ndarray[tuple[int, int], np.dtype[np.float_]]:
+    ) -> np.ndarray[tuple[int, int], np.dtype[np.float64]]:
         return np.array(self.fundamental_shape)[:, np.newaxis] * self.dk_stacked
 
     @cached_property
     def dk_stacked(
         self: BasisUtil[StackedBasisLike[*tuple[_BL0Inv, ...]]]
-    ) -> np.ndarray[tuple[int, int], np.dtype[np.float_]]:
+    ) -> np.ndarray[tuple[int, int], np.dtype[np.float64]]:
         """Get dk as a list of dk for each axis."""
         return 2 * np.pi * np.linalg.inv(self.delta_x_stacked).T
 
     @property
     def fundamental_dk_stacked(
         self: BasisUtil[StackedBasisLike[*tuple[_BL0Inv, ...]]],
-    ) -> np.ndarray[tuple[int, int], np.dtype[np.float_]]:
+    ) -> np.ndarray[tuple[int, int], np.dtype[np.float64]]:
         return self.dk_stacked

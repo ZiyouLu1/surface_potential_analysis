@@ -45,13 +45,13 @@ if TYPE_CHECKING:
 
 def _get_location_offsets_per_band(
     axis: TunnellingSimulationBandsBasis[_L0Inv],
-) -> np.ndarray[tuple[Literal[2], _L0Inv], np.dtype[np.float_]]:
+) -> np.ndarray[tuple[Literal[2], _L0Inv], np.dtype[np.float64]]:
     return np.tensordot(axis.unit_cell, axis.locations, axes=(0, 0))  # type: ignore[no-any-return]
 
 
 def _calculate_approximate_locations(
     basis: TunnellingSimulationBasis[Any, Any, _AX2Inv],
-) -> np.ndarray[tuple[Literal[2], Any], np.dtype[np.float_]]:
+) -> np.ndarray[tuple[Literal[2], Any], np.dtype[np.float64]]:
     nx_points = BasisUtil(basis).stacked_nx_points
     central_locations = np.tensordot(
         basis[2].unit_cell, (nx_points[0], nx_points[1]), axes=(0, 0)
@@ -64,7 +64,7 @@ def _calculate_approximate_locations(
 def calculate_isf_approximate_locations(
     initial_occupation: ProbabilityVector[_B1Inv],
     final_occupation: ProbabilityVectorList[_B0, _B1Inv],
-    dk: np.ndarray[tuple[Literal[2]], np.dtype[np.float_]],
+    dk: np.ndarray[tuple[Literal[2]], np.dtype[np.float64]],
 ) -> SingleBasisDiagonalOperator[_B0]:
     """
     Calculate the ISF, assuming all states are approximately eigenstates of position.
@@ -108,7 +108,7 @@ def calculate_isf_approximate_locations(
         axes=(0, 1),
     )
     return {
-        "data": eigenvalues.astype(np.complex_),
+        "data": eigenvalues.astype(np.complex128),
         "basis": StackedBasis(
             final_occupation["basis"][0], final_occupation["basis"][0]
         ),
@@ -127,7 +127,7 @@ class ISF4VariableFit:
 
 
 def get_isf_from_4_variable_fit(
-    fit: ISF4VariableFit, times: np.ndarray[tuple[_L0Inv], np.dtype[np.float_]]
+    fit: ISF4VariableFit, times: np.ndarray[tuple[_L0Inv], np.dtype[np.float64]]
 ) -> SingleBasisDiagonalOperator[ExplicitTimeBasis[_L0Inv]]:
     """
     Given an ISF Fit calculate the ISF.
@@ -147,7 +147,7 @@ def get_isf_from_4_variable_fit(
             fit.fast_amplitude * np.exp(-fit.fast_rate * times)
             + fit.slow_amplitude * np.exp(-fit.slow_rate * times)
             + fit.baseline,
-            dtype=np.complex_,
+            dtype=np.complex128,
         ),
     }
 
@@ -228,7 +228,7 @@ def extract_fey_rate_from_4_variables_fit_112bar(
             nu * (lam + 1 - y) / (2 * lam) - fit.slow_rate,
         ]
 
-    result, detail, _, _ = scipy.optimize.fsolve(  # type: ignore unknown # cSpell: disable-line
+    result, _detail, _, _ = scipy.optimize.fsolve(  # type: ignore unknown # cSpell: disable-line
         _func,
         [fit.slow_rate, fit.slow_rate / fit.fast_rate],
         full_output=True,
@@ -256,7 +256,7 @@ class ISFFey4VariableFit:
 
 
 def calculate_isf_fey_4_variable_model_110(  # noqa: PLR0913
-    t: np.ndarray[_S0Inv, np.dtype[np.float_]],
+    t: np.ndarray[_S0Inv, np.dtype[np.float64]],
     fast_rate: FloatLike_co,
     fast_amplitude: FloatLike_co,
     slow_rate: FloatLike_co,
@@ -264,7 +264,7 @@ def calculate_isf_fey_4_variable_model_110(  # noqa: PLR0913
     offset: FloatLike_co,
     *,
     a_dk: float,
-) -> np.ndarray[_S0Inv, np.dtype[np.float_]]:
+) -> np.ndarray[_S0Inv, np.dtype[np.float64]]:
     """
     Use the fey model calculate the ISF as measured in the 112bar direction given dk = 2/a.
 
@@ -295,7 +295,7 @@ def calculate_isf_fey_4_variable_model_110(  # noqa: PLR0913
 
 
 def get_isf_from_fey_4_variable_model_110(
-    fit: ISFFey4VariableFit, times: np.ndarray[tuple[_L0Inv], np.dtype[np.float_]]
+    fit: ISFFey4VariableFit, times: np.ndarray[tuple[_L0Inv], np.dtype[np.float64]]
 ) -> SingleBasisDiagonalOperator[ExplicitTimeBasis[_L0Inv]]:
     """
     Given an ISF Fit calculate the ISF.
@@ -319,7 +319,7 @@ def get_isf_from_fey_4_variable_model_110(
             fit.slow_amplitude,
             fit.offset,
             a_dk=fit.a_dk,
-        ).astype(np.complex_),
+        ).astype(np.complex128),
     }
 
 
@@ -382,12 +382,12 @@ def fit_isf_to_fey_4_variable_model_110(
 
 
 def calculate_isf_fey_model_110(
-    t: np.ndarray[_S0Inv, np.dtype[np.float_]],
+    t: np.ndarray[_S0Inv, np.dtype[np.float64]],
     fast_rate: float,
     slow_rate: float,
     *,
     a_dk: float,
-) -> np.ndarray[_S0Inv, np.dtype[np.float_]]:
+) -> np.ndarray[_S0Inv, np.dtype[np.float64]]:
     """
     Use the fey model calculate the ISF as measured in the 112bar direction given dk = 2/a.
 
@@ -422,12 +422,12 @@ def calculate_isf_fey_model_110(
 
 
 def calculate_isf_fey_model_112bar(
-    t: np.ndarray[_S0Inv, np.dtype[np.float_]],
+    t: np.ndarray[_S0Inv, np.dtype[np.float64]],
     fast_rate: float,
     slow_rate: float,
     *,
     a_dk: float,
-) -> np.ndarray[_S0Inv, np.dtype[np.float_]]:
+) -> np.ndarray[_S0Inv, np.dtype[np.float64]]:
     """
     Use the fey model calculate the ISF as measured in the 112bar direction given dk = 2/a.
 
@@ -456,7 +456,7 @@ def calculate_isf_fey_model_112bar(
 
 
 def get_isf_from_fey_model_fit_110(
-    fit: ISFFeyModelFit, times: np.ndarray[tuple[_L0Inv], np.dtype[np.float_]]
+    fit: ISFFeyModelFit, times: np.ndarray[tuple[_L0Inv], np.dtype[np.float64]]
 ) -> SingleBasisDiagonalOperator[ExplicitTimeBasis[_L0Inv]]:
     """
     Given an ISF Fit calculate the ISF.
@@ -474,12 +474,12 @@ def get_isf_from_fey_model_fit_110(
         "basis": StackedBasis(ExplicitTimeBasis(times), ExplicitTimeBasis(times)),
         "data": calculate_isf_fey_model_110(
             times, fit.fast_rate, fit.slow_rate, a_dk=fit.a_dk
-        ).astype(np.complex_),
+        ).astype(np.complex128),
     }
 
 
 def get_isf_from_fey_model_fit_112bar(
-    fit: ISFFeyModelFit, times: np.ndarray[tuple[_L0Inv], np.dtype[np.float_]]
+    fit: ISFFeyModelFit, times: np.ndarray[tuple[_L0Inv], np.dtype[np.float64]]
 ) -> SingleBasisDiagonalOperator[ExplicitTimeBasis[_L0Inv]]:
     """
     Given an ISF Fit calculate the ISF.
@@ -497,7 +497,7 @@ def get_isf_from_fey_model_fit_112bar(
         "basis": StackedBasis(ExplicitTimeBasis(times), ExplicitTimeBasis(times)),
         "data": calculate_isf_fey_model_112bar(
             times, fit.fast_rate, fit.slow_rate, a_dk=fit.a_dk
-        ).astype(np.complex_),
+        ).astype(np.complex128),
     }
 
 

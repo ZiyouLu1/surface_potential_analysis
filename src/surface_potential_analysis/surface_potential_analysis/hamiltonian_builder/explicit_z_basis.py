@@ -59,7 +59,7 @@ class PotentialSizeError(Exception):
 def _get_xy_hamiltonian(
     basis: _B0Inv,
     mass: float,
-    bloch_fraction: np.ndarray[tuple[Literal[2]], np.dtype[np.float_]],
+    bloch_fraction: np.ndarray[tuple[Literal[2]], np.dtype[np.float64]],
 ) -> SingleBasisOperator[_B0Inv]:
     xy_basis = StackedBasis[Any, Any](
         TransformedPositionBasis(basis[0].delta_x[:2], basis[0].n, basis[0].n),
@@ -105,7 +105,7 @@ class _SurfaceHamiltonianUtil(
         ],
         resolution: tuple[_N0Inv, _N1Inv],
         config: PotentialBasisConfig[FundamentalPositionBasis1d[_NF2Inv], _N2Inv],
-        bloch_fraction: np.ndarray[tuple[Literal[3]], np.dtype[np.float_]],
+        bloch_fraction: np.ndarray[tuple[Literal[3]], np.dtype[np.float64]],
     ) -> None:
         self._potential = potential
         self._resolution = resolution
@@ -152,7 +152,7 @@ class _SurfaceHamiltonianUtil(
     @property
     def points(
         self,
-    ) -> np.ndarray[tuple[_NF0Inv, _NF1Inv, _NF2Inv], np.dtype[np.complex_]]:
+    ) -> np.ndarray[tuple[_NF0Inv, _NF1Inv, _NF2Inv], np.dtype[np.complex128]]:
         return self._potential["data"].reshape(  # type: ignore[no-any-return]
             BasisUtil(self._potential["basis"]).shape
         )
@@ -203,7 +203,7 @@ class _SurfaceHamiltonianUtil(
             FundamentalBasis[_N2Inv],
             StackedBasisLike[*tuple[FundamentalPositionBasis1d[_NF2Inv]]],
         ],
-    ) -> np.ndarray[tuple[int, int], np.dtype[np.complex_]]:
+    ) -> np.ndarray[tuple[int, int], np.dtype[np.complex128]]:
         basis = self.basis(state_vectors_z)
         return np.array(  # type: ignore[no-any-return]
             hamiltonian_generator.calculate_off_diagonal_energies2(
@@ -216,7 +216,7 @@ class _SurfaceHamiltonianUtil(
     @property
     def subtracted_points(
         self,
-    ) -> np.ndarray[tuple[int, int, int], np.dtype[np.float_]]:
+    ) -> np.ndarray[tuple[int, int, int], np.dtype[np.float64]]:
         return np.subtract(self.points, self._config["potential"]["data"][np.newaxis, np.newaxis, :])  # type: ignore[no-any-return]
 
     def get_ft_potential(
@@ -234,7 +234,7 @@ def total_surface_hamiltonian(
             FundamentalPositionBasis3d[_NF2Inv],
         ]
     ],
-    bloch_fraction: np.ndarray[tuple[Literal[3]], np.dtype[np.float_]],
+    bloch_fraction: np.ndarray[tuple[Literal[3]], np.dtype[np.float64]],
     resolution: tuple[_N0Inv, _N1Inv],
     config: PotentialBasisConfig[FundamentalPositionBasis1d[_NF2Inv], _N2Inv],
 ) -> SingleBasisOperator[
@@ -270,7 +270,7 @@ def total_surface_hamiltonian_as_fundamental(
             FundamentalPositionBasis3d[_NF2Inv],
         ]
     ],
-    bloch_fraction: np.ndarray[tuple[Literal[3]], np.dtype[np.float_]],
+    bloch_fraction: np.ndarray[tuple[Literal[3]], np.dtype[np.float64]],
     resolution: tuple[_N0Inv, _N1Inv],
     config: PotentialBasisConfig[FundamentalPositionBasis1d[_NF2Inv], _N2Inv],
 ) -> SingleBasisOperator[

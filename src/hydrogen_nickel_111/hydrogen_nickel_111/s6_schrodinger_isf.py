@@ -87,7 +87,7 @@ def get_simulation_at_temperature(
     hamiltonian = get_coherent_hamiltonian(a_matrix["basis"][0])
     initial_state: StateVector[Any] = {
         "basis": a_matrix["basis"][0],
-        "data": np.zeros(a_matrix["basis"][0].n, dtype=np.complex_),
+        "data": np.zeros(a_matrix["basis"][0].n, dtype=np.complex128),
     }
     initial_state["data"][idx] = 1
     return solve_stochastic_schrodinger_equation(
@@ -99,7 +99,7 @@ def get_repeated_simulation_at_temperature(
     temperature: float, idx: int, times: _B0, repeats: int = 1
 ) -> StateVectorList[StackedBasisLike[FundamentalBasis[int], _B0], Any]:
     states_i = get_simulation_at_temperature(temperature, idx, times, _i=0)
-    probabilities = np.zeros((0, times.times.size, 800), dtype=np.complex_)
+    probabilities = np.zeros((0, times.times.size, 800), dtype=np.complex128)
     for repeat in range(repeats):
         states_i = get_simulation_at_temperature(temperature, idx, times, _i=repeat)
         probabilities = np.append(
@@ -125,7 +125,7 @@ def plot_average_isf_against_time() -> None:
 
     initial_state: StateVector[Any] = {
         "basis": a_matrix["basis"][0],
-        "data": np.zeros(a_matrix["basis"].shape[0], dtype=np.complex_),
+        "data": np.zeros(a_matrix["basis"].shape[0], dtype=np.complex128),
     }
     initial_state["data"][0] = 1
     times = FundamentalTimeBasis(20000, 8e-10)
@@ -160,7 +160,7 @@ def get_repeat_average_isf(
 
 def get_lambda_values(
     temperature: float, n: int = 2
-) -> np.ndarray[tuple[int], np.dtype[np.float_]]:
+) -> np.ndarray[tuple[int], np.dtype[np.float64]]:
     energies = np.array([get_hydrogen_energy_difference(0, i) for i in range(n)])
     return np.exp(-energies / (Boltzmann * temperature))
 
@@ -304,7 +304,7 @@ def plot_rate_against_temperature() -> None:
 def get_average_initial_site_probability(
     temperature: float, band: int, times: _B0, repeats: int
 ) -> ProbabilityVectorList[_B0, FundamentalBasis[Literal[2]]]:
-    probabilities = np.zeros((0, times.times.size, 800), dtype=np.float_)
+    probabilities = np.zeros((0, times.times.size, 800), dtype=np.float64)
     for repeat in range(repeats):
         probabilities_i = from_state_vector_list(
             get_simulation_at_temperature(temperature, band, times, _i=repeat)
@@ -342,7 +342,7 @@ def plot_ballistic_isf_against_time() -> None:
 
     initial_state: StateVector[Any] = {
         "basis": a_matrix["basis"][0],
-        "data": np.zeros(a_matrix["basis"].shape[0], dtype=np.complex_),
+        "data": np.zeros(a_matrix["basis"].shape[0], dtype=np.complex128),
     }
     initial_state["data"][0] = 1
     times = FundamentalTimeBasis(20000, 1e-15)

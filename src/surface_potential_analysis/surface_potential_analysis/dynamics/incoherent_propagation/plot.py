@@ -19,7 +19,7 @@ _L0Inv = TypeVar("_L0Inv", bound=int)
 
 def plot_rate_decomposition_against_temperature(
     rates: list[RateDecomposition[_L0Inv]],
-    temperatures: np.ndarray[tuple[_N0Inv], np.dtype[np.float_]],
+    temperatures: np.ndarray[tuple[_N0Inv], np.dtype[np.float64]],
     *,
     ax: Axes | None = None,
 ) -> tuple[Figure, Axes]:

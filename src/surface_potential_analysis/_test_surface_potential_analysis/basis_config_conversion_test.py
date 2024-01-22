@@ -111,7 +111,7 @@ class BasisConfigConversionTest(unittest.TestCase):
         basis_0 = FundamentalPositionBasis(np.array([1]), n)
         momentum = basis_as_fundamental_momentum_basis(basis_0)
 
-        initial_points = rng.random(n).astype(np.complex_)
+        initial_points = rng.random(n).astype(np.complex128)
         converted = convert_vector(initial_points, basis_0, momentum)
         truncated_basis = TransformedPositionBasis(np.array([1]), n, fundamental_n)
         scaled = converted * np.sqrt(fundamental_n / n)
@@ -224,7 +224,7 @@ class BasisConfigConversionTest(unittest.TestCase):
         n = rng.integers(2, fundamental_n)  # type: ignore bad libary types
 
         vectors = special_ortho_group.rvs(fundamental_n)[:n]
-        axis = ExplicitBasis(np.array([0]), vectors.astype(np.complex_))
+        axis = ExplicitBasis(np.array([0]), vectors.astype(np.complex128))
         actual = convert_vector(
             np.eye(n),
             axis,

@@ -33,7 +33,7 @@ if TYPE_CHECKING:
 def plot_k_points_projected_2d(
     basis: StackedBasisLike[*tuple[Any, ...]],
     axes: tuple[int, int],
-    points: np.ndarray[tuple[int, ...], np.dtype[np.float_]],
+    points: np.ndarray[tuple[int, ...], np.dtype[np.float64]],
     *,
     ax: Axes | None = None,
 ) -> tuple[Figure, Axes, Line2D]:
@@ -156,7 +156,7 @@ def plot_fundamental_k_in_plane_projected_2d(
 def plot_x_points_projected_2d(
     basis: StackedBasisLike[*tuple[_BL0, ...]],
     axes: tuple[int, int],
-    points: np.ndarray[tuple[int, ...], np.dtype[np.float_]],
+    points: np.ndarray[tuple[int, ...], np.dtype[np.float64]],
     *,
     ax: Axes | None = None,
 ) -> tuple[Figure, Axes, Line2D]:
@@ -253,7 +253,7 @@ def plot_fundamental_x_at_index_projected_2d(
     util = BasisUtil(basis)
     idx = idx if isinstance(idx, tuple) else util.get_stacked_index(idx)
     points = (
-        np.array(util.fundamental_stacked_nx_points, dtype=np.float_)
+        np.array(util.fundamental_stacked_nx_points, dtype=np.float64)
         .reshape(util.ndim, *util.fundamental_shape)[:, *idx]
         .reshape(util.ndim, -1)
     )

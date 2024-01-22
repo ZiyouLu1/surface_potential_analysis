@@ -19,7 +19,7 @@ def build_hamiltonian_from_wavepackets(
     basis: _B0Inv,
 ) -> SingleBasisOperator[_B0Inv]:
     (n_x1, n_x2, _) = basis.shape
-    array = np.zeros((*basis.shape, *basis.shape), np.complex_)
+    array = np.zeros((*basis.shape, *basis.shape), np.complex128)
     for i, wavepacket in enumerate(wavepackets):
         sample_shape = wavepacket["basis"][0].shape
         h = pad_ft_points(

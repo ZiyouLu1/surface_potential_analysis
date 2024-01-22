@@ -11,7 +11,6 @@ from surface_potential_analysis.operator.operator_list import OperatorList
 if TYPE_CHECKING:
     from surface_potential_analysis.types import SingleIndexLike
 
-    pass
 
 _B0 = TypeVar("_B0", bound=BasisLike[Any, Any])
 _B1 = TypeVar("_B1", bound=BasisLike[Any, Any])

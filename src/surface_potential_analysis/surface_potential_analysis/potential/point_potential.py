@@ -14,10 +14,10 @@ _L0_co = TypeVar("_L0_co", bound=int, covariant=True)
 class PointPotential3d(TypedDict, Generic[_L0_co]):
     """Represents an uneven potential, given at a series of points in the unit cell."""
 
-    x_points: np.ndarray[tuple[_L0_co], np.dtype[np.float_]]
-    y_points: np.ndarray[tuple[_L0_co], np.dtype[np.float_]]
-    z_points: np.ndarray[tuple[_L0_co], np.dtype[np.float_]]
-    points: np.ndarray[tuple[_L0_co], np.dtype[np.float_]]
+    x_points: np.ndarray[tuple[_L0_co], np.dtype[np.float64]]
+    y_points: np.ndarray[tuple[_L0_co], np.dtype[np.float64]]
+    z_points: np.ndarray[tuple[_L0_co], np.dtype[np.float64]]
+    points: np.ndarray[tuple[_L0_co], np.dtype[np.float64]]
 
 
 def load_point_potential_json(

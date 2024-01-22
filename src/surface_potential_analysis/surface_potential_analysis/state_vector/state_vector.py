@@ -15,14 +15,14 @@ class StateVector(TypedDict, Generic[_B0_co]):
     """represents a state vector in a basis."""
 
     basis: _B0_co
-    data: np.ndarray[tuple[int], np.dtype[np.complex_]]
+    data: np.ndarray[tuple[int], np.dtype[np.complex128]]
 
 
 class StateDualVector(TypedDict, Generic[_B0_co]):
     """represents a dual vector in a basis."""
 
     basis: _B0_co
-    data: np.ndarray[tuple[int], np.dtype[np.complex_]]
+    data: np.ndarray[tuple[int], np.dtype[np.complex128]]
 
 
 def as_vector(vector: StateDualVector[_B0Inv]) -> StateVector[_B0Inv]:
@@ -57,7 +57,7 @@ def as_dual_vector(vector: StateVector[_B0Inv]) -> StateDualVector[_B0Inv]:
 
 def calculate_normalization(
     state: StateVector[Any] | StateDualVector[Any],
-) -> np.float_:
+) -> np.float64:
     """
     calculate the normalization of a state.
 

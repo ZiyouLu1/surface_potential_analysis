@@ -46,8 +46,8 @@ if TYPE_CHECKING:
 
 def _get_projected_bloch_phases(
     collection: EigenstateColllection[StackedBasisLike[_BF0, Any], Any],
-    direction: np.ndarray[tuple[_L0], np.dtype[np.float_]],
-) -> np.ndarray[tuple[int], np.dtype[np.float_]]:
+    direction: np.ndarray[tuple[_L0], np.dtype[np.float64]],
+) -> np.ndarray[tuple[int], np.dtype[np.float64]]:
     util = BasisUtil(collection["basis"][1])
     bloch_phases = np.tensordot(
         collection["basis"][0][0].bloch_fractions,
@@ -97,7 +97,7 @@ def plot_states_1d_x(
 
 def plot_eigenvalues_against_bloch_phase_1d(
     collection: EigenstateColllection[StackedBasisLike[_BF0, Any], Any],
-    direction: np.ndarray[tuple[int], np.dtype[np.float_]],
+    direction: np.ndarray[tuple[int], np.dtype[np.float64]],
     band: int = 0,
     *,
     ax: Axes | None = None,
@@ -132,7 +132,7 @@ def plot_eigenvalues_against_bloch_phase_1d(
 
 def plot_occupation_against_bloch_phase_1d(
     collection: EigenstateColllection[StackedBasisLike[_BF0, Any], Any],
-    direction: np.ndarray[tuple[int], np.dtype[np.float_]],
+    direction: np.ndarray[tuple[int], np.dtype[np.float64]],
     temperature: float,
     band: int = 0,
     *,

@@ -22,16 +22,16 @@ _L0Inv = TypeVar("_L0Inv", bound=int)
 
 
 def electron_occupation(
-    energies: np.ndarray[tuple[_L0Inv], np.dtype[np.float_]], temperature: float
-) -> np.ndarray[tuple[_L0Inv], np.dtype[np.float_]]:
+    energies: np.ndarray[tuple[_L0Inv], np.dtype[np.float64]], temperature: float
+) -> np.ndarray[tuple[_L0Inv], np.dtype[np.float64]]:
     kt = Boltzmann * temperature
     e = np.array(energies)
     return 1 / (1 + np.exp((e - fermi_energy_nickel) / kt))  # type: ignore[no-any-return]
 
 
 def overlap_potential(
-    dk_points: np.ndarray[tuple[_L0Inv], np.dtype[np.float_]]
-) -> np.ndarray[tuple[_L0Inv], np.dtype[np.float_]]:
+    dk_points: np.ndarray[tuple[_L0Inv], np.dtype[np.float64]]
+) -> np.ndarray[tuple[_L0Inv], np.dtype[np.float64]]:
     """
     _summary_.
 
@@ -57,7 +57,7 @@ def overlap_potential(
 
 def plot_electron_occupation() -> None:
     energies = np.linspace(
-        fermi_energy_nickel * 0.99, fermi_energy_nickel * 1.01, 1000, dtype=np.float_
+        fermi_energy_nickel * 0.99, fermi_energy_nickel * 1.01, 1000, dtype=np.float64
     )
     fig, ax = plt.subplots()
     ax.plot(energies, electron_occupation(energies, 100))

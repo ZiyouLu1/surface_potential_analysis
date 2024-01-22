@@ -228,5 +228,5 @@ def calculate_eigenstate_cross_product() -> None:
 
     prod = np.multiply(state_0["data"], np.conjugate(state_1["data"]))
     print(prod)  # noqa: T201
-    norm: np.float_ = np.sum(prod)
+    norm: np.float64 = np.sum(prod)
     print(norm)  # 0.95548 # noqa: T201

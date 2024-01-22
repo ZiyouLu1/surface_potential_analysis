@@ -33,7 +33,7 @@ Scale = Literal["symlog", "linear"]
 
 
 def _get_default_lim(
-    measure: Measure, data: np.ndarray[Any, np.dtype[np.float_]]
+    measure: Measure, data: np.ndarray[Any, np.dtype[np.float64]]
 ) -> tuple[float, float]:
     if measure == "abs":
         return (0, float(np.max(data)))
@@ -43,7 +43,7 @@ def _get_default_lim(
 def _get_lim(
     lim: tuple[float | None, float | None],
     measure: Measure,
-    data: np.ndarray[Any, np.dtype[np.float_]],
+    data: np.ndarray[Any, np.dtype[np.float64]],
 ) -> tuple[float, float]:
     (default_min, default_max) = _get_default_lim(measure, data)
     l_max = default_max if lim[1] is None else lim[1]
@@ -96,7 +96,7 @@ def _set_ymargin(ax: Axes, bottom: float = 0.0, top: float = 0.3) -> None:
 
 def plot_data_1d_k(
     basis: StackedBasisLike[*tuple[Any, ...]],
-    data: np.ndarray[tuple[_L0Inv], np.dtype[np.complex_]],
+    data: np.ndarray[tuple[_L0Inv], np.dtype[np.complex128]],
     axes: tuple[int,] = (0,),
     idx: SingleStackedIndexLike | None = None,
     *,
@@ -148,7 +148,7 @@ def plot_data_1d_k(
 
 def plot_data_1d_x(
     basis: StackedBasisLike[*tuple[Any, ...]],
-    data: np.ndarray[tuple[_L0Inv], np.dtype[np.complex_]],
+    data: np.ndarray[tuple[_L0Inv], np.dtype[np.complex128]],
     axes: tuple[int,] = (0,),
     idx: SingleStackedIndexLike | None = None,
     *,
@@ -197,7 +197,7 @@ def plot_data_1d_x(
 
 def plot_data_2d_k(
     basis: StackedBasisLike[*tuple[Any, ...]],
-    data: np.ndarray[tuple[_L0Inv], np.dtype[np.complex_]],
+    data: np.ndarray[tuple[_L0Inv], np.dtype[np.complex128]],
     axes: tuple[int, int] = (0, 1),
     idx: SingleStackedIndexLike | None = None,
     *,
@@ -260,7 +260,7 @@ def plot_data_2d_k(
 
 def plot_data_2d_x(
     basis: StackedBasisLike[*tuple[Any, ...]],
-    data: np.ndarray[tuple[_L0Inv], np.dtype[np.complex_]],
+    data: np.ndarray[tuple[_L0Inv], np.dtype[np.complex128]],
     axes: tuple[int, int] = (0, 1),
     idx: SingleStackedIndexLike | None = None,
     *,
@@ -373,7 +373,7 @@ _L0Inv = TypeVar("_L0Inv", bound=int)
 
 def animate_data_through_surface_x(
     basis: StackedBasisLike[*tuple[Any, ...]],
-    data: np.ndarray[tuple[_L0Inv], np.dtype[np.complex_]],
+    data: np.ndarray[tuple[_L0Inv], np.dtype[np.complex128]],
     axes: tuple[int, int, int] = (0, 1, 2),
     idx: SingleStackedIndexLike | None = None,
     *,

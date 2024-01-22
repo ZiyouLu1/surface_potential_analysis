@@ -17,7 +17,7 @@ _L0Inv = TypeVar("_L0Inv", bound=int)
 
 def get_point_potential_xy_locations(
     potential: PointPotential3d[_L0Inv],
-) -> np.ndarray[tuple[Literal[2], int], np.dtype[np.float_]]:
+) -> np.ndarray[tuple[Literal[2], int], np.dtype[np.float64]]:
     """
     Get xy locations in a point potential.
 

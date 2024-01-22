@@ -24,7 +24,7 @@ class OperatorList(TypedDict, Generic[_B0Inv, _B1Inv, _B2Inv]):
     """Represents a list of eigenstates, each with the same basis and bloch wavevector."""
 
     basis: StackedBasisLike[_B0Inv, StackedBasisLike[_B1Inv, _B2Inv]]
-    data: np.ndarray[tuple[int], np.dtype[np.complex_]]
+    data: np.ndarray[tuple[int], np.dtype[np.complex128]]
     """A list of state vectors"""
 
 
@@ -55,7 +55,7 @@ class DiagonalOperatorList(TypedDict, Generic[_B0Inv, _B1Inv, _B2Inv]):
     """Represents a list of eigenstates, each with the same basis and bloch wavevector."""
 
     basis: StackedBasisLike[_B0Inv, StackedBasisLike[_B1Inv, _B2Inv]]
-    data: np.ndarray[tuple[int], np.dtype[np.complex_]]
+    data: np.ndarray[tuple[int], np.dtype[np.complex128]]
     """A list of state vectors"""
 
 

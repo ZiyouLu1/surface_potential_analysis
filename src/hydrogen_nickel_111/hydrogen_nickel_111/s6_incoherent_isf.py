@@ -56,7 +56,7 @@ if TYPE_CHECKING:
 _L0Inv = TypeVar("_L0Inv", bound=int)
 
 
-def get_jianding_isf_110() -> np.ndarray[tuple[Literal[2]], np.dtype[np.float_]]:
+def get_jianding_isf_110() -> np.ndarray[tuple[Literal[2]], np.dtype[np.float64]]:
     basis = get_wavepacket_hydrogen(0)["basis"][1]
 
     util = BasisUtil(basis)
@@ -65,7 +65,7 @@ def get_jianding_isf_110() -> np.ndarray[tuple[Literal[2]], np.dtype[np.float_]]
     return dk[:2]  # type: ignore[no-any-return]
 
 
-def get_jianding_isf_112bar() -> np.ndarray[tuple[Literal[2]], np.dtype[np.float_]]:
+def get_jianding_isf_112bar() -> np.ndarray[tuple[Literal[2]], np.dtype[np.float64]]:
     basis = get_wavepacket_hydrogen(0)["basis"][1]
 
     util = BasisUtil(basis)
@@ -78,7 +78,7 @@ def get_jianding_isf_112bar() -> np.ndarray[tuple[Literal[2]], np.dtype[np.float
     return dk[:2]  # type: ignore[no-any-return]
 
 
-def get_jianding_isf_diagonal() -> np.ndarray[tuple[Literal[2]], np.dtype[np.float_]]:
+def get_jianding_isf_diagonal() -> np.ndarray[tuple[Literal[2]], np.dtype[np.float64]]:
     basis = get_wavepacket_hydrogen(0)["basis"][1]
 
     util = BasisUtil(basis)
@@ -101,7 +101,7 @@ def calculate_rates_hydrogen(
     n_bands: int = 6,
     *,
     plot: bool = False,
-) -> np.ndarray[tuple[Literal[3], Literal[7]], np.dtype[np.float_]]:
+) -> np.ndarray[tuple[Literal[3], Literal[7]], np.dtype[np.float64]]:
     temperatures = np.array([100, 125, 150, 175, 200, 225, 250])
     times = [
         np.linspace(0, 4e-8, 2000),
@@ -167,7 +167,7 @@ def extract_intrinsic_rates(fast_rate: float, slow_rate: float) -> tuple[float, 
             nu * (lam + 1 - y) / (2 * lam) - slow_rate,
         ]
 
-    result, detail, _, _ = scipy.optimize.fsolve(  # type: ignore unknown # cSpell: disable-line
+    result, _detail, _, _ = scipy.optimize.fsolve(  # type: ignore unknown # cSpell: disable-line
         _func,
         [slow_rate, slow_rate / fast_rate],
         full_output=True,
@@ -180,8 +180,8 @@ def extract_intrinsic_rates(fast_rate: float, slow_rate: float) -> tuple[float, 
 
 
 def calculate_rates_hydrogen_tight_binding(
-    temperatures: np.ndarray[tuple[_L0Inv], np.dtype[np.float_]],
-) -> np.ndarray[tuple[Literal[2], _L0Inv], np.dtype[np.float_]]:
+    temperatures: np.ndarray[tuple[_L0Inv], np.dtype[np.float64]],
+) -> np.ndarray[tuple[Literal[2], _L0Inv], np.dtype[np.float64]]:
     prefactor = 3 * calculate_gamma_potential_integral_hydrogen_diagonal(0, 1, (0, 0))
 
     fast_rates = [

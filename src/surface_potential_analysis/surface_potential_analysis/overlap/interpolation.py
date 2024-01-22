@@ -37,9 +37,9 @@ if TYPE_CHECKING:
 _S0Inv = TypeVar("_S0Inv", bound=tuple[int, ...])
 
 ArrayStackedIndexFractionLike = tuple[
-    np.ndarray[_S0Inv, np.dtype[np.float_ | np.int_]],
-    np.ndarray[_S0Inv, np.dtype[np.float_ | np.int_]],
-    np.ndarray[_S0Inv, np.dtype[np.float_ | np.int_]],
+    np.ndarray[_S0Inv, np.dtype[np.float64 | np.int_]],
+    np.ndarray[_S0Inv, np.dtype[np.float64 | np.int_]],
+    np.ndarray[_S0Inv, np.dtype[np.float64 | np.int_]],
 ]
 
 
@@ -49,7 +49,7 @@ def get_overlap_momentum_interpolator_k_fractions(
     ]
 ) -> Callable[
     [ArrayStackedIndexFractionLike[_S0Inv]],
-    np.ndarray[_S0Inv, np.dtype[np.complex_]],
+    np.ndarray[_S0Inv, np.dtype[np.complex128]],
 ]:
     """
     Get an interpolator to calculate the overlap in momentum basis.
@@ -73,7 +73,7 @@ def get_overlap_momentum_interpolator_k_fractions(
 
     def _interpolator(
         k_fractions: ArrayStackedIndexFractionLike[_S0Inv],
-    ) -> np.ndarray[_S0Inv, np.dtype[np.complex_]]:
+    ) -> np.ndarray[_S0Inv, np.dtype[np.complex128]]:
         phi = np.sum(x_fractions * np.asarray(k_fractions)[:, np.newaxis, :], axis=0)
         return np.sum(overlap["data"][:, np.newaxis] * np.exp(2j * np.pi * phi), axis=0)  # type: ignore[no-any-return]
 
@@ -83,8 +83,8 @@ def get_overlap_momentum_interpolator_k_fractions(
 def get_overlap_momentum_interpolator(
     overlap: FundamentalPositionOverlap[_L0Inv, _L1Inv, _L2Inv]
 ) -> Callable[
-    [np.ndarray[tuple[Literal[3], *Ts], np.dtype[np.float_]]],
-    np.ndarray[tuple[*Ts], np.dtype[np.complex_]],
+    [np.ndarray[tuple[Literal[3], *Ts], np.dtype[np.float64]]],
+    np.ndarray[tuple[*Ts], np.dtype[np.complex128]],
 ]:
     """
     Given the overlap create an interpolator to calculate th interpolation in momentum basis.
@@ -105,8 +105,8 @@ def get_overlap_momentum_interpolator(
     x_points = util.get_x_points_at_index(nx_points_wrapped)
 
     def _interpolator(
-        k_coordinates: np.ndarray[tuple[Literal[3], *Ts], np.dtype[np.float_]]
-    ) -> np.ndarray[tuple[*Ts], np.dtype[np.complex_]]:
+        k_coordinates: np.ndarray[tuple[Literal[3], *Ts], np.dtype[np.float64]]
+    ) -> np.ndarray[tuple[*Ts], np.dtype[np.complex128]]:
         phi = np.tensordot(x_points, k_coordinates, axes=(0, 0))
         return np.tensordot(overlap["data"], np.exp(1j * phi), axes=(0, 0))  # type: ignore[no-any-return]
 
@@ -120,8 +120,8 @@ def get_overlap_momentum_interpolator_flat(
     ],
     n_points: IntLike_co | None = None,
 ) -> Callable[
-    [np.ndarray[tuple[Literal[2], *Ts], np.dtype[np.float_]]],
-    np.ndarray[tuple[*Ts], np.dtype[np.complex_]],
+    [np.ndarray[tuple[Literal[2], *Ts], np.dtype[np.float64]]],
+    np.ndarray[tuple[*Ts], np.dtype[np.complex128]],
 ]:
     """
     Given the overlap create an interpolator to calculate the interpolation in momentum basis.
@@ -159,8 +159,8 @@ def get_overlap_momentum_interpolator_flat(
     relevant_vector = vector_transformed[relevant_slice]
 
     def _interpolator(
-        k_coordinates: np.ndarray[tuple[Literal[2], *Ts], np.dtype[np.float_]]
-    ) -> np.ndarray[tuple[*Ts], np.dtype[np.complex_]]:
+        k_coordinates: np.ndarray[tuple[Literal[2], *Ts], np.dtype[np.float64]]
+    ) -> np.ndarray[tuple[*Ts], np.dtype[np.complex128]]:
         phi = np.tensordot(relevant_x_points, k_coordinates, axes=(0, 0))
         return np.tensordot(relevant_vector, np.exp(1j * phi), axes=(0, 0))  # type: ignore[no-any-return]
 
@@ -169,13 +169,13 @@ def get_overlap_momentum_interpolator_flat(
 
 def get_angle_averaged_diagonal_overlap_function(
     interpolator: Callable[
-        [np.ndarray[tuple[Literal[2], int], np.dtype[np.float_]]],
-        np.ndarray[tuple[int], np.dtype[np.complex_]],
+        [np.ndarray[tuple[Literal[2], int], np.dtype[np.float64]]],
+        np.ndarray[tuple[int], np.dtype[np.complex128]],
     ],
-    abs_q: np.ndarray[_S0Inv, np.dtype[np.float_]],
+    abs_q: np.ndarray[_S0Inv, np.dtype[np.float64]],
     *,
     theta_samples: int = 50,
-) -> np.ndarray[_S0Inv, np.dtype[np.float_]]:
+) -> np.ndarray[_S0Inv, np.dtype[np.float64]]:
     """
     Given an interpolator for the overlap, average over the angle.
 
@@ -191,7 +191,7 @@ def get_angle_averaged_diagonal_overlap_function(
     np.ndarray[tuple[int], np.dtype[np.float_]]
     """
     theta = np.linspace(0, 2 * np.pi, theta_samples)
-    averages = list[np.float_]()
+    averages = list[np.float64]()
     for q in abs_q.ravel():
         k_points = q * np.array([np.cos(theta), np.sin(theta)])
         interpolated = interpolator(k_points)  # type: ignore[var-annotated]

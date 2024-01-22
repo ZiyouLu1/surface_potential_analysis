@@ -59,8 +59,8 @@ _L2Inv = TypeVar("_L2Inv", bound=int)
 def _get_diagonal_overlap_function_hydrogen(
     i: int, j: int, offset_j: tuple[int, int]
 ) -> Callable[
-    [np.ndarray[_S0Inv, np.dtype[np.float_]]],
-    np.ndarray[_S0Inv, np.dtype[np.float_]],
+    [np.ndarray[_S0Inv, np.dtype[np.float64]]],
+    np.ndarray[_S0Inv, np.dtype[np.float64]],
 ]:
     overlap = get_overlap_hydrogen(i, j, (0, 0), offset_j)
     n_points = np.prod(BasisUtil(get_wavepacket_hydrogen(0)["basis"]).shape[0:2])
@@ -78,8 +78,8 @@ def _get_diagonal_overlap_function_hydrogen(
     )
 
     def overlap_function(
-        q: np.ndarray[_S0Inv, np.dtype[np.float_]]
-    ) -> np.ndarray[_S0Inv, np.dtype[np.float_]]:
+        q: np.ndarray[_S0Inv, np.dtype[np.float64]]
+    ) -> np.ndarray[_S0Inv, np.dtype[np.float64]]:
         return get_angle_averaged_diagonal_overlap_function(interpolator, q)
 
     return overlap_function
@@ -88,7 +88,7 @@ def _get_diagonal_overlap_function_hydrogen(
 @cache
 def _calculate_gamma_potential_integral_hydrogen_diagonal(
     i: int, j: int, offset_j: tuple[int, int]
-) -> np.complex_:
+) -> np.complex128:
     overlap_function = _get_diagonal_overlap_function_hydrogen(i, j, offset_j)
     return calculate_hermitian_gamma_potential_integral(
         FERMI_WAVEVECTOR["NICKEL"], overlap_function
@@ -186,10 +186,10 @@ def get_fey_jump_matrix_hydrogen() -> TunnellingJumpMatrix[Literal[2]]:
     """
 
     def jump_function(i: int, j: int, hop: int) -> float:
-        if i == 0 and j == 1 and (hop in [0, 2, 6]):
+        if i == 0 and j == 1 and (hop in {0, 2, 6}):
             return 3.02959631e08
 
-        if i == 1 and j == 0 and (hop in [0, 1, 3]):
+        if i == 1 and j == 0 and (hop in {0, 1, 3}):
             return 6.55978349e08
         return 0
 

@@ -59,7 +59,7 @@ if TYPE_CHECKING:
 def _get_global_phases(
     wavepacket: Wavepacket[_SB0, _SB1],
     idx: SingleIndexLike,
-) -> np.ndarray[tuple[int], np.dtype[np.float_]]:
+) -> np.ndarray[tuple[int], np.dtype[np.float64]]:
     ...
 
 
@@ -67,7 +67,7 @@ def _get_global_phases(
 def _get_global_phases(
     wavepacket: Wavepacket[_SB0, _SB1],
     idx: ArrayIndexLike[*_TS],
-) -> np.ndarray[tuple[int, *_TS], np.dtype[np.float_]]:
+) -> np.ndarray[tuple[int, *_TS], np.dtype[np.float64]]:
     ...
 
 
@@ -75,8 +75,8 @@ def _get_global_phases(
     wavepacket: Wavepacket[_SB0, _SB1],
     idx: SingleIndexLike | ArrayIndexLike[*_TS],
 ) -> (
-    np.ndarray[tuple[int, *_TS], np.dtype[np.float_]]
-    | np.ndarray[tuple[int], np.dtype[np.float_]]
+    np.ndarray[tuple[int, *_TS], np.dtype[np.float64]]
+    | np.ndarray[tuple[int], np.dtype[np.float64]]
 ):
     """
     Get the global bloch phase at a given index in the irreducible cell.
@@ -108,7 +108,7 @@ def _get_global_phases(
 def _get_bloch_wavefunction_phases(
     wavepacket: Wavepacket[_SB0, _SB1],
     idx: SingleIndexLike = 0,
-) -> np.ndarray[tuple[int], np.dtype[np.float_]]:
+) -> np.ndarray[tuple[int], np.dtype[np.float64]]:
     """
     Get the phase of the bloch wavefunctions at the given point in position space.
 
@@ -190,7 +190,7 @@ def get_wavepacket_two_points(
 
     converted = convert_state_vector_to_position_basis(get_wavepacket_state_vector(wavepacket, 0))  # type: ignore[arg-type,var-annotated]
     converted_util = BasisUtil(converted["basis"])
-    idx_0 = cast(  #  can't infer np.argmax
+    idx_0 = cast(  # can't infer np.argmax
         SingleStackedIndexLike,
         converted_util.get_stacked_index(np.argmax(np.abs(converted["data"]), axis=-1)),
     )
@@ -201,8 +201,8 @@ def get_wavepacket_two_points(
 
 
 def _wrap_phases(
-    phases: np.ndarray[tuple[int], np.dtype[np.float_]], half_width: float = np.pi
-) -> np.ndarray[tuple[int], np.dtype[np.float_]]:
+    phases: np.ndarray[tuple[int], np.dtype[np.float64]], half_width: float = np.pi
+) -> np.ndarray[tuple[int], np.dtype[np.float64]]:
     return (phases + half_width) % (2 * half_width) - half_width  # type: ignore[no-any-return]
 
 

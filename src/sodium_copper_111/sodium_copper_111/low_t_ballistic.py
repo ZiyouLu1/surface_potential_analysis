@@ -109,13 +109,13 @@ def calculate_ballistic_rate_per_band(
     hamiltonian: SingleBasisDiagonalOperator[
         StackedBasisLike[FundamentalBasis[int], _SB0]
     ]
-) -> np.ndarray[Any, np.dtype[np.float_]]:
+) -> np.ndarray[Any, np.dtype[np.float64]]:
     diagonal_stacked_hamiltonian = hamiltonian["data"].reshape(
         hamiltonian["basis"][0].shape
     )
     hamiltonian_stacked = np.zeros(
         (*hamiltonian["basis"][0].shape, hamiltonian["basis"][0][1].n),
-        dtype=np.complex_,
+        dtype=np.complex128,
     )
     for band in range(hamiltonian["basis"][0][0].n):
         hamiltonian_stacked[band] = np.diag(diagonal_stacked_hamiltonian[band])
@@ -151,14 +151,14 @@ def calculate_average_energy_per_band(
     hamiltonian: SingleBasisDiagonalOperator[
         StackedBasisLike[FundamentalBasis[int], _B0]
     ]
-) -> np.ndarray[Any, np.dtype[np.float_]]:
+) -> np.ndarray[Any, np.dtype[np.float64]]:
     hamiltonian_stacked = hamiltonian["data"].reshape(*hamiltonian["basis"][0].shape)
     return np.abs(np.average(hamiltonian_stacked, axis=1))
 
 
 def plot_ballistic_temperature_rate_curve(
     wavepackets: WavepacketWithEigenvaluesList[_B0, _SB1, _SB0],
-    temperatures: np.ndarray[tuple[int], np.dtype[np.float_]] | None = None,
+    temperatures: np.ndarray[tuple[int], np.dtype[np.float64]] | None = None,
     *,
     ax: Axes | None = None,
 ) -> tuple[Figure, Axes, Line2D]:

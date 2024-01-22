@@ -38,7 +38,7 @@ class StateVectorList(TypedDict, Generic[_B0_co, _B1_co]):
     """
 
     basis: StackedBasisLike[_B0_co, _B1_co]
-    data: np.ndarray[tuple[int], np.dtype[np.complex_]]
+    data: np.ndarray[tuple[int], np.dtype[np.complex128]]
     """A list of state vectors"""
 
 
@@ -152,7 +152,7 @@ def average_state_vector(
     probabilities: StateVectorList[_SB0, _B1],
     axis: tuple[int, ...] | None = None,
     *,
-    weights: np.ndarray[tuple[int], np.dtype[np.float_]] | None = None,
+    weights: np.ndarray[tuple[int], np.dtype[np.float64]] | None = None,
 ) -> StateVectorList[Any, _B1]:
     """
     Average probabilities over several repeats.

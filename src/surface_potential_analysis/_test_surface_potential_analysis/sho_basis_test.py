@@ -38,7 +38,7 @@ class SHOBasisTest(unittest.TestCase):
     def test_sho_normalization(self) -> None:
         mass = hbar**2
         sho_omega = 1 / hbar
-        x_points = np.linspace(-10, 10, 1001, dtype=np.complex_)
+        x_points = np.linspace(-10, 10, 1001, dtype=np.complex128)
 
         for iz1 in range(12):
             for iz2 in range(12):
@@ -57,7 +57,7 @@ class SHOBasisTest(unittest.TestCase):
         mass = hbar**2
         sho_omega = 1 / hbar
         z_points = np.linspace(
-            -10, 10, rng.integers(low=0, high=1000), dtype=np.complex_  # type: ignore bad libary types
+            -10, 10, rng.integers(low=0, high=1000), dtype=np.complex128  # type: ignore bad libary types
         )
 
         norm = np.sqrt(mass * sho_omega / hbar)
@@ -94,7 +94,7 @@ class SHOBasisTest(unittest.TestCase):
         mass = hbar**2 * rng.random()
         sho_omega = rng.random() / hbar
         z_points = np.linspace(
-            -20 * rng.random(), 20 * rng.random(), 1000, dtype=np.complex_
+            -20 * rng.random(), 20 * rng.random(), 1000, dtype=np.complex128
         )
 
         for n in range(14):

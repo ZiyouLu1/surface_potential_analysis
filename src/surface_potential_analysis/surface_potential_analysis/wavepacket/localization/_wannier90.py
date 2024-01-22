@@ -109,7 +109,7 @@ class Wannier90Options(Generic[_B0]):
 
 
 def _build_real_lattice_block(
-    delta_x: np.ndarray[tuple[int, int], np.dtype[np.float_]]
+    delta_x: np.ndarray[tuple[int, int], np.dtype[np.float64]]
 ) -> str:
     # Wannier90 expects the wavefunction to be 3D, so we add the extra fake axis here
     delta_x_padded = np.eye(3)
@@ -118,7 +118,7 @@ def _build_real_lattice_block(
 
     newline = "\n"
     return f"""begin unit_cell_cart
-{newline.join(' '.join(str(x) for x in o ) for o in delta_x_padded) }
+{newline.join(' '.join(str(x) for x in o) for o in delta_x_padded) }
 end unit_cell_cart"""
 
 
@@ -139,7 +139,7 @@ def _build_k_points_block(
     newline = "\n"
     return f"""mp_grid : {" ".join(str(x) for x in mp_grid)}
 begin kpoints
-{newline.join([ f"{f0!r} {f1!r} {f2!r}" for (f0,f1,f2) in fractions_padded.T])}
+{newline.join([f"{f0!r} {f1!r} {f2!r}" for (f0, f1, f2) in fractions_padded.T])}
 end kpoints"""
 
 
@@ -168,7 +168,7 @@ num_iter = {options.num_iter}
 conv_tol = {options.convergence_tolerance}
 conv_window = {options.convergence_window}
 write_u_matrices = .true.
-{"auto_projections = .true."if has_projections  else "use_bloch_phases = .true."}
+{"auto_projections = .true."if has_projections else "use_bloch_phases = .true."}
 num_wann = {wavepackets["basis"][0][0].n}
 {_build_real_lattice_block(util.delta_x_stacked)}
 {_build_k_points_block(wavepackets["basis"][0][1])}
@@ -300,7 +300,7 @@ def _build_mmn_file(
     newline = "\n"
     return f"""
 {n_wavefunctions} {n_k_points} {n_n_tot}
-{newline.join(_build_mmn_file_block(wavepackets, k,options=options) for k in nnk_points)}"""
+{newline.join(_build_mmn_file_block(wavepackets, k, options=options) for k in nnk_points)}"""
 
 
 def _build_amn_file(
@@ -325,13 +325,13 @@ def _build_amn_file(
     stacked = coefficients.reshape(n_k_points, n_wavefunctions, n_projections)
     newline = "\n"
     newline.join(
-        f"{m+1} {n+1} {k+1} {np.real(s)} {np.imag(s)}"
+        f"{m + 1} {n + 1} {k + 1} {np.real(s)} {np.imag(s)}"
         for ((k, m, n), s) in np.ndenumerate(stacked)
     )
     return f"""
 {n_wavefunctions} {n_k_points} {n_projections}
 {newline.join(
-    f"{m+1} {n+1} {k+1} {np.real(s)!r} {np.imag(s)!r}"
+    f"{m + 1} {n + 1} {k + 1} {np.real(s)!r} {np.imag(s)!r}"
     for ((k, m, n), s) in np.ndenumerate(stacked)
 )}
 """
@@ -390,13 +390,13 @@ def _build_dmn_file(
 {n_wavefunctions} {n_symmetry} {n_k_points_irr} {n_k_points}
 
 {newline.join(
-    " ".join((j+1) for j in i if j!=-1)
-    for i in idx_padded.reshape(10,-1)
+    " ".join((j + 1) for j in i if j != -1)
+    for i in idx_padded.reshape(10, -1)
 )}
 {
 newline.join(
-    " ".join((j+1) for j in i if j!=-1)
-    for i in u_padded.reshape(10,-1)
+    " ".join((j + 1) for j in i if j != -1)
+    for i in u_padded.reshape(10, -1)
 )
 }
 """
@@ -404,7 +404,7 @@ newline.join(
 
 def _parse_u_mat_file_block(
     block: list[str],
-) -> np.ndarray[tuple[int], np.dtype[np.complex_]]:
+) -> np.ndarray[tuple[int], np.dtype[np.complex128]]:
     variables = [line.strip().split() for line in block]
     return np.array([float(s[0]) + 1j * float(s[1]) for s in variables])  # type: ignore[no-any-return]
 
@@ -595,7 +595,7 @@ def get_localization_operator_wannier90_individual_bands(
         for wavepacket in wavepacket_list_into_iter(wavepackets)
     ]
     n_bands = wavepackets["basis"][0][0].n
-    out = np.zeros((wavepackets["basis"][0][1].n, n_bands, n_bands), dtype=np.complex_)
+    out = np.zeros((wavepackets["basis"][0][1].n, n_bands, n_bands), dtype=np.complex128)
     out[:, np.arange(n_bands), np.arange(n_bands)] = (
         np.array(operator_data)
         .reshape(n_bands, wavepackets["basis"][0][1].n)

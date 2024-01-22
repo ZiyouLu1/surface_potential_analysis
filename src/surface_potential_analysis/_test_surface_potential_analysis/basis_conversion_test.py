@@ -37,7 +37,7 @@ rng = np.random.default_rng()
 def get_basis_conversion_matrix(
     basis_0: BasisWithLengthLike[_N0Inv, _NF0Inv, _NDInv],
     basis_1: BasisWithLengthLike[_N1Inv, _NF1Inv, _NDInv],
-) -> np.ndarray[tuple[_NF0Inv, _NF1Inv], np.dtype[np.complex_]]:
+) -> np.ndarray[tuple[_NF0Inv, _NF1Inv], np.dtype[np.complex128]]:
     """
     Get the matrix to convert one set of axis axes into another.
 
@@ -56,11 +56,11 @@ def get_basis_conversion_matrix(
 
 
 def convert_vector_simple(
-    vector: np.ndarray[_S0Inv, np.dtype[np.complex_]],
+    vector: np.ndarray[_S0Inv, np.dtype[np.complex128]],
     initial_basis: BasisWithLengthLike[Any, Any, Any],
     final_basis: BasisWithLengthLike[Any, Any, Any],
     axis: int = -1,
-) -> np.ndarray[Any, np.dtype[np.complex_]]:
+) -> np.ndarray[Any, np.dtype[np.complex128]]:
     matrix = get_basis_conversion_matrix(initial_basis, final_basis)
     return np.moveaxis(np.tensordot(vector, matrix, axes=([axis], [0])), -1, axis)  # type: ignore[no-any-return]
 
@@ -103,7 +103,7 @@ class BasisConversionTest(unittest.TestCase):
             basis,
         )
         expected = convert_vector_simple(
-            np.eye(fundamental_n).astype(np.complex_),
+            np.eye(fundamental_n).astype(np.complex128),
             basis_as_fundamental_position_basis(basis),
             basis,
         )
@@ -144,7 +144,7 @@ class BasisConversionTest(unittest.TestCase):
                 np.eye(n), basis, basis_as_fundamental_position_basis(basis)
             ),
             convert_vector_simple(
-                np.eye(n).astype(np.complex_),
+                np.eye(n).astype(np.complex128),
                 basis,
                 basis_as_fundamental_position_basis(basis),
             ),

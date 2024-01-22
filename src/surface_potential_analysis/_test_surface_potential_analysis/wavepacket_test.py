@@ -221,7 +221,7 @@ end nnkpts
     def test_unfurl_momentum_basis_wavepacket(self) -> None:
         ns = rng.integers(1, 5)  # type: ignore bad libary types
         nf = rng.integers(1, 5)  # type: ignore bad libary types
-        vectors = np.zeros((ns, nf), dtype=np.complex_)
+        vectors = np.zeros((ns, nf), dtype=np.complex128)
         vectors[0, 0] = 1
         actual = _unfurl_momentum_basis_wavepacket(
             {

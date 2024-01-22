@@ -96,7 +96,7 @@ def get_jump_matrix_from_a_matrix(
     n_bands = matrix["basis"][2].fundamental_n
     util = BasisUtil(matrix["basis"])
     stacked = matrix["data"].reshape(*util.shape, *util.shape)
-    data = np.zeros((n_bands, n_bands, 9), dtype=np.complex_)
+    data = np.zeros((n_bands, n_bands, 9), dtype=np.complex128)
     for n_0 in range(n_bands):
         for n_1 in range(n_bands):
             for hop in range(9):
@@ -175,7 +175,7 @@ def get_a_matrix_from_jump_matrix(
 
     (n_x0, n_x1) = shape
     jump_stacked = matrix["data"].reshape(n_bands, n_bands, 9)
-    array = np.zeros((*final_util.shape, *final_util.shape), dtype=np.complex_)
+    array = np.zeros((*final_util.shape, *final_util.shape), dtype=np.complex128)
     for n_0 in range(n_bands):
         for n_1 in range(n_bands):
             for hop in range(9):
@@ -240,7 +240,7 @@ def get_jump_matrix_from_function(
     TunnellingAMatrix[_S0Inv]
     """
     n_bands = bands_basis.fundamental_n
-    data = np.zeros((n_bands, n_bands, 9), dtype=np.complex_)
+    data = np.zeros((n_bands, n_bands, 9), dtype=np.complex128)
     for n0 in range(n_bands):
         for n1 in range(n_bands):
             for d1 in range(9):
@@ -354,7 +354,7 @@ def get_initial_pure_density_matrix_for_basis(
     """
     util = BasisUtil(basis)
     idx = util.get_flat_index(idx) if isinstance(idx, tuple) else idx
-    vector = np.zeros(basis.n, dtype=np.complex_)
+    vector = np.zeros(basis.n, dtype=np.complex128)
     vector[idx] = 1
     return {"basis": StackedBasis(basis, basis), "data": vector}
 

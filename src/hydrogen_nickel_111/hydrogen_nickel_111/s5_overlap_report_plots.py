@@ -41,7 +41,7 @@ def plot_fermi_occupation_intregrand() -> None:
     k1_points = np.linspace(
         FERMI_WAVEVECTOR["NICKEL"] - 5 * dk,
         FERMI_WAVEVECTOR["NICKEL"] + 5 * dk,
-        dtype=np.float_,
+        dtype=np.float64,
     )
 
     for i, t in enumerate([150, 170, 190]):
@@ -133,8 +133,8 @@ def plot_fermi_occupation_integral() -> None:
 
 
 def get_rate_simple_equation_hydrogen(
-    temperature: np.ndarray[_S0Inv, np.dtype[np.float_]]
-) -> np.ndarray[_S0Inv, np.dtype[np.float_]]:
+    temperature: np.ndarray[_S0Inv, np.dtype[np.float64]]
+) -> np.ndarray[_S0Inv, np.dtype[np.float64]]:
     omega = float(get_hydrogen_energy_difference(0, 1))
     temperature_flat = temperature.ravel()
     temperature_dep_integral = np.array(
@@ -160,8 +160,8 @@ def get_rate_simple_equation_hydrogen(
 
 
 def get_rate_simple_equation_deuterium(
-    temperature: np.ndarray[_S0Inv, np.dtype[np.float_]]
-) -> np.ndarray[_S0Inv, np.dtype[np.float_]]:
+    temperature: np.ndarray[_S0Inv, np.dtype[np.float64]]
+) -> np.ndarray[_S0Inv, np.dtype[np.float64]]:
     omega = float(get_deuterium_energy_difference(0, 1))
     temperature_flat = temperature.ravel()
     temperature_dep_integral = np.array(

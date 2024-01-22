@@ -80,7 +80,7 @@ def interpolate_points_fftn(
     points: np.ndarray[Any, Any],
     s: Sequence[int],
     axes: Sequence[int] | None = None,
-) -> np.ndarray[Any, np.dtype[np.complex_]]:
+) -> np.ndarray[Any, np.dtype[np.complex128]]:
     """
     Interpolate a grid of points with the given shape using the fourier transform.
 
@@ -153,10 +153,10 @@ def pad_ft_points_real_axis(
 
 
 def interpolate_points_rfftn(
-    points: np.ndarray[_S0Inv, np.dtype[np.float_]],
+    points: np.ndarray[_S0Inv, np.dtype[np.float64]],
     s: Sequence[int],
     axes: Sequence[int] | None = None,
-) -> np.ndarray[tuple[int, ...], np.dtype[np.float_]]:
+) -> np.ndarray[tuple[int, ...], np.dtype[np.float64]]:
     """
     Interpolate points using a real fourier transform.
 
@@ -185,8 +185,8 @@ def interpolate_points_rfftn(
 
 
 def interpolate_points_rfft(
-    points: np.ndarray[_S0Inv, np.dtype[np.float_]], n: int, axis: int = -1
-) -> np.ndarray[tuple[int, ...], np.dtype[np.float_]]:
+    points: np.ndarray[_S0Inv, np.dtype[np.float64]], n: int, axis: int = -1
+) -> np.ndarray[tuple[int, ...], np.dtype[np.float64]]:
     """
     interpolate along the given axis to a new length n.
 
@@ -229,11 +229,11 @@ def interpolate_points_rfft(
 
 
 def interpolate_points_along_axis_spline(
-    data: np.ndarray[_S0Inv, np.dtype[np.float_]],
-    old_coords: np.ndarray[tuple[int], np.dtype[np.float_]],
+    data: np.ndarray[_S0Inv, np.dtype[np.float64]],
+    old_coords: np.ndarray[tuple[int], np.dtype[np.float64]],
     n: int,
     axis: int = -1,
-) -> np.ndarray[tuple[int, ...], np.dtype[np.float_]]:
+) -> np.ndarray[tuple[int, ...], np.dtype[np.float64]]:
     """Use a spline interpolation to increase the Z resolution, spacing z linearly."""
     new_coords = list(np.linspace(old_coords[0], old_coords[-1], n))  # type: ignore bad type inference
 

@@ -111,7 +111,7 @@ def plot_average_isf_against_time(
 
 def plot_isf_4_variable_fit_against_time(
     fit: ISF4VariableFit,
-    times: np.ndarray[tuple[_N0Inv], np.dtype[np.float_]],
+    times: np.ndarray[tuple[_N0Inv], np.dtype[np.float64]],
     *,
     ax: Axes | None = None,
     measure: Measure = "abs",
@@ -143,7 +143,7 @@ def plot_isf_4_variable_fit_against_time(
 
 def plot_isf_fey_4_variable_fit_against_time(
     fit: ISFFey4VariableFit,
-    times: np.ndarray[tuple[_N0Inv], np.dtype[np.float_]],
+    times: np.ndarray[tuple[_N0Inv], np.dtype[np.float64]],
     *,
     ax: Axes | None = None,
     measure: Measure = "abs",
@@ -175,7 +175,7 @@ def plot_isf_fey_4_variable_fit_against_time(
 
 def plot_isf_fey_model_fit_112bar_against_time(
     fit: ISFFeyModelFit,
-    times: np.ndarray[tuple[_N0Inv], np.dtype[np.float_]],
+    times: np.ndarray[tuple[_N0Inv], np.dtype[np.float64]],
     *,
     ax: Axes | None = None,
     measure: Measure = "abs",
@@ -207,7 +207,7 @@ def plot_isf_fey_model_fit_112bar_against_time(
 
 def plot_isf_fey_model_fit_110_against_time(
     fit: ISFFeyModelFit,
-    times: np.ndarray[tuple[_N0Inv], np.dtype[np.float_]],
+    times: np.ndarray[tuple[_N0Inv], np.dtype[np.float64]],
     *,
     ax: Axes | None = None,
     measure: Measure = "abs",

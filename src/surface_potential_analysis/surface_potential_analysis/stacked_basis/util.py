@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from itertools import starmap
 from typing import (
     TYPE_CHECKING,
     Any,
@@ -50,10 +51,10 @@ if TYPE_CHECKING:
 
 
 def project_k_points_along_axes(
-    points: np.ndarray[tuple[_NDInv, Unpack[_TS]], np.dtype[np.float_]],
+    points: np.ndarray[tuple[_NDInv, Unpack[_TS]], np.dtype[np.float64]],
     basis: StackedBasisLike[Unpack[tuple[_BL0Inv, ...]]],
     axes: tuple[int, ...],
-) -> np.ndarray[tuple[int, Unpack[_TS]], np.dtype[np.float_]]:
+) -> np.ndarray[tuple[int, Unpack[_TS]], np.dtype[np.float64]]:
     """
     Get the list of k points projected onto the plane including both axes.
 
@@ -83,7 +84,7 @@ def project_k_points_along_axes(
 def get_fundamental_stacked_k_points_projected_along_axes(
     basis: StackedBasisLike[Unpack[tuple[_BL0Inv, ...]]],
     axes: tuple[int, ...],
-) -> np.ndarray[tuple[int, int], np.dtype[np.float_]]:
+) -> np.ndarray[tuple[int, int], np.dtype[np.float64]]:
     """
     Get the fundamental_k_points projected onto the plane including both axes.
 
@@ -105,7 +106,7 @@ def get_k_coordinates_in_axes(
     basis: StackedBasisLike[Unpack[tuple[_BL0Inv, ...]]],
     axes: tuple[int, ...],
     idx: SingleStackedIndexLike | None,
-) -> np.ndarray[tuple[int, int], np.dtype[np.float_]]:
+) -> np.ndarray[tuple[int, int], np.dtype[np.float64]]:
     """
     Get the fundamental_k_points projected onto the plane including both axes.
 
@@ -125,10 +126,10 @@ def get_k_coordinates_in_axes(
 
 
 def project_x_points_along_axes(
-    points: np.ndarray[tuple[_NDInv, Unpack[_TS]], np.dtype[np.float_]],
+    points: np.ndarray[tuple[_NDInv, Unpack[_TS]], np.dtype[np.float64]],
     basis: StackedBasisLike[Unpack[tuple[_BL0Inv, ...]]],
     axes: tuple[int, ...],
-) -> np.ndarray[tuple[int, Unpack[_TS]], np.dtype[np.float_]]:
+) -> np.ndarray[tuple[int, Unpack[_TS]], np.dtype[np.float64]]:
     """
     Get the list of x points projected onto the plane including all axes.
 
@@ -158,7 +159,7 @@ def project_x_points_along_axes(
 def get_fundamental_stacked_x_points_projected_along_axes(
     basis: StackedBasisLike[Unpack[tuple[_BL0Inv, ...]]],
     axes: tuple[int, ...],
-) -> np.ndarray[tuple[int, int], np.dtype[np.float_]]:
+) -> np.ndarray[tuple[int, int], np.dtype[np.float64]]:
     """
     Get the fundamental_x_points projected onto the plane including both axes.
 
@@ -180,7 +181,7 @@ def get_x_coordinates_in_axes(
     basis: StackedBasisLike[Unpack[tuple[_BL0Inv, ...]]],
     axes: tuple[int, ...],
     idx: SingleStackedIndexLike | None,
-) -> np.ndarray[tuple[int, int], np.dtype[np.float_]]:
+) -> np.ndarray[tuple[int, int], np.dtype[np.float64]]:
     """
     Get the fundamental_x_points projected onto the plane including both axes.
 
@@ -201,17 +202,17 @@ def get_x_coordinates_in_axes(
 
 @overload
 def _wrap_distance(
-    distance: float | np.float_, length: FloatLike_co, origin: FloatLike_co = 0
-) -> np.float_:
+    distance: float | np.float64, length: FloatLike_co, origin: FloatLike_co = 0
+) -> np.float64:
     ...
 
 
 @overload
 def _wrap_distance(
-    distance: np.ndarray[_S0Inv, np.dtype[np.float_]],
+    distance: np.ndarray[_S0Inv, np.dtype[np.float64]],
     length: FloatLike_co,
     origin: FloatLike_co = 0,
-) -> np.ndarray[_S0Inv, np.dtype[np.float_]]:
+) -> np.ndarray[_S0Inv, np.dtype[np.float64]]:
     ...
 
 
@@ -292,9 +293,9 @@ def wrap_index_around_origin(
 
 def wrap_x_point_around_origin(
     basis: StackedBasisLike[Unpack[tuple[_BL0Inv, ...]]],
-    points: np.ndarray[tuple[_NDInv, Unpack[_TS]], np.dtype[np.float_]],
-    origin: np.ndarray[tuple[_NDInv], np.dtype[np.float_]] | None = None,
-) -> np.ndarray[tuple[_NDInv, Unpack[_TS]], np.dtype[np.float_]]:
+    points: np.ndarray[tuple[_NDInv, Unpack[_TS]], np.dtype[np.float64]],
+    origin: np.ndarray[tuple[_NDInv], np.dtype[np.float64]] | None = None,
+) -> np.ndarray[tuple[_NDInv, Unpack[_TS]], np.dtype[np.float64]]:
     """
     Given an index or list of indexes in stacked form, find the equivalent index closest to the origin.
 
@@ -325,7 +326,7 @@ def wrap_x_point_around_origin(
                 distance_along_axes, origin_along_axes, strict=True
             )
         ],
-        dtype=np.float_,
+        dtype=np.float64,
     )
     return np.tensordot(util.delta_x_stacked, wrapped_distances, axes=(0, 0))
 
@@ -359,8 +360,8 @@ def calculate_distances_along_path(
     if wrap_distances:
         util = BasisUtil(basis)
         return np.array(
-            [_wrap_distance(d, n) for (d, n) in zip(out, util.shape, strict=True)],
-            dtype=np.float_,
+            list(starmap(_wrap_distance, zip(out, util.shape, strict=True))),
+            dtype=np.float64,
         )
 
     return out  # type:ignore[no-any-return]
@@ -371,7 +372,7 @@ def calculate_cumulative_x_distances_along_path(
     path: np.ndarray[_S2d0Inv, np.dtype[np.int_]],
     *,
     wrap_distances: bool = False,
-) -> np.ndarray[tuple[int], np.dtype[np.float_]]:
+) -> np.ndarray[tuple[int], np.dtype[np.float64]]:
     """
     calculate the cumulative distances along the given path in the given basis.
 
@@ -406,7 +407,7 @@ def calculate_cumulative_k_distances_along_path(
     path: np.ndarray[_S2d0Inv, np.dtype[np.int_]],
     *,
     wrap_distances: bool = False,
-) -> np.ndarray[tuple[int], np.dtype[np.float_]]:
+) -> np.ndarray[tuple[int], np.dtype[np.float64]]:
     """
     calculate the cumulative distances along the given path in the given basis.
 
@@ -494,7 +495,7 @@ def get_single_point_basis(
 @timed
 def get_max_idx(
     basis: StackedBasisLike[*tuple[Any, ...]],
-    data: np.ndarray[tuple[Any], np.dtype[np.complex_]],
+    data: np.ndarray[tuple[Any], np.dtype[np.complex128]],
     axes: tuple[int, ...],
 ) -> SingleStackedIndexLike:
     """

@@ -140,7 +140,7 @@ def get_all_brag_point_index(
 
 def get_all_brag_point(
     basis: StackedBasisLike[*tuple[Any, ...]], *, n_bands: int = 1
-) -> np.ndarray[tuple[int, int], np.dtype[np.float_]]:
+) -> np.ndarray[tuple[int, int], np.dtype[np.float64]]:
     """
     Given a basis in 3D, get the coordinates of the brag points in the first n_bands.
 
@@ -161,25 +161,25 @@ def get_all_brag_point(
 
 @overload
 def get_bragg_plane_distance(
-    bragg_point: np.ndarray[tuple[Literal[3]], np.dtype[np.float_]],
-    point: np.ndarray[tuple[Literal[3], _L, Unpack[_TS]], np.dtype[np.float_]],
-) -> np.ndarray[tuple[_L, Unpack[_TS]], np.dtype[np.float_]]:
+    bragg_point: np.ndarray[tuple[Literal[3]], np.dtype[np.float64]],
+    point: np.ndarray[tuple[Literal[3], _L, Unpack[_TS]], np.dtype[np.float64]],
+) -> np.ndarray[tuple[_L, Unpack[_TS]], np.dtype[np.float64]]:
     ...
 
 
 @overload
 def get_bragg_plane_distance(
-    bragg_point: np.ndarray[tuple[Literal[3]], np.dtype[np.float_]],
-    point: np.ndarray[tuple[Literal[3]], np.dtype[np.float_]],
-) -> np.float_:
+    bragg_point: np.ndarray[tuple[Literal[3]], np.dtype[np.float64]],
+    point: np.ndarray[tuple[Literal[3]], np.dtype[np.float64]],
+) -> np.float64:
     ...
 
 
 def get_bragg_plane_distance(
-    bragg_point: np.ndarray[tuple[Literal[3]], np.dtype[np.float_]],
-    point: np.ndarray[tuple[Literal[3]], np.dtype[np.float_]]
-    | np.ndarray[tuple[Literal[3], Unpack[_TS]], np.dtype[np.float_]],
-) -> np.float_ | np.ndarray[tuple[Unpack[_TS]], np.dtype[np.float_]]:
+    bragg_point: np.ndarray[tuple[Literal[3]], np.dtype[np.float64]],
+    point: np.ndarray[tuple[Literal[3]], np.dtype[np.float64]]
+    | np.ndarray[tuple[Literal[3], Unpack[_TS]], np.dtype[np.float64]],
+) -> np.float64 | np.ndarray[tuple[Unpack[_TS]], np.dtype[np.float64]]:
     """
     Get the distance from the bragg plane for the given bragg_point.
 

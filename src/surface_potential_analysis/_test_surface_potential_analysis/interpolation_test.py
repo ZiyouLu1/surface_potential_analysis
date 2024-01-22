@@ -24,9 +24,9 @@ def interpolate_real_points_fourier(
 
 
 def interpolate_complex_points_fourier(
-    points: np.ndarray[tuple[int, int], np.dtype[np.complex_]],
+    points: np.ndarray[tuple[int, int], np.dtype[np.complex128]],
     shape: tuple[int, int],
-) -> np.ndarray[tuple[int, int], np.dtype[np.complex_]]:
+) -> np.ndarray[tuple[int, int], np.dtype[np.complex128]]:
     return interpolate_points_fftn(points, shape, axes=(0, 1))
 
 

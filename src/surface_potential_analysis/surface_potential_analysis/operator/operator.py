@@ -33,7 +33,7 @@ class Operator(TypedDict, Generic[_B0_co, _B1_co]):
 
     basis: StackedBasisLike[_B0_co, _B1_co]
     # We need higher kinded types, and const generics to do this properly
-    data: np.ndarray[tuple[int], np.dtype[np.complex_]]
+    data: np.ndarray[tuple[int], np.dtype[np.complex128]]
 
 
 SingleBasisOperator = Operator[_B0, _B0]
@@ -45,13 +45,13 @@ class DiagonalOperator(TypedDict, Generic[_B0_co, _B1_co]):
 
     basis: StackedBasisLike[_B0_co, _B1_co]
     """Basis of the lhs (first index in array)"""
-    data: np.ndarray[tuple[int], np.dtype[np.complex_]]
+    data: np.ndarray[tuple[int], np.dtype[np.complex128]]
 
 
 class StatisticalDiagonalOperator(DiagonalOperator[_B0_co, _B1_co]):
     """Represents a statistical operator in the given basis."""
 
-    standard_deviation: np.ndarray[tuple[int], np.dtype[np.float_]]
+    standard_deviation: np.ndarray[tuple[int], np.dtype[np.float64]]
 
 
 def as_operator(operator: DiagonalOperator[_B0, _B1]) -> Operator[_B0, _B1]:
@@ -120,7 +120,7 @@ SingleBasisDiagonalOperator = DiagonalOperator[_B0, _B0]
 def get_eigenvalue(
     eigenvalue_list: SingleBasisDiagonalOperator[BasisLike[Any, Any]],
     idx: SingleFlatIndexLike,
-) -> np.complex_:
+) -> np.complex128:
     """
     Get a single eigenvalue from the list.
 
@@ -140,7 +140,7 @@ def average_eigenvalues(
     eigenvalues: SingleBasisDiagonalOperator[StackedBasisLike[*tuple[Any, ...]]],
     axis: tuple[int, ...] | None = None,
     *,
-    weights: np.ndarray[tuple[int], np.dtype[np.float_]] | None = None,
+    weights: np.ndarray[tuple[int], np.dtype[np.float64]] | None = None,
 ) -> SingleBasisDiagonalOperator[StackedBasis[*tuple[Any, ...]]]:
     """
     Average eigenvalues over the given axis.

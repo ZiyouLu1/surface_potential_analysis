@@ -30,11 +30,11 @@ _LF0Inv = TypeVar("_LF0Inv", bound=int)
 
 
 def calculate_sho_wavefunction(
-    x_points: np.ndarray[tuple[_L0Inv], np.dtype[np.complex_]],
+    x_points: np.ndarray[tuple[_L0Inv], np.dtype[np.complex128]],
     sho_omega: float,
     mass: float,
     n: int,
-) -> np.ndarray[tuple[_L0Inv], np.dtype[np.complex_]]:
+) -> np.ndarray[tuple[_L0Inv], np.dtype[np.complex128]]:
     """
     Calculate the value of a sho wavefunction at x_points.
 
@@ -65,8 +65,8 @@ def calculate_sho_wavefunction(
 
 def calculate_x_distances(
     parent: BasisWithLengthLike3d[_L0Inv, Any],
-    x_origin: np.ndarray[tuple[Literal[3]], np.dtype[np.float_]],
-) -> np.ndarray[tuple[_L0Inv], np.dtype[np.complex_]]:
+    x_origin: np.ndarray[tuple[Literal[3]], np.dtype[np.float64]],
+) -> np.ndarray[tuple[_L0Inv], np.dtype[np.complex128]]:
     """Given a basis, calculate x distances with a projected value of zero at x_origin."""
     util = BasisUtil(parent)
     x_points = util.fundamental_x_points
@@ -81,7 +81,7 @@ class SHOBasisConfig(TypedDict):
 
     sho_omega: float
     mass: float
-    x_origin: np.ndarray[tuple[Literal[3]], np.dtype[np.float_]]
+    x_origin: np.ndarray[tuple[Literal[3]], np.dtype[np.float64]]
 
 
 def get_sho_potential_basis_config(

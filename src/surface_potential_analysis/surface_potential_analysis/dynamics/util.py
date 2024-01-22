@@ -31,7 +31,7 @@ def get_hop_shift(hop: int, ndim: int) -> tuple[int, ...]:
 
 def build_hop_operator(
     hop: int, shape: tuple[IntLike_co, ...]
-) -> np.ndarray[Any, np.dtype[np.float_]]:
+) -> np.ndarray[Any, np.dtype[np.float64]]:
     """
     Given a hop index, build a hop operator in the given shape.
 

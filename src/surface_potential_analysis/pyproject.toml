@@ -35,9 +35,14 @@ ignore_missing_imports = true
 module = "qutip.*"
 ignore_missing_imports = true
 
-[tool.ruff]
+[tool.ruff.lint]
 select = ["ALL"]
-ignore = ["COM812", "E501", "ANN101", "S101", "PT009", "D100", "D105"]
+preview = true
+ignore = ["COM812", "E501", "ANN101", "S101", "PT009", "D100", "D105", "CPY001"]
+
+[tool.ruff.extend-per-file-ignores]
+# Also ignore `E402` in all `__init__.py` files.
+"_test_surface_potential_analysis/**/*" = ["PLR6301"]
 
 [tool.ruff.pydocstyle]
 convention = "numpy"

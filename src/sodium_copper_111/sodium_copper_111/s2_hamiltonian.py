@@ -28,7 +28,7 @@ LITHIUM_MASS = 1.1525801e-26
 
 def get_hamiltonian(
     shape: tuple[_L0Inv],
-    bloch_fraction: np.ndarray[tuple[Literal[1]], np.dtype[np.float_]] | None = None,
+    bloch_fraction: np.ndarray[tuple[Literal[1]], np.dtype[np.float64]] | None = None,
 ) -> SingleBasisOperator[
     StackedBasisLike[FundamentalTransformedPositionBasis[_L0Inv, Literal[1]]],
 ]:
@@ -38,7 +38,7 @@ def get_hamiltonian(
 
 def get_hamiltonian_hydrogen(
     shape: tuple[_L0Inv],
-    bloch_fraction: np.ndarray[tuple[Literal[1]], np.dtype[np.float_]] | None = None,
+    bloch_fraction: np.ndarray[tuple[Literal[1]], np.dtype[np.float64]] | None = None,
 ) -> SingleBasisOperator[
     StackedBasisLike[FundamentalTransformedPositionBasis[_L0Inv, Literal[1]]],
 ]:
@@ -48,7 +48,7 @@ def get_hamiltonian_hydrogen(
 
 def get_hamiltonian_2d(
     shape: tuple[_L0Inv, _L1Inv],
-    bloch_fraction: np.ndarray[tuple[Literal[2]], np.dtype[np.float_]] | None = None,
+    bloch_fraction: np.ndarray[tuple[Literal[2]], np.dtype[np.float64]] | None = None,
 ) -> SingleBasisOperator[
     StackedBasisLike[
         FundamentalTransformedPositionBasis[_L0Inv, Literal[2]],
@@ -61,7 +61,7 @@ def get_hamiltonian_2d(
 
 def get_hamiltonian_flat(
     shape: tuple[_L0Inv],
-    bloch_fraction: np.ndarray[tuple[Literal[1]], np.dtype[np.float_]] | None = None,
+    bloch_fraction: np.ndarray[tuple[Literal[1]], np.dtype[np.float64]] | None = None,
 ) -> SingleBasisOperator[
     StackedBasisLike[FundamentalTransformedPositionBasis[_L0Inv, Literal[1]]],
 ]:
@@ -72,7 +72,7 @@ def get_hamiltonian_flat(
 
 def get_hamiltonian_flat_lithium(
     shape: tuple[_L0Inv],
-    bloch_fraction: np.ndarray[tuple[Literal[1]], np.dtype[np.float_]] | None = None,
+    bloch_fraction: np.ndarray[tuple[Literal[1]], np.dtype[np.float64]] | None = None,
 ) -> SingleBasisOperator[
     StackedBasisLike[FundamentalTransformedPositionBasis[_L0Inv, Literal[1]]],
 ]:
@@ -83,7 +83,7 @@ def get_hamiltonian_flat_lithium(
 
 def get_hamiltonian_flat_2d(
     shape: tuple[_L0Inv, _L1Inv],
-    bloch_fraction: np.ndarray[tuple[Literal[2]], np.dtype[np.float_]] | None = None,
+    bloch_fraction: np.ndarray[tuple[Literal[2]], np.dtype[np.float64]] | None = None,
 ) -> SingleBasisOperator[
     StackedBasisLike[
         FundamentalTransformedPositionBasis[_L0Inv, Literal[2]],

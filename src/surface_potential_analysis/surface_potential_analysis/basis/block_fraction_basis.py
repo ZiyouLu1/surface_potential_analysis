@@ -24,7 +24,7 @@ class BasisWithBlockFractionLike(BasisLike[_NF0_co, _N0_co], Protocol[_NF0_co, _
 
     @property
     @abc.abstractmethod
-    def bloch_fractions(self) -> np.ndarray[tuple[int, _N0_co], np.dtype[np.float_]]:
+    def bloch_fractions(self) -> np.ndarray[tuple[int, _N0_co], np.dtype[np.float64]]:
         ...
 
 
@@ -34,13 +34,13 @@ class ExplicitBlockFractionBasis(
     """A axis with vectors that are the fundamental position states."""
 
     def __init__(
-        self, bloch_fractions: np.ndarray[tuple[Any, _NF0_co], np.dtype[np.float_]]
+        self, bloch_fractions: np.ndarray[tuple[Any, _NF0_co], np.dtype[np.float64]]
     ) -> None:
         self._bloch_fractions = bloch_fractions
         super().__init__(cast(_NF0_co, bloch_fractions.shape[1]))
 
     @property
-    def bloch_fractions(self) -> np.ndarray[tuple[int, _NF0_co], np.dtype[np.float_]]:
+    def bloch_fractions(self) -> np.ndarray[tuple[int, _NF0_co], np.dtype[np.float64]]:
         return self._bloch_fractions
 
 
@@ -54,7 +54,7 @@ class EvenlySpacedBlockFractionBasis(
         super().__init__(n, step, offset)
 
     @property
-    def bloch_fractions(self) -> np.ndarray[tuple[Any, _N0_co], np.dtype[np.float_]]:
+    def bloch_fractions(self) -> np.ndarray[tuple[Any, _N0_co], np.dtype[np.float64]]:
         return self.__from_fundamental__(  # type: ignore can't infer shape
             np.linspace(-0.5, 0.5, self.fundamental_n, endpoint=False)
         )

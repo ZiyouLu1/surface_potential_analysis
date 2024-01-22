@@ -181,6 +181,6 @@ def solve_schrodinger_equation_qutip(
             [
                 np.asarray([state.data.toarray().reshape(-1) for state in result.states])  # type: ignore unknown
             ],
-            dtype=np.complex_,
+            dtype=np.complex128,
         ).reshape(-1),
     }

@@ -133,7 +133,7 @@ def get_localization_operator_for_projections(
             wavepackets["basis"][0][1],
             StackedBasis(projections["basis"][0], wavepackets["basis"][0][0]),
         ),
-        "data": np.array(data, dtype=np.complex_).reshape(-1),
+        "data": np.array(data, dtype=np.complex128).reshape(-1),
     }
 
 
@@ -396,7 +396,7 @@ def get_gaussian_states(
         StackedBasisLike[*tuple[FundamentalPositionBasis[Any, Any], ...]],
     ] = {
         "basis": StackedBasis(FundamentalBasis(1), basis),
-        "data": np.zeros(basis.n, dtype=np.complex_),
+        "data": np.zeros(basis.n, dtype=np.complex128),
     }
     out["data"] = np.exp(-0.5 * np.sum(np.square(dx), axis=(0)))
     out["data"] /= np.linalg.norm(out["data"])

@@ -58,7 +58,7 @@ if TYPE_CHECKING:
 def get_single_point_state_vector_excact(
     basis: _B0, idx: SingleFlatIndexLike
 ) -> StateVector[_B0]:
-    data = np.zeros(basis.n, dtype=np.complex_)
+    data = np.zeros(basis.n, dtype=np.complex128)
     data[idx] = 1
     return {"basis": basis, "data": data}
 
@@ -73,7 +73,7 @@ def get_single_point_state_vectors(
     StackedBasisLike[*tuple[FundamentalPositionBasis[Any, Any], ...]],
 ]:
     converted = stacked_basis_as_fundamental_position_basis(get_unfurled_basis(basis))
-    data = np.zeros((n_bands, converted.n), dtype=np.complex_)
+    data = np.zeros((n_bands, converted.n), dtype=np.complex128)
     for i, n in enumerate(np.linspace(0, basis[1].n, n_bands, endpoint=False)):
         data[i, n] = 1
     return {
@@ -138,7 +138,7 @@ def get_most_localized_free_state_vectors(
 
 def get_most_localized_state_vectors_from_probability(
     wavepackets: WavepacketList[_B0, _SB0, _SBL0],
-    fractions: tuple[np.ndarray[tuple[int], np.dtype[np.float_]], ...],
+    fractions: tuple[np.ndarray[tuple[int], np.dtype[np.float64]], ...],
 ) -> StateVectorList[
     FundamentalBasis[int],
     StackedBasisLike[*tuple[FundamentalTransformedPositionBasis[Any, Any], ...]],

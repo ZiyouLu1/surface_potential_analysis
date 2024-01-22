@@ -52,7 +52,7 @@ class Potential(TypedDict, Generic[_SB0]):
     """Represents a potential in an evenly spaced grid of points."""
 
     basis: _SB0
-    data: np.ndarray[tuple[int], np.dtype[np.complex_]]
+    data: np.ndarray[tuple[int], np.dtype[np.complex128]]
 
 
 def load_potential(path: Path) -> Potential[Any]:
@@ -115,7 +115,7 @@ class UnevenPotential3dZBasis(FundamentalBasis[_L2_co]):
     """Represents the z axis of an uneven potential."""
 
     def __init__(
-        self, z_points: np.ndarray[tuple[_L2_co], np.dtype[np.float_]]
+        self, z_points: np.ndarray[tuple[_L2_co], np.dtype[np.float64]]
     ) -> None:
         self.z_points = z_points
         super().__init__(z_points.size)  # type:ignore[arg-type]
@@ -129,7 +129,7 @@ class UnevenPotential3d(TypedDict, Generic[_L0_co, _L1_co, _L2_co]):
         FundamentalPositionBasis2d[_L1_co],
         UnevenPotential3dZBasis[_L2_co],
     ]
-    data: np.ndarray[tuple[int], np.dtype[np.complex_]]
+    data: np.ndarray[tuple[int], np.dtype[np.complex128]]
 
 
 def load_uneven_potential(path: Path) -> UnevenPotential3d[Any, Any, Any]:
@@ -245,7 +245,7 @@ def interpolate_uneven_potential(
     """
     util = BasisUtil(data["basis"])
     xy_interpolated = interpolate_points_rfftn(
-        data["data"].reshape(util.shape).astype(np.float_),
+        data["data"].reshape(util.shape).astype(np.float64),
         s=(shape[0], shape[1]),
         axes=(0, 1),
     )

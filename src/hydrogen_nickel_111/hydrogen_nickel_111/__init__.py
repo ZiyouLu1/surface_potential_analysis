@@ -29,8 +29,8 @@ __all__ = [
     "s4_wavepacket_analysis",
     "s4_wavepacket_plot",
     "s4_wavepacket_report_plots",
+    "s5_electron_integral",
     "s5_overlap",
     "s5_overlap_analysis",
     "s5_overlap_report_plots",
-    "s5_electron_integral",
 ]

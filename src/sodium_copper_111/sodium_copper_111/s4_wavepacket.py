@@ -82,7 +82,7 @@ def get_all_wavepackets(
     shape: tuple[_L0Inv], resolution: tuple[_L1Inv]
 ) -> _SodiumWavepacketList[_L1Inv, _L0Inv, _L1Inv]:
     def _hamiltonian_generator(
-        bloch_fraction: np.ndarray[tuple[Literal[1]], np.dtype[np.float_]]
+        bloch_fraction: np.ndarray[tuple[Literal[1]], np.dtype[np.float64]]
     ) -> SingleBasisOperator[
         StackedBasisLike[FundamentalTransformedPositionBasis1d[_L1Inv]]
     ]:
@@ -161,7 +161,7 @@ def get_all_wavepackets_flat(
     shape: tuple[_L0Inv], resolution: tuple[_L1Inv]
 ) -> _SodiumWavepacketList[_L1Inv, _L0Inv, _L1Inv]:
     def _hamiltonian_generator(
-        bloch_fraction: np.ndarray[tuple[Literal[1]], np.dtype[np.float_]]
+        bloch_fraction: np.ndarray[tuple[Literal[1]], np.dtype[np.float64]]
     ) -> SingleBasisOperator[
         StackedBasisLike[FundamentalTransformedPositionBasis1d[_L1Inv]]
     ]:
@@ -197,7 +197,7 @@ def get_all_wavepackets_flat_2d(
     ],
 ]:
     def _hamiltonian_generator(
-        bloch_fraction: np.ndarray[tuple[Literal[2]], np.dtype[np.float_]]
+        bloch_fraction: np.ndarray[tuple[Literal[2]], np.dtype[np.float64]]
     ) -> SingleBasisOperator[
         StackedBasisLike[
             FundamentalTransformedPositionBasis[_L2Inv, Literal[2]],
@@ -238,7 +238,7 @@ def get_all_wavepackets_2d(
     ],
 ]:
     def _hamiltonian_generator(
-        bloch_fraction: np.ndarray[tuple[Literal[2]], np.dtype[np.float_]]
+        bloch_fraction: np.ndarray[tuple[Literal[2]], np.dtype[np.float64]]
     ) -> SingleBasisOperator[
         StackedBasisLike[
             FundamentalTransformedPositionBasis[_L2Inv, Literal[2]],
@@ -260,7 +260,7 @@ def get_all_wavepackets_flat_lithium(
     shape: tuple[_L0Inv], resolution: tuple[_L1Inv]
 ) -> _SodiumWavepacketList[_L1Inv, _L0Inv, _L1Inv]:
     def _hamiltonian_generator(
-        bloch_fraction: np.ndarray[tuple[Literal[1]], np.dtype[np.float_]]
+        bloch_fraction: np.ndarray[tuple[Literal[1]], np.dtype[np.float64]]
     ) -> SingleBasisOperator[
         StackedBasisLike[FundamentalTransformedPositionBasis1d[_L1Inv]]
     ]:

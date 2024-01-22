@@ -31,7 +31,6 @@ if TYPE_CHECKING:
 _S0Inv = TypeVar("_S0Inv", bound=tuple[int, ...])
 
 _B0 = TypeVarTuple("_B0")
-_B1 = TypeVarTuple("_B1")
 _B0Inv = TypeVar("_B0Inv", bound=BasisLike[Any, Any])
 
 # ruff: noqa: D102
@@ -100,11 +99,11 @@ class StackedBasisLike(BasisLike[Any, Any], Protocol[*_B0]):
 
 
 def _convert_stacked_vector(
-    vector: np.ndarray[_S0Inv, np.dtype[np.complex_] | np.dtype[np.float_]],
+    vector: np.ndarray[_S0Inv, np.dtype[np.complex128] | np.dtype[np.float64]],
     initial_basis: StackedBasisLike[*tuple[BasisLike[Any, Any], ...]],
     final_basis: StackedBasisLike[*tuple[BasisLike[Any, Any], ...]],
     axis: int = -1,
-) -> np.ndarray[tuple[int, ...], np.dtype[np.complex_]]:
+) -> np.ndarray[tuple[int, ...], np.dtype[np.complex128]]:
     """
     Convert a vector, expressed in terms of the given basis from_config in the basis to_config.
 
@@ -126,7 +125,7 @@ def _convert_stacked_vector(
     for ax, (initial, final) in enumerate(zip(initial_basis, final_basis, strict=True)):
         stacked = convert_vector(stacked, initial, final, ax)
     return (  # type: ignore[no-any-return]
-        stacked.astype(np.complex_, copy=False)
+        stacked.astype(np.complex128, copy=False)
         .reshape(-1, *swapped.shape[1:])
         .swapaxes(axis, 0)
     )
@@ -143,9 +142,9 @@ class StackedBasis(StackedBasisLike[Unpack[_B0]]):
 
     def __from_fundamental__(
         self: StackedBasisLike[*tuple[BasisLike[Any, Any], ...]],
-        vectors: np.ndarray[_S0Inv, np.dtype[np.complex_] | np.dtype[np.float_]],
+        vectors: np.ndarray[_S0Inv, np.dtype[np.complex128] | np.dtype[np.float64]],
         axis: int = -1,
-    ) -> np.ndarray[tuple[int, ...], np.dtype[np.complex_]]:
+    ) -> np.ndarray[tuple[int, ...], np.dtype[np.complex128]]:
         basis = StackedBasis[Any](
             *tuple(FundamentalBasis(axis.fundamental_n) for axis in self)
         )
@@ -153,9 +152,9 @@ class StackedBasis(StackedBasisLike[Unpack[_B0]]):
 
     def __into_fundamental__(
         self: StackedBasisLike[*tuple[BasisLike[Any, Any], ...]],
-        vectors: np.ndarray[_S0Inv, np.dtype[np.complex_] | np.dtype[np.float_]],
+        vectors: np.ndarray[_S0Inv, np.dtype[np.complex128] | np.dtype[np.float64]],
         axis: int = -1,
-    ) -> np.ndarray[tuple[int, ...], np.dtype[np.complex_]]:
+    ) -> np.ndarray[tuple[int, ...], np.dtype[np.complex128]]:
         basis = StackedBasis[Any](
             *tuple(FundamentalBasis(axis.fundamental_n) for axis in self)
         )
@@ -163,9 +162,9 @@ class StackedBasis(StackedBasisLike[Unpack[_B0]]):
 
     def __into_transformed__(
         self: StackedBasisLike[*tuple[BasisLike[Any, Any], ...]],
-        vectors: np.ndarray[_S0Inv, np.dtype[np.complex_] | np.dtype[np.float_]],
+        vectors: np.ndarray[_S0Inv, np.dtype[np.complex128] | np.dtype[np.float64]],
         axis: int = -1,
-    ) -> np.ndarray[tuple[int, ...], np.dtype[np.complex_]]:
+    ) -> np.ndarray[tuple[int, ...], np.dtype[np.complex128]]:
         basis = StackedBasis[Any](
             *tuple(FundamentalTransformedBasis(axis.fundamental_n) for axis in self)
         )
@@ -173,9 +172,9 @@ class StackedBasis(StackedBasisLike[Unpack[_B0]]):
 
     def __from_transformed__(
         self: StackedBasisLike[*tuple[BasisLike[Any, Any], ...]],
-        vectors: np.ndarray[_S0Inv, np.dtype[np.complex_] | np.dtype[np.float_]],
+        vectors: np.ndarray[_S0Inv, np.dtype[np.complex128] | np.dtype[np.float64]],
         axis: int = -1,
-    ) -> np.ndarray[tuple[int, ...], np.dtype[np.complex_]]:
+    ) -> np.ndarray[tuple[int, ...], np.dtype[np.complex128]]:
         basis = StackedBasis[Any](
             *tuple(FundamentalTransformedBasis(axis.fundamental_n) for axis in self)
         )
@@ -183,10 +182,10 @@ class StackedBasis(StackedBasisLike[Unpack[_B0]]):
 
     def __convert_vector_into__(
         self: StackedBasisLike[*tuple[BasisLike[Any, Any], ...]],
-        vector: np.ndarray[_S0Inv, np.dtype[np.complex_] | np.dtype[np.float_]],
+        vector: np.ndarray[_S0Inv, np.dtype[np.complex128] | np.dtype[np.float64]],
         basis: BasisLike[Any, Any],
         axis: int = -1,
-    ) -> np.ndarray[Any, np.dtype[np.complex_]]:
+    ) -> np.ndarray[Any, np.dtype[np.complex128]]:
         assert basis.fundamental_n == self.fundamental_n
         if not isinstance(basis, StackedBasisLike):
             return super().__convert_vector_into__(vector, basis, axis)

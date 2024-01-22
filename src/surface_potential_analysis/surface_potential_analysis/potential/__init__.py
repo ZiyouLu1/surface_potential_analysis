@@ -21,10 +21,10 @@ from .potential import (
 __all__ = [
     # point potential
     "PointPotential3d",
-    "load_point_potential_json",
     # potential
     "UnevenPotential3d",
     "interpolate_uneven_potential",
+    "load_point_potential_json",
     "load_potential",
     "load_uneven_potential",
     "normalize_potential",

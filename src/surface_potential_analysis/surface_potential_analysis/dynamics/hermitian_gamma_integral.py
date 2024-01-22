@@ -16,17 +16,17 @@ _S0Inv = TypeVar("_S0Inv", bound=tuple[int, ...])
 
 @overload
 def _get_delta_e(
-    k_0: np.ndarray[_S0Inv, np.dtype[np.float_]],
-    k_1: np.ndarray[_S0Inv, np.dtype[np.float_]] | FloatLike_co,
-) -> np.ndarray[_S0Inv, np.dtype[np.float_]]:
+    k_0: np.ndarray[_S0Inv, np.dtype[np.float64]],
+    k_1: np.ndarray[_S0Inv, np.dtype[np.float64]] | FloatLike_co,
+) -> np.ndarray[_S0Inv, np.dtype[np.float64]]:
     ...
 
 
 @overload
 def _get_delta_e(
-    k_0: np.ndarray[_S0Inv, np.dtype[np.float_]] | FloatLike_co,
-    k_1: np.ndarray[_S0Inv, np.dtype[np.float_]],
-) -> np.ndarray[_S0Inv, np.dtype[np.float_]]:
+    k_0: np.ndarray[_S0Inv, np.dtype[np.float64]] | FloatLike_co,
+    k_1: np.ndarray[_S0Inv, np.dtype[np.float64]],
+) -> np.ndarray[_S0Inv, np.dtype[np.float64]]:
     ...
 
 
@@ -39,30 +39,30 @@ def _get_delta_e(
 
 
 def _get_delta_e(
-    k_0: np.ndarray[_S0Inv, np.dtype[np.float_]] | FloatLike_co,
-    k_1: np.ndarray[_S0Inv, np.dtype[np.float_]] | FloatLike_co,
-) -> np.ndarray[_S0Inv, np.dtype[np.float_]] | FloatLike_co:
+    k_0: np.ndarray[_S0Inv, np.dtype[np.float64]] | FloatLike_co,
+    k_1: np.ndarray[_S0Inv, np.dtype[np.float64]] | FloatLike_co,
+) -> np.ndarray[_S0Inv, np.dtype[np.float64]] | FloatLike_co:
     e_0 = (hbar * k_0) ** 2 / (2 * electron_mass)
     e_1 = (hbar * k_1) ** 2 / (2 * electron_mass)
     return e_0 - e_1  # type: ignore[no-any-return]
 
 
 def _get_fermi_occupation(
-    k: np.ndarray[_S0Inv, np.dtype[np.float_]],
+    k: np.ndarray[_S0Inv, np.dtype[np.float64]],
     *,
     k_f: FloatLike_co,
     boltzmann_energy: FloatLike_co,
-) -> np.ndarray[_S0Inv, np.dtype[np.float_]]:
+) -> np.ndarray[_S0Inv, np.dtype[np.float64]]:
     return 1 / (1 + np.exp((_get_delta_e(k, k_f)) / boltzmann_energy))  # type: ignore[no-any-return]
 
 
 def get_hermitian_gamma_occupation_integrand(
-    k: np.ndarray[_S0Inv, np.dtype[np.float_]],
+    k: np.ndarray[_S0Inv, np.dtype[np.float64]],
     *,
     omega: FloatLike_co,
     k_f: FloatLike_co,
     boltzmann_energy: FloatLike_co,
-) -> np.ndarray[_S0Inv, np.dtype[np.float_]]:
+) -> np.ndarray[_S0Inv, np.dtype[np.float64]]:
     """
     Get the integrand of the hermitian_gamma_occupation_integral.
 
@@ -103,8 +103,8 @@ def calculate_hermitian_gamma_occupation_integral(
     d_k = 2 * boltzmann_energy * electron_mass / (hbar**2 * k_f)
 
     def f(
-        k: np.ndarray[_S0Inv, np.dtype[np.float_]]
-    ) -> np.ndarray[_S0Inv, np.dtype[np.float_]]:
+        k: np.ndarray[_S0Inv, np.dtype[np.float64]]
+    ) -> np.ndarray[_S0Inv, np.dtype[np.float64]]:
         return get_hermitian_gamma_occupation_integrand(
             k, omega=omega, k_f=k_f, boltzmann_energy=boltzmann_energy
         )
@@ -117,8 +117,8 @@ def _calculate_real_gamma_prefactor(k_f: float) -> float:
 
 
 def _get_coulomb_potential(
-    q: np.ndarray[_S0Inv, np.dtype[np.float_]]
-) -> np.ndarray[_S0Inv, np.dtype[np.float_]]:
+    q: np.ndarray[_S0Inv, np.dtype[np.float64]]
+) -> np.ndarray[_S0Inv, np.dtype[np.float64]]:
     bohr_radius = (
         4 * np.pi * epsilon_0 * hbar**2 / (elementary_charge**2 * electron_mass)
     )
@@ -137,16 +137,16 @@ def _get_coulomb_potential(
 
 
 def _get_hopping_potential_integrand(
-    phi: np.ndarray[_S0Inv, np.dtype[np.float_]],
+    phi: np.ndarray[_S0Inv, np.dtype[np.float64]],
     *,
     k_f: float,
     overlap: Callable[
-        [np.ndarray[_S0Inv, np.dtype[np.float_]]],
-        np.ndarray[_S0Inv, np.dtype[np.complex_] | np.dtype[np.float_]],
+        [np.ndarray[_S0Inv, np.dtype[np.float64]]],
+        np.ndarray[_S0Inv, np.dtype[np.complex128] | np.dtype[np.float64]],
     ],
-) -> np.ndarray[_S0Inv, np.dtype[np.complex_]]:
+) -> np.ndarray[_S0Inv, np.dtype[np.complex128]]:
     q = k_f * np.sin(phi / 2)
-    return _calculate_real_gamma_prefactor(k_f) * np.sin(phi) * _get_coulomb_potential(q) ** 2 * overlap(q).astype(np.complex_)  # type: ignore[no-any-return]
+    return _calculate_real_gamma_prefactor(k_f) * np.sin(phi) * _get_coulomb_potential(q) ** 2 * overlap(q).astype(np.complex128)  # type: ignore[no-any-return]
 
 
 def _complex_quad(func: Any, *args: Any, **kwargs: Any) -> Any:  # noqa: ANN401
@@ -168,10 +168,10 @@ def _complex_quad(func: Any, *args: Any, **kwargs: Any) -> Any:  # noqa: ANN401
 def calculate_hermitian_gamma_potential_integral(
     k_f: float,
     overlap: Callable[
-        [np.ndarray[_S0Inv, np.dtype[np.float_]]],
-        np.ndarray[_S0Inv, np.dtype[np.complex_] | np.dtype[np.float_]],
+        [np.ndarray[_S0Inv, np.dtype[np.float64]]],
+        np.ndarray[_S0Inv, np.dtype[np.complex128] | np.dtype[np.float64]],
     ],
-) -> np.complex_:
+) -> np.complex128:
     """
     Given the overlap as a function of |q|, calculate the potential integral in hermitian gamma.
 
@@ -186,8 +186,8 @@ def calculate_hermitian_gamma_potential_integral(
     """
 
     def f(
-        k: np.ndarray[_S0Inv, np.dtype[np.float_]]
-    ) -> np.ndarray[_S0Inv, np.dtype[np.complex_]]:
+        k: np.ndarray[_S0Inv, np.dtype[np.float64]]
+    ) -> np.ndarray[_S0Inv, np.dtype[np.complex128]]:
         return _get_hopping_potential_integrand(k, k_f=k_f, overlap=overlap)
 
     return _complex_quad(f, 0, np.pi)[0]
@@ -199,10 +199,10 @@ def calculate_real_gamma_integral(
     k_f: float,
     boltzmann_energy: float,
     overlap: Callable[
-        [np.ndarray[_S0Inv, np.dtype[np.float_]]],
-        np.ndarray[_S0Inv, np.dtype[np.complex_]],
+        [np.ndarray[_S0Inv, np.dtype[np.float64]]],
+        np.ndarray[_S0Inv, np.dtype[np.complex128]],
     ],
-) -> np.complex_:
+) -> np.complex128:
     r"""Calculate the hermitian part of gamma.
 
     \gamma_{\vec{l}_1,\vec{l}_0}(\omega) =

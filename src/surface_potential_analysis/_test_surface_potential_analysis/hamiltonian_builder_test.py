@@ -58,7 +58,7 @@ rng = np.random.default_rng()
 
 def _generate_random_potential(
     width: int = 5,
-) -> np.ndarray[tuple[int, int], np.dtype[np.float_]]:
+) -> np.ndarray[tuple[int, int], np.dtype[np.float64]]:
     random_array = rng.random((width + 1, width + 1))
 
     out = np.zeros_like(random_array, dtype=float)
@@ -75,7 +75,7 @@ def _generate_random_potential(
 
 def _generate_symmetrical_points(
     height: int, width: int = 5
-) -> np.ndarray[tuple[int], np.dtype[np.complex_]]:
+) -> np.ndarray[tuple[int], np.dtype[np.complex128]]:
     return np.swapaxes([_generate_random_potential(width) for _ in range(height)], 0, -1).ravel()  # type: ignore[no-any-return]
 
 
@@ -87,7 +87,7 @@ class HamiltonianBuilderTest(unittest.TestCase):
             "basis": StackedBasis(
                 FundamentalTransformedPositionBasis(np.array([1]), 100)
             ),
-            "data": np.array(rng.random(100), dtype=np.complex_),
+            "data": np.array(rng.random(100), dtype=np.complex128),
         }
         actual = momentum_basis.hamiltonian_from_potential(potential)
 
@@ -111,7 +111,7 @@ class HamiltonianBuilderTest(unittest.TestCase):
             "x_origin": np.array([0, 0, -1]),
         }
         potential: Potential[Any] = {
-            "data": np.zeros(4 * 4 * 3, dtype=np.complex_),
+            "data": np.zeros(4 * 4 * 3, dtype=np.complex128),
             "basis": position_basis_3d_from_shape(
                 (4, 4, 3),
                 np.array(
@@ -140,7 +140,7 @@ class HamiltonianBuilderTest(unittest.TestCase):
             "x_origin": np.array([0, 0, -2]),
         }
         potential: Potential[Any] = {
-            "data": np.zeros((4, 4, 5), dtype=np.complex_).ravel(),
+            "data": np.zeros((4, 4, 5), dtype=np.complex128).ravel(),
             "basis": position_basis_3d_from_shape(
                 (4, 4, 5),
                 np.array(
@@ -168,7 +168,7 @@ class HamiltonianBuilderTest(unittest.TestCase):
             "x_origin": np.array([0, 0, -20]),
         }
         potential: Potential[Any] = {
-            "data": np.zeros((2 * nx, 2 * ny, nz), dtype=np.complex_).ravel(),
+            "data": np.zeros((2 * nx, 2 * ny, nz), dtype=np.complex128).ravel(),
             "basis": position_basis_3d_from_shape(
                 (2 * nx, 2 * ny, nz),
                 np.array(
@@ -293,7 +293,7 @@ class HamiltonianBuilderTest(unittest.TestCase):
             "x_origin": np.array([0, 0, 0]),
         }
         potential: Potential[Any] = {
-            "data": np.zeros(shape=(nx, ny, nz), dtype=np.complex_).ravel(),
+            "data": np.zeros(shape=(nx, ny, nz), dtype=np.complex128).ravel(),
             "basis": position_basis_3d_from_shape(
                 (nx, ny, nz),
                 np.array(
@@ -343,7 +343,7 @@ class HamiltonianBuilderTest(unittest.TestCase):
 
         potential: Potential[Any] = {
             "basis": expected_basis,
-            "data": points.astype(np.complex_).ravel(),
+            "data": points.astype(np.complex128).ravel(),
         }
 
         momentum_builder_result = momentum_basis.total_surface_hamiltonian(
@@ -403,7 +403,7 @@ class HamiltonianBuilderTest(unittest.TestCase):
 
         potential: Potential[Any] = {
             "basis": expected_basis,
-            "data": points.astype(np.complex_).ravel(),
+            "data": points.astype(np.complex128).ravel(),
         }
 
         momentum_builder_result = momentum_basis.total_surface_hamiltonian(
@@ -458,7 +458,7 @@ class HamiltonianBuilderTest(unittest.TestCase):
         eigenstates = calculate_eigenvectors_hermitian(
             hamiltonian, subset_by_index=(0, 50)
         )
-        expected = hbar * omega * (util.stacked_nk_points[0].astype(np.float_) + 0.5)
+        expected = hbar * omega * (util.stacked_nk_points[0].astype(np.float64) + 0.5)
         np.testing.assert_almost_equal(expected[:50], eigenstates["eigenvalue"][:50])
 
         in_basis = convert_potential_to_basis(

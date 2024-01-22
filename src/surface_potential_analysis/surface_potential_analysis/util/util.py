@@ -109,9 +109,9 @@ _L2Inv = TypeVar("_L2Inv", bound=int)
 def calculate_cumulative_distances_along_path(
     path: np.ndarray[tuple[Literal[3], _LInv], np.dtype[np.int_]],
     coordinates: np.ndarray[
-        tuple[Literal[3], _L0Inv, _L1Inv, _L2Inv], np.dtype[np.float_]
+        tuple[Literal[3], _L0Inv, _L1Inv, _L2Inv], np.dtype[np.float64]
     ],
-) -> np.ndarray[tuple[_LInv], np.dtype[np.float_]]:
+) -> np.ndarray[tuple[_LInv], np.dtype[np.float64]]:
     """
     Get a list of cumulative distances along a path ([x_coord, y_coord, z_coord]) given a grid of coordinates.
 
@@ -142,7 +142,7 @@ Measure = Literal["real", "imag", "abs", "angle"]
 def get_measured_data(
     data: np.ndarray[_S0Inv, _DTInv],
     measure: Measure,
-) -> np.ndarray[_S0Inv, np.dtype[np.float_]]:
+) -> np.ndarray[_S0Inv, np.dtype[np.float64]]:
     """
     Transform data with the given measure.
 

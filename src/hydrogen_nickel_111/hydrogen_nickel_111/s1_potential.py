@@ -121,7 +121,7 @@ def get_coordinate_fractions(
     vec0: tuple[float, float],
     vec1: tuple[float, float],
     coordinates: np.ndarray[Any, Any],
-) -> np.ndarray[tuple[int, ...], np.dtype[np.float_]]:
+) -> np.ndarray[tuple[int, ...], np.dtype[np.float64]]:
     out: list[list[float]] = []
     for coord in coordinates:
         a = np.array(
@@ -129,7 +129,7 @@ def get_coordinate_fractions(
                 [vec0[0], vec1[0]],
                 [vec0[1], vec1[1]],
             ],
-            dtype=np.float_,
+            dtype=np.float64,
         )
         fraction = np.linalg.solve(a, [coord[0], coord[1]])
         out.append([fraction[0], fraction[1]])
@@ -142,13 +142,13 @@ _L2Inv = TypeVar("_L2Inv", bound=int)
 
 
 def interpolate_points_fourier_nickel(  # noqa: PLR0913
-    points: np.ndarray[tuple[int, int], np.dtype[np.complex_]],
+    points: np.ndarray[tuple[int, int], np.dtype[np.complex128]],
     delta_x0_reciprocal: AxisVector2d,
     delta_x1_reciprocal: AxisVector2d,
     delta_x0_real: tuple[float, float],
     delta_x1_real: tuple[float, float],
     shape: tuple[_L0Inv, _L1Inv],
-) -> np.ndarray[tuple[_L0Inv, _L1Inv], np.dtype[np.float_]]:
+) -> np.ndarray[tuple[_L0Inv, _L1Inv], np.dtype[np.float64]]:
     """
     Interpolate a grid of points with the given shape into the real spacing.
 
@@ -231,7 +231,7 @@ def interpolate_energy_grid_xy_fourier_nickel(
             ),
             data["basis"][2],
         ),
-        "data": points.reshape(-1).astype(np.complex_),
+        "data": points.reshape(-1).astype(np.complex128),
     }
 
 
@@ -279,7 +279,7 @@ def interpolate_energy_grid_fourier_nickel(
                 shape[2],
             ),
         ),
-        "data": interpolated.ravel().astype(np.complex_),
+        "data": interpolated.ravel().astype(np.complex128),
     }
 
 

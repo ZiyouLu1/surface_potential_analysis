@@ -75,7 +75,7 @@ def _get_operator_between_states(
     states: list[StateVector[_B1Inv]], operator: SingleBasisOperator[_B1Inv]
 ) -> SingleBasisOperator[FundamentalBasis[Any]]:
     n_states = len(states)
-    array = np.zeros((n_states, n_states), dtype=np.complex_)
+    array = np.zeros((n_states, n_states), dtype=np.complex128)
     for i in range(n_states):
         dual_vector = as_dual_vector(states[i])
         for j in range(n_states):
@@ -158,7 +158,7 @@ def localize_position_operator_many_band(
     operator_position = _get_position_operator(basis)
     operator = _get_operator_between_states(states, operator_position)
     eigenstates = calculate_eigenvectors_hermitian(operator)
-    state_vectors = np.array([s["data"] for s in states], dtype=np.complex_)
+    state_vectors = np.array([s["data"] for s in states], dtype=np.complex128)
     return [
         {
             "basis": basis,

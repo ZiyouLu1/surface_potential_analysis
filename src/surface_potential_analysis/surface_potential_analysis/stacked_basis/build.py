@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from itertools import starmap
 from typing import TYPE_CHECKING, Any, Literal, TypeVar, overload
 
 import numpy as np
@@ -109,7 +110,7 @@ def fundamental_stacked_basis_from_shape(
 
 def position_basis_from_shape(
     shape: tuple[int, ...],
-    delta_x: np.ndarray[_S1Inv, np.dtype[np.float_]] | None = None,
+    delta_x: np.ndarray[_S1Inv, np.dtype[np.float64]] | None = None,
 ) -> StackedBasisLike[*tuple[FundamentalPositionBasis[int, int], ...]]:
     """
     Given a resolution and a set of directions construct a FundamentalPositionBasisConfig.
@@ -128,15 +129,14 @@ def position_basis_from_shape(
     delta_x = np.eye(len(shape)) if delta_x is None else delta_x
     return StackedBasis(
         *tuple(
-            FundamentalPositionBasis(dx, n)
-            for dx, n in zip(delta_x, shape, strict=True)
+            starmap(FundamentalPositionBasis, zip(delta_x, shape, strict=True))
         )
     )
 
 
 def position_basis_3d_from_shape(
     shape: tuple[_L0, _L1, _L2],
-    delta_x: np.ndarray[tuple[Literal[3], Literal[3]], np.dtype[np.float_]]
+    delta_x: np.ndarray[tuple[Literal[3], Literal[3]], np.dtype[np.float64]]
     | None = None,
 ) -> StackedBasisLike[
     FundamentalPositionBasis[_L0, Literal[3]],
@@ -162,9 +162,9 @@ def position_basis_3d_from_shape(
 def momentum_basis_3d_from_resolution(
     resolution: tuple[_L0, _L1, _L2],
     delta_x: tuple[
-        np.ndarray[tuple[Literal[3]], np.dtype[np.float_]],
-        np.ndarray[tuple[Literal[3]], np.dtype[np.float_]],
-        np.ndarray[tuple[Literal[3]], np.dtype[np.float_]],
+        np.ndarray[tuple[Literal[3]], np.dtype[np.float64]],
+        np.ndarray[tuple[Literal[3]], np.dtype[np.float64]],
+        np.ndarray[tuple[Literal[3]], np.dtype[np.float64]],
     ]
     | None = None,
 ) -> StackedBasis[

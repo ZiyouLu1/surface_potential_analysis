@@ -72,7 +72,7 @@ if TYPE_CHECKING:
 @npy_cached(get_data_path("wavepacket/wavepacket_hydrogen.npy"), load_pickle=True)
 def get_all_wavepackets_hydrogen() -> _HydrogenCopperWavepacketList:
     def _hamiltonian_generator(
-        bloch_fraction: np.ndarray[tuple[Literal[3]], np.dtype[np.float_]]
+        bloch_fraction: np.ndarray[tuple[Literal[3]], np.dtype[np.float64]]
     ) -> SingleBasisOperator[Any]:
         return get_hamiltonian_hydrogen(
             shape=(46, 46, 250),
@@ -119,6 +119,6 @@ def get_wannier90_localized_wavepacket_hydrogen(
     )
 
 
-def get_hydrogen_energy_difference(state_0: int, state_1: int) -> np.float_:
+def get_hydrogen_energy_difference(state_0: int, state_1: int) -> np.float64:
     eigenvalues = get_average_eigenvalues(get_all_wavepackets_hydrogen())["data"]
     return eigenvalues[state_0] - eigenvalues[state_1]

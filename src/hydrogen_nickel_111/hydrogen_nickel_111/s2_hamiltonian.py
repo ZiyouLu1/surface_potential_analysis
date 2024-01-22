@@ -39,7 +39,7 @@ _L5 = TypeVar("_L5", bound=int)
 
 def get_hamiltonian_hydrogen(
     shape: tuple[_L0, _L1, _L2],
-    bloch_fraction: np.ndarray[tuple[Literal[3]], np.dtype[np.float_]],
+    bloch_fraction: np.ndarray[tuple[Literal[3]], np.dtype[np.float64]],
     resolution: tuple[_L3, _L4, _L5],
 ) -> SingleBasisOperator[
     StackedBasisLike[
@@ -81,7 +81,7 @@ def get_hamiltonian_hydrogen(
 
 def get_hamiltonian_hydrogen_extrapolated(
     shape: tuple[_L0, _L1, _L2],
-    bloch_fraction: np.ndarray[tuple[Literal[3]], np.dtype[np.float_]],
+    bloch_fraction: np.ndarray[tuple[Literal[3]], np.dtype[np.float64]],
     resolution: tuple[_L3, _L4, _L5],
 ) -> SingleBasisOperator[
     StackedBasisLike[
@@ -124,7 +124,7 @@ def get_hamiltonian_hydrogen_extrapolated(
 
 def get_hamiltonian_hydrogen_extrapolated_flipped(
     shape: tuple[_L0, _L1, _L2],
-    bloch_fraction: np.ndarray[tuple[Literal[3]], np.dtype[np.float_]],
+    bloch_fraction: np.ndarray[tuple[Literal[3]], np.dtype[np.float64]],
     resolution: tuple[_L3, _L4, _L5],
 ) -> SingleBasisOperator[
     StackedBasisLike[
@@ -168,7 +168,7 @@ def get_hamiltonian_hydrogen_extrapolated_flipped(
 
 def get_hamiltonian_deuterium(
     shape: tuple[_L0, _L1, _L2],
-    bloch_fraction: np.ndarray[tuple[Literal[3]], np.dtype[np.float_]],
+    bloch_fraction: np.ndarray[tuple[Literal[3]], np.dtype[np.float64]],
     resolution: tuple[_L3, _L4, _L5],
 ) -> SingleBasisOperator[
     StackedBasisLike[

@@ -36,7 +36,7 @@ _B0 = TypeVar("_B0", bound=BasisLike[Any, Any])
 class Eigenstate(StateVector[_B0_co], TypedDict):
     """A State vector which is the eigenvector of some operator."""
 
-    eigenvalue: complex | np.complex_
+    eigenvalue: complex | np.complex128
 
 
 class EigenstateList(
@@ -45,7 +45,7 @@ class EigenstateList(
 ):
     """Represents a collection of eigenstates, each with the same basis."""
 
-    eigenvalue: np.ndarray[tuple[int], np.dtype[np.complex_]]
+    eigenvalue: np.ndarray[tuple[int], np.dtype[np.complex128]]
 
 
 _SB0 = TypeVar("_SB0", bound=StackedBasisLike[*tuple[Any, ...]])
@@ -55,10 +55,10 @@ EigenstateColllection = EigenstateList[_SB0, _B0]
 
 def calculate_eigenstate_collection(
     hamiltonian_generator: Callable[
-        [np.ndarray[tuple[_L1], np.dtype[np.float_]]],
+        [np.ndarray[tuple[_L1], np.dtype[np.float64]]],
         SingleBasisOperator[_B0],
     ],
-    bloch_fractions: np.ndarray[tuple[_L1, _L0], np.dtype[np.float_]],
+    bloch_fractions: np.ndarray[tuple[_L1, _L0], np.dtype[np.float64]],
     *,
     subset_by_index: tuple[int, int] | None = None,
 ) -> EigenstateColllection[
@@ -86,9 +86,9 @@ def calculate_eigenstate_collection(
     basis = hamiltonian_generator(bloch_fractions[:, 0])["basis"][0]
 
     vectors = np.zeros(
-        (bloch_fractions.shape[1], n_states * basis.n), dtype=np.complex_
+        (bloch_fractions.shape[1], n_states * basis.n), dtype=np.complex128
     )
-    eigenvalues = np.zeros((bloch_fractions.shape[1], n_states), dtype=np.complex_)
+    eigenvalues = np.zeros((bloch_fractions.shape[1], n_states), dtype=np.complex128)
 
     for idx, bloch_fraction in enumerate(bloch_fractions.T):
         h = hamiltonian_generator(bloch_fraction)

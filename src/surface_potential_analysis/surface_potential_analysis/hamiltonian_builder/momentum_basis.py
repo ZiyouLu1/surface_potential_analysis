@@ -65,7 +65,7 @@ def hamiltonian_from_potential(
 def hamiltonian_from_mass(
     basis: StackedBasisLike[*tuple[Any, ...]],
     mass: float,
-    bloch_fraction: np.ndarray[tuple[_L0], np.dtype[np.float_]] | None = None,
+    bloch_fraction: np.ndarray[tuple[_L0], np.dtype[np.float64]] | None = None,
 ) -> DiagonalOperator[
     StackedBasisLike[*tuple[FundamentalTransformedPositionBasis[Any, Any], ...]],
     StackedBasisLike[*tuple[FundamentalTransformedPositionBasis[Any, Any], ...]],
@@ -89,7 +89,7 @@ def hamiltonian_from_mass(
 
     bloch_phase = np.tensordot(util.fundamental_dk_stacked, bloch_fraction, axes=(0, 0))
     k_points = util.fundamental_stacked_k_points + bloch_phase[:, np.newaxis]
-    energy = np.sum(np.square(hbar * k_points) / (2 * mass), axis=0, dtype=np.complex_)
+    energy = np.sum(np.square(hbar * k_points) / (2 * mass), axis=0, dtype=np.complex128)
     momentum_basis = stacked_basis_as_fundamental_momentum_basis(basis)
 
     return {"basis": StackedBasis(momentum_basis, momentum_basis), "data": energy}
@@ -98,7 +98,7 @@ def hamiltonian_from_mass(
 def hamiltonian_from_mass_in_basis(
     basis: _SB0,
     mass: float,
-    bloch_fraction: np.ndarray[tuple[_L0], np.dtype[np.float_]] | None = None,
+    bloch_fraction: np.ndarray[tuple[_L0], np.dtype[np.float64]] | None = None,
 ) -> SingleBasisOperator[_SB0]:
     """
     Given a mass and a basis calculate the kinetic part of the Hamiltonian.
@@ -123,7 +123,7 @@ def hamiltonian_from_mass_in_basis(
 def total_surface_hamiltonian(
     potential: Potential[_SB0],
     mass: float,
-    bloch_fraction: np.ndarray[tuple[_L0], np.dtype[np.float_]] | None = None,
+    bloch_fraction: np.ndarray[tuple[_L0], np.dtype[np.float64]] | None = None,
 ) -> SingleBasisOperator[_SB0]:
     """
     Calculate the total hamiltonian in momentum basis for a given potential and mass.

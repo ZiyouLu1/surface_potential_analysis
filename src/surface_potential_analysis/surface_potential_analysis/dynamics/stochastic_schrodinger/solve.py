@@ -21,7 +21,6 @@ from surface_potential_analysis.dynamics.util import build_hop_operator, get_hop
 if TYPE_CHECKING:
     from collections.abc import Callable
 
-    from surface_potential_analysis.basis.basis_like import BasisLike
     from surface_potential_analysis.basis.time_basis_like import EvenlySpacedTimeBasis
     from surface_potential_analysis.dynamics.incoherent_propagation.tunnelling_matrix import (
         TunnellingAMatrix,
@@ -41,7 +40,6 @@ if TYPE_CHECKING:
     )
 
     _B0Inv = TypeVar("_B0Inv", bound=TunnellingSimulationBasis[Any, Any, Any])
-    _B1Inv = TypeVar("_B1Inv", bound=BasisLike[Any, Any])
     _L0Inv = TypeVar("_L0Inv", bound=int)
     _L1Inv = TypeVar("_L1Inv", bound=int)
     _L2Inv = TypeVar("_L2Inv", bound=int)
@@ -74,7 +72,7 @@ def get_collapse_operators_from_a_matrix(
                     ([data[idx]], ([np.int32(idx[0])], [np.int32(idx[1])])),  # type: ignore always idx[1]
                     shape=data.shape,
                 ).toarray(),
-                dtype=np.float_,
+                dtype=np.float64,
             ),
         }
         for idx in zip(*np.nonzero(data), strict=True)
@@ -112,7 +110,7 @@ def get_simplified_collapse_operators_from_a_matrix(
                     continue
 
                 operator = np.sqrt(hop_val) * build_hop_operator(hop, (n_x1, n_x2))
-                array = np.zeros((*util.shape, *util.shape), dtype=np.complex_)
+                array = np.zeros((*util.shape, *util.shape), dtype=np.complex128)
                 array[:, :, n_1, :, :, n_0] = operator
                 out.append({"basis": matrix["basis"], "data": array.reshape(-1)})
 
@@ -175,7 +173,7 @@ def get_collapse_operators_from_function(
                 (i1, j1) = (i0 + d1_stacked[0], j0 + d1_stacked[1])
                 j = np.ravel_multi_index((i1, j1, n1), (*shape, n_bands), mode="wrap")
 
-                data = np.zeros(shape, dtype=np.complex_)
+                data = np.zeros(shape, dtype=np.complex128)
                 data[i, j] = a_function(
                     int(n0), n1, (0, 0), (d1_stacked[0], d1_stacked[1])
                 )
@@ -267,6 +265,6 @@ def solve_stochastic_schrodinger_equation(  # type: ignore bad overload
                 np.asarray([state.data.toarray().reshape(-1) for state in trajectory])  # type: ignore unknown
                 for trajectory in result.states  # type: ignore unknown
             ],
-            dtype=np.complex_,
+            dtype=np.complex128,
         ).reshape(n_trajectories * times.n, -1),
     }

@@ -20,12 +20,12 @@ class BasisWithTimeLike(BasisLike[_N1_co, _N0_co], Protocol[_N1_co, _N0_co]):  #
 
     @property
     @abc.abstractmethod
-    def times(self) -> np.ndarray[tuple[_N0_co], np.dtype[np.float_]]:
+    def times(self) -> np.ndarray[tuple[_N0_co], np.dtype[np.float64]]:
         ...
 
     @property
     @abc.abstractmethod
-    def fundamental_times(self) -> np.ndarray[tuple[_N1_co], np.dtype[np.float_]]:
+    def fundamental_times(self) -> np.ndarray[tuple[_N1_co], np.dtype[np.float64]]:
         ...
 
     @property
@@ -43,11 +43,11 @@ class EvenlySpacedTimeBasis(
         super().__init__(n, step, offset)  # type: ignore[arg-type]
 
     @property
-    def times(self) -> np.ndarray[tuple[_N0_co], np.dtype[np.float_]]:
+    def times(self) -> np.ndarray[tuple[_N0_co], np.dtype[np.float64]]:
         return np.linspace(0, self._delta_t, self.n)  # type: ignore[no-any-return]
 
     @property
-    def fundamental_times(self) -> np.ndarray[tuple[Any], np.dtype[np.float_]]:
+    def fundamental_times(self) -> np.ndarray[tuple[Any], np.dtype[np.float64]]:
         return np.linspace(0, self._delta_t, self.fundamental_n)  # type: ignore[no-any-return]
 
     @property
@@ -66,14 +66,14 @@ class FundamentalTimeBasis(EvenlySpacedTimeBasis[_N0_co, Literal[1], Literal[0]]
 class ExplicitTimeBasis(FundamentalBasis[_N1_co], BasisWithTimeLike[_N1_co, _N1_co]):
     """A axis with vectors that are the fundamental position states."""
 
-    def __init__(self, times: np.ndarray[tuple[_N1_co], np.dtype[np.float_]]) -> None:
+    def __init__(self, times: np.ndarray[tuple[_N1_co], np.dtype[np.float64]]) -> None:
         self._times = times
         super().__init__(times.size)  # type: ignore[arg-type]
 
     @property
-    def times(self) -> np.ndarray[tuple[_N1_co], np.dtype[np.float_]]:
+    def times(self) -> np.ndarray[tuple[_N1_co], np.dtype[np.float64]]:
         return self._times
 
     @property
-    def fundamental_times(self) -> np.ndarray[tuple[_N1_co], np.dtype[np.float_]]:
+    def fundamental_times(self) -> np.ndarray[tuple[_N1_co], np.dtype[np.float64]]:
         return self.times
