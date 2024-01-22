@@ -16,17 +16,24 @@ from surface_potential_analysis.state_vector.eigenstate_collection import (
 from surface_potential_analysis.state_vector.eigenstate_collection_plot import (
     plot_eigenvalues_against_bloch_phase_1d,
     plot_lowest_band_eigenvalues_against_bloch_k,
+    plot_occupation_against_band,
     plot_occupation_against_bloch_phase_1d,
 )
 from surface_potential_analysis.state_vector.plot import (
     plot_state_1d_k,
     plot_state_1d_x,
+    plot_state_2d_k,
+    plot_state_2d_x,
     plot_state_difference_1d_k,
 )
 
 from sodium_copper_111.s1_potential import get_interpolated_potential
 
-from .s3_eigenstates import get_eigenstate_collection
+from .s3_eigenstates import (
+    get_eigenstate_collection,
+    get_eigenstate_collection_2d,
+    get_eigenstate_collection_hydrogen,
+)
 
 
 def plot_lowest_band_energies() -> None:
@@ -157,4 +164,96 @@ def plot_first_six_band_boltzmann_occupation() -> None:
     )
 
     fig.show()
+    input()
+
+
+def plot_first_six_band_energies_hydrogen() -> None:
+    fig, ax = plt.subplots()
+
+    collection = get_eigenstate_collection_hydrogen((60,))
+    direction = np.array([1])
+
+    for i in range(5):
+        _, _, ln = plot_eigenvalues_against_bloch_phase_1d(
+            collection, direction, i, ax=ax
+        )
+        ln.set_label(f"n={i}")
+
+    ax.legend()
+    ax.set_title("Plot of 6 lowest band energies")
+
+    fig.show()
+    input()
+
+
+def plot_first_six_band_eigenstates_hydrogen() -> None:
+    fig, axs = cast(tuple[Figure, tuple[Axes, ...]], plt.subplots(2))
+
+    collection = get_eigenstate_collection_hydrogen((17,))
+
+    for i in range(5):
+        eigenstate = select_eigenstate(collection, 5, i)
+        _, _, ln = plot_state_1d_x(eigenstate, ax=axs[0], measure="abs")
+        ln.set_label(f"n={i}")
+
+        _, _, ln = plot_state_1d_k(eigenstate, ax=axs[1], measure="abs")
+        ln.set_label(f"n={i}")
+
+    ax2 = axs[0].twinx()
+    _, _, ln = plot_potential_1d_x(get_interpolated_potential((100,)), ax=ax2)
+    ln.set_linestyle("--")
+    ln.set_label("potential")
+
+    axs[0].legend()
+    axs[0].set_title("Plot of eigenstates from the six lowest bands")
+    axs[1].legend()
+
+    fig.show()
+    input()
+
+
+def plot_first_six_band_energies_2d() -> None:
+    fig, ax = plt.subplots()
+
+    collection = get_eigenstate_collection_2d((60, 60))
+    direction = np.array([1, 0])
+
+    for i in range(30):
+        _, _, ln = plot_eigenvalues_against_bloch_phase_1d(
+            collection, direction, i, ax=ax
+        )
+        ln.set_label(f"n={i}")
+
+    ax.legend()
+    ax.set_title("Plot of 6 lowest band energies")
+
+    fig.show()
+    input()
+
+
+def plot_boltzmann_occupation() -> None:
+    collection = get_eigenstate_collection_2d((60, 60))
+    fig, ax, _ = plot_occupation_against_band(collection, temperature=100)
+    ax.set_title(
+        f"Plot of occupation against band at T={100}K,\n"
+        "demonstrating high occupation for large bands"
+    )
+    fig.show()
+
+    collection = get_eigenstate_collection((60,))
+    fig, ax, _ = plot_occupation_against_band(collection, temperature=100)
+    fig.show()
+    input()
+
+
+def plot_first_six_band_eigenstates_2d() -> None:
+    collection = get_eigenstate_collection_2d((40, 40))
+
+    for i in range(0, 40, 10):
+        eigenstate = select_eigenstate(collection, 0, i)
+        fig, _, _ = plot_state_2d_x(eigenstate, measure="abs")
+        fig.show()
+
+        fig, _, _ = plot_state_2d_k(eigenstate, measure="abs")
+        fig.show()
     input()

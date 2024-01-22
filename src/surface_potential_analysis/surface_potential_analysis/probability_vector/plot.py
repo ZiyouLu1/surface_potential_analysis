@@ -65,10 +65,11 @@ def plot_probability_against_time(
     """
     fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
     times = probability["basis"][0].times
+    data = probability["data"].reshape(probability["basis"].shape)
 
     lines: list[Line2D] = []
-    for n in range(probability["data"].shape[1]):
-        (line,) = ax.plot(times, (probability["data"][:, n]))
+    for n in range(probability["basis"].shape[1]):
+        (line,) = ax.plot(times, (data[:, n]))
         lines.append(line)
 
     ax.set_title("Plot of probability against time")

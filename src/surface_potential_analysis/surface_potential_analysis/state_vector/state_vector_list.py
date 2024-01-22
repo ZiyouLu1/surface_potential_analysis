@@ -122,7 +122,7 @@ def as_state_vector_list(
 _B2Inv = TypeVar("_B2Inv", bound=BasisLike[Any, Any])
 
 
-def calculate_inner_product(
+def calculate_inner_products(
     state_0: StateVectorList[_B0, _B2Inv],
     state_1: StateVectorList[_B1, _B2Inv],
 ) -> Operator[_B0, _B1]:

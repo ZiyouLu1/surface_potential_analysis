@@ -122,7 +122,6 @@ def get_hop_hamiltonian() -> (
 def get_coherent_hamiltonian(
     basis: _B0Inv,
 ) -> SingleBasisOperator[_B0Inv]:
-    get_wannier90_localized_split_bands_hamiltonian_hydrogen()
     hop_hamiltonian = get_hop_hamiltonian()
     (n_x1, n_x2, n_bands) = basis.shape
     assert hop_hamiltonian["basis"][1][0].n == n_bands

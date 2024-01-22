@@ -252,6 +252,7 @@ class ISFFey4VariableFit:
     fast_amplitude: float
     slow_rate: float
     slow_amplitude: float
+    offset: float
 
 
 def calculate_isf_fey_4_variable_model_110(  # noqa: PLR0913
@@ -260,6 +261,7 @@ def calculate_isf_fey_4_variable_model_110(  # noqa: PLR0913
     fast_amplitude: FloatLike_co,
     slow_rate: FloatLike_co,
     slow_amplitude: FloatLike_co,
+    offset: FloatLike_co,
     *,
     a_dk: float,
 ) -> np.ndarray[_S0Inv, np.dtype[np.float_]]:
@@ -288,7 +290,7 @@ def calculate_isf_fey_4_variable_model_110(  # noqa: PLR0913
     return (
         (fast_amplitude * np.exp(-slow_rate * (3 * lam + 3 + z) * t / (6 * lam)))
         + (slow_amplitude * np.exp(-slow_rate * (3 * lam + 3 - z) * t / (6 * lam)))
-        + (1 - fast_amplitude - slow_amplitude)
+        + (offset)
     )
 
 
@@ -315,6 +317,7 @@ def get_isf_from_fey_4_variable_model_110(
             fit.fast_amplitude,
             fit.slow_rate,
             fit.slow_amplitude,
+            fit.offset,
             a_dk=fit.a_dk,
         ).astype(np.complex_),
     }
@@ -326,6 +329,7 @@ def fit_isf_to_fey_4_variable_model_110(
     *,
     measure: Measure = "abs",
     a_dk: float = 2,
+    start_t: float = 0,
 ) -> ISFFey4VariableFit:
     """
     Fit the ISF to a double exponential, and calculate the fast and slow rates.
@@ -340,29 +344,41 @@ def fit_isf_to_fey_4_variable_model_110(
     ISFFit
     """
     data = get_measured_data(isf["data"], measure)
+    times = isf["basis"][0].times
+    valid_times = times > start_t
+
+    sigma = isf.get("standard_deviation")
+    if isinstance(sigma, np.ndarray):
+        sigma = sigma[valid_times]
 
     def f(
-        t: np.ndarray[Any, Any], fr: float, fa: float, sa: float
+        t: np.ndarray[Any, Any], fr: float, fa: float, sa: float, offset: float
     ) -> np.ndarray[Any, Any]:
         return calculate_isf_fey_4_variable_model_110(
-            t, fr, fa, lam * fr, sa, a_dk=a_dk
+            t, fr, fa, lam * fr, sa, offset, a_dk=a_dk
         )
 
     def penalized_f(
-        t: np.ndarray[Any, Any], fr: float, fa: float, sa: float
+        t: np.ndarray[Any, Any], fr: float, fa: float, sa: float, offset: float
     ) -> np.ndarray[Any, Any]:
-        penalization = (max(fa + sa, 1.0) - 1) * 10000
-        return f(t, fr, fa, sa) - penalization
+        return f(t, fr, fa, sa, offset)  # - penalization
 
     params, _ = scipy.optimize.curve_fit(
         penalized_f,
-        isf["basis"][0].times,
-        data,
-        p0=(1.4e9, 1 / (1 + lam), lam / (1 + lam)),
-        bounds=([0, 0, 0], [np.inf, 1, 1]),
-        sigma=isf.get("standard_deviation"),
+        times[valid_times],
+        data[valid_times],
+        p0=(1.4e9, 1 / (1 + lam), lam / (1 + lam), 0.05),
+        bounds=([0, 0, 0, 0], [np.inf, np.inf, np.inf, 0.2]),
+        maxfev=10000,
     )
-    return ISFFey4VariableFit(a_dk, params[0], params[1], lam * params[0], params[2])
+    return ISFFey4VariableFit(
+        a_dk,
+        params[0],
+        params[1],
+        lam * params[0],
+        params[2],
+        params[3],
+    )
 
 
 def calculate_isf_fey_model_110(

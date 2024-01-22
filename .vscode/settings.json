@@ -15,8 +15,7 @@
   // ],
   // "isort.check": true,
   "editor.codeActionsOnSave": {
-    // "source.organizeImports": true,
-    "source.fixAll": true
+    "source.fixAll": "explicit"
   },
   "editor.formatOnSave": true,
   "cSpell.allowCompoundWords": true,
@@ -144,7 +143,8 @@
     "./src/hydrogen_platinum_111",
     "./src/hydrogen_ruthenium_100",
     "./src/hydrogen_nickel_111",
-    "./src/sodium_copper_111"
+    "./src/sodium_copper_111",
+    "./src/low_energy_1d"
   ],
   "[python]": {
     "editor.defaultFormatter": "ms-python.black-formatter"

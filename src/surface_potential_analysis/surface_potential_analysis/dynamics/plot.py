@@ -57,7 +57,7 @@ def plot_probability_per_band(
     -------
     tuple[Figure, Axes, list[Line2D]]
     """
-    probability_per_band = sum_probabilities(probability, (2,))
+    probability_per_band = sum_probabilities(probability, (0, 1))
     fig, ax, lines = plot_probability_against_time(
         probability_per_band, ax=ax, scale=scale
     )
@@ -131,7 +131,7 @@ def plot_probability_per_site(
     -------
     tuple[Figure, Axes, list[Line2D]]
     """
-    probability_per_site = sum_probabilities(probability, (0, 1))
+    probability_per_site = sum_probabilities(probability, (2,))
     fig, ax, lines = plot_probability_against_time(
         probability_per_site, ax=ax, scale=scale
     )

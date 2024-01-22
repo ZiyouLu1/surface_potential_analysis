@@ -174,7 +174,9 @@ def sum_probabilities(
     ProbabilityVectorList[Any, _L0Inv]
     """
     axis = tuple(range(probabilities["basis"].ndim)) if axis is None else axis
-    basis = tuple(b for (i, b) in enumerate(probabilities["basis"][1]) if i not in axis)
+    basis = StackedBasis(
+        *tuple(b for (i, b) in enumerate(probabilities["basis"][1]) if i not in axis)
+    )
     return {
         "basis": StackedBasis(probabilities["basis"][0], basis),
         "data": np.sum(

@@ -31,7 +31,7 @@ from surface_potential_analysis.state_vector.state_vector_list import (
     get_state_vector,
 )
 from surface_potential_analysis.state_vector.state_vector_list import (
-    calculate_inner_product as calculate_inner_product_states,
+    calculate_inner_products as calculate_inner_product_states,
 )
 from surface_potential_analysis.state_vector.util import (
     get_single_point_state_vector_excact,

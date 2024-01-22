@@ -84,7 +84,13 @@ def plot_potential_1d_x(
     converted = convert_potential_to_position_basis(potential)
 
     fig, ax, line = plot_data_1d_x(
-        converted["basis"], converted["data"], axes, idx, ax=ax, scale=scale
+        converted["basis"],
+        converted["data"],
+        axes,
+        idx,
+        ax=ax,
+        scale=scale,
+        measure="real",
     )
     ax.set_ylabel("Energy /J")
     return fig, ax, line
@@ -395,7 +401,13 @@ def plot_potential_along_path(
     converted = convert_potential_to_position_basis(potential)
     util = BasisUtil(converted["basis"])
 
-    data = get_measured_data(converted["data"].reshape(util.shape)[*path], measure)
+    data = get_measured_data(
+        np.take(
+            converted["data"].reshape(util.shape),
+            np.ravel_multi_index(path, util.shape, mode="wrap"),
+        ),
+        measure,
+    )
     distances = calculate_cumulative_x_distances_along_path(
         converted["basis"], path, wrap_distances=wrap_distances
     )
@@ -429,7 +441,8 @@ def get_minimum_path(
     """
     axis = axis % potential["basis"].ndim
     min_idx = np.argmin(potential["data"].reshape(potential["basis"].shape), axis=axis)
-    return np.insert(path, axis, min_idx[*path], axis=0)
+    wrapped = np.ravel_multi_index(path, min_idx.shape, mode="wrap")
+    return np.insert(path, axis, min_idx.flat[wrapped], axis=0)
 
 
 def plot_potential_minimum_along_path(

@@ -140,7 +140,7 @@ def plot_state_1d_x(
 
 def plot_state_2d_k(
     state: StateVector[StackedBasisLike[*tuple[Any, ...]]],
-    axes: tuple[int, int],
+    axes: tuple[int, int] = (0, 1),
     idx: SingleStackedIndexLike | None = None,
     *,
     ax: Axes | None = None,

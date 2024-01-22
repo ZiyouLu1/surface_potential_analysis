@@ -291,8 +291,7 @@ def plot_potential_minimum_along_edge() -> None:
     # Note we are 'missing' two points here!
     path = np.array([(shape[0] - (x), x) for x in range(shape[0])]).T
     # Add a fake point here so they line up. path[0] is not included in the unit cell
-    path[0] = path[2]
-    _, _, line = plot_potential_minimum_along_path(interpolation, path, ax=ax)
+    _, _, line = plot_potential_minimum_along_path(interpolation, path, axis=2, ax=ax)
     line.set_label("diagonal")
 
     path = np.array([(x, 0) for x in range(shape[0])]).T

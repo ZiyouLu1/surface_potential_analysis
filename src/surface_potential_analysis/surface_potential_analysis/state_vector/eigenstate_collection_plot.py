@@ -52,7 +52,7 @@ def _get_projected_bloch_phases(
     bloch_phases = np.tensordot(
         collection["basis"][0][0].bloch_fractions,
         util.fundamental_dk_stacked,
-        axes=(1, 0),
+        axes=(0, 0),
     )
     normalized_direction = direction / np.linalg.norm(direction)
     return np.dot(bloch_phases, normalized_direction)
@@ -157,12 +157,44 @@ def plot_occupation_against_bloch_phase_1d(
     fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
 
     projected = _get_projected_bloch_phases(collection, direction)
-    eigenvalues = collection["eigenvalue"].reshape(*collection["basis"][0].shape, -1)[
-        :, band
-    ]
+    eigenvalues = collection["eigenvalue"].reshape(*collection["basis"][0].shape, -1)
     occupations = np.exp(-eigenvalues / (temperature * Boltzmann))
-    (line,) = ax.plot(projected, occupations)
+    occupation_for_band = occupations[:, band] / np.sum(occupations)
+    (line,) = ax.plot(projected, occupation_for_band)
     ax.set_xlabel("Bloch Phase / $m^{-1}$")
+    ax.set_ylabel("Occupation / Au")
+    return fig, ax, line
+
+
+def plot_occupation_against_band(
+    collection: EigenstateColllection[StackedBasisLike[_BF0, Any], Any],
+    temperature: float,
+    *,
+    ax: Axes | None = None,
+) -> tuple[Figure, Axes, Line2D]:
+    """
+    Plot the eigenvalues in an eigenstate collection against their projected phases.
+
+    Parameters
+    ----------
+    collection : EigenstateColllection[_B0Inv, _L0Inv]
+    direction : np.ndarray[tuple[int], np.dtype[np.float_]]
+    band : int, optional
+        band to plot, by default 0
+    ax : Axes | None, optional
+        axis, by default None
+
+    Returns
+    -------
+    tuple[Figure, Axes, Line2D]
+    """
+    fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
+
+    eigenvalues = collection["eigenvalue"].reshape(*collection["basis"][0].shape, -1)
+    occupations = np.exp(-eigenvalues / (temperature * Boltzmann))
+    occupation_for_band = np.sum(occupations, axis=0) / np.sum(occupations)
+    (line,) = ax.plot(occupation_for_band)
+    ax.set_xlabel("band idx")
     ax.set_ylabel("Occupation / Au")
     return fig, ax, line
 

@@ -82,6 +82,18 @@ def _get_scale_with_lim(
             )
 
 
+# https://stackoverflow.com/questions/49382105/set-different-margins-for-left-and-right-side
+def _set_ymargin(ax: Axes, bottom: float = 0.0, top: float = 0.3) -> None:
+    ax.set_autoscale_on(b=True)
+    ax.set_ymargin(0)
+    ax.autoscale_view()
+    lim = ax.get_ylim()
+    delta = lim[1] - lim[0]
+    bottom = lim[0] - delta * bottom
+    top = lim[1] + delta * top
+    ax.set_ylim(bottom, top)
+
+
 def plot_data_1d_k(
     basis: StackedBasisLike[*tuple[Any, ...]],
     data: np.ndarray[tuple[_L0Inv], np.dtype[np.complex_]],
@@ -126,9 +138,11 @@ def plot_data_1d_k(
 
     (line,) = ax.plot(shifted_coordinates[0], shifted_data)
     ax.set_xlabel(f"k{(axes[0] % 3)} axis")
-    lim = _get_lim((None, None), measure, shifted_data)
-    ax.set_yscale(_get_scale_with_lim(scale, lim))
-    ax.set_ylim(lim[0], (1.01 if scale == "linear" else 2) * lim[1])
+    ax.set_xmargin(0)
+    _set_ymargin(ax, 0, 0.05)
+    if measure == "abs":
+        ax.set_ylim(0, ax.get_ylim()[1])
+    ax.set_yscale(_get_scale_with_lim(scale, ax.get_ylim()))
     return fig, ax, line
 
 
@@ -173,9 +187,11 @@ def plot_data_1d_x(
 
     (line,) = ax.plot(coordinates[0], measured_data)
     ax.set_xlabel(f"x{(axes[0] % 3)} axis")
-    lim = _get_lim((None, None), measure, measured_data)
-    ax.set_yscale(_get_scale_with_lim(scale, lim))
-    ax.set_ylim(lim[0], (1.01 if scale == "linear" else 2) * lim[1])
+    ax.set_xmargin(0)
+    _set_ymargin(ax, 0, 0.05)
+    if measure == "abs":
+        ax.set_ylim(0, ax.get_ylim()[1])
+    ax.set_yscale(_get_scale_with_lim(scale, ax.get_ylim()))
     return fig, ax, line
 
 

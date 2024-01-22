@@ -10,7 +10,7 @@ packages = [{ include = "_main" }]
 main = '_main.main:main'
 
 [tool.poetry.dependencies]
-python = ">=3.11,<3.12"
+python = ">=3.12,<3.13"
 nickel_111 = { path = "../nickel_111/", develop = true }
 copper_100 = { path = "../copper_100/", develop = true }
 copper_111 = { path = "../copper_111/", develop = true }

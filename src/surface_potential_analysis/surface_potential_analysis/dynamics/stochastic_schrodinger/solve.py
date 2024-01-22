@@ -21,6 +21,7 @@ from surface_potential_analysis.dynamics.util import build_hop_operator, get_hop
 if TYPE_CHECKING:
     from collections.abc import Callable
 
+    from surface_potential_analysis.basis.basis_like import BasisLike
     from surface_potential_analysis.basis.time_basis_like import EvenlySpacedTimeBasis
     from surface_potential_analysis.dynamics.incoherent_propagation.tunnelling_matrix import (
         TunnellingAMatrix,
@@ -29,7 +30,9 @@ if TYPE_CHECKING:
         TunnellingSimulationBandsBasis,
         TunnellingSimulationBasis,
     )
-    from surface_potential_analysis.operator.operator import SingleBasisOperator
+    from surface_potential_analysis.operator.operator import (
+        SingleBasisOperator,
+    )
     from surface_potential_analysis.state_vector import (
         StateVector,
     )
@@ -38,6 +41,7 @@ if TYPE_CHECKING:
     )
 
     _B0Inv = TypeVar("_B0Inv", bound=TunnellingSimulationBasis[Any, Any, Any])
+    _B1Inv = TypeVar("_B1Inv", bound=BasisLike[Any, Any])
     _L0Inv = TypeVar("_L0Inv", bound=int)
     _L1Inv = TypeVar("_L1Inv", bound=int)
     _L2Inv = TypeVar("_L2Inv", bound=int)
