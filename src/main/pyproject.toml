@@ -17,7 +17,6 @@ copper_111 = { path = "../copper_111/", develop = true }
 surface_potential_analysis = { path = "../surface_potential_analysis/", develop = true }
 
 [tool.poetry.group.dev.dependencies]
-black = "^23.1.0"
 mypy = "*"
 ruff = "*"
 

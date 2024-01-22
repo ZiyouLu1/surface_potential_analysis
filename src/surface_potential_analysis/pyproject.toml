@@ -15,7 +15,6 @@ hamiltonian_generator = { path = "../hamiltonian_generator/", develop = true }
 qutip = "^4.0.0"
 
 [tool.poetry.group.dev.dependencies]
-black = "^23.1.0"
 mypy = "*"
 ruff = "*"
 

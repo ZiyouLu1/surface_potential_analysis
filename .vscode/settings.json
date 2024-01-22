@@ -101,6 +101,14 @@
     "ylim",
     "yscale"
   ],
+  "[python]": {
+    "editor.formatOnSave": true,
+    "editor.defaultFormatter": "charliermarsh.ruff",
+    "editor.codeActionsOnSave": {
+      "source.fixAll": true,
+      "source.organizeImports": true
+    }
+  },
   // "mypy.args": [
   // "--follow-imports=error",
   // "--ignore-missing-imports",
@@ -146,9 +154,6 @@
     "./src/sodium_copper_111",
     "./src/low_energy_1d"
   ],
-  "[python]": {
-    "editor.defaultFormatter": "ms-python.black-formatter"
-  },
   "python.analysis.enablePytestSupport": false,
   "mypy-type-checker.importStrategy": "fromEnvironment",
   "search.exclude": {
