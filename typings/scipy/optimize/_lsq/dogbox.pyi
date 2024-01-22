@@ -44,7 +44,8 @@ References
             Mathematics, Corfu, Greece, 2004.
 .. [NumOpt] J. Nocedal and S. J. Wright, "Numerical optimization, 2nd edition".
 """
-def lsmr_operator(Jop, d, active_set): # -> LinearOperator:
+
+def lsmr_operator(Jop, d, active_set):  # -> LinearOperator:
     """Compute LinearOperator to use in LSMR by dogbox algorithm.
 
     `active_set` mask is used to excluded active variables from computations
@@ -52,7 +53,7 @@ def lsmr_operator(Jop, d, active_set): # -> LinearOperator:
     """
     ...
 
-def find_intersection(x, tr_bounds, lb, ub): # -> tuple[Any, Any, Any, Any, Any, Any]:
+def find_intersection(x, tr_bounds, lb, ub):  # -> tuple[Any, Any, Any, Any, Any, Any]:
     """Find intersection of trust-region bounds and initial bounds.
 
     Returns
@@ -68,7 +69,9 @@ def find_intersection(x, tr_bounds, lb, ub): # -> tuple[Any, Any, Any, Any, Any,
     """
     ...
 
-def dogleg_step(x, newton_step, g, a, b, tr_bounds, lb, ub): # -> tuple[Unknown, NDArray[Any], Literal[False]] | tuple[Unknown, NDArray[Any], bool_]:
+def dogleg_step(
+    x, newton_step, g, a, b, tr_bounds, lb, ub
+):  # -> tuple[Unknown, NDArray[Any], Literal[False]] | tuple[Unknown, NDArray[Any], bool_]:
     """Find dogleg step in a rectangular region.
 
     Returns
@@ -86,6 +89,21 @@ def dogleg_step(x, newton_step, g, a, b, tr_bounds, lb, ub): # -> tuple[Unknown,
     """
     ...
 
-def dogbox(fun, jac, x0, f0, J0, lb, ub, ftol, xtol, gtol, max_nfev, x_scale, loss_function, tr_solver, tr_options, verbose):
-    ...
-
+def dogbox(
+    fun,
+    jac,
+    x0,
+    f0,
+    J0,
+    lb,
+    ub,
+    ftol,
+    xtol,
+    gtol,
+    max_nfev,
+    x_scale,
+    loss_function,
+    tr_solver,
+    tr_options,
+    verbose,
+): ...

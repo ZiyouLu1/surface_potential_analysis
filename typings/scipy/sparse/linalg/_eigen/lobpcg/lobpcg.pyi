@@ -21,7 +21,21 @@ References
        https://github.com/lobpcg/blopex
 """
 __all__ = ["lobpcg"]
-def lobpcg(A, X, B=..., M=..., Y=..., tol=..., maxiter=..., largest=..., verbosityLevel=..., retLambdaHistory=..., retResidualNormsHistory=..., restartControl=...):
+
+def lobpcg(
+    A,
+    X,
+    B=...,
+    M=...,
+    Y=...,
+    tol=...,
+    maxiter=...,
+    largest=...,
+    verbosityLevel=...,
+    retLambdaHistory=...,
+    retResidualNormsHistory=...,
+    restartControl=...,
+):
     """Locally Optimal Block Preconditioned Conjugate Gradient Method (LOBPCG).
 
     LOBPCG is a preconditioned eigensolver for large real symmetric and complex
@@ -264,4 +278,3 @@ def lobpcg(A, X, B=..., M=..., Y=..., tol=..., maxiter=..., largest=..., verbosi
 
     """
     ...
-

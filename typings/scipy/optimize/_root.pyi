@@ -9,9 +9,12 @@ Functions
 ---------
 - root : find a root of a vector function.
 """
-__all__ = ['root']
+__all__ = ["root"]
 ROOT_METHODS = ...
-def root(fun, x0, args=..., method=..., jac=..., tol=..., callback=..., options=...): # -> OptimizeResult:
+
+def root(
+    fun, x0, args=..., method=..., jac=..., tol=..., callback=..., options=...
+):  # -> OptimizeResult:
     r"""
     Find a root of a vector function.
 
@@ -188,4 +191,3 @@ def root(fun, x0, args=..., method=..., jac=..., tol=..., callback=..., options=
 
     """
     ...
-

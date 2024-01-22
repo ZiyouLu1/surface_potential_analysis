@@ -110,7 +110,7 @@ def convert_wavepacket_to_basis(
 
 
 def convert_wavepacket_to_position_basis(
-    wavepacket: Wavepacket[_B0Inv, StackedBasisLike[*tuple[_BL0, ...]]]
+    wavepacket: Wavepacket[_B0Inv, StackedBasisLike[*tuple[_BL0, ...]]],
 ) -> Wavepacket[
     _B0Inv, StackedBasisLike[*tuple[FundamentalPositionBasis[Any, Any], ...]]
 ]:

@@ -97,16 +97,62 @@ References
 .. [JJMore] More, J. J., "The Levenberg-Marquardt Algorithm: Implementation
     and Theory," Numerical Analysis, ed. G. A. Watson, Lecture
 """
-def trf(fun, jac, x0, f0, J0, lb, ub, ftol, xtol, gtol, max_nfev, x_scale, loss_function, tr_solver, tr_options, verbose):
-    ...
 
-def select_step(x, J_h, diag_h, g_h, p, p_h, d, Delta, lb, ub, theta): # -> tuple[Unknown, Unknown, Any] | tuple[Unknown, Unknown | NDArray[Unknown], Any | float]:
+def trf(
+    fun,
+    jac,
+    x0,
+    f0,
+    J0,
+    lb,
+    ub,
+    ftol,
+    xtol,
+    gtol,
+    max_nfev,
+    x_scale,
+    loss_function,
+    tr_solver,
+    tr_options,
+    verbose,
+): ...
+def select_step(
+    x, J_h, diag_h, g_h, p, p_h, d, Delta, lb, ub, theta
+):  # -> tuple[Unknown, Unknown, Any] | tuple[Unknown, Unknown | NDArray[Unknown], Any | float]:
     """Select the best step according to Trust Region Reflective algorithm."""
     ...
 
-def trf_bounds(fun, jac, x0, f0, J0, lb, ub, ftol, xtol, gtol, max_nfev, x_scale, loss_function, tr_solver, tr_options, verbose):
-    ...
-
-def trf_no_bounds(fun, jac, x0, f0, J0, ftol, xtol, gtol, max_nfev, x_scale, loss_function, tr_solver, tr_options, verbose):
-    ...
-
+def trf_bounds(
+    fun,
+    jac,
+    x0,
+    f0,
+    J0,
+    lb,
+    ub,
+    ftol,
+    xtol,
+    gtol,
+    max_nfev,
+    x_scale,
+    loss_function,
+    tr_solver,
+    tr_options,
+    verbose,
+): ...
+def trf_no_bounds(
+    fun,
+    jac,
+    x0,
+    f0,
+    J0,
+    ftol,
+    xtol,
+    gtol,
+    max_nfev,
+    x_scale,
+    loss_function,
+    tr_solver,
+    tr_options,
+    verbose,
+): ...

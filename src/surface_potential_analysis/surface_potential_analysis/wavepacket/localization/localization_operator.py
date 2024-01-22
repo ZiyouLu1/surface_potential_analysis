@@ -68,7 +68,7 @@ def get_localized_wavepackets(
 
 
 def get_wavepacket_hamiltonian(
-    wavepackets: WavepacketWithEigenvaluesList[_B0, _SB1, _SB0]
+    wavepackets: WavepacketWithEigenvaluesList[_B0, _SB1, _SB0],
 ) -> DiagonalOperator[StackedBasisLike[_B0, _SB1], StackedBasisLike[_B0, _SB1]]:
     """
     Get the Hamiltonian in the Wavepacket basis.

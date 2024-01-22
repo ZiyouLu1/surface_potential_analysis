@@ -8,7 +8,8 @@ from ._data import _data_matrix
 
 """Sparse DIAgonal format"""
 __docformat__ = ...
-__all__ = ['dia_array', 'dia_matrix', 'isspmatrix_dia']
+__all__ = ["dia_array", "dia_matrix", "isspmatrix_dia"]
+
 class _dia_base(_data_matrix):
     """Sparse matrix with DIAgonal storage
 
@@ -80,40 +81,29 @@ class _dia_base(_data_matrix):
            [0., 0., 0., ..., 1., 2., 1.],
            [0., 0., 0., ..., 0., 1., 2.]])
     """
+
     _format = ...
-    def __init__(self, arg1, shape=..., dtype=..., copy=...) -> None:
+    def __init__(self, arg1, shape=..., dtype=..., copy=...) -> None: ...
+    def __repr__(self):  # -> Any:
         ...
-    
-    def __repr__(self): # -> Any:
+    def count_nonzero(self):  # -> int:
         ...
-    
-    def count_nonzero(self): # -> int:
+    def sum(self, axis=..., dtype=..., out=...):  # -> Any | matrix[Any, Any]:
         ...
-    
-    def sum(self, axis=..., dtype=..., out=...): # -> Any | matrix[Any, Any]:
+    def todia(self, copy=...):  # -> Self@_dia_base:
         ...
-    
-    def todia(self, copy=...): # -> Self@_dia_base:
+    def transpose(self, axes=..., copy=...):  # -> dia_array:
         ...
-    
-    def transpose(self, axes=..., copy=...): # -> dia_array:
+    def diagonal(self, k=...):  # -> NDArray[Unknown]:
         ...
-    
-    def diagonal(self, k=...): # -> NDArray[Unknown]:
+    def tocsc(self, copy=...):  # -> csc_array:
         ...
-    
-    def tocsc(self, copy=...): # -> csc_array:
+    def tocoo(self, copy=...):  # -> coo_array:
         ...
-    
-    def tocoo(self, copy=...): # -> coo_array:
+    def resize(self, *shape):  # -> None:
         ...
-    
-    def resize(self, *shape): # -> None:
-        ...
-    
 
-
-def isspmatrix_dia(x): # -> bool:
+def isspmatrix_dia(x):  # -> bool:
     """Is `x` of dia_matrix type?
 
     Parameters
@@ -138,11 +128,5 @@ def isspmatrix_dia(x): # -> bool:
     """
     ...
 
-class dia_array(_dia_base, sparray):
-    ...
-
-
-class dia_matrix(spmatrix, _dia_base):
-    ...
-
-
+class dia_array(_dia_base, sparray): ...
+class dia_matrix(spmatrix, _dia_base): ...

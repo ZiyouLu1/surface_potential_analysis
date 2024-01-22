@@ -44,5 +44,5 @@ def math_to_image(
     dpi: float = ...,
     format: str = ...,
     *,
-    color: str = ...
+    color: str = ...,
 ): ...

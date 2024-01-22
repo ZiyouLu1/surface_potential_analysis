@@ -8,7 +8,67 @@ from scipy._lib._util import _rename_parameter
 An extension of scipy.stats._stats_py to support masked arrays
 
 """
-__all__ = ['argstoarray', 'count_tied_groups', 'describe', 'f_oneway', 'find_repeats', 'friedmanchisquare', 'kendalltau', 'kendalltau_seasonal', 'kruskal', 'kruskalwallis', 'ks_twosamp', 'ks_2samp', 'kurtosis', 'kurtosistest', 'ks_1samp', 'kstest', 'linregress', 'mannwhitneyu', 'meppf', 'mode', 'moment', 'mquantiles', 'msign', 'normaltest', 'obrientransform', 'pearsonr', 'plotting_positions', 'pointbiserialr', 'rankdata', 'scoreatpercentile', 'sem', 'sen_seasonal_slopes', 'skew', 'skewtest', 'spearmanr', 'siegelslopes', 'theilslopes', 'tmax', 'tmean', 'tmin', 'trim', 'trimboth', 'trimtail', 'trima', 'trimr', 'trimmed_mean', 'trimmed_std', 'trimmed_stde', 'trimmed_var', 'tsem', 'ttest_1samp', 'ttest_onesamp', 'ttest_ind', 'ttest_rel', 'tvar', 'variation', 'winsorize', 'brunnermunzel']
+__all__ = [
+    "argstoarray",
+    "count_tied_groups",
+    "describe",
+    "f_oneway",
+    "find_repeats",
+    "friedmanchisquare",
+    "kendalltau",
+    "kendalltau_seasonal",
+    "kruskal",
+    "kruskalwallis",
+    "ks_twosamp",
+    "ks_2samp",
+    "kurtosis",
+    "kurtosistest",
+    "ks_1samp",
+    "kstest",
+    "linregress",
+    "mannwhitneyu",
+    "meppf",
+    "mode",
+    "moment",
+    "mquantiles",
+    "msign",
+    "normaltest",
+    "obrientransform",
+    "pearsonr",
+    "plotting_positions",
+    "pointbiserialr",
+    "rankdata",
+    "scoreatpercentile",
+    "sem",
+    "sen_seasonal_slopes",
+    "skew",
+    "skewtest",
+    "spearmanr",
+    "siegelslopes",
+    "theilslopes",
+    "tmax",
+    "tmean",
+    "tmin",
+    "trim",
+    "trimboth",
+    "trimtail",
+    "trima",
+    "trimr",
+    "trimmed_mean",
+    "trimmed_std",
+    "trimmed_stde",
+    "trimmed_var",
+    "tsem",
+    "ttest_1samp",
+    "ttest_onesamp",
+    "ttest_ind",
+    "ttest_rel",
+    "tvar",
+    "variation",
+    "winsorize",
+    "brunnermunzel",
+]
+
 def argstoarray(*args):
     """
     Constructs a 2D array from a group of sequences.
@@ -59,7 +119,9 @@ def argstoarray(*args):
     """
     ...
 
-def find_repeats(arr): # -> tuple[NDArray[float64], NDArray[intp]] | tuple[ndarray[Any, dtype[float64]], ndarray[Any, dtype[Any]]]:
+def find_repeats(
+    arr,
+):  # -> tuple[NDArray[float64], NDArray[intp]] | tuple[ndarray[Any, dtype[float64]], ndarray[Any, dtype[Any]]]:
     """Find repeats in arr and return a tuple (repeats, repeat_count).
 
     The input is cast to float64. Masked values are discarded.
@@ -92,7 +154,7 @@ def find_repeats(arr): # -> tuple[NDArray[float64], NDArray[intp]] | tuple[ndarr
     """
     ...
 
-def count_tied_groups(x, use_missing=...): # -> dict[Any, int]:
+def count_tied_groups(x, use_missing=...):  # -> dict[Any, int]:
     """
     Counts the number of tied values.
 
@@ -128,7 +190,7 @@ def count_tied_groups(x, use_missing=...): # -> dict[Any, int]:
     """
     ...
 
-def rankdata(data, axis=..., use_missing=...): # -> ndarray[Any, dtype[Any]]:
+def rankdata(data, axis=..., use_missing=...):  # -> ndarray[Any, dtype[Any]]:
     """Returns the rank (also known as order statistics) of each data point
     along the given axis.
 
@@ -152,7 +214,8 @@ def rankdata(data, axis=..., use_missing=...): # -> ndarray[Any, dtype[Any]]:
     ...
 
 ModeResult = ...
-def mode(a, axis=...): # -> ModeResult:
+
+def mode(a, axis=...):  # -> ModeResult:
     """
     Returns an array of the modal (most common) value in the passed array.
 
@@ -191,7 +254,7 @@ def msign(x):
     """Returns the sign of x, or 0 if x is masked."""
     ...
 
-def pearsonr(x, y): # -> tuple[MaskedConstant, MaskedConstant] | PearsonRResult:
+def pearsonr(x, y):  # -> tuple[MaskedConstant, MaskedConstant] | PearsonRResult:
     r"""
     Pearson correlation coefficient and p-value for testing non-correlation.
 
@@ -351,7 +414,9 @@ def pearsonr(x, y): # -> tuple[MaskedConstant, MaskedConstant] | PearsonRResult:
     """
     ...
 
-def spearmanr(x, y=..., use_ties=..., axis=..., nan_policy=..., alternative=...): # -> _:
+def spearmanr(
+    x, y=..., use_ties=..., axis=..., nan_policy=..., alternative=...
+):  # -> _:
     """
     Calculates a Spearman rank-order correlation coefficient and the p-value
     to test for non-correlation.
@@ -425,7 +490,9 @@ def spearmanr(x, y=..., use_ties=..., axis=..., nan_policy=..., alternative=...)
     """
     ...
 
-def kendalltau(x, y, use_ties=..., use_missing=..., method=..., alternative=...): # -> _:
+def kendalltau(
+    x, y, use_ties=..., use_missing=..., method=..., alternative=...
+):  # -> _:
     """
     Computes Kendall's rank correlation tau on two variables *x* and *y*.
 
@@ -475,7 +542,7 @@ def kendalltau(x, y, use_ties=..., use_missing=..., method=..., alternative=...)
     """
     ...
 
-def kendalltau_seasonal(x): # -> dict[str, Unknown]:
+def kendalltau_seasonal(x):  # -> dict[str, Unknown]:
     """
     Computes a multivariate Kendall's rank correlation tau, for seasonal data.
 
@@ -488,7 +555,8 @@ def kendalltau_seasonal(x): # -> dict[str, Unknown]:
     ...
 
 PointbiserialrResult = ...
-def pointbiserialr(x, y): # -> PointbiserialrResult:
+
+def pointbiserialr(x, y):  # -> PointbiserialrResult:
     """Calculates a point biserial correlation coefficient and its p-value.
 
     Parameters
@@ -515,7 +583,7 @@ def pointbiserialr(x, y): # -> PointbiserialrResult:
     """
     ...
 
-def linregress(x, y=...): # -> _:
+def linregress(x, y=...):  # -> _:
     r"""
     Linear regression calculation
 
@@ -525,7 +593,7 @@ def linregress(x, y=...): # -> _:
     """
     ...
 
-def theilslopes(y, x=..., alpha=..., method=...): # -> _:
+def theilslopes(y, x=..., alpha=..., method=...):  # -> _:
     r"""
     Computes the Theil-Sen estimator for a set of points (x, y).
 
@@ -580,7 +648,7 @@ def theilslopes(y, x=..., alpha=..., method=...): # -> _:
     """
     ...
 
-def siegelslopes(y, x=..., method=...): # -> _:
+def siegelslopes(y, x=..., method=...):  # -> _:
     r"""
     Computes the Siegel estimator for a set of points (x, y).
 
@@ -623,7 +691,8 @@ def siegelslopes(y, x=..., method=...): # -> _:
     ...
 
 SenSeasonalSlopesResult = ...
-def sen_seasonal_slopes(x): # -> _:
+
+def sen_seasonal_slopes(x):  # -> _:
     r"""
     Computes seasonal Theil-Sen and Kendall slope estimators.
 
@@ -732,7 +801,10 @@ def sen_seasonal_slopes(x): # -> _:
     ...
 
 Ttest_1sampResult = ...
-def ttest_1samp(a, popmean, axis=..., alternative=...): # -> tuple[float, float] | Ttest_1sampResult:
+
+def ttest_1samp(
+    a, popmean, axis=..., alternative=...
+):  # -> tuple[float, float] | Ttest_1sampResult:
     """
     Calculates the T-test for the mean of ONE group of scores.
 
@@ -775,7 +847,8 @@ def ttest_1samp(a, popmean, axis=..., alternative=...): # -> tuple[float, float]
 
 ttest_onesamp = ...
 Ttest_indResult = ...
-def ttest_ind(a, b, axis=..., equal_var=..., alternative=...): # -> Ttest_indResult:
+
+def ttest_ind(a, b, axis=..., equal_var=..., alternative=...):  # -> Ttest_indResult:
     """
     Calculates the T-test for the means of TWO INDEPENDENT samples of scores.
 
@@ -824,7 +897,8 @@ def ttest_ind(a, b, axis=..., equal_var=..., alternative=...): # -> Ttest_indRes
     ...
 
 Ttest_relResult = ...
-def ttest_rel(a, b, axis=..., alternative=...): # -> Ttest_relResult:
+
+def ttest_rel(a, b, axis=..., alternative=...):  # -> Ttest_relResult:
     """
     Calculates the T-test on TWO RELATED samples of scores, a and b.
 
@@ -865,7 +939,8 @@ def ttest_rel(a, b, axis=..., alternative=...): # -> Ttest_relResult:
     ...
 
 MannwhitneyuResult = ...
-def mannwhitneyu(x, y, use_continuity=...): # -> MannwhitneyuResult:
+
+def mannwhitneyu(x, y, use_continuity=...):  # -> MannwhitneyuResult:
     """
     Computes the Mann-Whitney statistic
 
@@ -891,7 +966,8 @@ def mannwhitneyu(x, y, use_continuity=...): # -> MannwhitneyuResult:
     ...
 
 KruskalResult = ...
-def kruskal(*args): # -> KruskalResult:
+
+def kruskal(*args):  # -> KruskalResult:
     """
     Compute the Kruskal-Wallis H-test for independent samples
 
@@ -937,8 +1013,9 @@ def kruskal(*args): # -> KruskalResult:
     ...
 
 kruskalwallis = ...
+
 @_rename_parameter("mode", "method")
-def ks_1samp(x, cdf, args=..., alternative=..., method=...): # -> _:
+def ks_1samp(x, cdf, args=..., alternative=..., method=...):  # -> _:
     """
     Computes the Kolmogorov-Smirnov test on one sample of masked values.
 
@@ -974,7 +1051,7 @@ def ks_1samp(x, cdf, args=..., alternative=..., method=...): # -> _:
     ...
 
 @_rename_parameter("mode", "method")
-def ks_2samp(data1, data2, alternative=..., method=...): # -> _:
+def ks_2samp(data1, data2, alternative=..., method=...):  # -> _:
     """
     Computes the Kolmogorov-Smirnov test on two samples.
 
@@ -1007,8 +1084,9 @@ def ks_2samp(data1, data2, alternative=..., method=...): # -> _:
     ...
 
 ks_twosamp = ...
+
 @_rename_parameter("mode", "method")
-def kstest(data1, data2, args=..., alternative=..., method=...): # -> _:
+def kstest(data1, data2, args=..., alternative=..., method=...):  # -> _:
     """
 
     Parameters
@@ -1093,6 +1171,7 @@ def trimr(a, limits=..., inclusive=..., axis=...):
     ...
 
 trimdoc = ...
+
 def trim(a, limits=..., inclusive=..., relative=..., axis=...):
     """
     Trims an array by masking the data outside some given limits.
@@ -1113,8 +1192,8 @@ def trim(a, limits=..., inclusive=..., relative=..., axis=...):
     """
     ...
 
-if trim.__doc__:
-    ...
+if trim.__doc__: ...
+
 def trimboth(data, proportiontocut=..., inclusive=..., axis=...):
     """
     Trims the smallest and largest data values.
@@ -1175,6 +1254,7 @@ def trimtail(data, proportiontocut=..., tail=..., inclusive=..., axis=...):
     ...
 
 trim1 = ...
+
 def trimmed_mean(a, limits=..., inclusive=..., relative=..., axis=...):
     """Returns the trimmed mean of the data along the given axis.
 
@@ -1183,8 +1263,8 @@ def trimmed_mean(a, limits=..., inclusive=..., relative=..., axis=...):
     """
     ...
 
-if trimmed_mean.__doc__:
-    ...
+if trimmed_mean.__doc__: ...
+
 def trimmed_var(a, limits=..., inclusive=..., relative=..., axis=..., ddof=...):
     """Returns the trimmed variance of the data along the given axis.
 
@@ -1197,8 +1277,8 @@ def trimmed_var(a, limits=..., inclusive=..., relative=..., axis=..., ddof=...):
     """
     ...
 
-if trimmed_var.__doc__:
-    ...
+if trimmed_var.__doc__: ...
+
 def trimmed_std(a, limits=..., inclusive=..., relative=..., axis=..., ddof=...):
     """Returns the trimmed standard deviation of the data along the given axis.
 
@@ -1211,8 +1291,8 @@ def trimmed_std(a, limits=..., inclusive=..., relative=..., axis=..., ddof=...):
     """
     ...
 
-if trimmed_std.__doc__:
-    ...
+if trimmed_std.__doc__: ...
+
 def trimmed_stde(a, limits=..., inclusive=..., axis=...):
     """
     Returns the standard error of the trimmed mean along the given axis.
@@ -1426,7 +1506,7 @@ def tmax(a, upperlimit=..., axis=..., inclusive=...):
     """
     ...
 
-def tsem(a, limits=..., inclusive=..., axis=..., ddof=...): # -> Any:
+def tsem(a, limits=..., inclusive=..., axis=..., ddof=...):  # -> Any:
     """
     Compute the trimmed standard error of the mean.
 
@@ -1525,7 +1605,7 @@ def winsorize(a, limits=..., inclusive=..., inplace=..., axis=..., nan_policy=..
     """
     ...
 
-def moment(a, moment=..., axis=...): # -> float64:
+def moment(a, moment=..., axis=...):  # -> float64:
     """
     Calculates the nth moment about the mean for a sample.
 
@@ -1671,7 +1751,8 @@ def kurtosis(a, axis=..., fisher=..., bias=...):
     ...
 
 DescribeResult = ...
-def describe(a, axis=..., ddof=..., bias=...): # -> DescribeResult:
+
+def describe(a, axis=..., ddof=..., bias=...):  # -> DescribeResult:
     """
     Computes several descriptive statistics of the passed array.
 
@@ -1726,7 +1807,7 @@ def describe(a, axis=..., ddof=..., bias=...): # -> DescribeResult:
     """
     ...
 
-def stde_median(data, axis=...): # -> Any:
+def stde_median(data, axis=...):  # -> Any:
     """Returns the McKean-Schrader estimate of the standard error of the sample
     median along the given axis. masked values are discarded.
 
@@ -1742,7 +1823,8 @@ def stde_median(data, axis=...): # -> Any:
     ...
 
 SkewtestResult = ...
-def skewtest(a, axis=..., alternative=...): # -> SkewtestResult:
+
+def skewtest(a, axis=..., alternative=...):  # -> SkewtestResult:
     """
     Tests whether the skew is different from the normal distribution.
 
@@ -1781,7 +1863,8 @@ def skewtest(a, axis=..., alternative=...): # -> SkewtestResult:
     ...
 
 KurtosistestResult = ...
-def kurtosistest(a, axis=..., alternative=...): # -> KurtosistestResult:
+
+def kurtosistest(a, axis=..., alternative=...):  # -> KurtosistestResult:
     """
     Tests whether a dataset has normal kurtosis
 
@@ -1820,7 +1903,8 @@ def kurtosistest(a, axis=..., alternative=...): # -> KurtosistestResult:
     ...
 
 NormaltestResult = ...
-def normaltest(a, axis=...): # -> NormaltestResult:
+
+def normaltest(a, axis=...):  # -> NormaltestResult:
     """
     Tests whether a sample differs from a normal distribution.
 
@@ -2002,6 +2086,7 @@ def plotting_positions(data, alpha=..., beta=...):
     ...
 
 meppf = ...
+
 def obrientransform(*args):
     """
     Computes a transform on input data (any number of columns).  Used to
@@ -2064,7 +2149,8 @@ def sem(a, axis=..., ddof=...):
     ...
 
 F_onewayResult = ...
-def f_oneway(*args): # -> F_onewayResult:
+
+def f_oneway(*args):  # -> F_onewayResult:
     """
     Performs a 1-way ANOVA, returning an F-value and probability given
     any number of groups.  From Heiman, pp.394-7.
@@ -2083,7 +2169,8 @@ def f_oneway(*args): # -> F_onewayResult:
     ...
 
 FriedmanchisquareResult = ...
-def friedmanchisquare(*args): # -> FriedmanchisquareResult:
+
+def friedmanchisquare(*args):  # -> FriedmanchisquareResult:
     """Friedman Chi-Square is a non-parametric, one-way within-subjects ANOVA.
     This function calculates the Friedman Chi-square test for repeated measures
     and returns the result, along with the associated probability value.
@@ -2109,7 +2196,8 @@ def friedmanchisquare(*args): # -> FriedmanchisquareResult:
     ...
 
 BrunnerMunzelResult = ...
-def brunnermunzel(x, y, alternative=..., distribution=...): # -> BrunnerMunzelResult:
+
+def brunnermunzel(x, y, alternative=..., distribution=...):  # -> BrunnerMunzelResult:
     """
     Computes the Brunner-Munzel test on samples x and y
 
@@ -2146,4 +2234,3 @@ def brunnermunzel(x, y, alternative=..., distribution=...): # -> BrunnerMunzelRe
 
     """
     ...
-

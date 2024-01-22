@@ -188,7 +188,9 @@ def get_wavepacket_two_points(
     util = BasisUtil(wavepacket["basis"][1])
     origin = (util.shape[0] * offset[0], util.shape[1] * offset[1], 0)
 
-    converted = convert_state_vector_to_position_basis(get_wavepacket_state_vector(wavepacket, 0))  # type: ignore[arg-type,var-annotated]
+    converted = convert_state_vector_to_position_basis(
+        get_wavepacket_state_vector(wavepacket, 0)
+    )  # type: ignore[arg-type,var-annotated]
     converted_util = BasisUtil(converted["basis"])
     idx_0 = cast(  # can't infer np.argmax
         SingleStackedIndexLike,

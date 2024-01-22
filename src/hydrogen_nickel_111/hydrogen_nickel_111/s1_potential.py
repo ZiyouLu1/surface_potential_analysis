@@ -310,7 +310,7 @@ def interpolate_nickel_potential(
 
 
 def get_interpolated_potential(
-    shape: tuple[_L0Inv, _L1Inv, _L2Inv]
+    shape: tuple[_L0Inv, _L1Inv, _L2Inv],
 ) -> Potential[
     StackedBasisLike[
         FundamentalPositionBasis3d[_L0Inv],
@@ -323,7 +323,7 @@ def get_interpolated_potential(
 
 
 def extrapolate_uneven_potential(
-    potential: UnevenPotential3d[Any, Any, Any]
+    potential: UnevenPotential3d[Any, Any, Any],
 ) -> UnevenPotential3d[Any, Any, Any]:
     util = BasisUtil(potential["basis"])
 

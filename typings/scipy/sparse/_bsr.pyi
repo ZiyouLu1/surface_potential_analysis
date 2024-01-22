@@ -9,7 +9,8 @@ from ._base import sparray
 
 """Compressed Block Sparse Row format"""
 __docformat__ = ...
-__all__ = ['bsr_array', 'bsr_matrix', 'isspmatrix_bsr']
+__all__ = ["bsr_array", "bsr_matrix", "isspmatrix_bsr"]
+
 class _bsr_base(_cs_matrix, _minmax_mixin):
     """Block Sparse Row format sparse array.
 
@@ -112,35 +113,28 @@ class _bsr_base(_cs_matrix, _minmax_mixin):
            [4, 4, 5, 5, 6, 6]])
 
     """
+
     _format = ...
-    def __init__(self, arg1, shape=..., dtype=..., copy=..., blocksize=...) -> None:
-        ...
-    
-    def check_format(self, full_check=...): # -> None:
+    def __init__(self, arg1, shape=..., dtype=..., copy=..., blocksize=...) -> None: ...
+    def check_format(self, full_check=...):  # -> None:
         """check whether the matrix format is valid
 
-            *Parameters*:
-                full_check:
-                    True  - rigorous check, O(N) operations : default
-                    False - basic check, O(1) operations
+        *Parameters*:
+            full_check:
+                True  - rigorous check, O(N) operations : default
+                False - basic check, O(1) operations
 
         """
         ...
-    
+
     blocksize = ...
-    def __repr__(self): # -> Any:
+    def __repr__(self):  # -> Any:
         ...
-    
-    def diagonal(self, k=...): # -> NDArray[Unknown] | NDArray[float64]:
+    def diagonal(self, k=...):  # -> NDArray[Unknown] | NDArray[float64]:
         ...
-    
-    def __getitem__(self, key):
-        ...
-    
-    def __setitem__(self, key, val):
-        ...
-    
-    def tobsr(self, blocksize=..., copy=...): # -> bsr_array | Self@_bsr_base:
+    def __getitem__(self, key): ...
+    def __setitem__(self, key, val): ...
+    def tobsr(self, blocksize=..., copy=...):  # -> bsr_array | Self@_bsr_base:
         """Convert this matrix into Block Sparse Row Format.
 
         With copy=False, the data/indices may be shared between this
@@ -150,51 +144,43 @@ class _bsr_base(_cs_matrix, _minmax_mixin):
         block size of the bsr_array.
         """
         ...
-    
-    def tocsr(self, copy=...): # -> csr_array:
+
+    def tocsr(self, copy=...):  # -> csr_array:
         ...
-    
-    def tocsc(self, copy=...): # -> csc_array:
+    def tocsc(self, copy=...):  # -> csc_array:
         ...
-    
-    def tocoo(self, copy=...): # -> coo_array:
+    def tocoo(self, copy=...):  # -> coo_array:
         """Convert this matrix to COOrdinate format.
 
         When copy=False the data array will be shared between
         this matrix and the resultant coo_matrix.
         """
         ...
-    
-    def toarray(self, order=..., out=...): # -> NDArray[float64]:
+
+    def toarray(self, order=..., out=...):  # -> NDArray[float64]:
         ...
-    
-    def transpose(self, axes=..., copy=...): # -> bsr_array:
+    def transpose(self, axes=..., copy=...):  # -> bsr_array:
         ...
-    
-    def eliminate_zeros(self): # -> None:
+    def eliminate_zeros(self):  # -> None:
         """Remove zero elements in-place."""
         ...
-    
-    def sum_duplicates(self): # -> None:
+
+    def sum_duplicates(self):  # -> None:
         """Eliminate duplicate matrix entries by adding them together
 
         The is an *in place* operation
         """
         ...
-    
-    def sort_indices(self): # -> None:
-        """Sort the indices of this matrix *in place*
-        """
-        ...
-    
-    def prune(self): # -> None:
-        """ Remove empty space after all non-zero elements.
-        """
-        ...
-    
 
+    def sort_indices(self):  # -> None:
+        """Sort the indices of this matrix *in place*"""
+        ...
 
-def isspmatrix_bsr(x): # -> bool:
+    def prune(self):  # -> None:
+        """Remove empty space after all non-zero elements."""
+        ...
+
+def isspmatrix_bsr(x):  # -> bool:
     """Is `x` of a bsr_matrix type?
 
     Parameters
@@ -219,11 +205,5 @@ def isspmatrix_bsr(x): # -> bool:
     """
     ...
 
-class bsr_array(_bsr_base, sparray):
-    ...
-
-
-class bsr_matrix(spmatrix, _bsr_base):
-    ...
-
-
+class bsr_array(_bsr_base, sparray): ...
+class bsr_matrix(spmatrix, _bsr_base): ...

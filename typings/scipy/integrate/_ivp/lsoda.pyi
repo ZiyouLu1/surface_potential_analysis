@@ -115,14 +115,23 @@ class LSODA(OdeSolver):
            on Scientific and Statistical Computing, Vol. 4, No. 1, pp. 136-148,
            1983.
     """
-    def __init__(self, fun, t0, y0, t_bound, first_step=..., min_step=..., max_step=..., rtol=..., atol=..., jac=..., lband=..., uband=..., vectorized=..., **extraneous) -> None:
-        ...
-    
-
+    def __init__(
+        self,
+        fun,
+        t0,
+        y0,
+        t_bound,
+        first_step=...,
+        min_step=...,
+        max_step=...,
+        rtol=...,
+        atol=...,
+        jac=...,
+        lband=...,
+        uband=...,
+        vectorized=...,
+        **extraneous,
+    ) -> None: ...
 
 class LsodaDenseOutput(DenseOutput):
-    def __init__(self, t_old, t, h, order, yh) -> None:
-        ...
-    
-
-
+    def __init__(self, t_old, t, h, order, yh) -> None: ...

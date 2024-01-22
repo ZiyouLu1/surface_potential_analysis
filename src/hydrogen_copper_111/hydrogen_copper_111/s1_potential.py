@@ -184,7 +184,7 @@ def get_reflected_potential() -> UnevenPotential3d[int, int, int]:
 
 
 def get_interpolated_potential(
-    shape: tuple[_L0Inv, _L1Inv, _L2Inv]
+    shape: tuple[_L0Inv, _L1Inv, _L2Inv],
 ) -> Potential[
     StackedBasisLike[
         FundamentalPositionBasis3d[_L0Inv],

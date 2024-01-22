@@ -126,9 +126,7 @@ def get_unfurled_basis(
     Basis[_ND0Inv]
     """
     return StackedBasis(
-        *tuple(
-            starmap(UnfurledBasis, zip(basis[0], basis[1], strict=True))
-        )
+        *tuple(starmap(UnfurledBasis, zip(basis[0], basis[1], strict=True)))
     )
 
 
@@ -253,7 +251,7 @@ def generate_wavepacket(
 
 
 def get_wavepacket_basis(
-    wavepackets: WavepacketList[_B0, _SB0, _SB1]
+    wavepackets: WavepacketList[_B0, _SB0, _SB1],
 ) -> WavepacketBasis[_SB0, _SB1]:
     """
     Get the basis of the wavepacket.
@@ -372,7 +370,7 @@ def get_wavepackets_with_eigenvalues(
 
 
 def as_wavepacket_list(
-    wavepackets: Iterable[Wavepacket[_SB0, _SB1]]
+    wavepackets: Iterable[Wavepacket[_SB0, _SB1]],
 ) -> WavepacketList[FundamentalBasis[int], _SB0, _SB1]:
     """
     Convert an iterable of wavepackets into a wavepacket list.
@@ -397,7 +395,7 @@ def as_wavepacket_list(
 
 
 def wavepacket_list_into_iter(
-    wavepackets: WavepacketList[Any, _SB0, _SB1]
+    wavepackets: WavepacketList[Any, _SB0, _SB1],
 ) -> Iterable[Wavepacket[_SB0, _SB1]]:
     """
     Iterate over wavepackets in the list.
@@ -416,7 +414,7 @@ def wavepacket_list_into_iter(
 
 
 def get_average_eigenvalues(
-    wavepackets: WavepacketWithEigenvaluesList[_B0, Any, Any]
+    wavepackets: WavepacketWithEigenvaluesList[_B0, Any, Any],
 ) -> SingleBasisDiagonalOperator[_B0]:
     """
     Get the band averaged eigenvalues of a wavepacket.

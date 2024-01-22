@@ -122,7 +122,10 @@ def get_k_coordinates_in_axes(
     idx = tuple(0 for _ in range(basis.ndim - len(axes))) if idx is None else idx
     points = get_fundamental_stacked_k_points_projected_along_axes(basis, axes)
     slice_ = slice_ignoring_axes(idx, axes)
-    return np.transpose(points.reshape(-1, *basis.shape)[:, *slice_], (0, *(1 + np.array(get_position_in_sorted(axes)))))  # type: ignore[no-any-return]
+    return np.transpose(
+        points.reshape(-1, *basis.shape)[:, *slice_],
+        (0, *(1 + np.array(get_position_in_sorted(axes)))),
+    )  # type: ignore[no-any-return]
 
 
 def project_x_points_along_axes(
@@ -197,7 +200,10 @@ def get_x_coordinates_in_axes(
     idx = tuple(0 for _ in range(basis.ndim - len(axes))) if idx is None else idx
     points = get_fundamental_stacked_x_points_projected_along_axes(basis, axes)
     slice_ = slice_ignoring_axes(idx, axes)
-    return np.transpose(points.reshape(-1, *basis.shape)[:, *slice_], (0, *(1 + np.array(get_position_in_sorted(axes)))))  # type: ignore[no-any-return]
+    return np.transpose(
+        points.reshape(-1, *basis.shape)[:, *slice_],
+        (0, *(1 + np.array(get_position_in_sorted(axes)))),
+    )  # type: ignore[no-any-return]
 
 
 @overload

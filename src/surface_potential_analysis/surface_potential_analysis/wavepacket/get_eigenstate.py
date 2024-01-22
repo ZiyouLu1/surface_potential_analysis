@@ -156,7 +156,7 @@ def get_bloch_state_vector(
 
 
 def get_all_eigenstates(
-    wavepacket: WavepacketWithEigenvalues[_SB0, _SBL1]
+    wavepacket: WavepacketWithEigenvalues[_SB0, _SBL1],
 ) -> list[
     Eigenstate[
         StackedBasisLike[
@@ -198,7 +198,7 @@ def get_all_eigenstates(
 
 
 def get_all_wavepacket_states(
-    wavepacket: Wavepacket[_SB0, _SBL1]
+    wavepacket: Wavepacket[_SB0, _SBL1],
 ) -> list[StateVector[StackedBasisLike[*tuple[Any, ...]]]]:
     """
     Get the eigenstate of a given wavepacket at a specific index.
@@ -267,7 +267,10 @@ def get_tight_binding_state(
     # truncated to a single unit cell
     unit_cell_util = BasisUtil(wavepacket["basis"])
     relevant_idx = wrap_index_around_origin(
-        wavepacket["basis"], unit_cell_util.fundamental_stacked_nx_points, origin, (0, 1)  # type: ignore[arg-type]
+        wavepacket["basis"],
+        unit_cell_util.fundamental_stacked_nx_points,
+        origin,
+        (0, 1),  # type: ignore[arg-type]
     )
     relevant_idx_flat = util.get_flat_index(relevant_idx, mode="wrap")
     out: StateVector[

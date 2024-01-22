@@ -180,7 +180,7 @@ def localize_single_band_wavepacket_projection(
 
 
 def localize_tight_binding_projection(
-    wavepacket: Wavepacket[_SB0, _SBL0]
+    wavepacket: Wavepacket[_SB0, _SBL0],
 ) -> Wavepacket[_SB0, _SBL0]:
     """
     Given a wavepacket, localize using a tight binding projection.
@@ -309,7 +309,7 @@ def get_exponential_state(
 def _get_exponential_decay_state(
     wavepacket: Wavepacket[
         StackedBasisLike[*tuple[_B0, ...]], StackedBasisLike[*tuple[_BL0, ...]]
-    ]
+    ],
 ) -> StateVector[StackedBasisLike[*tuple[FundamentalPositionBasis[Any, Any], ...]]]:
     exponential = get_exponential_state(wavepacket)
     tight_binding = convert_state_vector_to_position_basis(
@@ -326,7 +326,7 @@ def _get_exponential_decay_state(
 
 
 def localize_exponential_decay_projection(
-    wavepacket: Wavepacket[_SB0, _SBL0]
+    wavepacket: Wavepacket[_SB0, _SBL0],
 ) -> Wavepacket[_SB0, _SBL0]:
     """
     Given a wavepacket, localize using a tight binding projection.
@@ -404,7 +404,7 @@ def get_gaussian_states(
 
 
 def localize_wavepacket_gaussian_projection(
-    wavepacket: Wavepacket[_SB0, _SBL0]
+    wavepacket: Wavepacket[_SB0, _SBL0],
 ) -> Wavepacket[_SB0, _SBL0]:
     """
     Given a wavepacket, localize using a tight binding projection.

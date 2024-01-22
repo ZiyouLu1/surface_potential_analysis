@@ -7,7 +7,18 @@ from ._odepack_py import *
 from ._quadpack_py import *
 from ._ode import *
 from ._bvp import solve_bvp
-from ._ivp import BDF, DOP853, DenseOutput, LSODA, OdeSolution, OdeSolver, RK23, RK45, Radau, solve_ivp
+from ._ivp import (
+    BDF,
+    DOP853,
+    DenseOutput,
+    LSODA,
+    OdeSolution,
+    OdeSolver,
+    RK23,
+    RK45,
+    Radau,
+    solve_ivp,
+)
 from ._quad_vec import quad_vec
 from . import dop, lsoda, odepack, quadpack, vode
 from scipy._lib._testutils import PytestTester
@@ -101,5 +112,5 @@ Solving boundary value problems for ODE systems
 
    solve_bvp     -- Solve a boundary value problem for a system of ODEs.
 """
-__all__ = [s for s in dir() if nots.startswith('_')]
+__all__ = [s for s in dir() if nots.startswith("_")]
 test = ...

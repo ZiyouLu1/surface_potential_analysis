@@ -12,5 +12,18 @@ from .tfqmr import tfqmr
 from scipy._lib._testutils import PytestTester
 
 "Iterative Solvers for Sparse Linear Systems"
-__all__ = ['bicg', 'bicgstab', 'cg', 'cgs', 'gcrotmk', 'gmres', 'lgmres', 'lsmr', 'lsqr', 'minres', 'qmr', 'tfqmr']
+__all__ = [
+    "bicg",
+    "bicgstab",
+    "cg",
+    "cgs",
+    "gcrotmk",
+    "gmres",
+    "lgmres",
+    "lsmr",
+    "lsqr",
+    "minres",
+    "qmr",
+    "tfqmr",
+]
 test = ...

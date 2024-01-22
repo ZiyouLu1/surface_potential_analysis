@@ -109,7 +109,8 @@ class WavepacketTest(unittest.TestCase):
             wavepacket["basis"][1][1].delta_x, actual["basis"][1][1].delta_x
         )
         np.testing.assert_array_almost_equal(
-            wavepacket["basis"][1][2].delta_x, actual["basis"][1][2].delta_x  # type: ignore bad inference
+            wavepacket["basis"][1][2].delta_x,
+            actual["basis"][1][2].delta_x,  # type: ignore bad inference
         )
 
     def test_get_wavepacket_sample_fractions(self) -> None:

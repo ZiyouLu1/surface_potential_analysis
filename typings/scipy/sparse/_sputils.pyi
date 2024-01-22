@@ -6,9 +6,21 @@ import numpy as np
 
 """ Utility functions for sparse matrix module
 """
-__all__ = ['upcast', 'getdtype', 'getdata', 'isscalarlike', 'isintlike', 'isshape', 'issequence', 'isdense', 'ismatrix', 'get_sum_dtype']
+__all__ = [
+    "upcast",
+    "getdtype",
+    "getdata",
+    "isscalarlike",
+    "isintlike",
+    "isshape",
+    "issequence",
+    "isdense",
+    "ismatrix",
+    "get_sum_dtype",
+]
 supported_dtypes = ...
 _upcast_memo = ...
+
 def upcast(*args):
     """Returns the nearest supported sparse dtype for the
     combination of one or more types.
@@ -49,7 +61,7 @@ def downcast_intp_index(arr):
     """
     ...
 
-def to_native(A): # -> NDArray[Unknown]:
+def to_native(A):  # -> NDArray[Unknown]:
     """
     Ensure that the data type of the NumPy array `A` has native byte order.
 
@@ -59,7 +71,7 @@ def to_native(A): # -> NDArray[Unknown]:
     """
     ...
 
-def getdtype(dtype, a=..., default=...): # -> dtype[Unknown]:
+def getdtype(dtype, a=..., default=...):  # -> dtype[Unknown]:
     """Function used to simplify argument processing. If 'dtype' is not
     specified (is None), returns a.dtype; otherwise returns a np.dtype
     object created from the specified dtype argument. If 'dtype' and 'a'
@@ -75,7 +87,7 @@ def getdata(obj, dtype=..., copy=...) -> np.ndarray:
     """
     ...
 
-def get_index_dtype(arrays=..., maxval=..., check_contents=...): # -> int64 | int32:
+def get_index_dtype(arrays=..., maxval=..., check_contents=...):  # -> int64 | int32:
     """
     Based on input (integer) arrays `a`, determine a suitable index data
     type that can hold the data in the arrays.
@@ -98,7 +110,7 @@ def get_index_dtype(arrays=..., maxval=..., check_contents=...): # -> int64 | in
     """
     ...
 
-def get_sum_dtype(dtype): # -> uint | int_:
+def get_sum_dtype(dtype):  # -> uint | int_:
     """Mimic numpy's casting for np.sum"""
     ...
 
@@ -120,23 +132,17 @@ def isshape(x, nonneg=..., allow_ndim=...) -> bool:
     """
     ...
 
-def issequence(t) -> bool:
-    ...
-
-def ismatrix(t) -> bool:
-    ...
-
-def isdense(x) -> bool:
-    ...
-
-def validateaxis(axis) -> None:
-    ...
-
-def check_shape(args, current_shape=...): # -> tuple[int, int] | tuple[int | float, int | float]:
+def issequence(t) -> bool: ...
+def ismatrix(t) -> bool: ...
+def isdense(x) -> bool: ...
+def validateaxis(axis) -> None: ...
+def check_shape(
+    args, current_shape=...
+):  # -> tuple[int, int] | tuple[int | float, int | float]:
     """Imitate numpy.matrix handling of shape arguments"""
     ...
 
-def check_reshape_kwargs(kwargs): # -> tuple[Unknown, Unknown]:
+def check_reshape_kwargs(kwargs):  # -> tuple[Unknown, Unknown]:
     """Unpack keyword arguments for reshape function.
 
     This is useful because keyword arguments after star arguments are not
@@ -152,9 +158,6 @@ def is_pydata_spmatrix(m) -> bool:
     """
     ...
 
-def matrix(*args, **kwargs):
+def matrix(*args, **kwargs): ...
+def asmatrix(data, dtype=...):  # -> matrix[Unknown, Unknown]:
     ...
-
-def asmatrix(data, dtype=...): # -> matrix[Unknown, Unknown]:
-    ...
-

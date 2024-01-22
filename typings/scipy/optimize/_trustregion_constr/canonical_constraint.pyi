@@ -39,25 +39,25 @@ class CanonicalConstraint:
     keep_feasible : ndarray, shape (n_ineq,)
         Mask indicating which inequality constraints should be kept feasible.
     """
-    def __init__(self, n_eq, n_ineq, fun, jac, hess, keep_feasible) -> None:
-        ...
-    
+    def __init__(self, n_eq, n_ineq, fun, jac, hess, keep_feasible) -> None: ...
     @classmethod
-    def from_PreparedConstraint(cls, constraint): # -> Self@CanonicalConstraint:
+    def from_PreparedConstraint(cls, constraint):  # -> Self@CanonicalConstraint:
         """Create an instance from `PreparedConstrained` object."""
         ...
-    
+
     @classmethod
-    def empty(cls, n): # -> Self@CanonicalConstraint:
+    def empty(cls, n):  # -> Self@CanonicalConstraint:
         """Create an "empty" instance.
 
         This "empty" instance is required to allow working with unconstrained
         problems as if they have some constraints.
         """
         ...
-    
+
     @classmethod
-    def concatenate(cls, canonical_constraints, sparse_jacobian): # -> Self@CanonicalConstraint:
+    def concatenate(
+        cls, canonical_constraints, sparse_jacobian
+    ):  # -> Self@CanonicalConstraint:
         """Concatenate multiple `CanonicalConstraint` into one.
 
         `sparse_jacobian` (bool) determines the Jacobian format of the
@@ -65,10 +65,10 @@ class CanonicalConstraint:
         must have their Jacobians in the same format.
         """
         ...
-    
 
-
-def initial_constraints_as_canonical(n, prepared_constraints, sparse_jacobian): # -> tuple[NDArray[Unknown] | NDArray[float64], NDArray[Unknown] | NDArray[float64], Unknown | NDArray[Unknown] | csr_matrix | NDArray[float64], Unknown | NDArray[Unknown] | csr_matrix | NDArray[float64]]:
+def initial_constraints_as_canonical(
+    n, prepared_constraints, sparse_jacobian
+):  # -> tuple[NDArray[Unknown] | NDArray[float64], NDArray[Unknown] | NDArray[float64], Unknown | NDArray[Unknown] | csr_matrix | NDArray[float64], Unknown | NDArray[Unknown] | csr_matrix | NDArray[float64]]:
     """Convert initial values of the constraints to the canonical format.
 
     The purpose to avoid one additional call to the constraints at the initial
@@ -76,4 +76,3 @@ def initial_constraints_as_canonical(n, prepared_constraints, sparse_jacobian): 
     concatenates them to the canonical constraint format.
     """
     ...
-

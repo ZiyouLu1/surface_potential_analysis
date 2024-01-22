@@ -11,8 +11,9 @@ class PageTrendTestResult:
     method: str
     ...
 
-
-def page_trend_test(data, ranked=..., predicted_ranks=..., method=...): # -> PageTrendTestResult:
+def page_trend_test(
+    data, ranked=..., predicted_ranks=..., method=...
+):  # -> PageTrendTestResult:
     r"""
     Perform Page's Test, a measure of trend in observations between treatments.
 
@@ -306,27 +307,25 @@ def page_trend_test(data, ranked=..., predicted_ranks=..., method=...): # -> Pag
     ...
 
 class _PageL:
-    '''Maintains state between `page_trend_test` executions'''
+    """Maintains state between `page_trend_test` executions"""
     def __init__(self) -> None:
-        '''Lightweight initialization'''
+        """Lightweight initialization"""
         ...
-    
-    def set_k(self, k): # -> None:
-        '''Calculate lower and upper limits of L for single row'''
-        ...
-    
-    def sf(self, l, n): # -> Any:
-        '''Survival function of Page's L statistic'''
-        ...
-    
-    def p_l_k_1(self): # -> NDArray[floating[Any]]:
-        '''Relative frequency of each L value over all possible single rows'''
-        ...
-    
-    def pmf(self, l, n): # -> Literal[0]:
-        '''Recursive function to evaluate p(l, k, n); see [5] Equation 1'''
-        ...
-    
 
+    def set_k(self, k):  # -> None:
+        """Calculate lower and upper limits of L for single row"""
+        ...
+
+    def sf(self, l, n):  # -> Any:
+        """Survival function of Page's L statistic"""
+        ...
+
+    def p_l_k_1(self):  # -> NDArray[floating[Any]]:
+        """Relative frequency of each L value over all possible single rows"""
+        ...
+
+    def pmf(self, l, n):  # -> Literal[0]:
+        """Recursive function to evaluate p(l, k, n); see [5] Equation 1"""
+        ...
 
 _pagel_state = ...

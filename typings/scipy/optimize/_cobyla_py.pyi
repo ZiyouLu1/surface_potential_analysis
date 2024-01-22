@@ -15,13 +15,28 @@ Functions
     fmin_cobyla
 
 """
-__all__ = ['fmin_cobyla']
+__all__ = ["fmin_cobyla"]
 _module_lock = RLock()
-def synchronized(func): # -> _Wrapped[..., Unknown, (*args: Unknown, **kwargs: Unknown), Unknown]:
-    ...
 
+def synchronized(
+    func,
+):  # -> _Wrapped[..., Unknown, (*args: Unknown, **kwargs: Unknown), Unknown]:
+    ...
 @synchronized
-def fmin_cobyla(func, x0, cons, args=..., consargs=..., rhobeg=..., rhoend=..., maxfun=..., disp=..., catol=..., *, callback=...):
+def fmin_cobyla(
+    func,
+    x0,
+    cons,
+    args=...,
+    consargs=...,
+    rhobeg=...,
+    rhoend=...,
+    maxfun=...,
+    disp=...,
+    catol=...,
+    *,
+    callback=...,
+):
     """
     Minimize a function using the Constrained Optimization By Linear
     Approximation (COBYLA) method. This method wraps a FORTRAN
@@ -135,4 +150,3 @@ def fmin_cobyla(func, x0, cons, args=..., consargs=..., rhobeg=..., rhoend=..., 
 
     """
     ...
-

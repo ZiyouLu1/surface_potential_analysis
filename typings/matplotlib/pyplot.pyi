@@ -88,7 +88,7 @@ def figure(
     frameon: bool = True,
     FigureClass=...,
     clear: bool = False,
-    **kwargs
+    **kwargs,
 ) -> Figure: ...
 def gcf() -> Figure: ...
 def fignum_exists(num) -> bool: ...
@@ -117,7 +117,7 @@ def subplots(
     sharey: bool | Literal["none", "all", "row", "col"] = ...,
     subplot_kw: dict[Any, Any] = ...,
     gridspec_kw: dict[Any, Any] = ...,
-    **fig_kw: dict[Any, Any]
+    **fig_kw: dict[Any, Any],
 ) -> tuple[Figure, np.ndarray[Any, Any]]: ...
 @overload
 def subplots(
@@ -129,7 +129,7 @@ def subplots(
     squeeze: Literal[True] = ...,
     subplot_kw: dict[Any, Any] = ...,
     gridspec_kw: dict[Any, Any] = ...,
-    **fig_kw: dict[Any, Any]
+    **fig_kw: dict[Any, Any],
 ) -> tuple[Figure, Axes]: ...
 
 ##
@@ -144,7 +144,7 @@ def subplots(
     squeeze: Literal[True] = ...,
     subplot_kw: dict[Any, Any] = ...,
     gridspec_kw: dict[Any, Any] = ...,
-    **fig_kw: dict[Any, Any]
+    **fig_kw: dict[Any, Any],
 ) -> tuple[Figure, np.ndarray[Any, Any]]: ...
 @overload
 def subplots(
@@ -156,7 +156,7 @@ def subplots(
     squeeze: Literal[True] = ...,
     subplot_kw: dict[Any, Any] = ...,
     gridspec_kw: dict[Any, Any] = ...,
-    **fig_kw: dict[Any, Any]
+    **fig_kw: dict[Any, Any],
 ) -> tuple[Figure, np.ndarray[Any, Any]]: ...
 @overload
 def subplots(
@@ -168,7 +168,7 @@ def subplots(
     squeeze: Literal[True] = ...,
     subplot_kw: dict[Any, Any] = ...,
     gridspec_kw: dict[Any, Any] = ...,
-    **fig_kw: dict[Any, Any]
+    **fig_kw: dict[Any, Any],
 ) -> tuple[Figure, np.ndarray[Any, Any]]: ...
 @overload
 def subplots(
@@ -179,7 +179,7 @@ def subplots(
     squeeze: Literal[True] = ...,
     subplot_kw: dict[Any, Any] = ...,
     gridspec_kw: dict[Any, Any] = ...,
-    **fig_kw: dict[Any, Any]
+    **fig_kw: dict[Any, Any],
 ) -> tuple[Figure, np.ndarray[Any, Any]]: ...
 @overload
 def subplots(
@@ -190,7 +190,7 @@ def subplots(
     squeeze: Literal[True] = ...,
     subplot_kw: dict[Any, Any] = ...,
     gridspec_kw: dict[Any, Any] = ...,
-    **fig_kw: dict[Any, Any]
+    **fig_kw: dict[Any, Any],
 ) -> tuple[Figure, np.ndarray[Any, Any]]: ...
 @overload
 def subplots(
@@ -200,7 +200,7 @@ def subplots(
     squeeze: Literal[True] = ...,
     subplot_kw: dict[Any, Any] = ...,
     gridspec_kw: dict[Any, Any] = ...,
-    **fig_kw: dict[Any, Any]
+    **fig_kw: dict[Any, Any],
 ) -> tuple[Figure, Axes]: ...
 @overload
 def subplots(
@@ -212,7 +212,7 @@ def subplots(
     squeeze: bool = ...,
     subplot_kw: dict[Any, Any] = ...,
     gridspec_kw: dict[Any, Any] = ...,
-    **fig_kw: dict[Any, Any]
+    **fig_kw: dict[Any, Any],
 ) -> tuple[Figure, np.ndarray[Any, Any]]: ...
 def subplot_mosaic(
     mosaic: list | str,
@@ -222,7 +222,7 @@ def subplot_mosaic(
     subplot_kw: dict = ...,
     gridspec_kw: dict = ...,
     empty_sentinel: object = ...,
-    **fig_kw
+    **fig_kw,
 ) -> tuple[Figure, dict[Text, Axes]]: ...
 def subplot2grid(
     shape: Sequence[int],
@@ -230,7 +230,7 @@ def subplot2grid(
     rowspan: int = ...,
     colspan: int = ...,
     fig: Figure = ...,
-    **kwargs
+    **kwargs,
 ) -> Axes: ...
 def twinx(ax: Axes = ...) -> Axes: ...
 def twiny(ax: Axes = ...) -> Axes: ...
@@ -249,13 +249,13 @@ def rgrids(
     labels: Sequence[str] | None = ...,
     angle: float = ...,
     fmt: str | None = ...,
-    **kwargs
+    **kwargs,
 ) -> tuple[list[Line2D], list[Text]]: ...
 def thetagrids(
     angles: Sequence[float] = ...,
     labels: Sequence[str] | None = ...,
     fmt: str | None = ...,
-    **kwargs
+    **kwargs,
 ) -> tuple[list[Line2D], list[Text]]: ...
 def get_plot_commands() -> list: ...
 def colorbar(mappable=..., cax: Axes = ..., ax: Axes = ..., **kwargs): ...
@@ -278,7 +278,7 @@ def figimage(
     vmax: float = ...,
     origin: Literal["upper", "lower"] = ...,
     resize: bool = ...,
-    **kwargs
+    **kwargs,
 ) -> FigureImage: ...
 def figtext(
     x: float, y: float, s: str, fontdict: dict = ..., **kwargs
@@ -307,7 +307,7 @@ def tight_layout(
     pad: float = ...,
     h_pad: float = ...,
     w_pad: float = ...,
-    rect: Sequence[float] = ...
+    rect: Sequence[float] = ...,
 ): ...
 def waitforbuttonpress(timeout=...): ...
 def acorr(x: ArrayLike, *, data=..., **kwargs): ...
@@ -320,7 +320,7 @@ def angle_spectrum(
     sides: Literal["default", "onesided", "twosided"] = ...,
     *,
     data=...,
-    **kwargs
+    **kwargs,
 ): ...
 def annotate(
     text: str,
@@ -330,7 +330,7 @@ def annotate(
     textcoords: str | Artist | Transform | Callable = ...,
     arrowprops: dict = ...,
     annotation_clip: bool | None = ...,
-    **kwargs
+    **kwargs,
 ) -> Annotation: ...
 def arrow(x: float, y: float, dx: float, dy: float, **kwargs) -> FancyArrow: ...
 def autoscale(
@@ -362,7 +362,7 @@ def bar(
     *,
     align: Literal["center", "edge"] = ...,
     data=...,
-    **kwargs
+    **kwargs,
 ) -> BarContainer: ...
 def barbs(*args, data=..., **kwargs): ...
 def barh(
@@ -372,7 +372,7 @@ def barh(
     left: float | ArrayLike = ...,
     *,
     align: Literal["center", "edge"] = ...,
-    **kwargs
+    **kwargs,
 ) -> BarContainer: ...
 def bar_label(
     container: BarContainer,
@@ -381,7 +381,7 @@ def bar_label(
     fmt: str = ...,
     label_type: Literal["edge", "center"] = ...,
     padding: float = ...,
-    **kwargs
+    **kwargs,
 ) -> list: ...
 def boxplot(
     x: ArrayLike,
@@ -412,7 +412,7 @@ def boxplot(
     zorder: float = ...,
     capwidths=...,
     *,
-    data=...
+    data=...,
 ) -> dict: ...
 def broken_barh(xranges, yrange, *, data=..., **kwargs) -> BrokenBarHCollection: ...
 def clabel(CS, levels: ArrayLike = ..., **kwargs): ...
@@ -430,7 +430,7 @@ def cohere(
     scale_by_freq: bool = ...,
     *,
     data=...,
-    **kwargs
+    **kwargs,
 ): ...
 def contour(*args, data=..., **kwargs) -> QuadContourSet: ...
 def contourf(*args, data=..., **kwargs) -> QuadContourSet: ...
@@ -449,7 +449,7 @@ def csd(
     return_line: bool = ...,
     *,
     data=...,
-    **kwargs
+    **kwargs,
 ): ...
 def errorbar(
     x: float | ArrayLike,
@@ -469,7 +469,7 @@ def errorbar(
     capthick: float = ...,
     *,
     data=...,
-    **kwargs
+    **kwargs,
 ) -> ErrorbarContainer: ...
 def eventplot(
     positions: ArrayLike | Sequence[ArrayLike],
@@ -481,7 +481,7 @@ def eventplot(
     linestyles: str | tuple | list = ...,
     *,
     data=...,
-    **kwargs
+    **kwargs,
 ) -> list: ...
 def fill(*args, data=..., **kwargs) -> list[Polygon]: ...
 def fill_between(
@@ -493,7 +493,7 @@ def fill_between(
     step: Literal["pre", "post", "mid"] = ...,
     *,
     data=...,
-    **kwargs
+    **kwargs,
 ) -> PolyCollection: ...
 def fill_betweenx(
     y,
@@ -504,13 +504,13 @@ def fill_betweenx(
     interpolate: bool = ...,
     *,
     data=...,
-    **kwargs
+    **kwargs,
 ) -> PolyCollection: ...
 def grid(
     visible: bool | None = ...,
     which: Literal["major", "minor", "both"] = ...,
     axis: Literal["both", "x", "y"] = ...,
-    **kwargs
+    **kwargs,
 ): ...
 def hexbin(
     x: ArrayLike,
@@ -533,7 +533,7 @@ def hexbin(
     marginals: bool = ...,
     *,
     data=...,
-    **kwargs
+    **kwargs,
 ) -> PolyCollection: ...
 def hist(
     x,
@@ -553,7 +553,7 @@ def hist(
     stacked: bool = ...,
     *,
     data=...,
-    **kwargs
+    **kwargs,
 ): ...
 def stairs(
     values: ArrayLike,
@@ -563,7 +563,7 @@ def stairs(
     baseline: float | ArrayLike | None = ...,
     fill: bool = ...,
     data=...,
-    **kwargs
+    **kwargs,
 ): ...
 def hist2d(
     x,
@@ -576,7 +576,7 @@ def hist2d(
     cmax: float = ...,
     *,
     data=...,
-    **kwargs
+    **kwargs,
 ): ...
 def hlines(
     y: float | ArrayLike,
@@ -587,7 +587,7 @@ def hlines(
     label: str = ...,
     *,
     data=...,
-    **kwargs
+    **kwargs,
 ) -> LineCollection: ...
 def imshow(
     X: ArrayLike,
@@ -607,7 +607,7 @@ def imshow(
     resample: bool = ...,
     url: str = ...,
     data=...,
-    **kwargs
+    **kwargs,
 ) -> AxesImage: ...
 def legend(*args, **kwargs) -> Legend: ...
 def locator_params(
@@ -624,7 +624,7 @@ def magnitude_spectrum(
     scale: Literal["default", "linear", "dB"] = ...,
     *,
     data=...,
-    **kwargs
+    **kwargs,
 ): ...
 def margins(*margins, x: float = ..., y: float = ..., tight: bool | None = ...): ...
 def minorticks_off(): ...
@@ -638,7 +638,7 @@ def pcolor(
     vmin: float = ...,
     vmax: float = ...,
     data=...,
-    **kwargs
+    **kwargs,
 ) -> Collection: ...
 def pcolormesh(
     *args,
@@ -650,7 +650,7 @@ def pcolormesh(
     shading: Literal["flat", "nearest", "gouraud", "auto"] = ...,
     antialiased=...,
     data=...,
-    **kwargs
+    **kwargs,
 ) -> QuadMesh: ...
 def phase_spectrum(
     x: Sequence,
@@ -661,7 +661,7 @@ def phase_spectrum(
     sides: Literal["default", "onesided", "twosided"] = ...,
     *,
     data=...,
-    **kwargs
+    **kwargs,
 ): ...
 def pie(
     x,
@@ -682,7 +682,7 @@ def pie(
     rotatelabels: bool = ...,
     *,
     normalize: bool = ...,
-    data=...
+    data=...,
 ): ...
 def plot(*args, scalex=..., scaley=..., data=..., **kwargs) -> list: ...
 def plot_date(
@@ -694,7 +694,7 @@ def plot_date(
     ydate: bool = ...,
     *,
     data=...,
-    **kwargs
+    **kwargs,
 ) -> list: ...
 def psd(
     x: Sequence,
@@ -710,7 +710,7 @@ def psd(
     return_line: bool = ...,
     *,
     data=...,
-    **kwargs
+    **kwargs,
 ): ...
 def quiver(*args, data=..., **kwargs) -> Quiver: ...
 def quiverkey(Q: Quiver, X: float, Y: float, U: float, label: str, **kwargs): ...
@@ -730,7 +730,7 @@ def scatter(
     edgecolors: Color = ...,
     plotnonfinite: bool = ...,
     data=...,
-    **kwargs
+    **kwargs,
 ) -> PathCollection: ...
 def semilogx(*args, **kwargs) -> list: ...
 def semilogy(*args, **kwargs) -> list: ...
@@ -753,7 +753,7 @@ def specgram(
     vmax=...,
     *,
     data=...,
-    **kwargs
+    **kwargs,
 ): ...
 def spy(
     Z,
@@ -762,7 +762,7 @@ def spy(
     markersize=...,
     aspect: Literal["equal", "auto", None] | float = ...,
     origin: Literal["upper", "lower"] = ...,
-    **kwargs
+    **kwargs,
 ) -> tuple[AxesImage, Line2D]: ...
 def stackplot(
     x,
@@ -771,7 +771,7 @@ def stackplot(
     colors: list[Color] = ...,
     baseline: Literal["zero", "sym", "wiggle", "weighted_wiggle"] = ...,
     data=...,
-    **kwargs
+    **kwargs,
 ) -> list: ...
 def stem(
     *args,
@@ -782,7 +782,7 @@ def stem(
     label: str = ...,
     use_line_collection: bool = ...,
     orientation: str = ...,
-    data=...
+    data=...,
 ) -> StemContainer: ...
 def step(
     x: ArrayLike,
@@ -790,7 +790,7 @@ def step(
     *args,
     where: Literal["pre", "post", "mid"] = ...,
     data=...,
-    **kwargs
+    **kwargs,
 ) -> list: ...
 def streamplot(
     x,
@@ -812,7 +812,7 @@ def streamplot(
     integration_direction: Literal["forward", "backward", "both"] = ...,
     broken_streamlines: bool = ...,
     *,
-    data=...
+    data=...,
 ) -> StreamplotSet: ...
 def table(
     cellText=...,
@@ -828,7 +828,7 @@ def table(
     loc: str = ...,
     bbox: Bbox = ...,
     edges: Literal["open", "closed", "horizontal", "vertical"] = ...,
-    **kwargs
+    **kwargs,
 ) -> Table: ...
 def text(x: float, y: float, s: str, fontdict: dict = ..., **kwargs) -> Text: ...
 def tick_params(axis: Literal["x", "y", "both"] = ..., **kwargs): ...
@@ -839,7 +839,7 @@ def ticklabel_format(
     scilimits=...,
     useOffset: bool | float = ...,
     useLocale: bool = ...,
-    useMathText: bool = ...
+    useMathText: bool = ...,
 ): ...
 def tricontour(*args, **kwargs) -> TriContourSet: ...
 def tricontourf(*args, **kwargs) -> TriContourSet: ...
@@ -852,7 +852,7 @@ def tripcolor(
     vmax: float = ...,
     shading: Literal["flat", "gouraud"] = ...,
     facecolors: ArrayLike = ...,
-    **kwargs
+    **kwargs,
 ): ...
 def triplot(*args, **kwargs): ...
 def violinplot(
@@ -867,7 +867,7 @@ def violinplot(
     points: int = ...,
     bw_method: str | Scalar | Callable = ...,
     *,
-    data=...
+    data=...,
 ) -> dict: ...
 def vlines(
     x: float | ArrayLike,
@@ -878,7 +878,7 @@ def vlines(
     label: str = ...,
     *,
     data=...,
-    **kwargs
+    **kwargs,
 ) -> LineCollection: ...
 def xcorr(
     x,
@@ -889,7 +889,7 @@ def xcorr(
     maxlags: int = ...,
     *,
     data=...,
-    **kwargs
+    **kwargs,
 ): ...
 def sci(im): ...
 def title(
@@ -899,7 +899,7 @@ def title(
     pad: float = ...,
     *,
     y: float = ...,
-    **kwargs
+    **kwargs,
 ) -> Text: ...
 def xlabel(
     xlabel: str,
@@ -907,7 +907,7 @@ def xlabel(
     labelpad: float = ...,
     *,
     loc: Literal["left", "center", "right"] = ...,
-    **kwargs
+    **kwargs,
 ): ...
 def ylabel(
     ylabel: str,
@@ -915,7 +915,7 @@ def ylabel(
     labelpad: float = ...,
     *,
     loc: Literal["bottom", "center", "top"] = ...,
-    **kwargs
+    **kwargs,
 ): ...
 def xscale(
     value: Literal["linear", "log", "symlog", "logit"] | ScaleBase, **kwargs

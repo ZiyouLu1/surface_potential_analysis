@@ -78,12 +78,11 @@ class RotationSpline:
     >>> plt.title("Angular acceleration")
     >>> plt.show()
     """
+
     MAX_ITER = ...
     TOL = ...
-    def __init__(self, times, rotations) -> None:
-        ...
-    
-    def __call__(self, times, order=...): # -> Any:
+    def __init__(self, times, rotations) -> None: ...
+    def __call__(self, times, order=...):  # -> Any:
         """Compute interpolated values.
 
         Parameters
@@ -102,6 +101,3 @@ class RotationSpline:
         Interpolated Rotation, angular rate or acceleration.
         """
         ...
-    
-
-

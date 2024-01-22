@@ -26,7 +26,19 @@ from ._dual_annealing import dual_annealing
 from ._qap import quadratic_assignment
 from ._direct_py import direct
 from ._milp import milp
-from . import cobyla, lbfgsb, linesearch, minpack, minpack2, moduleTNC, nonlin, optimize, slsqp, tnc, zeros
+from . import (
+    cobyla,
+    lbfgsb,
+    linesearch,
+    minpack,
+    minpack2,
+    moduleTNC,
+    nonlin,
+    optimize,
+    slsqp,
+    tnc,
+    zeros,
+)
 from scipy._lib._testutils import PytestTester
 
 """
@@ -436,5 +448,5 @@ Simple iteration solvers:
    diagbroyden
 
 """
-__all__ = [s for s in dir() if nots.startswith('_')]
+__all__ = [s for s in dir() if nots.startswith("_")]
 test = ...

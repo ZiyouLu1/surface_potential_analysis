@@ -61,7 +61,8 @@ def pad_ft_points(
     slice_end = np.array([slice(None) for _ in array.shape], dtype=slice)
     slice_end[axes_arr] = np.array(
         [
-            slice(start, None) if (start := max((-n + 1) // 2, (-s + 1) // 2)) < 0
+            slice(start, None)
+            if (start := max((-n + 1) // 2, (-s + 1) // 2)) < 0
             # else no negative frequencies
             else slice(0, 0)
             for (n, s) in zip(shape_arr[axes_arr], s, strict=True)
@@ -142,7 +143,8 @@ def pad_ft_points_real_axis(
     padded_shape[axis] = n // 2 + 1
 
     padded: np.ndarray[tuple[int, ...], _DT] = np.zeros(
-        shape=padded_shape, dtype=array.dtype  # type: ignore can't infer dtype
+        shape=padded_shape,
+        dtype=array.dtype,  # type: ignore can't infer dtype
     )
     relevant_slice = slice(min(padded.shape[axis], array.shape[axis]))
     padded[slice_along_axis(relevant_slice, axis)] = array[

@@ -27,7 +27,7 @@ class PathEffectRenderer(RendererBase):
         marker_trans: Transform,
         path,
         *args,
-        **kwargs
+        **kwargs,
     ): ...
     def draw_path_collection(
         self, gc: GraphicsContextBase, master_transform, paths, *args, **kwargs
@@ -58,7 +58,7 @@ class SimplePatchShadow(AbstractPathEffect):
         shadow_rgbFace: Color = ...,
         alpha: float = 0.3,
         rho: float = 0.3,
-        **kwargs
+        **kwargs,
     ) -> None: ...
     def draw_path(
         self,
@@ -78,7 +78,7 @@ class SimpleLineShadow(AbstractPathEffect):
         shadow_color: Color = "black",
         alpha: float = 0.3,
         rho: float = 0.3,
-        **kwargs
+        **kwargs,
     ) -> None: ...
     def draw_path(
         self,
@@ -107,7 +107,7 @@ class TickedStroke(AbstractPathEffect):
         spacing: float = 10,
         angle: float = 45,
         length: float = 1.414,
-        **kwargs
+        **kwargs,
     ) -> None: ...
     def draw_path(
         self,

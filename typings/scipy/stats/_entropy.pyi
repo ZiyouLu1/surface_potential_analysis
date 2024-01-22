@@ -9,8 +9,14 @@ Created on Fri Apr  2 09:06:05 2021
 
 @author: matth
 """
-__all__ = ['entropy', 'differential_entropy']
-def entropy(pk: np.typing.ArrayLike, qk: np.typing.ArrayLike | None = ..., base: float | None = ..., axis: int = ...) -> np.number | np.ndarray:
+__all__ = ["entropy", "differential_entropy"]
+
+def entropy(
+    pk: np.typing.ArrayLike,
+    qk: np.typing.ArrayLike | None = ...,
+    base: float | None = ...,
+    axis: int = ...,
+) -> np.number | np.ndarray:
     """
     Calculate the Shannon entropy/relative entropy of given distribution(s).
 
@@ -122,7 +128,14 @@ def entropy(pk: np.typing.ArrayLike, qk: np.typing.ArrayLike | None = ..., base:
     """
     ...
 
-def differential_entropy(values: np.typing.ArrayLike, *, window_length: int | None = ..., base: float | None = ..., axis: int = ..., method: str = ...) -> np.number | np.ndarray:
+def differential_entropy(
+    values: np.typing.ArrayLike,
+    *,
+    window_length: int | None = ...,
+    base: float | None = ...,
+    axis: int = ...,
+    method: str = ...,
+) -> np.number | np.ndarray:
     r"""Given a sample of a distribution, estimate the differential entropy.
 
     Several estimation methods are available using the `method` parameter. By
@@ -260,4 +273,3 @@ def differential_entropy(values: np.typing.ArrayLike, *, window_length: int | No
 
     """
     ...
-

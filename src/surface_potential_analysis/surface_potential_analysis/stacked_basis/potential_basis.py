@@ -69,7 +69,8 @@ def get_potential_basis_config_eigenstates(
         config["potential"], config["mass"], np.array([bloch_fraction])
     )
     return calculate_eigenvectors_hermitian(  # type: ignore FundamentalBasis[int] not FundamentalBasis[_N0Inv]
-        hamiltonian, subset_by_index=(0, config["n"] - 1)  # type: ignore cannot infer type of hamiltonian properly
+        hamiltonian,
+        subset_by_index=(0, config["n"] - 1),  # type: ignore cannot infer type of hamiltonian properly
     )
 
 
@@ -89,12 +90,13 @@ def get_potential_basis_config_basis(
     """
     eigenstates = get_potential_basis_config_eigenstates(config)
     return ExplicitBasis(
-        eigenstates["basis"][0].delta_x, eigenstates["data"]  # type: ignore[arg-type]
+        eigenstates["basis"][0].delta_x,
+        eigenstates["data"],  # type: ignore[arg-type]
     )
 
 
 def select_minimum_potential_3d(
-    potential: Potential[StackedBasisLike[Any, Any, _B3d0]]
+    potential: Potential[StackedBasisLike[Any, Any, _B3d0]],
 ) -> Potential[StackedBasisLike[FundamentalPositionBasis1d[Any]]]:
     """
     Given a 3D potential in the standard configuration select the minimum potential.

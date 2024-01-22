@@ -6,9 +6,12 @@ from ._trustregion import BaseQuadraticSubproblem
 
 """Newton-CG trust-region optimization."""
 __all__ = []
+
 class CGSteihaugSubproblem(BaseQuadraticSubproblem):
     """Quadratic subproblem solved by a conjugate gradient method"""
-    def solve(self, trust_radius): # -> tuple[Unknown, Literal[False]] | tuple[Unknown, Literal[True]]:
+    def solve(
+        self, trust_radius
+    ):  # -> tuple[Unknown, Literal[False]] | tuple[Unknown, Literal[True]]:
         """
         Solve the subproblem using a conjugate gradient method.
 
@@ -32,6 +35,3 @@ class CGSteihaugSubproblem(BaseQuadraticSubproblem):
         not need to be positive semidefinite.
         """
         ...
-    
-
-

@@ -7,8 +7,9 @@ from scipy.sparse.linalg._interface import LinearOperator
 """
 Sparse matrix functions
 """
-__all__ = ['expm', 'inv']
+__all__ = ["expm", "inv"]
 UPPER_TRIANGULAR = ...
+
 def inv(A):
     """
     Compute the inverse of a sparse matrix
@@ -51,27 +52,19 @@ def inv(A):
     ...
 
 class MatrixPowerOperator(LinearOperator):
-    def __init__(self, A, p, structure=...) -> None:
-        ...
-    
+    def __init__(self, A, p, structure=...) -> None: ...
     @property
-    def T(self): # -> MatrixPowerOperator:
+    def T(self):  # -> MatrixPowerOperator:
         ...
-    
-
 
 class ProductOperator(LinearOperator):
     """
     For now, this is limited to products of multiple square matrices.
     """
-    def __init__(self, *args, **kwargs) -> None:
-        ...
-    
+    def __init__(self, *args, **kwargs) -> None: ...
     @property
-    def T(self): # -> ProductOperator:
+    def T(self):  # -> ProductOperator:
         ...
-    
-
 
 class _ExpmPadeHelper:
     """
@@ -99,75 +92,51 @@ class _ExpmPadeHelper:
             may initially be estimated.
         """
         ...
-    
-    @property
-    def A2(self):
-        ...
-    
-    @property
-    def A4(self):
-        ...
-    
-    @property
-    def A6(self):
-        ...
-    
-    @property
-    def A8(self):
-        ...
-    
-    @property
-    def A10(self):
-        ...
-    
-    @property
-    def d4_tight(self): # -> floating[Any]:
-        ...
-    
-    @property
-    def d6_tight(self): # -> floating[Any]:
-        ...
-    
-    @property
-    def d8_tight(self): # -> floating[Any]:
-        ...
-    
-    @property
-    def d10_tight(self): # -> floating[Any]:
-        ...
-    
-    @property
-    def d4_loose(self): # -> floating[Any]:
-        ...
-    
-    @property
-    def d6_loose(self): # -> floating[Any]:
-        ...
-    
-    @property
-    def d8_loose(self): # -> floating[Any]:
-        ...
-    
-    @property
-    def d10_loose(self): # -> floating[Any]:
-        ...
-    
-    def pade3(self): # -> tuple[Unknown, Unknown]:
-        ...
-    
-    def pade5(self): # -> tuple[Unknown, Unknown]:
-        ...
-    
-    def pade7(self): # -> tuple[Unknown, Unknown]:
-        ...
-    
-    def pade9(self): # -> tuple[Unknown, Unknown]:
-        ...
-    
-    def pade13_scaled(self, s): # -> tuple[Unknown, Unknown]:
-        ...
-    
 
+    @property
+    def A2(self): ...
+    @property
+    def A4(self): ...
+    @property
+    def A6(self): ...
+    @property
+    def A8(self): ...
+    @property
+    def A10(self): ...
+    @property
+    def d4_tight(self):  # -> floating[Any]:
+        ...
+    @property
+    def d6_tight(self):  # -> floating[Any]:
+        ...
+    @property
+    def d8_tight(self):  # -> floating[Any]:
+        ...
+    @property
+    def d10_tight(self):  # -> floating[Any]:
+        ...
+    @property
+    def d4_loose(self):  # -> floating[Any]:
+        ...
+    @property
+    def d6_loose(self):  # -> floating[Any]:
+        ...
+    @property
+    def d8_loose(self):  # -> floating[Any]:
+        ...
+    @property
+    def d10_loose(self):  # -> floating[Any]:
+        ...
+    def pade3(self):  # -> tuple[Unknown, Unknown]:
+        ...
+    def pade5(self):  # -> tuple[Unknown, Unknown]:
+        ...
+    def pade7(self):  # -> tuple[Unknown, Unknown]:
+        ...
+    def pade9(self):  # -> tuple[Unknown, Unknown]:
+        ...
+    def pade13_scaled(self, s):  # -> tuple[Unknown, Unknown]:
+        ...
 
 def expm(A):
     """
@@ -215,4 +184,3 @@ def expm(A):
            [  0.        ,   0.        ,  20.08553692]])
     """
     ...
-

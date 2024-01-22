@@ -166,7 +166,10 @@ def plot_potential_1d_x2_comparison_111(
     points = get_111_comparison_points_x2((s0, s1), offset)
     comparison_points = {k: (v, 2) for (k, v) in points.items()}
     return plot_potential_1d_comparison(
-        potential, comparison_points, ax=ax, scale=scale  # type: ignore[arg-type]
+        potential,
+        comparison_points,
+        ax=ax,
+        scale=scale,  # type: ignore[arg-type]
     )
 
 
@@ -204,7 +207,10 @@ def plot_potential_1d_x2_comparison_100(
     points = get_100_comparison_points_x2((s0, s1), offset)
     comparison_points = {k: (v, 2) for (k, v) in points.items()}
     return plot_potential_1d_comparison(
-        potential, comparison_points, ax=ax, scale=scale  # type: ignore[arg-type]
+        potential,
+        comparison_points,
+        ax=ax,
+        scale=scale,  # type: ignore[arg-type]
     )
 
 

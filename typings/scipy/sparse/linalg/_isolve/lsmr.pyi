@@ -19,7 +19,8 @@ Systems Optimization Laboratory
 Dept of MS&E, Stanford University.
 
 """
-__all__ = ['lsmr']
+__all__ = ["lsmr"]
+
 def lsmr(A, b, damp=..., atol=..., btol=..., conlim=..., maxiter=..., show=..., x0=...):
     """Iterative solver for least-squares problems.
 
@@ -187,4 +188,3 @@ def lsmr(A, b, damp=..., atol=..., btol=..., conlim=..., maxiter=..., show=..., 
     contains the minimal distance that was found.
     """
     ...
-

@@ -9,7 +9,8 @@ from ._index import IndexMixin
 """List of Lists sparse matrix class
 """
 __docformat__ = ...
-__all__ = ['lil_array', 'lil_matrix', 'isspmatrix_lil']
+__all__ = ["lil_array", "lil_matrix", "isspmatrix_lil"]
+
 class _lil_base(_spbase, IndexMixin):
     """Row-based LIst of Lists sparse matrix
 
@@ -72,71 +73,49 @@ class _lil_base(_spbase, IndexMixin):
 
 
     """
+
     _format = ...
-    def __init__(self, arg1, shape=..., dtype=..., copy=...) -> None:
+    def __init__(self, arg1, shape=..., dtype=..., copy=...) -> None: ...
+    def __iadd__(self, other):  # -> Self@_lil_base:
         ...
-    
-    def __iadd__(self, other): # -> Self@_lil_base:
+    def __isub__(self, other):  # -> Self@_lil_base:
         ...
-    
-    def __isub__(self, other): # -> Self@_lil_base:
+    def __imul__(self, other):  # -> Self@_lil_base | _NotImplementedType:
         ...
-    
-    def __imul__(self, other): # -> Self@_lil_base | _NotImplementedType:
+    def __itruediv__(self, other):  # -> Self@_lil_base | _NotImplementedType:
         ...
-    
-    def __itruediv__(self, other): # -> Self@_lil_base | _NotImplementedType:
+    def count_nonzero(self):  # -> int:
         ...
-    
-    def count_nonzero(self): # -> int:
+    def __str__(self) -> str: ...
+    def getrowview(self, i):  # -> lil_array:
+        """Returns a view of the 'i'th row (without copying)."""
         ...
-    
-    def __str__(self) -> str:
-        ...
-    
-    def getrowview(self, i): # -> lil_array:
-        """Returns a view of the 'i'th row (without copying).
-        """
-        ...
-    
-    def getrow(self, i): # -> lil_array:
-        """Returns a copy of the 'i'th row.
-        """
-        ...
-    
-    def __getitem__(self, key): # -> IndexMixin:
-        ...
-    
-    def __setitem__(self, key, x): # -> None:
-        ...
-    
-    def __truediv__(self, other): # -> lil_array:
-        ...
-    
-    def copy(self): # -> lil_array:
-        ...
-    
-    def reshape(self, *args, **kwargs): # -> lil_array | Self@_lil_base:
-        ...
-    
-    def resize(self, *shape): # -> None:
-        ...
-    
-    def toarray(self, order=..., out=...): # -> NDArray[float64]:
-        ...
-    
-    def transpose(self, axes=..., copy=...):
-        ...
-    
-    def tolil(self, copy=...): # -> lil_array | Self@_lil_base:
-        ...
-    
-    def tocsr(self, copy=...): # -> csr_array:
-        ...
-    
 
+    def getrow(self, i):  # -> lil_array:
+        """Returns a copy of the 'i'th row."""
+        ...
 
-def isspmatrix_lil(x): # -> bool:
+    def __getitem__(self, key):  # -> IndexMixin:
+        ...
+    def __setitem__(self, key, x):  # -> None:
+        ...
+    def __truediv__(self, other):  # -> lil_array:
+        ...
+    def copy(self):  # -> lil_array:
+        ...
+    def reshape(self, *args, **kwargs):  # -> lil_array | Self@_lil_base:
+        ...
+    def resize(self, *shape):  # -> None:
+        ...
+    def toarray(self, order=..., out=...):  # -> NDArray[float64]:
+        ...
+    def transpose(self, axes=..., copy=...): ...
+    def tolil(self, copy=...):  # -> lil_array | Self@_lil_base:
+        ...
+    def tocsr(self, copy=...):  # -> csr_array:
+        ...
+
+def isspmatrix_lil(x):  # -> bool:
     """Is `x` of lil_matrix type?
 
     Parameters
@@ -161,11 +140,5 @@ def isspmatrix_lil(x): # -> bool:
     """
     ...
 
-class lil_array(_lil_base, sparray):
-    ...
-
-
-class lil_matrix(spmatrix, _lil_base):
-    ...
-
-
+class lil_array(_lil_base, sparray): ...
+class lil_matrix(spmatrix, _lil_base): ...

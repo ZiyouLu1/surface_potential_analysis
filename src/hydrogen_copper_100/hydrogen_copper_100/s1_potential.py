@@ -55,7 +55,7 @@ def load_clean_copper_data() -> UnevenPotential3d[Any, Any, Any]:
 
 
 def get_interpolated_potential(
-    shape: tuple[int, int, int]
+    shape: tuple[int, int, int],
 ) -> Potential[
     StackedBasisLike[
         FundamentalPositionBasis3d[Any],
@@ -82,7 +82,7 @@ def get_interpolated_potential(
 
 
 def get_interpolated_potential_relaxed(
-    shape: tuple[int, int, int]
+    shape: tuple[int, int, int],
 ) -> Potential[
     StackedBasisLike[
         FundamentalPositionBasis3d[Any],

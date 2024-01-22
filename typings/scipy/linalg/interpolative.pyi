@@ -356,12 +356,25 @@ with both real and complex data types, passing input arguments to the proper
 backend routine.
 
 """
-__all__ = ['estimate_rank', 'estimate_spectral_norm', 'estimate_spectral_norm_diff', 'id_to_svd', 'interp_decomp', 'rand', 'reconstruct_interp_matrix', 'reconstruct_matrix_from_id', 'reconstruct_skel_matrix', 'seed', 'svd']
+__all__ = [
+    "estimate_rank",
+    "estimate_spectral_norm",
+    "estimate_spectral_norm_diff",
+    "id_to_svd",
+    "interp_decomp",
+    "rand",
+    "reconstruct_interp_matrix",
+    "reconstruct_matrix_from_id",
+    "reconstruct_skel_matrix",
+    "seed",
+    "svd",
+]
 _DTYPE_ERROR = ...
 _TYPE_ERROR = ...
 _32BIT_ERROR = ...
-_IS_32BIT = (sys.maxsize < 2 ** 32)
-def seed(seed=...): # -> None:
+_IS_32BIT = sys.maxsize < 2**32
+
+def seed(seed=...):  # -> None:
     """
     Seed the internal random number generator used in this ID package.
 
@@ -402,7 +415,9 @@ def rand(*shape):
     """
     ...
 
-def interp_decomp(A, eps_or_k, rand=...): # -> tuple[Unknown, Unknown, Unknown | ndarray[Any, dtype[Unknown]]] | tuple[Unknown, NDArray[Any] | Unknown | ndarray[Any, dtype[Unknown]]] | tuple[Unknown, Unknown, Unknown] | tuple[Unknown, Unknown]:
+def interp_decomp(
+    A, eps_or_k, rand=...
+):  # -> tuple[Unknown, Unknown, Unknown | ndarray[Any, dtype[Unknown]]] | tuple[Unknown, NDArray[Any] | Unknown | ndarray[Any, dtype[Unknown]]] | tuple[Unknown, Unknown, Unknown] | tuple[Unknown, Unknown]:
     """
     Compute ID of a matrix.
 
@@ -479,7 +494,7 @@ def interp_decomp(A, eps_or_k, rand=...): # -> tuple[Unknown, Unknown, Unknown |
     """
     ...
 
-def reconstruct_matrix_from_id(B, idx, proj): # -> ndarray[Any, dtype[Unknown]]:
+def reconstruct_matrix_from_id(B, idx, proj):  # -> ndarray[Any, dtype[Unknown]]:
     """
     Reconstruct matrix from its ID.
 
@@ -582,7 +597,7 @@ def reconstruct_skel_matrix(A, k, idx):
     """
     ...
 
-def id_to_svd(B, idx, proj): # -> tuple[Unknown, Unknown, Unknown]:
+def id_to_svd(B, idx, proj):  # -> tuple[Unknown, Unknown, Unknown]:
     """
     Convert ID to SVD.
 
@@ -668,7 +683,7 @@ def estimate_spectral_norm_diff(A, B, its=...):
     """
     ...
 
-def svd(A, eps_or_k, rand=...): # -> tuple[Unknown, Unknown, Unknown]:
+def svd(A, eps_or_k, rand=...):  # -> tuple[Unknown, Unknown, Unknown]:
     """
     Compute SVD of a matrix via an ID.
 
@@ -717,7 +732,7 @@ def svd(A, eps_or_k, rand=...): # -> tuple[Unknown, Unknown, Unknown]:
     """
     ...
 
-def estimate_rank(A, eps): # -> int:
+def estimate_rank(A, eps):  # -> int:
     """
     Estimate matrix rank to a specified relative precision using randomized
     methods.
@@ -747,4 +762,3 @@ def estimate_rank(A, eps): # -> int:
         Estimated matrix rank.
     """
     ...
-

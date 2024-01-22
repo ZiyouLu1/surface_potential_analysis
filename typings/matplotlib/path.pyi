@@ -6,7 +6,6 @@ from .transforms import Affine2D, Bbox, Transform
 from functools import lru_cache
 
 class Path:
-
     code_type = np.uint8
     STOP = code_type(0)
     MOVETO = code_type(1)
@@ -72,7 +71,7 @@ class Path:
         curves=...,
         stroke_width: float = ...,
         snap=...,
-        sketch=...
+        sketch=...,
     ): ...
     def transformed(self, transform) -> Path: ...
     def contains_point(

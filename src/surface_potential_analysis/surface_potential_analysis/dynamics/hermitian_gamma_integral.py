@@ -103,7 +103,7 @@ def calculate_hermitian_gamma_occupation_integral(
     d_k = 2 * boltzmann_energy * electron_mass / (hbar**2 * k_f)
 
     def f(
-        k: np.ndarray[_S0Inv, np.dtype[np.float64]]
+        k: np.ndarray[_S0Inv, np.dtype[np.float64]],
     ) -> np.ndarray[_S0Inv, np.dtype[np.float64]]:
         return get_hermitian_gamma_occupation_integrand(
             k, omega=omega, k_f=k_f, boltzmann_energy=boltzmann_energy
@@ -117,7 +117,7 @@ def _calculate_real_gamma_prefactor(k_f: float) -> float:
 
 
 def _get_coulomb_potential(
-    q: np.ndarray[_S0Inv, np.dtype[np.float64]]
+    q: np.ndarray[_S0Inv, np.dtype[np.float64]],
 ) -> np.ndarray[_S0Inv, np.dtype[np.float64]]:
     bohr_radius = (
         4 * np.pi * epsilon_0 * hbar**2 / (elementary_charge**2 * electron_mass)
@@ -146,7 +146,12 @@ def _get_hopping_potential_integrand(
     ],
 ) -> np.ndarray[_S0Inv, np.dtype[np.complex128]]:
     q = k_f * np.sin(phi / 2)
-    return _calculate_real_gamma_prefactor(k_f) * np.sin(phi) * _get_coulomb_potential(q) ** 2 * overlap(q).astype(np.complex128)  # type: ignore[no-any-return]
+    return (
+        _calculate_real_gamma_prefactor(k_f)
+        * np.sin(phi)
+        * _get_coulomb_potential(q) ** 2
+        * overlap(q).astype(np.complex128)
+    )  # type: ignore[no-any-return]
 
 
 def _complex_quad(func: Any, *args: Any, **kwargs: Any) -> Any:  # noqa: ANN401
@@ -186,7 +191,7 @@ def calculate_hermitian_gamma_potential_integral(
     """
 
     def f(
-        k: np.ndarray[_S0Inv, np.dtype[np.float64]]
+        k: np.ndarray[_S0Inv, np.dtype[np.float64]],
     ) -> np.ndarray[_S0Inv, np.dtype[np.complex128]]:
         return _get_hopping_potential_integrand(k, k_f=k_f, overlap=overlap)
 

@@ -112,7 +112,8 @@ class _SurfaceHamiltonianUtil(
     @property
     def z_distances(self) -> np.ndarray[tuple[int], np.dtype[np.float64]]:
         return calculate_x_distances(
-            self._potential["basis"][2], self._config["x_origin"]  # type: ignore[arg-type]
+            self._potential["basis"][2],
+            self._config["x_origin"],  # type: ignore[arg-type]
         )
 
     @property

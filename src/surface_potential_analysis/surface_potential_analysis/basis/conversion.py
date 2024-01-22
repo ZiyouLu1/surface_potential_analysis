@@ -28,7 +28,7 @@ if TYPE_CHECKING:
 
 
 def basis_as_fundamental_position_basis(
-    axis: BasisWithLengthLike[_NF0Inv, _N0Inv, _NDInv]
+    axis: BasisWithLengthLike[_NF0Inv, _N0Inv, _NDInv],
 ) -> FundamentalPositionBasis[_NF0Inv, _NDInv]:
     """
     Get the fundamental position axis for a given axis.
@@ -45,7 +45,7 @@ def basis_as_fundamental_position_basis(
 
 
 def basis_as_fundamental_momentum_basis(
-    axis: BasisWithLengthLike[_NF0Inv, _N0Inv, _NDInv]
+    axis: BasisWithLengthLike[_NF0Inv, _N0Inv, _NDInv],
 ) -> FundamentalTransformedPositionBasis[_NF0Inv, _NDInv]:
     """
     Get the fundamental momentum axis for a given axis.
@@ -62,7 +62,7 @@ def basis_as_fundamental_momentum_basis(
 
 
 def basis_as_fundamental_transformed_basis(
-    axis: BasisLike[_NF0Inv, _N0Inv]
+    axis: BasisLike[_NF0Inv, _N0Inv],
 ) -> FundamentalTransformedBasis[_NF0Inv]:
     """
     Get the fundamental momentum axis for a given axis.
@@ -79,7 +79,7 @@ def basis_as_fundamental_transformed_basis(
 
 
 def basis_as_fundamental_basis(
-    axis: BasisLike[_NF0Inv, _N0Inv]
+    axis: BasisLike[_NF0Inv, _N0Inv],
 ) -> FundamentalBasis[_NF0Inv]:
     """
     Get the fundamental momentum axis for a given axis.
@@ -96,7 +96,7 @@ def basis_as_fundamental_basis(
 
 
 def basis_as_explicit_position_basis(
-    axis: BasisWithLengthLike[_NF0Inv, _N0Inv, _NDInv]
+    axis: BasisWithLengthLike[_NF0Inv, _N0Inv, _NDInv],
 ) -> ExplicitBasis[_NF0Inv, _N0Inv, _NDInv]:
     """
     Convert the axis into an explicit position axis.
@@ -114,7 +114,7 @@ def basis_as_explicit_position_basis(
 
 
 def basis_as_orthonormal_basis(
-    axis: BasisWithLengthLike[_NF0Inv, _N0Inv, _NDInv]
+    axis: BasisWithLengthLike[_NF0Inv, _N0Inv, _NDInv],
 ) -> ExplicitBasis[_NF0Inv, _N0Inv, _NDInv]:
     """
     make the given axis orthonormal.
@@ -157,7 +157,7 @@ def basis_as_n_point_basis(
 
 
 def basis_as_single_point_basis(
-    axis: BasisWithLengthLike[_NF0Inv, _N0Inv, _NDInv]
+    axis: BasisWithLengthLike[_NF0Inv, _N0Inv, _NDInv],
 ) -> FundamentalPositionBasis[Literal[1], _NDInv]:
     """
     Get the corresponding single point axis for a given axis.

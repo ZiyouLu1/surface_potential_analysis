@@ -6,15 +6,16 @@ from scipy.optimize import OptimizeResult
 
 METHODS = ...
 MESSAGES = ...
-class OdeResult(OptimizeResult):
-    ...
 
+class OdeResult(OptimizeResult): ...
 
-def prepare_events(events): # -> tuple[tuple[Unknown] | Unknown, NDArray[Any] | None, NDArray[float64] | None]:
+def prepare_events(
+    events,
+):  # -> tuple[tuple[Unknown] | Unknown, NDArray[Any] | None, NDArray[float64] | None]:
     """Standardize event functions and extract is_terminal and direction."""
     ...
 
-def solve_event_equation(event, sol, t_old, t): # -> tuple[Unknown, RootResults]:
+def solve_event_equation(event, sol, t_old, t):  # -> tuple[Unknown, RootResults]:
     """Solve an equation corresponding to an ODE event.
 
     The equation is ``event(t, y(t)) = 0``, here ``y(t)`` is known from an
@@ -39,7 +40,9 @@ def solve_event_equation(event, sol, t_old, t): # -> tuple[Unknown, RootResults]
     """
     ...
 
-def handle_events(sol, events, active_events, is_terminal, t_old, t): # -> tuple[Unknown, ndarray[Any, dtype[Any]], bool]:
+def handle_events(
+    sol, events, active_events, is_terminal, t_old, t
+):  # -> tuple[Unknown, ndarray[Any, dtype[Any]], bool]:
     """Helper function to handle events.
 
     Parameters
@@ -68,7 +71,7 @@ def handle_events(sol, events, active_events, is_terminal, t_old, t): # -> tuple
     """
     ...
 
-def find_active_events(g, g_new, direction): # -> NDArray[intp]:
+def find_active_events(g, g_new, direction):  # -> NDArray[intp]:
     """Find which event occurred during an integration step.
 
     Parameters
@@ -85,7 +88,18 @@ def find_active_events(g, g_new, direction): # -> NDArray[intp]:
     """
     ...
 
-def solve_ivp(fun, t_span, y0, method=..., t_eval=..., dense_output=..., events=..., vectorized=..., args=..., **options):
+def solve_ivp(
+    fun,
+    t_span,
+    y0,
+    method=...,
+    t_eval=...,
+    dense_output=...,
+    events=...,
+    vectorized=...,
+    args=...,
+    **options,
+):
     """Solve an initial value problem for a system of ODEs.
 
     This function numerically integrates a system of ordinary differential
@@ -448,4 +462,3 @@ def solve_ivp(fun, t_span, y0, method=..., t_eval=..., dense_output=..., events=
 
     """
     ...
-

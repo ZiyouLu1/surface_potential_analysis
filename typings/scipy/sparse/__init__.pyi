@@ -15,7 +15,23 @@ from ._construct import *
 from ._extract import *
 from ._matrix import spmatrix
 from ._matrix_io import *
-from . import base, bsr, compressed, construct, coo, csc, csgraph, csr, data, dia, dok, extract, lil, sparsetools, sputils
+from . import (
+    base,
+    bsr,
+    compressed,
+    construct,
+    coo,
+    csc,
+    csgraph,
+    csr,
+    data,
+    dia,
+    dok,
+    extract,
+    lil,
+    sparsetools,
+    sputils,
+)
 from scipy._lib._testutils import PytestTester
 
 """
@@ -283,5 +299,5 @@ indices. Use the .sorted_indices() and .sort_indices() methods when
 sorted indices are required (e.g., when passing data to other libraries).
 
 """
-__all__ = [s for s in dir() if nots.startswith('_')]
+__all__ = [s for s in dir() if nots.startswith("_")]
 test = ...

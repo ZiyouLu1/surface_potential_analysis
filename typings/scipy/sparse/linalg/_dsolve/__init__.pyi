@@ -59,5 +59,14 @@ Example session::
     >>> print("Error: ", a@x-b)
 
 """
-__all__ = ['MatrixRankWarning', 'SuperLU', 'factorized', 'spilu', 'splu', 'spsolve', 'spsolve_triangular', 'use_solver']
+__all__ = [
+    "MatrixRankWarning",
+    "SuperLU",
+    "factorized",
+    "spilu",
+    "splu",
+    "spsolve",
+    "spsolve_triangular",
+    "use_solver",
+]
 test = ...

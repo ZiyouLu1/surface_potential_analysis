@@ -5,7 +5,7 @@ from .gridspec import GridSpecBase
 
 class LayoutEngine:
     def __init__(self, **kwargs) -> None: ...
-    def set(self, **kwargs)-> None: ...
+    def set(self, **kwargs) -> None: ...
     @property
     def colorbar_gridspec(self) -> bool: ...
     @property
@@ -21,7 +21,7 @@ class TightLayoutEngine(LayoutEngine):
         h_pad: float = ...,
         w_pad: float = ...,
         rect: Sequence[float] = ...,
-        **kwargs
+        **kwargs,
     ) -> None: ...
     def execute(self, fig: Figure) -> None: ...
     def set(
@@ -30,7 +30,7 @@ class TightLayoutEngine(LayoutEngine):
         pad: float = 1.08,
         w_pad: float = ...,
         h_pad: float = ...,
-        rect: Sequence[float] = ...
+        rect: Sequence[float] = ...,
     ) -> None: ...
 
 class ConstrainedLayoutEngine(LayoutEngine):
@@ -43,7 +43,7 @@ class ConstrainedLayoutEngine(LayoutEngine):
         wspace: float = ...,
         rect: Sequence[float] = ...,
         compress: bool = ...,
-        **kwargs
+        **kwargs,
     ) -> None: ...
     def execute(
         self, fig: Figure
@@ -55,5 +55,5 @@ class ConstrainedLayoutEngine(LayoutEngine):
         w_pad: float = ...,
         hspace: float = ...,
         wspace: float = ...,
-        rect: tuple = ...
+        rect: tuple = ...,
     ) -> None: ...

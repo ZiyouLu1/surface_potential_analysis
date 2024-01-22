@@ -10,12 +10,13 @@ Matrix square root for general matrices and for upper triangular matrices.
 This module exists to avoid cyclic imports.
 
 """
-__all__ = ['sqrtm']
-class SqrtmError(np.linalg.LinAlgError):
-    ...
+__all__ = ["sqrtm"]
 
+class SqrtmError(np.linalg.LinAlgError): ...
 
-def sqrtm(A, disp=..., blocksize=...): # -> Any | tuple[Any | Unknown, Unknown | floating[Any] | float]:
+def sqrtm(
+    A, disp=..., blocksize=...
+):  # -> Any | tuple[Any | Unknown, Unknown | floating[Any] | float]:
     """
     Matrix square root.
 
@@ -65,4 +66,3 @@ def sqrtm(A, disp=..., blocksize=...): # -> Any | tuple[Any | Unknown, Unknown |
 
     """
     ...
-

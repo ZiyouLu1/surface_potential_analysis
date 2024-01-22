@@ -183,7 +183,7 @@ _L2 = TypeVar("_L2", bound=int)
 
 
 def get_interpolated_potential(
-    shape: tuple[_L0, _L1, _L2]
+    shape: tuple[_L0, _L1, _L2],
 ) -> Potential[
     StackedBasisLike[
         FundamentalPositionBasis3d[_L0],

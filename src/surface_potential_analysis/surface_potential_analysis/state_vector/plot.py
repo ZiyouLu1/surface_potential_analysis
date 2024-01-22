@@ -438,7 +438,9 @@ def plot_state_along_path(
     points = converted["data"].reshape(*util.shape)[*path]
     data = get_measured_data(points, measure)
     distances = calculate_cumulative_x_distances_along_path(
-        converted["basis"], path, wrap_distances=wrap_distances  # type: ignore[arg-type]
+        converted["basis"],
+        path,
+        wrap_distances=wrap_distances,  # type: ignore[arg-type]
     )
     (line,) = ax.plot(distances, data)
     ax.set_yscale(scale)

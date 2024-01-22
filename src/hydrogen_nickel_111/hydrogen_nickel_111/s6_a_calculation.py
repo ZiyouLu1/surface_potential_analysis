@@ -78,7 +78,7 @@ def _get_diagonal_overlap_function_hydrogen(
     )
 
     def overlap_function(
-        q: np.ndarray[_S0Inv, np.dtype[np.float64]]
+        q: np.ndarray[_S0Inv, np.dtype[np.float64]],
     ) -> np.ndarray[_S0Inv, np.dtype[np.float64]]:
         return get_angle_averaged_diagonal_overlap_function(interpolator, q)
 

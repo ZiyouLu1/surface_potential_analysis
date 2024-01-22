@@ -6,7 +6,10 @@ import numpy as np
 
 """Functions used by least-squares algorithms."""
 EPS = np.finfo(float).eps
-def intersect_trust_region(x, s, Delta): # -> tuple[Any, Unknown] | tuple[Unknown, Any]:
+
+def intersect_trust_region(
+    x, s, Delta
+):  # -> tuple[Any, Unknown] | tuple[Unknown, Any]:
     """Find the intersection of a line with the boundary of a trust region.
 
     This function solves the quadratic equation with respect to t
@@ -24,7 +27,9 @@ def intersect_trust_region(x, s, Delta): # -> tuple[Any, Unknown] | tuple[Unknow
     """
     ...
 
-def solve_lsq_trust_region(n, m, uf, s, V, Delta, initial_alpha=..., rtol=..., max_iter=...): # -> tuple[Unknown, float, Literal[0]] | tuple[Unknown, Unknown, int]:
+def solve_lsq_trust_region(
+    n, m, uf, s, V, Delta, initial_alpha=..., rtol=..., max_iter=...
+):  # -> tuple[Unknown, float, Literal[0]] | tuple[Unknown, Unknown, int]:
     """Solve a trust-region problem arising in least-squares minimization.
 
     This function implements a method described by J. J. More [1]_ and used
@@ -74,7 +79,9 @@ def solve_lsq_trust_region(n, m, uf, s, V, Delta, initial_alpha=..., rtol=..., m
     """
     ...
 
-def solve_trust_region_2d(B, g, Delta): # -> tuple[Unknown, Literal[True]] | tuple[Unknown, Literal[False]]:
+def solve_trust_region_2d(
+    B, g, Delta
+):  # -> tuple[Unknown, Literal[True]] | tuple[Unknown, Literal[False]]:
     """Solve a general trust-region problem in 2 dimensions.
 
     The problem is reformulated as a 4th order algebraic equation,
@@ -99,7 +106,9 @@ def solve_trust_region_2d(B, g, Delta): # -> tuple[Unknown, Literal[True]] | tup
     """
     ...
 
-def update_tr_radius(Delta, actual_reduction, predicted_reduction, step_norm, bound_hit): # -> tuple[Unknown, Unknown | Literal[1, 0]]:
+def update_tr_radius(
+    Delta, actual_reduction, predicted_reduction, step_norm, bound_hit
+):  # -> tuple[Unknown, Unknown | Literal[1, 0]]:
     """Update the radius of a trust region based on the cost reduction.
 
     Returns
@@ -111,7 +120,9 @@ def update_tr_radius(Delta, actual_reduction, predicted_reduction, step_norm, bo
     """
     ...
 
-def build_quadratic_1d(J, g, s, diag=..., s0=...): # -> tuple[Any, Any, Any] | tuple[Any, Any]:
+def build_quadratic_1d(
+    J, g, s, diag=..., s0=...
+):  # -> tuple[Any, Any, Any] | tuple[Any, Any]:
     """Parameterize a multivariate quadratic function along a line.
 
     The resulting univariate quadratic function is given as follows::
@@ -144,7 +155,7 @@ def build_quadratic_1d(J, g, s, diag=..., s0=...): # -> tuple[Any, Any, Any] | t
     """
     ...
 
-def minimize_quadratic_1d(a, b, lb, ub, c=...): # -> tuple[Any, Unknown]:
+def minimize_quadratic_1d(a, b, lb, ub, c=...):  # -> tuple[Any, Unknown]:
     """Minimize a 1-D quadratic function subject to bounds.
 
     The free term `c` is 0 by default. Bounds must be finite.
@@ -158,7 +169,7 @@ def minimize_quadratic_1d(a, b, lb, ub, c=...): # -> tuple[Any, Unknown]:
     """
     ...
 
-def evaluate_quadratic(J, g, s, diag=...): # -> Any:
+def evaluate_quadratic(J, g, s, diag=...):  # -> Any:
     """Compute values of a quadratic function arising in least squares.
 
     The function is 0.5 * s.T * (J.T * J + diag) * s + g.T * s.
@@ -183,11 +194,11 @@ def evaluate_quadratic(J, g, s, diag=...): # -> Any:
     """
     ...
 
-def in_bounds(x, lb, ub): # -> bool_:
+def in_bounds(x, lb, ub):  # -> bool_:
     """Check if a point lies within bounds."""
     ...
 
-def step_size_to_bound(x, s, lb, ub): # -> tuple[Unknown, Any]:
+def step_size_to_bound(x, s, lb, ub):  # -> tuple[Unknown, Any]:
     """Compute a min_step size required to reach a bound.
 
     The function computes a positive scalar t, such that x + s * t is on
@@ -207,7 +218,7 @@ def step_size_to_bound(x, s, lb, ub): # -> tuple[Unknown, Any]:
     """
     ...
 
-def find_active_constraints(x, lb, ub, rtol=...): # -> NDArray[Any]:
+def find_active_constraints(x, lb, ub, rtol=...):  # -> NDArray[Any]:
     """Determine which constraints are active in a given point.
 
     The threshold is computed using `rtol` and the absolute value of the
@@ -232,7 +243,7 @@ def make_strictly_feasible(x, lb, ub, rstep=...):
     """
     ...
 
-def CL_scaling_vector(x, g, lb, ub): # -> tuple[Unknown, Unknown]:
+def CL_scaling_vector(x, g, lb, ub):  # -> tuple[Unknown, Unknown]:
     """Compute Coleman-Li scaling vector and its derivatives.
 
     Components of a vector v are defined as follows::
@@ -264,39 +275,41 @@ def CL_scaling_vector(x, g, lb, ub): # -> tuple[Unknown, Unknown]:
     """
     ...
 
-def reflective_transformation(y, lb, ub): # -> tuple[Unknown, Unknown]:
+def reflective_transformation(y, lb, ub):  # -> tuple[Unknown, Unknown]:
     """Compute reflective transformation and its gradient."""
     ...
 
-def print_header_nonlinear(): # -> None:
+def print_header_nonlinear():  # -> None:
     ...
-
-def print_iteration_nonlinear(iteration, nfev, cost, cost_reduction, step_norm, optimality): # -> None:
+def print_iteration_nonlinear(
+    iteration, nfev, cost, cost_reduction, step_norm, optimality
+):  # -> None:
     ...
-
-def print_header_linear(): # -> None:
+def print_header_linear():  # -> None:
     ...
-
-def print_iteration_linear(iteration, cost, cost_reduction, step_norm, optimality): # -> None:
+def print_iteration_linear(
+    iteration, cost, cost_reduction, step_norm, optimality
+):  # -> None:
     ...
-
 def compute_grad(J, f):
     """Compute gradient of the least-squares cost function."""
     ...
 
-def compute_jac_scale(J, scale_inv_old=...): # -> tuple[NDArray[floating[Any]] | Any, NDArray[floating[Any]] | Any | NDArray[Any]]:
+def compute_jac_scale(
+    J, scale_inv_old=...
+):  # -> tuple[NDArray[floating[Any]] | Any, NDArray[floating[Any]] | Any | NDArray[Any]]:
     """Compute variables scale based on the Jacobian matrix."""
     ...
 
-def left_multiplied_operator(J, d): # -> LinearOperator:
+def left_multiplied_operator(J, d):  # -> LinearOperator:
     """Return diag(d) J as LinearOperator."""
     ...
 
-def right_multiplied_operator(J, d): # -> LinearOperator:
+def right_multiplied_operator(J, d):  # -> LinearOperator:
     """Return J diag(d) as LinearOperator."""
     ...
 
-def regularized_lsq_operator(J, diag): # -> LinearOperator:
+def regularized_lsq_operator(J, diag):  # -> LinearOperator:
     """Return a matrix arising in regularized least squares as LinearOperator.
 
     The matrix is
@@ -306,28 +319,31 @@ def regularized_lsq_operator(J, diag): # -> LinearOperator:
     """
     ...
 
-def right_multiply(J, d, copy=...): # -> LinearOperator:
+def right_multiply(J, d, copy=...):  # -> LinearOperator:
     """Compute J diag(d).
 
     If `copy` is False, `J` is modified in place (unless being LinearOperator).
     """
     ...
 
-def left_multiply(J, d, copy=...): # -> LinearOperator:
+def left_multiply(J, d, copy=...):  # -> LinearOperator:
     """Compute diag(d) J.
 
     If `copy` is False, `J` is modified in place (unless being LinearOperator).
     """
     ...
 
-def check_termination(dF, F, dx_norm, x_norm, ratio, ftol, xtol): # -> Literal[4, 2, 3] | None:
+def check_termination(
+    dF, F, dx_norm, x_norm, ratio, ftol, xtol
+):  # -> Literal[4, 2, 3] | None:
     """Check termination condition for nonlinear least squares."""
     ...
 
-def scale_for_robust_loss_function(J, f, rho): # -> tuple[Unknown | LinearOperator, Unknown]:
+def scale_for_robust_loss_function(
+    J, f, rho
+):  # -> tuple[Unknown | LinearOperator, Unknown]:
     """Scale Jacobian and residuals for a robust loss function.
 
     Arrays are modified in place.
     """
     ...
-

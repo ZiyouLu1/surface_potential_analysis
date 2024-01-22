@@ -8,8 +8,9 @@ This module provides functions to perform full Procrustes analysis.
 This code was originally written by Justin Kucynski and ported over from
 scikit-bio by Yoshiki Vazquez-Baeza.
 """
-__all__ = ['procrustes']
-def procrustes(data1, data2): # -> tuple[Any, Unknown, Any]:
+__all__ = ["procrustes"]
+
+def procrustes(data1, data2):  # -> tuple[Any, Unknown, Any]:
     r"""Procrustes analysis, a similarity test for two data sets.
 
     Each input matrix is a set of points or vectors (the rows of the matrix).
@@ -95,4 +96,3 @@ def procrustes(data1, data2): # -> tuple[Any, Unknown, Any]:
 
     """
     ...
-

@@ -25,5 +25,5 @@ Rotations in 3 dimensions
    Slerp
    RotationSpline
 """
-__all__ = ['Rotation', 'Slerp', 'RotationSpline']
+__all__ = ["Rotation", "Slerp", "RotationSpline"]
 test = ...

@@ -130,5 +130,5 @@ Morphology
    white_tophat
 
 """
-__all__ = [s for s in dir() if nots.startswith('_')]
+__all__ = [s for s in dir() if nots.startswith("_")]
 test = ...

@@ -6,10 +6,12 @@ import numpy as np
 import numpy.typing as npt
 from typing import TYPE_CHECKING
 
-__all__ = ['geometric_slerp']
-if TYPE_CHECKING:
-    ...
-def geometric_slerp(start: npt.ArrayLike, end: npt.ArrayLike, t: npt.ArrayLike, tol: float = ...) -> np.ndarray:
+__all__ = ["geometric_slerp"]
+if TYPE_CHECKING: ...
+
+def geometric_slerp(
+    start: npt.ArrayLike, end: npt.ArrayLike, t: npt.ArrayLike, tol: float = ...
+) -> np.ndarray:
     """
     Geometric spherical linear interpolation.
 
@@ -147,4 +149,3 @@ def geometric_slerp(start: npt.ArrayLike, end: npt.ArrayLike, t: npt.ArrayLike, 
     >>> plt.show()
     """
     ...
-

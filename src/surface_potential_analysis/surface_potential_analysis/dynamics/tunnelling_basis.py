@@ -22,7 +22,6 @@ if TYPE_CHECKING:
     )
 
 
-
 _L0_co = TypeVar("_L0_co", bound=int, covariant=True)
 
 _AX0Inv = TypeVar("_AX0Inv", bound=BasisLike[Any, Any])

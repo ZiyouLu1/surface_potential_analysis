@@ -7,7 +7,10 @@ from scipy.optimize import OptimizeResult
 
 """Boundary value problem solver."""
 EPS = np.finfo(float).eps
-def estimate_fun_jac(fun, x, y, p, f0=...): # -> tuple[NDArray[float64], NDArray[float64] | None]:
+
+def estimate_fun_jac(
+    fun, x, y, p, f0=...
+):  # -> tuple[NDArray[float64], NDArray[float64] | None]:
     """Estimate derivatives of an ODE system rhs with forward differences.
 
     Returns
@@ -21,7 +24,9 @@ def estimate_fun_jac(fun, x, y, p, f0=...): # -> tuple[NDArray[float64], NDArray
     """
     ...
 
-def estimate_bc_jac(bc, ya, yb, p, bc0=...): # -> tuple[NDArray[float64], NDArray[float64], NDArray[float64] | None]:
+def estimate_bc_jac(
+    bc, ya, yb, p, bc0=...
+):  # -> tuple[NDArray[float64], NDArray[float64], NDArray[float64] | None]:
     """Estimate derivatives of boundary conditions with forward differences.
 
     Returns
@@ -38,14 +43,14 @@ def estimate_bc_jac(bc, ya, yb, p, bc0=...): # -> tuple[NDArray[float64], NDArra
     """
     ...
 
-def compute_jac_indices(n, m, k): # -> tuple[NDArray[Unknown], NDArray[bool_]]:
+def compute_jac_indices(n, m, k):  # -> tuple[NDArray[Unknown], NDArray[bool_]]:
     """Compute indices for the collocation system Jacobian construction.
 
     See `construct_global_jac` for the explanation.
     """
     ...
 
-def stacked_matmul(a, b): # -> NDArray[float64] | Any:
+def stacked_matmul(a, b):  # -> NDArray[float64] | Any:
     """Stacked matrix multiply: out[i,:,:] = np.dot(a[i,:,:], b[i,:,:]).
 
     Empirical optimization. Use outer Python loop and BLAS for large
@@ -53,7 +58,21 @@ def stacked_matmul(a, b): # -> NDArray[float64] | Any:
     """
     ...
 
-def construct_global_jac(n, m, k, i_jac, j_jac, h, df_dy, df_dy_middle, df_dp, df_dp_middle, dbc_dya, dbc_dyb, dbc_dp): # -> csc_matrix:
+def construct_global_jac(
+    n,
+    m,
+    k,
+    i_jac,
+    j_jac,
+    h,
+    df_dy,
+    df_dy_middle,
+    df_dp,
+    df_dp_middle,
+    dbc_dya,
+    dbc_dyb,
+    dbc_dp,
+):  # -> csc_matrix:
     """Construct the Jacobian of the collocation system.
 
     There are n * m + k functions: m - 1 collocations residuals, each
@@ -136,7 +155,7 @@ def construct_global_jac(n, m, k, i_jac, j_jac, h, df_dy, df_dy_middle, df_dp, d
     """
     ...
 
-def collocation_fun(fun, y, p, x, h): # -> tuple[Unknown, Unknown, Unknown, Unknown]:
+def collocation_fun(fun, y, p, x, h):  # -> tuple[Unknown, Unknown, Unknown, Unknown]:
     """Evaluate collocation residuals.
 
     This function lies in the core of the method. The solution is sought
@@ -169,11 +188,15 @@ def collocation_fun(fun, y, p, x, h): # -> tuple[Unknown, Unknown, Unknown, Unkn
     """
     ...
 
-def prepare_sys(n, m, k, fun, bc, fun_jac, bc_jac, x, h): # -> tuple[(y: Unknown, p: Unknown) -> tuple[Unknown, Unknown, Unknown, Unknown], (y: Unknown, p: Unknown, y_middle: Unknown, f: Unknown, f_middle: Unknown, bc0: Unknown) -> csc_matrix]:
+def prepare_sys(
+    n, m, k, fun, bc, fun_jac, bc_jac, x, h
+):  # -> tuple[(y: Unknown, p: Unknown) -> tuple[Unknown, Unknown, Unknown, Unknown], (y: Unknown, p: Unknown, y_middle: Unknown, f: Unknown, f_middle: Unknown, bc0: Unknown) -> csc_matrix]:
     """Create the function and the Jacobian for the collocation system."""
     ...
 
-def solve_newton(n, m, h, col_fun, bc, jac, y, p, B, bvp_tol, bc_tol): # -> tuple[Unknown, Unknown, bool]:
+def solve_newton(
+    n, m, h, col_fun, bc, jac, y, p, B, bvp_tol, bc_tol
+):  # -> tuple[Unknown, Unknown, bool]:
     """Solve the nonlinear collocation system by a Newton method.
 
     This is a simple Newton method with a backtracking line search. As
@@ -235,18 +258,18 @@ def solve_newton(n, m, h, col_fun, bc, jac, y, p, B, bvp_tol, bc_tol): # -> tupl
     """
     ...
 
-def print_iteration_header(): # -> None:
+def print_iteration_header():  # -> None:
+    ...
+def print_iteration_progress(
+    iteration, residual, bc_residual, total_nodes, nodes_added
+):  # -> None:
     ...
 
-def print_iteration_progress(iteration, residual, bc_residual, total_nodes, nodes_added): # -> None:
-    ...
-
-class BVPResult(OptimizeResult):
-    ...
-
+class BVPResult(OptimizeResult): ...
 
 TERMINATION_MESSAGES = ...
-def estimate_rms_residuals(fun, sol, x, h, p, r_middle, f_middle): # -> Any:
+
+def estimate_rms_residuals(fun, sol, x, h, p, r_middle, f_middle):  # -> Any:
     """Estimate rms values of collocation residuals using Lobatto quadrature.
 
     The residuals are defined as the difference between the derivatives of
@@ -275,7 +298,7 @@ def estimate_rms_residuals(fun, sol, x, h, p, r_middle, f_middle): # -> Any:
     """
     ...
 
-def create_spline(y, yp, x, h): # -> PPoly:
+def create_spline(y, yp, x, h):  # -> PPoly:
     """Create a cubic spline given values and derivatives.
 
     Formulas for the coefficients are taken from interpolate.CubicSpline.
@@ -287,7 +310,7 @@ def create_spline(y, yp, x, h): # -> PPoly:
     """
     ...
 
-def modify_mesh(x, insert_1, insert_2): # -> NDArray[Unknown]:
+def modify_mesh(x, insert_1, insert_2):  # -> NDArray[Unknown]:
     """Insert nodes into a mesh.
 
     Nodes removal logic is not established, its impact on the solver is
@@ -314,11 +337,26 @@ def modify_mesh(x, insert_1, insert_2): # -> NDArray[Unknown]:
     """
     ...
 
-def wrap_functions(fun, bc, fun_jac, bc_jac, k, a, S, D, dtype): # -> tuple[(x: Unknown, y: Unknown, p: Unknown) -> (NDArray[Unknown] | Unknown), ((ya: Unknown, yb: Unknown, _: Unknown) -> NDArray[Unknown]) | ((x: Unknown, y: Unknown, p: Unknown) -> NDArray[Unknown]), ((x: Unknown, y: Unknown, p: Unknown) -> tuple[NDArray[Unknown] | Unknown, NDArray[Unknown]]) | Unbound, ((ya: Unknown, yb: Unknown, _: Unknown) -> tuple[NDArray[Unknown], NDArray[Unknown], None]) | ((ya: Unknown, yb: Unknown, p: Unknown) -> tuple[NDArray[Unknown], NDArray[Unknown], NDArray[Unknown]]) | Unbound]:
+def wrap_functions(
+    fun, bc, fun_jac, bc_jac, k, a, S, D, dtype
+):  # -> tuple[(x: Unknown, y: Unknown, p: Unknown) -> (NDArray[Unknown] | Unknown), ((ya: Unknown, yb: Unknown, _: Unknown) -> NDArray[Unknown]) | ((x: Unknown, y: Unknown, p: Unknown) -> NDArray[Unknown]), ((x: Unknown, y: Unknown, p: Unknown) -> tuple[NDArray[Unknown] | Unknown, NDArray[Unknown]]) | Unbound, ((ya: Unknown, yb: Unknown, _: Unknown) -> tuple[NDArray[Unknown], NDArray[Unknown], None]) | ((ya: Unknown, yb: Unknown, p: Unknown) -> tuple[NDArray[Unknown], NDArray[Unknown], NDArray[Unknown]]) | Unbound]:
     """Wrap functions for unified usage in the solver."""
     ...
 
-def solve_bvp(fun, bc, x, y, p=..., S=..., fun_jac=..., bc_jac=..., tol=..., max_nodes=..., verbose=..., bc_tol=...): # -> BVPResult:
+def solve_bvp(
+    fun,
+    bc,
+    x,
+    y,
+    p=...,
+    S=...,
+    fun_jac=...,
+    bc_jac=...,
+    tol=...,
+    max_nodes=...,
+    verbose=...,
+    bc_tol=...,
+):  # -> BVPResult:
     """Solve a boundary value problem for a system of ODEs.
 
     This function numerically solves a first order system of ODEs subject to
@@ -607,4 +645,3 @@ def solve_bvp(fun, bc, x, y, p=..., S=..., fun_jac=..., bc_jac=..., tol=..., max
     >>> plt.show()
     """
     ...
-

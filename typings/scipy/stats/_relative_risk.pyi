@@ -32,12 +32,13 @@ class RelativeRiskResult:
     confidence_interval :
         Compute the confidence interval for the relative risk estimate.
     """
+
     relative_risk: float
     exposed_cases: int
     exposed_total: int
     control_cases: int
     control_total: int
-    def confidence_interval(self, confidence_level=...): # -> ConfidenceInterval:
+    def confidence_interval(self, confidence_level=...):  # -> ConfidenceInterval:
         """
         Compute the confidence interval for the relative risk.
 
@@ -76,10 +77,10 @@ class RelativeRiskResult:
         ConfidenceInterval(low=1.1261564003469628, high=5.549850800541033)
         """
         ...
-    
 
-
-def relative_risk(exposed_cases, exposed_total, control_cases, control_total): # -> RelativeRiskResult:
+def relative_risk(
+    exposed_cases, exposed_total, control_cases, control_total
+):  # -> RelativeRiskResult:
     """
     Compute the relative risk (also known as the risk ratio).
 
@@ -188,4 +189,3 @@ def relative_risk(exposed_cases, exposed_total, control_cases, control_total): #
     that high CAT is associated with greater risk of CHD.
     """
     ...
-

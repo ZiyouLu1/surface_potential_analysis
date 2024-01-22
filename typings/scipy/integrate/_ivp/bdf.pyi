@@ -8,15 +8,18 @@ MAX_ORDER = ...
 NEWTON_MAXITER = ...
 MIN_FACTOR = ...
 MAX_FACTOR = ...
-def compute_R(order, factor): # -> NDArray[floating[Any]]:
+
+def compute_R(order, factor):  # -> NDArray[floating[Any]]:
     """Compute the matrix for changing the differences array."""
     ...
 
-def change_D(D, order, factor): # -> None:
+def change_D(D, order, factor):  # -> None:
     """Change differences array in-place when step size is changed."""
     ...
 
-def solve_bdf_system(fun, t_new, y_predict, c, psi, LU, solve_lu, scale, tol): # -> tuple[bool, int, Unknown, Unknown | Literal[0]]:
+def solve_bdf_system(
+    fun, t_new, y_predict, c, psi, LU, solve_lu, scale, tol
+):  # -> tuple[bool, int, Unknown, Unknown | Literal[0]]:
     """Solve the algebraic system resulting from BDF method."""
     ...
 
@@ -145,14 +148,21 @@ class BDF(OdeSolver):
            sparse Jacobian matrices", Journal of the Institute of Mathematics
            and its Applications, 13, pp. 117-120, 1974.
     """
-    def __init__(self, fun, t0, y0, t_bound, max_step=..., rtol=..., atol=..., jac=..., jac_sparsity=..., vectorized=..., first_step=..., **extraneous) -> None:
-        ...
-    
-
+    def __init__(
+        self,
+        fun,
+        t0,
+        y0,
+        t_bound,
+        max_step=...,
+        rtol=...,
+        atol=...,
+        jac=...,
+        jac_sparsity=...,
+        vectorized=...,
+        first_step=...,
+        **extraneous,
+    ) -> None: ...
 
 class BdfDenseOutput(DenseOutput):
-    def __init__(self, t_old, t, h, order, D) -> None:
-        ...
-    
-
-
+    def __init__(self, t_old, t, h, order, D) -> None: ...

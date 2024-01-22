@@ -13,7 +13,8 @@ _PI_SQUARED = ...
 _PI_FOUR = ...
 _PI_SIX = ...
 _STIRLING_COEFFS = ...
-def kolmogn(n, x, cdf=...): # -> NDArray[Any]:
+
+def kolmogn(n, x, cdf=...):  # -> NDArray[Any]:
     """Computes the CDF for the two-sided Kolmogorov-Smirnov distribution.
 
     The two-sided Kolmogorov-Smirnov distribution has as its CDF Pr(D_n <= x),
@@ -39,7 +40,7 @@ def kolmogn(n, x, cdf=...): # -> NDArray[Any]:
     """
     ...
 
-def kolmognp(n, x): # -> NDArray[Any]:
+def kolmognp(n, x):  # -> NDArray[Any]:
     """Computes the PDF for the two-sided Kolmogorov-Smirnov distribution.
 
     Parameters
@@ -58,7 +59,7 @@ def kolmognp(n, x): # -> NDArray[Any]:
     """
     ...
 
-def kolmogni(n, q, cdf=...): # -> NDArray[Any]:
+def kolmogni(n, q, cdf=...):  # -> NDArray[Any]:
     """Computes the PPF(or ISF) for the two-sided Kolmogorov-Smirnov distribution.
 
     Parameters
@@ -78,4 +79,3 @@ def kolmogni(n, q, cdf=...): # -> NDArray[Any]:
     The return value has shape the result of numpy broadcasting n and x.
     """
     ...
-

@@ -7,7 +7,6 @@ from .axes import Axes
 from .artist import Artist, allow_rasterization
 
 class QuiverKey(Artist):
-
     halign = ...
     valign = ...
     pivot = ...
@@ -26,7 +25,7 @@ class QuiverKey(Artist):
         labelpos: Literal["N", "S", "E", "W"] = ...,
         labelcolor: Color = ...,
         fontproperties: dict = ...,
-        **kwargs
+        **kwargs,
     ) -> None: ...
     @property
     def labelsep(self): ...
@@ -52,7 +51,7 @@ class Quiver(PolyCollection):
         width: float = ...,
         color: Color = ...,
         pivot=...,
-        **kwargs
+        **kwargs,
     ) -> None: ...
     def get_datalim(self, transData): ...
     @allow_rasterization
@@ -75,7 +74,7 @@ class Barbs(PolyCollection):
         barb_increments=...,
         rounding=...,
         flip_barb=...,
-        **kwargs
+        **kwargs,
     ) -> None: ...
     def set_UVC(self, U, V, C=...): ...
     def set_offsets(self, xy): ...

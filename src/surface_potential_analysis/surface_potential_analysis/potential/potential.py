@@ -274,7 +274,7 @@ def interpolate_uneven_potential(
 
 
 def mock_even_potential(
-    uneven: UnevenPotential3d[_L0Inv, _L1Inv, _L2Inv]
+    uneven: UnevenPotential3d[_L0Inv, _L1Inv, _L2Inv],
 ) -> Potential[
     StackedBasisLike[
         FundamentalPositionBasis3d[_L0Inv],

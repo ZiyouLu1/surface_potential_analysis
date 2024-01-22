@@ -7,37 +7,35 @@ class spmatrix:
 
     It cannot be instantiated.  Most of the work is provided by subclasses.
     """
+
     _is_array = ...
-    def __mul__(self, other):
+    def __mul__(self, other): ...
+    def __rmul__(self, other): ...
+    def __pow__(
+        self, other
+    ):  # -> coo_matrix | _spbase | Any | dia_matrix | _NotImplementedType:
         ...
-    
-    def __rmul__(self, other):
-        ...
-    
-    def __pow__(self, other): # -> coo_matrix | _spbase | Any | dia_matrix | _NotImplementedType:
-        ...
-    
-    def set_shape(self, shape): # -> None:
+    def set_shape(self, shape):  # -> None:
         """Set the shape of the matrix in-place"""
         ...
-    
+
     def get_shape(self):
         """Get the shape of the matrix"""
         ...
-    
+
     shape = ...
     def asfptype(self):
         """Upcast array to a floating point format (if necessary)"""
         ...
-    
+
     def getmaxprint(self):
         """Maximum number of elements to display when printed."""
         ...
-    
+
     def getformat(self):
         """Matrix storage format"""
         ...
-    
+
     def getnnz(self, axis=...):
         """Number of stored values, including explicit zeros.
 
@@ -48,7 +46,7 @@ class spmatrix:
             each column, or in each row.
         """
         ...
-    
+
     def getH(self):
         """Return the Hermitian transpose of this array.
 
@@ -57,18 +55,15 @@ class spmatrix:
         numpy.matrix.getH : NumPy's implementation of `getH` for matrices
         """
         ...
-    
+
     def getcol(self, j):
         """Returns a copy of column j of the array, as an (m x 1) sparse
         array (column vector).
         """
         ...
-    
+
     def getrow(self, i):
         """Returns a copy of row i of the array, as a (1 x n) sparse
         array (row vector).
         """
         ...
-    
-
-

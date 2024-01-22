@@ -6,6 +6,7 @@ from ._trustregion import BaseQuadraticSubproblem
 
 """Dog-leg trust-region optimization."""
 __all__ = []
+
 class DoglegSubproblem(BaseQuadraticSubproblem):
     """Quadratic subproblem solved by the dogleg method"""
     def cauchy_point(self):
@@ -13,14 +14,16 @@ class DoglegSubproblem(BaseQuadraticSubproblem):
         The Cauchy point is minimal along the direction of steepest descent.
         """
         ...
-    
+
     def newton_point(self):
         """
         The Newton point is a global minimum of the approximate function.
         """
         ...
-    
-    def solve(self, trust_radius): # -> tuple[Unknown, Literal[False]] | tuple[Unknown, Literal[True]]:
+
+    def solve(
+        self, trust_radius
+    ):  # -> tuple[Unknown, Literal[False]] | tuple[Unknown, Literal[True]]:
         """
         Minimize a function using the dog-leg trust-region algorithm.
 
@@ -51,6 +54,3 @@ class DoglegSubproblem(BaseQuadraticSubproblem):
                Springer-Verlag, 2006, page 73.
         """
         ...
-    
-
-

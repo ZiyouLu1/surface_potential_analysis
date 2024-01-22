@@ -117,7 +117,6 @@ class AuxTransformBox(OffsetBox):
     def draw(self, renderer: RendererBase): ...
 
 class AnchoredOffsetbox(OffsetBox):
-
     zorder = ...
     codes = ...
 
@@ -131,7 +130,7 @@ class AnchoredOffsetbox(OffsetBox):
         frameon: bool = ...,
         bbox_to_anchor: BboxBase | Sequence[float] = ...,
         bbox_transform: Transform | None = ...,
-        **kwargs
+        **kwargs,
     ) -> None: ...
     def set_child(self, child): ...
     def get_child(self): ...
@@ -144,7 +143,6 @@ class AnchoredOffsetbox(OffsetBox):
     def draw(self, renderer: RendererBase): ...
 
 class AnchoredText(AnchoredOffsetbox):
-
     patch: FancyBboxPatch
 
     def __init__(
@@ -154,7 +152,7 @@ class AnchoredText(AnchoredOffsetbox):
         pad: float = ...,
         borderpad: float = ...,
         prop: dict = ...,
-        **kwargs
+        **kwargs,
     ) -> None: ...
 
 class OffsetImage(OffsetBox):
@@ -170,7 +168,7 @@ class OffsetImage(OffsetBox):
         filterrad=...,
         resample=...,
         dpi_cor=...,
-        **kwargs
+        **kwargs,
     ) -> None: ...
     def set_data(self, arr: ArrayLike): ...
     def get_data(self): ...
@@ -183,7 +181,6 @@ class OffsetImage(OffsetBox):
     def draw(self, renderer: RendererBase): ...
 
 class AnnotationBbox(Artist, _AnnotationBase):
-
     zorder = ...
     def __str__(self) -> str: ...
     def __init__(
@@ -200,7 +197,7 @@ class AnnotationBbox(Artist, _AnnotationBase):
         bboxprops=...,
         arrowprops=...,
         fontsize: float = ...,
-        **kwargs
+        **kwargs,
     ) -> None: ...
     @property
     def xyann(self): ...

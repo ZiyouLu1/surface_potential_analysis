@@ -180,7 +180,7 @@ class HandlerErrorbar(HandlerLine2D):
         yerr_size: float = ...,
         marker_pad: float = ...,
         numpoints: int = ...,
-        **kwargs
+        **kwargs,
     ) -> None: ...
     def get_err_size(
         self, legend: Legend, xdescent, ydescent, width, height, fontsize: int
@@ -204,7 +204,7 @@ class HandlerStem(HandlerNpointsYoffsets):
         numpoints: int = ...,
         bottom: float = ...,
         yoffsets: Sequence[float] = ...,
-        **kwargs
+        **kwargs,
     ) -> None: ...
     def get_ydata(
         self, legend: Legend, xdescent, ydescent, width, height, fontsize: int

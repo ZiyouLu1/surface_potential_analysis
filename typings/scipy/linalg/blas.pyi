@@ -206,13 +206,16 @@ BLAS Level 3 functions
    ztrsm
 
 """
-__all__ = ['get_blas_funcs', 'find_best_blas_type']
+__all__ = ["get_blas_funcs", "find_best_blas_type"]
 HAS_ILP64 = ...
 empty_module = ...
 _type_score = ...
 _type_conv = ...
 _blas_alias = ...
-def find_best_blas_type(arrays=..., dtype=...): # -> tuple[Unknown, Unknown, Unknown | bool]:
+
+def find_best_blas_type(
+    arrays=..., dtype=...
+):  # -> tuple[Unknown, Unknown, Unknown | bool]:
     """Find best-matching BLAS/LAPACK type.
 
     Arrays are used to determine the optimal prefix of BLAS routines.
@@ -253,7 +256,7 @@ def find_best_blas_type(arrays=..., dtype=...): # -> tuple[Unknown, Unknown, Unk
     ...
 
 @_memoize_get_funcs
-def get_blas_funcs(names, arrays=..., dtype=..., ilp64=...): # -> list[Unknown]:
+def get_blas_funcs(names, arrays=..., dtype=..., ilp64=...):  # -> list[Unknown]:
     """Return available BLAS function objects from names.
 
     Arrays are used to determine the optimal prefix of BLAS routines.
@@ -310,4 +313,3 @@ def get_blas_funcs(names, arrays=..., dtype=..., ilp64=...): # -> list[Unknown]:
 
     """
     ...
-

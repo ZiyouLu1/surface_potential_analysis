@@ -26,13 +26,16 @@ class HamiltonianEigenstates(unittest.TestCase):
     def test_calculate_energy_diagonal(self) -> None:
         basis = StackedBasis[Any, Any, Any](
             FundamentalTransformedPositionBasis(
-                np.array([1, 0, 0]), rng.integers(1, 10)  # type: ignore bad libary types
+                np.array([1, 0, 0]),
+                rng.integers(1, 10),  # type: ignore bad libary types
             ),
             FundamentalTransformedPositionBasis(
-                np.array([0, 1, 0]), rng.integers(1, 10)  # type: ignore bad libary types
+                np.array([0, 1, 0]),
+                rng.integers(1, 10),  # type: ignore bad libary types
             ),
             FundamentalTransformedPositionBasis(
-                np.array([0, 0, 1]), rng.integers(1, 10)  # type: ignore bad libary types
+                np.array([0, 0, 1]),
+                rng.integers(1, 10),  # type: ignore bad libary types
             ),
         )
         energies = rng.random((basis).n)

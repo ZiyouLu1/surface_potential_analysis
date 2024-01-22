@@ -60,6 +60,8 @@ class OverlapTest(unittest.TestCase):
         util = BasisUtil(overlap["basis"])
         overlap_momentum = convert_overlap_to_momentum_basis(overlap)
         expected = overlap_momentum["data"]
-        actual = get_overlap_momentum_interpolator_k_fractions(overlap)(util.stacked_nk_points)  # type: ignore[var-annotated,arg-type]
+        actual = get_overlap_momentum_interpolator_k_fractions(overlap)(
+            util.stacked_nk_points
+        )  # type: ignore[var-annotated,arg-type]
 
         np.testing.assert_array_almost_equal(expected, actual)

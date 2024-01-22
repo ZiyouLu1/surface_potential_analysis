@@ -16,10 +16,86 @@ References
    York. 2000.
 
 """
-__all__ = ['find_repeats', 'gmean', 'hmean', 'pmean', 'mode', 'tmean', 'tvar', 'tmin', 'tmax', 'tstd', 'tsem', 'moment', 'skew', 'kurtosis', 'describe', 'skewtest', 'kurtosistest', 'normaltest', 'jarque_bera', 'scoreatpercentile', 'percentileofscore', 'cumfreq', 'relfreq', 'obrientransform', 'sem', 'zmap', 'zscore', 'gzscore', 'iqr', 'gstd', 'median_abs_deviation', 'sigmaclip', 'trimboth', 'trim1', 'trim_mean', 'f_oneway', 'pearsonr', 'fisher_exact', 'spearmanr', 'pointbiserialr', 'kendalltau', 'weightedtau', 'multiscale_graphcorr', 'linregress', 'siegelslopes', 'theilslopes', 'ttest_1samp', 'ttest_ind', 'ttest_ind_from_stats', 'ttest_rel', 'kstest', 'ks_1samp', 'ks_2samp', 'chisquare', 'power_divergence', 'tiecorrect', 'ranksums', 'kruskal', 'friedmanchisquare', 'rankdata', 'combine_pvalues', 'wasserstein_distance', 'energy_distance', 'brunnermunzel', 'alexandergovern', 'expectile']
+__all__ = [
+    "find_repeats",
+    "gmean",
+    "hmean",
+    "pmean",
+    "mode",
+    "tmean",
+    "tvar",
+    "tmin",
+    "tmax",
+    "tstd",
+    "tsem",
+    "moment",
+    "skew",
+    "kurtosis",
+    "describe",
+    "skewtest",
+    "kurtosistest",
+    "normaltest",
+    "jarque_bera",
+    "scoreatpercentile",
+    "percentileofscore",
+    "cumfreq",
+    "relfreq",
+    "obrientransform",
+    "sem",
+    "zmap",
+    "zscore",
+    "gzscore",
+    "iqr",
+    "gstd",
+    "median_abs_deviation",
+    "sigmaclip",
+    "trimboth",
+    "trim1",
+    "trim_mean",
+    "f_oneway",
+    "pearsonr",
+    "fisher_exact",
+    "spearmanr",
+    "pointbiserialr",
+    "kendalltau",
+    "weightedtau",
+    "multiscale_graphcorr",
+    "linregress",
+    "siegelslopes",
+    "theilslopes",
+    "ttest_1samp",
+    "ttest_ind",
+    "ttest_ind_from_stats",
+    "ttest_rel",
+    "kstest",
+    "ks_1samp",
+    "ks_2samp",
+    "chisquare",
+    "power_divergence",
+    "tiecorrect",
+    "ranksums",
+    "kruskal",
+    "friedmanchisquare",
+    "rankdata",
+    "combine_pvalues",
+    "wasserstein_distance",
+    "energy_distance",
+    "brunnermunzel",
+    "alexandergovern",
+    "expectile",
+]
 SignificanceResult = ...
-@_axis_nan_policy_factory(lambda x: x, n_samples=1, n_outputs=1, too_small=0, paired=True, result_to_tuple=lambda x: (x, ), kwd_samples=['weights'])
-def gmean(a, axis=..., dtype=..., weights=...): # -> Any:
+
+@_axis_nan_policy_factory(
+    lambda x: x,
+    n_samples=1,
+    n_outputs=1,
+    too_small=0,
+    paired=True,
+    result_to_tuple=lambda x: (x,),
+    kwd_samples=["weights"],
+)
+def gmean(a, axis=..., dtype=..., weights=...):  # -> Any:
     r"""Compute the weighted geometric mean along the specified axis.
 
     The weighted geometric mean of the array :math:`a_i` associated to weights
@@ -81,8 +157,16 @@ def gmean(a, axis=..., dtype=..., weights=...): # -> Any:
     """
     ...
 
-@_axis_nan_policy_factory(lambda x: x, n_samples=1, n_outputs=1, too_small=0, paired=True, result_to_tuple=lambda x: (x, ), kwd_samples=['weights'])
-def hmean(a, axis=..., dtype=..., *, weights=...): # -> Any:
+@_axis_nan_policy_factory(
+    lambda x: x,
+    n_samples=1,
+    n_outputs=1,
+    too_small=0,
+    paired=True,
+    result_to_tuple=lambda x: (x,),
+    kwd_samples=["weights"],
+)
+def hmean(a, axis=..., dtype=..., *, weights=...):  # -> Any:
     r"""Calculate the weighted harmonic mean along the specified axis.
 
     The weighted harmonic mean of the array :math:`a_i` associated to weights
@@ -155,8 +239,16 @@ def hmean(a, axis=..., dtype=..., *, weights=...): # -> Any:
     """
     ...
 
-@_axis_nan_policy_factory(lambda x: x, n_samples=1, n_outputs=1, too_small=0, paired=True, result_to_tuple=lambda x: (x, ), kwd_samples=['weights'])
-def pmean(a, p, *, axis=..., dtype=..., weights=...): # -> Any:
+@_axis_nan_policy_factory(
+    lambda x: x,
+    n_samples=1,
+    n_outputs=1,
+    too_small=0,
+    paired=True,
+    result_to_tuple=lambda x: (x,),
+    kwd_samples=["weights"],
+)
+def pmean(a, p, *, axis=..., dtype=..., weights=...):  # -> Any:
     r"""Calculate the weighted power mean along the specified axis.
 
     The weighted power mean of the array :math:`a_i` associated to weights
@@ -255,8 +347,11 @@ def pmean(a, p, *, axis=..., dtype=..., weights=...): # -> Any:
     ...
 
 ModeResult = ...
-@_axis_nan_policy_factory(_mode_result, override={ 'vectorization': True,'nan_propagation': False })
-def mode(a, axis=..., nan_policy=..., keepdims=...): # -> ModeResult:
+
+@_axis_nan_policy_factory(
+    _mode_result, override={"vectorization": True, "nan_propagation": False}
+)
+def mode(a, axis=..., nan_policy=..., keepdims=...):  # -> ModeResult:
     r"""Return an array of the modal (most common) value in the passed array.
 
     If there is more than one such value, only one is returned.
@@ -321,7 +416,7 @@ def mode(a, axis=..., nan_policy=..., keepdims=...): # -> ModeResult:
     """
     ...
 
-def tmean(a, limits=..., inclusive=..., axis=...): # -> floating[Any]:
+def tmean(a, limits=..., inclusive=..., axis=...):  # -> floating[Any]:
     """Compute the trimmed mean.
 
     This function finds the arithmetic mean of given values, ignoring values
@@ -365,7 +460,7 @@ def tmean(a, limits=..., inclusive=..., axis=...): # -> floating[Any]:
     """
     ...
 
-def tvar(a, limits=..., inclusive=..., axis=..., ddof=...): # -> Any:
+def tvar(a, limits=..., inclusive=..., axis=..., ddof=...):  # -> Any:
     """Compute the trimmed variance.
 
     This function computes the sample variance of an array of values,
@@ -514,7 +609,7 @@ def tmax(a, upperlimit=..., axis=..., inclusive=..., nan_policy=...):
     """
     ...
 
-def tstd(a, limits=..., inclusive=..., axis=..., ddof=...): # -> Any:
+def tstd(a, limits=..., inclusive=..., axis=..., ddof=...):  # -> Any:
     """Compute the trimmed sample standard deviation.
 
     This function finds the sample standard deviation of given values,
@@ -562,7 +657,7 @@ def tstd(a, limits=..., inclusive=..., axis=..., ddof=...): # -> Any:
     """
     ...
 
-def tsem(a, limits=..., inclusive=..., axis=..., ddof=...): # -> Any:
+def tsem(a, limits=..., inclusive=..., axis=..., ddof=...):  # -> Any:
     """Compute the trimmed standard error of the mean.
 
     This function finds the standard error of the mean for given
@@ -610,8 +705,15 @@ def tsem(a, limits=..., inclusive=..., axis=..., ddof=...): # -> Any:
     """
     ...
 
-@_axis_nan_policy_factory(_moment_result_object, n_samples=1, result_to_tuple=lambda x: (x, ), n_outputs=_moment_outputs)
-def moment(a, moment=..., axis=..., nan_policy=..., *, center=...): # -> NDArray[Unknown] | float64 | NDArray[float64]:
+@_axis_nan_policy_factory(
+    _moment_result_object,
+    n_samples=1,
+    result_to_tuple=lambda x: (x,),
+    n_outputs=_moment_outputs,
+)
+def moment(
+    a, moment=..., axis=..., nan_policy=..., *, center=...
+):  # -> NDArray[Unknown] | float64 | NDArray[float64]:
     r"""Calculate the nth moment about the mean for a sample.
 
     A moment is a specific quantitative measure of the shape of a set of
@@ -682,8 +784,8 @@ def moment(a, moment=..., axis=..., nan_policy=..., *, center=...): # -> NDArray
     """
     ...
 
-@_axis_nan_policy_factory(lambda x: x, result_to_tuple=lambda x: (x, ), n_outputs=1)
-def skew(a, axis=..., bias=..., nan_policy=...): # -> ndarray[Any, dtype[Any]]:
+@_axis_nan_policy_factory(lambda x: x, result_to_tuple=lambda x: (x,), n_outputs=1)
+def skew(a, axis=..., bias=..., nan_policy=...):  # -> ndarray[Any, dtype[Any]]:
     r"""Compute the sample skewness of a data set.
 
     For normally distributed data, the skewness should be about zero. For
@@ -759,8 +861,10 @@ def skew(a, axis=..., bias=..., nan_policy=...): # -> ndarray[Any, dtype[Any]]:
     """
     ...
 
-@_axis_nan_policy_factory(lambda x: x, result_to_tuple=lambda x: (x, ), n_outputs=1)
-def kurtosis(a, axis=..., fisher=..., bias=..., nan_policy=...): # -> NDArray[signedinteger[Any]] | ndarray[Any, dtype[Any]]:
+@_axis_nan_policy_factory(lambda x: x, result_to_tuple=lambda x: (x,), n_outputs=1)
+def kurtosis(
+    a, axis=..., fisher=..., bias=..., nan_policy=...
+):  # -> NDArray[signedinteger[Any]] | ndarray[Any, dtype[Any]]:
     """Compute the kurtosis (Fisher or Pearson) of a dataset.
 
     Kurtosis is the fourth central moment divided by the square of the
@@ -844,7 +948,10 @@ def kurtosis(a, axis=..., fisher=..., bias=..., nan_policy=...): # -> NDArray[si
     ...
 
 DescribeResult = ...
-def describe(a, axis=..., ddof=..., bias=..., nan_policy=...): # -> scipy.stats._mstats_basic.DescribeResult | scipy.stats._stats_py.DescribeResult:
+
+def describe(
+    a, axis=..., ddof=..., bias=..., nan_policy=...
+):  # -> scipy.stats._mstats_basic.DescribeResult | scipy.stats._stats_py.DescribeResult:
     """Compute several descriptive statistics of the passed array.
 
     Parameters
@@ -912,7 +1019,10 @@ def describe(a, axis=..., ddof=..., bias=..., nan_policy=...): # -> scipy.stats.
     ...
 
 SkewtestResult = ...
-def skewtest(a, axis=..., nan_policy=..., alternative=...): # -> scipy.stats._mstats_basic.SkewtestResult | scipy.stats._stats_py.SkewtestResult:
+
+def skewtest(
+    a, axis=..., nan_policy=..., alternative=...
+):  # -> scipy.stats._mstats_basic.SkewtestResult | scipy.stats._stats_py.SkewtestResult:
     r"""Test whether the skew is different from the normal distribution.
 
     This function tests the null hypothesis that the skewness of
@@ -1074,7 +1184,10 @@ def skewtest(a, axis=..., nan_policy=..., alternative=...): # -> scipy.stats._ms
     ...
 
 KurtosistestResult = ...
-def kurtosistest(a, axis=..., nan_policy=..., alternative=...): # -> scipy.stats._mstats_basic.KurtosistestResult | scipy.stats._stats_py.KurtosistestResult:
+
+def kurtosistest(
+    a, axis=..., nan_policy=..., alternative=...
+):  # -> scipy.stats._mstats_basic.KurtosistestResult | scipy.stats._stats_py.KurtosistestResult:
     r"""Test whether a dataset has normal kurtosis.
 
     This function tests the null hypothesis that the kurtosis
@@ -1242,7 +1355,10 @@ def kurtosistest(a, axis=..., nan_policy=..., alternative=...): # -> scipy.stats
     ...
 
 NormaltestResult = ...
-def normaltest(a, axis=..., nan_policy=...): # -> scipy.stats._mstats_basic.NormaltestResult | scipy.stats._stats_py.NormaltestResult:
+
+def normaltest(
+    a, axis=..., nan_policy=...
+):  # -> scipy.stats._mstats_basic.NormaltestResult | scipy.stats._stats_py.NormaltestResult:
     r"""Test whether a sample differs from a normal distribution.
 
     This function tests the null hypothesis that a sample comes
@@ -1393,7 +1509,7 @@ def normaltest(a, axis=..., nan_policy=...): # -> scipy.stats._mstats_basic.Norm
     ...
 
 @_axis_nan_policy_factory(SignificanceResult, default_axis=None)
-def jarque_bera(x, *, axis=...): # -> _:
+def jarque_bera(x, *, axis=...):  # -> _:
     r"""Perform the Jarque-Bera goodness of fit test on sample data.
 
     The Jarque-Bera test tests whether the sample data has the skewness and
@@ -1539,7 +1655,9 @@ def jarque_bera(x, *, axis=...): # -> _:
     """
     ...
 
-def scoreatpercentile(a, per, limit=..., interpolation_method=..., axis=...): # -> float | NDArray[float64] | NDArray[Unknown] | Any:
+def scoreatpercentile(
+    a, per, limit=..., interpolation_method=..., axis=...
+):  # -> float | NDArray[float64] | NDArray[Unknown] | Any:
     """Calculate the score at a given percentile of the input sequence.
 
     For example, the score at `per=50` is the median. If the desired quantile
@@ -1693,7 +1811,8 @@ def percentileofscore(a, score, kind=..., nan_policy=...):
 
 HistogramResult = ...
 CumfreqResult = ...
-def cumfreq(a, numbins=..., defaultreallimits=..., weights=...): # -> CumfreqResult:
+
+def cumfreq(a, numbins=..., defaultreallimits=..., weights=...):  # -> CumfreqResult:
     """Return a cumulative frequency histogram, using the histogram function.
 
     A cumulative histogram is a mapping that counts the cumulative number of
@@ -1768,7 +1887,8 @@ def cumfreq(a, numbins=..., defaultreallimits=..., weights=...): # -> CumfreqRes
     ...
 
 RelfreqResult = ...
-def relfreq(a, numbins=..., defaultreallimits=..., weights=...): # -> RelfreqResult:
+
+def relfreq(a, numbins=..., defaultreallimits=..., weights=...):  # -> RelfreqResult:
     """Return a relative frequency histogram, using the histogram function.
 
     A relative frequency  histogram is a mapping of the number of
@@ -1839,7 +1959,7 @@ def relfreq(a, numbins=..., defaultreallimits=..., weights=...): # -> RelfreqRes
     """
     ...
 
-def obrientransform(*samples): # -> NDArray[Any] | NDArray[Unknown]:
+def obrientransform(*samples):  # -> NDArray[Any] | NDArray[Unknown]:
     """Compute the O'Brien transform on input data (any number of arrays).
 
     Used to test for homogeneity of variance prior to running one-way stats.
@@ -1892,8 +2012,10 @@ def obrientransform(*samples): # -> NDArray[Any] | NDArray[Unknown]:
     """
     ...
 
-@_axis_nan_policy_factory(lambda x: x, result_to_tuple=lambda x: (x, ), n_outputs=1, too_small=1)
-def sem(a, axis=..., ddof=..., nan_policy=...): # -> Any:
+@_axis_nan_policy_factory(
+    lambda x: x, result_to_tuple=lambda x: (x,), n_outputs=1, too_small=1
+)
+def sem(a, axis=..., ddof=..., nan_policy=...):  # -> Any:
     """Compute standard error of the mean.
 
     Calculate the standard error of the mean (or standard error of
@@ -1947,7 +2069,7 @@ def sem(a, axis=..., ddof=..., nan_policy=...): # -> Any:
     """
     ...
 
-def zscore(a, axis=..., ddof=..., nan_policy=...): # -> NDArray[float64]:
+def zscore(a, axis=..., ddof=..., nan_policy=...):  # -> NDArray[float64]:
     """
     Compute the z score.
 
@@ -2031,7 +2153,7 @@ def zscore(a, axis=..., ddof=..., nan_policy=...): # -> NDArray[float64]:
     """
     ...
 
-def gzscore(a, *, axis=..., ddof=..., nan_policy=...): # -> NDArray[float64]:
+def gzscore(a, *, axis=..., ddof=..., nan_policy=...):  # -> NDArray[float64]:
     """
     Compute the geometric standard score.
 
@@ -2121,7 +2243,7 @@ def gzscore(a, *, axis=..., ddof=..., nan_policy=...): # -> NDArray[float64]:
     """
     ...
 
-def zmap(scores, compare, axis=..., ddof=..., nan_policy=...): # -> NDArray[float64]:
+def zmap(scores, compare, axis=..., ddof=..., nan_policy=...):  # -> NDArray[float64]:
     """
     Calculate the relative z-scores.
 
@@ -2173,7 +2295,7 @@ def zmap(scores, compare, axis=..., ddof=..., nan_policy=...): # -> NDArray[floa
     """
     ...
 
-def gstd(a, axis=..., ddof=...): # -> Any:
+def gstd(a, axis=..., ddof=...):  # -> Any:
     """
     Calculate the geometric standard deviation of an array.
 
@@ -2286,8 +2408,17 @@ def gstd(a, axis=..., ddof=...): # -> Any:
     ...
 
 _scale_conversions = ...
-@_axis_nan_policy_factory(lambda x: x, result_to_tuple=lambda x: (x, ), n_outputs=1, default_axis=None, override={ 'nan_propagation': False })
-def iqr(x, axis=..., rng=..., scale=..., nan_policy=..., interpolation=..., keepdims=...): # -> Any:
+
+@_axis_nan_policy_factory(
+    lambda x: x,
+    result_to_tuple=lambda x: (x,),
+    n_outputs=1,
+    default_axis=None,
+    override={"nan_propagation": False},
+)
+def iqr(
+    x, axis=..., rng=..., scale=..., nan_policy=..., interpolation=..., keepdims=...
+):  # -> Any:
     r"""
     Compute the interquartile range of the data along the specified axis.
 
@@ -2398,7 +2529,9 @@ def iqr(x, axis=..., rng=..., scale=..., nan_policy=..., interpolation=..., keep
     """
     ...
 
-def median_abs_deviation(x, axis=..., center=..., scale=..., nan_policy=...): # -> float | NDArray[Any] | NDArray[floating[Any]] | Any:
+def median_abs_deviation(
+    x, axis=..., center=..., scale=..., nan_policy=...
+):  # -> float | NDArray[Any] | NDArray[floating[Any]] | Any:
     r"""
     Compute the median absolute deviation of the data along the given axis.
 
@@ -2510,7 +2643,8 @@ def median_abs_deviation(x, axis=..., center=..., scale=..., nan_policy=...): # 
     ...
 
 SigmaclipResult = ...
-def sigmaclip(a, low=..., high=...): # -> SigmaclipResult:
+
+def sigmaclip(a, low=..., high=...):  # -> SigmaclipResult:
     """Perform iterative sigma-clipping of array elements.
 
     Starting from the full sample, all elements outside the critical range are
@@ -2567,7 +2701,7 @@ def sigmaclip(a, low=..., high=...): # -> SigmaclipResult:
     """
     ...
 
-def trimboth(a, proportiontocut, axis=...): # -> NDArray[Unknown]:
+def trimboth(a, proportiontocut, axis=...):  # -> NDArray[Unknown]:
     """Slice off a proportion of items from both ends of an array.
 
     Slice off the passed proportion of items from both ends of the passed
@@ -2633,7 +2767,9 @@ def trimboth(a, proportiontocut, axis=...): # -> NDArray[Unknown]:
     """
     ...
 
-def trim1(a, proportiontocut, tail=..., axis=...): # -> list[Unknown] | ndarray[Any, dtype[Unknown]]:
+def trim1(
+    a, proportiontocut, tail=..., axis=...
+):  # -> list[Unknown] | ndarray[Any, dtype[Unknown]]:
     """Slice off a proportion from ONE end of the passed array distribution.
 
     If `proportiontocut` = 0.1, slices off 'leftmost' or 'rightmost'
@@ -2696,7 +2832,7 @@ def trim1(a, proportiontocut, tail=..., axis=...): # -> list[Unknown] | ndarray[
     """
     ...
 
-def trim_mean(a, proportiontocut, axis=...): # -> float | Any:
+def trim_mean(a, proportiontocut, axis=...):  # -> float | Any:
     """Return mean of array after trimming distribution from both tails.
 
     If `proportiontocut` = 0.1, slices off 'leftmost' and 'rightmost' 10% of
@@ -2747,7 +2883,8 @@ def trim_mean(a, proportiontocut, axis=...): # -> float | Any:
     ...
 
 F_onewayResult = ...
-def f_oneway(*samples, axis=...): # -> F_onewayResult:
+
+def f_oneway(*samples, axis=...):  # -> F_onewayResult:
     """Perform one-way ANOVA.
 
     The one-way ANOVA tests the null hypothesis that two or more groups have
@@ -2878,7 +3015,7 @@ def f_oneway(*samples, axis=...): # -> F_onewayResult:
     """
     ...
 
-def alexandergovern(*samples, nan_policy=...): # -> AlexanderGovernResult:
+def alexandergovern(*samples, nan_policy=...):  # -> AlexanderGovernResult:
     """Performs the Alexander Govern test.
 
     The Alexander-Govern approximation tests the equality of k independent
@@ -2967,16 +3104,15 @@ def alexandergovern(*samples, nan_policy=...): # -> AlexanderGovernResult:
 
     """
     ...
-
 @dataclass
 class AlexanderGovernResult:
     statistic: float
     pvalue: float
     ...
 
-
 ConfidenceInterval = ...
 PearsonRResultBase = ...
+
 class PearsonRResult(PearsonRResultBase):
     """
     Result of `scipy.stats.pearsonr`
@@ -2995,10 +3131,10 @@ class PearsonRResult(PearsonRResultBase):
         coefficient `statistic` for the given confidence level.
 
     """
-    def __init__(self, statistic, pvalue, alternative, n, x, y) -> None:
-        ...
-    
-    def confidence_interval(self, confidence_level=..., method=...): # -> ConfidenceInterval:
+    def __init__(self, statistic, pvalue, alternative, n, x, y) -> None: ...
+    def confidence_interval(
+        self, confidence_level=..., method=...
+    ):  # -> ConfidenceInterval:
         """
         The confidence interval for the correlation coefficient.
 
@@ -3044,10 +3180,8 @@ class PearsonRResult(PearsonRResultBase):
                https://en.wikipedia.org/wiki/Pearson_correlation_coefficient
         """
         ...
-    
 
-
-def pearsonr(x, y, *, alternative=..., method=...): # -> PearsonRResult:
+def pearsonr(x, y, *, alternative=..., method=...):  # -> PearsonRResult:
     r"""
     Pearson correlation coefficient and p-value for testing non-correlation.
 
@@ -3279,7 +3413,7 @@ def pearsonr(x, y, *, alternative=..., method=...): # -> PearsonRResult:
     """
     ...
 
-def fisher_exact(table, alternative=...): # -> _:
+def fisher_exact(table, alternative=...):  # -> _:
     """Perform a Fisher exact test on a 2x2 contingency table.
 
     The null hypothesis is that the true odds ratio of the populations
@@ -3512,7 +3646,7 @@ def fisher_exact(table, alternative=...): # -> _:
     """
     ...
 
-def spearmanr(a, b=..., axis=..., nan_policy=..., alternative=...): # -> _:
+def spearmanr(a, b=..., axis=..., nan_policy=..., alternative=...):  # -> _:
     r"""Calculate a Spearman correlation coefficient with associated p-value.
 
     The Spearman rank-order correlation coefficient is a nonparametric measure
@@ -3753,7 +3887,7 @@ def spearmanr(a, b=..., axis=..., nan_policy=..., alternative=...): # -> _:
     """
     ...
 
-def pointbiserialr(x, y): # -> _:
+def pointbiserialr(x, y):  # -> _:
     r"""Calculate a point biserial correlation coefficient and its p-value.
 
     The point biserial correlation is used to measure the relationship
@@ -3843,7 +3977,9 @@ def pointbiserialr(x, y): # -> _:
     """
     ...
 
-def kendalltau(x, y, initial_lexsort=..., nan_policy=..., method=..., variant=..., alternative=...):
+def kendalltau(
+    x, y, initial_lexsort=..., nan_policy=..., method=..., variant=..., alternative=...
+):
     r"""Calculate Kendall's tau, a correlation measure for ordinal data.
 
     Kendall's tau is a measure of the correspondence between two rankings.
@@ -4082,7 +4218,7 @@ def kendalltau(x, y, initial_lexsort=..., nan_policy=..., method=..., variant=..
     """
     ...
 
-def weightedtau(x, y, rank=..., weigher=..., additive=...): # -> _:
+def weightedtau(x, y, rank=..., weigher=..., additive=...):  # -> _:
     r"""Compute a weighted version of Kendall's :math:`\tau`.
 
     The weighted :math:`\tau` is a weighted version of Kendall's
@@ -4219,16 +4355,14 @@ def weightedtau(x, y, rank=..., weigher=..., additive=...): # -> _:
 
 class _ParallelP:
     """Helper function to calculate parallel p-value."""
-    def __init__(self, x, y, random_states) -> None:
-        ...
-    
-    def __call__(self, index):
-        ...
-    
-
+    def __init__(self, x, y, random_states) -> None: ...
+    def __call__(self, index): ...
 
 MGCResult = ...
-def multiscale_graphcorr(x, y, compute_distance=..., reps=..., workers=..., is_twosamp=..., random_state=...): # -> _:
+
+def multiscale_graphcorr(
+    x, y, compute_distance=..., reps=..., workers=..., is_twosamp=..., random_state=...
+):  # -> _:
     r"""Computes the Multiscale Graph Correlation (MGC) test statistic.
 
     Specifically, for each point, MGC finds the :math:`k`-nearest neighbors for
@@ -4429,6 +4563,7 @@ def multiscale_graphcorr(x, y, compute_distance=..., reps=..., workers=..., is_t
     ...
 
 TtestResultBase = ...
+
 class TtestResult(TtestResultBase):
     """
     Result of a t-test.
@@ -4457,10 +4592,10 @@ class TtestResult(TtestResultBase):
         fields `low` and `high`.
 
     """
-    def __init__(self, statistic, pvalue, df, alternative, standard_error, estimate) -> None:
-        ...
-    
-    def confidence_interval(self, confidence_level=...): # -> ConfidenceInterval:
+    def __init__(
+        self, statistic, pvalue, df, alternative, standard_error, estimate
+    ) -> None: ...
+    def confidence_interval(self, confidence_level=...):  # -> ConfidenceInterval:
         """
         Parameters
         ----------
@@ -4476,17 +4611,25 @@ class TtestResult(TtestResultBase):
 
         """
         ...
-    
 
-
-def pack_TtestResult(statistic, pvalue, df, alternative, standard_error, estimate): # -> TtestResult:
+def pack_TtestResult(
+    statistic, pvalue, df, alternative, standard_error, estimate
+):  # -> TtestResult:
     ...
-
-def unpack_TtestResult(res): # -> tuple[Unknown, Unknown, Unknown, Unknown, Unknown, Unknown]:
+def unpack_TtestResult(
+    res,
+):  # -> tuple[Unknown, Unknown, Unknown, Unknown, Unknown, Unknown]:
     ...
-
-@_axis_nan_policy_factory(pack_TtestResult, default_axis=0, n_samples=2, result_to_tuple=unpack_TtestResult, n_outputs=6)
-def ttest_1samp(a, popmean, axis=..., nan_policy=..., alternative=...): # -> TtestResult:
+@_axis_nan_policy_factory(
+    pack_TtestResult,
+    default_axis=0,
+    n_samples=2,
+    result_to_tuple=unpack_TtestResult,
+    n_outputs=6,
+)
+def ttest_1samp(
+    a, popmean, axis=..., nan_policy=..., alternative=...
+):  # -> TtestResult:
     """Calculate the T-test for the mean of ONE group of scores.
 
     This is a test for the null hypothesis that the expected value
@@ -4643,7 +4786,10 @@ def ttest_1samp(a, popmean, axis=..., nan_policy=..., alternative=...): # -> Tte
     ...
 
 Ttest_indResult = ...
-def ttest_ind_from_stats(mean1, std1, nobs1, mean2, std2, nobs2, equal_var=..., alternative=...): # -> Ttest_indResult:
+
+def ttest_ind_from_stats(
+    mean1, std1, nobs1, mean2, std2, nobs2, equal_var=..., alternative=...
+):  # -> Ttest_indResult:
     r"""
     T-test for means of two independent samples from descriptive statistics.
 
@@ -4766,8 +4912,24 @@ def ttest_ind_from_stats(mean1, std1, nobs1, mean2, std2, nobs2, equal_var=..., 
     """
     ...
 
-@_axis_nan_policy_factory(pack_TtestResult, default_axis=0, n_samples=2, result_to_tuple=unpack_TtestResult, n_outputs=6)
-def ttest_ind(a, b, axis=..., equal_var=..., nan_policy=..., permutations=..., random_state=..., alternative=..., trim=...): # -> TtestResult:
+@_axis_nan_policy_factory(
+    pack_TtestResult,
+    default_axis=0,
+    n_samples=2,
+    result_to_tuple=unpack_TtestResult,
+    n_outputs=6,
+)
+def ttest_ind(
+    a,
+    b,
+    axis=...,
+    equal_var=...,
+    nan_policy=...,
+    permutations=...,
+    random_state=...,
+    alternative=...,
+    trim=...,
+):  # -> TtestResult:
     """
     Calculate the T-test for the means of *two independent* samples of scores.
 
@@ -5014,8 +5176,15 @@ def ttest_ind(a, b, axis=..., equal_var=..., nan_policy=..., permutations=..., r
     """
     ...
 
-@_axis_nan_policy_factory(pack_TtestResult, default_axis=0, n_samples=2, result_to_tuple=unpack_TtestResult, n_outputs=6, paired=True)
-def ttest_rel(a, b, axis=..., nan_policy=..., alternative=...): # -> TtestResult:
+@_axis_nan_policy_factory(
+    pack_TtestResult,
+    default_axis=0,
+    n_samples=2,
+    result_to_tuple=unpack_TtestResult,
+    n_outputs=6,
+    paired=True,
+)
+def ttest_rel(a, b, axis=..., nan_policy=..., alternative=...):  # -> TtestResult:
     """Calculate the t-test on TWO RELATED samples of scores, a and b.
 
     This is a test for the null hypothesis that two related or
@@ -5118,7 +5287,10 @@ def ttest_rel(a, b, axis=..., nan_policy=..., alternative=...): # -> TtestResult
 
 _power_div_lambda_names = ...
 Power_divergenceResult = ...
-def power_divergence(f_obs, f_exp=..., ddof=..., axis=..., lambda_=...): # -> Power_divergenceResult:
+
+def power_divergence(
+    f_obs, f_exp=..., ddof=..., axis=..., lambda_=...
+):  # -> Power_divergenceResult:
     """Cressie-Read power divergence statistic and goodness of fit test.
 
     This function tests the null hypothesis that the categorical data
@@ -5283,7 +5455,7 @@ def power_divergence(f_obs, f_exp=..., ddof=..., axis=..., lambda_=...): # -> Po
     """
     ...
 
-def chisquare(f_obs, f_exp=..., ddof=..., axis=...): # -> Power_divergenceResult:
+def chisquare(f_obs, f_exp=..., ddof=..., axis=...):  # -> Power_divergenceResult:
     """Calculate a one-way chi-square test.
 
     The chi-square test tests the null hypothesis that the categorical data
@@ -5455,8 +5627,9 @@ def chisquare(f_obs, f_exp=..., ddof=..., axis=...): # -> Power_divergenceResult
     ...
 
 KstestResult = ...
+
 @_rename_parameter("mode", "method")
-def ks_1samp(x, cdf, args=..., alternative=..., method=...): # -> _:
+def ks_1samp(x, cdf, args=..., alternative=..., method=...):  # -> _:
     """
     Performs the one-sample Kolmogorov-Smirnov test for goodness of fit.
 
@@ -5578,8 +5751,9 @@ def ks_1samp(x, cdf, args=..., alternative=..., method=...): # -> _:
     ...
 
 Ks_2sampResult = KstestResult
+
 @_rename_parameter("mode", "method")
-def ks_2samp(data1, data2, alternative=..., method=...): # -> _:
+def ks_2samp(data1, data2, alternative=..., method=...):  # -> _:
     """
     Performs the two-sample Kolmogorov-Smirnov test for goodness of fit.
 
@@ -5728,7 +5902,7 @@ def ks_2samp(data1, data2, alternative=..., method=...): # -> _:
     ...
 
 @_rename_parameter("mode", "method")
-def kstest(rvs, cdf, args=..., N=..., alternative=..., method=...): # -> _:
+def kstest(rvs, cdf, args=..., N=..., alternative=..., method=...):  # -> _:
     """
     Performs the (one-sample or two-sample) Kolmogorov-Smirnov test for
     goodness of fit.
@@ -5894,7 +6068,7 @@ def kstest(rvs, cdf, args=..., N=..., alternative=..., method=...): # -> _:
     """
     ...
 
-def tiecorrect(rankvals): # -> float | Any:
+def tiecorrect(rankvals):  # -> float | Any:
     """Tie correction factor for Mann-Whitney U and Kruskal-Wallis H tests.
 
     Parameters
@@ -5934,8 +6108,9 @@ def tiecorrect(rankvals): # -> float | Any:
     ...
 
 RanksumsResult = ...
+
 @_axis_nan_policy_factory(RanksumsResult, n_samples=2)
-def ranksums(x, y, alternative=...): # -> RanksumsResult:
+def ranksums(x, y, alternative=...):  # -> RanksumsResult:
     """Compute the Wilcoxon rank-sum statistic for two samples.
 
     The Wilcoxon rank-sum test tests the null hypothesis that two sets
@@ -6002,8 +6177,11 @@ def ranksums(x, y, alternative=...): # -> RanksumsResult:
     ...
 
 KruskalResult = ...
+
 @_axis_nan_policy_factory(KruskalResult, n_samples=None)
-def kruskal(*samples, nan_policy=...): # -> scipy.stats._stats_py.KruskalResult | scipy.stats._mstats_basic.KruskalResult:
+def kruskal(
+    *samples, nan_policy=...
+):  # -> scipy.stats._stats_py.KruskalResult | scipy.stats._mstats_basic.KruskalResult:
     """Compute the Kruskal-Wallis H-test for independent samples.
 
     The Kruskal-Wallis H-test tests the null hypothesis that the population
@@ -6072,7 +6250,8 @@ def kruskal(*samples, nan_policy=...): # -> scipy.stats._stats_py.KruskalResult 
     ...
 
 FriedmanchisquareResult = ...
-def friedmanchisquare(*samples): # -> FriedmanchisquareResult:
+
+def friedmanchisquare(*samples):  # -> FriedmanchisquareResult:
     """Compute the Friedman test for repeated samples.
 
     The Friedman test tests the null hypothesis that repeated samples of
@@ -6139,7 +6318,10 @@ def friedmanchisquare(*samples): # -> FriedmanchisquareResult:
     ...
 
 BrunnerMunzelResult = ...
-def brunnermunzel(x, y, alternative=..., distribution=..., nan_policy=...): # -> scipy.stats._stats_py.BrunnerMunzelResult | scipy.stats._mstats_basic.BrunnerMunzelResult:
+
+def brunnermunzel(
+    x, y, alternative=..., distribution=..., nan_policy=...
+):  # -> scipy.stats._stats_py.BrunnerMunzelResult | scipy.stats._mstats_basic.BrunnerMunzelResult:
     """Compute the Brunner-Munzel test on samples x and y.
 
     The Brunner-Munzel test is a nonparametric test of the null hypothesis that
@@ -6216,7 +6398,7 @@ def brunnermunzel(x, y, alternative=..., distribution=..., nan_policy=...): # ->
     """
     ...
 
-def combine_pvalues(pvalues, method=..., weights=...): # -> _:
+def combine_pvalues(pvalues, method=..., weights=...):  # -> _:
     """
     Combine p-values from independent tests that bear upon the same hypothesis.
 
@@ -6320,7 +6502,7 @@ def combine_pvalues(pvalues, method=..., weights=...): # -> _:
     """
     ...
 
-def wasserstein_distance(u_values, v_values, u_weights=..., v_weights=...): # -> Any:
+def wasserstein_distance(u_values, v_values, u_weights=..., v_weights=...):  # -> Any:
     r"""
     Compute the first Wasserstein distance between two 1D distributions.
 
@@ -6396,7 +6578,7 @@ def wasserstein_distance(u_values, v_values, u_weights=..., v_weights=...): # ->
     """
     ...
 
-def energy_distance(u_values, v_values, u_weights=..., v_weights=...): # -> Any:
+def energy_distance(u_values, v_values, u_weights=..., v_weights=...):  # -> Any:
     r"""Compute the energy distance between two 1D distributions.
 
     .. versionadded:: 1.0.0
@@ -6481,7 +6663,8 @@ def energy_distance(u_values, v_values, u_weights=..., v_weights=...): # -> Any:
     ...
 
 RepeatedResults = ...
-def find_repeats(arr): # -> RepeatedResults:
+
+def find_repeats(arr):  # -> RepeatedResults:
     """Find repeats and repeat counts.
 
     Parameters
@@ -6514,7 +6697,9 @@ def find_repeats(arr): # -> RepeatedResults:
     """
     ...
 
-def rankdata(a, method=..., *, axis=..., nan_policy=...): # -> NDArray[float64 | int_] | NDArray[Unknown] | NDArray[Any] | Any | NDArray[signedinteger[Any]]:
+def rankdata(
+    a, method=..., *, axis=..., nan_policy=...
+):  # -> NDArray[float64 | int_] | NDArray[Unknown] | NDArray[Any] | Any | NDArray[signedinteger[Any]]:
     """Assign ranks to data, dealing with ties appropriately.
 
     By default (``axis=None``), the data array is first flattened, and a flat
@@ -6603,7 +6788,7 @@ def rankdata(a, method=..., *, axis=..., nan_policy=...): # -> NDArray[float64 |
     """
     ...
 
-def expectile(a, alpha=..., *, weights=...): # -> floating[Any]:
+def expectile(a, alpha=..., *, weights=...):  # -> floating[Any]:
     r"""Compute the expectile at the specified level.
 
     Expectiles are a generalization of the expectation in the same way as
@@ -6698,4 +6883,3 @@ def expectile(a, alpha=..., *, weights=...): # -> floating[Any]:
 
     """
     ...
-

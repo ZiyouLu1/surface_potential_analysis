@@ -76,7 +76,9 @@ def _generate_random_potential(
 def _generate_symmetrical_points(
     height: int, width: int = 5
 ) -> np.ndarray[tuple[int], np.dtype[np.complex128]]:
-    return np.swapaxes([_generate_random_potential(width) for _ in range(height)], 0, -1).ravel()  # type: ignore[no-any-return]
+    return np.swapaxes(
+        [_generate_random_potential(width) for _ in range(height)], 0, -1
+    ).ravel()  # type: ignore[no-any-return]
 
 
 class HamiltonianBuilderTest(unittest.TestCase):

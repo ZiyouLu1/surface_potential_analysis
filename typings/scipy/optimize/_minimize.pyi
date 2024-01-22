@@ -10,11 +10,25 @@ Functions
 - minimize : minimization of a function of several variables.
 - minimize_scalar : minimization of a function of one variable.
 """
-__all__ = ['minimize', 'minimize_scalar']
+__all__ = ["minimize", "minimize_scalar"]
 MINIMIZE_METHODS = ...
 MINIMIZE_METHODS_NEW_CB = ...
 MINIMIZE_SCALAR_METHODS = ...
-def minimize(fun, x0, args=..., method=..., jac=..., hess=..., hessp=..., bounds=..., constraints=..., tol=..., callback=..., options=...):
+
+def minimize(
+    fun,
+    x0,
+    args=...,
+    method=...,
+    jac=...,
+    hess=...,
+    hessp=...,
+    bounds=...,
+    constraints=...,
+    tol=...,
+    callback=...,
+    options=...,
+):
     """Minimization of scalar function of one or more variables.
 
     Parameters
@@ -493,7 +507,9 @@ def minimize(fun, x0, args=..., method=..., jac=..., hess=..., hessp=..., bounds
     """
     ...
 
-def minimize_scalar(fun, bracket=..., bounds=..., args=..., method=..., tol=..., options=...): # -> OptimizeResult:
+def minimize_scalar(
+    fun, bracket=..., bounds=..., args=..., method=..., tol=..., options=...
+):  # -> OptimizeResult:
     """Minimization of scalar function of one variable.
 
     Parameters
@@ -634,11 +650,14 @@ def minimize_scalar(fun, bracket=..., bounds=..., args=..., method=..., tol=...,
     """
     ...
 
-def standardize_bounds(bounds, x0, meth): # -> Bounds | list[tuple[float | None, float | None]]:
+def standardize_bounds(
+    bounds, x0, meth
+):  # -> Bounds | list[tuple[float | None, float | None]]:
     """Converts bounds to the form required by the solver."""
     ...
 
-def standardize_constraints(constraints, x0, meth): # -> list[NonlinearConstraint | LinearConstraint | dict[Unknown, Unknown]] | list[Unknown]:
+def standardize_constraints(
+    constraints, x0, meth
+):  # -> list[NonlinearConstraint | LinearConstraint | dict[Unknown, Unknown]] | list[Unknown]:
     """Converts constraints to the form required by the solver."""
     ...
-

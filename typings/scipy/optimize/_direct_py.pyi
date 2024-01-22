@@ -7,12 +7,26 @@ from typing import Any, Callable, Iterable, TYPE_CHECKING
 from scipy.optimize import OptimizeResult
 from ._constraints import Bounds
 
-if TYPE_CHECKING:
-    ...
-__all__ = ['direct']
+if TYPE_CHECKING: ...
+__all__ = ["direct"]
 ERROR_MESSAGES = ...
 SUCCESS_MESSAGES = ...
-def direct(func: Callable[[npt.ArrayLike, tuple[Any]], float], bounds: Iterable | Bounds, *, args: tuple = ..., eps: float = ..., maxfun: int | None = ..., maxiter: int = ..., locally_biased: bool = ..., f_min: float = ..., f_min_rtol: float = ..., vol_tol: float = ..., len_tol: float = ..., callback: Callable[[npt.ArrayLike], None] | None = ...) -> OptimizeResult:
+
+def direct(
+    func: Callable[[npt.ArrayLike, tuple[Any]], float],
+    bounds: Iterable | Bounds,
+    *,
+    args: tuple = ...,
+    eps: float = ...,
+    maxfun: int | None = ...,
+    maxiter: int = ...,
+    locally_biased: bool = ...,
+    f_min: float = ...,
+    f_min_rtol: float = ...,
+    vol_tol: float = ...,
+    len_tol: float = ...,
+    callback: Callable[[npt.ArrayLike], None] | None = ...,
+) -> OptimizeResult:
     """
     Finds the global minimum of a function using the
     DIRECT algorithm.
@@ -159,4 +173,3 @@ def direct(func: Callable[[npt.ArrayLike, tuple[Any]], float], bounds: Iterable 
 
     """
     ...
-

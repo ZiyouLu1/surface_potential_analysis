@@ -219,9 +219,7 @@ def extract_fey_rate_from_4_variables_fit_112bar(
 
     def _func(x: tuple[float, float]) -> list[float]:
         nu, lam = x
-        y = np.sqrt(
-            lam**2 + 2 * lam * (8 * np.cos(a_dk * np.sqrt(3) / 2) + 1) / 9 + 1
-        )
+        y = np.sqrt(lam**2 + 2 * lam * (8 * np.cos(a_dk * np.sqrt(3) / 2) + 1) / 9 + 1)
 
         return [
             nu * (lam + 1 + y) / (2 * lam) - fit.fast_rate,

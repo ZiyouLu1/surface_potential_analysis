@@ -6,8 +6,14 @@ import numpy as np
 from ._trustregion import BaseQuadraticSubproblem
 
 """Nearly exact trust-region optimization subproblem."""
-__all__ = ['_minimize_trustregion_exact', 'estimate_smallest_singular_value', 'singular_leading_submatrix', 'IterativeSubproblem']
-def estimate_smallest_singular_value(U): # -> tuple[Unknown, Unknown]:
+__all__ = [
+    "_minimize_trustregion_exact",
+    "estimate_smallest_singular_value",
+    "singular_leading_submatrix",
+    "IterativeSubproblem",
+]
+
+def estimate_smallest_singular_value(U):  # -> tuple[Unknown, Unknown]:
     """Given upper triangular matrix ``U`` estimate the smallest singular
     value and the correspondent right singular vector in O(n**2) operations.
 
@@ -42,7 +48,7 @@ def estimate_smallest_singular_value(U): # -> tuple[Unknown, Unknown]:
     """
     ...
 
-def gershgorin_bounds(H): # -> tuple[Any, Any]:
+def gershgorin_bounds(H):  # -> tuple[Any, Any]:
     """
     Given a square matrix ``H`` compute upper
     and lower bounds for its eigenvalues (Gregoshgorin Bounds).
@@ -55,7 +61,7 @@ def gershgorin_bounds(H): # -> tuple[Any, Any]:
     """
     ...
 
-def singular_leading_submatrix(A, U, k): # -> tuple[Unknown, NDArray[float64]]:
+def singular_leading_submatrix(A, U, k):  # -> tuple[Unknown, NDArray[float64]]:
     """
     Compute term that makes the leading ``k`` by ``k``
     submatrix from ``A`` singular.
@@ -101,14 +107,12 @@ class IterativeSubproblem(BaseQuadraticSubproblem):
            SIAM Journal on Scientific and Statistical Computing, vol. 4(3),
            pp. 553-572, 1983.
     """
+
     UPDATE_COEFF = ...
     EPS = np.finfo(float).eps
-    def __init__(self, x, fun, jac, hess, hessp=..., k_easy=..., k_hard=...) -> None:
-        ...
-    
-    def solve(self, tr_radius): # -> tuple[Unknown | NDArray[float64], bool]:
+    def __init__(
+        self, x, fun, jac, hess, hessp=..., k_easy=..., k_hard=...
+    ) -> None: ...
+    def solve(self, tr_radius):  # -> tuple[Unknown | NDArray[float64], bool]:
         """Solve quadratic subproblem"""
         ...
-    
-
-

@@ -108,7 +108,7 @@ def aaa() -> None:
 def calculate_ballistic_rate_per_band(
     hamiltonian: SingleBasisDiagonalOperator[
         StackedBasisLike[FundamentalBasis[int], _SB0]
-    ]
+    ],
 ) -> np.ndarray[Any, np.dtype[np.float64]]:
     diagonal_stacked_hamiltonian = hamiltonian["data"].reshape(
         hamiltonian["basis"][0].shape
@@ -150,7 +150,7 @@ def calculate_ballistic_rate_per_band(
 def calculate_average_energy_per_band(
     hamiltonian: SingleBasisDiagonalOperator[
         StackedBasisLike[FundamentalBasis[int], _B0]
-    ]
+    ],
 ) -> np.ndarray[Any, np.dtype[np.float64]]:
     hamiltonian_stacked = hamiltonian["data"].reshape(*hamiltonian["basis"][0].shape)
     return np.abs(np.average(hamiltonian_stacked, axis=1))

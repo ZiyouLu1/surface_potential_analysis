@@ -21,7 +21,6 @@ class Container(tuple):
     pchanged = Artist.pchanged
 
 class BarContainer(Container):
-
     patches: list[Rectangle]
     errorbar: None | ErrorbarContainer
     datavalues: None | ArrayLike
@@ -34,11 +33,10 @@ class BarContainer(Container):
         *,
         datavalues=...,
         orientation=...,
-        **kwargs
+        **kwargs,
     ) -> None: ...
 
 class ErrorbarContainer(Container):
-
     lines: tuple[Line2D, tuple[Line2D, ...], list[LineCollection]]
     has_xerr: bool
     has_yerr: bool
@@ -48,11 +46,10 @@ class ErrorbarContainer(Container):
         lines: tuple[Line2D, tuple[Line2D, ...], list[LineCollection]],
         has_xerr: bool = ...,
         has_yerr: bool = ...,
-        **kwargs
+        **kwargs,
     ) -> None: ...
 
 class StemContainer(Container):
-
     markerline: Line2D
     stemlines: list[Line2D]
     baseline: Line2D
@@ -60,5 +57,5 @@ class StemContainer(Container):
     def __init__(
         self,
         markerline_stemlines_baseline: tuple[Line2D, list[Line2D], Line2D],
-        **kwargs
+        **kwargs,
     ) -> None: ...

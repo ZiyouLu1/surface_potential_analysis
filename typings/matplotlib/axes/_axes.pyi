@@ -174,7 +174,7 @@ class Axes(_AxesBase):
     ) -> list[EventCollection]: ...
     def plot(
         self,
-        *args: * tuple[Any, ...],
+        *args: *tuple[Any, ...],
         scalex: bool = ...,
         scaley: bool = ...,
         data: Any = ...,

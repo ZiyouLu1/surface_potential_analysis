@@ -11,15 +11,15 @@ class _ScipyBackend:
     treats the domain as a hierarchy. This means the user can install a single
     backend for ``numpy`` and have it implement ``numpy.scipy.fft`` as well.
     """
+
     __ua_domain__ = ...
     @staticmethod
-    def __ua_function__(method, args, kwargs): # -> _NotImplementedType | Any:
+    def __ua_function__(method, args, kwargs):  # -> _NotImplementedType | Any:
         ...
-    
-
 
 _named_backends = ...
-def set_global_backend(backend, coerce=..., only=..., try_last=...): # -> None:
+
+def set_global_backend(backend, coerce=..., only=..., try_last=...):  # -> None:
     """Sets the global fft backend
 
     This utility method replaces the default backend for permanent use. It
@@ -61,7 +61,7 @@ def set_global_backend(backend, coerce=..., only=..., try_last=...): # -> None:
     """
     ...
 
-def register_backend(backend): # -> None:
+def register_backend(backend):  # -> None:
     """
     Register a backend for permanent use.
 
@@ -153,4 +153,3 @@ def skip_backend(backend):
     BackendNotImplementedError: No selected backends had an implementation ...
     """
     ...
-

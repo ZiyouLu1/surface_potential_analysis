@@ -15,12 +15,32 @@ Functions
     scalar_search_wolfe2
 
 """
-__all__ = ['LineSearchWarning', 'line_search_wolfe1', 'line_search_wolfe2', 'scalar_search_wolfe1', 'scalar_search_wolfe2', 'line_search_armijo']
-class LineSearchWarning(RuntimeWarning):
-    ...
+__all__ = [
+    "LineSearchWarning",
+    "line_search_wolfe1",
+    "line_search_wolfe2",
+    "scalar_search_wolfe1",
+    "scalar_search_wolfe2",
+    "line_search_armijo",
+]
 
+class LineSearchWarning(RuntimeWarning): ...
 
-def line_search_wolfe1(f, fprime, xk, pk, gfk=..., old_fval=..., old_old_fval=..., args=..., c1=..., c2=..., amax=..., amin=..., xtol=...): # -> tuple[Unknown | None, int, int, Unknown, Unknown, Unknown]:
+def line_search_wolfe1(
+    f,
+    fprime,
+    xk,
+    pk,
+    gfk=...,
+    old_fval=...,
+    old_old_fval=...,
+    args=...,
+    c1=...,
+    c2=...,
+    amax=...,
+    amin=...,
+    xtol=...,
+):  # -> tuple[Unknown | None, int, int, Unknown, Unknown, Unknown]:
     """
     As `scalar_search_wolfe1` but do a line search to direction `pk`
 
@@ -54,7 +74,18 @@ def line_search_wolfe1(f, fprime, xk, pk, gfk=..., old_fval=..., old_old_fval=..
     """
     ...
 
-def scalar_search_wolfe1(phi, derphi, phi0=..., old_phi0=..., derphi0=..., c1=..., c2=..., amax=..., amin=..., xtol=...): # -> tuple[Unknown | None, Unknown, Unknown]:
+def scalar_search_wolfe1(
+    phi,
+    derphi,
+    phi0=...,
+    old_phi0=...,
+    derphi0=...,
+    c1=...,
+    c2=...,
+    amax=...,
+    amin=...,
+    xtol=...,
+):  # -> tuple[Unknown | None, Unknown, Unknown]:
     """
     Scalar function search for alpha that satisfies strong Wolfe conditions
 
@@ -98,7 +129,22 @@ def scalar_search_wolfe1(phi, derphi, phi0=..., old_phi0=..., derphi0=..., c1=..
     ...
 
 line_search = ...
-def line_search_wolfe2(f, myfprime, xk, pk, gfk=..., old_fval=..., old_old_fval=..., args=..., c1=..., c2=..., amax=..., extra_condition=..., maxiter=...): # -> tuple[Unknown | float | None, int, int, Unknown | None, Unknown | None, None]:
+
+def line_search_wolfe2(
+    f,
+    myfprime,
+    xk,
+    pk,
+    gfk=...,
+    old_fval=...,
+    old_old_fval=...,
+    args=...,
+    c1=...,
+    c2=...,
+    amax=...,
+    extra_condition=...,
+    maxiter=...,
+):  # -> tuple[Unknown | float | None, int, int, Unknown | None, Unknown | None, None]:
     """Find alpha that satisfies strong Wolfe conditions.
 
     Parameters
@@ -192,7 +238,18 @@ def line_search_wolfe2(f, myfprime, xk, pk, gfk=..., old_fval=..., old_old_fval=
     """
     ...
 
-def scalar_search_wolfe2(phi, derphi, phi0=..., old_phi0=..., derphi0=..., c1=..., c2=..., amax=..., extra_condition=..., maxiter=...): # -> tuple[Unknown | float | None, Unknown | None, Unknown | None, Unknown | None]:
+def scalar_search_wolfe2(
+    phi,
+    derphi,
+    phi0=...,
+    old_phi0=...,
+    derphi0=...,
+    c1=...,
+    c2=...,
+    amax=...,
+    extra_condition=...,
+    maxiter=...,
+):  # -> tuple[Unknown | float | None, Unknown | None, Unknown | None, Unknown | None]:
     """Find alpha that satisfies strong Wolfe conditions.
 
     alpha > 0 is assumed to be a descent direction.
@@ -247,7 +304,9 @@ def scalar_search_wolfe2(phi, derphi, phi0=..., old_phi0=..., derphi0=..., c1=..
     """
     ...
 
-def line_search_armijo(f, xk, pk, gfk, old_fval, args=..., c1=..., alpha0=...): # -> tuple[int | Unknown | None, int, Unknown]:
+def line_search_armijo(
+    f, xk, pk, gfk, old_fval, args=..., c1=..., alpha0=...
+):  # -> tuple[int | Unknown | None, int, Unknown]:
     """Minimize over alpha, the function ``f(xk+alpha pk)``.
 
     Parameters
@@ -283,13 +342,17 @@ def line_search_armijo(f, xk, pk, gfk, old_fval, args=..., c1=..., alpha0=...): 
     """
     ...
 
-def line_search_BFGS(f, xk, pk, gfk, old_fval, args=..., c1=..., alpha0=...): # -> tuple[int | Unknown | None, int, Literal[0], Unknown]:
+def line_search_BFGS(
+    f, xk, pk, gfk, old_fval, args=..., c1=..., alpha0=...
+):  # -> tuple[int | Unknown | None, int, Literal[0], Unknown]:
     """
     Compatibility wrapper for `line_search_armijo`
     """
     ...
 
-def scalar_search_armijo(phi, phi0, derphi0, c1=..., alpha0=..., amin=...): # -> tuple[int, Unknown] | tuple[Unknown, Unknown] | tuple[None, Unknown]:
+def scalar_search_armijo(
+    phi, phi0, derphi0, c1=..., alpha0=..., amin=...
+):  # -> tuple[int, Unknown] | tuple[Unknown, Unknown] | tuple[None, Unknown]:
     """Minimize over alpha, the function ``phi(alpha)``.
 
     Uses the interpolation algorithm (Armijo backtracking) as suggested by
@@ -304,4 +367,3 @@ def scalar_search_armijo(phi, phi0, derphi0, c1=..., alpha0=..., amin=...): # ->
 
     """
     ...
-

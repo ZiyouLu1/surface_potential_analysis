@@ -16,5 +16,5 @@ The submodules of sparse.linalg._eigen:
     1. lobpcg: Locally Optimal Block Preconditioned Conjugate Gradient Method
 
 """
-__all__ = ['ArpackError', 'ArpackNoConvergence', 'eigs', 'eigsh', 'lobpcg', 'svds']
+__all__ = ["ArpackError", "ArpackNoConvergence", "eigs", "eigsh", "lobpcg", "svds"]
 test = ...

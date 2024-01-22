@@ -114,9 +114,7 @@ def furl_eigenstate(
     return {
         "basis": StackedBasis(
             fundamental_stacked_basis_from_shape(shape),
-            stacked_basis_as_fundamental_momentum_basis(
-                basis
-            ),  # type: ignore z ax is wrong here
+            stacked_basis_as_fundamental_momentum_basis(basis),  # type: ignore z ax is wrong here
         ),
         "data": flattened * np.sqrt(ns0 * ns1),
         "eigenvalue": np.zeros(flattened.shape[0:2]),
@@ -126,7 +124,7 @@ def furl_eigenstate(
 def _unfurl_momentum_basis_wavepacket(
     wavepacket: Wavepacket[
         StackedBasisLike[*tuple[_FB0, ...]], StackedBasisLike[*tuple[_MB0, ...]]
-    ]
+    ],
 ) -> StateVector[
     StackedBasisLike[*tuple[FundamentalTransformedPositionBasis[Any, Any], ...]]
 ]:
@@ -168,7 +166,7 @@ def _unfurl_momentum_basis_wavepacket(
 
 
 def unfurl_wavepacket(
-    wavepacket: Wavepacket[_SB0, _SB1]
+    wavepacket: Wavepacket[_SB0, _SB1],
 ) -> StateVector[
     StackedBasisLike[*tuple[FundamentalTransformedPositionBasis[Any, Any], ...]]
 ]:
@@ -195,7 +193,7 @@ def unfurl_wavepacket(
 
 
 def unfurl_wavepacket_list(
-    wavepackets: WavepacketList[_B0, _SB0, _SB1]
+    wavepackets: WavepacketList[_B0, _SB0, _SB1],
 ) -> StateVectorList[
     _B0, StackedBasisLike[*tuple[FundamentalTransformedPositionBasis[Any, Any], ...]]
 ]:

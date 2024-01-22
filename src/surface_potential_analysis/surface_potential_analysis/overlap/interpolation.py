@@ -46,7 +46,7 @@ ArrayStackedIndexFractionLike = tuple[
 def get_overlap_momentum_interpolator_k_fractions(
     overlap: SingleOverlap[
         StackedBasisLike[*tuple[FundamentalPositionBasis[Any, Any], ...]]
-    ]
+    ],
 ) -> Callable[
     [ArrayStackedIndexFractionLike[_S0Inv]],
     np.ndarray[_S0Inv, np.dtype[np.complex128]],
@@ -81,7 +81,7 @@ def get_overlap_momentum_interpolator_k_fractions(
 
 
 def get_overlap_momentum_interpolator(
-    overlap: FundamentalPositionOverlap[_L0Inv, _L1Inv, _L2Inv]
+    overlap: FundamentalPositionOverlap[_L0Inv, _L1Inv, _L2Inv],
 ) -> Callable[
     [np.ndarray[tuple[Literal[3], *Ts], np.dtype[np.float64]]],
     np.ndarray[tuple[*Ts], np.dtype[np.complex128]],
@@ -105,7 +105,7 @@ def get_overlap_momentum_interpolator(
     x_points = util.get_x_points_at_index(nx_points_wrapped)
 
     def _interpolator(
-        k_coordinates: np.ndarray[tuple[Literal[3], *Ts], np.dtype[np.float64]]
+        k_coordinates: np.ndarray[tuple[Literal[3], *Ts], np.dtype[np.float64]],
     ) -> np.ndarray[tuple[*Ts], np.dtype[np.complex128]]:
         phi = np.tensordot(x_points, k_coordinates, axes=(0, 0))
         return np.tensordot(overlap["data"], np.exp(1j * phi), axes=(0, 0))  # type: ignore[no-any-return]
@@ -139,7 +139,8 @@ def get_overlap_momentum_interpolator_flat(
         Interpolator, which takes a coordinate list in momentum basis ignoring k2 axis
     """
     basis = StackedBasis[Any, Any, Any](
-        *overlap["basis"][0][:-1], basis_as_single_point_basis(overlap["basis"][0][-1])  # type: ignore cannot deal with *
+        *overlap["basis"][0][:-1],
+        basis_as_single_point_basis(overlap["basis"][0][-1]),  # type: ignore cannot deal with *
     )
     util = BasisUtil(basis)
     nx_points_wrapped = wrap_index_around_origin(
@@ -159,7 +160,7 @@ def get_overlap_momentum_interpolator_flat(
     relevant_vector = vector_transformed[relevant_slice]
 
     def _interpolator(
-        k_coordinates: np.ndarray[tuple[Literal[2], *Ts], np.dtype[np.float64]]
+        k_coordinates: np.ndarray[tuple[Literal[2], *Ts], np.dtype[np.float64]],
     ) -> np.ndarray[tuple[*Ts], np.dtype[np.complex128]]:
         phi = np.tensordot(relevant_x_points, k_coordinates, axes=(0, 0))
         return np.tensordot(relevant_vector, np.exp(1j * phi), axes=(0, 0))  # type: ignore[no-any-return]

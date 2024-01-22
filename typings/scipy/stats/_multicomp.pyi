@@ -9,9 +9,9 @@ from typing import Literal, TYPE_CHECKING
 from scipy.stats._common import ConfidenceInterval
 from scipy._lib._util import DecimalNumber, SeedType
 
-if TYPE_CHECKING:
-    ...
-__all__ = ['dunnett']
+if TYPE_CHECKING: ...
+__all__ = ["dunnett"]
+
 @dataclass
 class DunnettResult:
     """Result object returned by `scipy.stats.dunnett`.
@@ -27,9 +27,10 @@ class DunnettResult:
         at index ``i`` is the p-value for the comparison between
         group ``i`` and the control.
     """
+
     statistic: np.ndarray
     pvalue: np.ndarray
-    _alternative: Literal['two-sided', 'less', 'greater'] = ...
+    _alternative: Literal["two-sided", "less", "greater"] = ...
     _rho: np.ndarray = ...
     _df: int = ...
     _std: float = ...
@@ -40,10 +41,10 @@ class DunnettResult:
     _rng: SeedType = ...
     _ci: ConfidenceInterval | None = ...
     _ci_cl: DecimalNumber | None = ...
-    def __str__(self) -> str:
-        ...
-    
-    def confidence_interval(self, confidence_level: DecimalNumber = ...) -> ConfidenceInterval:
+    def __str__(self) -> str: ...
+    def confidence_interval(
+        self, confidence_level: DecimalNumber = ...
+    ) -> ConfidenceInterval:
         """Compute the confidence interval for the specified confidence level.
 
         Parameters
@@ -62,10 +63,13 @@ class DunnettResult:
 
         """
         ...
-    
 
-
-def dunnett(*samples: npt.ArrayLike, control: npt.ArrayLike, alternative: Literal['two-sided', 'less', 'greater'] = ..., random_state: SeedType = ...) -> DunnettResult:
+def dunnett(
+    *samples: npt.ArrayLike,
+    control: npt.ArrayLike,
+    alternative: Literal["two-sided", "less", "greater"] = ...,
+    random_state: SeedType = ...,
+) -> DunnettResult:
     """Dunnett's test: multiple comparisons of means against a control group.
 
     This is an implementation of Dunnett's original, single-step test as
@@ -207,4 +211,3 @@ def dunnett(*samples: npt.ArrayLike, control: npt.ArrayLike, alternative: Litera
 
     """
     ...
-

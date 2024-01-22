@@ -58,7 +58,7 @@ class StackedBasisLike(BasisLike[Any, Any], Protocol[*_B0]):
 
     @property
     def fundamental_shape(
-        self: StackedBasisLike[*tuple[_B0Inv, ...]]
+        self: StackedBasisLike[*tuple[_B0Inv, ...]],
     ) -> tuple[int, ...]:
         return tuple(ax.fundamental_n for ax in self)
 

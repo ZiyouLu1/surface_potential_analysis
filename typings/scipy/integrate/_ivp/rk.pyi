@@ -9,7 +9,8 @@ from . import dop853_coefficients
 SAFETY = ...
 MIN_FACTOR = ...
 MAX_FACTOR = ...
-def rk_step(fun, t, y, f, h, A, B, C, K): # -> tuple[Unknown, Unknown]:
+
+def rk_step(fun, t, y, f, h, A, B, C, K):  # -> tuple[Unknown, Unknown]:
     """Perform a single Runge-Kutta step.
 
     This function computes a prediction of an explicit Runge-Kutta method and
@@ -60,6 +61,7 @@ def rk_step(fun, t, y, f, h, A, B, C, K): # -> tuple[Unknown, Unknown]:
 
 class RungeKutta(OdeSolver):
     """Base class for explicit Runge-Kutta methods."""
+
     C: np.ndarray = ...
     A: np.ndarray = ...
     B: np.ndarray = ...
@@ -68,10 +70,19 @@ class RungeKutta(OdeSolver):
     order: int = ...
     error_estimator_order: int = ...
     n_stages: int = ...
-    def __init__(self, fun, t0, y0, t_bound, max_step=..., rtol=..., atol=..., vectorized=..., first_step=..., **extraneous) -> None:
-        ...
-    
-
+    def __init__(
+        self,
+        fun,
+        t0,
+        y0,
+        t_bound,
+        max_step=...,
+        rtol=...,
+        atol=...,
+        vectorized=...,
+        first_step=...,
+        **extraneous,
+    ) -> None: ...
 
 class RK23(RungeKutta):
     """Explicit Runge-Kutta method of order 3(2).
@@ -165,6 +176,7 @@ class RK23(RungeKutta):
     .. [1] P. Bogacki, L.F. Shampine, "A 3(2) Pair of Runge-Kutta Formulas",
            Appl. Math. Lett. Vol. 2, No. 4. pp. 321-325, 1989.
     """
+
     order = ...
     error_estimator_order = ...
     n_stages = ...
@@ -173,7 +185,6 @@ class RK23(RungeKutta):
     B = np.array([2 / 9, 1 / 3, 4 / 9])
     E = np.array([5 / 72, -1 / 12, -1 / 9, 1 / 8])
     P = np.array([[1, -4 / 3, 5 / 9], [0, 1, -2 / 3], [0, 4 / 3, -8 / 9], [0, -1, 1]])
-
 
 class RK45(RungeKutta):
     """Explicit Runge-Kutta method of order 5(4).
@@ -258,15 +269,61 @@ class RK45(RungeKutta):
     .. [2] L. W. Shampine, "Some Practical Runge-Kutta Formulas", Mathematics
            of Computation,, Vol. 46, No. 173, pp. 135-150, 1986.
     """
+
     order = ...
     error_estimator_order = ...
     n_stages = ...
     C = np.array([0, 1 / 5, 3 / 10, 4 / 5, 8 / 9, 1])
-    A = np.array([[0, 0, 0, 0, 0], [1 / 5, 0, 0, 0, 0], [3 / 40, 9 / 40, 0, 0, 0], [44 / 45, -56 / 15, 32 / 9, 0, 0], [19372 / 6561, -25360 / 2187, 64448 / 6561, -212 / 729, 0], [9017 / 3168, -355 / 33, 46732 / 5247, 49 / 176, -5103 / 18656]])
+    A = np.array(
+        [
+            [0, 0, 0, 0, 0],
+            [1 / 5, 0, 0, 0, 0],
+            [3 / 40, 9 / 40, 0, 0, 0],
+            [44 / 45, -56 / 15, 32 / 9, 0, 0],
+            [19372 / 6561, -25360 / 2187, 64448 / 6561, -212 / 729, 0],
+            [9017 / 3168, -355 / 33, 46732 / 5247, 49 / 176, -5103 / 18656],
+        ]
+    )
     B = np.array([35 / 384, 0, 500 / 1113, 125 / 192, -2187 / 6784, 11 / 84])
-    E = np.array([-71 / 57600, 0, 71 / 16695, -71 / 1920, 17253 / 339200, -22 / 525, 1 / 40])
-    P = np.array([[1, -8048581381 / 2820520608, 8663915743 / 2820520608, -12715105075 / 11282082432], [0, 0, 0, 0], [0, 131558114200 / 32700410799, -68118460800 / 10900136933, 87487479700 / 32700410799], [0, -1754552775 / 470086768, 14199869525 / 1410260304, -10690763975 / 1880347072], [0, 127303824393 / 49829197408, -318862633887 / 49829197408, 701980252875 / 199316789632], [0, -282668133 / 205662961, 2019193451 / 616988883, -1453857185 / 822651844], [0, 40617522 / 29380423, -110615467 / 29380423, 69997945 / 29380423]])
-
+    E = np.array(
+        [-71 / 57600, 0, 71 / 16695, -71 / 1920, 17253 / 339200, -22 / 525, 1 / 40]
+    )
+    P = np.array(
+        [
+            [
+                1,
+                -8048581381 / 2820520608,
+                8663915743 / 2820520608,
+                -12715105075 / 11282082432,
+            ],
+            [0, 0, 0, 0],
+            [
+                0,
+                131558114200 / 32700410799,
+                -68118460800 / 10900136933,
+                87487479700 / 32700410799,
+            ],
+            [
+                0,
+                -1754552775 / 470086768,
+                14199869525 / 1410260304,
+                -10690763975 / 1880347072,
+            ],
+            [
+                0,
+                127303824393 / 49829197408,
+                -318862633887 / 49829197408,
+                701980252875 / 199316789632,
+            ],
+            [
+                0,
+                -282668133 / 205662961,
+                2019193451 / 616988883,
+                -1453857185 / 822651844,
+            ],
+            [0, 40617522 / 29380423, -110615467 / 29380423, 69997945 / 29380423],
+        ]
+    )
 
 class DOP853(RungeKutta):
     """Explicit Runge-Kutta method of order 8.
@@ -350,6 +407,7 @@ class DOP853(RungeKutta):
     .. [2] `Page with original Fortran code of DOP853
             <http://www.unige.ch/~hairer/software.html>`_.
     """
+
     n_stages = ...
     order = ...
     error_estimator_order = ...
@@ -361,20 +419,22 @@ class DOP853(RungeKutta):
     D = dop853_coefficients.D
     A_EXTRA = ...
     C_EXTRA = ...
-    def __init__(self, fun, t0, y0, t_bound, max_step=..., rtol=..., atol=..., vectorized=..., first_step=..., **extraneous) -> None:
-        ...
-    
-
+    def __init__(
+        self,
+        fun,
+        t0,
+        y0,
+        t_bound,
+        max_step=...,
+        rtol=...,
+        atol=...,
+        vectorized=...,
+        first_step=...,
+        **extraneous,
+    ) -> None: ...
 
 class RkDenseOutput(DenseOutput):
-    def __init__(self, t_old, t, y_old, Q) -> None:
-        ...
-    
-
+    def __init__(self, t_old, t, y_old, Q) -> None: ...
 
 class Dop853DenseOutput(DenseOutput):
-    def __init__(self, t_old, t, y_old, F) -> None:
-        ...
-    
-
-
+    def __init__(self, t_old, t, y_old, F) -> None: ...

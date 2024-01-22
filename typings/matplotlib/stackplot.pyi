@@ -11,5 +11,5 @@ def stackplot(
     labels: Sequence[str] = ...,
     colors: Sequence[Color] = ...,
     baseline: Literal["zero", "sym", "wiggle", "weighted_wiggle"] = ...,
-    **kwargs
+    **kwargs,
 ) -> list[PolyCollection]: ...

@@ -8,9 +8,9 @@ from dataclasses import dataclass
 from typing import Literal, TYPE_CHECKING
 from scipy.stats._censored_data import CensoredData
 
-if TYPE_CHECKING:
-    ...
-__all__ = ['ecdf', 'logrank']
+if TYPE_CHECKING: ...
+__all__ = ["ecdf", "logrank"]
+
 @dataclass
 class EmpiricalDistributionFunction:
     """An empirical distribution function produced by `scipy.stats.ecdf`
@@ -25,15 +25,14 @@ class EmpiricalDistributionFunction:
         its complement, the survival function (SF), corresponding with
         `quantiles`.
     """
+
     quantiles: np.ndarray
     probabilities: np.ndarray
     _n: np.ndarray = ...
     _d: np.ndarray = ...
     _sf: np.ndarray = ...
     _kind: str = ...
-    def __init__(self, q, p, n, d, kind) -> None:
-        ...
-    
+    def __init__(self, q, p, n, d, kind) -> None: ...
     def evaluate(self, x):
         """Evaluate the empirical CDF/SF function at the input.
 
@@ -48,7 +47,7 @@ class EmpiricalDistributionFunction:
             The CDF/SF evaluated at the input
         """
         ...
-    
+
     def plot(self, ax=..., **matplotlib_kwargs):
         """Plot the empirical distribution function
 
@@ -69,8 +68,10 @@ class EmpiricalDistributionFunction:
             Objects representing the plotted data
         """
         ...
-    
-    def confidence_interval(self, confidence_level=..., *, method=...): # -> ConfidenceInterval:
+
+    def confidence_interval(
+        self, confidence_level=..., *, method=...
+    ):  # -> ConfidenceInterval:
         """Compute a confidence interval around the CDF/SF point estimate
 
         Parameters
@@ -110,12 +111,10 @@ class EmpiricalDistributionFunction:
 
         """
         ...
-    
-
 
 @dataclass
 class ECDFResult:
-    """ Result object returned by `scipy.stats.ecdf`
+    """Result object returned by `scipy.stats.ecdf`
 
     Attributes
     ----------
@@ -125,12 +124,10 @@ class ECDFResult:
         An object representing the complement of the empirical cumulative
         distribution function.
     """
+
     cdf: EmpiricalDistributionFunction
     sf: EmpiricalDistributionFunction
-    def __init__(self, q, cdf, sf, n, d) -> None:
-        ...
-    
-
+    def __init__(self, q, cdf, sf, n, d) -> None: ...
 
 def ecdf(sample: npt.ArrayLike | CensoredData) -> ECDFResult:
     """Empirical cumulative distribution function of a sample.
@@ -278,7 +275,6 @@ def ecdf(sample: npt.ArrayLike | CensoredData) -> ECDFResult:
 
     """
     ...
-
 @dataclass
 class LogRankResult:
     """Result object returned by `scipy.stats.logrank`.
@@ -292,12 +288,16 @@ class LogRankResult:
     pvalue : float ndarray
         The computed p-value of the test.
     """
+
     statistic: np.ndarray
     pvalue: np.ndarray
     ...
 
-
-def logrank(x: npt.ArrayLike | CensoredData, y: npt.ArrayLike | CensoredData, alternative: Literal['two-sided', 'less', 'greater'] = ...) -> LogRankResult:
+def logrank(
+    x: npt.ArrayLike | CensoredData,
+    y: npt.ArrayLike | CensoredData,
+    alternative: Literal["two-sided", "less", "greater"] = ...,
+) -> LogRankResult:
     r"""Compare the survival distributions of two samples via the logrank test.
 
     Parameters
@@ -445,4 +445,3 @@ def logrank(x: npt.ArrayLike | CensoredData, y: npt.ArrayLike | CensoredData, al
 
     """
     ...
-

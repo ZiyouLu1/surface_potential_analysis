@@ -106,7 +106,7 @@ class FigureBase(Artist):
         sharex: bool | Literal["none", "all", "row", "col"] = ...,
         sharey: bool | Literal["none", "all", "row", "col"] = ...,
         subplot_kw: dict = ...,
-        gridspec_kw: dict = ...
+        gridspec_kw: dict = ...,
     ) -> list[Axes]: ...
     @overload
     def subplots(
@@ -118,7 +118,7 @@ class FigureBase(Artist):
         sharex: bool | Literal["none", "all", "row", "col"] = ...,
         sharey: bool | Literal["none", "all", "row", "col"] = ...,
         subplot_kw: dict = ...,
-        gridspec_kw: dict = ...
+        gridspec_kw: dict = ...,
     ) -> list[list[Axes]]: ...
     @overload
     def subplots(
@@ -130,7 +130,7 @@ class FigureBase(Artist):
         sharex: bool | Literal["none", "all", "row", "col"] = ...,
         sharey: bool | Literal["none", "all", "row", "col"] = ...,
         subplot_kw: dict = ...,
-        gridspec_kw: dict = ...
+        gridspec_kw: dict = ...,
     ) -> Axes: ...
     @overload
     def subplots(
@@ -142,7 +142,7 @@ class FigureBase(Artist):
         sharex: bool | Literal["none", "all", "row", "col"] = ...,
         sharey: bool | Literal["none", "all", "row", "col"] = ...,
         subplot_kw: dict = ...,
-        gridspec_kw: dict = ...
+        gridspec_kw: dict = ...,
     ) -> list[Axes]: ...
     def delaxes(self, ax: Axes) -> None: ...
     def clear(self, keep_observers: bool = False) -> None: ...
@@ -157,7 +157,7 @@ class FigureBase(Artist):
         cax: Axes = ...,
         ax: Any = ...,
         use_gridspec: bool = ...,
-        **kwargs: Any
+        **kwargs: Any,
     ) -> Colorbar: ...
     def subplots_adjust(
         self,
@@ -181,7 +181,7 @@ class FigureBase(Artist):
         hspace: float | None = None,
         width_ratios: ArrayLike = ...,
         height_ratios: ArrayLike = ...,
-        **kwargs
+        **kwargs,
     ): ...
     def add_subfigure(self, subplotspec: SubplotSpec, **kwargs) -> SubFigure: ...
     def sca(self, a: Axes) -> Axes: ...
@@ -200,7 +200,7 @@ class FigureBase(Artist):
         sharey: bool = ...,
         subplot_kw: dict = ...,
         gridspec_kw: dict = ...,
-        empty_sentinel: object = ...
+        empty_sentinel: object = ...,
     ) -> dict[Text, Axes]: ...
 
 class Figure(FigureBase):
@@ -222,12 +222,12 @@ class Figure(FigureBase):
         layout: LayoutEngine
         | Literal["constrained", "compressed", "tight"]
         | None = ...,
-        **kwargs
+        **kwargs,
     ) -> None: ...
     def set_layout_engine(
         self,
         layout: LayoutEngine | Literal["constrained", "compressed", "tight"] = ...,
-        **kwargs: dict
+        **kwargs: dict,
     ) -> None: ...
     def get_layout_engine(self) -> None: ...
     def show(self, warn: bool = True) -> None: ...
@@ -258,7 +258,7 @@ class Figure(FigureBase):
         vmax: float = ...,
         origin: Literal["upper", "lower"] = ...,
         resize: bool = ...,
-        **kwargs
+        **kwargs,
     ) -> FigureImage: ...
     def set_size_inches(
         self, w: float, h: float = ..., forward: bool = True
@@ -283,7 +283,7 @@ class Figure(FigureBase):
         fname: str | PathLike | FileLike | BytesIO | BufferedWriter,
         *,
         transparent: bool = ...,
-        **kwargs
+        **kwargs,
     ) -> None: ...
     def ginput(
         self,
@@ -302,7 +302,7 @@ class Figure(FigureBase):
         pad: float = 1.08,
         h_pad: float = ...,
         w_pad: float = ...,
-        rect: tuple[float, float, float, float] = ...
+        rect: tuple[float, float, float, float] = ...,
     ) -> None: ...
 
 def figaspect(arg: float): ...
@@ -318,7 +318,7 @@ class SubFigure(FigureBase):
         edgecolor: Color = ...,
         linewidth: float = ...,
         frameon: bool = ...,
-        **kwargs
+        **kwargs,
     ) -> None: ...
     @property
     def dpi(self) -> float: ...

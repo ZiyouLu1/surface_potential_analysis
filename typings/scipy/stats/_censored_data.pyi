@@ -169,35 +169,30 @@ class CensoredData:
     (2.3575922823897315, 0, 30.40650074451254)
 
     """
-    def __init__(self, uncensored=..., *, left=..., right=..., interval=...) -> None:
+    def __init__(
+        self, uncensored=..., *, left=..., right=..., interval=...
+    ) -> None: ...
+    def __repr__(self):  # -> str:
         ...
-    
-    def __repr__(self): # -> str:
+    def __str__(self) -> str: ...
+    def __sub__(self, other):  # -> CensoredData:
         ...
-    
-    def __str__(self) -> str:
+    def __truediv__(self, other):  # -> CensoredData:
         ...
-    
-    def __sub__(self, other): # -> CensoredData:
-        ...
-    
-    def __truediv__(self, other): # -> CensoredData:
-        ...
-    
-    def __len__(self): # -> int:
+    def __len__(self):  # -> int:
         """
         The number of values (censored and not censored).
         """
         ...
-    
-    def num_censored(self): # -> int:
+
+    def num_censored(self):  # -> int:
         """
         Number of censored values.
         """
         ...
-    
+
     @classmethod
-    def right_censored(cls, x, censored): # -> Self@CensoredData:
+    def right_censored(cls, x, censored):  # -> Self@CensoredData:
         """
         Create a `CensoredData` instance of right-censored data.
 
@@ -235,9 +230,9 @@ class CensoredData:
         CensoredData(4 values: 2 not censored, 2 right-censored)
         """
         ...
-    
+
     @classmethod
-    def left_censored(cls, x, censored): # -> Self@CensoredData:
+    def left_censored(cls, x, censored):  # -> Self@CensoredData:
         """
         Create a `CensoredData` instance of left-censored data.
 
@@ -275,9 +270,9 @@ class CensoredData:
         CensoredData(4 values: 2 not censored, 2 left-censored)
         """
         ...
-    
+
     @classmethod
-    def interval_censored(cls, low, high): # -> Self@CensoredData:
+    def interval_censored(cls, low, high):  # -> Self@CensoredData:
         """
         Create a `CensoredData` instance of interval-censored data.
 
@@ -315,6 +310,3 @@ class CensoredData:
         CensoredData(4 values: 0 not censored, 4 interval-censored)
         """
         ...
-    
-
-

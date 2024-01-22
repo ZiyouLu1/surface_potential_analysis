@@ -7,6 +7,7 @@ __all__ = ["RBFInterpolator"]
 _AVAILABLE = ...
 _SCALE_INVARIANT = ...
 _NAME_TO_MIN_DEGREE = ...
+
 class RBFInterpolator:
     """Radial basis function (RBF) interpolation in N dimensions.
 
@@ -159,10 +160,10 @@ class RBFInterpolator:
     >>> plt.show()
 
     """
-    def __init__(self, y, d, neighbors=..., smoothing=..., kernel=..., epsilon=..., degree=...) -> None:
-        ...
-    
-    def __call__(self, x): # -> ndarray[Any, dtype[Any]] | Any:
+    def __init__(
+        self, y, d, neighbors=..., smoothing=..., kernel=..., epsilon=..., degree=...
+    ) -> None: ...
+    def __call__(self, x):  # -> ndarray[Any, dtype[Any]] | Any:
         """Evaluate the interpolant at `x`.
 
         Parameters
@@ -177,6 +178,3 @@ class RBFInterpolator:
 
         """
         ...
-    
-
-

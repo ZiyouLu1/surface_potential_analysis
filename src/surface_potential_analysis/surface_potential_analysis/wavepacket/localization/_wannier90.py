@@ -109,7 +109,7 @@ class Wannier90Options(Generic[_B0]):
 
 
 def _build_real_lattice_block(
-    delta_x: np.ndarray[tuple[int, int], np.dtype[np.float64]]
+    delta_x: np.ndarray[tuple[int, int], np.dtype[np.float64]],
 ) -> str:
     # Wannier90 expects the wavefunction to be 3D, so we add the extra fake axis here
     delta_x_padded = np.eye(3)
@@ -124,7 +124,7 @@ end unit_cell_cart"""
 
 # ! cSpell:disable
 def _build_k_points_block(
-    list_basis: StackedBasisLike[*tuple[BasisLike[Any, Any], ...]]
+    list_basis: StackedBasisLike[*tuple[BasisLike[Any, Any], ...]],
 ) -> str:
     n_dim = list_basis.ndim
     fractions = get_wavepacket_sample_fractions(list_basis)
@@ -258,7 +258,8 @@ def _parse_nnk_points_file(
     nnk_points_file: str,
 ) -> tuple[int, list[tuple[int, int, int, int, int]]]:
     block = re.search(
-        "begin nnkpts((.|\n)+?)end nnkpts", nnk_points_file  # cSpell:disable-line
+        "begin nnkpts((.|\n)+?)end nnkpts",
+        nnk_points_file,  # cSpell:disable-line
     )
     if block is None:
         msg = "Unable to find nnk_points block"
@@ -537,7 +538,10 @@ def get_localization_operator_wannier90(
 
         # Build Files for localisation
         _write_localization_files_wannier90(
-            wavepackets, tmp_dir_path, n_nkp_file, options=options  # type: ignore should be fundamental basis, but we have no way of ensuring this in the type system
+            wavepackets,
+            tmp_dir_path,
+            n_nkp_file,
+            options=options,  # type: ignore should be fundamental basis, but we have no way of ensuring this in the type system
         )
         input(f"Run Wannier 90 in {tmp_dir_path}")
 
@@ -595,7 +599,9 @@ def get_localization_operator_wannier90_individual_bands(
         for wavepacket in wavepacket_list_into_iter(wavepackets)
     ]
     n_bands = wavepackets["basis"][0][0].n
-    out = np.zeros((wavepackets["basis"][0][1].n, n_bands, n_bands), dtype=np.complex128)
+    out = np.zeros(
+        (wavepackets["basis"][0][1].n, n_bands, n_bands), dtype=np.complex128
+    )
     out[:, np.arange(n_bands), np.arange(n_bands)] = (
         np.array(operator_data)
         .reshape(n_bands, wavepackets["basis"][0][1].n)

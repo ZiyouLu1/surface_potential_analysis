@@ -14,5 +14,5 @@ LOBPCG is a preconditioned eigensolver for large symmetric positive definite
 Call the function lobpcg - see help for lobpcg.lobpcg.
 
 """
-__all__ = [s for s in dir() if nots.startswith('_')]
+__all__ = [s for s in dir() if nots.startswith("_")]
 test = ...

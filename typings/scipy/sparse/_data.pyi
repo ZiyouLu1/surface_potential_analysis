@@ -12,38 +12,25 @@ from ._base import _spbase
 
 """
 __all__ = []
+
 class _data_matrix(_spbase):
-    def __init__(self) -> None:
-        ...
-    
+    def __init__(self) -> None: ...
+
     dtype = ...
-    def __abs__(self):
+    def __abs__(self): ...
+    def __round__(self, ndigits=...): ...
+    def __neg__(self): ...
+    def __imul__(self, other):  # -> Self@_data_matrix | _NotImplementedType:
         ...
-    
-    def __round__(self, ndigits=...):
+    def __itruediv__(self, other):  # -> Self@_data_matrix | _NotImplementedType:
         ...
-    
-    def __neg__(self):
+    def astype(self, dtype, casting=..., copy=...):  # -> Self@_data_matrix:
         ...
-    
-    def __imul__(self, other): # -> Self@_data_matrix | _NotImplementedType:
+    def conjugate(self, copy=...):  # -> Self@_data_matrix:
         ...
-    
-    def __itruediv__(self, other): # -> Self@_data_matrix | _NotImplementedType:
+    def copy(self): ...
+    def count_nonzero(self):  # -> int:
         ...
-    
-    def astype(self, dtype, casting=..., copy=...): # -> Self@_data_matrix:
-        ...
-    
-    def conjugate(self, copy=...): # -> Self@_data_matrix:
-        ...
-    
-    def copy(self):
-        ...
-    
-    def count_nonzero(self): # -> int:
-        ...
-    
     def power(self, n, dtype=...):
         """
         This function performs element-wise power.
@@ -55,15 +42,13 @@ class _data_matrix(_spbase):
         dtype : If dtype is not specified, the current dtype will be preserved.
         """
         ...
-    
-
 
 class _minmax_mixin:
     """Mixin for min and max methods.
 
     These are not implemented for dia_matrix, hence the separate class.
     """
-    def max(self, axis=..., out=...): # -> Any:
+    def max(self, axis=..., out=...):  # -> Any:
         """
         Return the maximum of the matrix or maximum along an axis.
         This takes all elements into account, not just the non-zero ones.
@@ -94,8 +79,8 @@ class _minmax_mixin:
 
         """
         ...
-    
-    def min(self, axis=..., out=...): # -> Any:
+
+    def min(self, axis=..., out=...):  # -> Any:
         """
         Return the minimum of the matrix or maximum along an axis.
         This takes all elements into account, not just the non-zero ones.
@@ -126,8 +111,8 @@ class _minmax_mixin:
 
         """
         ...
-    
-    def nanmax(self, axis=..., out=...): # -> Any:
+
+    def nanmax(self, axis=..., out=...):  # -> Any:
         """
         Return the maximum of the matrix or maximum along an axis, ignoring any
         NaNs. This takes all elements into account, not just the non-zero
@@ -164,8 +149,8 @@ class _minmax_mixin:
 
         """
         ...
-    
-    def nanmin(self, axis=..., out=...): # -> Any:
+
+    def nanmin(self, axis=..., out=...):  # -> Any:
         """
         Return the minimum of the matrix or minimum along an axis, ignoring any
         NaNs. This takes all elements into account, not just the non-zero
@@ -202,8 +187,8 @@ class _minmax_mixin:
 
         """
         ...
-    
-    def argmax(self, axis=..., out=...): # -> int:
+
+    def argmax(self, axis=..., out=...):  # -> int:
         """Return indices of maximum elements along an axis.
 
         Implicit zero elements are also taken into account. If there are
@@ -225,8 +210,8 @@ class _minmax_mixin:
             Indices of maximum elements. If matrix, its size along `axis` is 1.
         """
         ...
-    
-    def argmin(self, axis=..., out=...): # -> int:
+
+    def argmin(self, axis=..., out=...):  # -> int:
         """Return indices of minimum elements along an axis.
 
         Implicit zero elements are also taken into account. If there are
@@ -248,6 +233,3 @@ class _minmax_mixin:
             Indices of minimum elements. If matrix, its size along `axis` is 1.
         """
         ...
-    
-
-

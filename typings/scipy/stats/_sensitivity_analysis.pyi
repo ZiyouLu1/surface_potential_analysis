@@ -9,9 +9,9 @@ from typing import Callable, Literal, Protocol, TYPE_CHECKING
 from scipy.stats._resampling import BootstrapResult
 from scipy._lib._util import DecimalNumber, IntNumber, SeedType
 
-if TYPE_CHECKING:
-    ...
-__all__ = ['sobol_indices']
+if TYPE_CHECKING: ...
+__all__ = ["sobol_indices"]
+
 def f_ishigami(x: npt.ArrayLike) -> np.ndarray:
     r"""Ishigami function.
 
@@ -38,7 +38,9 @@ def f_ishigami(x: npt.ArrayLike) -> np.ndarray:
     """
     ...
 
-def sample_A_B(n: IntNumber, dists: list[PPFDist], random_state: SeedType = ...) -> np.ndarray:
+def sample_A_B(
+    n: IntNumber, dists: list[PPFDist], random_state: SeedType = ...
+) -> np.ndarray:
     """Sample two matrices A and B.
 
     Uses a Sobol' sequence with 2`d` columns to have 2 uncorrelated matrices.
@@ -69,7 +71,9 @@ def sample_AB(A: np.ndarray, B: np.ndarray) -> np.ndarray:
     """
     ...
 
-def saltelli_2010(f_A: np.ndarray, f_B: np.ndarray, f_AB: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+def saltelli_2010(
+    f_A: np.ndarray, f_B: np.ndarray, f_AB: np.ndarray
+) -> tuple[np.ndarray, np.ndarray]:
     r"""Saltelli2010 formulation.
 
     .. math::
@@ -103,13 +107,11 @@ def saltelli_2010(f_A: np.ndarray, f_B: np.ndarray, f_AB: np.ndarray) -> tuple[n
        :doi:`10.1016/j.cpc.2009.09.018`, 2010.
     """
     ...
-
 @dataclass
 class BootstrapSobolResult:
     first_order: BootstrapResult
     total_order: BootstrapResult
     ...
-
 
 @dataclass
 class SobolResult:
@@ -123,7 +125,9 @@ class SobolResult:
     _B: np.ndarray | None = ...
     _AB: np.ndarray | None = ...
     _bootstrap_result: BootstrapResult | None = ...
-    def bootstrap(self, confidence_level: DecimalNumber = ..., n_resamples: IntNumber = ...) -> BootstrapSobolResult:
+    def bootstrap(
+        self, confidence_level: DecimalNumber = ..., n_resamples: IntNumber = ...
+    ) -> BootstrapSobolResult:
         """Bootstrap Sobol' indices to provide confidence intervals.
 
         Parameters
@@ -150,17 +154,20 @@ class SobolResult:
 
         """
         ...
-    
-
 
 class PPFDist(Protocol):
     @property
-    def ppf(self) -> Callable[..., float]:
-        ...
-    
+    def ppf(self) -> Callable[..., float]: ...
 
-
-def sobol_indices(*, func: Callable[[np.ndarray], npt.ArrayLike] | dict[Literal['f_A', 'f_B', 'f_AB'], np.ndarray], n: IntNumber, dists: list[PPFDist] | None = ..., method: Callable | Literal['saltelli_2010'] = ..., random_state: SeedType = ...) -> SobolResult:
+def sobol_indices(
+    *,
+    func: Callable[[np.ndarray], npt.ArrayLike]
+    | dict[Literal["f_A", "f_B", "f_AB"], np.ndarray],
+    n: IntNumber,
+    dists: list[PPFDist] | None = ...,
+    method: Callable | Literal["saltelli_2010"] = ...,
+    random_state: SeedType = ...,
+) -> SobolResult:
     r"""Global sensitivity indices of Sobol'.
 
     Parameters
@@ -494,4 +501,3 @@ def sobol_indices(*, func: Callable[[np.ndarray], npt.ArrayLike] | dict[Literal[
 
     """
     ...
-

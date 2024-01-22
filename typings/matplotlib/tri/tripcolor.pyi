@@ -12,5 +12,5 @@ def tripcolor(
     vmax=...,
     shading: Literal["flat", "gouraud"] = "flat",
     facecolors: ArrayLike = ...,
-    **kwargs
+    **kwargs,
 ): ...

@@ -96,7 +96,9 @@ def get_data_in_axes(
     list[slice | _IntLike_co | None]
         _description_
     """
-    return np.transpose(data[slice_ignoring_axes(idx, axes)], get_position_in_sorted(axes))  # type: ignore[no-any-return]
+    return np.transpose(
+        data[slice_ignoring_axes(idx, axes)], get_position_in_sorted(axes)
+    )  # type: ignore[no-any-return]
 
 
 _LInv = TypeVar("_LInv", bound=int)

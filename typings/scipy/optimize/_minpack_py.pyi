@@ -290,7 +290,7 @@ def curve_fit(
     *,
     full_output: bool = ...,
     nan_policy: bool = ...,
-    **kwargs: Any
+    **kwargs: Any,
 ) -> tuple[np.ndarray[Any, Any], np.ndarray[Any, Any]]:
     """
     Use non-linear least squares to fit a function, f, to data.

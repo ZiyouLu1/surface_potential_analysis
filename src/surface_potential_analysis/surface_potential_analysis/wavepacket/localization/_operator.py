@@ -109,7 +109,7 @@ def _localize_operator(
 
 
 def localize_position_operator(
-    wavepacket: WavepacketWithEigenvalues[_B0Inv, _B1Inv]
+    wavepacket: WavepacketWithEigenvalues[_B0Inv, _B1Inv],
 ) -> list[WavepacketWithEigenvalues[_B0Inv, _B1Inv]]:
     """
     Given a wavepacket generate a set of normalized wavepackets using the operator method.
@@ -134,7 +134,7 @@ def localize_position_operator_many_band(
         WavepacketWithEigenvalues[
             StackedBasisLike[*tuple[_B0, ...]], StackedBasisLike[*tuple[_BL0, ...]]
         ]
-    ]
+    ],
 ) -> list[StateVector[Any]]:
     """
     Given a sequence of wavepackets at each band, get all possible eigenstates of position.
@@ -169,7 +169,7 @@ def localize_position_operator_many_band(
 
 
 def localize_position_operator_many_band_individual(
-    wavepackets: list[WavepacketWithEigenvalues[_B0Inv, _B1Inv]]
+    wavepackets: list[WavepacketWithEigenvalues[_B0Inv, _B1Inv]],
 ) -> list[StateVector[Any]]:
     """
     Given a wavepacket generate a set of normalized wavepackets using the operator method.

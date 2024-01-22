@@ -69,7 +69,9 @@ def get_state_vector_decomposition(
     # linalg.solve(a, b) = x where np.dot(a, x) == b, which is the sum
     # of the product over the last axis of x, so a[i] x[:, i] = b[:]
     # ie solved is the decomposition of b into the eigenvectors
-    return scipy.linalg.solve(eigenstates["data"].reshape(eigenstates["basis"].shape).T, initial_state["data"])  # type: ignore[no-any-return]
+    return scipy.linalg.solve(
+        eigenstates["data"].reshape(eigenstates["basis"].shape).T, initial_state["data"]
+    )  # type: ignore[no-any-return]
 
 
 def solve_schrodinger_equation(
@@ -179,7 +181,9 @@ def solve_schrodinger_equation_qutip(
         "basis": StackedBasis(times, hamiltonian["basis"][0]),
         "data": np.array(
             [
-                np.asarray([state.data.toarray().reshape(-1) for state in result.states])  # type: ignore unknown
+                np.asarray(
+                    [state.data.toarray().reshape(-1) for state in result.states]
+                )  # type: ignore unknown
             ],
             dtype=np.complex128,
         ).reshape(-1),

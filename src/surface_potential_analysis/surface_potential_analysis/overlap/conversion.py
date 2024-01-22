@@ -64,7 +64,7 @@ def convert_overlap_to_momentum_basis(
         StackedBasisLike[*tuple[_BL0, ...]],
         _B1,
         _B2,
-    ]
+    ],
 ) -> Overlap[
     StackedBasisLike[*tuple[FundamentalTransformedPositionBasis[Any, Literal[3]], ...]],
     _B1,
@@ -99,7 +99,7 @@ def convert_overlap_to_position_basis(
         StackedBasisLike[*tuple[_BL0, ...]],
         _B1,
         _B2,
-    ]
+    ],
 ) -> Overlap[
     StackedBasisLike[*tuple[FundamentalPositionBasis[Any, Any], ...]],
     _B1,

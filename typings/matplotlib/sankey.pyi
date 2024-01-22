@@ -20,7 +20,7 @@ class Sankey:
         head_angle: int = ...,
         margin: float = ...,
         tolerance: float = ...,
-        **kwargs
+        **kwargs,
     ) -> None: ...
     def add(
         self,
@@ -33,6 +33,6 @@ class Sankey:
         prior: int = ...,
         connect: Sequence[int] = ...,
         rotation: float = ...,
-        **kwargs
+        **kwargs,
     ) -> Sankey: ...
     def finish(self) -> list[SimpleNamespace]: ...

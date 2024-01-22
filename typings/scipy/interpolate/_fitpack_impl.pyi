@@ -24,32 +24,89 @@ TODO: Make interfaces to the following fitpack functions:
     For univariate splines: cocosp, concon, fourco, insert
     For bivariate splines: profil, regrid, parsur, surev
 """
-__all__ = ['splrep', 'splprep', 'splev', 'splint', 'sproot', 'spalde', 'bisplrep', 'bisplev', 'insert', 'splder', 'splantider']
+__all__ = [
+    "splrep",
+    "splprep",
+    "splev",
+    "splint",
+    "sproot",
+    "spalde",
+    "bisplrep",
+    "bisplev",
+    "insert",
+    "splder",
+    "splantider",
+]
 dfitpack_int = ...
 _iermess = ...
 _iermess2 = ...
 _parcur_cache = ...
-def splprep(x, w=..., u=..., ub=..., ue=..., k=..., task=..., s=..., t=..., full_output=..., nest=..., per=..., quiet=...):
-    ...
+
+def splprep(
+    x,
+    w=...,
+    u=...,
+    ub=...,
+    ue=...,
+    k=...,
+    task=...,
+    s=...,
+    t=...,
+    full_output=...,
+    nest=...,
+    per=...,
+    quiet=...,
+): ...
 
 _curfit_cache = ...
-def splrep(x, y, w=..., xb=..., xe=..., k=..., task=..., s=..., t=..., full_output=..., per=..., quiet=...): # -> tuple[tuple[Unknown, Unknown, int], Unknown, Unknown, Unknown] | tuple[Unknown, Unknown, int]:
-    ...
 
-def splev(x, tck, der=..., ext=...): # -> list[Unknown]:
+def splrep(
+    x,
+    y,
+    w=...,
+    xb=...,
+    xe=...,
+    k=...,
+    task=...,
+    s=...,
+    t=...,
+    full_output=...,
+    per=...,
+    quiet=...,
+):  # -> tuple[tuple[Unknown, Unknown, int], Unknown, Unknown, Unknown] | tuple[Unknown, Unknown, int]:
     ...
-
-def splint(a, b, tck, full_output=...): # -> list[Unknown] | tuple[Unknown, Unknown]:
+def splev(x, tck, der=..., ext=...):  # -> list[Unknown]:
     ...
-
-def sproot(tck, mest=...): # -> list[Unknown]:
+def splint(a, b, tck, full_output=...):  # -> list[Unknown] | tuple[Unknown, Unknown]:
     ...
-
-def spalde(x, tck): # -> list[Unknown]:
+def sproot(tck, mest=...):  # -> list[Unknown]:
+    ...
+def spalde(x, tck):  # -> list[Unknown]:
     ...
 
 _surfit_cache = ...
-def bisplrep(x, y, z, w=..., xb=..., xe=..., yb=..., ye=..., kx=..., ky=..., task=..., s=..., eps=..., tx=..., ty=..., full_output=..., nxest=..., nyest=..., quiet=...):
+
+def bisplrep(
+    x,
+    y,
+    z,
+    w=...,
+    xb=...,
+    xe=...,
+    yb=...,
+    ye=...,
+    kx=...,
+    ky=...,
+    task=...,
+    s=...,
+    eps=...,
+    tx=...,
+    ty=...,
+    full_output=...,
+    nxest=...,
+    nyest=...,
+    quiet=...,
+):
     """
     Find a bivariate B-spline representation of a surface.
 
@@ -219,12 +276,13 @@ def dblint(xa, xb, ya, yb, tck):
     """
     ...
 
-def insert(x, tck, m=..., per=...): # -> tuple[Unbound | Unknown, list[Unknown], Unbound | Unknown] | tuple[Unknown, Unknown, Unknown]:
+def insert(
+    x, tck, m=..., per=...
+):  # -> tuple[Unbound | Unknown, list[Unknown], Unbound | Unknown] | tuple[Unknown, Unknown, Unknown]:
     ...
-
-def splder(tck, n=...): # -> tuple[Unknown, Unknown | Any, Unknown]:
+def splder(tck, n=...):  # -> tuple[Unknown, Unknown | Any, Unknown]:
     ...
-
-def splantider(tck, n=...): # -> tuple[Unknown, Unknown | Any, Unknown] | tuple[Unknown | Any, Unknown | Any, Unknown]:
+def splantider(
+    tck, n=...
+):  # -> tuple[Unknown, Unknown | Any, Unknown] | tuple[Unknown | Any, Unknown | Any, Unknown]:
     ...
-

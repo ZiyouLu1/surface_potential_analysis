@@ -120,6 +120,6 @@ Warnings / Errors used in :mod:`scipy.spatial`
 
    QhullError
 """
-__all__ = [s for s in dir() if nots.startswith('_')]
-__all__ += ['distance', 'transform']
+__all__ = [s for s in dir() if nots.startswith("_")]
+__all__ += ["distance", "transform"]
 test = ...

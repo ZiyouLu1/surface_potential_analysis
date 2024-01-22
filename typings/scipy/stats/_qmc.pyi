@@ -9,18 +9,25 @@ from typing import ClassVar, Literal, TYPE_CHECKING, overload
 from scipy._lib._util import DecimalNumber, GeneratorType, IntNumber, SeedType
 
 """Quasi-Monte Carlo engines and helpers."""
-if TYPE_CHECKING:
-    ...
-__all__ = ['scale', 'discrepancy', 'update_discrepancy', 'QMCEngine', 'Sobol', 'Halton', 'LatinHypercube', 'PoissonDisk', 'MultinomialQMC', 'MultivariateNormalQMC']
-@overload
-def check_random_state(seed: IntNumber | None = ...) -> np.random.Generator:
-    ...
+if TYPE_CHECKING: ...
+__all__ = [
+    "scale",
+    "discrepancy",
+    "update_discrepancy",
+    "QMCEngine",
+    "Sobol",
+    "Halton",
+    "LatinHypercube",
+    "PoissonDisk",
+    "MultinomialQMC",
+    "MultivariateNormalQMC",
+]
 
 @overload
-def check_random_state(seed: GeneratorType) -> GeneratorType:
-    ...
-
-def check_random_state(seed=...): # -> Generator | RandomState:
+def check_random_state(seed: IntNumber | None = ...) -> np.random.Generator: ...
+@overload
+def check_random_state(seed: GeneratorType) -> GeneratorType: ...
+def check_random_state(seed=...):  # -> Generator | RandomState:
     """Turn `seed` into a `numpy.random.Generator` instance.
 
     Parameters
@@ -39,7 +46,13 @@ def check_random_state(seed=...): # -> Generator | RandomState:
     """
     ...
 
-def scale(sample: npt.ArrayLike, l_bounds: npt.ArrayLike, u_bounds: npt.ArrayLike, *, reverse: bool = ...) -> np.ndarray:
+def scale(
+    sample: npt.ArrayLike,
+    l_bounds: npt.ArrayLike,
+    u_bounds: npt.ArrayLike,
+    *,
+    reverse: bool = ...,
+) -> np.ndarray:
     r"""Sample scaling from unit hypercube to different bounds.
 
     To convert a sample from :math:`[0, 1)` to :math:`[a, b), b>a`,
@@ -94,7 +107,13 @@ def scale(sample: npt.ArrayLike, l_bounds: npt.ArrayLike, u_bounds: npt.ArrayLik
     """
     ...
 
-def discrepancy(sample: npt.ArrayLike, *, iterative: bool = ..., method: Literal["CD", "WD", "MD", "L2-star"] = ..., workers: IntNumber = ...) -> float:
+def discrepancy(
+    sample: npt.ArrayLike,
+    *,
+    iterative: bool = ...,
+    method: Literal["CD", "WD", "MD", "L2-star"] = ...,
+    workers: IntNumber = ...,
+) -> float:
     """Discrepancy of a given sample.
 
     Parameters
@@ -204,7 +223,9 @@ def discrepancy(sample: npt.ArrayLike, *, iterative: bool = ..., method: Literal
     """
     ...
 
-def update_discrepancy(x_new: npt.ArrayLike, sample: npt.ArrayLike, initial_disc: DecimalNumber) -> float:
+def update_discrepancy(
+    x_new: npt.ArrayLike, sample: npt.ArrayLike, initial_disc: DecimalNumber
+) -> float:
     """Update the centered discrepancy with a new sample.
 
     Parameters
@@ -283,7 +304,16 @@ def n_primes(n: IntNumber) -> list[int]:
     """
     ...
 
-def van_der_corput(n: IntNumber, base: IntNumber = ..., *, start_index: IntNumber = ..., scramble: bool = ..., permutations: npt.ArrayLike | None = ..., seed: SeedType = ..., workers: IntNumber = ...) -> np.ndarray:
+def van_der_corput(
+    n: IntNumber,
+    base: IntNumber = ...,
+    *,
+    start_index: IntNumber = ...,
+    scramble: bool = ...,
+    permutations: npt.ArrayLike | None = ...,
+    seed: SeedType = ...,
+    workers: IntNumber = ...,
+) -> np.ndarray:
     """Van der Corput sequence.
 
     Pseudo-random number generator based on a b-adic expansion.
@@ -429,9 +459,13 @@ class QMCEngine(ABC):
 
     """
     @abstractmethod
-    def __init__(self, d: IntNumber, *, optimization: Literal["random-cd", "lloyd"] | None = ..., seed: SeedType = ...) -> None:
-        ...
-    
+    def __init__(
+        self,
+        d: IntNumber,
+        *,
+        optimization: Literal["random-cd", "lloyd"] | None = ...,
+        seed: SeedType = ...,
+    ) -> None: ...
     def random(self, n: IntNumber = ..., *, workers: IntNumber = ...) -> np.ndarray:
         """Draw `n` in the half-open interval ``[0, 1)``.
 
@@ -453,8 +487,16 @@ class QMCEngine(ABC):
 
         """
         ...
-    
-    def integers(self, l_bounds: npt.ArrayLike, *, u_bounds: npt.ArrayLike | None = ..., n: IntNumber = ..., endpoint: bool = ..., workers: IntNumber = ...) -> np.ndarray:
+
+    def integers(
+        self,
+        l_bounds: npt.ArrayLike,
+        *,
+        u_bounds: npt.ArrayLike | None = ...,
+        n: IntNumber = ...,
+        endpoint: bool = ...,
+        workers: IntNumber = ...,
+    ) -> np.ndarray:
         r"""
         Draw `n` integers from `l_bounds` (inclusive) to `u_bounds`
         (exclusive), or if endpoint=True, `l_bounds` (inclusive) to
@@ -503,7 +545,7 @@ class QMCEngine(ABC):
 
         """
         ...
-    
+
     def reset(self) -> QMCEngine:
         """Reset the engine to base state.
 
@@ -514,7 +556,7 @@ class QMCEngine(ABC):
 
         """
         ...
-    
+
     def fast_forward(self, n: IntNumber) -> QMCEngine:
         """Fast-forward the sequence by `n` positions.
 
@@ -530,8 +572,6 @@ class QMCEngine(ABC):
 
         """
         ...
-    
-
 
 class Halton(QMCEngine):
     """Halton sequence.
@@ -627,10 +667,14 @@ class Halton(QMCEngine):
            [4.375     , 4.44444444]])
 
     """
-    def __init__(self, d: IntNumber, *, scramble: bool = ..., optimization: Literal["random-cd", "lloyd"] | None = ..., seed: SeedType = ...) -> None:
-        ...
-    
-
+    def __init__(
+        self,
+        d: IntNumber,
+        *,
+        scramble: bool = ...,
+        optimization: Literal["random-cd", "lloyd"] | None = ...,
+        seed: SeedType = ...,
+    ) -> None: ...
 
 class LatinHypercube(QMCEngine):
     r"""Latin hypercube sampling (LHS).
@@ -824,10 +868,16 @@ class LatinHypercube(QMCEngine):
     be guaranteed to be of strength 2.
 
     """
-    def __init__(self, d: IntNumber, *, centered: bool = ..., scramble: bool = ..., strength: int = ..., optimization: Literal["random-cd", "lloyd"] | None = ..., seed: SeedType = ...) -> None:
-        ...
-    
-
+    def __init__(
+        self,
+        d: IntNumber,
+        *,
+        centered: bool = ...,
+        scramble: bool = ...,
+        strength: int = ...,
+        optimization: Literal["random-cd", "lloyd"] | None = ...,
+        seed: SeedType = ...,
+    ) -> None: ...
 
 class Sobol(QMCEngine):
     """Engine for generating (scrambled) Sobol' sequences.
@@ -967,10 +1017,17 @@ class Sobol(QMCEngine):
            [1.25 , 3.875]])
 
     """
+
     MAXDIM: ClassVar[int] = ...
-    def __init__(self, d: IntNumber, *, scramble: bool = ..., bits: IntNumber | None = ..., seed: SeedType = ..., optimization: Literal["random-cd", "lloyd"] | None = ...) -> None:
-        ...
-    
+    def __init__(
+        self,
+        d: IntNumber,
+        *,
+        scramble: bool = ...,
+        bits: IntNumber | None = ...,
+        seed: SeedType = ...,
+        optimization: Literal["random-cd", "lloyd"] | None = ...,
+    ) -> None: ...
     def random_base2(self, m: IntNumber) -> np.ndarray:
         """Draw point(s) from the Sobol' sequence.
 
@@ -989,7 +1046,7 @@ class Sobol(QMCEngine):
 
         """
         ...
-    
+
     def reset(self) -> Sobol:
         """Reset the engine to base state.
 
@@ -1000,7 +1057,7 @@ class Sobol(QMCEngine):
 
         """
         ...
-    
+
     def fast_forward(self, n: IntNumber) -> Sobol:
         """Fast-forward the sequence by `n` positions.
 
@@ -1016,8 +1073,6 @@ class Sobol(QMCEngine):
 
         """
         ...
-    
-
 
 class PoissonDisk(QMCEngine):
     """Poisson disk sampling.
@@ -1130,9 +1185,16 @@ class PoissonDisk(QMCEngine):
     (curse-of-dimensionality).
 
     """
-    def __init__(self, d: IntNumber, *, radius: DecimalNumber = ..., hypersphere: Literal["volume", "surface"] = ..., ncandidates: IntNumber = ..., optimization: Literal["random-cd", "lloyd"] | None = ..., seed: SeedType = ...) -> None:
-        ...
-    
+    def __init__(
+        self,
+        d: IntNumber,
+        *,
+        radius: DecimalNumber = ...,
+        hypersphere: Literal["volume", "surface"] = ...,
+        ncandidates: IntNumber = ...,
+        optimization: Literal["random-cd", "lloyd"] | None = ...,
+        seed: SeedType = ...,
+    ) -> None: ...
     def fill_space(self) -> np.ndarray:
         """Draw ``n`` samples in the interval ``[0, 1]``.
 
@@ -1152,7 +1214,7 @@ class PoissonDisk(QMCEngine):
 
         """
         ...
-    
+
     def reset(self) -> PoissonDisk:
         """Reset the engine to base state.
 
@@ -1163,8 +1225,6 @@ class PoissonDisk(QMCEngine):
 
         """
         ...
-    
-
 
 class MultivariateNormalQMC:
     r"""QMC sampling from a multivariate Normal :math:`N(\mu, \Sigma)`.
@@ -1200,9 +1260,16 @@ class MultivariateNormalQMC:
     >>> plt.show()
 
     """
-    def __init__(self, mean: npt.ArrayLike, cov: npt.ArrayLike | None = ..., *, cov_root: npt.ArrayLike | None = ..., inv_transform: bool = ..., engine: QMCEngine | None = ..., seed: SeedType = ...) -> None:
-        ...
-    
+    def __init__(
+        self,
+        mean: npt.ArrayLike,
+        cov: npt.ArrayLike | None = ...,
+        *,
+        cov_root: npt.ArrayLike | None = ...,
+        inv_transform: bool = ...,
+        engine: QMCEngine | None = ...,
+        seed: SeedType = ...,
+    ) -> None: ...
     def random(self, n: IntNumber = ...) -> np.ndarray:
         """Draw `n` QMC samples from the multivariate Normal.
 
@@ -1218,8 +1285,6 @@ class MultivariateNormalQMC:
 
         """
         ...
-    
-
 
 class MultinomialQMC:
     r"""QMC sampling from a multinomial distribution.
@@ -1265,9 +1330,14 @@ class MultinomialQMC:
     >>> plt.show()
 
     """
-    def __init__(self, pvals: npt.ArrayLike, n_trials: IntNumber, *, engine: QMCEngine | None = ..., seed: SeedType = ...) -> None:
-        ...
-    
+    def __init__(
+        self,
+        pvals: npt.ArrayLike,
+        n_trials: IntNumber,
+        *,
+        engine: QMCEngine | None = ...,
+        seed: SeedType = ...,
+    ) -> None: ...
     def random(self, n: IntNumber = ...) -> np.ndarray:
         """Draw `n` QMC samples from the multinomial distribution.
 
@@ -1283,6 +1353,3 @@ class MultinomialQMC:
 
         """
         ...
-    
-
-

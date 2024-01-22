@@ -7,7 +7,8 @@ from scipy._lib._util import _rename_parameter
 from dataclasses import dataclass
 from ._common import ConfidenceInterval
 
-__all__ = ['bootstrap', 'monte_carlo_test', 'permutation_test']
+__all__ = ["bootstrap", "monte_carlo_test", "permutation_test"]
+
 @dataclass
 class BootstrapResult:
     """Result object returned by `scipy.stats.bootstrap`.
@@ -26,13 +27,27 @@ class BootstrapResult:
         deviation of the bootstrap distribution.
 
     """
+
     confidence_interval: ConfidenceInterval
     bootstrap_distribution: np.ndarray
     standard_error: float | np.ndarray
     ...
 
-
-def bootstrap(data, statistic, *, n_resamples=..., batch=..., vectorized=..., paired=..., axis=..., confidence_level=..., alternative=..., method=..., bootstrap_result=..., random_state=...): # -> BootstrapResult:
+def bootstrap(
+    data,
+    statistic,
+    *,
+    n_resamples=...,
+    batch=...,
+    vectorized=...,
+    paired=...,
+    axis=...,
+    confidence_level=...,
+    alternative=...,
+    method=...,
+    bootstrap_result=...,
+    random_state=...,
+):  # -> BootstrapResult:
     r"""
     Compute a two-sided bootstrap confidence interval of a statistic.
 
@@ -358,7 +373,6 @@ def bootstrap(data, statistic, *, n_resamples=..., batch=..., vectorized=..., pa
 
     """
     ...
-
 @dataclass
 class MonteCarloTestResult:
     """Result object returned by `scipy.stats.monte_carlo_test`.
@@ -373,14 +387,24 @@ class MonteCarloTestResult:
         The values of the test statistic generated under the null
         hypothesis.
     """
+
     statistic: float | np.ndarray
     pvalue: float | np.ndarray
     null_distribution: np.ndarray
     ...
 
-
-@_rename_parameter('sample', 'data')
-def monte_carlo_test(data, rvs, statistic, *, vectorized=..., n_resamples=..., batch=..., alternative=..., axis=...): # -> MonteCarloTestResult:
+@_rename_parameter("sample", "data")
+def monte_carlo_test(
+    data,
+    rvs,
+    statistic,
+    *,
+    vectorized=...,
+    n_resamples=...,
+    batch=...,
+    alternative=...,
+    axis=...,
+):  # -> MonteCarloTestResult:
     r"""Perform a Monte Carlo hypothesis test.
 
     `data` contains a sample or a sequence of one or more samples. `rvs`
@@ -531,7 +555,6 @@ def monte_carlo_test(data, rvs, statistic, *, vectorized=..., n_resamples=..., b
 
     """
     ...
-
 @dataclass
 class PermutationTestResult:
     """Result object returned by `scipy.stats.permutation_test`.
@@ -546,13 +569,24 @@ class PermutationTestResult:
         The values of the test statistic generated under the null
         hypothesis.
     """
+
     statistic: float | np.ndarray
     pvalue: float | np.ndarray
     null_distribution: np.ndarray
     ...
 
-
-def permutation_test(data, statistic, *, permutation_type=..., vectorized=..., n_resamples=..., batch=..., alternative=..., axis=..., random_state=...): # -> PermutationTestResult:
+def permutation_test(
+    data,
+    statistic,
+    *,
+    permutation_type=...,
+    vectorized=...,
+    n_resamples=...,
+    batch=...,
+    alternative=...,
+    axis=...,
+    random_state=...,
+):  # -> PermutationTestResult:
     r"""
     Performs a permutation test of a given statistic on provided data.
 
@@ -976,7 +1010,6 @@ def permutation_test(data, statistic, *, permutation_type=..., vectorized=..., n
 
     """
     ...
-
 @dataclass
 class ResamplingMethod:
     """Configuration information for a statistical resampling method.
@@ -995,9 +1028,9 @@ class ResamplingMethod:
         is vectorized, but memory usage scales linearly with the batch size.
         Default is ``None``, which processes all resamples in a single batch.
     """
+
     n_resamples: int = ...
     batch: int = ...
-
 
 @dataclass
 class MonteCarloMethod(ResamplingMethod):
@@ -1030,8 +1063,8 @@ class MonteCarloMethod(ResamplingMethod):
         ``rvs = (rng.normal, rng.normal)`` where
         ``rng = np.random.default_rng()``.
     """
-    rvs: object = ...
 
+    rvs: object = ...
 
 @dataclass
 class PermutationMethod(ResamplingMethod):
@@ -1062,8 +1095,8 @@ class PermutationMethod(ResamplingMethod):
         If `random_state` is ``None`` (default), the
         `numpy.random.RandomState` singleton is used.
     """
-    random_state: object = ...
 
+    random_state: object = ...
 
 @dataclass
 class BootstrapMethod(ResamplingMethod):
@@ -1098,7 +1131,6 @@ class BootstrapMethod(ResamplingMethod):
         (AKA 'reverse') bootstrap ('basic'), or the bias-corrected and
         accelerated bootstrap ('BCa', default).
     """
+
     random_state: object = ...
     method: str = ...
-
-

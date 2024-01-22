@@ -22,13 +22,10 @@ class BinomTestResult:
         The p-value of the hypothesis test.
 
     """
-    def __init__(self, k, n, alternative, statistic, pvalue) -> None:
+    def __init__(self, k, n, alternative, statistic, pvalue) -> None: ...
+    def __repr__(self):  # -> str:
         ...
-    
-    def __repr__(self): # -> str:
-        ...
-    
-    def proportion_ci(self, confidence_level=..., method=...): # -> ConfidenceInterval:
+    def proportion_ci(self, confidence_level=..., method=...):  # -> ConfidenceInterval:
         """
         Compute the confidence interval for ``statistic``.
 
@@ -78,10 +75,8 @@ class BinomTestResult:
         ConfidenceInterval(low=0.05819170033997342, high=0.26739600249700846)
         """
         ...
-    
 
-
-def binomtest(k, n, p=..., alternative=...): # -> BinomTestResult:
+def binomtest(k, n, p=..., alternative=...):  # -> BinomTestResult:
     """
     Perform a test that the probability of success is p.
 
@@ -167,4 +162,3 @@ def binomtest(k, n, p=..., alternative=...): # -> BinomTestResult:
 
     """
     ...
-

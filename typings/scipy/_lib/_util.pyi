@@ -10,7 +10,10 @@ IntNumber = Union[int, np.integer]
 DecimalNumber = Union[float, np.floating, np.integer]
 if TYPE_CHECKING:
     SeedType = Optional[Union[IntNumber, np.random.Generator, np.random.RandomState]]
-    GeneratorType = TypeVar("GeneratorType", bound=Union[np.random.Generator, np.random.RandomState])
+    GeneratorType = TypeVar(
+        "GeneratorType", bound=Union[np.random.Generator, np.random.RandomState]
+    )
+
 def float_factorial(n: int) -> float:
     """Compute the factorial and return as a float
 
@@ -18,7 +21,7 @@ def float_factorial(n: int) -> float:
     """
     ...
 
-def check_random_state(seed): # -> RandomState | Generator:
+def check_random_state(seed):  # -> RandomState | Generator:
     """Turn `seed` into a `np.random.RandomState` instance.
 
     Parameters
@@ -40,7 +43,8 @@ def check_random_state(seed): # -> RandomState | Generator:
     ...
 
 FullArgSpec = ...
-def getfullargspec_no_self(func): # -> FullArgSpec:
+
+def getfullargspec_no_self(func):  # -> FullArgSpec:
     """inspect.getfullargspec replacement using inspect.signature.
 
     If func is a bound method, do not list the 'self' parameter.
@@ -67,13 +71,8 @@ class _FunctionWrapper:
     """
     Object to wrap user's function, allowing picklability
     """
-    def __init__(self, f, args) -> None:
-        ...
-    
-    def __call__(self, x):
-        ...
-    
-
+    def __init__(self, f, args) -> None: ...
+    def __call__(self, x): ...
 
 class MapWrapper:
     """
@@ -91,28 +90,19 @@ class MapWrapper:
         calling sequence as the built-in map function, then this callable is
         used for parallelization.
     """
-    def __init__(self, pool=...) -> None:
+    def __init__(self, pool=...) -> None: ...
+    def __enter__(self):  # -> Self@MapWrapper:
         ...
-    
-    def __enter__(self): # -> Self@MapWrapper:
+    def terminate(self):  # -> None:
         ...
-    
-    def terminate(self): # -> None:
+    def join(self):  # -> None:
         ...
-    
-    def join(self): # -> None:
+    def close(self):  # -> None:
         ...
-    
-    def close(self): # -> None:
+    def __exit__(self, exc_type, exc_value, traceback):  # -> None:
         ...
-    
-    def __exit__(self, exc_type, exc_value, traceback): # -> None:
+    def __call__(self, func, iterable):  # -> map[Unknown] | list[Unknown]:
         ...
-    
-    def __call__(self, func, iterable): # -> map[Unknown] | list[Unknown]:
-        ...
-    
-
 
 def rng_integers(gen, low, high=..., size=..., dtype=..., endpoint=...):
     """
@@ -158,4 +148,3 @@ def rng_integers(gen, low, high=..., size=..., dtype=..., endpoint=...):
         or a single such random int if size not provided.
     """
     ...
-

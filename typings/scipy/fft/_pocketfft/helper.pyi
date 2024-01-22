@@ -7,8 +7,9 @@ import contextlib
 _config = ...
 _cpu_count = ...
 _NORM_MAP = ...
+
 @contextlib.contextmanager
-def set_workers(workers): # -> Generator[None, Any, None]:
+def set_workers(workers):  # -> Generator[None, Any, None]:
     """Context manager for the default number of workers used in `scipy.fft`
 
     Parameters
@@ -28,7 +29,7 @@ def set_workers(workers): # -> Generator[None, Any, None]:
     """
     ...
 
-def get_workers(): # -> Any | int:
+def get_workers():  # -> Any | int:
     """Returns the default number of workers within the current context
 
     Examples
@@ -41,4 +42,3 @@ def get_workers(): # -> Any | int:
     4
     """
     ...
-

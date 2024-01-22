@@ -90,7 +90,7 @@ if TYPE_CHECKING:
 @npy_cached(get_data_path("wavepacket/wavepacket_hydrogen.npy"), load_pickle=True)  # type: ignore[misc]
 def get_all_wavepackets_hydrogen() -> _HydrogenPlatinumWavepacketList:
     def _hamiltonian_generator(
-        bloch_fraction: np.ndarray[tuple[Literal[3]], np.dtype[np.float64]]
+        bloch_fraction: np.ndarray[tuple[Literal[3]], np.dtype[np.float64]],
     ) -> SingleBasisOperator[
         StackedBasisLike[
             FundamentalTransformedPositionBasis[Literal[23], Literal[3]],
@@ -133,7 +133,7 @@ def get_hydrogen_energy_difference(state_0: int, state_1: int) -> np.float64:
 @npy_cached(get_data_path("wavepacket/wavepacket_deuterium.npy"), load_pickle=True)  # type: ignore[misc]
 def get_all_wavepackets_deuterium() -> _DeuteriumPlatinumWavepacketList:
     def _hamiltonian_generator(
-        bloch_fraction: np.ndarray[tuple[Literal[3]], np.dtype[np.float64]]
+        bloch_fraction: np.ndarray[tuple[Literal[3]], np.dtype[np.float64]],
     ) -> SingleBasisOperator[
         StackedBasisLike[
             FundamentalTransformedPositionBasis[Literal[33], Literal[3]],

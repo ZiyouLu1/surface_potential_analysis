@@ -16,10 +16,10 @@ class SecondaryAxis(_AxesBase):
     def set_ticks(
         self,
         ticks: list[float],
-        labels: list[str]|None = None,
+        labels: list[str] | None = None,
         *,
         minor: bool = False,
-        **kwargs
+        **kwargs,
     ) -> list: ...
     def set_functions(
         self, functions: tuple[Callable, Callable] | Transform

@@ -10,15 +10,36 @@ C = np.array([(4 - S6) / 10, (4 + S6) / 10, 1])
 E = np.array([-13 - 7 * S6, -13 + 7 * S6, -1]) / 3
 MU_REAL = ...
 MU_COMPLEX = ...
-T = np.array([[0.09443876248897524, -0.1412552950209542, 0.03002919410514742], [0.2502131229653333, 0.20412935229379994, -0.3829421127572619], [1, 1, 0]])
-TI = np.array([[4.178718591551904, 0.32768282076106237, 0.5233764454994495], [-4.178718591551904, -0.32768282076106237, 0.47662355450055044], [0.5028726349457868, -2.571926949855605, 0.5960392048282249]])
+T = np.array(
+    [
+        [0.09443876248897524, -0.1412552950209542, 0.03002919410514742],
+        [0.2502131229653333, 0.20412935229379994, -0.3829421127572619],
+        [1, 1, 0],
+    ]
+)
+TI = np.array(
+    [
+        [4.178718591551904, 0.32768282076106237, 0.5233764454994495],
+        [-4.178718591551904, -0.32768282076106237, 0.47662355450055044],
+        [0.5028726349457868, -2.571926949855605, 0.5960392048282249],
+    ]
+)
 TI_REAL = TI[0]
 TI_COMPLEX = TI[1] + 1j * TI[2]
-P = np.array([[13 / 3 + 7 * S6 / 3, -23 / 3 - 22 * S6 / 3, 10 / 3 + 5 * S6], [13 / 3 - 7 * S6 / 3, -23 / 3 + 22 * S6 / 3, 10 / 3 - 5 * S6], [1 / 3, -8 / 3, 10 / 3]])
+P = np.array(
+    [
+        [13 / 3 + 7 * S6 / 3, -23 / 3 - 22 * S6 / 3, 10 / 3 + 5 * S6],
+        [13 / 3 - 7 * S6 / 3, -23 / 3 + 22 * S6 / 3, 10 / 3 - 5 * S6],
+        [1 / 3, -8 / 3, 10 / 3],
+    ]
+)
 NEWTON_MAXITER = ...
 MIN_FACTOR = ...
 MAX_FACTOR = ...
-def solve_collocation_system(fun, t, y, h, Z0, scale, tol, LU_real, LU_complex, solve_lu): # -> tuple[bool, int, Unknown | Any, Unknown | None]:
+
+def solve_collocation_system(
+    fun, t, y, h, Z0, scale, tol, LU_real, LU_complex, solve_lu
+):  # -> tuple[bool, int, Unknown | Any, Unknown | None]:
     """Solve the collocation system.
 
     Parameters
@@ -205,14 +226,21 @@ class Radau(OdeSolver):
            sparse Jacobian matrices", Journal of the Institute of Mathematics
            and its Applications, 13, pp. 117-120, 1974.
     """
-    def __init__(self, fun, t0, y0, t_bound, max_step=..., rtol=..., atol=..., jac=..., jac_sparsity=..., vectorized=..., first_step=..., **extraneous) -> None:
-        ...
-    
-
+    def __init__(
+        self,
+        fun,
+        t0,
+        y0,
+        t_bound,
+        max_step=...,
+        rtol=...,
+        atol=...,
+        jac=...,
+        jac_sparsity=...,
+        vectorized=...,
+        first_step=...,
+        **extraneous,
+    ) -> None: ...
 
 class RadauDenseOutput(DenseOutput):
-    def __init__(self, t_old, t, y_old, Q) -> None:
-        ...
-    
-
-
+    def __init__(self, t_old, t, y_old, Q) -> None: ...

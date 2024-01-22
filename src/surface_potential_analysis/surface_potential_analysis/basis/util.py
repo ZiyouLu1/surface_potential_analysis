@@ -65,7 +65,7 @@ class BasisUtil(BasisLike[Any, Any], Generic[_B0_co]):
 
     @property
     def vectors(
-        self: BasisUtil[BasisLike[_NF0Inv, _N0Inv]]
+        self: BasisUtil[BasisLike[_NF0Inv, _N0Inv]],
     ) -> np.ndarray[tuple[_N0Inv, _NF0Inv], np.dtype[np.complex128]]:
         return self.__into_fundamental__(np.eye(self.n, self.n))  # type: ignore[return-value]
 
@@ -85,13 +85,13 @@ class BasisUtil(BasisLike[Any, Any], Generic[_B0_co]):
 
     @property
     def nx_points(
-        self: BasisUtil[BasisLike[Any, _N0Inv]]
+        self: BasisUtil[BasisLike[Any, _N0Inv]],
     ) -> np.ndarray[tuple[_N0Inv], np.dtype[np.int_]]:
         return np.arange(0, self.n, dtype=int)  # type: ignore[no-any-return]
 
     @property
     def nk_points(
-        self: BasisUtil[BasisLike[Any, _N0Inv]]
+        self: BasisUtil[BasisLike[Any, _N0Inv]],
     ) -> np.ndarray[tuple[_N0Inv], np.dtype[np.int_]]:
         return np.fft.ifftshift(  # type: ignore[no-any-return]
             np.arange((-self.n + 1) // 2, (self.n + 1) // 2)
@@ -99,7 +99,7 @@ class BasisUtil(BasisLike[Any, Any], Generic[_B0_co]):
 
     @property
     def fundamental_nk_points(
-        self: BasisUtil[BasisLike[_NF0Inv, Any]]
+        self: BasisUtil[BasisLike[_NF0Inv, Any]],
     ) -> np.ndarray[tuple[_NF0Inv], np.dtype[np.int_]]:
         # We want points from (-self.Nk + 1) // 2 to (self.Nk - 1) // 2
         n = self.fundamental_n
@@ -109,33 +109,35 @@ class BasisUtil(BasisLike[Any, Any], Generic[_B0_co]):
 
     @property
     def fundamental_nx_points(
-        self: BasisUtil[BasisLike[_NF0Inv, Any]]
+        self: BasisUtil[BasisLike[_NF0Inv, Any]],
     ) -> np.ndarray[tuple[_NF0Inv], np.dtype[np.int_]]:
         return np.arange(  # type: ignore[no-any-return]
-            0, self.fundamental_n, dtype=int  # type: ignore[misc]
+            0,
+            self.fundamental_n,
+            dtype=int,  # type: ignore[misc]
         )
 
     @property
     def delta_x(
-        self: BasisUtil[BasisWithLengthLike[Any, Any, _ND0Inv]]
+        self: BasisUtil[BasisWithLengthLike[Any, Any, _ND0Inv]],
     ) -> AxisVector[_ND0Inv]:
         return self._basis.delta_x
 
     @cached_property
     def dx(
-        self: BasisUtil[BasisWithLengthLike[Any, Any, _ND0Inv]]
+        self: BasisUtil[BasisWithLengthLike[Any, Any, _ND0Inv]],
     ) -> AxisVector[_ND0Inv]:
         return self.delta_x / self.n  # type: ignore[no-any-return, misc]
 
     @cached_property
     def fundamental_dx(
-        self: BasisUtil[BasisWithLengthLike[Any, Any, _ND0Inv]]
+        self: BasisUtil[BasisWithLengthLike[Any, Any, _ND0Inv]],
     ) -> AxisVector[_ND0Inv]:
         return self.delta_x / self.fundamental_n  # type: ignore[no-any-return,misc]
 
     @property
     def x_points(
-        self: BasisUtil[BasisWithLengthLike[Any, _N0Inv, _ND0Inv]]
+        self: BasisUtil[BasisWithLengthLike[Any, _N0Inv, _ND0Inv]],
     ) -> np.ndarray[tuple[_ND0Inv, _N0Inv], np.dtype[np.int_]]:
         return self.dx[:, np.newaxis] * self.nx_points  # type: ignore[no-any-return]
 
@@ -150,7 +152,7 @@ class BasisUtil(BasisLike[Any, Any], Generic[_B0_co]):
 
     @property
     def shape(
-        self: BasisUtil[StackedBasisLike[*tuple[_B0Inv, ...]]]
+        self: BasisUtil[StackedBasisLike[*tuple[_B0Inv, ...]]],
     ) -> tuple[int, ...]:
         return self._basis.shape
 
@@ -160,7 +162,7 @@ class BasisUtil(BasisLike[Any, Any], Generic[_B0_co]):
 
     @property
     def fundamental_shape(
-        self: BasisUtil[StackedBasisLike[*tuple[_B0Inv, ...]]]
+        self: BasisUtil[StackedBasisLike[*tuple[_B0Inv, ...]]],
     ) -> tuple[int, ...]:
         return self._basis.fundamental_shape
 
@@ -176,7 +178,7 @@ class BasisUtil(BasisLike[Any, Any], Generic[_B0_co]):
 
     @property
     def fundamental_stacked_nk_points(
-        self: BasisUtil[StackedBasisLike[*tuple[_B0Inv, ...]]]
+        self: BasisUtil[StackedBasisLike[*tuple[_B0Inv, ...]]],
     ) -> ArrayStackedIndexLike[tuple[int]]:
         nk_mesh = np.meshgrid(
             *[BasisUtil(xi_basis).fundamental_nk_points for xi_basis in self],
@@ -186,7 +188,7 @@ class BasisUtil(BasisLike[Any, Any], Generic[_B0_co]):
 
     @property
     def stacked_nx_points(
-        self: BasisUtil[StackedBasisLike[*tuple[_B0Inv, ...]]]
+        self: BasisUtil[StackedBasisLike[*tuple[_B0Inv, ...]]],
     ) -> ArrayStackedIndexLike[tuple[int]]:
         nx_mesh = np.meshgrid(
             *[BasisUtil(xi_basis).nx_points for xi_basis in self],
@@ -196,7 +198,7 @@ class BasisUtil(BasisLike[Any, Any], Generic[_B0_co]):
 
     @property
     def fundamental_stacked_nx_points(
-        self: BasisUtil[StackedBasisLike[*tuple[_B0Inv, ...]]]
+        self: BasisUtil[StackedBasisLike[*tuple[_B0Inv, ...]]],
     ) -> ArrayStackedIndexLike[tuple[int]]:
         nx_mesh = np.meshgrid(
             *[BasisUtil(xi_basis).fundamental_nx_points for xi_basis in self],
@@ -377,7 +379,7 @@ class BasisUtil(BasisLike[Any, Any], Generic[_B0_co]):
 
     @property
     def delta_x_stacked(
-        self: BasisUtil[StackedBasisLike[*tuple[_BL0Inv, ...]]]
+        self: BasisUtil[StackedBasisLike[*tuple[_BL0Inv, ...]]],
     ) -> np.ndarray[tuple[int, int], np.dtype[np.float64]]:
         return np.array([axi.delta_x for axi in self])
 
@@ -389,7 +391,7 @@ class BasisUtil(BasisLike[Any, Any], Generic[_B0_co]):
 
     @cached_property
     def dx_stacked(
-        self: BasisUtil[StackedBasisLike[*tuple[_BL0Inv, ...]]]
+        self: BasisUtil[StackedBasisLike[*tuple[_BL0Inv, ...]]],
     ) -> np.ndarray[tuple[int, int], np.dtype[np.float64]]:
         return np.array([BasisUtil(axi).dx for axi in self])
 
@@ -401,7 +403,7 @@ class BasisUtil(BasisLike[Any, Any], Generic[_B0_co]):
 
     @property
     def delta_k_stacked(
-        self: BasisUtil[StackedBasisLike[*tuple[_BL0Inv, ...]]]
+        self: BasisUtil[StackedBasisLike[*tuple[_BL0Inv, ...]]],
     ) -> np.ndarray[tuple[int, int], np.dtype[np.float64]]:
         return np.array(self.shape)[:, np.newaxis] * self.dk_stacked
 
@@ -413,7 +415,7 @@ class BasisUtil(BasisLike[Any, Any], Generic[_B0_co]):
 
     @cached_property
     def dk_stacked(
-        self: BasisUtil[StackedBasisLike[*tuple[_BL0Inv, ...]]]
+        self: BasisUtil[StackedBasisLike[*tuple[_BL0Inv, ...]]],
     ) -> np.ndarray[tuple[int, int], np.dtype[np.float64]]:
         """Get dk as a list of dk for each axis."""
         return 2 * np.pi * np.linalg.inv(self.delta_x_stacked).T

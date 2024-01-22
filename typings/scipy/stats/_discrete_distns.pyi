@@ -32,10 +32,11 @@ class binom_gen(rv_discrete):
     hypergeom, nbinom, nhypergeom
 
     """
+
     ...
 
-
 binom = ...
+
 class bernoulli_gen(binom_gen):
     r"""A Bernoulli discrete random variable.
 
@@ -61,10 +62,11 @@ class bernoulli_gen(binom_gen):
     %(example)s
 
     """
+
     ...
 
-
 bernoulli = ...
+
 class betabinom_gen(rv_discrete):
     r"""A beta-binomial discrete random variable.
 
@@ -101,10 +103,11 @@ class betabinom_gen(rv_discrete):
     %(example)s
 
     """
+
     ...
 
-
 betabinom = ...
+
 class nbinom_gen(rv_discrete):
     r"""A negative binomial discrete random variable.
 
@@ -156,10 +159,11 @@ class nbinom_gen(rv_discrete):
     hypergeom, binom, nhypergeom
 
     """
+
     ...
 
-
 nbinom = ...
+
 class geom_gen(rv_discrete):
     r"""A geometric discrete random variable.
 
@@ -188,10 +192,11 @@ class geom_gen(rv_discrete):
     %(example)s
 
     """
+
     ...
 
-
 geom = ...
+
 class hypergeom_gen(rv_discrete):
     r"""A hypergeometric discrete random variable.
 
@@ -259,10 +264,11 @@ class hypergeom_gen(rv_discrete):
     nhypergeom, binom, nbinom
 
     """
+
     ...
 
-
 hypergeom = ...
+
 class nhypergeom_gen(rv_discrete):
     r"""A negative hypergeometric discrete random variable.
 
@@ -363,10 +369,11 @@ class nhypergeom_gen(rv_discrete):
            http://www.math.wm.edu/~leemis/chart/UDR/PDFs/Negativehypergeometric.pdf
 
     """
+
     ...
 
-
 nhypergeom = ...
+
 class logser_gen(rv_discrete):
     r"""A Logarithmic (Log-Series, Series) discrete random variable.
 
@@ -391,10 +398,11 @@ class logser_gen(rv_discrete):
     %(example)s
 
     """
+
     ...
 
-
 logser = ...
+
 class poisson_gen(rv_discrete):
     r"""A Poisson discrete random variable.
 
@@ -419,10 +427,11 @@ class poisson_gen(rv_discrete):
     %(example)s
 
     """
+
     ...
 
-
 poisson = ...
+
 class planck_gen(rv_discrete):
     r"""A Planck discrete exponential random variable.
 
@@ -451,10 +460,11 @@ class planck_gen(rv_discrete):
     %(example)s
 
     """
+
     ...
 
-
 planck = ...
+
 class boltzmann_gen(rv_discrete):
     r"""A Boltzmann (Truncated Discrete Exponential) random variable.
 
@@ -477,10 +487,11 @@ class boltzmann_gen(rv_discrete):
     %(example)s
 
     """
+
     ...
 
-
 boltzmann = ...
+
 class randint_gen(rv_discrete):
     r"""A uniform discrete random variable.
 
@@ -504,10 +515,11 @@ class randint_gen(rv_discrete):
     %(example)s
 
     """
+
     ...
 
-
 randint = ...
+
 class zipf_gen(rv_discrete):
     r"""A Zipf (Zeta) discrete random variable.
 
@@ -551,10 +563,11 @@ class zipf_gen(rv_discrete):
     True
 
     """
+
     ...
 
-
 zipf = ...
+
 class zipfian_gen(rv_discrete):
     r"""A Zipfian discrete random variable.
 
@@ -601,10 +614,11 @@ class zipfian_gen(rv_discrete):
     True
 
     """
+
     ...
 
-
 zipfian = ...
+
 class dlaplace_gen(rv_discrete):
     r"""A  Laplacian discrete random variable.
 
@@ -627,10 +641,11 @@ class dlaplace_gen(rv_discrete):
     %(example)s
 
     """
+
     ...
 
-
 dlaplace = ...
+
 class skellam_gen(rv_discrete):
     r"""A  Skellam discrete random variable.
 
@@ -661,10 +676,11 @@ class skellam_gen(rv_discrete):
     %(example)s
 
     """
+
     ...
 
-
 skellam = ...
+
 class yulesimon_gen(rv_discrete):
     r"""A Yule-Simon discrete random variable.
 
@@ -699,19 +715,20 @@ class yulesimon_gen(rv_discrete):
     %(example)s
 
     """
+
     ...
 
-
 yulesimon = ...
+
 class _nchypergeom_gen(rv_discrete):
     r"""A noncentral hypergeometric discrete random variable.
 
     For subclassing by nchypergeom_fisher_gen and nchypergeom_wallenius_gen.
 
     """
+
     rvs_name = ...
     dist = ...
-
 
 class nchypergeom_fisher_gen(_nchypergeom_gen):
     r"""A Fisher's noncentral hypergeometric discrete random variable.
@@ -786,11 +803,12 @@ class nchypergeom_fisher_gen(_nchypergeom_gen):
     %(example)s
 
     """
+
     rvs_name = ...
     dist = ...
 
-
 nchypergeom_fisher = ...
+
 class nchypergeom_wallenius_gen(_nchypergeom_gen):
     r"""A Wallenius' noncentral hypergeometric discrete random variable.
 
@@ -864,9 +882,9 @@ class nchypergeom_wallenius_gen(_nchypergeom_gen):
     %(example)s
 
     """
+
     rvs_name = ...
     dist = ...
-
 
 nchypergeom_wallenius = ...
 pairs = ...

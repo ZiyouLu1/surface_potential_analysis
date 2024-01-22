@@ -11,7 +11,7 @@ evaluate the function; and it must return either a tuple, whose first element is
 value of the function, and whose second argument is the gradient of the function
 (as a list of values); or None, to abort the minimization.
 """
-__all__ = ['fmin_tnc']
+__all__ = ["fmin_tnc"]
 MSG_NONE = ...
 MSG_ITER = ...
 MSG_INFO = ...
@@ -29,7 +29,31 @@ CONSTANT = ...
 NOPROGRESS = ...
 USERABORT = ...
 RCSTRINGS = ...
-def fmin_tnc(func, x0, fprime=..., args=..., approx_grad=..., bounds=..., epsilon=..., scale=..., offset=..., messages=..., maxCGit=..., maxfun=..., eta=..., stepmx=..., accuracy=..., fmin=..., ftol=..., xtol=..., pgtol=..., rescale=..., disp=..., callback=...): # -> tuple[Unknown, Unknown, Unknown]:
+
+def fmin_tnc(
+    func,
+    x0,
+    fprime=...,
+    args=...,
+    approx_grad=...,
+    bounds=...,
+    epsilon=...,
+    scale=...,
+    offset=...,
+    messages=...,
+    maxCGit=...,
+    maxfun=...,
+    eta=...,
+    stepmx=...,
+    accuracy=...,
+    fmin=...,
+    ftol=...,
+    xtol=...,
+    pgtol=...,
+    rescale=...,
+    disp=...,
+    callback=...,
+):  # -> tuple[Unknown, Unknown, Unknown]:
     """
     Minimize a function with variables subject to bounds, using
     gradient information in a truncated Newton algorithm. This
@@ -184,4 +208,3 @@ def fmin_tnc(func, x0, fprime=..., args=..., approx_grad=..., bounds=..., epsilo
 
     """
     ...
-

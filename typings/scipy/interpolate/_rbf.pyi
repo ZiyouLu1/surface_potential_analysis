@@ -47,7 +47,8 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
-__all__ = ['Rbf']
+__all__ = ["Rbf"]
+
 class Rbf:
     """
     Rbf(*args, **kwargs)
@@ -142,15 +143,8 @@ class Rbf:
     (20,)
 
     """
-    def __init__(self, *args, **kwargs) -> None:
-        ...
-    
+    def __init__(self, *args, **kwargs) -> None: ...
     @property
-    def A(self):
+    def A(self): ...
+    def __call__(self, *args):  # -> Any:
         ...
-    
-    def __call__(self, *args): # -> Any:
-        ...
-    
-
-

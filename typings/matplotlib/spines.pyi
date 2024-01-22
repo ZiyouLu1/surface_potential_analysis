@@ -44,7 +44,7 @@ class Spine(Patch):
         radius: float,
         theta1: float,
         theta2: float,
-        **kwargs
+        **kwargs,
     ) -> Spine: ...
     @classmethod
     def circular_spine(cls, axes, center, radius, **kwargs): ...

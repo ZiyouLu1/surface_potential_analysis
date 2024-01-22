@@ -7,64 +7,55 @@ class Arg:
     'interesting' regions and covering all orders of magnitude.
 
     """
-    def __init__(self, a=..., b=..., inclusive_a=..., inclusive_b=...) -> None:
-        ...
-    
-    def values(self, n): # -> NDArray[float64] | ndarray[Any, dtype[floating[Any]]]:
+    def __init__(self, a=..., b=..., inclusive_a=..., inclusive_b=...) -> None: ...
+    def values(self, n):  # -> NDArray[float64] | ndarray[Any, dtype[floating[Any]]]:
         """Return an array containing n numbers."""
         ...
-    
-
 
 class FixedArg:
-    def __init__(self, values) -> None:
+    def __init__(self, values) -> None: ...
+    def values(self, n):  # -> NDArray[Unknown]:
         ...
-    
-    def values(self, n): # -> NDArray[Unknown]:
-        ...
-    
-
 
 class ComplexArg:
-    def __init__(self, a=..., b=...) -> None:
+    def __init__(self, a=..., b=...) -> None: ...
+    def values(self, n):  # -> ndarray[Any, dtype[complexfloating[Any, Any]]]:
         ...
-    
-    def values(self, n): # -> ndarray[Any, dtype[complexfloating[Any, Any]]]:
-        ...
-    
-
 
 class IntArg:
-    def __init__(self, a=..., b=...) -> None:
+    def __init__(self, a=..., b=...) -> None: ...
+    def values(self, n):  # -> Any:
         ...
-    
-    def values(self, n): # -> Any:
-        ...
-    
 
-
-def get_args(argspec, n): # -> ndarray[Unknown, Unknown] | ndarray[Any, dtype[Any]]:
+def get_args(argspec, n):  # -> ndarray[Unknown, Unknown] | ndarray[Any, dtype[Any]]:
     ...
 
 class MpmathData:
-    def __init__(self, scipy_func, mpmath_func, arg_spec, name=..., dps=..., prec=..., n=..., rtol=..., atol=..., ignore_inf_sign=..., distinguish_nan_and_inf=..., nan_ok=..., param_filter=...) -> None:
+    def __init__(
+        self,
+        scipy_func,
+        mpmath_func,
+        arg_spec,
+        name=...,
+        dps=...,
+        prec=...,
+        n=...,
+        rtol=...,
+        atol=...,
+        ignore_inf_sign=...,
+        distinguish_nan_and_inf=...,
+        nan_ok=...,
+        param_filter=...,
+    ) -> None: ...
+    def check(self):  # -> None:
         ...
-    
-    def check(self): # -> None:
+    def __repr__(self):  # -> str:
         ...
-    
-    def __repr__(self): # -> str:
-        ...
-    
 
-
-def assert_mpmath_equal(*a, **kw): # -> None:
+def assert_mpmath_equal(*a, **kw):  # -> None:
     ...
-
-def nonfunctional_tooslow(func):
-    ...
-
-def mpf2float(x): # -> float:
+def nonfunctional_tooslow(func): ...
+def mpf2float(x):  # -> float:
     """
     Convert an mpf to the nearest floating point number. Just using
     float directly doesn't work because of results like this:
@@ -75,18 +66,18 @@ def mpf2float(x): # -> float:
     """
     ...
 
-def mpc2complex(x): # -> complex:
+def mpc2complex(x):  # -> complex:
     ...
-
-def trace_args(func): # -> (*a: Unknown, **kw: Unknown) -> Unknown:
+def trace_args(func):  # -> (*a: Unknown, **kw: Unknown) -> Unknown:
     ...
 
 POSIX = ...
-class TimeoutError(Exception):
-    ...
 
+class TimeoutError(Exception): ...
 
-def time_limited(timeout=..., return_val=..., use_sigalrm=...): # -> (func: Unknown) -> ((*a: Unknown, **kw: Unknown) -> (Unknown | float)):
+def time_limited(
+    timeout=..., return_val=..., use_sigalrm=...
+):  # -> (func: Unknown) -> ((*a: Unknown, **kw: Unknown) -> (Unknown | float)):
     """
     Decorator for setting a timeout for pure-Python functions.
 
@@ -103,18 +94,17 @@ def time_limited(timeout=..., return_val=..., use_sigalrm=...): # -> (func: Unkn
     """
     ...
 
-def exception_to_nan(func): # -> (*a: Unknown, **kw: Unknown) -> (Unknown | float):
+def exception_to_nan(func):  # -> (*a: Unknown, **kw: Unknown) -> (Unknown | float):
     """Decorate function to return nan if it raises an exception"""
     ...
 
-def inf_to_nan(func): # -> (*a: Unknown, **kw: Unknown) -> (float | Unknown):
+def inf_to_nan(func):  # -> (*a: Unknown, **kw: Unknown) -> (float | Unknown):
     """Decorate function to return nan if it returns inf"""
     ...
 
-def mp_assert_allclose(res, std, atol=..., rtol=...): # -> None:
+def mp_assert_allclose(res, std, atol=..., rtol=...):  # -> None:
     """
     Compare lists of mpmath.mpf's or mpmath.mpc's directly so that it
     can be done to higher precision than double.
     """
     ...
-

@@ -2,7 +2,6 @@ from .backend_bases import RendererBase
 import functools
 
 class TexManager:
-
     texcache = ...
 
     grey_arrayd = ...

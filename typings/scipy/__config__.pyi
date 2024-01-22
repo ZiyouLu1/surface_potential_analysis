@@ -6,13 +6,14 @@ from enum import Enum
 
 __all__ = ["show"]
 _built_with_meson = ...
+
 class DisplayModes(Enum):
     stdout = ...
     dicts = ...
 
-
 CONFIG = ...
-def show(mode=...): # -> dict[str, Unknown] | None:
+
+def show(mode=...):  # -> dict[str, Unknown] | None:
     """
     Show libraries and system information on which SciPy was built
     and is being used
@@ -36,4 +37,3 @@ def show(mode=...): # -> dict[str, Unknown] | None:
 
     """
     ...
-

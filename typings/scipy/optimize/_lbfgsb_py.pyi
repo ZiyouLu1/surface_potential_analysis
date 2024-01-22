@@ -13,8 +13,26 @@ Functions
     fmin_l_bfgs_b
 
 """
-__all__ = ['fmin_l_bfgs_b', 'LbfgsInvHessProduct']
-def fmin_l_bfgs_b(func, x0, fprime=..., args=..., approx_grad=..., bounds=..., m=..., factr=..., pgtol=..., epsilon=..., iprint=..., maxfun=..., maxiter=..., disp=..., callback=..., maxls=...): # -> tuple[Unknown, Unknown, dict[str, Unknown]]:
+__all__ = ["fmin_l_bfgs_b", "LbfgsInvHessProduct"]
+
+def fmin_l_bfgs_b(
+    func,
+    x0,
+    fprime=...,
+    args=...,
+    approx_grad=...,
+    bounds=...,
+    m=...,
+    factr=...,
+    pgtol=...,
+    epsilon=...,
+    iprint=...,
+    maxfun=...,
+    maxiter=...,
+    disp=...,
+    callback=...,
+    maxls=...,
+):  # -> tuple[Unknown, Unknown, dict[str, Unknown]]:
     """
     Minimize a function func using the L-BFGS-B algorithm.
 
@@ -165,8 +183,8 @@ class LbfgsInvHessProduct(LinearOperator):
     def __init__(self, sk, yk) -> None:
         """Construct the operator."""
         ...
-    
-    def todense(self): # -> NDArray[float64]:
+
+    def todense(self):  # -> NDArray[float64]:
         """Return a dense array representation of this operator.
 
         Returns
@@ -177,6 +195,3 @@ class LbfgsInvHessProduct(LinearOperator):
 
         """
         ...
-    
-
-

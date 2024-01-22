@@ -8,7 +8,6 @@ from .backend_bases import MouseEvent, RendererBase
 from .artist import Artist, allow_rasterization
 
 class Patch(Artist):
-
     zorder: float = ...
 
     def __init__(
@@ -23,7 +22,7 @@ class Patch(Artist):
         fill=...,
         capstyle: CapStyle = ...,
         joinstyle: JoinStyle = ...,
-        **kwargs
+        **kwargs,
     ) -> None: ...
     def get_verts(self): ...
     def contains(self, mouseevent: MouseEvent, radius: float = ...): ...
@@ -96,7 +95,7 @@ class Rectangle(Patch):
         angle: float = 0,
         *,
         rotation_point: Literal["xy", "center"] | Sequence[float] = "xy",
-        **kwargs
+        **kwargs,
     ) -> None: ...
     def get_path(self) -> Path: ...
     def get_patch_transform(self): ...
@@ -130,7 +129,7 @@ class RegularPolygon(Patch):
         numVertices: int,
         radius: float = ...,
         orientation: float = ...,
-        **kwargs
+        **kwargs,
     ) -> None: ...
     def get_path(self) -> Path: ...
     def get_patch_transform(self) -> Transform: ...
@@ -149,7 +148,7 @@ class StepPatch(PathPatch):
         *,
         orientation: Literal["vertical", "horizontal"] = "vertical",
         baseline: float | ArrayLike | None = 0,
-        **kwargs
+        **kwargs,
     ) -> None: ...
     def get_data(self): ...
     def set_data(
@@ -178,7 +177,7 @@ class Wedge(Patch):
         theta1: float,
         theta2: float,
         width: float = ...,
-        **kwargs
+        **kwargs,
     ) -> None: ...
     def set_center(self, center: Sequence[float]): ...
     def set_radius(self, radius: float): ...
@@ -210,7 +209,7 @@ class FancyArrow(Polygon):
         shape: Literal["full", "left", "right"] = "full",
         overhang: float = 0,
         head_starts_at_zero: bool = False,
-        **kwargs
+        **kwargs,
     ) -> None: ...
     def set_data(
         self,
@@ -221,7 +220,7 @@ class FancyArrow(Polygon):
         dy: float | None = None,
         width: float | None = None,
         head_width: float | None = None,
-        head_length: float | None = None
+        head_length: float | None = None,
     ): ...
 
 class CirclePolygon(RegularPolygon):
@@ -238,7 +237,7 @@ class Ellipse(Patch):
         width: float,
         height: float,
         angle: float = 0,
-        **kwargs
+        **kwargs,
     ) -> None: ...
     def get_path(self) -> Path: ...
     def get_patch_transform(self) -> Transform: ...
@@ -263,7 +262,7 @@ class Annulus(Patch):
         r: float | Sequence[float],
         width: float,
         angle: float = 0,
-        **kwargs
+        **kwargs,
     ) -> None: ...
     def __str__(self) -> str: ...
     def set_center(self, xy: Sequence[float]): ...
@@ -299,7 +298,7 @@ class Arc(Ellipse):
         angle: float = 0,
         theta1: float = 0,
         theta2: float = 360,
-        **kwargs
+        **kwargs,
     ) -> None: ...
     @allow_rasterization
     def draw(self, renderer: RendererBase): ...
@@ -423,7 +422,6 @@ class ArrowStyle(_Style):
         ): ...
 
     class _Curve(_Base):
-
         beginarrow = ...
         arrow = ...
         fillbegin = ...
@@ -446,45 +444,36 @@ class ArrowStyle(_Style):
         def __init__(self) -> None: ...
 
     class CurveA(_Curve):
-
         arrow = ...
 
     class CurveB(_Curve):
-
         arrow = ...
 
     class CurveAB(_Curve):
-
         arrow = ...
 
     class CurveFilledA(_Curve):
-
         arrow = ...
 
     class CurveFilledB(_Curve):
-
         arrow = ...
 
     class CurveFilledAB(_Curve):
-
         arrow = ...
 
     class BracketA(_Curve):
-
         arrow = ...
         def __init__(
             self, widthA: float = ..., lengthA: float = ..., angleA: float = ...
         ) -> None: ...
 
     class BracketB(_Curve):
-
         arrow = ...
         def __init__(
             self, widthB: float = ..., lengthB: float = ..., angleB: float = ...
         ) -> None: ...
 
     class BracketAB(_Curve):
-
         arrow = ...
         def __init__(
             self,
@@ -497,7 +486,6 @@ class ArrowStyle(_Style):
         ) -> None: ...
 
     class BarAB(_Curve):
-
         arrow = ...
         def __init__(
             self,
@@ -508,14 +496,12 @@ class ArrowStyle(_Style):
         ) -> None: ...
 
     class BracketCurve(_Curve):
-
         arrow = ...
         def __init__(
             self, widthA: float = ..., lengthA: float = ..., angleA: float = ...
         ) -> None: ...
 
     class CurveBracket(_Curve):
-
         arrow = ...
         def __init__(
             self, widthB: float = ..., lengthB: float = ..., angleB: float = ...
@@ -556,7 +542,7 @@ class FancyBboxPatch(Patch):
         bbox_transmuter=...,
         mutation_scale: float = ...,
         mutation_aspect: float = ...,
-        **kwargs
+        **kwargs,
     ) -> None: ...
     def set_boxstyle(self, boxstyle: str | BoxStyle = ..., **kwargs): ...
     def set_mutation_scale(self, scale: float): ...
@@ -591,7 +577,7 @@ class FancyArrowPatch(Patch):
         shrinkB: float = ...,
         mutation_scale: float = ...,
         mutation_aspect: float = ...,
-        **kwargs
+        **kwargs,
     ) -> None: ...
     def set_positions(
         self, posA: None | Sequence[float], posB: None | Sequence[Sequence]
@@ -631,7 +617,7 @@ class ConnectionPatch(FancyArrowPatch):
         mutation_scale: float = ...,
         mutation_aspect: float = ...,
         clip_on: bool = ...,
-        **kwargs
+        **kwargs,
     ) -> None: ...
     def set_annotation_clip(self, b: bool | None): ...
     def get_annotation_clip(self) -> bool: ...

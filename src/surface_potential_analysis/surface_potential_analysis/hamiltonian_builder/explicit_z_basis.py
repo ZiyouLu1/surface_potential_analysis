@@ -217,7 +217,9 @@ class _SurfaceHamiltonianUtil(
     def subtracted_points(
         self,
     ) -> np.ndarray[tuple[int, int, int], np.dtype[np.float64]]:
-        return np.subtract(self.points, self._config["potential"]["data"][np.newaxis, np.newaxis, :])  # type: ignore[no-any-return]
+        return np.subtract(
+            self.points, self._config["potential"]["data"][np.newaxis, np.newaxis, :]
+        )  # type: ignore[no-any-return]
 
     def get_ft_potential(
         self,

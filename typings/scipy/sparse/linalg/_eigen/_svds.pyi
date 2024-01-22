@@ -9,8 +9,21 @@ if os.environ.get("SCIPY_USE_PROPACK"):
 else:
     HAS_PROPACK = ...
 arpack_int = ...
-__all__ = ['svds']
-def svds(A, k=..., ncv=..., tol=..., which=..., v0=..., maxiter=..., return_singular_vectors=..., solver=..., random_state=..., options=...): # -> tuple[Unknown | None, Unknown, Unknown | None] | tuple[Unknown, ...]:
+__all__ = ["svds"]
+
+def svds(
+    A,
+    k=...,
+    ncv=...,
+    tol=...,
+    which=...,
+    v0=...,
+    maxiter=...,
+    return_singular_vectors=...,
+    solver=...,
+    random_state=...,
+    options=...,
+):  # -> tuple[Unknown | None, Unknown, Unknown | None] | tuple[Unknown, ...]:
     """
     Partial singular value decomposition of a sparse matrix.
 
@@ -348,4 +361,3 @@ def svds(A, k=..., ncv=..., tol=..., which=..., v0=..., maxiter=..., return_sing
 
     """
     ...
-

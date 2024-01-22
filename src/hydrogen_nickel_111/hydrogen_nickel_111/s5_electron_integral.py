@@ -30,7 +30,7 @@ def electron_occupation(
 
 
 def overlap_potential(
-    dk_points: np.ndarray[tuple[_L0Inv], np.dtype[np.float64]]
+    dk_points: np.ndarray[tuple[_L0Inv], np.dtype[np.float64]],
 ) -> np.ndarray[tuple[_L0Inv], np.dtype[np.float64]]:
     """
     _summary_.

@@ -7,7 +7,7 @@ from ._optimize import OptimizeResult
 _iter = ...
 _xtol = ...
 _rtol = ...
-__all__ = ['newton', 'bisect', 'ridder', 'brentq', 'brenth', 'toms748', 'RootResults']
+__all__ = ["newton", "bisect", "ridder", "brentq", "brenth", "toms748", "RootResults"]
 _ECONVERGED = ...
 _ESIGNERR = ...
 _ECONVERR = ...
@@ -19,6 +19,7 @@ CONVERR = ...
 VALUEERR = ...
 INPROGRESS = ...
 flag_map = ...
+
 class RootResults(OptimizeResult):
     """Represents the root finding result.
 
@@ -36,15 +37,23 @@ class RootResults(OptimizeResult):
         Description of the cause of termination.
 
     """
-    def __init__(self, root, iterations, function_calls, flag) -> None:
-        ...
-    
+    def __init__(self, root, iterations, function_calls, flag) -> None: ...
 
-
-def results_c(full_output, r): # -> tuple[Unknown, RootResults]:
+def results_c(full_output, r):  # -> tuple[Unknown, RootResults]:
     ...
-
-def newton(func, x0, fprime=..., args=..., tol=..., maxiter=..., fprime2=..., x1=..., rtol=..., full_output=..., disp=...): # -> result | NDArray[Unknown] | NDArray[Any] | NDArray[floating[Any]] | tuple[ndarray[Any, dtype[Unknown]] | Unknown, RootResults] | tuple[Unknown, RootResults] | tuple[Unknown | NDArray[floating[Any]], RootResults]:
+def newton(
+    func,
+    x0,
+    fprime=...,
+    args=...,
+    tol=...,
+    maxiter=...,
+    fprime2=...,
+    x1=...,
+    rtol=...,
+    full_output=...,
+    disp=...,
+):  # -> result | NDArray[Unknown] | NDArray[Any] | NDArray[floating[Any]] | tuple[ndarray[Any, dtype[Unknown]] | Unknown, RootResults] | tuple[Unknown, RootResults] | tuple[Unknown | NDArray[floating[Any]], RootResults]:
     """
     Find a root of a real or complex function using the Newton-Raphson
     (or secant or Halley's) method.
@@ -222,7 +231,9 @@ def newton(func, x0, fprime=..., args=..., tol=..., maxiter=..., fprime2=..., x1
     """
     ...
 
-def bisect(f, a, b, args=..., xtol=..., rtol=..., maxiter=..., full_output=..., disp=...): # -> tuple[Unknown, RootResults]:
+def bisect(
+    f, a, b, args=..., xtol=..., rtol=..., maxiter=..., full_output=..., disp=...
+):  # -> tuple[Unknown, RootResults]:
     """
     Find root of a function within an interval using bisection.
 
@@ -296,7 +307,9 @@ def bisect(f, a, b, args=..., xtol=..., rtol=..., maxiter=..., full_output=..., 
     """
     ...
 
-def ridder(f, a, b, args=..., xtol=..., rtol=..., maxiter=..., full_output=..., disp=...): # -> tuple[Unknown, RootResults]:
+def ridder(
+    f, a, b, args=..., xtol=..., rtol=..., maxiter=..., full_output=..., disp=...
+):  # -> tuple[Unknown, RootResults]:
     """
     Find a root of a function in an interval using Ridder's method.
 
@@ -382,7 +395,9 @@ def ridder(f, a, b, args=..., xtol=..., rtol=..., maxiter=..., full_output=..., 
     """
     ...
 
-def brentq(f, a, b, args=..., xtol=..., rtol=..., maxiter=..., full_output=..., disp=...): # -> tuple[Unknown, RootResults]:
+def brentq(
+    f, a, b, args=..., xtol=..., rtol=..., maxiter=..., full_output=..., disp=...
+):  # -> tuple[Unknown, RootResults]:
     """
     Find a root of a function in a bracketing interval using Brent's method.
 
@@ -501,7 +516,9 @@ def brentq(f, a, b, args=..., xtol=..., rtol=..., maxiter=..., full_output=..., 
     """
     ...
 
-def brenth(f, a, b, args=..., xtol=..., rtol=..., maxiter=..., full_output=..., disp=...): # -> tuple[Unknown, RootResults]:
+def brenth(
+    f, a, b, args=..., xtol=..., rtol=..., maxiter=..., full_output=..., disp=...
+):  # -> tuple[Unknown, RootResults]:
     """Find a root of a function in a bracketing interval using Brent's
     method with hyperbolic extrapolation.
 
@@ -601,43 +618,48 @@ def brenth(f, a, b, args=..., xtol=..., rtol=..., maxiter=..., full_output=..., 
     ...
 
 class TOMS748Solver:
-    """Solve f(x, *args) == 0 using Algorithm748 of Alefeld, Potro & Shi.
-    """
+    """Solve f(x, *args) == 0 using Algorithm748 of Alefeld, Potro & Shi."""
+
     _MU = ...
     _K_MIN = ...
     _K_MAX = ...
-    def __init__(self) -> None:
+    def __init__(self) -> None: ...
+    def configure(self, xtol, rtol, maxiter, disp, k):  # -> None:
         ...
-    
-    def configure(self, xtol, rtol, maxiter, disp, k): # -> None:
-        ...
-    
-    def get_result(self, x, flag=...): # -> tuple[Unknown, int, int, int]:
+    def get_result(self, x, flag=...):  # -> tuple[Unknown, int, int, int]:
         r"""Package the result and statistics into a tuple."""
         ...
-    
-    def start(self, f, a, b, args=...): # -> tuple[Literal[0], Unknown] | tuple[Literal[1], float]:
+
+    def start(
+        self, f, a, b, args=...
+    ):  # -> tuple[Literal[0], Unknown] | tuple[Literal[1], float]:
         r"""Prepare for the iterations."""
         ...
-    
-    def get_status(self): # -> tuple[Literal[0], float] | tuple[Literal[-2], float] | tuple[Literal[1], float]:
+
+    def get_status(
+        self,
+    ):  # -> tuple[Literal[0], float] | tuple[Literal[-2], float] | tuple[Literal[1], float]:
         """Determine the current status."""
         ...
-    
-    def iterate(self): # -> tuple[Literal[0], float | Unknown | Any] | tuple[Literal[0], float] | tuple[Literal[0, -2, 1], float]:
+
+    def iterate(
+        self,
+    ):  # -> tuple[Literal[0], float | Unknown | Any] | tuple[Literal[0], float] | tuple[Literal[0, -2, 1], float]:
         """Perform one step in the algorithm.
 
         Implements Algorithm 4.1(k=1) or 4.2(k=2) in [APS1995]
         """
         ...
-    
-    def solve(self, f, a, b, args=..., xtol=..., rtol=..., k=..., maxiter=..., disp=...): # -> tuple[Unknown | float, int, int, Literal[0]] | tuple[float, int, int, Literal[0]] | tuple[float | Unknown | Any, int, int, Literal[0]] | tuple[float | Unknown | Any, int, int, Literal[-2]]:
+
+    def solve(
+        self, f, a, b, args=..., xtol=..., rtol=..., k=..., maxiter=..., disp=...
+    ):  # -> tuple[Unknown | float, int, int, Literal[0]] | tuple[float, int, int, Literal[0]] | tuple[float | Unknown | Any, int, int, Literal[0]] | tuple[float | Unknown | Any, int, int, Literal[-2]]:
         r"""Solve f(x) = 0 given an interval containing a root."""
         ...
-    
 
-
-def toms748(f, a, b, args=..., k=..., xtol=..., rtol=..., maxiter=..., full_output=..., disp=...): # -> tuple[Unknown | float | Any, RootResults] | float | Any:
+def toms748(
+    f, a, b, args=..., k=..., xtol=..., rtol=..., maxiter=..., full_output=..., disp=...
+):  # -> tuple[Unknown | float | Any, RootResults] | float | Any:
     """
     Find a root using TOMS Algorithm 748 method.
 
@@ -742,4 +764,3 @@ def toms748(f, a, b, args=..., k=..., xtol=..., rtol=..., maxiter=..., full_outp
                root: 1.0
     """
     ...
-

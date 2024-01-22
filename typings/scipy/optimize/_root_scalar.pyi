@@ -10,8 +10,9 @@ Functions
 ---------
 - root : find a root of a scalar function.
 """
-__all__ = ['root_scalar']
+__all__ = ["root_scalar"]
 ROOT_SCALAR_METHODS = ...
+
 class MemoizeDer:
     """Decorator that caches the value and derivative(s) of function each
     time it is called.
@@ -22,27 +23,36 @@ class MemoizeDer:
     It supports the use case of a root-finder where `args` is fixed,
     `x` changes, and only rarely, if at all, does x assume the same value
     more than once."""
-    def __init__(self, fun) -> None:
-        ...
-    
+    def __init__(self, fun) -> None: ...
     def __call__(self, x, *args):
         r"""Calculate f or use cached value if available"""
         ...
-    
+
     def fprime(self, x, *args):
         r"""Calculate f' or use a cached value if available"""
         ...
-    
+
     def fprime2(self, x, *args):
         r"""Calculate f'' or use a cached value if available"""
         ...
-    
-    def ncalls(self): # -> int:
+
+    def ncalls(self):  # -> int:
         ...
-    
 
-
-def root_scalar(f, args=..., method=..., bracket=..., fprime=..., fprime2=..., x0=..., x1=..., xtol=..., rtol=..., maxiter=..., options=...):
+def root_scalar(
+    f,
+    args=...,
+    method=...,
+    bracket=...,
+    fprime=...,
+    fprime2=...,
+    x0=...,
+    x1=...,
+    xtol=...,
+    rtol=...,
+    maxiter=...,
+    options=...,
+):
     """
     Find a root of a scalar function.
 
@@ -185,4 +195,3 @@ def root_scalar(f, args=..., method=..., bracket=..., fprime=..., fprime2=..., x
 
     """
     ...
-

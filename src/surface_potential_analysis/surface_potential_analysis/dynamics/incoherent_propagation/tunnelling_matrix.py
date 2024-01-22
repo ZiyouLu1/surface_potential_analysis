@@ -80,7 +80,7 @@ def get_jump_matrix_from_a_matrix(
         TunnellingSimulationBasis[
             _AX0Inv, _AX1Inv, TunnellingSimulationBandsBasis[_L2Inv]
         ]
-    ]
+    ],
 ) -> TunnellingJumpMatrix[_L2Inv]:
     """
     Given an A Matrix, get a jump matrix.
@@ -360,7 +360,7 @@ def get_initial_pure_density_matrix_for_basis(
 
 
 def density_matrix_as_probability(
-    matrix: DiagonalOperator[_B1Inv, _B1Inv]
+    matrix: DiagonalOperator[_B1Inv, _B1Inv],
 ) -> ProbabilityVector[_B1Inv]:
     """
     Get the probability of each state in eh density matrix.
@@ -377,7 +377,7 @@ def density_matrix_as_probability(
 
 
 def density_matrix_list_as_probabilities(
-    matrix: DiagonalOperatorList[_B0Inv, _B1Inv, _B1Inv]
+    matrix: DiagonalOperatorList[_B0Inv, _B1Inv, _B1Inv],
 ) -> ProbabilityVectorList[_B0Inv, _B1Inv]:
     """
     Get the probability of each state in the density matrix.

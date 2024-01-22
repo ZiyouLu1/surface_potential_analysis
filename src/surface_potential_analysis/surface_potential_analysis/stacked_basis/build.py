@@ -128,9 +128,7 @@ def position_basis_from_shape(
     """
     delta_x = np.eye(len(shape)) if delta_x is None else delta_x
     return StackedBasis(
-        *tuple(
-            starmap(FundamentalPositionBasis, zip(delta_x, shape, strict=True))
-        )
+        *tuple(starmap(FundamentalPositionBasis, zip(delta_x, shape, strict=True)))
     )
 
 

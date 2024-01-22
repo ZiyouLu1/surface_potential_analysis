@@ -8,7 +8,8 @@ from ._compressed import _cs_matrix
 
 """Compressed Sparse Column matrix format"""
 __docformat__ = ...
-__all__ = ['csc_array', 'csc_matrix', 'isspmatrix_csc']
+__all__ = ["csc_array", "csc_matrix", "isspmatrix_csc"]
+
 class _csc_base(_cs_matrix):
     """
     Compressed Sparse Column matrix
@@ -102,25 +103,22 @@ class _csc_base(_cs_matrix):
            [2, 3, 6]])
 
     """
+
     _format = ...
-    def transpose(self, axes=..., copy=...): # -> csr_array:
+    def transpose(self, axes=..., copy=...):  # -> csr_array:
         ...
-    
-    def __iter__(self): # -> Generator[_csr_base, Unknown, None]:
+    def __iter__(self):  # -> Generator[_csr_base, Unknown, None]:
         ...
-    
-    def tocsc(self, copy=...): # -> Self@_csc_base:
+    def tocsc(self, copy=...):  # -> Self@_csc_base:
         ...
-    
-    def tocsr(self, copy=...): # -> csr_array:
+    def tocsr(self, copy=...):  # -> csr_array:
         ...
-    
-    def nonzero(self): # -> tuple[ndarray[Any, dtype[int32 | int64]] | Unknown | ndarray[Any, dtype[Unknown]], ndarray[Any, dtype[int32 | int64]]]:
+    def nonzero(
+        self,
+    ):  # -> tuple[ndarray[Any, dtype[int32 | int64]] | Unknown | ndarray[Any, dtype[Unknown]], ndarray[Any, dtype[int32 | int64]]]:
         ...
-    
 
-
-def isspmatrix_csc(x): # -> bool:
+def isspmatrix_csc(x):  # -> bool:
     """Is `x` of csc_matrix type?
 
     Parameters
@@ -145,11 +143,5 @@ def isspmatrix_csc(x): # -> bool:
     """
     ...
 
-class csc_array(_csc_base, sparray):
-    ...
-
-
-class csc_matrix(spmatrix, _csc_base):
-    ...
-
-
+class csc_array(_csc_base, sparray): ...
+class csc_matrix(spmatrix, _csc_base): ...

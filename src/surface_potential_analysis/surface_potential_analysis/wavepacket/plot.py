@@ -465,7 +465,13 @@ def plot_wavepacket_difference_2d_x(
     eigenstate_1 = unfurl_wavepacket(wavepacket_1)
 
     return plot_state_difference_2d_x(
-        eigenstate_0, eigenstate_1, axes, idx, ax=ax, measure=measure, scale=scale  # type: ignore[arg-type]
+        eigenstate_0,
+        eigenstate_1,
+        axes,
+        idx,
+        ax=ax,
+        measure=measure,
+        scale=scale,  # type: ignore[arg-type]
     )
 
 

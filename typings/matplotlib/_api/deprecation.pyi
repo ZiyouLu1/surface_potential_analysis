@@ -13,7 +13,7 @@ def warn_deprecated(
     pending: bool = ...,
     obj_type: str = ...,
     addendum: str = ...,
-    removal: str = ...
+    removal: str = ...,
 ) -> None: ...
 def deprecated(
     since: str,
@@ -24,7 +24,7 @@ def deprecated(
     pending: bool = ...,
     obj_type: str = ...,
     addendum: str = ...,
-    removal: str = ...
+    removal: str = ...,
 ) -> Callable: ...
 
 class deprecate_privatize_attribute:

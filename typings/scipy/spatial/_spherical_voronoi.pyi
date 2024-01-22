@@ -8,15 +8,16 @@ Spherical Voronoi Code
 .. versionadded:: 0.18.0
 
 """
-__all__ = ['SphericalVoronoi']
-def calculate_solid_angles(R): # -> Any:
+__all__ = ["SphericalVoronoi"]
+
+def calculate_solid_angles(R):  # -> Any:
     """Calculates the solid angles of plane triangles. Implements the method of
     Van Oosterom and Strackee [VanOosterom]_ with some modifications. Assumes
     that input points have unit norm."""
     ...
 
 class SphericalVoronoi:
-    """ Voronoi diagrams on the surface of a sphere.
+    """Voronoi diagrams on the surface of a sphere.
 
     .. versionadded:: 0.18.0
 
@@ -146,10 +147,8 @@ class SphericalVoronoi:
     >>> plt.show()
 
     """
-    def __init__(self, points, radius=..., center=..., threshold=...) -> None:
-        ...
-    
-    def sort_vertices_of_regions(self): # -> None:
+    def __init__(self, points, radius=..., center=..., threshold=...) -> None: ...
+    def sort_vertices_of_regions(self):  # -> None:
         """Sort indices of the vertices to be (counter-)clockwise ordered.
 
         Raises
@@ -178,8 +177,8 @@ class SphericalVoronoi:
         of its surrounding region.
         """
         ...
-    
-    def calculate_areas(self): # -> Any:
+
+    def calculate_areas(self):  # -> Any:
         """Calculates the areas of the Voronoi regions.
 
         For 2D point sets, the regions are circular arcs. The sum of the areas
@@ -196,6 +195,3 @@ class SphericalVoronoi:
             The areas of the Voronoi regions.
         """
         ...
-    
-
-

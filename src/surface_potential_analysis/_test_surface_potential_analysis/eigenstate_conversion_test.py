@@ -108,9 +108,15 @@ class EigenstateConversionTest(unittest.TestCase):
             )
 
             basis = StackedBasis[Any](
-                FundamentalPositionBasis3d(util.delta_x_stacked[0], util.fundamental_shape[0]),  # type: ignore[misc]
-                FundamentalPositionBasis3d(util.delta_x_stacked[1], util.fundamental_shape[1]),  # type: ignore[misc]
-                FundamentalPositionBasis3d(util.delta_x_stacked[2], util.fundamental_shape[2]),  # type: ignore[misc]
+                FundamentalPositionBasis3d(
+                    util.delta_x_stacked[0], util.fundamental_shape[0]
+                ),  # type: ignore[misc]
+                FundamentalPositionBasis3d(
+                    util.delta_x_stacked[1], util.fundamental_shape[1]
+                ),  # type: ignore[misc]
+                FundamentalPositionBasis3d(
+                    util.delta_x_stacked[2], util.fundamental_shape[2]
+                ),  # type: ignore[misc]
             )
             expected = convert_state_vector_to_basis(eigenstate, basis)
             np.testing.assert_allclose(
@@ -150,9 +156,15 @@ class EigenstateConversionTest(unittest.TestCase):
         )
 
         basis = StackedBasis[Any](
-            FundamentalPositionBasis3d(util.delta_x_stacked[0], util.fundamental_shape[0]),  # type: ignore[misc]
-            FundamentalPositionBasis3d(util.delta_x_stacked[1], util.fundamental_shape[1]),  # type: ignore[misc]
-            FundamentalPositionBasis3d(util.delta_x_stacked[2], util.fundamental_shape[2]),  # type: ignore[misc]
+            FundamentalPositionBasis3d(
+                util.delta_x_stacked[0], util.fundamental_shape[0]
+            ),  # type: ignore[misc]
+            FundamentalPositionBasis3d(
+                util.delta_x_stacked[1], util.fundamental_shape[1]
+            ),  # type: ignore[misc]
+            FundamentalPositionBasis3d(
+                util.delta_x_stacked[2], util.fundamental_shape[2]
+            ),  # type: ignore[misc]
         )
         expected = convert_state_vector_to_basis(eigenstate, basis)
         np.testing.assert_allclose(

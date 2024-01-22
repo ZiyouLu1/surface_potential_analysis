@@ -89,7 +89,9 @@ def hamiltonian_from_mass(
 
     bloch_phase = np.tensordot(util.fundamental_dk_stacked, bloch_fraction, axes=(0, 0))
     k_points = util.fundamental_stacked_k_points + bloch_phase[:, np.newaxis]
-    energy = np.sum(np.square(hbar * k_points) / (2 * mass), axis=0, dtype=np.complex128)
+    energy = np.sum(
+        np.square(hbar * k_points) / (2 * mass), axis=0, dtype=np.complex128
+    )
     momentum_basis = stacked_basis_as_fundamental_momentum_basis(basis)
 
     return {"basis": StackedBasis(momentum_basis, momentum_basis), "data": energy}

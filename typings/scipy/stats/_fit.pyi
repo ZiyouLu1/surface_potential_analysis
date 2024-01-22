@@ -18,12 +18,9 @@ class FitResult:
         Any status message provided by the optimizer.
 
     """
-    def __init__(self, dist, data, discrete, res) -> None:
+    def __init__(self, dist, data, discrete, res) -> None: ...
+    def __repr__(self):  # -> str:
         ...
-    
-    def __repr__(self): # -> str:
-        ...
-    
     def nllf(self, params=..., data=...):
         """Negative log-likelihood function
 
@@ -47,7 +44,7 @@ class FitResult:
 
         """
         ...
-    
+
     def plot(self, ax=..., *, plot_type=...):
         """Visually compare the data against the fitted distribution.
 
@@ -86,8 +83,6 @@ class FitResult:
             The matplotlib Axes object on which the plot was drawn.
         """
         ...
-    
-
 
 def fit(dist, data, bounds=..., *, guess=..., method=..., optimizer=...):
     r"""Fit a discrete or continuous distribution to data
@@ -317,7 +312,18 @@ def fit(dist, data, bounds=..., *, guess=..., method=..., optimizer=...):
     ...
 
 GoodnessOfFitResult = ...
-def goodness_of_fit(dist, data, *, known_params=..., fit_params=..., guessed_params=..., statistic=..., n_mc_samples=..., random_state=...): # -> GoodnessOfFitResult:
+
+def goodness_of_fit(
+    dist,
+    data,
+    *,
+    known_params=...,
+    fit_params=...,
+    guessed_params=...,
+    statistic=...,
+    n_mc_samples=...,
+    random_state=...,
+):  # -> GoodnessOfFitResult:
     r"""
     Perform a goodness of fit test comparing data to a distribution family.
 

@@ -231,7 +231,7 @@ def plot_interpolated_energy_grid_reciprocal() -> None:
 
 
 def get_john_point_locations(
-    grid: UnevenPotential3d[Any, Any, Any]
+    grid: UnevenPotential3d[Any, Any, Any],
 ) -> dict[str, tuple[int, int]]:
     shape = BasisUtil(grid["basis"][0:2]).shape
     return {

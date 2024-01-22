@@ -72,7 +72,7 @@ if TYPE_CHECKING:
 @npy_cached(get_data_path("wavepacket/wavepacket_hydrogen.npy"), load_pickle=True)
 def get_all_wavepackets_hydrogen() -> _HydrogenCopperWavepacketList:
     def _hamiltonian_generator(
-        bloch_fraction: np.ndarray[tuple[Literal[3]], np.dtype[np.float64]]
+        bloch_fraction: np.ndarray[tuple[Literal[3]], np.dtype[np.float64]],
     ) -> SingleBasisOperator[Any]:
         return get_hamiltonian_hydrogen(
             shape=(46, 46, 250),

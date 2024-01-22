@@ -8,7 +8,8 @@ from ._index import IndexMixin
 
 """Dictionary Of Keys based matrix"""
 __docformat__ = ...
-__all__ = ['dok_array', 'dok_matrix', 'isspmatrix_dok']
+__all__ = ["dok_array", "dok_matrix", "isspmatrix_dok"]
+
 class _dok_base(_spbase, IndexMixin, dict):
     """
     Dictionary Of Keys based sparse matrix.
@@ -58,71 +59,52 @@ class _dok_base(_spbase, IndexMixin, dict):
     ...         S[i, j] = i + j    # Update element
 
     """
+
     _format = ...
-    def __init__(self, arg1, shape=..., dtype=..., copy=...) -> None:
+    def __init__(self, arg1, shape=..., dtype=..., copy=...) -> None: ...
+    def update(self, val): ...
+    def count_nonzero(self):  # -> int:
         ...
-    
-    def update(self, val):
+    def __len__(self):  # -> int:
         ...
-    
-    def count_nonzero(self): # -> int:
-        ...
-    
-    def __len__(self): # -> int:
-        ...
-    
     def get(self, key, default=...):
         """This overrides the dict.get method, providing type checking
         but otherwise equivalent functionality.
         """
         ...
-    
-    def __add__(self, other): # -> _NotImplementedType | dok_array:
+
+    def __add__(self, other):  # -> _NotImplementedType | dok_array:
         ...
-    
-    def __radd__(self, other): # -> _NotImplementedType | dok_array:
+    def __radd__(self, other):  # -> _NotImplementedType | dok_array:
         ...
-    
-    def __neg__(self): # -> dok_array:
+    def __neg__(self):  # -> dok_array:
         ...
-    
-    def __imul__(self, other): # -> Self@_dok_base | _NotImplementedType:
+    def __imul__(self, other):  # -> Self@_dok_base | _NotImplementedType:
         ...
-    
-    def __truediv__(self, other): # -> dok_array:
+    def __truediv__(self, other):  # -> dok_array:
         ...
-    
-    def __itruediv__(self, other): # -> Self@_dok_base | _NotImplementedType:
+    def __itruediv__(self, other):  # -> Self@_dok_base | _NotImplementedType:
         ...
-    
-    def __reduce__(self): # -> str | tuple[Any, ...]:
+    def __reduce__(self):  # -> str | tuple[Any, ...]:
         ...
-    
-    def transpose(self, axes=..., copy=...): # -> dok_array:
+    def transpose(self, axes=..., copy=...):  # -> dok_array:
         ...
-    
-    def conjtransp(self): # -> dok_array:
+    def conjtransp(self):  # -> dok_array:
         """Return the conjugate transpose."""
         ...
-    
-    def copy(self): # -> dok_array:
-        ...
-    
-    def tocoo(self, copy=...): # -> coo_array:
-        ...
-    
-    def todok(self, copy=...): # -> dok_array | Self@_dok_base:
-        ...
-    
-    def tocsc(self, copy=...): # -> csc_array:
-        ...
-    
-    def resize(self, *shape): # -> None:
-        ...
-    
 
+    def copy(self):  # -> dok_array:
+        ...
+    def tocoo(self, copy=...):  # -> coo_array:
+        ...
+    def todok(self, copy=...):  # -> dok_array | Self@_dok_base:
+        ...
+    def tocsc(self, copy=...):  # -> csc_array:
+        ...
+    def resize(self, *shape):  # -> None:
+        ...
 
-def isspmatrix_dok(x): # -> bool:
+def isspmatrix_dok(x):  # -> bool:
     """Is `x` of dok_array type?
 
     Parameters
@@ -147,18 +129,13 @@ def isspmatrix_dok(x): # -> bool:
     """
     ...
 
-class dok_array(_dok_base, sparray):
-    ...
-
+class dok_array(_dok_base, sparray): ...
 
 class dok_matrix(spmatrix, _dok_base):
-    def set_shape(self, shape): # -> None:
+    def set_shape(self, shape):  # -> None:
         ...
-    
-    def get_shape(self): # -> tuple[int, int] | tuple[int | float, int | float]:
+    def get_shape(self):  # -> tuple[int, int] | tuple[int | float, int | float]:
         """Get shape of a sparse array."""
         ...
-    
+
     shape = ...
-
-

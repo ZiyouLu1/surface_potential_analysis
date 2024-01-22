@@ -31,7 +31,9 @@ from hydrogen_nickel_111.s5_overlap import (
 
 _S0Inv = TypeVar("_S0Inv", bound=tuple[int, ...])
 
-PLOT_COLOURS = cast(list[tuple[float, float, float]], plt.rcParams["axes.prop_cycle"].by_key()["color"])  # type: ignore unknown
+PLOT_COLOURS = cast(
+    list[tuple[float, float, float]], plt.rcParams["axes.prop_cycle"].by_key()["color"]
+)  # type: ignore unknown
 
 
 def plot_fermi_occupation_intregrand() -> None:
@@ -133,7 +135,7 @@ def plot_fermi_occupation_integral() -> None:
 
 
 def get_rate_simple_equation_hydrogen(
-    temperature: np.ndarray[_S0Inv, np.dtype[np.float64]]
+    temperature: np.ndarray[_S0Inv, np.dtype[np.float64]],
 ) -> np.ndarray[_S0Inv, np.dtype[np.float64]]:
     omega = float(get_hydrogen_energy_difference(0, 1))
     temperature_flat = temperature.ravel()
@@ -160,7 +162,7 @@ def get_rate_simple_equation_hydrogen(
 
 
 def get_rate_simple_equation_deuterium(
-    temperature: np.ndarray[_S0Inv, np.dtype[np.float64]]
+    temperature: np.ndarray[_S0Inv, np.dtype[np.float64]],
 ) -> np.ndarray[_S0Inv, np.dtype[np.float64]]:
     omega = float(get_deuterium_energy_difference(0, 1))
     temperature_flat = temperature.ravel()

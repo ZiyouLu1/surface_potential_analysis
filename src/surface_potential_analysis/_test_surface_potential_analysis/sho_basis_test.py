@@ -57,7 +57,10 @@ class SHOBasisTest(unittest.TestCase):
         mass = hbar**2
         sho_omega = 1 / hbar
         z_points = np.linspace(
-            -10, 10, rng.integers(low=0, high=1000), dtype=np.complex128  # type: ignore bad libary types
+            -10,
+            10,
+            rng.integers(low=0, high=1000),
+            dtype=np.complex128,  # type: ignore bad libary types
         )
 
         norm = np.sqrt(mass * sho_omega / hbar)

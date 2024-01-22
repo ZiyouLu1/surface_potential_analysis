@@ -145,7 +145,7 @@ def select_eigenstate(
 
 
 def get_eigenvalues_list(
-    states: EigenstateList[_B0, Any]
+    states: EigenstateList[_B0, Any],
 ) -> SingleBasisDiagonalOperator[_B0]:
     """
     Extract eigenvalues from an eigenstate list.

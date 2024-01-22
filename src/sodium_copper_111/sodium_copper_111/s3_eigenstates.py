@@ -48,7 +48,7 @@ def get_eigenstate_collection(
     bloch_fractions = np.linspace(-0.5, 0.5, 11).reshape(1, 11)
 
     def hamiltonian_generator(
-        bloch_fraction: np.ndarray[tuple[Literal[1]], np.dtype[np.float64]]
+        bloch_fraction: np.ndarray[tuple[Literal[1]], np.dtype[np.float64]],
     ) -> SingleBasisOperator[
         StackedBasisLike[FundamentalTransformedPositionBasis1d[_L0Inv]]
     ]:
@@ -70,7 +70,7 @@ def get_eigenstate_collection_hydrogen(
     bloch_fractions = np.linspace(-0.5, 0.5, 11).reshape(1, 11)
 
     def hamiltonian_generator(
-        bloch_fraction: np.ndarray[tuple[Literal[1]], np.dtype[np.float64]]
+        bloch_fraction: np.ndarray[tuple[Literal[1]], np.dtype[np.float64]],
     ) -> SingleBasisOperator[
         StackedBasisLike[FundamentalTransformedPositionBasis1d[_L0Inv]]
     ]:
@@ -101,7 +101,7 @@ def get_eigenstate_collection_2d(
     bloch_fractions = np.array([[f, 0] for f in bloch_fractions_x]).T
 
     def hamiltonian_generator(
-        bloch_fraction: np.ndarray[tuple[Literal[2]], np.dtype[np.float64]]
+        bloch_fraction: np.ndarray[tuple[Literal[2]], np.dtype[np.float64]],
     ) -> SingleBasisOperator[
         StackedBasisLike[
             FundamentalTransformedPositionBasis2d[_L0Inv],

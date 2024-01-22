@@ -23,7 +23,19 @@ from ._procrustes import *
 from ._decomp_update import *
 from ._sketches import *
 from ._decomp_cossin import *
-from . import basic, decomp, decomp_cholesky, decomp_lu, decomp_qr, decomp_schur, decomp_svd, flinalg, matfuncs, misc, special_matrices
+from . import (
+    basic,
+    decomp,
+    decomp_cholesky,
+    decomp_lu,
+    decomp_qr,
+    decomp_schur,
+    decomp_svd,
+    flinalg,
+    matfuncs,
+    misc,
+    special_matrices,
+)
 from scipy._lib._testutils import PytestTester
 
 """
@@ -230,5 +242,5 @@ Low-level routines
    `scipy.linalg.cython_lapack` -- Low-level LAPACK functions for Cython
 
 """
-__all__ = [s for s in dir() if nots.startswith('_')]
+__all__ = [s for s in dir() if nots.startswith("_")]
 test = ...

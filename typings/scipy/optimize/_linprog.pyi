@@ -17,10 +17,11 @@ Functions
     linprog_terse_callback
 
 """
-__all__ = ['linprog', 'linprog_verbose_callback', 'linprog_terse_callback']
+__all__ = ["linprog", "linprog_verbose_callback", "linprog_terse_callback"]
 __docformat__ = ...
 LINPROG_METHODS = ...
-def linprog_verbose_callback(res): # -> None:
+
+def linprog_verbose_callback(res):  # -> None:
     """
     A sample callback function demonstrating the linprog callback interface.
     This callback produces detailed output to sys.stdout before each iteration
@@ -64,7 +65,7 @@ def linprog_verbose_callback(res): # -> None:
     """
     ...
 
-def linprog_terse_callback(res): # -> None:
+def linprog_terse_callback(res):  # -> None:
     """
     A sample callback function demonstrating the linprog callback interface.
     This callback produces brief output to sys.stdout before each iteration
@@ -108,7 +109,19 @@ def linprog_terse_callback(res): # -> None:
     """
     ...
 
-def linprog(c, A_ub=..., b_ub=..., A_eq=..., b_eq=..., bounds=..., method=..., callback=..., options=..., x0=..., integrality=...): # -> OptimizeResult:
+def linprog(
+    c,
+    A_ub=...,
+    b_ub=...,
+    A_eq=...,
+    b_eq=...,
+    bounds=...,
+    method=...,
+    callback=...,
+    options=...,
+    x0=...,
+    integrality=...,
+):  # -> OptimizeResult:
     r"""
     Linear programming: minimize a linear objective function subject to linear
     equality and inequality constraints.
@@ -546,4 +559,3 @@ def linprog(c, A_ub=..., b_ub=..., A_eq=..., b_eq=..., bounds=..., method=..., c
 
     """
     ...
-

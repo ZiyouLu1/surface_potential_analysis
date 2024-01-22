@@ -12,11 +12,10 @@ from .patches import FancyBboxPatch
 from pathlib import PosixPath
 
 def get_rotation(
-    rotation: float | Literal[None, "horizontal", "vertical"]
+    rotation: float | Literal[None, "horizontal", "vertical"],
 ) -> float: ...
 
 class Text(Artist):
-
     zorder = ...
     def __repr__(self): ...
     def __init__(
@@ -37,7 +36,7 @@ class Text(Artist):
         transform_rotates_text: bool = ...,
         *,
         parse_math=...,
-        **kwargs
+        **kwargs,
     ) -> None: ...
     def update(self, kwargs: dict[str, Any]) -> None: ...
     def __getstate__(self): ...
@@ -198,7 +197,7 @@ class Annotation(Text, _AnnotationBase):
         textcoords: str | Artist | Transform | Callable | Sequence[float] = ...,
         arrowprops: dict = ...,
         annotation_clip: bool | None = ...,
-        **kwargs
+        **kwargs,
     ) -> None: ...
     def contains(self, event): ...
     @property

@@ -10,7 +10,13 @@ Convenience interface to N-D interpolation
 .. versionadded:: 0.9
 
 """
-__all__ = ['griddata', 'NearestNDInterpolator', 'LinearNDInterpolator', 'CloughTocher2DInterpolator']
+__all__ = [
+    "griddata",
+    "NearestNDInterpolator",
+    "LinearNDInterpolator",
+    "CloughTocher2DInterpolator",
+]
+
 class NearestNDInterpolator(NDInterpolatorBase):
     """NearestNDInterpolator(x, y).
 
@@ -82,10 +88,8 @@ class NearestNDInterpolator(NDInterpolatorBase):
     >>> plt.show()
 
     """
-    def __init__(self, x, y, rescale=..., tree_options=...) -> None:
-        ...
-    
-    def __call__(self, *args): # -> ndarray[Any, dtype[Unknown]]:
+    def __init__(self, x, y, rescale=..., tree_options=...) -> None: ...
+    def __call__(self, *args):  # -> ndarray[Any, dtype[Unknown]]:
         """
         Evaluate interpolator at given points.
 
@@ -98,10 +102,10 @@ class NearestNDInterpolator(NDInterpolatorBase):
 
         """
         ...
-    
 
-
-def griddata(points, values, xi, method=..., fill_value=..., rescale=...): # -> ndarray[Any, dtype[Unknown]]:
+def griddata(
+    points, values, xi, method=..., fill_value=..., rescale=...
+):  # -> ndarray[Any, dtype[Unknown]]:
     """
     Interpolate unstructured D-D data.
 
@@ -222,4 +226,3 @@ def griddata(points, values, xi, method=..., fill_value=..., rescale=...): # -> 
 
     """
     ...
-

@@ -8,11 +8,44 @@ from scipy._lib._util import _rename_parameter
 from ._axis_nan_policy import _axis_nan_policy_factory
 from .._lib.deprecation import _deprecated
 
-__all__ = ['mvsdist', 'bayes_mvs', 'kstat', 'kstatvar', 'probplot', 'ppcc_max', 'ppcc_plot', 'boxcox_llf', 'boxcox', 'boxcox_normmax', 'boxcox_normplot', 'shapiro', 'anderson', 'ansari', 'bartlett', 'levene', 'binom_test', 'fligner', 'mood', 'wilcoxon', 'median_test', 'circmean', 'circvar', 'circstd', 'anderson_ksamp', 'yeojohnson_llf', 'yeojohnson', 'yeojohnson_normmax', 'yeojohnson_normplot', 'directional_stats', 'false_discovery_control']
+__all__ = [
+    "mvsdist",
+    "bayes_mvs",
+    "kstat",
+    "kstatvar",
+    "probplot",
+    "ppcc_max",
+    "ppcc_plot",
+    "boxcox_llf",
+    "boxcox",
+    "boxcox_normmax",
+    "boxcox_normplot",
+    "shapiro",
+    "anderson",
+    "ansari",
+    "bartlett",
+    "levene",
+    "binom_test",
+    "fligner",
+    "mood",
+    "wilcoxon",
+    "median_test",
+    "circmean",
+    "circvar",
+    "circstd",
+    "anderson_ksamp",
+    "yeojohnson_llf",
+    "yeojohnson",
+    "yeojohnson_normmax",
+    "yeojohnson_normplot",
+    "directional_stats",
+    "false_discovery_control",
+]
 Mean = ...
 Variance = ...
 Std_dev = ...
-def bayes_mvs(data, alpha=...): # -> tuple[Mean, Variance, Std_dev]:
+
+def bayes_mvs(data, alpha=...):  # -> tuple[Mean, Variance, Std_dev]:
     r"""
     Bayesian confidence intervals for the mean, var, and std.
 
@@ -101,7 +134,9 @@ def bayes_mvs(data, alpha=...): # -> tuple[Mean, Variance, Std_dev]:
     """
     ...
 
-def mvsdist(data): # -> tuple[rv_continuous_frozen | rv_discrete_frozen, rv_continuous_frozen | rv_discrete_frozen, rv_continuous_frozen | rv_discrete_frozen]:
+def mvsdist(
+    data,
+):  # -> tuple[rv_continuous_frozen | rv_discrete_frozen, rv_continuous_frozen | rv_discrete_frozen, rv_continuous_frozen | rv_discrete_frozen]:
     """
     'Frozen' distributions for mean, variance, and standard deviation of data.
 
@@ -158,8 +193,10 @@ def mvsdist(data): # -> tuple[rv_continuous_frozen | rv_discrete_frozen, rv_cont
     """
     ...
 
-@_axis_nan_policy_factory(lambda x: x, result_to_tuple=lambda x: (x, ), n_outputs=1, default_axis=None)
-def kstat(data, n=...): # -> float | Any:
+@_axis_nan_policy_factory(
+    lambda x: x, result_to_tuple=lambda x: (x,), n_outputs=1, default_axis=None
+)
+def kstat(data, n=...):  # -> float | Any:
     r"""
     Return the nth k-statistic (1<=n<=4 so far).
 
@@ -226,8 +263,10 @@ def kstat(data, n=...): # -> float | Any:
     """
     ...
 
-@_axis_nan_policy_factory(lambda x: x, result_to_tuple=lambda x: (x, ), n_outputs=1, default_axis=None)
-def kstatvar(data, n=...): # -> float | Any:
+@_axis_nan_policy_factory(
+    lambda x: x, result_to_tuple=lambda x: (x,), n_outputs=1, default_axis=None
+)
+def kstatvar(data, n=...):  # -> float | Any:
     r"""Return an unbiased estimator of the variance of the k-statistic.
 
     See `kstat` for more details of the k-statistic.
@@ -268,7 +307,9 @@ def kstatvar(data, n=...): # -> float | Any:
     """
     ...
 
-def probplot(x, sparams=..., dist=..., fit=..., plot=..., rvalue=...): # -> tuple[tuple[NDArray[Unknown], NDArray[Unknown]], tuple[float, float, float]] | tuple[NDArray[Unknown], NDArray[Unknown]] | tuple[tuple[Unknown | Any, NDArray[Unknown]], tuple[Unknown | Unbound, Unknown | Unbound, Unknown | Unbound]] | tuple[Unknown | Any, NDArray[Unknown]]:
+def probplot(
+    x, sparams=..., dist=..., fit=..., plot=..., rvalue=...
+):  # -> tuple[tuple[NDArray[Unknown], NDArray[Unknown]], tuple[float, float, float]] | tuple[NDArray[Unknown], NDArray[Unknown]] | tuple[tuple[Unknown | Any, NDArray[Unknown]], tuple[Unknown | Unbound, Unknown | Unbound, Unknown | Unbound]] | tuple[Unknown | Any, NDArray[Unknown]]:
     """
     Calculate quantiles for a probability plot, and optionally show the plot.
 
@@ -387,7 +428,7 @@ def probplot(x, sparams=..., dist=..., fit=..., plot=..., rvalue=...): # -> tupl
     """
     ...
 
-def ppcc_max(x, brack=..., dist=...): # -> tuple[Unknown, Unknown, Unknown, Unknown]:
+def ppcc_max(x, brack=..., dist=...):  # -> tuple[Unknown, Unknown, Unknown, Unknown]:
     """Calculate the shape parameter that maximizes the PPCC.
 
     The probability plot correlation coefficient (PPCC) plot can be used
@@ -460,7 +501,7 @@ def ppcc_max(x, brack=..., dist=...): # -> tuple[Unknown, Unknown, Unknown, Unkn
     """
     ...
 
-def ppcc_plot(x, a, b, dist=..., plot=..., N=...): # -> tuple[Unknown, Unknown]:
+def ppcc_plot(x, a, b, dist=..., plot=..., N=...):  # -> tuple[Unknown, Unknown]:
     """Calculate and optionally plot probability plot correlation coefficient.
 
     The probability plot correlation coefficient (PPCC) plot can be used to
@@ -547,7 +588,7 @@ def ppcc_plot(x, a, b, dist=..., plot=..., N=...): # -> tuple[Unknown, Unknown]:
     """
     ...
 
-def boxcox_llf(lmb, data): # -> float:
+def boxcox_llf(lmb, data):  # -> float:
     r"""The boxcox log-likelihood function.
 
     Parameters
@@ -629,7 +670,9 @@ def boxcox_llf(lmb, data): # -> float:
     """
     ...
 
-def boxcox(x, lmbda=..., alpha=..., optimizer=...): # -> Any | NDArray[Unknown] | tuple[Unknown, Any] | tuple[Unknown, Any, tuple[tuple[Unknown, RootResults] | Unknown, tuple[Unknown, RootResults] | Unknown]]:
+def boxcox(
+    x, lmbda=..., alpha=..., optimizer=...
+):  # -> Any | NDArray[Unknown] | tuple[Unknown, Any] | tuple[Unknown, Any, tuple[tuple[Unknown, RootResults] | Unknown, tuple[Unknown, RootResults] | Unknown]]:
     r"""Return a dataset transformed by a Box-Cox power transformation.
 
     Parameters
@@ -745,7 +788,7 @@ def boxcox(x, lmbda=..., alpha=..., optimizer=...): # -> Any | NDArray[Unknown] 
     """
     ...
 
-def boxcox_normmax(x, brack=..., method=..., optimizer=...): # -> Any:
+def boxcox_normmax(x, brack=..., method=..., optimizer=...):  # -> Any:
     """Compute optimal Box-Cox transform parameter for input data.
 
     Parameters
@@ -846,7 +889,9 @@ def boxcox_normmax(x, brack=..., method=..., optimizer=...): # -> Any:
     """
     ...
 
-def boxcox_normplot(x, la, lb, plot=..., N=...): # -> NDArray[Unknown] | tuple[Unknown, Unknown]:
+def boxcox_normplot(
+    x, la, lb, plot=..., N=...
+):  # -> NDArray[Unknown] | tuple[Unknown, Unknown]:
     """Compute parameters for a Box-Cox normality plot, optionally show it.
 
     A Box-Cox normality plot shows graphically what the best transformation
@@ -913,7 +958,9 @@ def boxcox_normplot(x, la, lb, plot=..., N=...): # -> NDArray[Unknown] | tuple[U
     """
     ...
 
-def yeojohnson(x, lmbda=...): # -> NDArray[Unknown] | tuple[Unknown, tuple[Unknown, Unknown, Unknown, Unknown] | Unknown]:
+def yeojohnson(
+    x, lmbda=...
+):  # -> NDArray[Unknown] | tuple[Unknown, tuple[Unknown, Unknown, Unknown, Unknown] | Unknown]:
     r"""Return a dataset transformed by a Yeo-Johnson power transformation.
 
     Parameters
@@ -985,7 +1032,7 @@ def yeojohnson(x, lmbda=...): # -> NDArray[Unknown] | tuple[Unknown, tuple[Unkno
     """
     ...
 
-def yeojohnson_llf(lmb, data): # -> float:
+def yeojohnson_llf(lmb, data):  # -> float:
     r"""The yeojohnson log-likelihood function.
 
     Parameters
@@ -1069,7 +1116,7 @@ def yeojohnson_llf(lmb, data): # -> float:
     """
     ...
 
-def yeojohnson_normmax(x, brack=...): # -> tuple[Unknown, Unknown, Unknown, Unknown]:
+def yeojohnson_normmax(x, brack=...):  # -> tuple[Unknown, Unknown, Unknown, Unknown]:
     """Compute optimal Yeo-Johnson transform parameter.
 
     Compute optimal Yeo-Johnson transform parameter for input data, using
@@ -1119,7 +1166,9 @@ def yeojohnson_normmax(x, brack=...): # -> tuple[Unknown, Unknown, Unknown, Unkn
     """
     ...
 
-def yeojohnson_normplot(x, la, lb, plot=..., N=...): # -> NDArray[Unknown] | tuple[Unknown, Unknown]:
+def yeojohnson_normplot(
+    x, la, lb, plot=..., N=...
+):  # -> NDArray[Unknown] | tuple[Unknown, Unknown]:
     """Compute parameters for a Yeo-Johnson normality plot, optionally show it.
 
     A Yeo-Johnson normality plot shows graphically what the best
@@ -1189,7 +1238,8 @@ def yeojohnson_normplot(x, la, lb, plot=..., N=...): # -> NDArray[Unknown] | tup
     ...
 
 ShapiroResult = ...
-def shapiro(x): # -> ShapiroResult:
+
+def shapiro(x):  # -> ShapiroResult:
     r"""Perform the Shapiro-Wilk test for normality.
 
     The Shapiro-Wilk test tests the null hypothesis that the
@@ -1323,7 +1373,8 @@ _Avals_weibull = np.array(_Avals_weibull)
 _cvals_weibull = np.linspace(0, 0.5, 11)
 _get_As_weibull = ...
 AndersonResult = ...
-def anderson(x, dist=...): # -> _:
+
+def anderson(x, dist=...):  # -> _:
     """Anderson-Darling test for data coming from a particular distribution.
 
     The Anderson-Darling test tests the null hypothesis that a sample is
@@ -1439,7 +1490,8 @@ def anderson(x, dist=...): # -> _:
     ...
 
 Anderson_ksampResult = ...
-def anderson_ksamp(samples, midrank=...): # -> _:
+
+def anderson_ksamp(samples, midrank=...):  # -> _:
     """The Anderson-Darling test for k-samples.
 
     The k-sample Anderson-Darling test is a modification of the
@@ -1545,28 +1597,28 @@ def anderson_ksamp(samples, midrank=...): # -> _:
     ...
 
 AnsariResult = ...
+
 class _ABW:
     """Distribution of Ansari-Bradley W-statistic under the null hypothesis."""
     def __init__(self) -> None:
         """Minimal initializer."""
         ...
-    
+
     def pmf(self, k, n, m):
         """Probability mass function."""
         ...
-    
+
     def cdf(self, k, n, m):
         """Cumulative distribution function."""
         ...
-    
+
     def sf(self, k, n, m):
         """Survival function."""
         ...
-    
-
 
 _abw_state = ...
-def ansari(x, y, alternative=...): # -> AnsariResult:
+
+def ansari(x, y, alternative=...):  # -> AnsariResult:
     """Perform the Ansari-Bradley test for equal scale parameters.
 
     The Ansari-Bradley test ([1]_, [2]_) is a non-parametric test
@@ -1673,7 +1725,8 @@ def ansari(x, y, alternative=...): # -> AnsariResult:
     ...
 
 BartlettResult = ...
-def bartlett(*samples): # -> BartlettResult:
+
+def bartlett(*samples):  # -> BartlettResult:
     r"""Perform Bartlett's test for equal variances.
 
     Bartlett's test tests the null hypothesis that all input samples
@@ -1886,7 +1939,8 @@ def bartlett(*samples): # -> BartlettResult:
     ...
 
 LeveneResult = ...
-def levene(*samples, center=..., proportiontocut=...): # -> LeveneResult:
+
+def levene(*samples, center=..., proportiontocut=...):  # -> LeveneResult:
     r"""Perform Levene test for equal variances.
 
     The Levene test tests the null hypothesis that all input samples
@@ -2106,8 +2160,14 @@ def levene(*samples, center=..., proportiontocut=...): # -> LeveneResult:
     """
     ...
 
-@_deprecated("'binom_test' is deprecated in favour of" " 'binomtest' from version 1.7.0 and will" " be removed in Scipy 1.12.0.")
-def binom_test(x, n=..., p=..., alternative=...): # -> ndarray[Any, dtype[Any]] | float:
+@_deprecated(
+    "'binom_test' is deprecated in favour of"
+    " 'binomtest' from version 1.7.0 and will"
+    " be removed in Scipy 1.12.0."
+)
+def binom_test(
+    x, n=..., p=..., alternative=...
+):  # -> ndarray[Any, dtype[Any]] | float:
     """Perform a test that the probability of success is p.
 
     This is an exact, two-sided test of the null hypothesis
@@ -2160,7 +2220,8 @@ def binom_test(x, n=..., p=..., alternative=...): # -> ndarray[Any, dtype[Any]] 
     ...
 
 FlignerResult = ...
-def fligner(*samples, center=..., proportiontocut=...): # -> FlignerResult:
+
+def fligner(*samples, center=..., proportiontocut=...):  # -> FlignerResult:
     r"""Perform Fligner-Killeen test for equality of variance.
 
     Fligner's test tests the null hypothesis that all input samples
@@ -2386,7 +2447,7 @@ def fligner(*samples, center=..., proportiontocut=...): # -> FlignerResult:
     """
     ...
 
-def mood(x, y, axis=..., alternative=...): # -> _:
+def mood(x, y, axis=..., alternative=...):  # -> _:
     """Perform Mood's test for equal scale parameters.
 
     Mood's two-sample test for scale parameters is a non-parametric
@@ -2478,17 +2539,23 @@ def mood(x, y, axis=..., alternative=...): # -> _:
     ...
 
 WilcoxonResult = ...
-def wilcoxon_result_unpacker(res): # -> tuple[Unknown, Unknown, Unknown] | tuple[Unknown, Unknown]:
-    ...
 
-def wilcoxon_result_object(statistic, pvalue, zstatistic=...): # -> _:
+def wilcoxon_result_unpacker(
+    res,
+):  # -> tuple[Unknown, Unknown, Unknown] | tuple[Unknown, Unknown]:
     ...
-
-def wilcoxon_outputs(kwds): # -> Literal[3, 2]:
+def wilcoxon_result_object(statistic, pvalue, zstatistic=...):  # -> _:
     ...
-
+def wilcoxon_outputs(kwds):  # -> Literal[3, 2]:
+    ...
 @_rename_parameter("mode", "method")
-@_axis_nan_policy_factory(wilcoxon_result_object, paired=True, n_samples=lambda kwds: 2 if kwds.get('y', None) is not None else 1, result_to_tuple=wilcoxon_result_unpacker, n_outputs=wilcoxon_outputs)
+@_axis_nan_policy_factory(
+    wilcoxon_result_object,
+    paired=True,
+    n_samples=lambda kwds: 2 if kwds.get("y", None) is not None else 1,
+    result_to_tuple=wilcoxon_result_unpacker,
+    n_outputs=wilcoxon_outputs,
+)
 def wilcoxon(x, y=..., zero_method=..., correction=..., alternative=..., method=...):
     """Calculate the Wilcoxon signed-rank test.
 
@@ -2699,7 +2766,10 @@ def wilcoxon(x, y=..., zero_method=..., correction=..., alternative=..., method=
     ...
 
 MedianTestResult = ...
-def median_test(*samples, ties=..., correction=..., lambda_=..., nan_policy=...): # -> _:
+
+def median_test(
+    *samples, ties=..., correction=..., lambda_=..., nan_policy=...
+):  # -> _:
     """Perform a Mood's median test.
 
     Test that two or more samples come from populations with the same median.
@@ -2842,7 +2912,9 @@ def median_test(*samples, ties=..., correction=..., lambda_=..., nan_policy=...)
     """
     ...
 
-def circmean(samples, high=..., low=..., axis=..., nan_policy=...): # -> NDArray[floating[Any]] | Any:
+def circmean(
+    samples, high=..., low=..., axis=..., nan_policy=...
+):  # -> NDArray[floating[Any]] | Any:
     """Compute the circular mean for samples in a range.
 
     Parameters
@@ -2903,7 +2975,7 @@ def circmean(samples, high=..., low=..., axis=..., nan_policy=...): # -> NDArray
     """
     ...
 
-def circvar(samples, high=..., low=..., axis=..., nan_policy=...): # -> Any:
+def circvar(samples, high=..., low=..., axis=..., nan_policy=...):  # -> Any:
     """Compute the circular variance for samples assumed to be in a range.
 
     Parameters
@@ -2975,7 +3047,9 @@ def circvar(samples, high=..., low=..., axis=..., nan_policy=...): # -> Any:
     """
     ...
 
-def circstd(samples, high=..., low=..., axis=..., nan_policy=..., *, normalize=...): # -> Any:
+def circstd(
+    samples, high=..., low=..., axis=..., nan_policy=..., *, normalize=...
+):  # -> Any:
     """
     Compute the circular standard deviation for samples assumed to be in the
     range [low to high].
@@ -3066,15 +3140,11 @@ def circstd(samples, high=..., low=..., axis=..., nan_policy=..., *, normalize=.
     ...
 
 class DirectionalStats:
-    def __init__(self, mean_direction, mean_resultant_length) -> None:
+    def __init__(self, mean_direction, mean_resultant_length) -> None: ...
+    def __repr__(self):  # -> str:
         ...
-    
-    def __repr__(self): # -> str:
-        ...
-    
 
-
-def directional_stats(samples, *, axis=..., normalize=...): # -> DirectionalStats:
+def directional_stats(samples, *, axis=..., normalize=...):  # -> DirectionalStats:
     """
     Computes sample statistics for directional data.
 
@@ -3191,7 +3261,9 @@ def directional_stats(samples, *, axis=..., normalize=...): # -> DirectionalStat
     """
     ...
 
-def false_discovery_control(ps, *, axis=..., method=...): # -> ndarray[Any, dtype[Unknown]] | NDArray[floating[Unknown]]:
+def false_discovery_control(
+    ps, *, axis=..., method=...
+):  # -> ndarray[Any, dtype[Unknown]] | NDArray[floating[Unknown]]:
     """Adjust p-values to control the false discovery rate.
 
     The false discovery rate (FDR) is the expected proportion of rejected null
@@ -3333,4 +3405,3 @@ def false_discovery_control(ps, *, axis=..., method=...): # -> ndarray[Any, dtyp
 
     """
     ...
-

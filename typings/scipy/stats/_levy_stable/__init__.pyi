@@ -21,6 +21,7 @@ _cf_Z0 = ...
 _cf_Z1 = ...
 _pdf_single_value_cf_integrate_Z0 = ...
 _pdf_single_value_cf_integrate_Z1 = ...
+
 class levy_stable_gen(rv_continuous):
     r"""A Levy-stable continuous random variable.
 
@@ -167,6 +168,7 @@ class levy_stable_gen(rv_continuous):
     %(example)s
 
     """
+
     parameterization = ...
     pdf_default_method = ...
     cdf_default_method = ...
@@ -179,22 +181,28 @@ class levy_stable_gen(rv_continuous):
     pdf_fft_interpolation_level = ...
     pdf_fft_interpolation_degree = ...
     @inherit_docstring_from(rv_continuous)
-    def rvs(self, *args, **kwds): # -> NDArray[Any] | None:
+    def rvs(self, *args, **kwds):  # -> NDArray[Any] | None:
         ...
-    
     @inherit_docstring_from(rv_continuous)
-    def pdf(self, x, *args, **kwds): # -> ndarray[Any, dtype[Any]] | Any | None:
+    def pdf(self, x, *args, **kwds):  # -> ndarray[Any, dtype[Any]] | Any | None:
         ...
-    
     @inherit_docstring_from(rv_continuous)
-    def cdf(self, x, *args, **kwds): # -> ndarray[Any, dtype[Any]] | Any | None:
+    def cdf(self, x, *args, **kwds):  # -> ndarray[Any, dtype[Any]] | Any | None:
         ...
-    
 
+Cotes_table = np.array(
+    [[], [1]] + [v[2] for v in _builtincoeffs.values()], dtype=object
+)
+Cotes = np.array(
+    [
+        np.pad(r, (0, len(Cotes_table) - 1 - len(r)), mode="constant")
+        for r in Cotes_table
+    ]
+)
 
-Cotes_table = np.array([[], [1]] + [v[2] for v in _builtincoeffs.values()], dtype=object)
-Cotes = np.array([np.pad(r, (0, len(Cotes_table) - 1 - len(r)), mode='constant') for r in Cotes_table])
-def pdf_from_cf_with_fft(cf, h=..., q=..., level=...): # -> tuple[Unknown, Any | Unknown]:
+def pdf_from_cf_with_fft(
+    cf, h=..., q=..., level=...
+):  # -> tuple[Unknown, Any | Unknown]:
     """Calculates pdf from characteristic function.
 
     Uses fast Fourier transform with Newton-Cotes integration following [WZ].

@@ -16,9 +16,10 @@ Functions
     fmin_slsqp
 
 """
-__all__ = ['approx_jacobian', 'fmin_slsqp']
+__all__ = ["approx_jacobian", "fmin_slsqp"]
 __docformat__ = ...
 _epsilon = ...
+
 def approx_jacobian(x, func, epsilon, *args):
     """
     Approximate the Jacobian matrix of a callable function.
@@ -47,7 +48,26 @@ def approx_jacobian(x, func, epsilon, *args):
     """
     ...
 
-def fmin_slsqp(func, x0, eqcons=..., f_eqcons=..., ieqcons=..., f_ieqcons=..., bounds=..., fprime=..., fprime_eqcons=..., fprime_ieqcons=..., args=..., iter=..., acc=..., iprint=..., disp=..., full_output=..., epsilon=..., callback=...): # -> tuple[Unknown, Unknown, Unknown, Unknown, Unknown]:
+def fmin_slsqp(
+    func,
+    x0,
+    eqcons=...,
+    f_eqcons=...,
+    ieqcons=...,
+    f_ieqcons=...,
+    bounds=...,
+    fprime=...,
+    fprime_eqcons=...,
+    fprime_ieqcons=...,
+    args=...,
+    iter=...,
+    acc=...,
+    iprint=...,
+    disp=...,
+    full_output=...,
+    epsilon=...,
+    callback=...,
+):  # -> tuple[Unknown, Unknown, Unknown, Unknown, Unknown]:
     """
     Minimize a function using Sequential Least Squares Programming
 
@@ -156,4 +176,3 @@ def fmin_slsqp(func, x0, eqcons=..., f_eqcons=..., ieqcons=..., f_ieqcons=..., b
 
     """
     ...
-

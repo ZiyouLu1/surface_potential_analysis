@@ -114,7 +114,7 @@ if TYPE_CHECKING:
 def get_all_wavepackets_hydrogen() -> _HydrogenNickelWavepacketList:
     @timed
     def _hamiltonian_generator(
-        bloch_fraction: np.ndarray[tuple[Literal[3]], np.dtype[np.float64]]
+        bloch_fraction: np.ndarray[tuple[Literal[3]], np.dtype[np.float64]],
     ) -> SingleBasisOperator[Any]:
         return get_hamiltonian_hydrogen_extrapolated(
             shape=(250, 250, 64),
@@ -267,7 +267,7 @@ def get_hydrogen_energy_difference(state_0: int, state_1: int) -> np.float64:
 @npy_cached(get_data_path("wavepacket/wavepacket_deuterium.npy"), load_pickle=True)
 def get_all_wavepackets_deuterium() -> _DeuteriumNickelWavepacketList:
     def _hamiltonian_generator(
-        bloch_fraction: np.ndarray[tuple[Literal[3]], np.dtype[np.float64]]
+        bloch_fraction: np.ndarray[tuple[Literal[3]], np.dtype[np.float64]],
     ) -> SingleBasisOperator[Any]:
         return get_hamiltonian_deuterium(
             shape=(200, 200, 200),

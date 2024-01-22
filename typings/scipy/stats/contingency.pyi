@@ -23,8 +23,17 @@ Functions for creating and analyzing contingency tables.
    margins
 
 """
-__all__ = ['margins', 'expected_freq', 'chi2_contingency', 'crosstab', 'association', 'relative_risk', 'odds_ratio']
-def margins(a): # -> list[Unknown]:
+__all__ = [
+    "margins",
+    "expected_freq",
+    "chi2_contingency",
+    "crosstab",
+    "association",
+    "relative_risk",
+    "odds_ratio",
+]
+
+def margins(a):  # -> list[Unknown]:
     """Return a list of the marginal sums of the array `a`.
 
     Parameters
@@ -70,7 +79,7 @@ def margins(a): # -> list[Unknown]:
     """
     ...
 
-def expected_freq(observed): # -> Any:
+def expected_freq(observed):  # -> Any:
     """
     Compute the expected frequencies from a contingency table.
 
@@ -105,7 +114,8 @@ def expected_freq(observed): # -> Any:
     ...
 
 Chi2ContingencyResult = ...
-def chi2_contingency(observed, correction=..., lambda_=...): # -> _:
+
+def chi2_contingency(observed, correction=..., lambda_=...):  # -> _:
     """Chi-square test of independence of variables in a contingency table.
 
     This function computes the chi-square statistic and p-value for the
@@ -292,7 +302,7 @@ def chi2_contingency(observed, correction=..., lambda_=...): # -> _:
     """
     ...
 
-def association(observed, method=..., correction=..., lambda_=...): # -> float:
+def association(observed, method=..., correction=..., lambda_=...):  # -> float:
     """Calculates degree of association between two nominal variables.
 
     The function provides the option for computing one of three measures of
@@ -371,4 +381,3 @@ def association(observed, method=..., correction=..., lambda_=...): # -> float:
     0.14146478765062995
     """
     ...
-

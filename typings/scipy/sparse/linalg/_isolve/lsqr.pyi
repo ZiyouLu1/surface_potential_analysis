@@ -52,9 +52,21 @@ Kline with contributions by Mridul Aanjaneya and Bob Myhill.
 Adapted for SciPy by Stefan van der Walt.
 
 """
-__all__ = ['lsqr']
+__all__ = ["lsqr"]
 eps = ...
-def lsqr(A, b, damp=..., atol=..., btol=..., conlim=..., iter_lim=..., show=..., calc_var=..., x0=...):
+
+def lsqr(
+    A,
+    b,
+    damp=...,
+    atol=...,
+    btol=...,
+    conlim=...,
+    iter_lim=...,
+    show=...,
+    calc_var=...,
+    x0=...,
+):
     """Find the least-squares solution to a large, sparse, linear system
     of equations.
 
@@ -280,4 +292,3 @@ def lsqr(A, b, damp=..., atol=..., btol=..., conlim=..., iter_lim=..., show=...,
     contains the norm of the minimal residual that was found.
     """
     ...
-

@@ -13,7 +13,7 @@ Uses ARPACK: https://github.com/opencollab/arpack-ng
 """
 arpack_int = ...
 __docformat__ = ...
-__all__ = ['eigs', 'eigsh', 'ArpackError', 'ArpackNoConvergence']
+__all__ = ["eigs", "eigsh", "ArpackError", "ArpackNoConvergence"]
 _type_conv = ...
 _ndigits = ...
 DNAUPD_ERRORS = ...
@@ -34,14 +34,12 @@ _SEUPD_ERRORS = ...
 _NEUPD_ERRORS = ...
 _SEUPD_WHICH = ...
 _NEUPD_WHICH = ...
+
 class ArpackError(RuntimeError):
     """
     ARPACK error
     """
-    def __init__(self, info, infodict=...) -> None:
-        ...
-    
-
+    def __init__(self, info, infodict=...) -> None: ...
 
 class ArpackNoConvergence(ArpackError):
     """
@@ -55,12 +53,9 @@ class ArpackNoConvergence(ArpackError):
         Partial result. Converged eigenvectors.
 
     """
-    def __init__(self, msg, eigenvalues, eigenvectors) -> None:
-        ...
-    
+    def __init__(self, msg, eigenvalues, eigenvectors) -> None: ...
 
-
-def choose_ncv(k): # -> int:
+def choose_ncv(k):  # -> int:
     """
     Choose number of lanczos vectors based on target number
     of singular/eigen values and vectors to compute, k.
@@ -68,34 +63,63 @@ def choose_ncv(k): # -> int:
     ...
 
 class _ArpackParams:
-    def __init__(self, n, k, tp, mode=..., sigma=..., ncv=..., v0=..., maxiter=..., which=..., tol=...) -> None:
-        ...
-    
-
+    def __init__(
+        self,
+        n,
+        k,
+        tp,
+        mode=...,
+        sigma=...,
+        ncv=...,
+        v0=...,
+        maxiter=...,
+        which=...,
+        tol=...,
+    ) -> None: ...
 
 class _SymmetricArpackParams(_ArpackParams):
-    def __init__(self, n, k, tp, matvec, mode=..., M_matvec=..., Minv_matvec=..., sigma=..., ncv=..., v0=..., maxiter=..., which=..., tol=...) -> None:
+    def __init__(
+        self,
+        n,
+        k,
+        tp,
+        matvec,
+        mode=...,
+        M_matvec=...,
+        Minv_matvec=...,
+        sigma=...,
+        ncv=...,
+        v0=...,
+        maxiter=...,
+        which=...,
+        tol=...,
+    ) -> None: ...
+    def iterate(self):  # -> None:
         ...
-    
-    def iterate(self): # -> None:
+    def extract(self, return_eigenvectors):  # -> tuple[Unknown, Unknown]:
         ...
-    
-    def extract(self, return_eigenvectors): # -> tuple[Unknown, Unknown]:
-        ...
-    
-
 
 class _UnsymmetricArpackParams(_ArpackParams):
-    def __init__(self, n, k, tp, matvec, mode=..., M_matvec=..., Minv_matvec=..., sigma=..., ncv=..., v0=..., maxiter=..., which=..., tol=...) -> None:
+    def __init__(
+        self,
+        n,
+        k,
+        tp,
+        matvec,
+        mode=...,
+        M_matvec=...,
+        Minv_matvec=...,
+        sigma=...,
+        ncv=...,
+        v0=...,
+        maxiter=...,
+        which=...,
+        tol=...,
+    ) -> None: ...
+    def iterate(self):  # -> None:
         ...
-    
-    def iterate(self): # -> None:
+    def extract(self, return_eigenvectors):  # -> tuple[Unknown, Unknown]:
         ...
-    
-    def extract(self, return_eigenvectors): # -> tuple[Unknown, Unknown]:
-        ...
-    
-
 
 class SpLuInv(LinearOperator):
     """
@@ -103,10 +127,7 @@ class SpLuInv(LinearOperator):
        helper class to repeatedly solve M*x=b
        using a sparse LU-decomposition of M
     """
-    def __init__(self, M) -> None:
-        ...
-    
-
+    def __init__(self, M) -> None: ...
 
 class LuInv(LinearOperator):
     """
@@ -114,10 +135,7 @@ class LuInv(LinearOperator):
        helper class to repeatedly solve M*x=b
        using an LU-decomposition of M
     """
-    def __init__(self, M) -> None:
-        ...
-    
-
+    def __init__(self, M) -> None: ...
 
 def gmres_loose(A, b, tol):
     """
@@ -131,10 +149,7 @@ class IterInv(LinearOperator):
        helper class to repeatedly solve M*x=b
        using an iterative method.
     """
-    def __init__(self, M, ifunc=..., tol=...) -> None:
-        ...
-    
-
+    def __init__(self, M, ifunc=..., tol=...) -> None: ...
 
 class IterOpInv(LinearOperator):
     """
@@ -142,23 +157,37 @@ class IterOpInv(LinearOperator):
        helper class to repeatedly solve [A-sigma*M]*x = b
        using an iterative method
     """
-    def __init__(self, A, M, sigma, ifunc=..., tol=...) -> None:
-        ...
-    
+    def __init__(self, A, M, sigma, ifunc=..., tol=...) -> None: ...
     @property
-    def dtype(self): # -> dtype[Unknown]:
+    def dtype(self):  # -> dtype[Unknown]:
         ...
-    
 
-
-def get_inv_matvec(M, hermitian=..., tol=...): # -> (x: Unknown) -> (ndarray[Any, dtype[Unknown]] | ndarray[Any, Unknown]):
+def get_inv_matvec(
+    M, hermitian=..., tol=...
+):  # -> (x: Unknown) -> (ndarray[Any, dtype[Unknown]] | ndarray[Any, Unknown]):
     ...
-
-def get_OPinv_matvec(A, M, sigma, hermitian=..., tol=...): # -> (x: Unknown) -> (ndarray[Any, dtype[Unknown]] | ndarray[Any, Unknown]):
+def get_OPinv_matvec(
+    A, M, sigma, hermitian=..., tol=...
+):  # -> (x: Unknown) -> (ndarray[Any, dtype[Unknown]] | ndarray[Any, Unknown]):
     ...
 
 _ARPACK_LOCK = ...
-def eigs(A, k=..., M=..., sigma=..., which=..., v0=..., ncv=..., maxiter=..., tol=..., return_eigenvectors=..., Minv=..., OPinv=..., OPpart=...): # -> NDArray[Unknown] | tuple[NDArray[Unknown] | Unknown, NDArray[Any] | NDArray[Unknown] | Unknown, NDArray[Any] | NDArray[Unknown] | Unknown] | tuple[NDArray[Unknown] | Unknown, NDArray[Any] | NDArray[Unknown] | Unknown] | tuple[Unknown, Unknown]:
+
+def eigs(
+    A,
+    k=...,
+    M=...,
+    sigma=...,
+    which=...,
+    v0=...,
+    ncv=...,
+    maxiter=...,
+    tol=...,
+    return_eigenvectors=...,
+    Minv=...,
+    OPinv=...,
+    OPpart=...,
+):  # -> NDArray[Unknown] | tuple[NDArray[Unknown] | Unknown, NDArray[Any] | NDArray[Unknown] | Unknown, NDArray[Any] | NDArray[Unknown] | Unknown] | tuple[NDArray[Unknown] | Unknown, NDArray[Any] | NDArray[Unknown] | Unknown] | tuple[Unknown, Unknown]:
     """
     Find k eigenvalues and eigenvectors of the square matrix A.
 
@@ -312,7 +341,21 @@ def eigs(A, k=..., M=..., sigma=..., which=..., v0=..., ncv=..., maxiter=..., to
     """
     ...
 
-def eigsh(A, k=..., M=..., sigma=..., which=..., v0=..., ncv=..., maxiter=..., tol=..., return_eigenvectors=..., Minv=..., OPinv=..., mode=...): # -> tuple[Any | Unknown | ndarray[Any, _dtype], Any | Unknown | NDArray[Any] | NDArray[Unknown]] | ndarray[Any, _dtype] | tuple[Unknown, Unknown]:
+def eigsh(
+    A,
+    k=...,
+    M=...,
+    sigma=...,
+    which=...,
+    v0=...,
+    ncv=...,
+    maxiter=...,
+    tol=...,
+    return_eigenvectors=...,
+    Minv=...,
+    OPinv=...,
+    mode=...,
+):  # -> tuple[Any | Unknown | ndarray[Any, _dtype], Any | Unknown | NDArray[Any] | NDArray[Unknown]] | ndarray[Any, _dtype] | tuple[Unknown, Unknown]:
     """
     Find k eigenvalues and eigenvectors of the real symmetric square matrix
     or complex Hermitian matrix A.
@@ -517,4 +560,3 @@ def eigsh(A, k=..., M=..., sigma=..., which=..., v0=..., ncv=..., maxiter=..., t
 
     """
     ...
-

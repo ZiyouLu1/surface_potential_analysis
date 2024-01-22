@@ -11,7 +11,6 @@ from .artist import Artist, allow_rasterization
 from .patches import Rectangle
 
 class Cell(Rectangle):
-
     PAD = ...
 
     def __init__(
@@ -26,7 +25,7 @@ class Cell(Rectangle):
         loc: Literal["left", "center", "right"] = "right",
         fontproperties: FontProperties = ...,
         *,
-        visible_edges: str = "closed"
+        visible_edges: str = "closed",
     ) -> None: ...
     def set_transform(self, trans: Transform): ...
     def set_figure(self, fig: Figure) -> None: ...
@@ -49,7 +48,6 @@ class Cell(Rectangle):
 CustomCell = Cell
 
 class Table(Artist):
-
     codes = ...
     FONTSIZE = ...
     AXESPAD = ...
@@ -89,5 +87,5 @@ def table(
     loc: str = ...,
     bbox: Bbox = ...,
     edges: str | Literal["open", "closed", "horizontal", "vertical"] = ...,
-    **kwargs
+    **kwargs,
 ) -> Table: ...

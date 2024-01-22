@@ -72,7 +72,10 @@ _B0 = TypeVar("_B0", bound=EvenlySpacedTimeBasis[Any, Any, Any])
 
 
 def _sse_sim_cache(
-    temperature: float, idx: int, times: Any, _i: int = 0  # noqa: ARG001,ANN401
+    temperature: float,
+    idx: int,
+    times: Any,
+    _i: int = 0,  # noqa: ARG001,ANN401
 ) -> Path:
     return get_data_path(f"dynamics/see_simulation_{temperature}K_{idx}_{_i}")
 
@@ -145,7 +148,7 @@ def plot_average_isf_against_time() -> None:
 
 
 def get_repeat_average_isf(
-    isf: SingleBasisDiagonalOperator[StackedBasisLike[FundamentalBasis[Any], _B0]]
+    isf: SingleBasisDiagonalOperator[StackedBasisLike[FundamentalBasis[Any], _B0]],
 ) -> StatisticalDiagonalOperator[_B0, _B0]:
     average = average_eigenvalues(isf, (0,))
     standard_deviation = np.std(isf["data"].reshape(isf["basis"][0].shape), axis=0)

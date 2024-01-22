@@ -56,7 +56,7 @@ def get_eigenstate_collection_hydrogen(
     bloch_fractions = np.array([[f, 0, 0] for f in bloch_fractions_x])
 
     def hamiltonian_generator(
-        bloch_fraction: np.ndarray[tuple[Literal[3]], np.dtype[np.float64]]
+        bloch_fraction: np.ndarray[tuple[Literal[3]], np.dtype[np.float64]],
     ) -> SingleBasisOperator[
         StackedBasisLike[
             FundamentalTransformedPositionBasis[_L0, Literal[3]],
@@ -71,7 +71,9 @@ def get_eigenstate_collection_hydrogen(
         )
 
     return calculate_eigenstate_collection(
-        hamiltonian_generator, bloch_fractions, subset_by_index=(0, 10)  # type: ignore[arg-type,return-value]
+        hamiltonian_generator,
+        bloch_fractions,
+        subset_by_index=(0, 10),  # type: ignore[arg-type,return-value]
     )
 
 
@@ -98,7 +100,7 @@ def get_eigenstate_collection_deuterium(
     bloch_fractions = np.array([[f, 0, 0] for f in bloch_fractions_x])
 
     def hamiltonian_generator(
-        bloch_fraction: np.ndarray[tuple[Literal[3]], np.dtype[np.float64]]
+        bloch_fraction: np.ndarray[tuple[Literal[3]], np.dtype[np.float64]],
     ) -> SingleBasisOperator[
         StackedBasisLike[
             FundamentalTransformedPositionBasis[_L0, Literal[3]],
@@ -113,5 +115,7 @@ def get_eigenstate_collection_deuterium(
         )
 
     return calculate_eigenstate_collection(
-        hamiltonian_generator, bloch_fractions, subset_by_index=(0, 10)  # type: ignore[arg-type,return-value]
+        hamiltonian_generator,
+        bloch_fractions,
+        subset_by_index=(0, 10),  # type: ignore[arg-type,return-value]
     )

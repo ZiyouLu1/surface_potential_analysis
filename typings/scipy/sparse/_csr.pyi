@@ -8,7 +8,8 @@ from ._compressed import _cs_matrix
 
 """Compressed Sparse Row matrix format"""
 __docformat__ = ...
-__all__ = ['csr_array', 'csr_matrix', 'isspmatrix_csr']
+__all__ = ["csr_array", "csr_matrix", "isspmatrix_csr"]
+
 class _csr_base(_cs_matrix):
     """
     Compressed Sparse Row matrix
@@ -129,28 +130,22 @@ class _csr_base(_cs_matrix):
            [0, 1, 1, 1]])
 
     """
+
     _format = ...
-    def transpose(self, axes=..., copy=...): # -> csc_array:
+    def transpose(self, axes=..., copy=...):  # -> csc_array:
         ...
-    
-    def tolil(self, copy=...): # -> lil_array:
+    def tolil(self, copy=...):  # -> lil_array:
         ...
-    
-    def tocsr(self, copy=...): # -> Self@_csr_base:
+    def tocsr(self, copy=...):  # -> Self@_csr_base:
         ...
-    
-    def tocsc(self, copy=...): # -> csc_array:
+    def tocsc(self, copy=...):  # -> csc_array:
         ...
-    
-    def tobsr(self, blocksize=..., copy=...): # -> bsr_array:
+    def tobsr(self, blocksize=..., copy=...):  # -> bsr_array:
         ...
-    
-    def __iter__(self): # -> Generator[_csr_base, Any, None]:
+    def __iter__(self):  # -> Generator[_csr_base, Any, None]:
         ...
-    
 
-
-def isspmatrix_csr(x): # -> bool:
+def isspmatrix_csr(x):  # -> bool:
     """Is `x` of csr_matrix type?
 
     Parameters
@@ -175,11 +170,5 @@ def isspmatrix_csr(x): # -> bool:
     """
     ...
 
-class csr_array(_csr_base, sparray):
-    ...
-
-
-class csr_matrix(spmatrix, _csr_base):
-    ...
-
-
+class csr_array(_csr_base, sparray): ...
+class csr_matrix(spmatrix, _csr_base): ...
