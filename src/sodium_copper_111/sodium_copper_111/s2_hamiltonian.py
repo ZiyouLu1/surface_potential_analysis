@@ -46,6 +46,16 @@ def get_hamiltonian_hydrogen(
     return total_surface_hamiltonian(potential, HYDROGEN_MASS, bloch_fraction)
 
 
+def get_hamiltonian_lithium(
+    shape: tuple[_L0Inv],
+    bloch_fraction: np.ndarray[tuple[Literal[1]], np.dtype[np.float64]] | None = None,
+) -> SingleBasisOperator[
+    StackedBasisLike[FundamentalTransformedPositionBasis[_L0Inv, Literal[1]]],
+]:
+    potential = get_interpolated_potential(shape)
+    return total_surface_hamiltonian(potential, LITHIUM_MASS, bloch_fraction)
+
+
 def get_hamiltonian_2d(
     shape: tuple[_L0Inv, _L1Inv],
     bloch_fraction: np.ndarray[tuple[Literal[2]], np.dtype[np.float64]] | None = None,
@@ -57,6 +67,19 @@ def get_hamiltonian_2d(
 ]:
     potential = get_interpolated_potential_2d(shape)
     return total_surface_hamiltonian(potential, SODIUM_MASS, bloch_fraction)
+
+
+def get_hamiltonian_2d_lithium(
+    shape: tuple[_L0Inv, _L1Inv],
+    bloch_fraction: np.ndarray[tuple[Literal[2]], np.dtype[np.float64]] | None = None,
+) -> SingleBasisOperator[
+    StackedBasisLike[
+        FundamentalTransformedPositionBasis[_L0Inv, Literal[2]],
+        FundamentalTransformedPositionBasis[_L1Inv, Literal[2]],
+    ],
+]:
+    potential = get_interpolated_potential_2d(shape)
+    return total_surface_hamiltonian(potential, LITHIUM_MASS, bloch_fraction)
 
 
 def get_hamiltonian_flat(

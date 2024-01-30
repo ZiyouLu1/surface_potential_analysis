@@ -10,7 +10,7 @@ from surface_potential_analysis.basis.stacked_basis import StackedBasis
 from surface_potential_analysis.state_vector.util import (
     get_most_localized_free_state_vectors,
 )
-from surface_potential_analysis.util.decorators import npy_cached
+from surface_potential_analysis.util.decorators import npy_cached, npy_cached_dict
 from surface_potential_analysis.wavepacket.localization import (
     Wannier90Options,
     get_localization_operator_wannier90,
@@ -31,9 +31,11 @@ from surface_potential_analysis.wavepacket.wavepacket import (
 from .s2_hamiltonian import (
     get_hamiltonian,
     get_hamiltonian_2d,
+    get_hamiltonian_2d_lithium,
     get_hamiltonian_flat,
     get_hamiltonian_flat_2d,
     get_hamiltonian_flat_lithium,
+    get_hamiltonian_lithium,
 )
 from .surface_data import get_data_path
 
@@ -77,7 +79,7 @@ def _get_all_wavepackets_cache(shape: tuple[_L0Inv], resolution: tuple[_L1Inv]) 
     return get_data_path(f"wavepacket/wavepacket_{shape[0]}_{resolution[0]}.npy")
 
 
-@npy_cached(_get_all_wavepackets_cache, load_pickle=True)
+@npy_cached_dict(_get_all_wavepackets_cache, load_pickle=True)
 def get_all_wavepackets(
     shape: tuple[_L0Inv], resolution: tuple[_L1Inv]
 ) -> _SodiumWavepacketList[_L1Inv, _L0Inv, _L1Inv]:
@@ -272,4 +274,64 @@ def get_all_wavepackets_flat_lithium(
         _hamiltonian_generator,
         list_basis=StackedBasis(EvenlySpacedBasis(shape[0], 1, 0)),
         save_bands=EvenlySpacedBasis(resolution[0], 1, 0),
+    )
+
+
+def get_all_wavepackets_lithium(
+    shape: tuple[_L0Inv], resolution: tuple[_L1Inv]
+) -> _SodiumWavepacketList[_L1Inv, _L0Inv, _L1Inv]:
+    def _hamiltonian_generator(
+        bloch_fraction: np.ndarray[tuple[Literal[1]], np.dtype[np.float64]],
+    ) -> SingleBasisOperator[
+        StackedBasisLike[FundamentalTransformedPositionBasis1d[_L1Inv]]
+    ]:
+        return get_hamiltonian_lithium(shape=resolution, bloch_fraction=bloch_fraction)
+
+    return generate_wavepacket(
+        _hamiltonian_generator,
+        list_basis=StackedBasis(EvenlySpacedBasis(shape[0], 1, 0)),
+        save_bands=EvenlySpacedBasis(resolution[0], 1, 0),
+    )
+
+
+def _get_all_wavepackets_2d_cache_lithium(
+    shape: tuple[_L0Inv, _L1Inv], resolution: tuple[_L2Inv, _L3Inv]
+) -> Path:
+    return get_data_path(
+        f"wavepacket/wavepacket_lithium_{shape[0]}_{shape[1]}_{resolution[0]}_{resolution[1]}.npy"
+    )
+
+
+@npy_cached(_get_all_wavepackets_2d_cache_lithium, load_pickle=True)
+def get_all_wavepackets_2d_lithium(
+    shape: tuple[_L0Inv, _L1Inv], resolution: tuple[_L2Inv, _L3Inv]
+) -> WavepacketWithEigenvaluesList[
+    EvenlySpacedBasis[Any, Literal[1], Literal[0]],
+    StackedBasisLike[
+        EvenlySpacedBasis[_L0Inv, Literal[1], Literal[0]],
+        EvenlySpacedBasis[_L1Inv, Literal[1], Literal[0]],
+    ],
+    StackedBasisLike[
+        FundamentalTransformedPositionBasis2d[_L2Inv],
+        FundamentalTransformedPositionBasis2d[_L3Inv],
+    ],
+]:
+    def _hamiltonian_generator(
+        bloch_fraction: np.ndarray[tuple[Literal[2]], np.dtype[np.float64]],
+    ) -> SingleBasisOperator[
+        StackedBasisLike[
+            FundamentalTransformedPositionBasis[_L2Inv, Literal[2]],
+            FundamentalTransformedPositionBasis[_L3Inv, Literal[2]],
+        ],
+    ]:
+        return get_hamiltonian_2d_lithium(
+            shape=resolution, bloch_fraction=bloch_fraction
+        )
+
+    return generate_wavepacket(
+        _hamiltonian_generator,
+        list_basis=StackedBasis(
+            EvenlySpacedBasis(shape[0], 1, 0), EvenlySpacedBasis(shape[1], 1, 0)
+        ),
+        save_bands=EvenlySpacedBasis(np.prod(resolution), 1, 0),
     )

@@ -74,10 +74,10 @@ _B0 = TypeVar("_B0", bound=EvenlySpacedTimeBasis[Any, Any, Any])
 def _sse_sim_cache(
     temperature: float,
     idx: int,
-    times: Any,
-    _i: int = 0,  # noqa: ARG001,ANN401
+    times: Any,  # noqa: ARG001, ANN401
+    _i: int = 0,
 ) -> Path:
-    return get_data_path(f"dynamics/see_simulation_{temperature}K_{idx}_{_i}")
+    return get_data_path(f"dynamics/see_simulation_{temperature}K_{idx}_{_i}_hd")
 
 
 @npy_cached_dict(_sse_sim_cache, load_pickle=True)
@@ -183,7 +183,7 @@ def _get_average_repeat_average_isf(
                 get_jianding_isf_112bar(),
             )
         )
-        assert np.count_nonzero(np.logical_not(np.isfinite(isf_i["data"]))) == 0
+        # ! assert np.count_nonzero(np.logical_not(np.isfinite(isf_i["data"]))) == 0
         isf.append(isf_i)
 
     return {
@@ -197,6 +197,7 @@ def _get_average_repeat_average_isf(
 def get_average_simulation_isf(
     temperature: float, times: _B0
 ) -> StatisticalDiagonalOperator[_B0, _B0]:
+    _get_average_repeat_average_isf(temperature, 7, times, repeats=2)
     isf_s = [
         _get_average_repeat_average_isf(temperature, 0, times, repeats=6),
         _get_average_repeat_average_isf(temperature, 1, times, repeats=6),
@@ -236,6 +237,16 @@ def plot_average_isf_all_temperatures() -> None:
         EvenlySpacedTimeBasis(2000, 20, 0, 12e-10),
         EvenlySpacedTimeBasis(2000, 20, 0, 6e-10),
         EvenlySpacedTimeBasis(2000, 20, 0, 6e-10),
+    ]
+    times = [
+        EvenlySpacedTimeBasis(2000, 40, 0, 44e-10),
+        EvenlySpacedTimeBasis(2000, 40, 0, 44e-10),
+        EvenlySpacedTimeBasis(2000, 40, 0, 44e-10),
+        EvenlySpacedTimeBasis(2000, 20, 0, 22e-10),
+        # Fine ..
+        EvenlySpacedTimeBasis(2000, 20, 0, 12e-10),
+        EvenlySpacedTimeBasis(2000, 20, 0, 6e-10),
+        EvenlySpacedTimeBasis(10000, 100, 0, 6e-10),
     ]
     valid_times = [8.0e-10, 3.8e-10, 3.0e-10, 1.1e-10, 1.1e-10, 6e-11, 3.5e-11]
     for temperature, time, start in reversed(

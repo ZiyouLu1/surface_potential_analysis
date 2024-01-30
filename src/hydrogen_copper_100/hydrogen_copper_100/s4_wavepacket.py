@@ -58,10 +58,12 @@ if TYPE_CHECKING:
     )
     from surface_potential_analysis.basis.basis_like import BasisLike
     from surface_potential_analysis.operator.operator import (
-        DiagonalOperator,
         SingleBasisOperator,
     )
-    from surface_potential_analysis.operator.operator_list import OperatorList
+    from surface_potential_analysis.operator.operator_list import (
+        DiagonalOperatorList,
+        OperatorList,
+    )
     from surface_potential_analysis.wavepacket.localization.localization_operator import (
         LocalizationOperator,
     )
@@ -114,10 +116,7 @@ def get_wavepacket_hydrogen(
 
 
 def get_hamiltonian_hydrogen() -> (
-    DiagonalOperator[
-        StackedBasisLike[_HCuBandsBasis, _HCuSampleBasis],
-        StackedBasisLike[_HCuBandsBasis, _HCuSampleBasis],
-    ]
+    DiagonalOperatorList[_HCuBandsBasis, _HCuSampleBasis, _HCuSampleBasis]
 ):
     wavepackets = get_all_wavepackets_hydrogen()
     return get_wavepacket_hamiltonian(wavepackets)

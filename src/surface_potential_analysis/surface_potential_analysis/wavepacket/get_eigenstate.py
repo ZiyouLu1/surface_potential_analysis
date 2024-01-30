@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, TypeVar, TypeVarTuple, cast
+from typing import TYPE_CHECKING, Any, TypeVar, cast
 
 import numpy as np
 
@@ -72,7 +72,6 @@ if TYPE_CHECKING:
     _FB0 = TypeVar("_FB0", bound=FundamentalBasis[Any])
     _FTB0 = TypeVar("_FTB0", bound=FundamentalTransformedPositionBasis[Any, Any])
     _B0Inv = TypeVar("_B0Inv", bound=BasisLike[Any, Any])
-    _TS = TypeVarTuple("_TS")
     _SB0 = TypeVar("_SB0", bound=StackedBasisLike[*tuple[Any, ...]])
     _SB1 = TypeVar("_SB1", bound=StackedBasisLike[*tuple[Any, ...]])
     _B0 = TypeVar("_B0", bound=BasisLike[Any, Any])

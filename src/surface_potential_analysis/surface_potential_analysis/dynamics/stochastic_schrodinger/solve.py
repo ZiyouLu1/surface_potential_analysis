@@ -6,6 +6,7 @@ import numpy as np
 import qutip
 import qutip.ui
 import scipy.sparse
+from qutip.core.data import create, to
 
 from surface_potential_analysis.basis.basis import FundamentalBasis
 from surface_potential_analysis.basis.stacked_basis import (
@@ -160,7 +161,7 @@ def get_collapse_operators_from_function(
             ]
         ]
     ] = []
-    n_sites = np.prod(shape)
+    n_sites = np.prod(shape).item()
     n_bands = bands_basis.fundamental_n
     basis = get_basis_from_shape(shape, n_bands, bands_basis)
 
@@ -192,6 +193,7 @@ def solve_stochastic_schrodinger_equation(
     collapse_operators: list[SingleBasisOperator[_B0Inv]],
     *,
     n_trajectories: _L1Inv,
+    combine_collapse_operators: bool = False,
 ) -> StateVectorList[StackedBasisLike[FundamentalBasis[_L1Inv], _AX0Inv], _B0Inv]:
     ...
 
@@ -204,17 +206,19 @@ def solve_stochastic_schrodinger_equation(
     collapse_operators: list[SingleBasisOperator[_B0Inv]],
     *,
     n_trajectories: Literal[1] = 1,
+    combine_collapse_operators: bool = False,
 ) -> StateVectorList[StackedBasisLike[FundamentalBasis[Literal[1]], _AX0Inv], _B0Inv]:
     ...
 
 
-def solve_stochastic_schrodinger_equation(  # type: ignore bad overload
+def solve_stochastic_schrodinger_equation(  # type: ignore bad overload  # noqa: PLR0913
     initial_state: StateVector[_B0Inv],
     times: _AX0Inv,
     hamiltonian: SingleBasisOperator[_B0Inv],
     collapse_operators: list[SingleBasisOperator[_B0Inv]],
     *,
     n_trajectories: _L1Inv | Literal[1] = 1,
+    combine_collapse_operators: bool = False,
 ) -> (
     StateVectorList[StackedBasisLike[FundamentalBasis[Literal[1]], _AX0Inv], _B0Inv]
     | StateVectorList[StackedBasisLike[FundamentalBasis[_L1Inv], _AX0Inv], _B0Inv]
@@ -234,26 +238,50 @@ def solve_stochastic_schrodinger_equation(  # type: ignore bad overload
     StateVectorList[_B0Inv, _L0Inv]
     """
     hamiltonian_qobj = qutip.Qobj(
-        hamiltonian["data"].reshape(hamiltonian["basis"].shape)
+        to("csr", create(hamiltonian["data"].reshape(hamiltonian["basis"].shape)))
     )
     initial_state_qobj = qutip.Qobj(
-        initial_state["data"], shape=initial_state["data"].shape
+        to("csr", create(initial_state["data"]))  # , dims=initial_state["data"].shape
     )
-
-    sc_ops = [
-        qutip.Qobj(op["data"].reshape(op["basis"].shape)) for op in collapse_operators
-    ]
+    if combine_collapse_operators:
+        sc_ops = [
+            qutip.Qobj(
+                to(
+                    "csr",
+                    create(
+                        np.sum(
+                            [
+                                op["data"].reshape(op["basis"].shape)
+                                for op in collapse_operators
+                            ],
+                            axis=0,
+                        )
+                    ),
+                )
+            )
+        ]
+    else:
+        sc_ops = [
+            qutip.Qobj(
+                to("csr", create(op["data"].reshape(op["basis"].shape)))
+            )  # scipy.sparse.coo_array(op["data"].reshape(op["basis"].shape)))
+            for op in collapse_operators
+        ]
     result = qutip.ssesolve(
         hamiltonian_qobj,
         initial_state_qobj,
         times.times,
         sc_ops=sc_ops,
         e_ops=[],
-        nsubsteps=times.step,  # cspell:disable-line
-        # No other scheme scales well enough to such a large number of heatbath modes
-        solver="euler-maruyama",  # cspell:disable-line
+        options={
+            # No other scheme scales well enough to such a large number of heatbath modes
+            "method": "euler",
+            "progress_bar": "enhanced",
+            "store_states": True,
+            "store_density_matricies": False,
+            "dt": times.delta_t / times.fundamental_n,
+        },
         ntraj=n_trajectories,  # cspell:disable-line
-        progress_bar=qutip.ui.EnhancedTextProgressBar(),
     )
     return {
         "basis": StackedBasis(
@@ -262,9 +290,9 @@ def solve_stochastic_schrodinger_equation(  # type: ignore bad overload
         ),
         "data": np.array(
             [
-                np.asarray([state.data.toarray().reshape(-1) for state in trajectory])  # type: ignore unknown
+                np.asarray([state.full().reshape(-1) for state in trajectory])  # type: ignore unknown
                 for trajectory in result.states  # type: ignore unknown
             ],
             dtype=np.complex128,
-        ).reshape(n_trajectories * times.n, -1),
+        ).reshape(n_trajectories * 5, -1),
     }

@@ -4,16 +4,6 @@
     "src"
   ],
   "python.analysis.diagnosticMode": "workspace",
-  "python.analysis.reportUnknownMemberType": false,
-  "python.linting.mypyEnabled": false,
-  "python.linting.enabled": false,
-  // "python.linting.flake8Enabled": true,
-  "python.formatting.provider": "black",
-  // "isort.args": [
-  //   "--profile",
-  //   "black"
-  // ],
-  // "isort.check": true,
   "editor.codeActionsOnSave": {
     "source.fixAll": "explicit"
   },
@@ -105,8 +95,8 @@
     "editor.formatOnSave": true,
     "editor.defaultFormatter": "charliermarsh.ruff",
     "editor.codeActionsOnSave": {
-      "source.fixAll": true,
-      "source.organizeImports": true
+      "source.fixAll": "always",
+      "source.organizeImports": "always"
     }
   },
   // "mypy.args": [

@@ -26,7 +26,14 @@
         "hte",
         "teh"
     ],
-    "python.formatting.provider": "black",
+    "[python]": {
+        "editor.formatOnSave": true,
+        "editor.defaultFormatter": "charliermarsh.ruff",
+        "editor.codeActionsOnSave": {
+            "source.fixAll": true,
+            "source.organizeImports": true
+        }
+    },
     "editor.codeActionsOnSave": {
         "source.fixAll": true
     },

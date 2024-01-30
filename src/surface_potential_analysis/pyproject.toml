@@ -12,8 +12,8 @@ numpy = "^1.26.3"
 matplotlib = "^3.8.2"
 scipy = "^1.12.0"
 hamiltonian_generator = { path = "../hamiltonian_generator/", develop = true }
-qutip = "^4.0.0"
-
+# qutip = "5.0.0a2"
+qutip = { path = "../../lib/qutip" }
 [tool.poetry.group.dev.dependencies]
 mypy = "*"
 ruff = "*"
@@ -34,6 +34,9 @@ ignore_missing_imports = true
 module = "qutip.*"
 ignore_missing_imports = true
 
+[tool.ruff]
+unsafe-fixes = true
+
 [tool.ruff.lint]
 select = ["ALL"]
 preview = true
@@ -41,7 +44,18 @@ ignore = ["COM812", "E501", "ANN101", "S101", "PT009", "D100", "D105", "CPY001"]
 
 [tool.ruff.extend-per-file-ignores]
 # Also ignore `E402` in all `__init__.py` files.
-"_test_surface_potential_analysis/**/*" = ["PLR6301"]
+"_test_surface_potential_analysis/**/*" = ["PLR6301", "PLC2701", "PLR0914"]
+
+[tool.ruff.lint.pylint]
+allow-dunder-method-names = [
+    "__as_fundamental__",
+    "__from_fundamental__",
+    "__into_fundamental__",
+    "__as_transformed__",
+    "__into_transformed__",
+    "__from_transformed__",
+    "__convert_vector_into__",
+]
 
 [tool.ruff.pydocstyle]
 convention = "numpy"

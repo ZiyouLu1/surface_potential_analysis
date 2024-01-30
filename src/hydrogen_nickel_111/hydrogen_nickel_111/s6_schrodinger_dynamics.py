@@ -26,7 +26,10 @@ from surface_potential_analysis.dynamics.stochastic_schrodinger.solve import (
     solve_stochastic_schrodinger_equation,
 )
 from surface_potential_analysis.dynamics.util import build_hop_operator
-from surface_potential_analysis.operator.operator import average_eigenvalues
+from surface_potential_analysis.operator.operator import (
+    average_eigenvalues_list,
+)
+from surface_potential_analysis.operator.operator_list import as_flat_operator
 from surface_potential_analysis.probability_vector.plot import (
     plot_total_probability_against_time,
 )
@@ -162,7 +165,7 @@ def plot_expected_occupation_per_band_hydrogen(
 ) -> tuple[Figure, Axes]:
     eigenvalues = get_wavepacket_hamiltonian_hydrogen(8)
 
-    band_average = average_eigenvalues(eigenvalues, axis=(1,))
+    band_average = as_flat_operator(average_eigenvalues_list(eigenvalues, axis=(0,)))
     return plot_expected_occupation_per_band(temperature, band_average, ax=ax)
 
 

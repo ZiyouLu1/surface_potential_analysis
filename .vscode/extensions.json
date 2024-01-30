@@ -4,7 +4,6 @@
     "esbenp.prettier-vscode",
     "streetsidesoftware.code-spell-checker",
     "tamasfe.even-better-toml",
-    "matangover.mypy",
     "charliermarsh.ruff"
   ]
 }

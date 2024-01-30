@@ -1,0 +1,3 @@
+[submodule "lib/qutip"]
+	path = lib/qutip
+	url = git@github.com:Matt-Ord/qutip.git

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Generic, TypedDict, TypeVar
+from typing import TYPE_CHECKING, Any, Generic, TypedDict, TypeVar, Unpack
 
 import numpy as np
 
@@ -9,6 +9,7 @@ from surface_potential_analysis.basis.stacked_basis import StackedBasis
 
 if TYPE_CHECKING:
     from surface_potential_analysis.basis.stacked_basis import StackedBasisLike
+    from surface_potential_analysis.operator.operator import SingleBasisDiagonalOperator
     from surface_potential_analysis.types import SingleFlatIndexLike
 
     from .operator import (
@@ -28,7 +29,7 @@ class OperatorList(TypedDict, Generic[_B0Inv, _B1Inv, _B2Inv]):
     """A list of state vectors"""
 
 
-def get_operator(
+def as_operator(
     operator_list: OperatorList[_B0Inv, _B1Inv, _B2Inv], idx: SingleFlatIndexLike
 ) -> Operator[_B1Inv, _B2Inv]:
     """
@@ -59,7 +60,46 @@ class DiagonalOperatorList(TypedDict, Generic[_B0Inv, _B1Inv, _B2Inv]):
     """A list of state vectors"""
 
 
-def get_diagonal_operator(
+SingleBasisDiagonalOperatorList = DiagonalOperatorList[_B0Inv, _B1Inv, _B1Inv]
+
+
+def as_operator_list(
+    diagonal_list: DiagonalOperatorList[_B0Inv, _B1Inv, _B2Inv],
+) -> OperatorList[_B0Inv, _B1Inv, _B2Inv]:
+    """
+    Get a single state vector from a list of states.
+
+    Parameters
+    ----------
+    list : EigenstateList[_B0Inv]
+    idx : SingleFlatIndexLike
+
+    Returns
+    -------
+    Eigenstate[_B0Inv]
+    """
+    shape = diagonal_list["basis"][1].shape
+    data = np.zeros((diagonal_list["basis"][0].n, *shape), dtype=np.complex128)
+    data[:, np.diag_indices_from(data[0])] = diagonal_list["data"]
+    return {
+        "basis": diagonal_list["basis"],
+        "data": np.diag(diagonal_list["data"]),
+    }
+
+
+def as_flat_operator(
+    operator_list: SingleBasisDiagonalOperatorList[_B0Inv, _B1Inv],
+) -> SingleBasisDiagonalOperator[StackedBasisLike[_B0Inv, Unpack[tuple[Any, ...]]]]:
+    basis = StackedBasis[_B0Inv, Unpack[tuple[Any, ...]]](
+        operator_list["basis"][0], *operator_list["basis"][1]
+    )
+    return {
+        "basis": StackedBasis(basis, basis),
+        "data": operator_list["data"],
+    }
+
+
+def as_diagonal_operator(
     operator_list: DiagonalOperatorList[_B0Inv, _B1Inv, _B2Inv],
     idx: SingleFlatIndexLike,
 ) -> DiagonalOperator[_B1Inv, _B2Inv]:

@@ -46,7 +46,7 @@ def _get_random_sho_eigenstate(
     vector = np.array(_rng.random(np.prod(resolution)), dtype=np.complex128)
     vector /= np.linalg.norm(vector)
 
-    x2_basis = x2_basis = ExplicitBasis(
+    x2_basis = ExplicitBasis(
         np.array([0, 0, 20]),
         get_random_explicit_basis(
             3, fundamental_n=fundamental_resolution[2], n=resolution[2]

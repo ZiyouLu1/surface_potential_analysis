@@ -434,7 +434,7 @@ def calculate_cumulative_k_distances_along_path(
         basis, path, wrap_distances=wrap_distances
     )
     util = BasisUtil(basis)
-    x_distances = np.linalg.norm(  # TODO:test
+    x_distances = np.linalg.norm(  # TODO: test
         np.tensordot(distances, util.dk_stacked, axes=(0, 0)),
         axis=0,
     )

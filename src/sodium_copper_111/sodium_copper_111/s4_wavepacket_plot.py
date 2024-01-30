@@ -82,7 +82,7 @@ def plot_get_most_localized_state_vectors_from_probability() -> None:
 
 
 def plot_projection_localized_wavepacket() -> None:
-    wavepackets = get_projection_localized_wavepackets((21,), (60,), 25)
+    wavepackets = get_projection_localized_wavepackets((21,), (64,), 64)
 
     fig0, ax0 = plt.subplots()
     fig1, ax1 = plt.subplots()

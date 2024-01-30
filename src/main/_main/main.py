@@ -1,14 +1,16 @@
 from __future__ import annotations
 
-from hydrogen_nickel_111.s6_schrodinger_isf import (
-    plot_average_isf_all_temperatures,
+from sodium_copper_111.low_t_ballistic import (
+    plot_ballistic_rate_against_temperature_sodium,
 )
+from sodium_copper_111.s4_wavepacket_plot import plot_projection_localized_wavepacket
 from surface_potential_analysis.util.decorators import timed
 
 
 @timed
 def main() -> None:
-    plot_average_isf_all_temperatures()
+    plot_projection_localized_wavepacket()
+    plot_ballistic_rate_against_temperature_sodium()
 
 
 if __name__ == "__main__":
