@@ -29,7 +29,7 @@ from surface_potential_analysis.wavepacket.localization._wannier90 import (
     _parse_nnk_points_file,  # type: ignore this is test file
 )
 from surface_potential_analysis.wavepacket.wavepacket import (
-    Wavepacket,
+    BlochWavefunctionList,
     get_wavepacket_sample_fractions,
 )
 
@@ -45,7 +45,7 @@ class WavepacketTest(unittest.TestCase):
             rng.integers(1, 10),  # type: ignore bad libary types
             rng.integers(1, 10),  # type: ignore bad libary types
         )
-        wavepacket: Wavepacket[Any, Any] = {
+        wavepacket: BlochWavefunctionList[Any, Any] = {
             "basis": position_basis_3d_from_shape(resolution),
             "data": np.zeros((ns0 * ns1, np.prod(resolution))),
             "list_basis": fundamental_stacked_basis_from_shape((ns0, ns1, 1)),  # type: ignore[typeddict-item]
@@ -67,7 +67,7 @@ class WavepacketTest(unittest.TestCase):
         np.testing.assert_equal(actual_large[:, idx_array == 0], 0)
 
     def test_unfurl_wavepacket(self) -> None:
-        wavepacket: Wavepacket[Any, Any] = {
+        wavepacket: BlochWavefunctionList[Any, Any] = {
             "basis": momentum_basis_3d_from_resolution((3, 3, 3)),
             "list_basis": fundamental_stacked_basis_from_shape((3, 2, 1)),  # type: ignore[typeddict-item]
             "data": np.zeros((3, 2, 27)),
@@ -91,7 +91,7 @@ class WavepacketTest(unittest.TestCase):
         np.testing.assert_array_equal(eigenstate["data"], expected / np.sqrt(2 * 3))
 
     def test_furl_eigenstate(self) -> None:
-        wavepacket: Wavepacket[Any, Any] = {
+        wavepacket: BlochWavefunctionList[Any, Any] = {
             "basis": StackedBasis(
                 fundamental_stacked_basis_from_shape((3, 2, 1)),
                 momentum_basis_3d_from_resolution((3, 3, 3)),

@@ -23,8 +23,8 @@ from surface_potential_analysis.wavepacket.conversion import (
     convert_wavepacket_to_fundamental_momentum_basis,
 )
 from surface_potential_analysis.wavepacket.wavepacket import (
-    Wavepacket,
-    WavepacketList,
+    BlochWavefunctionList,
+    BlochWavefunctionListList,
     get_furled_basis,
     get_unfurled_basis,
     wavepacket_list_into_iter,
@@ -70,7 +70,7 @@ def furl_eigenstate(
         ]
     ],
     shape: tuple[_NS0Inv, _NS1Inv, Literal[1]],
-) -> Wavepacket[
+) -> BlochWavefunctionList[
     StackedBasisLike[
         FundamentalBasis[_NS0Inv],
         FundamentalBasis[_NS1Inv],
@@ -122,7 +122,7 @@ def furl_eigenstate(
 
 
 def _unfurl_momentum_basis_wavepacket(
-    wavepacket: Wavepacket[
+    wavepacket: BlochWavefunctionList[
         StackedBasisLike[*tuple[_FB0, ...]], StackedBasisLike[*tuple[_MB0, ...]]
     ],
 ) -> StateVector[
@@ -166,7 +166,7 @@ def _unfurl_momentum_basis_wavepacket(
 
 
 def unfurl_wavepacket(
-    wavepacket: Wavepacket[_SB0, _SB1],
+    wavepacket: BlochWavefunctionList[_SB0, _SB1],
 ) -> StateVector[
     StackedBasisLike[*tuple[FundamentalTransformedPositionBasis[Any, Any], ...]]
 ]:
@@ -193,7 +193,7 @@ def unfurl_wavepacket(
 
 
 def unfurl_wavepacket_list(
-    wavepackets: WavepacketList[_B0, _SB0, _SB1],
+    wavepackets: BlochWavefunctionListList[_B0, _SB0, _SB1],
 ) -> StateVectorList[
     _B0, StackedBasisLike[*tuple[FundamentalTransformedPositionBasis[Any, Any], ...]]
 ]:

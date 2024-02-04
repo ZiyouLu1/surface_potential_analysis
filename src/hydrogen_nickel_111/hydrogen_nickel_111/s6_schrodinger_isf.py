@@ -18,7 +18,7 @@ from surface_potential_analysis.basis.time_basis_like import (
 from surface_potential_analysis.dynamics.isf import (
     ISFFey4VariableFit,
     calculate_isf_approximate_locations,
-    fit_isf_to_fey_4_variable_model_110,
+    fit_isf_to_fey_4_variable_model_110_fixed_ratio,
 )
 from surface_potential_analysis.dynamics.isf_plot import (
     plot_isf_against_time,
@@ -71,13 +71,44 @@ if TYPE_CHECKING:
 _B0 = TypeVar("_B0", bound=EvenlySpacedTimeBasis[Any, Any, Any])
 
 
+def _sse_sim_cache_double_collapse(
+    temperature: float,
+    idx: int,
+    times: Any,  # noqa: ARG001, ANN401
+    _i: int = 0,
+) -> Path:
+    return get_data_path(
+        f"dynamics/see_simulation_{temperature}K_{idx}_{_i}_double_collapse"
+    )
+
+
+@npy_cached_dict(_sse_sim_cache_double_collapse, load_pickle=True)
+def get_simulation_at_temperature_double_collapse(
+    temperature: float, idx: int, times: _B0, _i: int = 0
+) -> StateVectorList[StackedBasisLike[FundamentalBasis[Literal[60]], _B0], Any]:
+    a_matrix = get_tunnelling_a_matrix_hydrogen((10, 10), 8, temperature)
+    collapse_operators = get_simplified_collapse_operators_from_a_matrix(a_matrix)
+    collapse_operators = [
+        {"basis": o["basis"], "data": 2 * o["data"]} for o in collapse_operators
+    ]
+    hamiltonian = get_coherent_hamiltonian(a_matrix["basis"][0])
+    initial_state: StateVector[Any] = {
+        "basis": a_matrix["basis"][0],
+        "data": np.zeros(a_matrix["basis"][0].n, dtype=np.complex128),
+    }
+    initial_state["data"][idx] = 1
+    return solve_stochastic_schrodinger_equation(
+        initial_state, times, hamiltonian, collapse_operators, n_trajectories=60
+    )
+
+
 def _sse_sim_cache(
     temperature: float,
     idx: int,
     times: Any,  # noqa: ARG001, ANN401
     _i: int = 0,
 ) -> Path:
-    return get_data_path(f"dynamics/see_simulation_{temperature}K_{idx}_{_i}_hd")
+    return get_data_path(f"dynamics/see_simulation_{temperature}K_{idx}_{_i}")
 
 
 @npy_cached_dict(_sse_sim_cache, load_pickle=True)
@@ -197,19 +228,19 @@ def _get_average_repeat_average_isf(
 def get_average_simulation_isf(
     temperature: float, times: _B0
 ) -> StatisticalDiagonalOperator[_B0, _B0]:
-    _get_average_repeat_average_isf(temperature, 7, times, repeats=2)
+    # For some simulations we dont have valid data for high bands
+    n_bands = 8 if times.dt < 3.5e-14 else 2  # noqa: PLR2004
     isf_s = [
-        _get_average_repeat_average_isf(temperature, 0, times, repeats=6),
-        _get_average_repeat_average_isf(temperature, 1, times, repeats=6),
-        _get_average_repeat_average_isf(temperature, 2, times, repeats=2),
-        _get_average_repeat_average_isf(temperature, 3, times, repeats=2),
-        _get_average_repeat_average_isf(temperature, 4, times, repeats=2),
-        _get_average_repeat_average_isf(temperature, 5, times, repeats=2),
-        _get_average_repeat_average_isf(temperature, 6, times, repeats=2),
-        _get_average_repeat_average_isf(temperature, 7, times, repeats=2),
+        _get_average_repeat_average_isf(
+            temperature,
+            0,
+            times,
+            repeats=6 if n < 2 else 2,  # noqa: PLR2004
+        )
+        for n in range(n_bands)
     ]
 
-    values = get_lambda_values(temperature, 8)
+    values = get_lambda_values(temperature, n_bands)
     probabilites = values / np.sum(values)
     return {
         "basis": isf_s[0]["basis"],
@@ -222,8 +253,41 @@ def get_average_simulation_isf(
             [isf["standard_deviation"] for isf in isf_s],
             axis=0,
             weights=probabilites,
-        ),
+        )
+        / 2,
     }
+
+
+def plot_band_occupation_all_temperatures() -> None:
+    temperatures = np.array([100, 125, 150, 175, 200, 225, 250])
+    times = [
+        EvenlySpacedTimeBasis(2000, 40, 0, 44e-10),
+        EvenlySpacedTimeBasis(2000, 40, 0, 44e-10),
+        EvenlySpacedTimeBasis(2000, 40, 0, 44e-10),
+        EvenlySpacedTimeBasis(2000, 20, 0, 22e-10),
+        # Fine ..
+        EvenlySpacedTimeBasis(2000, 20, 0, 12e-10),
+        EvenlySpacedTimeBasis(2000, 20, 0, 6e-10),
+        EvenlySpacedTimeBasis(2000, 20, 0, 6e-10),
+    ]
+    for temperature, time in reversed(list(zip(temperatures, times, strict=True))):
+        probabilities_i = from_state_vector_list(
+            get_repeated_simulation_at_temperature(temperature, 0, time, repeats=6)
+        )
+        fig, ax, lines = plot_average_probability_per_band(probabilities_i)
+
+        for line in lines:
+            line.set_linestyle("--")
+        probabilities_i = from_state_vector_list(
+            get_repeated_simulation_at_temperature(temperature, 1, time, repeats=6)
+        )
+        _, _, lines = plot_average_probability_per_band(probabilities_i, ax=ax)
+        for line in lines:
+            line.set_linestyle("--")
+        plot_expected_occupation_per_band_hydrogen(temperature, ax=ax)
+        fig.show()
+        input()
+    input()
 
 
 def plot_average_isf_all_temperatures() -> None:
@@ -238,38 +302,21 @@ def plot_average_isf_all_temperatures() -> None:
         EvenlySpacedTimeBasis(2000, 20, 0, 6e-10),
         EvenlySpacedTimeBasis(2000, 20, 0, 6e-10),
     ]
-    times = [
-        EvenlySpacedTimeBasis(2000, 40, 0, 44e-10),
-        EvenlySpacedTimeBasis(2000, 40, 0, 44e-10),
-        EvenlySpacedTimeBasis(2000, 40, 0, 44e-10),
-        EvenlySpacedTimeBasis(2000, 20, 0, 22e-10),
-        # Fine ..
-        EvenlySpacedTimeBasis(2000, 20, 0, 12e-10),
-        EvenlySpacedTimeBasis(2000, 20, 0, 6e-10),
-        EvenlySpacedTimeBasis(10000, 100, 0, 6e-10),
-    ]
-    valid_times = [8.0e-10, 3.8e-10, 3.0e-10, 1.1e-10, 1.1e-10, 6e-11, 3.5e-11]
-    for temperature, time, start in reversed(
-        list(zip(temperatures, times, valid_times, strict=True))
+    start_times = [8.0e-10, 3.8e-10, 3.0e-10, 1.1e-10, 1.1e-10, 6e-11, 3.5e-11]
+    end_times = [t.delta_t for t in times]
+    end_times[-1] = 3.5e-10
+    for temperature, time, start_time, end_time in reversed(
+        list(zip(temperatures, times, start_times, end_times, strict=True))
     ):
         isf = get_average_simulation_isf(temperature, time)
         assert np.all(np.isfinite(isf["data"]))
         assert np.all(np.isfinite(isf["standard_deviation"]))
         fig, ax, _ = plot_isf_against_time(isf)
 
-        fit = fit_isf_to_fey_4_variable_model_110(
-            isf, get_lambda_values(temperature)[1], start_t=start
+        fit = fit_isf_to_fey_4_variable_model_110_fixed_ratio(
+            isf, get_lambda_values(temperature)[1], start_t=start_time, end_t=end_time
         )
         plot_isf_fey_4_variable_fit_against_time(fit, isf["basis"][0].times, ax=ax)
-        probabilities_i = from_state_vector_list(
-            get_repeated_simulation_at_temperature(temperature, 0, time, repeats=6)
-        )
-        fig, ax2, lines = plot_average_probability_per_band(
-            probabilities_i, ax=ax.twinx()
-        )
-        plot_expected_occupation_per_band_hydrogen(temperature, ax=ax2)
-        for line in lines:
-            line.set_linestyle("--")
         fig.show()
         input()
     input()
@@ -287,14 +334,18 @@ def plot_rate_against_temperature() -> None:
         EvenlySpacedTimeBasis(2000, 20, 0, 6e-10),
     ]
     start_times = [8.0e-10, 3.8e-10, 3.0e-10, 1.1e-10, 1.1e-10, 6e-11, 3.5e-11]
+    end_times = [t.delta_t for t in times]
+    end_times[-1] = 3.5e-10
     fits = list[ISFFey4VariableFit]()
-    for temperature, time, start_t in list(
-        zip(temperatures, times, start_times, strict=True)
+    for temperature, time, start_time, end_time in list(
+        zip(temperatures, times, start_times, end_times, strict=True)
     ):
         isf = get_average_simulation_isf(temperature, time)
-        fit = fit_isf_to_fey_4_variable_model_110(
-            isf, get_lambda_values(temperature)[1], start_t=start_t
+        lambda_ = get_lambda_values(temperature)[1]
+        fit = fit_isf_to_fey_4_variable_model_110_fixed_ratio(
+            isf, lambda_, start_t=start_time, end_t=end_time
         )
+        # !fit = fit_isf_to_fey_4_variable_model_110(isf, start_t=start_t)
         fits.append(fit)
 
     fig, ax = plt.subplots()

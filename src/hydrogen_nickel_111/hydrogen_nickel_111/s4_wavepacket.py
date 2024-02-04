@@ -27,10 +27,10 @@ from surface_potential_analysis.wavepacket.localization.localization_operator im
     get_wavepacket_hamiltonian,
 )
 from surface_potential_analysis.wavepacket.wavepacket import (
-    Wavepacket,
-    WavepacketList,
-    WavepacketWithEigenvalues,
-    WavepacketWithEigenvaluesList,
+    BlochWavefunctionList,
+    BlochWavefunctionListList,
+    BlochWavefunctionListWithEigenvalues,
+    BlochWavefunctionListWithEigenvaluesList,
     generate_wavepacket,
     get_average_eigenvalues,
     get_wavepacket,
@@ -75,17 +75,17 @@ if TYPE_CHECKING:
         ExplicitBasis[Literal[64], Literal[15], Literal[3]],
     ]
 
-    _HydrogenNickelWavepacketList = WavepacketWithEigenvaluesList[
+    _HydrogenNickelWavepacketList = BlochWavefunctionListWithEigenvaluesList[
         _HNiBandsBasis,
         _HNiSampleBasis,
         _HNiWavepacketBasis,
     ]
 
-    _HydrogenNickelWavepacketWithEigenvalues = WavepacketWithEigenvalues[
+    _HydrogenNickelWavepacketWithEigenvalues = BlochWavefunctionListWithEigenvalues[
         _HNiSampleBasis,
         _HNiWavepacketBasis,
     ]
-    _DeuteriumNickelWavepacketList = WavepacketWithEigenvaluesList[
+    _DeuteriumNickelWavepacketList = BlochWavefunctionListWithEigenvaluesList[
         EvenlySpacedBasis[Literal[25], Literal[1], Literal[0]],
         StackedBasisLike[
             FundamentalBasis[Literal[12]],
@@ -98,7 +98,7 @@ if TYPE_CHECKING:
             ExplicitBasis[Literal[200], Literal[10], Literal[3]],
         ],
     ]
-    _DeuteriumNickelWavepacket = Wavepacket[
+    _DeuteriumNickelWavepacket = BlochWavefunctionList[
         StackedBasisLike[
             FundamentalBasis[Literal[12]],
             FundamentalBasis[Literal[12]],
@@ -177,7 +177,9 @@ def get_localization_operator_hydrogen(
 def get_wannier90_localized_wavepacket_hydrogen(
     start: int,
     end: int,
-) -> WavepacketList[FundamentalBasis[int], _HNiSampleBasis, _HNiWavepacketBasis]:
+) -> BlochWavefunctionListList[
+    FundamentalBasis[int], _HNiSampleBasis, _HNiWavepacketBasis
+]:
     wavepackets = get_all_wavepackets_hydrogen()
     operator = get_localization_operator_hydrogen(start, end)
     return get_localized_wavepackets(
@@ -214,7 +216,9 @@ def get_localization_operator_individual_bands_hydrogen(
 
 def get_wannier90_localized_individual_bands_wavepacket_hydrogen(
     n_samples: int,
-) -> WavepacketList[BasisLike[Any, Any], _HNiSampleBasis, _HNiWavepacketBasis]:
+) -> BlochWavefunctionListList[
+    BasisLike[Any, Any], _HNiSampleBasis, _HNiWavepacketBasis
+]:
     wavepackets = get_all_wavepackets_hydrogen()
     operator = get_localization_operator_individual_bands_hydrogen(n_samples)
     return get_localized_wavepackets(
@@ -242,7 +246,9 @@ def get_localization_operator_split_hydrogen() -> (
 
 
 def get_wannier90_localized_split_bands_wavepacket_hydrogen() -> (
-    WavepacketList[FundamentalBasis[int], _HNiSampleBasis, _HNiWavepacketBasis]
+    BlochWavefunctionListList[
+        FundamentalBasis[int], _HNiSampleBasis, _HNiWavepacketBasis
+    ]
 ):
     wavepackets = get_all_wavepackets_hydrogen()
     operator = get_localization_operator_split_hydrogen()

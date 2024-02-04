@@ -60,7 +60,7 @@ if TYPE_CHECKING:
     from surface_potential_analysis.operator.operator_list import OperatorList
     from surface_potential_analysis.state_vector.state_vector import StateVector
     from surface_potential_analysis.wavepacket.wavepacket import (
-        WavepacketWithEigenvalues,
+        BlochWavefunctionListWithEigenvalues,
     )
 
     _B0 = TypeVar("_B0", bound=BasisLike[Any, Any])
@@ -68,7 +68,7 @@ if TYPE_CHECKING:
 
 
 def build_hamiltonian_from_wavepackets(
-    wavepackets: list[WavepacketWithEigenvalues[Any, Any]],
+    wavepackets: list[BlochWavefunctionListWithEigenvalues[Any, Any]],
     basis: _B0Inv,
 ) -> SingleBasisOperator[_B0Inv]:
     (n_x1, n_x2, _) = basis.shape
@@ -165,7 +165,7 @@ def plot_expected_occupation_per_band_hydrogen(
 ) -> tuple[Figure, Axes]:
     eigenvalues = get_wavepacket_hamiltonian_hydrogen(8)
 
-    band_average = as_flat_operator(average_eigenvalues_list(eigenvalues, axis=(0,)))
+    band_average = as_flat_operator(average_eigenvalues_list(eigenvalues))
     return plot_expected_occupation_per_band(temperature, band_average, ax=ax)
 
 

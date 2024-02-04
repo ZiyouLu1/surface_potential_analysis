@@ -10,12 +10,12 @@ from surface_potential_analysis.util.interpolation import pad_ft_points
 if TYPE_CHECKING:
     from surface_potential_analysis.operator.operator import SingleBasisOperator
     from surface_potential_analysis.wavepacket.wavepacket import (
-        WavepacketWithEigenvalues,
+        BlochWavefunctionListWithEigenvalues,
     )
 
 
 def build_hamiltonian_from_wavepackets(
-    wavepackets: list[WavepacketWithEigenvalues[Any, Any]],
+    wavepackets: list[BlochWavefunctionListWithEigenvalues[Any, Any]],
     basis: _B0Inv,
 ) -> SingleBasisOperator[_B0Inv]:
     (n_x1, n_x2, _) = basis.shape

@@ -19,9 +19,9 @@ from surface_potential_analysis.wavepacket.localization.localization_operator im
     get_localized_wavepackets,
 )
 from surface_potential_analysis.wavepacket.wavepacket import (
-    Wavepacket,
-    WavepacketList,
-    WavepacketWithEigenvaluesList,
+    BlochWavefunctionList,
+    BlochWavefunctionListList,
+    BlochWavefunctionListWithEigenvaluesList,
     generate_wavepacket,
     get_average_eigenvalues,
     get_wavepacket,
@@ -58,12 +58,12 @@ if TYPE_CHECKING:
         FundamentalBasis[Literal[1]],
     ]
 
-    _HydrogenCopperWavepacketList = WavepacketWithEigenvaluesList[
+    _HydrogenCopperWavepacketList = BlochWavefunctionListWithEigenvaluesList[
         _HCuBandsBasis,
         _HCuSampleBasis,
         _HCuWavepacketBasis,
     ]
-    _HydrogenCopperWavepacket = Wavepacket[
+    _HydrogenCopperWavepacket = BlochWavefunctionList[
         _HCuSampleBasis,
         _HCuWavepacketBasis,
     ]
@@ -111,7 +111,9 @@ def get_localization_operator_hydrogen(
 
 def get_wannier90_localized_wavepacket_hydrogen(
     n_samples: int,
-) -> WavepacketList[FundamentalBasis[int], _HCuSampleBasis, _HCuWavepacketBasis]:
+) -> BlochWavefunctionListList[
+    FundamentalBasis[int], _HCuSampleBasis, _HCuWavepacketBasis
+]:
     wavepackets = get_all_wavepackets_hydrogen()
     operator = get_localization_operator_hydrogen(n_samples)
     return get_localized_wavepackets(

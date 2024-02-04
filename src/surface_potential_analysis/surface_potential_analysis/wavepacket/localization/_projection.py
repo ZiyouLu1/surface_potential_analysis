@@ -46,7 +46,7 @@ from surface_potential_analysis.wavepacket.localization.localization_operator im
     get_localized_wavepackets,
 )
 from surface_potential_analysis.wavepacket.wavepacket import (
-    WavepacketList,
+    BlochWavefunctionListList,
     as_wavepacket_list,
     get_unfurled_basis,
     get_wavepacket,
@@ -68,7 +68,7 @@ if TYPE_CHECKING:
         SingleStackedIndexLike,
     )
     from surface_potential_analysis.wavepacket.wavepacket import (
-        Wavepacket,
+        BlochWavefunctionList,
     )
 
 _SB0 = TypeVar("_SB0", bound=StackedBasisLike[*tuple[Any, ...]])
@@ -113,7 +113,7 @@ def _get_orthogonal_projected_states_many_band(
 
 
 def get_localization_operator_for_projections(
-    wavepackets: WavepacketList[_B0, _SB0, _SBL0],
+    wavepackets: BlochWavefunctionListList[_B0, _SB0, _SBL0],
     projections: StateVectorList[_B1, _B2],
 ) -> LocalizationOperator[_SB0, _B1, _B0]:
     converted = convert_state_vector_list_to_basis(
@@ -138,9 +138,9 @@ def get_localization_operator_for_projections(
 
 
 def localize_wavepacket_projection(
-    wavepackets: WavepacketList[_B0, _SB0, _SBL0],
+    wavepackets: BlochWavefunctionListList[_B0, _SB0, _SBL0],
     projections: StateVectorList[_B1, _B2],
-) -> WavepacketList[_B1, _SB0, _SBL0]:
+) -> BlochWavefunctionListList[_B1, _SB0, _SBL0]:
     """
     Given a wavepacket, localize using the given projection.
 
@@ -158,9 +158,9 @@ def localize_wavepacket_projection(
 
 
 def localize_single_band_wavepacket_projection(
-    wavepacket: Wavepacket[_SB0, _SBL0],
+    wavepacket: BlochWavefunctionList[_SB0, _SBL0],
     projection: StateVector[_SBL1],
-) -> Wavepacket[_SB0, _SBL0]:
+) -> BlochWavefunctionList[_SB0, _SBL0]:
     """
     Given a wavepacket, localize using the given projection.
 
@@ -180,8 +180,8 @@ def localize_single_band_wavepacket_projection(
 
 
 def localize_tight_binding_projection(
-    wavepacket: Wavepacket[_SB0, _SBL0],
-) -> Wavepacket[_SB0, _SBL0]:
+    wavepacket: BlochWavefunctionList[_SB0, _SBL0],
+) -> BlochWavefunctionList[_SB0, _SBL0]:
     """
     Given a wavepacket, localize using a tight binding projection.
 
@@ -203,7 +203,7 @@ def localize_tight_binding_projection(
 
 
 def get_single_point_state_for_wavepacket(
-    wavepacket: Wavepacket[
+    wavepacket: BlochWavefunctionList[
         StackedBasisLike[*tuple[_B0, ...]], StackedBasisLike[*tuple[_BL0, ...]]
     ],
     idx: SingleIndexLike = 0,
@@ -224,9 +224,9 @@ def get_single_point_state_for_wavepacket(
 
 
 def localize_single_point_projection(
-    wavepacket: Wavepacket[_SB0, _SBL0],
+    wavepacket: BlochWavefunctionList[_SB0, _SBL0],
     idx: SingleIndexLike = 0,
-) -> Wavepacket[_SB0, _SBL0]:
+) -> BlochWavefunctionList[_SB0, _SBL0]:
     """
     Given a wavepacket, localize using a tight binding projection.
 
@@ -247,7 +247,7 @@ def localize_single_point_projection(
 
 
 def get_exponential_state(
-    wavepacket: Wavepacket[
+    wavepacket: BlochWavefunctionList[
         StackedBasisLike[*tuple[_B0, ...]], StackedBasisLike[*tuple[_BL0, ...]]
     ],
     idx: SingleIndexLike = 0,
@@ -307,7 +307,7 @@ def get_exponential_state(
 
 
 def _get_exponential_decay_state(
-    wavepacket: Wavepacket[
+    wavepacket: BlochWavefunctionList[
         StackedBasisLike[*tuple[_B0, ...]], StackedBasisLike[*tuple[_BL0, ...]]
     ],
 ) -> StateVector[StackedBasisLike[*tuple[FundamentalPositionBasis[Any, Any], ...]]]:
@@ -326,8 +326,8 @@ def _get_exponential_decay_state(
 
 
 def localize_exponential_decay_projection(
-    wavepacket: Wavepacket[_SB0, _SBL0],
-) -> Wavepacket[_SB0, _SBL0]:
+    wavepacket: BlochWavefunctionList[_SB0, _SBL0],
+) -> BlochWavefunctionList[_SB0, _SBL0]:
     """
     Given a wavepacket, localize using a tight binding projection.
 
@@ -346,7 +346,7 @@ def localize_exponential_decay_projection(
 
 
 def get_gaussian_states(
-    wavepacket: Wavepacket[
+    wavepacket: BlochWavefunctionList[
         StackedBasisLike[*tuple[_B0, ...]], StackedBasisLike[*tuple[_BL0, ...]]
     ],
     origin: SingleIndexLike = 0,
@@ -404,8 +404,8 @@ def get_gaussian_states(
 
 
 def localize_wavepacket_gaussian_projection(
-    wavepacket: Wavepacket[_SB0, _SBL0],
-) -> Wavepacket[_SB0, _SBL0]:
+    wavepacket: BlochWavefunctionList[_SB0, _SBL0],
+) -> BlochWavefunctionList[_SB0, _SBL0]:
     """
     Given a wavepacket, localize using a tight binding projection.
 

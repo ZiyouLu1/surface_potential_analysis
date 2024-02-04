@@ -18,7 +18,7 @@ from surface_potential_analysis.wavepacket.wavepacket import wavepacket_list_int
 
 if TYPE_CHECKING:
     from surface_potential_analysis.wavepacket.wavepacket import (
-        WavepacketWithEigenvaluesList,
+        BlochWavefunctionListWithEigenvaluesList,
     )
 
 
@@ -49,7 +49,7 @@ class TunnellingSimulationBandsBasis(FundamentalBasis[_L0_co]):
     @classmethod
     def from_wavepackets(
         cls: type[Self],
-        wavepackets: WavepacketWithEigenvaluesList[Any, Any, Any],
+        wavepackets: BlochWavefunctionListWithEigenvaluesList[Any, Any, Any],
     ) -> Self:
         """
         Generate a basis given a list of wavepackets.

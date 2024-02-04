@@ -25,7 +25,7 @@ from surface_potential_analysis.wavepacket.eigenstate_conversion import (
     unfurl_wavepacket_list,
 )
 from surface_potential_analysis.wavepacket.wavepacket import (
-    WavepacketList,
+    BlochWavefunctionListList,
     get_unfurled_basis,
     get_wavepackets,
 )
@@ -46,7 +46,9 @@ if TYPE_CHECKING:
         IntLike_co,
         SingleFlatIndexLike,
     )
-    from surface_potential_analysis.wavepacket.wavepacket import WavepacketBasis
+    from surface_potential_analysis.wavepacket.wavepacket import (
+        BlochWavefunctionListBasis,
+    )
 
     _B0 = TypeVar("_B0", bound=BasisLike[Any, Any])
     _BL0 = TypeVar("_BL0", bound=BasisWithLengthLike[Any, Any, Any])
@@ -64,7 +66,7 @@ def get_single_point_state_vector_excact(
 
 
 def get_single_point_state_vectors(
-    basis: WavepacketBasis[
+    basis: BlochWavefunctionListBasis[
         StackedBasisLike[*tuple[_B0, ...]], StackedBasisLike[*tuple[_BL0, ...]]
     ],
     n_bands: _L0Inv,
@@ -83,7 +85,7 @@ def get_single_point_state_vectors(
 
 
 def get_most_localized_free_state_vectors(
-    basis: WavepacketBasis[_SB0, _SBL0],
+    basis: BlochWavefunctionListBasis[_SB0, _SBL0],
     shape: tuple[IntLike_co, ...],
 ) -> StateVectorList[
     StackedBasisLike[*tuple[FundamentalBasis[int], ...]],
@@ -137,7 +139,7 @@ def get_most_localized_free_state_vectors(
 
 
 def get_most_localized_state_vectors_from_probability(
-    wavepackets: WavepacketList[_B0, _SB0, _SBL0],
+    wavepackets: BlochWavefunctionListList[_B0, _SB0, _SBL0],
     fractions: tuple[np.ndarray[tuple[int], np.dtype[np.float64]], ...],
 ) -> StateVectorList[
     FundamentalBasis[int],

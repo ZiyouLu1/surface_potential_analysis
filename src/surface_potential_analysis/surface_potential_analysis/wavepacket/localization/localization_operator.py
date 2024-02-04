@@ -10,15 +10,14 @@ from surface_potential_analysis.basis.stacked_basis import (
     StackedBasisLike,
 )
 from surface_potential_analysis.operator.operator_list import (
-    DiagonalOperatorList,
     OperatorList,
     SingleBasisDiagonalOperatorList,
 )
 
 if TYPE_CHECKING:
     from surface_potential_analysis.wavepacket.wavepacket import (
-        WavepacketList,
-        WavepacketWithEigenvaluesList,
+        BlochWavefunctionListList,
+        BlochWavefunctionListWithEigenvaluesList,
     )
 
 _B0 = TypeVar("_B0", bound=BasisLike[Any, Any])
@@ -33,9 +32,9 @@ _SB1 = TypeVar("_SB1", bound=StackedBasisLike[*tuple[Any, ...]])
 
 
 def get_localized_wavepackets(
-    wavepackets: WavepacketList[_B2, _SB1, _SB0],
+    wavepackets: BlochWavefunctionListList[_B2, _SB1, _SB0],
     operator: LocalizationOperator[_SB1, _B1, _B2],
-) -> WavepacketList[_B1, _SB1, _SB0]:
+) -> BlochWavefunctionListList[_B1, _SB1, _SB0]:
     """
     Apply the LocalizationOperator to produce localized wavepackets.
 
@@ -68,8 +67,8 @@ def get_localized_wavepackets(
 
 
 def get_wavepacket_hamiltonian(
-    wavepackets: WavepacketWithEigenvaluesList[_B0, _SB1, _SB0],
-) -> DiagonalOperatorList[_B0, _SB1, _SB1]:
+    wavepackets: BlochWavefunctionListWithEigenvaluesList[_B0, _SB1, _SB0],
+) -> SingleBasisDiagonalOperatorList[_B0, _SB1]:
     """
     Get the Hamiltonian in the Wavepacket basis.
 
@@ -95,7 +94,7 @@ def get_localized_hamiltonian_from_eigenvalues(
     operator: LocalizationOperator[_SB1, _B1, _B2],
 ) -> OperatorList[_SB1, _B1, _B1]:
     hamiltonian_stacked = hamiltonian["data"].reshape(
-        hamiltonian["basis"][0], *hamiltonian["basis"][1][0].shape
+        hamiltonian["basis"][0].n, hamiltonian["basis"][1][0].n
     )
     operator_stacked = operator["data"].reshape(-1, *operator["basis"][1].shape)
 
@@ -127,7 +126,7 @@ def get_localized_hamiltonian_from_eigenvalues(
 
 
 def get_localized_wavepacket_hamiltonian(
-    wavepackets: WavepacketWithEigenvaluesList[_B2, _SB1, _SB0],
+    wavepackets: BlochWavefunctionListWithEigenvaluesList[_B2, _SB1, _SB0],
     operator: LocalizationOperator[_SB1, _B1, _B2],
 ) -> OperatorList[_SB1, _B1, _B1]:
     """

@@ -11,8 +11,8 @@ from surface_potential_analysis.wavepacket.localization import (
     localize_tightly_bound_wavepacket_two_point_max,
 )
 from surface_potential_analysis.wavepacket.wavepacket import (
-    Wavepacket,
-    WavepacketWithEigenvaluesList,
+    BlochWavefunctionList,
+    BlochWavefunctionListWithEigenvaluesList,
     generate_wavepacket,
     get_average_eigenvalues,
     get_wavepacket,
@@ -33,7 +33,7 @@ if TYPE_CHECKING:
     from surface_potential_analysis.basis.stacked_basis import StackedBasisLike
     from surface_potential_analysis.operator import SingleBasisOperator
 
-    _HydrogenPlatinumWavepacketList = WavepacketWithEigenvaluesList[
+    _HydrogenPlatinumWavepacketList = BlochWavefunctionListWithEigenvaluesList[
         EvenlySpacedBasis[Literal[20], Literal[1], Literal[0]],
         StackedBasisLike[
             FundamentalBasis[Literal[12]],
@@ -47,7 +47,7 @@ if TYPE_CHECKING:
         ],
     ]
 
-    _HydrogenPlatinumWavepacket = Wavepacket[
+    _HydrogenPlatinumWavepacket = BlochWavefunctionList[
         StackedBasisLike[
             FundamentalBasis[Literal[12]],
             FundamentalBasis[Literal[12]],
@@ -60,7 +60,7 @@ if TYPE_CHECKING:
         ],
     ]
 
-    _DeuteriumPlatinumWavepacketList = WavepacketWithEigenvaluesList[
+    _DeuteriumPlatinumWavepacketList = BlochWavefunctionListWithEigenvaluesList[
         EvenlySpacedBasis[Literal[20], Literal[1], Literal[0]],
         StackedBasisLike[
             FundamentalBasis[Literal[12]],
@@ -73,7 +73,7 @@ if TYPE_CHECKING:
             ExplicitBasis[Literal[250], Literal[10], Literal[3]],
         ],
     ]
-    _DeuteriumPlatinumWavepacket = Wavepacket[
+    _DeuteriumPlatinumWavepacket = BlochWavefunctionList[
         StackedBasisLike[
             FundamentalBasis[Literal[12]],
             FundamentalBasis[Literal[12]],

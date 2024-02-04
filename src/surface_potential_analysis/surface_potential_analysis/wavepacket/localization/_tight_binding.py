@@ -27,7 +27,7 @@ from surface_potential_analysis.wavepacket.get_eigenstate import (
     get_wavepacket_state_vector,
 )
 from surface_potential_analysis.wavepacket.wavepacket import (
-    Wavepacket,
+    BlochWavefunctionList,
     get_wavepacket_sample_fractions,
 )
 
@@ -57,7 +57,7 @@ if TYPE_CHECKING:
 
 @overload
 def _get_global_phases(
-    wavepacket: Wavepacket[_SB0, _SB1],
+    wavepacket: BlochWavefunctionList[_SB0, _SB1],
     idx: SingleIndexLike,
 ) -> np.ndarray[tuple[int], np.dtype[np.float64]]:
     ...
@@ -65,14 +65,14 @@ def _get_global_phases(
 
 @overload
 def _get_global_phases(
-    wavepacket: Wavepacket[_SB0, _SB1],
+    wavepacket: BlochWavefunctionList[_SB0, _SB1],
     idx: ArrayIndexLike[*_TS],
 ) -> np.ndarray[tuple[int, *_TS], np.dtype[np.float64]]:
     ...
 
 
 def _get_global_phases(
-    wavepacket: Wavepacket[_SB0, _SB1],
+    wavepacket: BlochWavefunctionList[_SB0, _SB1],
     idx: SingleIndexLike | ArrayIndexLike[*_TS],
 ) -> (
     np.ndarray[tuple[int, *_TS], np.dtype[np.float64]]
@@ -106,7 +106,7 @@ def _get_global_phases(
 
 
 def _get_bloch_wavefunction_phases(
-    wavepacket: Wavepacket[_SB0, _SB1],
+    wavepacket: BlochWavefunctionList[_SB0, _SB1],
     idx: SingleIndexLike = 0,
 ) -> np.ndarray[tuple[int], np.dtype[np.float64]]:
     """
@@ -133,10 +133,10 @@ def _get_bloch_wavefunction_phases(
 
 @timed
 def localize_tightly_bound_wavepacket_idx(
-    wavepacket: Wavepacket[_SB0, _SB1],
+    wavepacket: BlochWavefunctionList[_SB0, _SB1],
     idx: SingleIndexLike = 0,
     angle: float = 0,
-) -> Wavepacket[_SB0, _SB1]:
+) -> BlochWavefunctionList[_SB0, _SB1]:
     """
     localize a wavepacket in momentum basis.
 
@@ -166,7 +166,7 @@ def localize_tightly_bound_wavepacket_idx(
 
 
 def get_wavepacket_two_points(
-    wavepacket: Wavepacket[
+    wavepacket: BlochWavefunctionList[
         StackedBasisLike[_FB0, _FB1, FundamentalBasis[Literal[1]]],
         StackedBasisLike[_BL0, _BL1, _BL2],
     ],
@@ -210,13 +210,13 @@ def _wrap_phases(
 
 @timed
 def localize_tightly_bound_wavepacket_two_point_max(
-    wavepacket: Wavepacket[
+    wavepacket: BlochWavefunctionList[
         StackedBasisLike[_FB0, _FB1, FundamentalBasis[Literal[1]]],
         StackedBasisLike[_BL0, _BL1, _BL2],
     ],
     offset: tuple[int, int] = (0, 0),
     angle: float = 0,
-) -> Wavepacket[
+) -> BlochWavefunctionList[
     StackedBasisLike[_FB0, _FB1, FundamentalBasis[Literal[1]]],
     StackedBasisLike[_BL0, _BL1, _BL2],
 ]:
@@ -297,9 +297,9 @@ def localize_tightly_bound_wavepacket_two_point_max(
 
 @timed
 def localize_tightly_bound_wavepacket_max_point(
-    wavepacket: Wavepacket[_SB0, _SB1],
+    wavepacket: BlochWavefunctionList[_SB0, _SB1],
     angle: float = 0,
-) -> Wavepacket[_SB0, _SB1]:
+) -> BlochWavefunctionList[_SB0, _SB1]:
     """
     Normalize a wavepacket using a 'single-point' calculation.
 

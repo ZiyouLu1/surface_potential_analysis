@@ -321,9 +321,68 @@ def get_isf_from_fey_4_variable_model_110(
     }
 
 
-def fit_isf_to_fey_4_variable_model_110(
+def fit_isf_to_fey_4_variable_model_110_fixed_ratio(
     isf: SingleBasisDiagonalOperator[_BT0] | StatisticalDiagonalOperator[_BT0, _BT0],
     lam: FloatLike_co,
+    *,
+    measure: Measure = "abs",
+    a_dk: float = 2,
+    start_t: float = 0,
+    end_t: float | None = None,
+) -> ISFFey4VariableFit:
+    """
+    Fit the ISF to a double exponential, and calculate the fast and slow rates.
+
+    Parameters
+    ----------
+    isf : EigenvalueList[_L0Inv]
+    times : np.ndarray[tuple[int], np.dtype[np.float_]]
+
+    Returns
+    -------
+    ISFFit
+    """
+    data = get_measured_data(isf["data"], measure)
+    times = isf["basis"][0].times
+    end_t = isf["basis"][0].times[-1] if end_t is None else end_t
+    valid_times = np.logical_and(times > start_t, times < end_t)
+
+    sigma = isf.get("standard_deviation")
+    if isinstance(sigma, np.ndarray):
+        sigma = sigma[valid_times]
+
+    def f(
+        t: np.ndarray[Any, Any], fr: float, fa: float, sa: float, offset: float
+    ) -> np.ndarray[Any, Any]:
+        return calculate_isf_fey_4_variable_model_110(
+            t, fr, fa, lam * fr, sa, offset, a_dk=a_dk
+        )
+
+    def penalized_f(
+        t: np.ndarray[Any, Any], fr: float, fa: float, sa: float, offset: float
+    ) -> np.ndarray[Any, Any]:
+        return f(t, fr, fa, sa, offset)  # - penalization
+
+    params, _ = scipy.optimize.curve_fit(
+        penalized_f,
+        times[valid_times],
+        data[valid_times],
+        p0=(1.4e9, lam / (1 + lam), 1 / (1 + lam), 0.05),
+        bounds=([0, 0, 0, 0], [np.inf, np.inf, np.inf, 0.2]),
+        maxfev=10000,
+    )
+    return ISFFey4VariableFit(
+        a_dk,
+        params[0],
+        params[1],
+        lam * params[0],
+        params[2],
+        params[3],
+    )
+
+
+def fit_isf_to_fey_4_variable_model_110(
+    isf: SingleBasisDiagonalOperator[_BT0] | StatisticalDiagonalOperator[_BT0, _BT0],
     *,
     measure: Measure = "abs",
     a_dk: float = 2,
@@ -350,32 +409,42 @@ def fit_isf_to_fey_4_variable_model_110(
         sigma = sigma[valid_times]
 
     def f(
-        t: np.ndarray[Any, Any], fr: float, fa: float, sa: float, offset: float
+        t: np.ndarray[Any, Any],
+        fr: float,
+        fa: float,
+        sr: float,
+        sa: float,
+        offset: float,
     ) -> np.ndarray[Any, Any]:
         return calculate_isf_fey_4_variable_model_110(
-            t, fr, fa, lam * fr, sa, offset, a_dk=a_dk
+            t, fr, fa, sr, sa, offset, a_dk=a_dk
         )
 
     def penalized_f(
-        t: np.ndarray[Any, Any], fr: float, fa: float, sa: float, offset: float
+        t: np.ndarray[Any, Any],
+        fr: float,
+        fa: float,
+        sr: float,
+        sa: float,
+        offset: float,
     ) -> np.ndarray[Any, Any]:
-        return f(t, fr, fa, sa, offset)  # - penalization
+        return f(t, fr, fa, sr, sa, offset)  # - penalization
 
     params, _ = scipy.optimize.curve_fit(
         penalized_f,
         times[valid_times],
         data[valid_times],
-        p0=(1.4e9, 1 / (1 + lam), lam / (1 + lam), 0.05),
-        bounds=([0, 0, 0, 0], [np.inf, np.inf, np.inf, 0.2]),
+        p0=(1.4e9, 0.2, 0.7e9, 0.8, 0.05),
+        bounds=([0, 0, 0, 0, 0], [np.inf, np.inf, np.inf, np.inf, 0.2]),
         maxfev=10000,
     )
     return ISFFey4VariableFit(
         a_dk,
         params[0],
         params[1],
-        lam * params[0],
         params[2],
         params[3],
+        params[4],
     )
 
 

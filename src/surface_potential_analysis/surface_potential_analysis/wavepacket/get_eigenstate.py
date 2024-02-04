@@ -34,10 +34,10 @@ from surface_potential_analysis.wavepacket.conversion import (
     convert_wavepacket_to_fundamental_momentum_basis,
 )
 from surface_potential_analysis.wavepacket.wavepacket import (
-    Wavepacket,
-    WavepacketBasis,
-    WavepacketList,
-    WavepacketWithEigenvalues,
+    BlochWavefunctionList,
+    BlochWavefunctionListBasis,
+    BlochWavefunctionListList,
+    BlochWavefunctionListWithEigenvalues,
     get_sample_basis,
     get_wavepacket_basis,
 )
@@ -78,7 +78,7 @@ if TYPE_CHECKING:
 
 
 def _get_sampled_basis(
-    basis: WavepacketBasis[
+    basis: BlochWavefunctionListBasis[
         StackedBasisLike[*tuple[_B0, ...]], StackedBasisLike[*tuple[_BL0, ...]]
     ],
     offset: tuple[IntLike_co, ...],
@@ -101,7 +101,7 @@ def _get_sampled_basis(
 
 
 def get_wavepacket_state_vector(
-    wavepacket: Wavepacket[_SB0, _SB1], idx: SingleIndexLike
+    wavepacket: BlochWavefunctionList[_SB0, _SB1], idx: SingleIndexLike
 ) -> StateVector[
     StackedBasisLike[
         *tuple[EvenlySpacedTransformedPositionBasis[Any, Any, Any, Any], ...]
@@ -135,7 +135,7 @@ def get_wavepacket_state_vector(
 
 
 def get_bloch_state_vector(
-    wavepacket: Wavepacket[_SB0, _SBL1], idx: SingleIndexLike
+    wavepacket: BlochWavefunctionList[_SB0, _SBL1], idx: SingleIndexLike
 ) -> StateVector[_SBL1]:
     """
     Get the eigenstate of a given wavepacket at a specific index.
@@ -155,7 +155,7 @@ def get_bloch_state_vector(
 
 
 def get_all_eigenstates(
-    wavepacket: WavepacketWithEigenvalues[_SB0, _SBL1],
+    wavepacket: BlochWavefunctionListWithEigenvalues[_SB0, _SBL1],
 ) -> list[
     Eigenstate[
         StackedBasisLike[
@@ -197,7 +197,7 @@ def get_all_eigenstates(
 
 
 def get_all_wavepacket_states(
-    wavepacket: Wavepacket[_SB0, _SBL1],
+    wavepacket: BlochWavefunctionList[_SB0, _SBL1],
 ) -> list[StateVector[StackedBasisLike[*tuple[Any, ...]]]]:
     """
     Get the eigenstate of a given wavepacket at a specific index.
@@ -231,7 +231,7 @@ def get_all_wavepacket_states(
 
 
 def get_tight_binding_state(
-    wavepacket: Wavepacket[_SB0, _SBL1],
+    wavepacket: BlochWavefunctionList[_SB0, _SBL1],
     idx: SingleIndexLike = 0,
     origin: SingleIndexLike | None = None,
 ) -> StateVector[StackedBasisLike[*tuple[FundamentalPositionBasis[Any, Any], ...]]]:
@@ -283,7 +283,7 @@ def get_tight_binding_state(
 
 
 def get_states_at_bloch_idx(
-    wavepackets: WavepacketList[
+    wavepackets: BlochWavefunctionListList[
         _B0Inv,
         StackedBasisLike[*tuple[_FB0, ...]],
         StackedBasisLike[*tuple[_FTB0, ...]],

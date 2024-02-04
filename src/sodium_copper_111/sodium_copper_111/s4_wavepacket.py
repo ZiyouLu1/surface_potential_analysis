@@ -20,9 +20,9 @@ from surface_potential_analysis.wavepacket.localization.localization_operator im
     get_localized_wavepackets,
 )
 from surface_potential_analysis.wavepacket.wavepacket import (
-    WavepacketList,
-    WavepacketWithEigenvalues,
-    WavepacketWithEigenvaluesList,
+    BlochWavefunctionListList,
+    BlochWavefunctionListWithEigenvalues,
+    BlochWavefunctionListWithEigenvaluesList,
     generate_wavepacket,
     get_wavepacket_basis,
     get_wavepackets,
@@ -64,12 +64,12 @@ if TYPE_CHECKING:
     _L2Inv = TypeVar("_L2Inv", bound=int)
     _L3Inv = TypeVar("_L3Inv", bound=int)
 
-    _SodiumWavepacketList = WavepacketWithEigenvaluesList[
+    _SodiumWavepacketList = BlochWavefunctionListWithEigenvaluesList[
         EvenlySpacedBasis[_L0Inv, Literal[1], Literal[0]],
         StackedBasisLike[EvenlySpacedBasis[_L1Inv, Literal[1], Literal[0]]],
         StackedBasisLike[FundamentalTransformedPositionBasis1d[_L2Inv]],
     ]
-    _SodiumWavepacket = WavepacketWithEigenvalues[
+    _SodiumWavepacket = BlochWavefunctionListWithEigenvalues[
         StackedBasisLike[*tuple[FundamentalBasis[_L0Inv]]],
         StackedBasisLike[*tuple[FundamentalTransformedPositionBasis1d[_L1Inv]]],
     ]
@@ -131,7 +131,7 @@ def get_localization_operator_sodium(
 
 def get_localized_wavepackets_wannier_90(
     shape: tuple[_L0Inv], resolution: tuple[_L1Inv], n_bands: int = 0
-) -> WavepacketList[
+) -> BlochWavefunctionListList[
     StackedBasisLike[*tuple[FundamentalBasis[int], ...]],
     StackedBasisLike[EvenlySpacedBasis[_L0Inv, Literal[1], Literal[0]]],
     StackedBasisLike[FundamentalTransformedPositionBasis1d[_L1Inv]],
@@ -145,7 +145,7 @@ def get_localized_wavepackets_wannier_90(
 
 def get_projection_localized_wavepackets(
     shape: tuple[_L0Inv], resolution: tuple[_L1Inv], n_bands: int = 0
-) -> WavepacketList[
+) -> BlochWavefunctionListList[
     StackedBasisLike[*tuple[FundamentalBasis[int], ...]],
     StackedBasisLike[EvenlySpacedBasis[_L0Inv, Literal[1], Literal[0]]],
     StackedBasisLike[FundamentalTransformedPositionBasis1d[_L1Inv]],
@@ -187,7 +187,7 @@ def _get_all_wavepackets_flat_2d_cache(
 @npy_cached(_get_all_wavepackets_flat_2d_cache, load_pickle=True)
 def get_all_wavepackets_flat_2d(
     shape: tuple[_L0Inv, _L1Inv], resolution: tuple[_L2Inv, _L3Inv]
-) -> WavepacketWithEigenvaluesList[
+) -> BlochWavefunctionListWithEigenvaluesList[
     EvenlySpacedBasis[Any, Literal[1], Literal[0]],
     StackedBasisLike[
         EvenlySpacedBasis[_L0Inv, Literal[1], Literal[0]],
@@ -228,7 +228,7 @@ def _get_all_wavepackets_2d_cache(
 @npy_cached(_get_all_wavepackets_2d_cache, load_pickle=True)
 def get_all_wavepackets_2d(
     shape: tuple[_L0Inv, _L1Inv], resolution: tuple[_L2Inv, _L3Inv]
-) -> WavepacketWithEigenvaluesList[
+) -> BlochWavefunctionListWithEigenvaluesList[
     EvenlySpacedBasis[Any, Literal[1], Literal[0]],
     StackedBasisLike[
         EvenlySpacedBasis[_L0Inv, Literal[1], Literal[0]],
@@ -305,7 +305,7 @@ def _get_all_wavepackets_2d_cache_lithium(
 @npy_cached(_get_all_wavepackets_2d_cache_lithium, load_pickle=True)
 def get_all_wavepackets_2d_lithium(
     shape: tuple[_L0Inv, _L1Inv], resolution: tuple[_L2Inv, _L3Inv]
-) -> WavepacketWithEigenvaluesList[
+) -> BlochWavefunctionListWithEigenvaluesList[
     EvenlySpacedBasis[Any, Literal[1], Literal[0]],
     StackedBasisLike[
         EvenlySpacedBasis[_L0Inv, Literal[1], Literal[0]],

@@ -54,6 +54,14 @@ class EvenlySpacedTimeBasis(
     def delta_t(self) -> float:
         return self._delta_t
 
+    @property
+    def dt(self) -> float:
+        return self._delta_t / self.n
+
+    @property
+    def fundamental_dt(self) -> float:
+        return self._delta_t / self.fundamental_n
+
 
 class FundamentalTimeBasis(EvenlySpacedTimeBasis[_N0_co, Literal[1], Literal[0]]):
     """A axis with vectors that are the fundamental position states."""

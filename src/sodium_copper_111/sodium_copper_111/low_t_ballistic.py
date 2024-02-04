@@ -33,8 +33,27 @@ from surface_potential_analysis.stacked_basis.conversion import (
 from surface_potential_analysis.state_vector.conversion import (
     convert_state_vector_list_to_basis,
 )
+from surface_potential_analysis.state_vector.util import (
+    get_most_localized_free_state_vectors,
+)
+from surface_potential_analysis.wavepacket.localization import (
+    Wannier90Options,
+    get_localization_operator_wannier90,
+)
 from surface_potential_analysis.wavepacket.localization.localization_operator import (
+    LocalizationOperator,
+    get_localized_hamiltonian_from_eigenvalues,
+    get_localized_wavepackets,
     get_wavepacket_hamiltonian,
+)
+from surface_potential_analysis.wavepacket.plot import (
+    plot_wavepacket_1d_k,
+    plot_wavepacket_1d_x,
+)
+from surface_potential_analysis.wavepacket.wavepacket import (
+    get_unfurled_basis,
+    get_wavepacket_basis,
+    wavepacket_list_into_iter,
 )
 
 from sodium_copper_111.s4_wavepacket import (
@@ -51,14 +70,15 @@ if TYPE_CHECKING:
     from matplotlib.axes import Axes
     from matplotlib.figure import Figure
     from matplotlib.lines import Line2D
-    from surface_potential_analysis.operator.operator import SingleBasisDiagonalOperator
     from surface_potential_analysis.state_vector.state_vector import StateVector
     from surface_potential_analysis.wavepacket.wavepacket import (
-        WavepacketWithEigenvaluesList,
+        BlochWavefunctionListWithEigenvaluesList,
     )
 
 
 _B0 = TypeVar("_B0", bound=BasisLike[Any, Any])
+_B1 = TypeVar("_B1", bound=BasisLike[Any, Any])
+_B2 = TypeVar("_B2", bound=BasisLike[Any, Any])
 
 _SB0 = TypeVar("_SB0", bound=StackedBasisLike[*tuple[Any, ...]])
 _SB1 = TypeVar("_SB1", bound=StackedBasisLike[*tuple[Any, ...]])
@@ -152,40 +172,25 @@ def calculate_ballistic_rate_per_band(
 
 
 def calculate_ballistic_rate(
-    hamiltonian: SingleBasisDiagonalOperator[
-        StackedBasisLike[FundamentalBasis[int], _SB0]
-    ],
-    weights: np.ndarray[tuple[int], np.dtype[np.bool_]],
-) -> np.ndarray[Any, np.dtype[np.float64]]:
-    diagonal_stacked_hamiltonian = hamiltonian["data"].reshape(
-        hamiltonian["basis"][0].shape
+    hamiltonian: SingleBasisDiagonalOperatorList[_B2, _SB1],
+    operator: LocalizationOperator[_SB1, _B1, _B2],
+) -> float:
+    localized_hamiltonian = get_localized_hamiltonian_from_eigenvalues(
+        hamiltonian, operator
     )
-    hamiltonian_stacked = np.zeros(
-        (*hamiltonian["basis"][0].shape, hamiltonian["basis"][0][1].n),
-        dtype=np.complex128,
-    )
-    for band in range(hamiltonian["basis"][0][0].n):
-        hamiltonian_stacked[band] = np.diag(diagonal_stacked_hamiltonian[band])
-    hamiltonian_stacked = hamiltonian_stacked.reshape(
-        hamiltonian["basis"][0][0].n,
-        *hamiltonian["basis"][0][1].shape,
-        *hamiltonian["basis"][0][1].shape,
-    )
+    print(localized_hamiltonian)  # noqa: T201
+    # just the k=0 state
+    k0_hamiltonian = localized_hamiltonian["data"].reshape(
+        localized_hamiltonian["basis"].shape
+    )[0]
+    stacked = k0_hamiltonian.reshape(localized_hamiltonian["basis"][1].shape)
+    print(stacked)  # noqa: T201
 
-    transformed = np.fft.ifftn(
-        np.fft.fftn(
-            hamiltonian_stacked,
-            axes=list(range(1, 1 + hamiltonian["basis"][0][1].ndim)),
-            norm="ortho",
-        ),
-        axes=list(
-            range(
-                1 + hamiltonian["basis"][0][1].ndim,
-                1 + 2 * hamiltonian["basis"][0][1].ndim,
-            )
-        ),
-        norm="ortho",
-    )
+    # We need to find some average coherent rate between states
+    # Only the middle state is actually surrounded by n//2 states,
+    # some much less
+    # TODO: how do we therefore calculate the rate a la first order
+    # perterbation theory ...
     for i in range(1, transformed.ndim):
         slice_ = [0 for _ in range(transformed.ndim)]
         slice_[0] = slice(None)
@@ -198,13 +203,110 @@ def calculate_average_energy_per_band(
     hamiltonian: SingleBasisDiagonalOperatorList[FundamentalBasis[int], _B0],
 ) -> np.ndarray[Any, np.dtype[np.float64]]:
     hamiltonian_stacked = hamiltonian["data"].reshape(
-        hamiltonian["basis"][0].n, hamiltonian["basis"][1].n
+        hamiltonian["basis"][0].n, hamiltonian["basis"][1][0].n
     )
     return np.abs(np.average(hamiltonian_stacked, axis=1))
 
 
+def get_all_state_coherent_rate(
+    hamiltonian: SingleBasisDiagonalOperatorList[_B0, _SB1],
+) -> float:
+    """
+    Get the coherent rate of tunnelling between the localized states generated using the full basis.
+
+    These states are simply eigenstates of position.
+
+    Parameters
+    ----------
+    hamiltonian : SingleBasisDiagonalOperatorList[_B0, _SB1]
+
+    Returns
+    -------
+    float
+    """
+    get_unfurled_basis(basis)
+    position_basis
+
+
+def get_bloch_wavefunction_list_where(
+    wavepackets: BlochWavefunctionListWithEigenvaluesList[_B0, _SB1, _SB0],
+    cond: np.ndarray[tuple[int], np.dtype[np.bool_]],
+) -> BlochWavefunctionListWithEigenvaluesList[FundamentalBasis[int], _SB1, _SB0]:
+    n_bands = np.count_nonzero(cond)
+    return {
+        "data": wavepackets["data"].reshape(cond.size, -1)[cond, :].reshape(-1),
+        "basis": StackedBasis(
+            StackedBasis(FundamentalBasis(n_bands), wavepackets["basis"][0][1]),
+            wavepackets["basis"][1],
+        ),
+        "eigenvalue": wavepackets["eigenvalue"]
+        .reshape(cond.size, -1)[cond, :]
+        .reshape(-1),
+    }
+
+
+def get_localization_operator_1d(
+    wavepackets: BlochWavefunctionListWithEigenvaluesList[_B0, _SB1, _SB0],
+) -> LocalizationOperator[
+    _SB0,
+    StackedBasisLike[*tuple[FundamentalBasis[int], ...]],
+    _B0,
+]:
+    n_bands = wavepackets["basis"][0][0].n
+    projections = get_most_localized_free_state_vectors(
+        get_wavepacket_basis(wavepackets), (n_bands,)
+    )
+    return get_localization_operator_wannier90(
+        wavepackets,
+        options=Wannier90Options(
+            projection=projections, ignore_axes=(1, 2), num_iter=1000000
+        ),
+    )
+
+
+def get_localized_wavepacket_where(
+    wavepackets: BlochWavefunctionListWithEigenvaluesList[_B0, _SB1, _SB0],
+    cond: np.ndarray[tuple[int], np.dtype[np.bool_]],
+) -> BlochWavefunctionListWithEigenvaluesList[FundamentalBasis[int], _SB1, _SB0]:
+    wavepackets_where = get_bloch_wavefunction_list_where(wavepackets, cond)
+    operator = get_localization_operator_1d(wavepackets_where)
+
+    return get_localized_wavepackets(wavepackets_where, operator)
+
+
+def plot_initial_coherent_wavepackets(
+    wavepackets: BlochWavefunctionListWithEigenvaluesList[_B0, _SB1, _SB0],
+    temperature: float,
+) -> None:
+    hamiltonian = get_wavepacket_hamiltonian(wavepackets)
+    energies = calculate_average_energy_per_band(hamiltonian)
+    condition = energies < 4 * (Boltzmann * temperature)
+    condition[0] = 1
+
+    localized = get_localized_wavepacket_where(wavepackets, condition)
+
+    fig0, ax0 = plt.subplots()
+    fig1, ax1 = plt.subplots()
+    for i, wavepacket in enumerate(wavepacket_list_into_iter(localized)):
+        _, _, ln = plot_wavepacket_1d_x(wavepacket, ax=ax0)
+        ln.set_label(f"n={i}")
+
+        _, _, ln = plot_wavepacket_1d_k(wavepacket, ax=ax1, measure="abs")
+        ln.set_label(f"n={i}")
+    fig0.show()
+    fig1.show()
+    input()
+
+
+def plot_initial_coherent_wavepackets_sodium() -> None:
+    temperature = 150
+    wavepackets = get_all_wavepackets((4,), (32,))
+    plot_initial_coherent_wavepackets(wavepackets, temperature)
+    input()
+
+
 def plot_ballistic_temperature_rate_curve(
-    wavepackets: WavepacketWithEigenvaluesList[_B0, _SB1, _SB0],
+    wavepackets: BlochWavefunctionListWithEigenvaluesList[_B0, _SB1, _SB0],
     temperatures: np.ndarray[tuple[int], np.dtype[np.float64]] | None = None,
     *,
     ax: Axes | None = None,
@@ -212,30 +314,58 @@ def plot_ballistic_temperature_rate_curve(
     fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
     temperatures = np.linspace(50, 150, 100) if temperatures is None else temperatures
 
-    hamiltonian = get_wavepacket_hamiltonian(wavepackets)
-    operator = get_localization_operator_for_projections(wavepackets, projections)
+    energies = calculate_average_energy_per_band(
+        get_wavepacket_hamiltonian(wavepackets)
+    )
 
-    wavepackets = get_localized_wavepackets(wavepackets, operator)
-    energies = calculate_average_energy_per_band(hamiltonian)
-    rates = calculate_ballistic_rate_per_band(hamiltonian)
-
-    average_rates = list[float]()
+    rates = list[float]()
     for temperature in temperatures:
+        initial_threshold = energies > 2 * (Boltzmann * temperature)
+        initial_threshold[0] = 1
+
+        initial_wavepackets = get_bloch_wavefunction_list_where(
+            wavepackets, initial_threshold
+        )
+        hamiltonian = get_wavepacket_hamiltonian(initial_wavepackets)
+        operator = get_localization_operator_1d(initial_wavepackets)
+        approximate_rate = calculate_ballistic_rate(hamiltonian, operator)
+
         incoherent_rates = FRICTION_NA_CU * np.exp(
             (energies - energies[0]) / (Boltzmann * temperature)
         )
-        # When rates are greater than incoherent rate
-        # TODO: This should be the average coherent rate
-        # For now we assume this is close to the 'free particle'
-        # Rate
-        weights = np.max(rates) > incoherent_rates
-        weights[0] = 1
-        average_rate = np.average(rates, weights=weights)
-        average_rates.append(average_rate)
-    (line,) = ax.plot(temperatures, average_rates)
+        # When coherent rate is greater than incoherent rate
+        final_threshold = approximate_rate > incoherent_rates
+        final_threshold[0] = 1
+        final_wavepackets = get_bloch_wavefunction_list_where(
+            wavepackets, final_threshold
+        )
+        hamiltonian = get_wavepacket_hamiltonian(final_wavepackets)
+        operator = get_localization_operator_1d(final_wavepackets)
+        final_rate = calculate_ballistic_rate(hamiltonian, operator)
+
+        # TODO: Maybe repeat this for a second time ...
+        rates.append(final_rate)
+    (line,) = ax.plot(temperatures, rates)
     ax.set_xlabel("Temperature / k")
     ax.set_ylabel("Rate s-1")
     return fig, ax, line
+
+
+def print_localized_hamiltonian() -> None:
+    temperature = 150
+    wavepackets = get_all_wavepackets((4,), (32,))
+    energies = calculate_average_energy_per_band(
+        get_wavepacket_hamiltonian(wavepackets)
+    )
+    initial_threshold = energies < 2 * (Boltzmann * temperature)
+    initial_threshold[0] = 1
+
+    initial_wavepackets = get_bloch_wavefunction_list_where(
+        wavepackets, initial_threshold
+    )
+    hamiltonian = get_wavepacket_hamiltonian(initial_wavepackets)
+    operator = get_localization_operator_1d(initial_wavepackets)
+    print(calculate_ballistic_rate(hamiltonian, operator))  # noqa: T201
 
 
 def plot_ballistic_rate_against_temperature_sodium() -> None:

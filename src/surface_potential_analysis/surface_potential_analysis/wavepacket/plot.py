@@ -32,8 +32,8 @@ from surface_potential_analysis.wavepacket.get_eigenstate import (
 )
 
 from .wavepacket import (
-    Wavepacket,
-    WavepacketWithEigenvalues,
+    BlochWavefunctionList,
+    BlochWavefunctionListWithEigenvalues,
     get_sample_basis,
     get_wavepacket_sample_frequencies,
 )
@@ -62,7 +62,7 @@ if TYPE_CHECKING:
 
 
 def plot_wavepacket_sample_frequencies(
-    wavepacket: Wavepacket[
+    wavepacket: BlochWavefunctionList[
         StackedBasisLike[*tuple[Any, ...]],
         StackedBasisLike[*tuple[Any, ...]],
     ],
@@ -104,7 +104,7 @@ def plot_wavepacket_sample_frequencies(
 
 
 def plot_wavepacket_eigenvalues_2d_k(
-    wavepacket: WavepacketWithEigenvalues[
+    wavepacket: BlochWavefunctionListWithEigenvalues[
         StackedBasisLike[*tuple[Any, ...]],
         StackedBasisLike[*tuple[Any, ...]],
     ],
@@ -141,7 +141,7 @@ def plot_wavepacket_eigenvalues_2d_k(
 
 
 def plot_wavepacket_eigenvalues_2d_x(
-    wavepacket: WavepacketWithEigenvalues[
+    wavepacket: BlochWavefunctionListWithEigenvalues[
         StackedBasisLike[*tuple[Any, ...]],
         StackedBasisLike[*tuple[Any, ...]],
     ],
@@ -182,7 +182,7 @@ def plot_wavepacket_eigenvalues_2d_x(
 
 
 def plot_eigenvalues_1d_x(
-    wavepacket: WavepacketWithEigenvalues[
+    wavepacket: BlochWavefunctionListWithEigenvalues[
         StackedBasisLike[*tuple[Any, ...]], StackedBasisLike[*tuple[Any, ...]]
     ],
     axes: tuple[int,] = (0,),
@@ -222,7 +222,7 @@ def plot_eigenvalues_1d_x(
 
 
 def plot_wavepacket_1d_x(
-    wavepacket: Wavepacket[
+    wavepacket: BlochWavefunctionList[
         StackedBasisLike[*tuple[Any, ...]], StackedBasisLike[*tuple[Any, ...]]
     ],
     axes: tuple[int] = (0,),
@@ -258,7 +258,7 @@ def plot_wavepacket_1d_x(
 
 
 def plot_wavepacket_1d_k(
-    wavepacket: Wavepacket[
+    wavepacket: BlochWavefunctionList[
         StackedBasisLike[*tuple[Any, ...]], StackedBasisLike[*tuple[Any, ...]]
     ],
     axes: tuple[int] = (0,),
@@ -294,7 +294,7 @@ def plot_wavepacket_1d_k(
 
 
 def plot_wavepacket_2d_k(
-    wavepacket: Wavepacket[
+    wavepacket: BlochWavefunctionList[
         StackedBasisLike[*tuple[Any, ...]], StackedBasisLike[*tuple[Any, ...]]
     ],
     axes: tuple[int, int] = (0, 1),
@@ -328,7 +328,7 @@ def plot_wavepacket_2d_k(
 
 
 def plot_all_wavepacket_states_2d_k(
-    wavepacket: Wavepacket[
+    wavepacket: BlochWavefunctionList[
         StackedBasisLike[*tuple[Any, ...]], StackedBasisLike[*tuple[Any, ...]]
     ],
     axes: tuple[int, int] = (0, 1),
@@ -364,7 +364,7 @@ def plot_all_wavepacket_states_2d_k(
 
 
 def plot_wavepacket_2d_x(
-    wavepacket: Wavepacket[
+    wavepacket: BlochWavefunctionList[
         StackedBasisLike[*tuple[Any, ...]], StackedBasisLike[*tuple[Any, ...]]
     ],
     axes: tuple[int, int] = (0, 1),
@@ -398,7 +398,7 @@ def plot_wavepacket_2d_x(
 
 
 def plot_all_wavepacket_states_2d_x(
-    wavepacket: Wavepacket[
+    wavepacket: BlochWavefunctionList[
         StackedBasisLike[*tuple[Any, ...]], StackedBasisLike[*tuple[Any, ...]]
     ],
     axes: tuple[int, int] = (0, 1),
@@ -434,8 +434,8 @@ def plot_all_wavepacket_states_2d_x(
 
 
 def plot_wavepacket_difference_2d_x(
-    wavepacket_0: Wavepacket[_B0Inv, _B1Inv],
-    wavepacket_1: Wavepacket[_B0Inv, _B1Inv],
+    wavepacket_0: BlochWavefunctionList[_B0Inv, _B1Inv],
+    wavepacket_1: BlochWavefunctionList[_B0Inv, _B1Inv],
     axes: tuple[int, int] = (0, 1),
     idx: SingleStackedIndexLike | None = None,
     *,
@@ -476,7 +476,7 @@ def plot_wavepacket_difference_2d_x(
 
 
 def animate_wavepacket_3d_x(
-    wavepacket: Wavepacket[
+    wavepacket: BlochWavefunctionList[
         StackedBasisLike[*tuple[Any, ...]], StackedBasisLike[*tuple[Any, ...]]
     ],
     axes: tuple[int, int, int] = (0, 1, 2),
@@ -508,7 +508,7 @@ def animate_wavepacket_3d_x(
 
 
 def plot_wavepacket_along_path(
-    wavepacket: Wavepacket[
+    wavepacket: BlochWavefunctionList[
         StackedBasisLike[*tuple[Any, ...]], StackedBasisLike[*tuple[Any, ...]]
     ],
     path: np.ndarray[tuple[int, int], np.dtype[np.int_]],

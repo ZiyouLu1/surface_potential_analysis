@@ -6,7 +6,6 @@ import numpy as np
 import qutip
 import qutip.ui
 import scipy.sparse
-from qutip.core.data import create, to
 
 from surface_potential_analysis.basis.basis import FundamentalBasis
 from surface_potential_analysis.basis.stacked_basis import (
@@ -211,14 +210,13 @@ def solve_stochastic_schrodinger_equation(
     ...
 
 
-def solve_stochastic_schrodinger_equation(  # type: ignore bad overload  # noqa: PLR0913
+def solve_stochastic_schrodinger_equation(  # type: ignore bad overload
     initial_state: StateVector[_B0Inv],
     times: _AX0Inv,
     hamiltonian: SingleBasisOperator[_B0Inv],
     collapse_operators: list[SingleBasisOperator[_B0Inv]],
     *,
     n_trajectories: _L1Inv | Literal[1] = 1,
-    combine_collapse_operators: bool = False,
 ) -> (
     StateVectorList[StackedBasisLike[FundamentalBasis[Literal[1]], _AX0Inv], _B0Inv]
     | StateVectorList[StackedBasisLike[FundamentalBasis[_L1Inv], _AX0Inv], _B0Inv]
@@ -238,35 +236,14 @@ def solve_stochastic_schrodinger_equation(  # type: ignore bad overload  # noqa:
     StateVectorList[_B0Inv, _L0Inv]
     """
     hamiltonian_qobj = qutip.Qobj(
-        to("csr", create(hamiltonian["data"].reshape(hamiltonian["basis"].shape)))
-    )
-    initial_state_qobj = qutip.Qobj(
-        to("csr", create(initial_state["data"]))  # , dims=initial_state["data"].shape
-    )
-    if combine_collapse_operators:
-        sc_ops = [
-            qutip.Qobj(
-                to(
-                    "csr",
-                    create(
-                        np.sum(
-                            [
-                                op["data"].reshape(op["basis"].shape)
-                                for op in collapse_operators
-                            ],
-                            axis=0,
-                        )
-                    ),
-                )
-            )
-        ]
-    else:
-        sc_ops = [
-            qutip.Qobj(
-                to("csr", create(op["data"].reshape(op["basis"].shape)))
-            )  # scipy.sparse.coo_array(op["data"].reshape(op["basis"].shape)))
-            for op in collapse_operators
-        ]
+        hamiltonian["data"].reshape(hamiltonian["basis"].shape)
+    ).to("CSR")
+    initial_state_qobj = qutip.Qobj(initial_state["data"])
+
+    sc_ops = [
+        qutip.Qobj(op["data"].reshape(op["basis"].shape)).to("CSR")
+        for op in collapse_operators
+    ]
     result = qutip.ssesolve(
         hamiltonian_qobj,
         initial_state_qobj,
@@ -278,7 +255,8 @@ def solve_stochastic_schrodinger_equation(  # type: ignore bad overload  # noqa:
             "method": "euler",
             "progress_bar": "enhanced",
             "store_states": True,
-            "store_density_matricies": False,
+            "keep_runs_results": True,
+            "map": "parallel",
             "dt": times.delta_t / times.fundamental_n,
         },
         ntraj=n_trajectories,  # cspell:disable-line

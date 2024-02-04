@@ -32,8 +32,8 @@ if TYPE_CHECKING:
     )
     from surface_potential_analysis.types import SingleIndexLike
     from surface_potential_analysis.wavepacket.wavepacket import (
-        Wavepacket,
-        WavepacketList,
+        BlochWavefunctionList,
+        BlochWavefunctionListList,
     )
 
 
@@ -46,10 +46,10 @@ _SB0 = TypeVar("_SB0", bound=StackedBasisLike[*tuple[Any, ...]])
 
 @timed
 def calculate_wavepacket_overlap(
-    wavepacket_0: Wavepacket[
+    wavepacket_0: BlochWavefunctionList[
         StackedBasisLike[*tuple[_B0, ...]], StackedBasisLike[*tuple[_BL0, ...]]
     ],
-    wavepacket_1: Wavepacket[
+    wavepacket_1: BlochWavefunctionList[
         StackedBasisLike[*tuple[_B1, ...]], StackedBasisLike[*tuple[_BL1, ...]]
     ],
 ) -> SingleOverlap[StackedBasisLike[*tuple[FundamentalPositionBasis[Any, Any], ...]]]:
@@ -120,7 +120,7 @@ def calculate_state_vector_list_overlap(
 
 @overload
 def calculate_wavepacket_list_overlap(
-    wavepackets: WavepacketList[
+    wavepackets: BlochWavefunctionListList[
         _B1, StackedBasisLike[*tuple[_B0, ...]], StackedBasisLike[*tuple[_BL0, ...]]
     ],
     *,
@@ -132,7 +132,7 @@ def calculate_wavepacket_list_overlap(
 
 @overload
 def calculate_wavepacket_list_overlap(
-    wavepackets: WavepacketList[
+    wavepackets: BlochWavefunctionListList[
         _B1, StackedBasisLike[*tuple[_B0, ...]], StackedBasisLike[*tuple[_BL0, ...]]
     ],
     *,
@@ -146,7 +146,7 @@ def calculate_wavepacket_list_overlap(
 
 @timed
 def calculate_wavepacket_list_overlap(
-    wavepackets: WavepacketList[
+    wavepackets: BlochWavefunctionListList[
         _B1, StackedBasisLike[*tuple[_B0, ...]], StackedBasisLike[*tuple[_BL0, ...]]
     ],
     *,

@@ -15,7 +15,10 @@ from surface_potential_analysis.basis.basis_like import (
     BasisWithLengthLike,
     convert_vector,
 )
-from surface_potential_analysis.basis.evenly_spaced_basis import EvenlySpacedBasis
+from surface_potential_analysis.basis.evenly_spaced_basis import (
+    EvenlySpacedBasis,
+    EvenlySpacedTransformedPositionBasis,
+)
 from surface_potential_analysis.basis.stacked_basis import (
     StackedBasis,
     StackedBasisLike,
@@ -58,26 +61,67 @@ _SB0 = TypeVar("_SB0", bound=StackedBasisLike[*tuple[Any, ...]])
 _SB1 = TypeVar("_SB1", bound=StackedBasisLike[*tuple[Any, ...]])
 
 
-WavepacketBasis = StackedBasisLike[_SB0, _SB1]
+BlochWavefunctionListBasis = StackedBasisLike[_SB0, _SB1]
 
-Wavepacket = StateVectorList[_SB0, _SB1]
+BlochWavefunctionList = StateVectorList[_SB0, _SB1]
 """represents an approximation of a Wannier function."""
 
 
-WavepacketWithEigenvalues = EigenstateList[_SB0, _SB1]
+BlochWavefunctionListWithEigenvalues = EigenstateList[_SB0, _SB1]
 """represents an approximation of a Wannier function."""
 
 
-WavepacketList = StateVectorList[StackedBasisLike[_B0, _SB0], _SB1]
+BlochWavefunctionListList = StateVectorList[StackedBasisLike[_B0, _SB0], _SB1]
 """represents a list of wavefunctions."""
 
 
-WavepacketWithEigenvaluesList = EigenstateList[StackedBasisLike[_B0, _SB0], _SB1]
-"""Represents a list of WavepacketWithEigenvalues."""
+BlochWavefunctionListWithEigenvaluesList = EigenstateList[
+    StackedBasisLike[_B0, _SB0], _SB1
+]
+"""
+Represents a collection of bloch wavefunction lists.
+
+An individual wavefunction is stored per band and per sample in the first brillouin zone.
+
+An EigenstateList[StackedBasisLike[_B0, _SB0], _SB1] where
+- _B0   - The basis of Bands, this is essentially just
+the basis of the 'list' of individual wavepackets
+- _SB0  - The basis of the samples in the first brillouin zone
+- _SB1  - The basis of the individual bloch wavefunctions
+
+The underlying wavepackets have a basis of StackedBasisLike[_SB0, _SB1]
+however for convenience we store the data as a list of bloch state for each
+sample in the first brillouin zone
+"""
+
+
+def get_fundamental_unfurled_sample_basis_momentum(
+    basis: BlochWavefunctionListBasis[_SB0, StackedBasisLike[*tuple[_BL0, ...]]],
+    offsets: tuple[int, ...] | None = None,
+) -> StackedBasis[
+    *tuple[EvenlySpacedTransformedPositionBasis[int, int, int, int], ...]
+]:
+    """
+    Get the basis of an individual wavefunction from the wavepacket.
+
+    This takes states from the fundamental list_basis, for the sample at offset
+    """
+    offsets = (0,) * basis[0].ndim if offsets is None else offsets
+    return StackedBasis(
+        *tuple(
+            EvenlySpacedTransformedPositionBasis(
+                delta_x=b1.delta_x * b0.fundamental_n,
+                n=b1.fundamental_n,
+                step=b0.fundamental_n,
+                offset=offset,
+            )
+            for (b0, b1, offset) in zip(basis[0], basis[1], offsets, strict=True)
+        )
+    )
 
 
 def get_sample_basis(
-    basis: WavepacketBasis[_SB0, StackedBasisLike[*tuple[_BL0, ...]]],
+    basis: BlochWavefunctionListBasis[_SB0, StackedBasisLike[*tuple[_BL0, ...]]],
 ) -> StackedBasis[*tuple[BasisWithLengthLike[Any, Any, Any], ...]]:
     """
     Given the basis for a wavepacket, get the basis used to sample the packet.
@@ -109,7 +153,7 @@ class UnfurledBasis(StackedBasis[_B0, BasisWithLengthLike[_L0Inv, _L1Inv, _ND0In
 
 
 def get_unfurled_basis(
-    basis: WavepacketBasis[
+    basis: BlochWavefunctionListBasis[
         StackedBasisLike[*tuple[_B0, ...]], StackedBasisLike[*tuple[_BL0, ...]]
     ],
 ) -> StackedBasisLike[*tuple[UnfurledBasis[Any, Any, Any, Any], ...]]:
@@ -180,7 +224,7 @@ def get_wavepacket_sample_fractions(
 
 
 def get_wavepacket_sample_frequencies(
-    basis: WavepacketBasis[_SB0, StackedBasisLike[*tuple[_BL0, ...]]],
+    basis: BlochWavefunctionListBasis[_SB0, StackedBasisLike[*tuple[_BL0, ...]]],
 ) -> np.ndarray[tuple[int, int], np.dtype[np.float64]]:
     """
     Get the frequencies used in a given wavepacket.
@@ -207,7 +251,7 @@ def generate_wavepacket(
     ],
     list_basis: _SB0,
     save_bands: _ESB0,
-) -> WavepacketWithEigenvaluesList[_ESB0, _SB0, _SB1]:
+) -> BlochWavefunctionListWithEigenvaluesList[_ESB0, _SB0, _SB1]:
     """
     Generate a wavepacket with the given number of samples.
 
@@ -251,8 +295,8 @@ def generate_wavepacket(
 
 
 def get_wavepacket_basis(
-    wavepackets: WavepacketList[_B0, _SB0, _SB1],
-) -> WavepacketBasis[_SB0, _SB1]:
+    wavepackets: BlochWavefunctionListList[_B0, _SB0, _SB1],
+) -> BlochWavefunctionListBasis[_SB0, _SB1]:
     """
     Get the basis of the wavepacket.
 
@@ -268,9 +312,9 @@ def get_wavepacket_basis(
 
 
 def get_wavepacket(
-    wavepackets: WavepacketList[_B0, _SB0, _SB1],
+    wavepackets: BlochWavefunctionListList[_B0, _SB0, _SB1],
     idx: SingleFlatIndexLike,
-) -> Wavepacket[_SB0, _SB1]:
+) -> BlochWavefunctionList[_SB0, _SB1]:
     """
     Get the wavepacket at idx.
 
@@ -290,9 +334,9 @@ def get_wavepacket(
 
 
 def get_wavepacket_with_eigenvalues(
-    wavepackets: WavepacketWithEigenvaluesList[_B0, _SB0, _SB1],
+    wavepackets: BlochWavefunctionListWithEigenvaluesList[_B0, _SB0, _SB1],
     idx: SingleFlatIndexLike,
-) -> WavepacketWithEigenvalues[_SB0, _SB1]:
+) -> BlochWavefunctionListWithEigenvalues[_SB0, _SB1]:
     """
     Get the wavepacket at idx.
 
@@ -313,9 +357,9 @@ def get_wavepacket_with_eigenvalues(
 
 
 def get_wavepackets(
-    wavepackets: WavepacketList[_B0, _SB0, _SB1],
+    wavepackets: BlochWavefunctionListList[_B0, _SB0, _SB1],
     idx: slice,
-) -> WavepacketList[BasisLike[Any, Any], _SB0, _SB1]:
+) -> BlochWavefunctionListList[BasisLike[Any, Any], _SB0, _SB1]:
     """
     Get the wavepackets at the given slice.
 
@@ -340,9 +384,9 @@ def get_wavepackets(
 
 
 def get_wavepackets_with_eigenvalues(
-    wavepackets: WavepacketWithEigenvaluesList[_B0, _SB0, _SB1],
+    wavepackets: BlochWavefunctionListWithEigenvaluesList[_B0, _SB0, _SB1],
     idx: slice,
-) -> WavepacketWithEigenvaluesList[BasisLike[Any, Any], _SB0, _SB1]:
+) -> BlochWavefunctionListWithEigenvaluesList[BasisLike[Any, Any], _SB0, _SB1]:
     """
     Get the wavepackets at the given slice.
 
@@ -370,8 +414,8 @@ def get_wavepackets_with_eigenvalues(
 
 
 def as_wavepacket_list(
-    wavepackets: Iterable[Wavepacket[_SB0, _SB1]],
-) -> WavepacketList[FundamentalBasis[int], _SB0, _SB1]:
+    wavepackets: Iterable[BlochWavefunctionList[_SB0, _SB1]],
+) -> BlochWavefunctionListList[FundamentalBasis[int], _SB0, _SB1]:
     """
     Convert an iterable of wavepackets into a wavepacket list.
 
@@ -395,8 +439,8 @@ def as_wavepacket_list(
 
 
 def wavepacket_list_into_iter(
-    wavepackets: WavepacketList[Any, _SB0, _SB1],
-) -> Iterable[Wavepacket[_SB0, _SB1]]:
+    wavepackets: BlochWavefunctionListList[Any, _SB0, _SB1],
+) -> Iterable[BlochWavefunctionList[_SB0, _SB1]]:
     """
     Iterate over wavepackets in the list.
 
@@ -414,7 +458,7 @@ def wavepacket_list_into_iter(
 
 
 def get_average_eigenvalues(
-    wavepackets: WavepacketWithEigenvaluesList[_B0, Any, Any],
+    wavepackets: BlochWavefunctionListWithEigenvaluesList[_B0, Any, Any],
 ) -> SingleBasisDiagonalOperator[_B0]:
     """
     Get the band averaged eigenvalues of a wavepacket.

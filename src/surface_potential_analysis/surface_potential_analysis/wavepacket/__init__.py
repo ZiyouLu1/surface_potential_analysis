@@ -5,6 +5,6 @@ These states can be used to produce a more localized Wannier basis states
 """
 from __future__ import annotations
 
-from .wavepacket import Wavepacket
+from .wavepacket import BlochWavefunctionList
 
-__all__ = ["Wavepacket"]
+__all__ = ["BlochWavefunctionList"]

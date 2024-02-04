@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import re
+import subprocess
 import tempfile
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
@@ -52,7 +53,7 @@ from surface_potential_analysis.wavepacket.localization.localization_operator im
     get_localized_wavepackets,
 )
 from surface_potential_analysis.wavepacket.wavepacket import (
-    WavepacketList,
+    BlochWavefunctionListList,
     as_wavepacket_list,
     get_wavepacket_sample_fractions,
     wavepacket_list_into_iter,
@@ -144,7 +145,7 @@ end kpoints"""
 
 
 def _build_win_file(
-    wavepackets: WavepacketList[_B0, _SB0, _SBL0],
+    wavepackets: BlochWavefunctionListList[_B0, _SB0, _SBL0],
     *,
     postproc_setup: bool = False,
     options: Wannier90Options[Any],
@@ -232,7 +233,9 @@ def _get_offset_bloch_state(
 
 
 def _build_mmn_file_block(
-    wavepackets: WavepacketList[_B0, _SB0, StackedBasisLike[*tuple[_PB1Inv, ...]]],
+    wavepackets: BlochWavefunctionListList[
+        _B0, _SB0, StackedBasisLike[*tuple[_PB1Inv, ...]]
+    ],
     k: tuple[int, int, int, int, int],
     *,
     options: Wannier90Options[_B1],
@@ -241,6 +244,7 @@ def _build_mmn_file_block(
     block = f"{k_0} {k_1} {offset[0]} {offset[1]} {offset[2]}"
     for i in options.ignore_axes:
         offset[i] = 0
+
     for wavepacket_n in wavepacket_list_into_iter(wavepackets):
         for wavepacket_m in wavepacket_list_into_iter(wavepackets):
             mat = calculate_inner_product(
@@ -277,7 +281,9 @@ def _parse_nnk_points_file(
 
 
 def _build_mmn_file(
-    wavepackets: WavepacketList[_B0, _SB0, StackedBasisLike[*tuple[_PB1Inv, ...]]],
+    wavepackets: BlochWavefunctionListList[
+        _B0, _SB0, StackedBasisLike[*tuple[_PB1Inv, ...]]
+    ],
     nnk_points_file: str,
     *,
     options: Wannier90Options[_B1],
@@ -305,9 +311,9 @@ def _build_mmn_file(
 
 
 def _build_amn_file(
-    wavepackets: WavepacketList[
+    wavepackets: BlochWavefunctionListList[
         _B0,
-        StackedBasisLike[*tuple[_FB0, ...]],
+        StackedBasisLike[*tuple[Any, ...]],
         StackedBasisLike[*tuple[_PB1Inv, ...]],
     ],
     projections: StateVectorList[_B1, _B2],
@@ -368,7 +374,7 @@ def _get_fundamental_k_points(
 
 
 def _build_dmn_file(
-    wavepackets: WavepacketList[
+    wavepackets: BlochWavefunctionListList[
         _B0,
         StackedBasisLike[*tuple[_FB0, ...]],
         StackedBasisLike[*tuple[_PB1Inv, ...]],
@@ -451,7 +457,7 @@ def _get_localization_operator_from_u_mat_file(
 
 
 def _write_setup_files_wannier90(
-    wavepackets: WavepacketList[_B0, _SB0, _SBL0],
+    wavepackets: BlochWavefunctionListList[_B0, _SB0, _SBL0],
     tmp_dir_path: Path,
     *,
     options: Wannier90Options[_B1],
@@ -462,7 +468,9 @@ def _write_setup_files_wannier90(
 
 
 def _write_localization_files_wannier90(
-    wavepackets: WavepacketList[_B0, StackedBasisLike[*tuple[_FB0, ...]], _SBL0],
+    wavepackets: BlochWavefunctionListList[
+        _B0, StackedBasisLike[*tuple[_FB0, ...]], _SBL0
+    ],
     tmp_dir_path: Path,
     n_nkp_file: str,
     *,
@@ -486,7 +494,6 @@ def _write_localization_files_wannier90(
     mmn_filename = tmp_dir_path / "spa.mmn"
     with mmn_filename.open("w") as f:
         f.write(_build_mmn_file(converted, n_nkp_file, options=options))
-
     if options.projection.get("data", None) is not None:
         projection = cast(StateVectorList[_B1, Any], options.projection)
         amn_filename = tmp_dir_path / "spa.amn"
@@ -499,8 +506,47 @@ def _write_localization_files_wannier90(
             f.write(_build_dmn_file(converted, options.symmetry_operations))
 
 
+# ruff: noqa: S603, S607, S108
+def _run_wannier90(directory: Path) -> None:
+    container = "f776014440144052e94a86044eaf6ee4ce131f80ae12df0bd0d2bdcf24206bfa"
+    subprocess.run(
+        ["docker", "exec", container, "rm", "-r", "/tmp/scratch_w90"],
+        check=False,
+    )
+    subprocess.run(
+        ["docker", "exec", container, "mkdir", "/tmp/scratch_w90"],
+        check=True,
+    )
+    subprocess.run(
+        ["docker", "cp", ".", f"{container}:/tmp/scratch_w90"],
+        check=True,
+        cwd=directory,
+    )
+    subprocess.run(
+        [
+            "docker",
+            "exec",
+            "-w",
+            "/tmp/scratch_w90",
+            container,
+            "wannier90.x",
+            "spa.win",
+        ],
+        check=True,
+    )
+    subprocess.run(
+        ["docker", "cp", f"{container}:/tmp/scratch_w90/.", "."],
+        check=True,
+        cwd=directory,
+    )
+    subprocess.run(
+        ["docker", "exec", container, "rm", "-r", "/tmp/scratch_w90"],
+        check=True,
+    )
+
+
 def get_localization_operator_wannier90(
-    wavepackets: WavepacketList[_B0, _SB0, _SBL0],
+    wavepackets: BlochWavefunctionListList[_B0, _SB0, _SBL0],
     *,
     options: Wannier90Options[_B1],
 ) -> LocalizationOperator[_SB0, _B1, _B0]:
@@ -529,7 +575,10 @@ def get_localization_operator_wannier90(
 
         # Build Files for initial Setup
         _write_setup_files_wannier90(wavepackets, tmp_dir_path, options=options)
-        input(f"Run Wannier 90 in {tmp_dir_path}")
+        try:
+            _run_wannier90(tmp_dir_path)
+        except Exception:  # noqa: BLE001
+            input(f"Run Wannier 90 in {tmp_dir_path}")
 
         # Load Setup Files
         n_nkp_filename = tmp_dir_path / "spa.nnkp"  # cSpell:disable-line
@@ -543,7 +592,10 @@ def get_localization_operator_wannier90(
             n_nkp_file,
             options=options,  # type: ignore should be fundamental basis, but we have no way of ensuring this in the type system
         )
-        input(f"Run Wannier 90 in {tmp_dir_path}")
+        try:
+            _run_wannier90(tmp_dir_path)
+        except Exception:  # noqa: BLE001
+            input(f"Run Wannier 90 in {tmp_dir_path}")
 
         # Load Result files, and localize wavepacket
         u_mat_filename = tmp_dir_path / "spa_u.mat"
@@ -556,10 +608,10 @@ def get_localization_operator_wannier90(
 
 
 def localize_wavepacket_wannier90(
-    wavepackets: WavepacketList[_B0, _SB0, _SBL0],
+    wavepackets: BlochWavefunctionListList[_B0, _SB0, _SBL0],
     *,
     options: Wannier90Options[_B1],
-) -> WavepacketList[_B1, _SB0, _SBL0]:
+) -> BlochWavefunctionListList[_B1, _SB0, _SBL0]:
     """
     Localizes a set of wavepackets using wannier 90, with a single point projection as an initial guess.
 
@@ -585,7 +637,7 @@ def localize_wavepacket_wannier90(
 
 
 def get_localization_operator_wannier90_individual_bands(
-    wavepackets: WavepacketList[_B0, _SB0, _SBL0],
+    wavepackets: BlochWavefunctionListList[_B0, _SB0, _SBL0],
 ) -> LocalizationOperator[_SB0, _B0, _B0]:
     options = Wannier90Options[FundamentalBasis[Literal[1]]](
         projection={"basis": StackedBasis(FundamentalBasis(1))},

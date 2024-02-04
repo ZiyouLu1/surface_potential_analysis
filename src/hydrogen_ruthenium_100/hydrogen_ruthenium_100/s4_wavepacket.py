@@ -11,8 +11,8 @@ from surface_potential_analysis.wavepacket.localization import (
     localize_tightly_bound_wavepacket_two_point_max,
 )
 from surface_potential_analysis.wavepacket.wavepacket import (
-    Wavepacket,
-    WavepacketWithEigenvaluesList,
+    BlochWavefunctionList,
+    BlochWavefunctionListWithEigenvaluesList,
     generate_wavepacket,
     get_average_eigenvalues,
     get_wavepacket,
@@ -33,7 +33,7 @@ if TYPE_CHECKING:
     from surface_potential_analysis.basis.stacked_basis import StackedBasisLike
     from surface_potential_analysis.operator import SingleBasisOperator
 
-    _HydrogenRutheniumWavepacketList = WavepacketWithEigenvaluesList[
+    _HydrogenRutheniumWavepacketList = BlochWavefunctionListWithEigenvaluesList[
         EvenlySpacedBasis[Literal[20], Literal[1], Literal[0]],
         StackedBasisLike[
             FundamentalBasis[Literal[12]],
@@ -47,7 +47,7 @@ if TYPE_CHECKING:
         ],
     ]
 
-    _HydrogenRutheniumWavepacket = Wavepacket[
+    _HydrogenRutheniumWavepacket = BlochWavefunctionList[
         StackedBasisLike[
             FundamentalBasis[Literal[12]],
             FundamentalBasis[Literal[12]],
@@ -60,7 +60,7 @@ if TYPE_CHECKING:
         ],
     ]
 
-    _DeuteriumRutheniumWavepacketList = WavepacketWithEigenvaluesList[
+    _DeuteriumRutheniumWavepacketList = BlochWavefunctionListWithEigenvaluesList[
         EvenlySpacedBasis[Literal[20], Literal[1], Literal[0]],
         StackedBasisLike[
             FundamentalBasis[Literal[12]],
@@ -74,7 +74,7 @@ if TYPE_CHECKING:
         ],
     ]
 
-    _DeuteriumRutheniumWavepacket = Wavepacket[
+    _DeuteriumRutheniumWavepacket = BlochWavefunctionList[
         StackedBasisLike[
             FundamentalBasis[Literal[12]],
             FundamentalBasis[Literal[12]],
