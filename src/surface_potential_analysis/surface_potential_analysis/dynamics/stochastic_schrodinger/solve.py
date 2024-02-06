@@ -256,7 +256,8 @@ def solve_stochastic_schrodinger_equation(  # type: ignore bad overload
             "progress_bar": "enhanced",
             "store_states": True,
             "keep_runs_results": True,
-            "map": "parallel",
+            "map": "mpi",
+            "num_cpus": n_trajectories,
             "dt": times.delta_t / times.fundamental_n,
         },
         ntraj=n_trajectories,  # cspell:disable-line
