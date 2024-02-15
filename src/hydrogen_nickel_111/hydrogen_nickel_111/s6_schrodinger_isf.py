@@ -87,10 +87,9 @@ def get_simulation_at_temperature_double_collapse(
     temperature: float, idx: int, times: _B0, _i: int = 0
 ) -> StateVectorList[StackedBasisLike[FundamentalBasis[Literal[60]], _B0], Any]:
     a_matrix = get_tunnelling_a_matrix_hydrogen((10, 10), 8, temperature)
-    collapse_operators = get_simplified_collapse_operators_from_a_matrix(a_matrix)
-    collapse_operators = [
-        {"basis": o["basis"], "data": 2 * o["data"]} for o in collapse_operators
-    ]
+    collapse_operators = get_simplified_collapse_operators_from_a_matrix(
+        a_matrix, factor=2
+    )
     hamiltonian = get_coherent_hamiltonian(a_matrix["basis"][0])
     initial_state: StateVector[Any] = {
         "basis": a_matrix["basis"][0],

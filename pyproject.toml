@@ -22,7 +22,6 @@ python = ">=3.11,<3.13"
 numpy = "^1.26.3"
 matplotlib = "^3.8.2"
 scipy = "^1.11.0"
-hamiltonian_generator = { path = "src/hamiltonian_generator/", develop = true }
 surface_potential_analysis = { path = "src/surface_potential_analysis/", develop = true }
 
 [tool.poetry.group.dev.dependencies]
@@ -71,6 +70,7 @@ ignore = [
     "CPY001",
 ]
 exclude = ["typings/**/*", "lib/**/*"]
+unfixable = ["ERA001", "T201"]
 
 [tool.ruff.pydocstyle]
 convention = "numpy"

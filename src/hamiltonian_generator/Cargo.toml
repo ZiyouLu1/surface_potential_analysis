@@ -10,5 +10,4 @@ crate-type = ["cdylib"]
 
 [dependencies]
 num-complex = "0.4.2"
-pyo3 = { version = "0.17.3", features = ["extension-module","num-complex"] }
-
+pyo3 = { version = "0.20.2", features = ["extension-module", "num-complex"] }

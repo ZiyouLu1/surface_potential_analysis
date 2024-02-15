@@ -80,7 +80,7 @@ def get_collapse_operators_from_a_matrix(
 
 
 def get_simplified_collapse_operators_from_a_matrix(
-    matrix: TunnellingAMatrix[_B0Inv],
+    matrix: TunnellingAMatrix[_B0Inv], *, factor: float = 1
 ) -> list[SingleBasisOperator[_B0Inv]]:
     """
     Given a function which produces the collapse operators S_{i,j} calculate the relevant collapse operators.
@@ -105,7 +105,7 @@ def get_simplified_collapse_operators_from_a_matrix(
                 continue
             for hop in range(9):
                 hop_shift = get_hop_shift(hop, 2)
-                hop_val = jump_array[n_0, hop_shift[0], hop_shift[1], n_1]
+                hop_val = factor * jump_array[n_0, hop_shift[0], hop_shift[1], n_1]
                 if hop_val < 1:
                     continue
 

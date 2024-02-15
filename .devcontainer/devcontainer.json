@@ -1,16 +1,134 @@
+// For format details, see https://aka.ms/devcontainer.json. For config options, see the
+// README at: https://github.com/devcontainers/templates/tree/main/src/debian
 {
-  "name": "Python Dev Environment",
-  "build": {
-    "dockerfile": ".Dockerfile"
-  }
-  // Features to add to the dev container. More info: https://containers.dev/implementors/features.
-  // "features": {},
-  // Use 'forwardPorts' to make a list of ports inside the container available locally.
-  // "forwardPorts": [],
-  // Use 'postCreateCommand' to run commands after the container is created.
-  // "postCreateCommand": "python3 -m venv .venv\nsource .venv/bin/activate\npip install -r requirements.txt"
-  // Configure tool-specific properties.
-  // "customizations": {},
-  // Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.
-  // "remoteUser": "root"
+	"name": "Debian",
+	// Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
+	"image": "mcr.microsoft.com/devcontainers/base:bullseye",
+	"features": {
+		"ghcr.io/devcontainers/features/python:1": {
+			"version": "3.11"
+		},
+		"ghcr.io/devcontainers-contrib/features/poetry:2": {
+			"version": "latest"
+		},
+		"ghcr.io/devcontainers/features/rust:1": {
+			"version": "latest",
+			"profile": "minimal"
+		}
+	},
+	"customizations": {
+		"vscode": {
+			"settings": {
+				"editor.formatOnSave": true,
+				"editor.codeActionsOnSave": {
+					"source.fixAll": "always"
+				},
+				"[python]": {
+					"editor.defaultFormatter": "charliermarsh.ruff",
+					"editor.codeActionsOnSave": {
+						"source.fixAll": "always",
+						"source.organizeImports": "always"
+					},
+					"[analysis]": {
+						"diagnosticMode": "workspace",
+						"typeCheckingMode": "strict",
+						"include": [
+							"src"
+						]
+					}
+				},
+				"cSpell.allowCompoundWords": true,
+				"cSpell.flagWords": [
+					"hte",
+					"teh"
+				],
+				"cSpell.words": [
+					"arange",
+					"argmax",
+					"argmin",
+					"asarray",
+					"astype",
+					"atol",
+					"clim",
+					"colorbar",
+					"dtype",
+					"eigenstate",
+					"eigenstates",
+					"eigh",
+					"fftfreq",
+					"fftn",
+					"fftshift",
+					"hbar",
+					"hermitian",
+					"ifft",
+					"ifftn",
+					"ifftshift",
+					"imshow",
+					"irfft",
+					"irfftn",
+					"ishermitian",
+					"isreal",
+					"issymmetric",
+					"jianding",
+					"kinded",
+					"Libary",
+					"lindblad",
+					"lindbladian",
+					"linestyle",
+					"linspace",
+					"matplotlib",
+					"meshgrid",
+					"mesolve",
+					"ncols",
+					"ndarray",
+					"ndenumerate",
+					"ndim",
+					"ndimage",
+					"ndindex",
+					"ndk",
+					"nrows",
+					"pcolormesh",
+					"prefactor",
+					"pyplot",
+					"Qobj",
+					"qutip",
+					"rfft",
+					"rfftn",
+					"savefig",
+					"scipy",
+					"Seitz",
+					"sharey",
+					"splev",
+					"splrep",
+					"suptitle",
+					"symlog",
+					"toarray",
+					"twinx",
+					"vmax",
+					"vmin",
+					"Wannier",
+					"wavefunction",
+					"wavefunctions",
+					"wavepacket",
+					"wavepackets",
+					"Wavevector",
+					"xlabel",
+					"xlim",
+					"xscale",
+					"yerr",
+					"ylabel",
+					"ylim",
+					"yscale"
+				],
+			},
+			"extensions": [
+				"donjayamanne.python-extension-pack",
+				"esbenp.prettier-vscode",
+				"streetsidesoftware.code-spell-checker",
+				"tamasfe.even-better-toml",
+				"charliermarsh.ruff"
+			]
+		}
+	},
+	"onCreateCommand": "rustup default nightly && poetry install"
 }
