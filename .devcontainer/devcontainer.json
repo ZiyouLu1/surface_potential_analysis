@@ -130,5 +130,6 @@
 			]
 		}
 	},
-	"onCreateCommand": "rustup default nightly && poetry install"
+	"onCreateCommand": "rustup default nightly && poetry install",
+	"mounts": ["source=/mnt/c/Users/mo433/OneDrive - University of Cambridge/Documents/spa_data,target=/workspaces/surface_potential_analysis/data,type=bind,consistency=cached"]
 }

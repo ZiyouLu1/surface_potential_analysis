@@ -11,13 +11,16 @@ from surface_potential_analysis.util.decorators import timed
 
 @timed
 def main() -> None:
-    temperature = 250
-    times = EvenlySpacedTimeBasis(2000, 20, 0, 6e-10)
+    temperature = 125
+    times = EvenlySpacedTimeBasis(2, 2000, 0, 24e-10)
+    p: Profile | None = None
+
     try:
         with Profile() as p:
-            get_simulation_at_temperature_double_collapse(temperature, 0, times)
+            get_simulation_at_temperature_double_collapse(temperature, 0, times, _i=0)
     finally:
-        p.dump_stats("out1.prof")
+        if p is not None:
+            p.dump_stats("out.prof")
 
 
 if __name__ == "__main__":

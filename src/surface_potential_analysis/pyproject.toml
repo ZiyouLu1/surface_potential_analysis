@@ -11,7 +11,7 @@ python = ">=3.11,<3.13"
 numpy = "^1.26.3"
 matplotlib = "^3.8.2"
 scipy = "^1.11.0"
-hamiltonian_generator = { path = "../hamiltonian_generator/", develop = true }
+hamiltonian_generator = { path = "../hamiltonian_generator/" }
 # qutip = "5.0.0a2"
 qutip = { path = "../../lib/qutip", extras = ["full"] }
 [tool.poetry.group.dev.dependencies]
@@ -43,7 +43,6 @@ preview = true
 ignore = ["COM812", "E501", "ANN101", "S101", "PT009", "D100", "D105", "CPY001"]
 
 [tool.ruff.extend-per-file-ignores]
-# Also ignore `E402` in all `__init__.py` files.
 "_test_surface_potential_analysis/**/*" = ["PLR6301", "PLC2701", "PLR0914"]
 
 [tool.ruff.lint.pylint]
