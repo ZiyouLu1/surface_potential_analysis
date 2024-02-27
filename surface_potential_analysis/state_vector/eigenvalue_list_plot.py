@@ -100,10 +100,12 @@ def plot_eigenstate_occupations(
     fig, ax = get_figure(ax)
 
     energies = eigenstates["eigenvalue"]
+    energies -= np.min(energies)
     occupation = np.exp(-np.abs(energies) / (temperature * Boltzmann))
     occupation /= np.sum(occupation)
 
     (line,) = ax.plot(energies, occupation)
+    ax.axvline(np.average(energies, weights=occupation))
 
     ax.set_yscale(scale)
     ax.set_xlabel("Occupation")

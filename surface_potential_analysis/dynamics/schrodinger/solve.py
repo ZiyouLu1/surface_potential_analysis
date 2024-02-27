@@ -156,7 +156,11 @@ def solve_schrodinger_equation(
         initial_state_qobj,
         times.times,
         e_ops=[],
-        options={"progress_bar": "enhanced", "store_states": True},
+        options={
+            "progress_bar": "enhanced",
+            "store_states": True,
+            "nsteps": times.step,
+        },
     )
     return {
         "basis": StackedBasis(StackedBasis(times), hamiltonian["basis"][0]),

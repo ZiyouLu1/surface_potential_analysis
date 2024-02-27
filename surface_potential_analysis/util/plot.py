@@ -454,3 +454,53 @@ def animate_data_through_surface_x(
     ax.set_xlabel(f"x{axes[0]} axis")
     ax.set_ylabel(f"x{axes[1]} axis")
     return fig, ax, ani
+
+
+def animate_data_through_list_1d_x(
+    basis: StackedBasisLike[*tuple[Any, ...]],
+    data: np.ndarray[tuple[int, int], np.dtype[np.complex128]],
+    axes: tuple[int,] = (0,),
+    idx: SingleStackedIndexLike | None = None,
+    *,
+    ax: Axes | None = None,
+    scale: Scale = "linear",
+    measure: Measure = "abs",
+) -> tuple[Figure, Axes, ArtistAnimation]:
+    """
+    Given data on a given coordinate grid in 3D, animate through the surface.
+
+    Parameters
+    ----------
+    basis : StackedBasisLike
+    data : np.ndarray[tuple[_L0Inv], np.dtype[np.complex_]]
+    axes : tuple[int, int, int], optional
+        plot axes (z, y, z), by default (0, 1, 2)
+    idx : SingleStackedIndexLike | None, optional
+        idx in remaining dimensions, by default None
+    ax : Axes | None, optional
+        plot ax, by default None
+    scale : Scale, optional
+        scale, by default "linear"
+    clim : tuple[float  |  None, float  |  None], optional
+        clim, by default (None, None)
+    measure : Measure, optional
+        measure, by default "abs"
+
+    Returns
+    -------
+    tuple[Figure, Axes, ArtistAnimation]
+    """
+    fig, ax = get_figure(ax)
+
+    frames: list[list[Line2D]] = []
+
+    for data_i in data:
+        _, _, line = plot_data_1d_x(
+            basis, data_i, axes, idx, ax=ax, scale=scale, measure=measure
+        )
+        frames.append([line])
+        line.set_color(frames[0][0].get_color())
+
+    ani = ArtistAnimation(fig, frames)
+
+    return fig, ax, ani

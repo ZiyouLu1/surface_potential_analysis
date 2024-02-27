@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, TypeVar
 
 import numpy as np
+from matplotlib.animation import ArtistAnimation
 
 from surface_potential_analysis.basis.util import (
     BasisUtil,
@@ -15,6 +16,7 @@ from surface_potential_analysis.stacked_basis.util import (
     calculate_cumulative_x_distances_along_path,
 )
 from surface_potential_analysis.state_vector.conversion import (
+    convert_state_vector_list_to_basis,
     convert_state_vector_to_basis,
     convert_state_vector_to_momentum_basis,
     convert_state_vector_to_position_basis,
@@ -27,6 +29,7 @@ from surface_potential_analysis.state_vector.state_vector_list import (
     calculate_inner_products,
 )
 from surface_potential_analysis.util.plot import (
+    animate_data_through_list_1d_x,
     animate_data_through_surface_x,
     get_figure,
     plot_data_1d_k,
@@ -40,7 +43,6 @@ from surface_potential_analysis.util.util import (
 )
 
 if TYPE_CHECKING:
-    from matplotlib.animation import ArtistAnimation
     from matplotlib.axes import Axes
     from matplotlib.collections import QuadMesh
     from matplotlib.figure import Figure
@@ -150,6 +152,53 @@ def plot_state_1d_x(
     )
     ax.set_ylabel("State /Au")
     return fig, ax, line
+
+
+def animate_state_over_list_1d_x(
+    states: StateVectorList[BasisLike[Any, Any], StackedBasisLike[*tuple[Any, ...]]],
+    axes: tuple[int] = (0,),
+    idx: SingleStackedIndexLike | None = None,
+    *,
+    ax: Axes | None = None,
+    measure: Measure = "abs",
+    scale: Scale = "linear",
+) -> tuple[Figure, Axes, ArtistAnimation]:
+    """
+    Plot an state in 1d along the given axis, over time.
+
+    Parameters
+    ----------
+    states : StateVectorList[BasisLike[Any, Any], StackedBasisLike[*tuple[Any, ...]]]
+    idx : SingleStackedIndexLike, optional
+        index in the perpendicular directions, by default (0,0)
+    axis : int, optional
+        axis along which to plot, by default 0
+    ax : Axes | None, optional
+        plot axis, by default None
+    measure : Measure, optional
+        measure, by default "abs"
+    scale : Literal[&quot;symlog&quot;, &quot;linear&quot;], optional
+        scale, by default "linear"
+
+    Returns
+    -------
+    tuple[Figure, Axes, Line2D]
+    """
+    converted = convert_state_vector_list_to_basis(
+        states, stacked_basis_as_fundamental_position_basis(states["basis"][1])
+    )
+
+    fig, ax, ani = animate_data_through_list_1d_x(
+        converted["basis"][1],
+        converted["data"].reshape(converted["basis"].shape),
+        axes,
+        idx,
+        ax=ax,
+        scale=scale,
+        measure=measure,
+    )
+    ax.set_ylabel("State /Au")
+    return fig, ax, ani
 
 
 def plot_state_2d_k(
@@ -469,6 +518,22 @@ def plot_all_band_occupations(
     ax: Axes | None = None,
     scale: Scale = "linear",
 ) -> tuple[Figure, Axes]:
+    """
+    Plot the occupation of each state against energy.
+
+    Parameters
+    ----------
+    hamiltonian : SingleBasisOperator[_B0Inv]
+    states : StateVectorList[BasisLike[Any, Any], _B0Inv]
+    ax : Axes | None, optional
+        axis, by default None
+    scale : Scale, optional
+        scale, by default "linear"
+
+    Returns
+    -------
+    tuple[Figure, Axes]
+    """
     fig, ax = get_figure(ax)
 
     eigenstates = calculate_eigenvectors_hermitian(hamiltonian)
@@ -477,8 +542,6 @@ def plot_all_band_occupations(
 
     n_states = states["basis"][0].n
     for i, occupation in enumerate(occupations["data"].reshape(n_states, -1)):
-        if i != 10:
-            continue
         measured = np.abs(occupation) ** 2
         (line,) = ax.plot(energies, measured)
         line.set_label(f"state {i} occupation")
@@ -491,6 +554,54 @@ def plot_all_band_occupations(
     return fig, ax
 
 
+def animate_all_band_occupations(
+    hamiltonian: SingleBasisOperator[_B0Inv],
+    states: StateVectorList[BasisLike[Any, Any], _B0Inv],
+    *,
+    ax: Axes | None = None,
+    scale: Scale = "linear",
+) -> tuple[Figure, Axes, ArtistAnimation]:
+    """
+    Animate the occupation of each state against energy.
+
+    Parameters
+    ----------
+    hamiltonian : SingleBasisOperator[_B0Inv]
+    states : StateVectorList[BasisLike[Any, Any], _B0Inv]
+    ax : Axes | None, optional
+        axis, by default None
+    scale : Scale, optional
+        scale, by default "linear"
+
+    Returns
+    -------
+    tuple[Figure, Axes, ArtistAnimation]
+
+    """
+    fig, ax = get_figure(ax)
+
+    eigenstates = calculate_eigenvectors_hermitian(hamiltonian)
+    energies = eigenstates["eigenvalue"]
+    occupations = calculate_inner_products(states, eigenstates)
+
+    frames: list[list[Line2D]] = []
+    n_states = states["basis"][0].n
+    for i, occupation in enumerate(occupations["data"].reshape(n_states, -1)):
+        measured = np.abs(occupation) ** 2
+        (line,) = ax.plot(energies, measured)
+        line.set_label(f"state {i} occupation")
+        frames.append([line])
+        line.set_color(frames[0][0].get_color())
+
+    ani = ArtistAnimation(fig, frames)
+    ax.set_yscale(scale)
+    ax.set_xlabel("Occupation")
+    ax.set_xlabel("Energy /J")
+    ax.set_title("Plot of Occupation against Energy")
+
+    return fig, ax, ani
+
+
 def plot_band_occupation(
     hamiltonian: SingleBasisOperator[_B0Inv],
     state: StateVector[_B0Inv],
@@ -498,6 +609,22 @@ def plot_band_occupation(
     ax: Axes | None = None,
     scale: Scale = "linear",
 ) -> tuple[Figure, Axes, Line2D]:
+    """
+    Plot the occupation of the state against energy.
+
+    Parameters
+    ----------
+    hamiltonian : SingleBasisOperator[_B0Inv]
+    state : StateVector[_B0Inv]
+    ax : Axes | None, optional
+        axis, by default None
+    scale : Scale, optional
+        scale, by default "linear"
+
+    Returns
+    -------
+    tuple[Figure, Axes, Line2D]
+    """
     return plot_all_band_occupations(
         hamiltonian, as_state_vector_list([state]), ax=ax, scale=scale
     )
