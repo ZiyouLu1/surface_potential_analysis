@@ -44,7 +44,7 @@ class EvenlySpacedTimeBasis(
 
     @property
     def times(self) -> np.ndarray[tuple[_N0_co], np.dtype[np.float64]]:
-        return np.linspace(0, self._delta_t, self.n)  # type: ignore[no-any-return]
+        return self.fundamental_dt * self.offset + np.linspace(0, self._delta_t, self.n)
 
     @property
     def fundamental_times(self) -> np.ndarray[tuple[Any], np.dtype[np.float64]]:

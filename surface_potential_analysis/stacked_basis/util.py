@@ -19,7 +19,6 @@ from surface_potential_analysis.basis.basis import (
 from surface_potential_analysis.basis.util import (
     BasisUtil,
 )
-from surface_potential_analysis.util.decorators import timed
 from surface_potential_analysis.util.util import (
     get_position_in_sorted,
     slice_ignoring_axes,
@@ -498,7 +497,6 @@ def get_single_point_basis(
     return tuple(FundamentalPositionBasis(b.delta_x, 1) for b in basis)  # type: ignore[return-value]
 
 
-@timed
 def get_max_idx(
     basis: StackedBasisLike[*tuple[Any, ...]],
     data: np.ndarray[tuple[Any], np.dtype[np.complex128]],

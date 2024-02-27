@@ -46,7 +46,7 @@ _B = TypeVarTuple("_B")
 _TS = TypeVarTuple("_TS")
 
 
-# ruff: noqa: D102
+# ruff: noqa: D102, PLR0904
 class BasisUtil(BasisLike[Any, Any], Generic[_B0_co]):
     """A class to help with the manipulation of an axis."""
 

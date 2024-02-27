@@ -6,22 +6,32 @@ import numpy as np
 import qutip
 import qutip.ui
 import scipy.sparse
+from scipy.constants import hbar
 
 from surface_potential_analysis.basis.basis import FundamentalBasis
 from surface_potential_analysis.basis.stacked_basis import (
     StackedBasis,
     StackedBasisLike,
 )
+from surface_potential_analysis.basis.time_basis_like import EvenlySpacedTimeBasis
 from surface_potential_analysis.basis.util import BasisUtil
 from surface_potential_analysis.dynamics.tunnelling_basis import (
     get_basis_from_shape,
 )
 from surface_potential_analysis.dynamics.util import build_hop_operator, get_hop_shift
+from surface_potential_analysis.state_vector.eigenstate_calculation import (
+    calculate_eigenvectors_hermitian,
+)
+from surface_potential_analysis.state_vector.state_vector_list import (
+    calculate_inner_products,
+    get_state_vector,
+    get_weighted_state_vector,
+)
 
 if TYPE_CHECKING:
     from collections.abc import Callable
 
-    from surface_potential_analysis.basis.time_basis_like import EvenlySpacedTimeBasis
+    from surface_potential_analysis.basis.basis_like import BasisLike
     from surface_potential_analysis.dynamics.incoherent_propagation.tunnelling_matrix import (
         TunnellingAMatrix,
     )
@@ -40,6 +50,8 @@ if TYPE_CHECKING:
     )
 
     _B0Inv = TypeVar("_B0Inv", bound=TunnellingSimulationBasis[Any, Any, Any])
+    _B1Inv = TypeVar("_B1Inv", bound=BasisLike[Any, Any])
+    _B2Inv = TypeVar("_B2Inv", bound=BasisLike[Any, Any])
     _L0Inv = TypeVar("_L0Inv", bound=int)
     _L1Inv = TypeVar("_L1Inv", bound=int)
     _L2Inv = TypeVar("_L2Inv", bound=int)
@@ -186,40 +198,38 @@ def get_collapse_operators_from_function(
 
 @overload
 def solve_stochastic_schrodinger_equation(
-    initial_state: StateVector[_B0Inv],
+    initial_state: StateVector[_B1Inv],
     times: _AX0Inv,
-    hamiltonian: SingleBasisOperator[_B0Inv],
-    collapse_operators: list[SingleBasisOperator[_B0Inv]],
+    hamiltonian: SingleBasisOperator[_B1Inv],
+    collapse_operators: list[SingleBasisOperator[_B1Inv]] | None = None,
     *,
     n_trajectories: _L1Inv,
-    combine_collapse_operators: bool = False,
-) -> StateVectorList[StackedBasisLike[FundamentalBasis[_L1Inv], _AX0Inv], _B0Inv]:
+) -> StateVectorList[StackedBasisLike[FundamentalBasis[_L1Inv], _AX0Inv], _B1Inv]:
     ...
 
 
 @overload
 def solve_stochastic_schrodinger_equation(
-    initial_state: StateVector[_B0Inv],
+    initial_state: StateVector[_B1Inv],
     times: _AX0Inv,
-    hamiltonian: SingleBasisOperator[_B0Inv],
-    collapse_operators: list[SingleBasisOperator[_B0Inv]],
+    hamiltonian: SingleBasisOperator[_B1Inv],
+    collapse_operators: list[SingleBasisOperator[_B1Inv]] | None = None,
     *,
     n_trajectories: Literal[1] = 1,
-    combine_collapse_operators: bool = False,
-) -> StateVectorList[StackedBasisLike[FundamentalBasis[Literal[1]], _AX0Inv], _B0Inv]:
+) -> StateVectorList[StackedBasisLike[FundamentalBasis[Literal[1]], _AX0Inv], _B1Inv]:
     ...
 
 
 def solve_stochastic_schrodinger_equation(  # type: ignore bad overload
-    initial_state: StateVector[_B0Inv],
+    initial_state: StateVector[_B1Inv],
     times: _AX0Inv,
-    hamiltonian: SingleBasisOperator[_B0Inv],
-    collapse_operators: list[SingleBasisOperator[_B0Inv]],
+    hamiltonian: SingleBasisOperator[_B1Inv],
+    collapse_operators: list[SingleBasisOperator[_B1Inv]] | None = None,
     *,
     n_trajectories: _L1Inv | Literal[1] = 1,
 ) -> (
-    StateVectorList[StackedBasisLike[FundamentalBasis[Literal[1]], _AX0Inv], _B0Inv]
-    | StateVectorList[StackedBasisLike[FundamentalBasis[_L1Inv], _AX0Inv], _B0Inv]
+    StateVectorList[StackedBasisLike[FundamentalBasis[Literal[1]], _AX0Inv], _B1Inv]
+    | StateVectorList[StackedBasisLike[FundamentalBasis[_L1Inv], _AX0Inv], _B1Inv]
 ):
     """
     Given an initial state, use the stochastic schrodinger equation to solve the dynamics of the system.
@@ -235,13 +245,15 @@ def solve_stochastic_schrodinger_equation(  # type: ignore bad overload
     -------
     StateVectorList[_B0Inv, _L0Inv]
     """
+    if collapse_operators is None:
+        collapse_operators = []
     hamiltonian_qobj = qutip.Qobj(
-        hamiltonian["data"].reshape(hamiltonian["basis"].shape)
+        hamiltonian["data"].reshape(hamiltonian["basis"].shape) / hbar
     ).to("CSR")
     initial_state_qobj = qutip.Qobj(initial_state["data"])
 
     sc_ops = [
-        qutip.Qobj(op["data"].reshape(op["basis"].shape)).to("CSR")
+        qutip.Qobj(op["data"].reshape(op["basis"].shape) / hbar).to("CSR")
         for op in collapse_operators
     ]
     result = qutip.ssesolve(
@@ -256,9 +268,9 @@ def solve_stochastic_schrodinger_equation(  # type: ignore bad overload
             "progress_bar": "enhanced",
             "store_states": True,
             "keep_runs_results": True,
-            "map": "mpi",
+            "map": "parallel",
             "num_cpus": n_trajectories,
-            "dt": times.delta_t / times.fundamental_n,
+            "dt": times.fundamental_dt,
         },
         ntraj=n_trajectories,  # cspell:disable-line
     )
@@ -273,5 +285,107 @@ def solve_stochastic_schrodinger_equation(  # type: ignore bad overload
                 for trajectory in result.states  # type: ignore unknown
             ],
             dtype=np.complex128,
-        ).reshape(n_trajectories * 5, -1),
+        ).reshape(-1),
+    }
+
+
+rng = np.random.default_rng()
+
+
+def _select_random_localized_state(
+    states: StateVectorList[_B2Inv, _B1Inv],
+) -> StateVector[_B1Inv]:
+    """
+    Select a random state built from states.
+
+    This finds the states which diagonalize the overall density matrix,
+    and selects states according to their overall occupation.
+
+    Parameters
+    ----------
+    states : StateVectorList[_B2Inv, _B1Inv]
+
+    Returns
+    -------
+    StateVector[_B1Inv]
+    """
+    states["data"].reshape(states["basis"].shape)
+
+    op = calculate_inner_products(states, states)
+    # Vectors representing the combination of states that diagonalizes rho
+    eigenstates = calculate_eigenvectors_hermitian(op)
+    probabilities = eigenstates["eigenvalue"].astype(np.float64)
+
+    idx = rng.choice(probabilities.size, p=probabilities)
+    transformation = get_state_vector(eigenstates, idx)
+    return get_weighted_state_vector(states, transformation)
+
+
+@overload
+def solve_stochastic_schrodinger_equation_localized(
+    initial_state: StateVector[_B1Inv],
+    times: _AX0Inv,
+    hamiltonian: SingleBasisOperator[_B1Inv],
+    collapse_operators: list[SingleBasisOperator[_B1Inv]] | None = None,
+    *,
+    n_trajectories: _L1Inv,
+) -> StateVectorList[StackedBasisLike[FundamentalBasis[_L1Inv], _AX0Inv], _B1Inv]:
+    ...
+
+
+@overload
+def solve_stochastic_schrodinger_equation_localized(
+    initial_state: StateVector[_B1Inv],
+    times: _AX0Inv,
+    hamiltonian: SingleBasisOperator[_B1Inv],
+    collapse_operators: list[SingleBasisOperator[_B1Inv]] | None = None,
+    *,
+    n_trajectories: Literal[1] = 1,
+) -> StateVectorList[StackedBasisLike[FundamentalBasis[Literal[1]], _AX0Inv], _B1Inv]:
+    ...
+
+
+def solve_stochastic_schrodinger_equation_localized(  # type: ignore bad overload
+    initial_state: StateVector[_B1Inv],
+    times: _AX0Inv,
+    hamiltonian: SingleBasisOperator[_B1Inv],
+    collapse_operators: list[SingleBasisOperator[_B1Inv]] | None = None,
+    *,
+    n_trajectories: _L1Inv | Literal[1] = 1,
+    n_realizations: int = 2,
+) -> (
+    StateVectorList[StackedBasisLike[FundamentalBasis[Literal[1]], _AX0Inv], _B1Inv]
+    | StateVectorList[StackedBasisLike[FundamentalBasis[_L1Inv], _AX0Inv], _B1Inv]
+):
+    """
+    Find the quantum trajectores, using the localized stochastic schrodinger approach.
+
+    Returns
+    -------
+    StateVectorList[StackedBasisLike[FundamentalBasis[int], _AX0Inv], _B1Inv]
+    """
+    data = np.zeros((n_trajectories, times.n, initial_state["basis"].n), dtype=complex)
+
+    for trajectory in range(n_trajectories):
+        state = initial_state
+        for t in range(times.n):
+            for _ in range(times.step):
+                result = solve_stochastic_schrodinger_equation(
+                    state,
+                    EvenlySpacedTimeBasis(1, 1, 1, times.fundamental_dt),
+                    hamiltonian,
+                    collapse_operators,
+                    n_trajectories=n_realizations,
+                )
+                # Re-localize our state
+                state = _select_random_localized_state(result)
+
+            data[trajectory, t] = state["data"]
+
+    return {
+        "basis": StackedBasis(
+            StackedBasis(FundamentalBasis(n_trajectories), times),
+            hamiltonian["basis"][0],
+        ),
+        "data": data.reshape(-1),
     }

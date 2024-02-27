@@ -63,6 +63,25 @@ def get_state_vector(
     }
 
 
+def get_weighted_state_vector(
+    state_list: StateVectorList[_B0, _B1], weights: StateVector[_B0]
+) -> StateVector[_B1]:
+    """
+    Get a single state vector from a list of states.
+
+    Parameters
+    ----------
+    list : EigenstateList[_B0Inv]
+    idx : SingleFlatIndexLike
+
+    Returns
+    -------
+    Eigenstate[_B0Inv]
+    """
+    data = np.tensordot(weights["data"], state_list["data"], axes=(0, 0))
+    return {"basis": state_list["basis"][1], "data": data}
+
+
 def get_state_dual_vector(
     state_list: StateVectorList[_B0, _B1], idx: SingleFlatIndexLike
 ) -> StateDualVector[_B1]:
