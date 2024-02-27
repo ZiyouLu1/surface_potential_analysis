@@ -2,8 +2,6 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, TypeVar
 
-from matplotlib import pyplot as plt
-
 from surface_potential_analysis.probability_vector.conversion import (
     convert_probability_vector_to_momentum_basis,
     convert_probability_vector_to_position_basis,
@@ -13,6 +11,7 @@ from surface_potential_analysis.probability_vector.probability_vector import (
     sum_probabilities,
 )
 from surface_potential_analysis.util.plot import (
+    get_figure,
     plot_data_1d_k,
     plot_data_1d_x,
     plot_data_2d_k,
@@ -63,7 +62,7 @@ def plot_probability_against_time(
     -------
     tuple[Figure, Axes, list[Line2D]]
     """
-    fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
+    fig, ax = get_figure(ax)
     times = probability["basis"][0].times
     data = probability["data"].reshape(probability["basis"].shape)
 

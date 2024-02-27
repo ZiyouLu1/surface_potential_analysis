@@ -3,7 +3,6 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, TypeVar
 
 import numpy as np
-from matplotlib import pyplot as plt
 
 from surface_potential_analysis.basis.util import BasisUtil
 from surface_potential_analysis.state_vector.plot import (
@@ -16,6 +15,7 @@ from surface_potential_analysis.state_vector.plot import (
     plot_state_difference_2d_x,
 )
 from surface_potential_analysis.util.plot import (
+    get_figure,
     plot_data_2d_k,
     plot_data_2d_x,
 )
@@ -84,7 +84,7 @@ def plot_wavepacket_sample_frequencies(
     -------
     tuple[Figure, Axes, Line2D]
     """
-    fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
+    fig, ax = get_figure(ax)
     util = BasisUtil(wavepacket["basis"])
     idx = tuple(0 for _ in range(util.ndim - len(axes))) if idx is None else idx
 
@@ -207,7 +207,7 @@ def plot_eigenvalues_1d_x(
     -------
     tuple[Figure, Axes, Line2D]
     """
-    fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
+    fig, ax = get_figure(ax)
     util = BasisUtil(wavepacket["basis"][0])
     idx = tuple(0 for _ in range(util.ndim - 1)) if idx is None else idx
 

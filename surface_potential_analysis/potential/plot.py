@@ -3,7 +3,6 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, Literal, TypeVar
 
 import numpy as np
-from matplotlib import pyplot as plt
 
 from surface_potential_analysis.basis.util import BasisUtil
 from surface_potential_analysis.potential.conversion import (
@@ -15,6 +14,7 @@ from surface_potential_analysis.stacked_basis.util import (
 )
 from surface_potential_analysis.util.plot import (
     animate_data_through_surface_x,
+    get_figure,
     plot_data_1d_x,
     plot_data_2d_x,
 )
@@ -122,7 +122,7 @@ def plot_potential_1d_comparison(
     -------
     tuple[Figure, Axes]
     """
-    fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
+    fig, ax = get_figure(ax)
     lines: list[Line2D] = []
     for label, (idx, axis) in comparison_points.items():
         _, _, line = plot_potential_1d_x(potential, (axis,), idx, ax=ax, scale=scale)
@@ -402,7 +402,7 @@ def plot_potential_along_path(
     -------
     tuple[Figure, Axes, Line2D]
     """
-    fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
+    fig, ax = get_figure(ax)
 
     converted = convert_potential_to_position_basis(potential)
     util = BasisUtil(converted["basis"])

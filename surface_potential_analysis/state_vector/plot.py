@@ -1,9 +1,8 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, TypeVar
 
 import numpy as np
-from matplotlib import pyplot as plt
 
 from surface_potential_analysis.basis.util import (
     BasisUtil,
@@ -20,8 +19,16 @@ from surface_potential_analysis.state_vector.conversion import (
     convert_state_vector_to_momentum_basis,
     convert_state_vector_to_position_basis,
 )
+from surface_potential_analysis.state_vector.eigenstate_calculation import (
+    calculate_eigenvectors_hermitian,
+)
+from surface_potential_analysis.state_vector.state_vector_list import (
+    as_state_vector_list,
+    calculate_inner_products,
+)
 from surface_potential_analysis.util.plot import (
     animate_data_through_surface_x,
+    get_figure,
     plot_data_1d_k,
     plot_data_1d_x,
     plot_data_2d_k,
@@ -39,12 +46,19 @@ if TYPE_CHECKING:
     from matplotlib.figure import Figure
     from matplotlib.lines import Line2D
 
+    from surface_potential_analysis.basis.basis import BasisLike
     from surface_potential_analysis.basis.stacked_basis import StackedBasisLike
+    from surface_potential_analysis.operator.operator import SingleBasisOperator
     from surface_potential_analysis.state_vector.state_vector import StateVector
+    from surface_potential_analysis.state_vector.state_vector_list import (
+        StateVectorList,
+    )
     from surface_potential_analysis.types import (
         SingleStackedIndexLike,
     )
     from surface_potential_analysis.util.plot import Scale
+
+    _B0Inv = TypeVar("_B0Inv", bound=BasisLike[Any, Any])
 
 
 # ruff: noqa: PLR0913
@@ -431,7 +445,7 @@ def plot_state_along_path(
     -------
     tuple[Figure, Axes, Line2D]
     """
-    fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
+    fig, ax = get_figure(ax)
     converted = convert_state_vector_to_position_basis(state)  # type: ignore[var-annotated,arg-type]
 
     util = BasisUtil(converted["basis"])
@@ -446,3 +460,44 @@ def plot_state_along_path(
     ax.set_yscale(scale)
     ax.set_xlabel("distance /m")
     return fig, ax, line
+
+
+def plot_all_band_occupations(
+    hamiltonian: SingleBasisOperator[_B0Inv],
+    states: StateVectorList[BasisLike[Any, Any], _B0Inv],
+    *,
+    ax: Axes | None = None,
+    scale: Scale = "linear",
+) -> tuple[Figure, Axes]:
+    fig, ax = get_figure(ax)
+
+    eigenstates = calculate_eigenvectors_hermitian(hamiltonian)
+    energies = eigenstates["eigenvalue"]
+    occupations = calculate_inner_products(states, eigenstates)
+
+    n_states = states["basis"][0].n
+    for i, occupation in enumerate(occupations["data"].reshape(n_states, -1)):
+        if i != 10:
+            continue
+        measured = np.abs(occupation) ** 2
+        (line,) = ax.plot(energies, measured)
+        line.set_label(f"state {i} occupation")
+
+    ax.set_yscale(scale)
+    ax.set_xlabel("Occupation")
+    ax.set_xlabel("Energy /J")
+    ax.set_title("Plot of Occupation against Energy")
+
+    return fig, ax
+
+
+def plot_band_occupation(
+    hamiltonian: SingleBasisOperator[_B0Inv],
+    state: StateVector[_B0Inv],
+    *,
+    ax: Axes | None = None,
+    scale: Scale = "linear",
+) -> tuple[Figure, Axes, Line2D]:
+    return plot_all_band_occupations(
+        hamiltonian, as_state_vector_list([state]), ax=ax, scale=scale
+    )

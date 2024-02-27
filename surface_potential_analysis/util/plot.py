@@ -1,11 +1,13 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Literal, TypeVar
+from typing import TYPE_CHECKING, Any, Literal, TypeVar, cast
 
 import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib.animation import ArtistAnimation
+from matplotlib.axes import Axes
 from matplotlib.colors import Normalize, SymLogNorm
+from matplotlib.figure import Figure
 from matplotlib.scale import LinearScale, ScaleBase, SymmetricalLogScale
 
 from surface_potential_analysis.stacked_basis.util import (
@@ -19,9 +21,7 @@ from .util import Measure, get_data_in_axes, get_measured_data
 if TYPE_CHECKING:
     from collections.abc import Callable
 
-    from matplotlib.axes import Axes
     from matplotlib.collections import QuadMesh
-    from matplotlib.figure import Figure
     from matplotlib.image import AxesImage
     from matplotlib.lines import Line2D
 
@@ -30,6 +30,30 @@ if TYPE_CHECKING:
 
 
 Scale = Literal["symlog", "linear"]
+
+
+def get_figure(ax: Axes | None) -> tuple[Figure, Axes]:
+    """Get the figure of the given axis.
+
+    If no figure exists, a new figure is created
+
+    Parameters
+    ----------
+    ax : Axes | None
+
+    Returns
+    -------
+    tuple[Figure, Axes]
+
+    """
+    if ax is None:
+        return cast(tuple[Figure, Axes], plt.subplots())  # type: ignore plt.subplots Unknown type
+
+    fig = ax.get_figure()
+    if fig is None:
+        fig = plt.figure()  # type: ignore plt.figure Unknown type
+        ax.set_figure(fig)
+    return fig, ax
 
 
 def _get_default_lim(
@@ -126,7 +150,7 @@ def plot_data_1d_k(
     -------
     tuple[Figure, Axes, Line2D]
     """
-    fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
+    fig, ax = get_figure(ax)
     idx = get_max_idx(basis, data, axes) if idx is None else idx
 
     coordinates = get_k_coordinates_in_axes(basis, axes, idx)
@@ -178,7 +202,7 @@ def plot_data_1d_x(
     -------
     tuple[Figure, Axes, Line2D]
     """
-    fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
+    fig, ax = get_figure(ax)
     idx = get_max_idx(basis, data, axes) if idx is None else idx
 
     coordinates = get_x_coordinates_in_axes(basis, axes, idx)
@@ -227,7 +251,7 @@ def plot_data_2d_k(
     -------
     tuple[Figure, Axes, QuadMesh]
     """
-    fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
+    fig, ax = get_figure(ax)
     idx = get_max_idx(basis, data, axes) if idx is None else idx
 
     coordinates = get_k_coordinates_in_axes(basis, axes, idx)
@@ -292,7 +316,7 @@ def plot_data_2d_x(
     -------
     tuple[Figure, Axes, QuadMesh]
     """
-    fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
+    fig, ax = get_figure(ax)
     idx = get_max_idx(basis, data, axes) if idx is None else idx
 
     coordinates = get_x_coordinates_in_axes(basis, axes, idx)
@@ -349,7 +373,7 @@ def build_animation(
     -------
     tuple[Figure, Axes, ArtistAnimation]
     """
-    fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
+    fig, ax = get_figure(ax)
 
     mesh0 = build_frame(0, ax)
     frames = [[build_frame(d, ax)] for d in range(n)]

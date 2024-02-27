@@ -3,7 +3,6 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, Literal, TypeVar
 
 import numpy as np
-from matplotlib import pyplot as plt
 
 from surface_potential_analysis.overlap.conversion import (
     convert_overlap_to_momentum_basis,
@@ -13,6 +12,7 @@ from surface_potential_analysis.stacked_basis.util import (
     calculate_cumulative_k_distances_along_path,
 )
 from surface_potential_analysis.util.plot import (
+    get_figure,
     plot_data_2d_k,
     plot_data_2d_x,
 )
@@ -168,7 +168,7 @@ def plot_overlap_along_path_k(
     -------
     tuple[Figure, Axes, Line2D]
     """
-    fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
+    fig, ax = get_figure(ax)
     converted = convert_overlap_to_momentum_basis(overlap)
 
     points = converted["data"].reshape(converted["basis"].shape)[*path]

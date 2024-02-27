@@ -3,13 +3,13 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, TypeVar
 
 import numpy as np
-from matplotlib import pyplot as plt
 from scipy.constants import Boltzmann
 
 from surface_potential_analysis.basis.util import BasisUtil
 from surface_potential_analysis.state_vector.state_vector_list import (
     state_vector_list_into_iter,
 )
+from surface_potential_analysis.util.plot import get_figure
 
 from .plot import plot_state_1d_x
 
@@ -88,7 +88,7 @@ def plot_states_1d_x(
     -------
     tuple[Figure, Axes]
     """
-    fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
+    fig, ax = get_figure(ax)
 
     for state in state_vector_list_into_iter(states):
         plot_state_1d_x(state, axes, idx, ax=ax, measure=measure, scale=scale)
@@ -118,7 +118,7 @@ def plot_eigenvalues_against_bloch_phase_1d(
     -------
     tuple[Figure, Axes, Line2D]
     """
-    fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
+    fig, ax = get_figure(ax)
 
     projected = _get_projected_bloch_phases(collection, direction)
     (line,) = ax.plot(
@@ -154,7 +154,7 @@ def plot_occupation_against_bloch_phase_1d(
     -------
     tuple[Figure, Axes, Line2D]
     """
-    fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
+    fig, ax = get_figure(ax)
 
     projected = _get_projected_bloch_phases(collection, direction)
     eigenvalues = collection["eigenvalue"].reshape(*collection["basis"][0].shape, -1)
@@ -188,7 +188,7 @@ def plot_occupation_against_band(
     -------
     tuple[Figure, Axes, Line2D]
     """
-    fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
+    fig, ax = get_figure(ax)
 
     eigenvalues = collection["eigenvalue"].reshape(*collection["basis"][0].shape, -1)
     occupations = np.exp(-eigenvalues / (temperature * Boltzmann))

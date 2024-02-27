@@ -3,7 +3,8 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, TypeVar
 
 import numpy as np
-from matplotlib import pyplot as plt
+
+from surface_potential_analysis.util.plot import get_figure
 
 if TYPE_CHECKING:
     from matplotlib.axes import Axes
@@ -37,7 +38,7 @@ def plot_rate_decomposition_against_temperature(
     -------
     tuple[Figure, Axes]
     """
-    fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
+    fig, ax = get_figure(ax)
 
     rate_constants = -np.real([rate.eigenvalues for rate in rates])
     coefficients = np.abs([rate.coefficients for rate in rates])

@@ -3,8 +3,8 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 import numpy as np
-from matplotlib import pyplot as plt
 
+from surface_potential_analysis.util.plot import get_figure
 from surface_potential_analysis.util.util import Measure, get_measured_data
 
 from .util import BasisUtil
@@ -25,7 +25,7 @@ def plot_explicit_basis_states_x(
     measure: Measure = "abs",
 ) -> tuple[Figure, Axes, list[Line2D]]:
     """Plot basis states against position."""
-    fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
+    fig, ax = get_figure(ax)
     util = BasisUtil(basis)
 
     x_points = np.linalg.norm(util.fundamental_x_points, axis=0)
@@ -50,7 +50,7 @@ def plot_explicit_basis_state_x(
     measure: Measure = "abs",
 ) -> tuple[Figure, Axes, Line2D]:
     """Plot basis states against position."""
-    fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
+    fig, ax = get_figure(ax)
     util = BasisUtil(basis)
 
     x_points = np.linalg.norm(util.fundamental_x_points, axis=0)

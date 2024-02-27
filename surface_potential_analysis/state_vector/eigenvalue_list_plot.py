@@ -2,9 +2,10 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, TypeVar
 
-import matplotlib.pyplot as plt
 import numpy as np
+from scipy.constants import Boltzmann
 
+from surface_potential_analysis.util.plot import get_figure
 from surface_potential_analysis.util.util import Measure, get_measured_data
 
 if TYPE_CHECKING:
@@ -12,12 +13,15 @@ if TYPE_CHECKING:
     from matplotlib.figure import Figure
     from matplotlib.lines import Line2D
 
+    from surface_potential_analysis.basis.basis_like import BasisLike
     from surface_potential_analysis.basis.time_basis_like import BasisWithTimeLike
     from surface_potential_analysis.operator.operator import (
         SingleBasisDiagonalOperator,
         StatisticalDiagonalOperator,
     )
     from surface_potential_analysis.util.plot import Scale
+
+    from .eigenstate_calculation import EigenstateList
 
     _B0_co = TypeVar(
         "_B0_co",
@@ -54,7 +58,7 @@ def plot_eigenvalue_against_time(
     -------
     tuple[Figure, Axes, Line2D]
     """
-    fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
+    fig, ax = get_figure(ax)
 
     data = get_measured_data(eigenvalues["data"], measure)
     times = eigenvalues["basis"][0].times
@@ -67,4 +71,43 @@ def plot_eigenvalue_against_time(
     ax.set_yscale(scale)
     ax.set_xlabel("time /s")
     ax.set_xlim(times[0], times[-1])
+    return fig, ax, line
+
+
+def plot_eigenstate_occupations(
+    eigenstates: EigenstateList[BasisLike[Any, Any], BasisLike[Any, Any]],
+    temperature: float,
+    *,
+    ax: Axes | None = None,
+    scale: Scale = "linear",
+) -> tuple[Figure, Axes, Line2D]:
+    """
+    Plot the expected occupation of eigenstates at the given temperature.
+
+    Parameters
+    ----------
+    eigenstates : EigenstateList[BasisLike[Any, Any], BasisLike[Any, Any]]
+    temperature : float
+    ax : Axes | None, optional
+        ax, by default None
+    scale : Scale, optional
+        scale, by default "linear"
+
+    Returns
+    -------
+    tuple[Figure, Axes, Line2D]
+    """
+    fig, ax = get_figure(ax)
+
+    energies = eigenstates["eigenvalue"]
+    occupation = np.exp(-np.abs(energies) / (temperature * Boltzmann))
+    occupation /= np.sum(occupation)
+
+    (line,) = ax.plot(energies, occupation)
+
+    ax.set_yscale(scale)
+    ax.set_xlabel("Occupation")
+    ax.set_xlabel("Energy /J")
+    ax.set_title("Plot of Occupation against Energy")
+
     return fig, ax, line

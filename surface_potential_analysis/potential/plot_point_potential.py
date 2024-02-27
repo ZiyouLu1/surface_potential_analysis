@@ -3,7 +3,8 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, Literal, TypeVar
 
 import numpy as np
-from matplotlib import pyplot as plt
+
+from surface_potential_analysis.util.plot import get_figure
 
 if TYPE_CHECKING:
     from matplotlib.axes import Axes
@@ -56,7 +57,7 @@ def plot_point_potential_location_xy(
     -------
     tuple[Figure, Axes, Line2D]
     """
-    fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
+    fig, ax = get_figure(ax)
 
     points = get_point_potential_xy_locations(potential)
     (line,) = ax.plot(*points)
@@ -85,7 +86,7 @@ def plot_point_potential_all_z(
     -------
     tuple[Figure, Axes]
     """
-    fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
+    fig, ax = get_figure(ax)
 
     points = get_point_potential_xy_locations(potential)
     for x, y in points.T:

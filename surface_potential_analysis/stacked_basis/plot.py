@@ -3,7 +3,6 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, TypeVar
 
 import numpy as np
-from matplotlib import pyplot as plt
 
 from surface_potential_analysis.basis.conversion import basis_as_single_point_basis
 from surface_potential_analysis.basis.stacked_basis import StackedBasis
@@ -16,6 +15,7 @@ from surface_potential_analysis.stacked_basis.util import (
     project_k_points_along_axes,
     project_x_points_along_axes,
 )
+from surface_potential_analysis.util.plot import get_figure
 from surface_potential_analysis.util.util import slice_ignoring_axes
 
 if TYPE_CHECKING:
@@ -54,7 +54,7 @@ def plot_k_points_projected_2d(
     -------
     tuple[Figure, Axes, Line2D]
     """
-    fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
+    fig, ax = get_figure(ax)
     projected_points = project_k_points_along_axes(points, basis, axes)
 
     (line,) = ax.plot(*projected_points.reshape(2, -1))
@@ -177,7 +177,7 @@ def plot_x_points_projected_2d(
     -------
     tuple[Figure, Axes, Line2D]
     """
-    fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
+    fig, ax = get_figure(ax)
     projected_points = project_x_points_along_axes(points, basis, axes)
 
     (line,) = ax.plot(*projected_points.reshape(2, -1))

@@ -2,9 +2,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, TypeVar
 
-from matplotlib import pyplot as plt
-
 from surface_potential_analysis.basis.util import BasisUtil
+from surface_potential_analysis.util.plot import get_figure
 
 from ._comparison_points import (
     get_100_comparison_points_x2,
@@ -48,7 +47,7 @@ def plot_uneven_potential_z(
     -------
     tuple[Figure, Axes, Line2D]
     """
-    fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
+    fig, ax = get_figure(ax)
 
     coordinates = potential["basis"][2].z_points
     util = BasisUtil(potential["basis"])
@@ -85,7 +84,7 @@ def plot_uneven_potential_z_comparison(
     -------
     tuple[Figure, Axes]
     """
-    fig, ax = (ax.get_figure(), ax) if ax is not None else plt.subplots()
+    fig, ax = get_figure(ax)
     lines: list[Line2D] = []
     for label, idx in comparison_points.items():
         (_, _, line) = plot_uneven_potential_z(potential, idx, ax=ax, scale=scale)
