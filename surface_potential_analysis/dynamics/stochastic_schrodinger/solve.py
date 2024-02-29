@@ -264,7 +264,7 @@ def solve_stochastic_schrodinger_equation(  # type: ignore bad overload
         e_ops=[],
         options={
             # No other scheme scales well enough to such a large number of heatbath modes
-            "method": "euler",
+            # "method": "euler",
             "progress_bar": "enhanced",
             "store_states": True,
             "keep_runs_results": True,

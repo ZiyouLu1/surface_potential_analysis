@@ -29,6 +29,7 @@ from surface_potential_analysis.state_vector.state_vector_list import (
     calculate_inner_products,
 )
 from surface_potential_analysis.util.plot import (
+    animate_data_through_list_1d_k,
     animate_data_through_list_1d_x,
     animate_data_through_surface_x,
     get_figure,
@@ -189,6 +190,53 @@ def animate_state_over_list_1d_x(
     )
 
     fig, ax, ani = animate_data_through_list_1d_x(
+        converted["basis"][1],
+        converted["data"].reshape(converted["basis"].shape),
+        axes,
+        idx,
+        ax=ax,
+        scale=scale,
+        measure=measure,
+    )
+    ax.set_ylabel("State /Au")
+    return fig, ax, ani
+
+
+def animate_state_over_list_1d_k(
+    states: StateVectorList[BasisLike[Any, Any], StackedBasisLike[*tuple[Any, ...]]],
+    axes: tuple[int] = (0,),
+    idx: SingleStackedIndexLike | None = None,
+    *,
+    ax: Axes | None = None,
+    measure: Measure = "abs",
+    scale: Scale = "linear",
+) -> tuple[Figure, Axes, ArtistAnimation]:
+    """
+    Plot an state in 1d along the given axis, over time.
+
+    Parameters
+    ----------
+    states : StateVectorList[BasisLike[Any, Any], StackedBasisLike[*tuple[Any, ...]]]
+    idx : SingleStackedIndexLike, optional
+        index in the perpendicular directions, by default (0,0)
+    axis : int, optional
+        axis along which to plot, by default 0
+    ax : Axes | None, optional
+        plot axis, by default None
+    measure : Measure, optional
+        measure, by default "abs"
+    scale : Literal[&quot;symlog&quot;, &quot;linear&quot;], optional
+        scale, by default "linear"
+
+    Returns
+    -------
+    tuple[Figure, Axes, Line2D]
+    """
+    converted = convert_state_vector_list_to_basis(
+        states, stacked_basis_as_fundamental_momentum_basis(states["basis"][1])
+    )
+
+    fig, ax, ani = animate_data_through_list_1d_k(
         converted["basis"][1],
         converted["data"].reshape(converted["basis"].shape),
         axes,
