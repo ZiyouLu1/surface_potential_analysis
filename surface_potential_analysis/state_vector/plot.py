@@ -586,6 +586,7 @@ def plot_all_band_occupations(
 
     eigenstates = calculate_eigenvectors_hermitian(hamiltonian)
     energies = eigenstates["eigenvalue"]
+    energies -= np.min(energies)
     occupations = calculate_inner_products(states, eigenstates)
 
     n_states = states["basis"][0].n
@@ -630,6 +631,7 @@ def animate_all_band_occupations(
 
     eigenstates = calculate_eigenvectors_hermitian(hamiltonian)
     energies = eigenstates["eigenvalue"]
+    energies -= np.min(energies)
     occupations = calculate_inner_products(states, eigenstates)
 
     frames: list[list[Line2D]] = []
