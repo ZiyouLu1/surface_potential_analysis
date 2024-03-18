@@ -46,9 +46,11 @@ class WavepacketTest(unittest.TestCase):
             rng.integers(1, 10),  # type: ignore bad libary types
         )
         wavepacket: BlochWavefunctionList[Any, Any] = {
-            "basis": position_basis_3d_from_shape(resolution),
-            "data": np.zeros((ns0 * ns1, np.prod(resolution))),
-            "list_basis": fundamental_stacked_basis_from_shape((ns0, ns1, 1)),  # type: ignore[typeddict-item]
+            "basis": StackedBasis(
+                fundamental_stacked_basis_from_shape((ns0, ns1, 1)),
+                position_basis_3d_from_shape(resolution),
+            ),
+            "data": np.zeros((ns0 * ns1, np.prod(resolution))).reshape(-1),
         }
 
         idx = rng.integers(0, np.prod(resolution).item())  # type: ignore bad libary types
@@ -68,10 +70,13 @@ class WavepacketTest(unittest.TestCase):
 
     def test_unfurl_wavepacket(self) -> None:
         wavepacket: BlochWavefunctionList[Any, Any] = {
-            "basis": momentum_basis_3d_from_resolution((3, 3, 3)),
-            "list_basis": fundamental_stacked_basis_from_shape((3, 2, 1)),  # type: ignore[typeddict-item]
-            "data": np.zeros((3, 2, 27)),
+            "basis": StackedBasis(
+                fundamental_stacked_basis_from_shape((3, 2, 1)),
+                momentum_basis_3d_from_resolution((3, 3, 3)),
+            ),
+            "data": np.zeros((3, 2, 27)).reshape(-1),
         }
+
         wavepacket["data"][0][0][0] = 1
         wavepacket["data"][1][0][0] = 2
         wavepacket["data"][2][0][0] = 3

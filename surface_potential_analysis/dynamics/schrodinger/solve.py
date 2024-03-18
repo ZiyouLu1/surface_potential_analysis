@@ -95,7 +95,6 @@ def solve_schrodinger_equation_decomposition(
         hamiltonian["data"].reshape(hamiltonian["basis"].shape),
         np.conj(hamiltonian["data"].reshape(hamiltonian["basis"].shape)).T,
     )
-
     coefficients = get_state_vector_decomposition(initial_state, eigenstates)
     np.testing.assert_array_almost_equal(
         np.tensordot(

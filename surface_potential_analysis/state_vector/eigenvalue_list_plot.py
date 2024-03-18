@@ -104,6 +104,10 @@ def plot_eigenstate_occupations(
     occupation = np.exp(-np.abs(energies) / (temperature * Boltzmann))
     occupation /= np.sum(occupation)
 
+    a_sort = np.argsort(energies)
+    energies = energies[a_sort]
+    occupation = occupation[a_sort]
+
     (line,) = ax.plot(energies, occupation)
     ax.axvline(np.average(energies, weights=occupation))
 
@@ -111,5 +115,41 @@ def plot_eigenstate_occupations(
     ax.set_xlabel("Occupation")
     ax.set_xlabel("Energy /J")
     ax.set_title("Plot of Occupation against Energy")
+
+    return fig, ax, line
+
+
+def plot_eigenvalues(
+    eigenstates: EigenstateList[BasisLike[Any, Any], BasisLike[Any, Any]],
+    *,
+    ax: Axes | None = None,
+    scale: Scale = "linear",
+    measure: Measure = "abs",
+) -> tuple[Figure, Axes, Line2D]:
+    """
+    Plot the expected occupation of eigenstates at the given temperature.
+
+    Parameters
+    ----------
+    eigenstates : EigenstateList[BasisLike[Any, Any], BasisLike[Any, Any]]
+    temperature : float
+    ax : Axes | None, optional
+        ax, by default None
+    scale : Scale, optional
+        scale, by default "linear"
+
+    Returns
+    -------
+    tuple[Figure, Axes, Line2D]
+    """
+    fig, ax = get_figure(ax)
+    a_sort = np.argsort(np.abs(eigenstates["eigenvalue"]))
+    energies = get_measured_data(eigenstates["eigenvalue"], measure)[a_sort]
+
+    (line,) = ax.plot(energies)
+
+    ax.set_yscale(scale)
+    ax.set_ylabel(f"{measure} Eigenvalue")
+    ax.set_title("Plot of Eigenvalues")
 
     return fig, ax, line

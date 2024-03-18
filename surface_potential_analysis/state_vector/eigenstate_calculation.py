@@ -48,6 +48,22 @@ def calculate_eigenvectors_hermitian(
     }
 
 
+def calculate_eigenvectors(
+    hamiltonian: SingleBasisOperator[_B0Inv],
+) -> EigenstateList[FundamentalBasis[int], _B0Inv]:
+    """Get a list of eigenstates for a given operator, assuming it is hermitian."""
+    eigenvalues, vectors = np.linalg.eig(
+        hamiltonian["data"].reshape(hamiltonian["basis"].shape),
+    )
+    return {
+        "basis": StackedBasis(
+            FundamentalBasis(eigenvalues.size), hamiltonian["basis"][0]
+        ),
+        "data": np.transpose(vectors).reshape(-1),
+        "eigenvalue": eigenvalues,
+    }
+
+
 def calculate_expectation(
     hamiltonian: SingleBasisOperator[_B0Inv], eigenstate: StateVector[_B0Inv]
 ) -> complex:

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Generic, TypedDict, TypeVar
+from typing import TYPE_CHECKING, Any, Callable, Generic, TypedDict, TypeVar
 
 import numpy as np
 
@@ -19,10 +19,14 @@ if TYPE_CHECKING:
     from surface_potential_analysis.operator.operator_list import (
         SingleBasisDiagonalOperatorList,
     )
+    from surface_potential_analysis.state_vector.eigenstate_collection import Eigenstate
+    from surface_potential_analysis.state_vector.state_vector import StateVector
     from surface_potential_analysis.types import SingleFlatIndexLike
 
 _B0 = TypeVar("_B0", bound=BasisLike[Any, Any])
 _B1 = TypeVar("_B1", bound=BasisLike[Any, Any])
+_B2 = TypeVar("_B2", bound=BasisLike[Any, Any])
+
 
 _B0_co = TypeVar("_B0_co", bound=BasisLike[Any, Any], covariant=True)
 _B1_co = TypeVar("_B1_co", bound=BasisLike[Any, Any], covariant=True)
@@ -210,3 +214,70 @@ def average_eigenvalues_list(
             weights=weights,
         ).reshape(-1),
     }
+
+
+def apply_function_to_operator(
+    operator: SingleBasisOperator[_B0],
+    fn: Callable[
+        [np.ndarray[Any, np.dtype[np.complex128]]],
+        np.ndarray[Any, np.dtype[np.complex128]],
+    ],
+) -> SingleBasisOperator[_B0]:
+    res = np.linalg.eig(operator["data"].reshape(operator["basis"].shape))
+    eigenvalues = fn(res.eigenvalues)
+    data = np.einsum(
+        "k,ak,kb->ab", eigenvalues, res.eigenvectors, np.linalg.inv(res.eigenvectors)
+    )
+
+    return {"basis": operator["basis"], "data": data}
+
+
+def matmul_operator(
+    lhs: Operator[_B0, _B1], rhs: Operator[_B1, _B2]
+) -> Operator[_B0, _B2]:
+    data = np.tensordot(
+        lhs["data"].reshape(lhs["basis"].shape),
+        rhs["data"].reshape(rhs["basis"].shape),
+        axes=(1, 0),
+    )
+    return {"basis": StackedBasis(lhs["basis"][0], rhs["basis"][1]), "data": data}
+
+
+def add_operator(a: Operator[_B0, _B1], b: Operator[_B0, _B1]) -> Operator[_B0, _B1]:
+    """
+    Add together two operators.
+
+    Parameters
+    ----------
+    a : Operator[_B0Inv]
+    b : Operator[_B0Inv]
+
+    Returns
+    -------
+    Operator[_B0Inv]
+    """
+    return {"basis": a["basis"], "data": a["data"] + b["data"]}
+
+
+def apply_operator_to_state(
+    lhs: Operator[_B0, _B1], state: StateVector[_B1]
+) -> Eigenstate[_B0]:
+    """
+    Add together two operators.
+
+    Parameters
+    ----------
+    a : Operator[_B0Inv]
+    b : Operator[_B0Inv]
+
+    Returns
+    -------
+    Operator[_B0Inv]
+    """
+    data = np.tensordot(
+        lhs["data"].reshape(lhs["basis"].shape),
+        state["data"].reshape(state["basis"].n),
+        axes=(1, 0),
+    )
+    norm = np.linalg.norm(data).astype(np.complex128)
+    return {"basis": lhs["basis"][0], "data": data / norm, "eigenvalue": norm}

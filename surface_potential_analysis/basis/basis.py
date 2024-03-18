@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, Literal, TypeVar
+from typing import Literal, TypeVar
 
 import numpy as np
 
@@ -21,110 +21,6 @@ _N0Inv = TypeVar("_N0Inv", bound=int)
 _ND0Inv = TypeVar("_ND0Inv", bound=int)
 
 _S0Inv = TypeVar("_S0Inv", bound=tuple[int, ...])
-# ruff: noqa: D102
-
-
-class ExplicitBasis(BasisWithLengthLike[_NF0_co, _N0_co, _ND0Inv]):
-    """An basis with vectors given as explicit states."""
-
-    def __init__(
-        self,
-        delta_x: AxisVector[_ND0Inv],
-        vectors: np.ndarray[tuple[_N0_co, _NF0_co], np.dtype[np.complex128]],
-    ) -> None:
-        self._delta_x = delta_x
-        self._vectors = vectors
-        super().__init__()
-
-    @property
-    def delta_x(self) -> AxisVector[_ND0Inv]:
-        return self._delta_x
-
-    @property
-    def n(self) -> _N0_co:
-        return self.vectors.shape[0]  # type: ignore[no-any-return]
-
-    @property
-    def fundamental_n(self) -> _NF0_co:
-        return self.vectors.shape[1]  # type: ignore[no-any-return]
-
-    @property
-    def vectors(self) -> np.ndarray[tuple[_N0_co, _NF0_co], np.dtype[np.complex128]]:
-        return self._vectors
-
-    @property
-    def _transformed_vectors(
-        self,
-    ) -> np.ndarray[tuple[_N0_co, _NF0_co], np.dtype[np.complex128]]:
-        return np.fft.fft(self.vectors, self.fundamental_n, axis=1, norm="ortho")
-
-    def __from_fundamental__(
-        self,
-        vectors: np.ndarray[_S0Inv, np.dtype[np.complex128] | np.dtype[np.float64]],
-        axis: int = -1,
-    ) -> np.ndarray[tuple[int, ...], np.dtype[np.complex128]]:
-        transformed = np.tensordot(np.conj(self.vectors), vectors, axes=([0], [axis]))
-        return np.moveaxis(transformed, 0, axis)
-
-    def __into_fundamental__(
-        self,
-        vectors: np.ndarray[_S0Inv, np.dtype[np.complex128] | np.dtype[np.float64]],
-        axis: int = -1,
-    ) -> np.ndarray[tuple[int, ...], np.dtype[np.complex128]]:
-        transformed = np.tensordot(vectors, self.vectors, axes=([axis], [0]))
-        return np.moveaxis(transformed, -1, axis)
-
-    def __from_transformed__(
-        self,
-        vectors: np.ndarray[_S0Inv, np.dtype[np.complex128] | np.dtype[np.float64]],
-        axis: int = -1,
-    ) -> np.ndarray[tuple[int, ...], np.dtype[np.complex128]]:
-        transformed_vectors = np.conj(self._transformed_vectors)
-        transformed = np.tensordot(transformed_vectors, vectors, axes=([0], [axis]))
-        return np.moveaxis(transformed, 0, axis)
-
-    def __into_transformed__(
-        self,
-        vectors: np.ndarray[_S0Inv, np.dtype[np.complex128] | np.dtype[np.float64]],
-        axis: int = -1,
-    ) -> np.ndarray[tuple[int, ...], np.dtype[np.complex128]]:
-        transformed_vectors = self._transformed_vectors
-        transformed = np.tensordot(vectors, transformed_vectors, axes=([axis], [0]))
-        return np.moveaxis(transformed, -1, axis)
-
-    @classmethod
-    def from_momentum_vectors(
-        cls: type[ExplicitBasis[_NF0_co, _N0_co, _ND0Inv]],
-        delta_x: AxisVector[_ND0Inv],
-        vectors: np.ndarray[tuple[_N0_co, _NF0_co], np.dtype[np.complex128]],
-    ) -> ExplicitBasis[_NF0_co, _N0_co, _ND0Inv]:
-        vectors = np.fft.ifft(vectors, axis=1, norm="ortho")
-        return cls(delta_x, vectors)
-
-    def __convert_vector_into__(
-        self,
-        vectors: np.ndarray[_S0Inv, np.dtype[np.complex128] | np.dtype[np.float64]],
-        basis: BasisLike[Any, Any],
-        axis: int = -1,
-    ) -> np.ndarray[Any, np.dtype[np.complex128]]:
-        if isinstance(basis, ExplicitBasis):
-            assert basis.fundamental_n == self.fundamental_n
-            # We dont need to go all the way to fundamental basis here
-            # Instead we can just compute the transformation once
-            matrix = np.tensordot(np.conj(basis.vectors), self.vectors, axes=([1], [1]))
-            transformed = np.tensordot(matrix, vectors, axes=([1], [axis]))
-            return np.moveaxis(transformed, 0, axis)
-        return super().__convert_vector_into__(vectors, basis, axis)
-
-
-ExplicitBasis1d = ExplicitBasis[_NF0Inv, _N0Inv, Literal[1]]
-"""An basis with vectors given as explicit states with a 1d basis vector."""
-
-ExplicitBasis2d = ExplicitBasis[_NF0Inv, _N0Inv, Literal[2]]
-"""An basis with vectors given as explicit states with a 2d basis vector."""
-
-ExplicitBasis3d = ExplicitBasis[_NF0Inv, _N0Inv, Literal[3]]
-"""An basis with vectors given as explicit states with a 3d basis vector."""
 
 
 class FundamentalBasis(

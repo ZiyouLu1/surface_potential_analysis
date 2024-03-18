@@ -10,10 +10,9 @@ from surface_potential_analysis.basis.util import (
     BasisUtil,
 )
 from surface_potential_analysis.operator.conversion import (
-    add_operator,
     convert_operator_to_basis,
 )
-from surface_potential_analysis.operator.operator import as_operator
+from surface_potential_analysis.operator.operator import add_operator, as_operator
 from surface_potential_analysis.potential.conversion import convert_potential_to_basis
 from surface_potential_analysis.stacked_basis.conversion import (
     stacked_basis_as_fundamental_momentum_basis,

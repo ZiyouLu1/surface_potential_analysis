@@ -5,13 +5,15 @@ from typing import TYPE_CHECKING, Any, Generic, Literal, TypedDict, TypeVar
 import numpy as np
 
 from surface_potential_analysis.basis.basis import (
-    ExplicitBasis,
-    ExplicitBasis1d,
     FundamentalBasis,
     FundamentalPositionBasis,
     FundamentalPositionBasis1d,
 )
 from surface_potential_analysis.basis.basis_like import BasisWithLengthLike
+from surface_potential_analysis.basis.explicit_basis import (
+    ExplicitBasis1d,
+    ExplicitBasisWithLength,
+)
 from surface_potential_analysis.basis.stacked_basis import (
     StackedBasis,
     StackedBasisLike,
@@ -89,7 +91,7 @@ def get_potential_basis_config_basis(
     ExplicitBasis[_L1Inv, PositionBasis[_L0Inv]]
     """
     eigenstates = get_potential_basis_config_eigenstates(config)
-    return ExplicitBasis(
+    return ExplicitBasisWithLength(
         eigenstates["basis"][0].delta_x,
         eigenstates["data"],  # type: ignore[arg-type]
     )

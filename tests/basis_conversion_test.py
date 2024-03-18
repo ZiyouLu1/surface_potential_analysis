@@ -67,8 +67,8 @@ def convert_vector_simple(
 
 class BasisConversionTest(unittest.TestCase):
     def test_as_explicit_position_basis_momentum_normalization(self) -> None:
-        fundamental_n = rng.integers(2, 5)  # type: ignore bad libary types
-        n = rng.integers(1, fundamental_n)  # type: ignore bad libary types
+        fundamental_n = rng.integers(2, 5)  # type: ignore bad library types
+        n = rng.integers(1, fundamental_n)  # type: ignore bad library types
 
         basis = get_random_explicit_basis(1, fundamental_n=fundamental_n, n=n)
 

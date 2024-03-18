@@ -45,12 +45,12 @@ class StackedBasisLike(BasisLike[Any, Any], Protocol[*_B0]):
         return len(self.fundamental_shape)
 
     @property
-    def fundamental_n(self: StackedBasisLike[*tuple[_B0Inv, ...]]) -> np.int_:
-        return np.prod(self.fundamental_shape)
+    def fundamental_n(self: StackedBasisLike[*tuple[_B0Inv, ...]]) -> int:
+        return np.prod(self.fundamental_shape).item()
 
     @property
-    def n(self: StackedBasisLike[*tuple[_B0Inv, ...]]) -> np.int_:
-        return np.prod(self.shape)
+    def n(self: StackedBasisLike[*tuple[_B0Inv, ...]]) -> int:
+        return np.prod(self.shape).item()
 
     @property
     def shape(self: StackedBasisLike[*tuple[_B0Inv, ...]]) -> tuple[int, ...]:

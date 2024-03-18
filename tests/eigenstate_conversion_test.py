@@ -7,14 +7,12 @@ import hamiltonian_generator
 import numpy as np
 from scipy.constants import hbar
 
-from tests.utils import get_random_explicit_basis
 from surface_potential_analysis.basis.basis import (
-    ExplicitBasis,
-    ExplicitBasis3d,
     FundamentalPositionBasis3d,
     TransformedPositionBasis,
     TransformedPositionBasis3d,
 )
+from surface_potential_analysis.basis.explicit_basis import ExplicitBasisWithLength
 from surface_potential_analysis.basis.stacked_basis import (
     StackedBasis,
     StackedBasisLike,
@@ -27,8 +25,10 @@ from surface_potential_analysis.stacked_basis.sho_basis import (
 from surface_potential_analysis.state_vector.conversion import (
     convert_state_vector_to_basis,
 )
+from tests.utils import get_random_explicit_basis
 
 if TYPE_CHECKING:
+    from surface_potential_analysis.basis.explicit_basis import ExplicitBasis3d
     from surface_potential_analysis.state_vector.state_vector import StateVector
 
 _rng = np.random.default_rng()
@@ -46,7 +46,7 @@ def _get_random_sho_eigenstate(
     vector = np.array(_rng.random(np.prod(resolution)), dtype=np.complex128)
     vector /= np.linalg.norm(vector)
 
-    x2_basis = ExplicitBasis(
+    x2_basis = ExplicitBasisWithLength(
         np.array([0, 0, 20]),
         get_random_explicit_basis(
             3, fundamental_n=fundamental_resolution[2], n=resolution[2]

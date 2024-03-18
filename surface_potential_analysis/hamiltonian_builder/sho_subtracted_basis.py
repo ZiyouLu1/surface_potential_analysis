@@ -8,7 +8,6 @@ import numpy as np
 from scipy.constants import hbar
 
 from surface_potential_analysis.basis.basis import (
-    ExplicitBasis3d,
     FundamentalPositionBasis,
     FundamentalPositionBasis3d,
     TransformedPositionBasis,
@@ -28,6 +27,7 @@ from surface_potential_analysis.stacked_basis.sho_basis import (
 )
 
 if TYPE_CHECKING:
+    from surface_potential_analysis.basis.explicit_basis import ExplicitBasis3d
     from surface_potential_analysis.operator import SingleBasisOperator
     from surface_potential_analysis.potential.potential import Potential
 
@@ -168,12 +168,10 @@ class _SurfaceHamiltonianUtil(
     def eigenstate_indexes(
         self,
     ) -> np.ndarray[tuple[Literal[3], int], np.dtype[np.int_]]:
-        util = BasisUtil(self.basis)
-
         x0t, x1t, zt = np.meshgrid(
-            util._utils[0].nk_points,  # type: ignore[misc] # noqa: SLF001
-            util._utils[1].nk_points,  # type: ignore[misc] # noqa: SLF001
-            util._utils[2].nx_points,  # type: ignore[misc] # noqa: SLF001
+            BasisUtil(self.basis[0]).nk_points,  # type: ignore[misc]
+            BasisUtil(self.basis[1]).nk_points,  # type: ignore[misc]
+            BasisUtil(self.basis[2]).nx_points,  # type: ignore[misc]
             indexing="ij",
         )
         return np.array([x0t.ravel(), x1t.ravel(), zt.ravel()])  # type: ignore[no-any-return]

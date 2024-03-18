@@ -6,7 +6,6 @@ import numpy as np
 from scipy.stats import special_ortho_group
 
 from surface_potential_analysis.basis.basis import (
-    ExplicitBasis,
     FundamentalPositionBasis,
     TransformedPositionBasis,
 )
@@ -18,6 +17,7 @@ from surface_potential_analysis.basis.conversion import (
     basis_as_fundamental_momentum_basis,
     basis_as_fundamental_position_basis,
 )
+from surface_potential_analysis.basis.explicit_basis import ExplicitBasisWithLength
 from surface_potential_analysis.basis.stacked_basis import StackedBasis
 from surface_potential_analysis.basis.util import BasisUtil
 from surface_potential_analysis.util.interpolation import (
@@ -224,7 +224,7 @@ class BasisConfigConversionTest(unittest.TestCase):
         n = rng.integers(2, fundamental_n)  # type: ignore bad libary types
 
         vectors = special_ortho_group.rvs(fundamental_n)[:n]
-        axis = ExplicitBasis(np.array([0]), vectors.astype(np.complex128))
+        axis = ExplicitBasisWithLength(np.array([0]), vectors.astype(np.complex128))
         actual = convert_vector(
             np.eye(n),
             axis,

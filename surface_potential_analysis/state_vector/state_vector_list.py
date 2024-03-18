@@ -196,3 +196,25 @@ def average_state_vector(
             weights=weights,
         ).reshape(-1),
     }
+
+
+def get_basis_states(
+    basis: _B0,
+) -> StateVectorList[FundamentalBasis[int], _B0]:
+    """
+    Get the eigenstates of a particular basis.
+
+    Parameters
+    ----------
+    basis : _B0
+
+    Returns
+    -------
+    StateVectorList[FundamentalBasis[int], _B0]
+
+    """
+    data = np.eye(basis.n, basis.n).astype(np.complex128)
+    return {
+        "basis": StackedBasis(FundamentalBasis(basis.n), basis),
+        "data": data.reshape(-1),
+    }

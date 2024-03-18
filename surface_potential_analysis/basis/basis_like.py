@@ -301,6 +301,8 @@ def convert_matrix(
     final_basis: BasisLike[Any, Any],
     initial_dual_basis: BasisLike[Any, Any],
     final_dual_basis: BasisLike[Any, Any],
+    *,
+    axes: tuple[int, int] = (0, 1),
 ) -> np.ndarray[tuple[int, int], np.dtype[np.complex128]]:
     """
     Convert a matrix from initial_basis to final_basis.
@@ -315,8 +317,10 @@ def convert_matrix(
     -------
     np.ndarray[tuple[int, int], np.dtype[np.complex_]]
     """
-    converted = convert_vector(matrix, initial_basis, final_basis, axis=0)
-    return convert_dual_vector(converted, initial_dual_basis, final_dual_basis, axis=1)  # type: ignore[return-value]
+    converted = convert_vector(matrix, initial_basis, final_basis, axis=axes[0])
+    return convert_dual_vector(
+        converted, initial_dual_basis, final_dual_basis, axis=axes[1]
+    )  # type: ignore[return-value]
 
 
 @runtime_checkable

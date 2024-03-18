@@ -8,10 +8,10 @@ import numpy as np
 from scipy.constants import hbar
 
 from surface_potential_analysis.basis.basis import (
-    ExplicitBasis3d,
     FundamentalPositionBasis,
     FundamentalPositionBasis3d,
 )
+from surface_potential_analysis.basis.explicit_basis import ExplicitBasis3d
 from surface_potential_analysis.basis.util import BasisUtil
 from surface_potential_analysis.stacked_basis.sho_basis import (
     SHOBasisConfig,
@@ -97,7 +97,7 @@ class SHOBasisTest(unittest.TestCase):
         mass = hbar**2 * rng.random()
         sho_omega = rng.random() / hbar
         z_points = np.linspace(
-            -20 * rng.random(), 20 * rng.random(), 1000, dtype=np.complex128
+            -20 * rng.random(), 20 * rng.random(), 1000, dtype=np.float64
         )
 
         for n in range(14):

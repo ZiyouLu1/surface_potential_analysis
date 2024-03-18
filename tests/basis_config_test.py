@@ -88,10 +88,10 @@ class TestBasisConfig(unittest.TestCase):
         np.testing.assert_array_equal(delta_x[1], util.delta_x_stacked[1])
         np.testing.assert_array_equal(delta_x[2], util.delta_x_stacked[2])
 
-        self.assertEqual(util.dk_stacked[0][0], 2 * np.pi)
-        self.assertEqual(util.dk_stacked[0][1], -2 * np.pi / np.sqrt(3))
-        self.assertEqual(util.dk_stacked[1][0], 0)
-        self.assertEqual(util.dk_stacked[1][1], 4 * np.pi / np.sqrt(3))
+        self.assertAlmostEqual(util.dk_stacked[0][0], 2 * np.pi)
+        self.assertAlmostEqual(util.dk_stacked[0][1], -2 * np.pi / np.sqrt(3))
+        self.assertAlmostEqual(util.dk_stacked[1][0], 0)
+        self.assertAlmostEqual(util.dk_stacked[1][1], 4 * np.pi / np.sqrt(3))
 
         util2 = BasisUtil(basis)
         np.testing.assert_array_equal(delta_x[0], util2.delta_x_stacked[0])

@@ -14,9 +14,11 @@ python = ">=3.11,<3.13"
 numpy = "^1.26.3"
 matplotlib = "^3.8.2"
 scipy = "^1.11.0"
+# hamiltonian_generator = { path = "./lib/hamiltonian_generator" }
+qutip = "5.0.0b1"
+# sse_solver_py = { path = "./lib/sse_solver/sse_solver_py" }
+sse_solver_py = { path = "lib/sse_solver/sse_solver_py" }
 hamiltonian_generator = { path = "lib/hamiltonian_generator" }
-# qutip = "5.0.0a2"
-qutip = { path = "./lib/qutip" }
 
 [tool.poetry.group.dev.dependencies]
 ruff = "*"
@@ -32,7 +34,7 @@ exclude = ["typings/**/*", "lib/**/*"]
 
 
 [tool.ruff.extend-per-file-ignores]
-"test/**/*" = ["PLR6301", "PLC2701", "PLR0914"]
+"tests/**/*" = ["PLR6301", "PLC2701", "PLR0914", "D101", "D102"]
 
 [tool.ruff.lint.pylint]
 allow-dunder-method-names = [

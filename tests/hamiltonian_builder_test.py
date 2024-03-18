@@ -401,7 +401,7 @@ class HamiltonianBuilderTest(unittest.TestCase):
         }
         bloch_fraction = np.array([0, 0, 0])
 
-        points = rng.random(*shape)
+        points = rng.random(shape)
 
         potential: Potential[Any] = {
             "basis": expected_basis,

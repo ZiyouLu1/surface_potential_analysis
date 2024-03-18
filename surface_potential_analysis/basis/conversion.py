@@ -2,16 +2,12 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Literal, TypeVar
 
-import numpy as np
-
 from surface_potential_analysis.basis.basis import (
-    ExplicitBasis,
     FundamentalBasis,
     FundamentalPositionBasis,
     FundamentalTransformedBasis,
     FundamentalTransformedPositionBasis,
 )
-from surface_potential_analysis.basis.util import BasisUtil
 
 if TYPE_CHECKING:
     from .basis_like import (
@@ -93,49 +89,6 @@ def basis_as_fundamental_basis(
     FundamentalMomentumBasis[_NF0Inv, _NDInv]
     """
     return FundamentalBasis(axis.fundamental_n)
-
-
-def basis_as_explicit_position_basis(
-    axis: BasisWithLengthLike[_NF0Inv, _N0Inv, _NDInv],
-) -> ExplicitBasis[_NF0Inv, _N0Inv, _NDInv]:
-    """
-    Convert the axis into an explicit position axis.
-
-    Parameters
-    ----------
-    axis : BasisLike[_NF0Inv, _N0Inv]
-
-    Returns
-    -------
-    ExplicitBasis[_NF0Inv, _N0Inv]
-    """
-    util = BasisUtil(axis)
-    return ExplicitBasis(axis.delta_x, util.vectors)
-
-
-def basis_as_orthonormal_basis(
-    axis: BasisWithLengthLike[_NF0Inv, _N0Inv, _NDInv],
-) -> ExplicitBasis[_NF0Inv, _N0Inv, _NDInv]:
-    """
-    make the given axis orthonormal.
-
-    Parameters
-    ----------
-    axis : BasisLike[_NF0Inv, _N0Inv]
-
-    Returns
-    -------
-    ExplicitBasis[_NF0Inv, _N0Inv]
-    """
-    vectors = BasisUtil(axis).vectors
-    orthonormal_vectors = np.zeros_like(vectors, dtype=vectors.dtype)
-    for i, v in enumerate(vectors):
-        vector = v
-        for other in orthonormal_vectors[:i]:
-            vector -= np.dot(vector, other) * other
-        orthonormal_vectors[i] = vector / np.linalg.norm(vector)
-
-    return ExplicitBasis(axis.delta_x, orthonormal_vectors)
 
 
 def basis_as_n_point_basis(

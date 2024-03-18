@@ -10,9 +10,11 @@ import scipy.special
 from scipy.constants import hbar
 
 from surface_potential_analysis.basis.basis import (
-    ExplicitBasis,
-    ExplicitBasis3d,
     FundamentalPositionBasis,
+)
+from surface_potential_analysis.basis.explicit_basis import (
+    ExplicitBasis3d,
+    ExplicitBasisWithLength,
 )
 from surface_potential_analysis.basis.stacked_basis import StackedBasis
 from surface_potential_analysis.basis.util import BasisUtil
@@ -144,7 +146,7 @@ def sho_basis_3d_from_config(
     """
     potential_basis_config = get_sho_potential_basis_config(parent, config, n)
     axis = get_potential_basis_config_basis(potential_basis_config)
-    return ExplicitBasis(parent.delta_x, axis.vectors)
+    return ExplicitBasisWithLength(parent.delta_x, axis.vectors)
 
 
 def infinate_sho_basis_3d_from_config(
@@ -175,4 +177,4 @@ def infinate_sho_basis_3d_from_config(
     )
     util = BasisUtil(parent)
     vectors = vectors * np.sqrt(np.linalg.norm(util.fundamental_dx))
-    return ExplicitBasis(parent.delta_x, vectors)
+    return ExplicitBasisWithLength(parent.delta_x, vectors)
