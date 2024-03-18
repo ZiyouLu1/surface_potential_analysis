@@ -152,6 +152,7 @@ def plot_state_1d_x(
         measure=measure,
     )
     ax.set_ylabel("State /Au")
+    line.set_label(f"{measure} state")
     return fig, ax, line
 
 

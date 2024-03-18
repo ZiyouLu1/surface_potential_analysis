@@ -500,7 +500,6 @@ def animate_data_through_list_1d_x(
         line.set_color(frames[0][0].get_color())
 
     ani = ArtistAnimation(fig, frames)
-
     return fig, ax, ani
 
 

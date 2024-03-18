@@ -9,6 +9,10 @@ from surface_potential_analysis.basis.basis_like import (
     BasisLike,
 )
 from surface_potential_analysis.basis.stacked_basis import StackedBasis
+from surface_potential_analysis.types import (
+    SingleFlatIndexLike,
+)
+from surface_potential_analysis.util.util import get_data_in_axes
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
@@ -19,7 +23,10 @@ if TYPE_CHECKING:
         StateDualVector,
         StateVector,
     )
-    from surface_potential_analysis.types import SingleFlatIndexLike
+    from surface_potential_analysis.types import (
+        SingleFlatIndexLike,
+        SingleStackedIndexLike,
+    )
 
     _B0 = TypeVar("_B0", bound=BasisLike[Any, Any])
     _B1 = TypeVar("_B1", bound=BasisLike[Any, Any])
@@ -78,7 +85,11 @@ def get_weighted_state_vector(
     -------
     Eigenstate[_B0Inv]
     """
-    data = np.tensordot(weights["data"], state_list["data"], axes=(0, 0))
+    data = np.tensordot(
+        weights["data"],
+        state_list["data"].reshape(state_list["basis"][0].n, -1),
+        axes=(0, 0),
+    )
     return {"basis": state_list["basis"][1], "data": data}
 
 
@@ -217,4 +228,38 @@ def get_basis_states(
     return {
         "basis": StackedBasis(FundamentalBasis(basis.n), basis),
         "data": data.reshape(-1),
+    }
+
+
+def get_state_along_axis(
+    states: StateVectorList[_SB0, _B1],
+    axes: tuple[int, ...] = (0,),
+    idx: SingleStackedIndexLike | None = None,
+) -> StateVectorList[Any, _B1]:
+    """
+    Get Probability from the list.
+
+    Parameters
+    ----------
+    probabilities : ProbabilityVectorList[_B0Inv, _L0Inv]
+    idx : SingleFlatIndexLike
+
+    Returns
+    -------
+    ProbabilityVector[_B0Inv]
+    """
+    ndim = states["basis"][0].ndim
+    idx = tuple(0 for _ in range(ndim - 2)) if idx is None else idx
+    final_basis = StackedBasis(
+        *tuple(b for (i, b) in enumerate(states["basis"][0]) if i in axes)
+    )
+
+    vector = get_data_in_axes(
+        states["data"].reshape(*states["basis"][0].shape, -1),
+        (*axes, ndim),
+        idx,
+    ).reshape(-1)
+    return {
+        "basis": StackedBasis(final_basis, states["basis"][1]),
+        "data": vector,
     }

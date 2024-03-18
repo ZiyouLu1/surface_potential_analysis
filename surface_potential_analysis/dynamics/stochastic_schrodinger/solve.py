@@ -24,6 +24,7 @@ from surface_potential_analysis.state_vector.eigenstate_calculation import (
 )
 from surface_potential_analysis.state_vector.state_vector_list import (
     calculate_inner_products,
+    get_state_along_axis,
     get_state_vector,
     get_weighted_state_vector,
 )
@@ -204,8 +205,7 @@ def solve_stochastic_schrodinger_equation(
     collapse_operators: list[SingleBasisOperator[_B1Inv]] | None = None,
     *,
     n_trajectories: _L1Inv,
-) -> StateVectorList[StackedBasisLike[FundamentalBasis[_L1Inv], _AX0Inv], _B1Inv]:
-    ...
+) -> StateVectorList[StackedBasisLike[FundamentalBasis[_L1Inv], _AX0Inv], _B1Inv]: ...
 
 
 @overload
@@ -216,8 +216,9 @@ def solve_stochastic_schrodinger_equation(
     collapse_operators: list[SingleBasisOperator[_B1Inv]] | None = None,
     *,
     n_trajectories: Literal[1] = 1,
-) -> StateVectorList[StackedBasisLike[FundamentalBasis[Literal[1]], _AX0Inv], _B1Inv]:
-    ...
+) -> StateVectorList[
+    StackedBasisLike[FundamentalBasis[Literal[1]], _AX0Inv], _B1Inv
+]: ...
 
 
 def solve_stochastic_schrodinger_equation(  # type: ignore bad overload
@@ -312,12 +313,16 @@ def _select_random_localized_state(
     states["data"].reshape(states["basis"].shape)
 
     op = calculate_inner_products(states, states)
+    op["data"] /= np.linalg.norm(op["data"])
     # Vectors representing the combination of states that diagonalizes rho
     eigenstates = calculate_eigenvectors_hermitian(op)
-    probabilities = eigenstates["eigenvalue"].astype(np.float64)
+
+    probabilities = eigenstates["eigenvalue"]
+    probabilities /= np.sum(probabilities)
 
     idx = rng.choice(probabilities.size, p=probabilities)
     transformation = get_state_vector(eigenstates, idx)
+    transformation["data"] /= np.sqrt(2)
     return get_weighted_state_vector(states, transformation)
 
 
@@ -329,8 +334,7 @@ def solve_stochastic_schrodinger_equation_localized(
     collapse_operators: list[SingleBasisOperator[_B1Inv]] | None = None,
     *,
     n_trajectories: _L1Inv,
-) -> StateVectorList[StackedBasisLike[FundamentalBasis[_L1Inv], _AX0Inv], _B1Inv]:
-    ...
+) -> StateVectorList[StackedBasisLike[FundamentalBasis[_L1Inv], _AX0Inv], _B1Inv]: ...
 
 
 @overload
@@ -341,8 +345,9 @@ def solve_stochastic_schrodinger_equation_localized(
     collapse_operators: list[SingleBasisOperator[_B1Inv]] | None = None,
     *,
     n_trajectories: Literal[1] = 1,
-) -> StateVectorList[StackedBasisLike[FundamentalBasis[Literal[1]], _AX0Inv], _B1Inv]:
-    ...
+) -> StateVectorList[
+    StackedBasisLike[FundamentalBasis[Literal[1]], _AX0Inv], _B1Inv
+]: ...
 
 
 def solve_stochastic_schrodinger_equation_localized(  # type: ignore bad overload
@@ -369,16 +374,17 @@ def solve_stochastic_schrodinger_equation_localized(  # type: ignore bad overloa
     for trajectory in range(n_trajectories):
         state = initial_state
         for t in range(times.n):
-            for _ in range(times.step):
-                result = solve_stochastic_schrodinger_equation(
-                    state,
-                    EvenlySpacedTimeBasis(1, 1, 1, times.fundamental_dt),
-                    hamiltonian,
-                    collapse_operators,
-                    n_trajectories=n_realizations,
-                )
-                # Re-localize our state
-                state = _select_random_localized_state(result)
+            result = solve_stochastic_schrodinger_equation(
+                state,
+                EvenlySpacedTimeBasis(2, times.step, 0, times.dt),
+                hamiltonian,
+                collapse_operators,
+                n_trajectories=n_realizations,
+            )
+            # Re-localize our state
+            state = _select_random_localized_state(
+                get_state_along_axis(result, axes=(1,), idx=(1,))
+            )
 
             data[trajectory, t] = state["data"]
 

@@ -232,7 +232,6 @@ def get_single_factorized_noise_operators_diagonal(
     # The original kernel has the noise operators as \ket{i}\bra{j}
     # When we diagonalize we have \hat{Z}'_\beta = U^\dagger_{\beta, \alpha} \hat{Z}_\alpha
     # np.conj(res.eigenvectors) is U^\dagger_{\beta, \alpha}
-    # TODO: is this the right way round...
     return {
         "basis": StackedBasis(
             FundamentalBasis(kernel["basis"][0][0].n), kernel["basis"][0]
@@ -259,15 +258,15 @@ def get_diagonal_noise_kernel(
 
 
 def truncate_diagonal_noise_kernel(
-    kernel: DiagonalNoiseKernel[_B0, _B1, _B0, _B1], *, n: int
+    kernel: DiagonalNoiseKernel[_B0, _B1, _B0, _B1], *, n: int | slice
 ) -> DiagonalNoiseKernel[_B0, _B1, _B0, _B1]:
     operators = get_single_factorized_noise_operators_diagonal(kernel)
 
     arg_sort = np.argsort(np.abs(operators["eigenvalue"]))
-    args = arg_sort[-n::]
+    args = arg_sort[-n::] if isinstance(n, int) else arg_sort[n]
     return get_diagonal_noise_kernel(
         {
-            "basis": StackedBasis(FundamentalBasis(n), operators["basis"][1]),
+            "basis": StackedBasis(FundamentalBasis(args.size), operators["basis"][1]),
             "data": operators["data"]
             .reshape(operators["basis"][0].n, -1)[args]
             .ravel(),

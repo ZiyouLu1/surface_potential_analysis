@@ -87,14 +87,13 @@ def get_data_in_axes(
     Parameters
     ----------
     slice : list[slice  |  _IntLike_co  |  None]
-        _description_
+        slice excluding axes
     axes : tuple[_IntLike_co]
-        _description_
+        axes to insert slice(None)
 
     Returns
     -------
     list[slice | _IntLike_co | None]
-        _description_
     """
     return np.transpose(
         data[slice_ignoring_axes(idx, axes)], get_position_in_sorted(axes)
