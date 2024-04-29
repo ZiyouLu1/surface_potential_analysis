@@ -119,8 +119,33 @@ DiagonalNoiseOperator = DiagonalOperator
 SingleBasisDiagonalNoiseOperator = DiagonalNoiseOperator[_B0, _B0]
 
 NoiseOperatorList = EigenOperatorList[_B0, _B1, _B2]
+SingleBasisNoiseOperatorList = EigenOperatorList[_B0, _B1, _B1]
+
 DiagonalNoiseOperatorList = DiagonalEigenOperatorList[_B0, _B1, _B2]
+SingleBasisDiagonalNoiseOperatorList = DiagonalEigenOperatorList[_B0, _B1, _B1]
 DiagonalNoiseOperator = DiagonalOperator
+
+
+def as_noise_kernel(
+    diagonal: DiagonalNoiseKernel[_B0, _B1, _B0, _B1],
+) -> NoiseKernel[_B0, _B1, _B0, _B1]:
+    """
+    Given a diagonal noise kernel, get the full noise kernel.
+
+    Parameters
+    ----------
+    diagonal : DiagonalNoiseKernel[_B0, _B1, _B0, _B1]
+
+    Returns
+    -------
+    NoiseKernel[_B0, _B1, _B0, _B1]
+    """
+    n = diagonal["basis"][0].shape[0]
+    m = diagonal["basis"][1].shape[0]
+
+    full_data = np.diag(diagonal["data"]).reshape(n, m, n, m).swapaxes(1, 2)
+
+    return {"basis": diagonal["basis"], "data": full_data.ravel()}
 
 
 def get_single_factorized_noise_operators(
@@ -176,7 +201,9 @@ def get_single_factorized_noise_operators(
 def get_noise_kernel(
     operators: NoiseOperatorList[FundamentalBasis[int], _B0, _B1],
 ) -> NoiseKernel[_B0, _B1, _B0, _B1]:
-    operators_data = operators["data"].reshape(-1, *operators["basis"][1].shape)
+    operators_data = operators["data"].reshape(
+        operators["basis"][0].n, *operators["basis"][1].shape
+    )
 
     data = np.einsum(
         "a,aji,akl->ij kl",
@@ -263,7 +290,7 @@ def truncate_diagonal_noise_kernel(
     operators = get_single_factorized_noise_operators_diagonal(kernel)
 
     arg_sort = np.argsort(np.abs(operators["eigenvalue"]))
-    args = arg_sort[-n::] if isinstance(n, int) else arg_sort[n]
+    args = arg_sort[-n::] if isinstance(n, int) else arg_sort[::-1][n]
     return get_diagonal_noise_kernel(
         {
             "basis": StackedBasis(FundamentalBasis(args.size), operators["basis"][1]),

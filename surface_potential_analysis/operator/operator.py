@@ -88,9 +88,7 @@ def as_diagonal_operator(operator: Operator[_B0, _B1]) -> DiagonalOperator[_B0, 
     -------
     Operator[_B0_co, _B1_co]
     """
-    diagonal = np.diag(operator["data"])
-    np.testing.assert_array_equal(0, operator["data"] - np.diag(diagonal))
-    np.testing.assert_equal(operator["data"].shape[0], operator["data"].shape[1])
+    diagonal = np.diag(operator["data"].reshape(operator["basis"].shape))
     return {"basis": operator["basis"], "data": diagonal.reshape(-1)}
 
 
@@ -259,6 +257,24 @@ def add_operator(a: Operator[_B0, _B1], b: Operator[_B0, _B1]) -> Operator[_B0, 
     return {"basis": a["basis"], "data": a["data"] + b["data"]}
 
 
+def subtract_operator(
+    a: Operator[_B0, _B1], b: Operator[_B0, _B1]
+) -> Operator[_B0, _B1]:
+    """
+    Subtract two operators (a-b).
+
+    Parameters
+    ----------
+    a : Operator[_B0Inv]
+    b : Operator[_B0Inv]
+
+    Returns
+    -------
+    Operator[_B0Inv]
+    """
+    return {"basis": a["basis"], "data": a["data"] - b["data"]}
+
+
 def apply_operator_to_state(
     lhs: Operator[_B0, _B1], state: StateVector[_B1]
 ) -> Eigenstate[_B0]:
@@ -281,3 +297,25 @@ def apply_operator_to_state(
     )
     norm = np.linalg.norm(data).astype(np.complex128)
     return {"basis": lhs["basis"][0], "data": data / norm, "eigenvalue": norm}
+
+
+def get_commutator(
+    lhs: SingleBasisOperator[_B0], rhs: SingleBasisOperator[_B0]
+) -> SingleBasisOperator[_B0]:
+    """
+    Given two operators lhs, rhs, calculate the commutator.
+
+    This is equivalent to ths rhs - rhs lhs
+
+    Parameters
+    ----------
+    lhs : SingleBasisOperator[_B0]
+    rhs : SingleBasisOperator[_B0]
+
+    Returns
+    -------
+    SingleBasisOperator[_B0]
+    """
+    lhs_rhs = matmul_operator(lhs, rhs)
+    rhs_lhs = matmul_operator(rhs, lhs)
+    return subtract_operator(lhs_rhs, rhs_lhs)

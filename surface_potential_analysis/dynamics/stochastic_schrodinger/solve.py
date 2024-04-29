@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import contextlib
 from typing import TYPE_CHECKING, Any, Literal, TypeVar, overload
 
 import numpy as np
@@ -28,6 +29,9 @@ from surface_potential_analysis.state_vector.state_vector_list import (
     get_state_vector,
     get_weighted_state_vector,
 )
+
+with contextlib.suppress(ImportError):
+    from sse_solver_py import solve_sse_euler
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -205,7 +209,8 @@ def solve_stochastic_schrodinger_equation(
     collapse_operators: list[SingleBasisOperator[_B1Inv]] | None = None,
     *,
     n_trajectories: _L1Inv,
-) -> StateVectorList[StackedBasisLike[FundamentalBasis[_L1Inv], _AX0Inv], _B1Inv]: ...
+) -> StateVectorList[StackedBasisLike[FundamentalBasis[_L1Inv], _AX0Inv], _B1Inv]:
+    ...
 
 
 @overload
@@ -216,9 +221,8 @@ def solve_stochastic_schrodinger_equation(
     collapse_operators: list[SingleBasisOperator[_B1Inv]] | None = None,
     *,
     n_trajectories: Literal[1] = 1,
-) -> StateVectorList[
-    StackedBasisLike[FundamentalBasis[Literal[1]], _AX0Inv], _B1Inv
-]: ...
+) -> StateVectorList[StackedBasisLike[FundamentalBasis[Literal[1]], _AX0Inv], _B1Inv]:
+    ...
 
 
 def solve_stochastic_schrodinger_equation(  # type: ignore bad overload
@@ -290,6 +294,86 @@ def solve_stochastic_schrodinger_equation(  # type: ignore bad overload
     }
 
 
+@overload
+def solve_stochastic_schrodinger_equation_rust(
+    initial_state: StateVector[_B1Inv],
+    times: _AX0Inv,
+    hamiltonian: SingleBasisOperator[_B1Inv],
+    collapse_operators: list[SingleBasisOperator[_B1Inv]] | None = None,
+    *,
+    n_trajectories: _L1Inv,
+) -> StateVectorList[StackedBasisLike[FundamentalBasis[_L1Inv], _AX0Inv], _B1Inv]:
+    ...
+
+
+@overload
+def solve_stochastic_schrodinger_equation_rust(
+    initial_state: StateVector[_B1Inv],
+    times: _AX0Inv,
+    hamiltonian: SingleBasisOperator[_B1Inv],
+    collapse_operators: list[SingleBasisOperator[_B1Inv]] | None = None,
+    *,
+    n_trajectories: Literal[1] = 1,
+) -> StateVectorList[StackedBasisLike[FundamentalBasis[Literal[1]], _AX0Inv], _B1Inv]:
+    ...
+
+
+def solve_stochastic_schrodinger_equation_rust(  # type: ignore bad overload
+    initial_state: StateVector[_B1Inv],
+    times: _AX0Inv,
+    hamiltonian: SingleBasisOperator[_B1Inv],
+    collapse_operators: list[SingleBasisOperator[_B1Inv]] | None = None,
+    *,
+    n_trajectories: _L1Inv | Literal[1] = 1,
+) -> (
+    StateVectorList[StackedBasisLike[FundamentalBasis[Literal[1]], _AX0Inv], _B1Inv]
+    | StateVectorList[StackedBasisLike[FundamentalBasis[_L1Inv], _AX0Inv], _B1Inv]
+):
+    """
+    Given an initial state, use the stochastic schrodinger equation to solve the dynamics of the system.
+
+    Parameters
+    ----------
+    initial_state : StateVector[_B0Inv]
+    times : np.ndarray[tuple[int], np.dtype[np.float_]]
+    hamiltonian : SingleBasisOperator[_B0Inv]
+    collapse_operators : list[SingleBasisOperator[_B0Inv]]
+
+    Returns
+    -------
+    StateVectorList[_B0Inv, _L0Inv]
+    """
+    data = np.zeros(
+        (n_trajectories, times.n, initial_state["data"].size), dtype=np.complex128
+    )
+    collapse_operators = [] if collapse_operators is None else collapse_operators
+
+    for i in range(n_trajectories):
+        out = solve_sse_euler(
+            list(initial_state["data"]),
+            [
+                list(x / hbar)
+                for x in hamiltonian["data"].reshape(hamiltonian["basis"].shape)
+            ],
+            [
+                [list(x / np.sqrt(hbar)) for x in o["data"].reshape(o["basis"].shape)]
+                for o in collapse_operators
+            ],
+            times.n,
+            times.step,
+            times.fundamental_dt,
+        )
+        data[i] = np.array(out).reshape(times.n, -1)
+
+    return {
+        "basis": StackedBasis(
+            StackedBasis(FundamentalBasis(n_trajectories), times),
+            hamiltonian["basis"][0],
+        ),
+        "data": data.ravel(),
+    }
+
+
 rng = np.random.default_rng()
 
 
@@ -334,7 +418,8 @@ def solve_stochastic_schrodinger_equation_localized(
     collapse_operators: list[SingleBasisOperator[_B1Inv]] | None = None,
     *,
     n_trajectories: _L1Inv,
-) -> StateVectorList[StackedBasisLike[FundamentalBasis[_L1Inv], _AX0Inv], _B1Inv]: ...
+) -> StateVectorList[StackedBasisLike[FundamentalBasis[_L1Inv], _AX0Inv], _B1Inv]:
+    ...
 
 
 @overload
@@ -345,9 +430,8 @@ def solve_stochastic_schrodinger_equation_localized(
     collapse_operators: list[SingleBasisOperator[_B1Inv]] | None = None,
     *,
     n_trajectories: Literal[1] = 1,
-) -> StateVectorList[
-    StackedBasisLike[FundamentalBasis[Literal[1]], _AX0Inv], _B1Inv
-]: ...
+) -> StateVectorList[StackedBasisLike[FundamentalBasis[Literal[1]], _AX0Inv], _B1Inv]:
+    ...
 
 
 def solve_stochastic_schrodinger_equation_localized(  # type: ignore bad overload

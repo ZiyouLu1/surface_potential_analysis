@@ -7,13 +7,20 @@ from matplotlib.axes import Axes
 from matplotlib.figure import Figure
 
 from surface_potential_analysis.basis.basis_like import BasisLike
+from surface_potential_analysis.operator.operator import (
+    SingleBasisDiagonalOperator,
+    as_diagonal_operator,
+    as_operator,
+)
 from surface_potential_analysis.state_vector.eigenstate_calculation import (
     calculate_eigenvectors,
     calculate_eigenvectors_hermitian,
 )
 from surface_potential_analysis.state_vector.eigenvalue_list_plot import (
-    plot_eigenstate_occupations,
-    plot_eigenvalues,
+    plot_eigenstate_occupations as plot_eigenstate_occupations_states,
+)
+from surface_potential_analysis.state_vector.eigenvalue_list_plot import (
+    plot_eigenvalues as plot_eigenvalues_states,
 )
 from surface_potential_analysis.util.plot import (
     Scale,
@@ -26,11 +33,15 @@ from surface_potential_analysis.util.util import (
 
 if TYPE_CHECKING:
     from matplotlib.axes import Axes
+    from matplotlib.collections import QuadMesh
     from matplotlib.figure import Figure
     from matplotlib.lines import Line2D
 
     from surface_potential_analysis.basis.basis_like import BasisLike
-    from surface_potential_analysis.operator.operator import SingleBasisOperator
+    from surface_potential_analysis.operator.operator import (
+        DiagonalOperator,
+        SingleBasisOperator,
+    )
 
     from .operator import Operator
 
@@ -42,6 +53,23 @@ def plot_operator_sparsity(
     measure: Measure = "abs",
     scale: Scale = "linear",
 ) -> tuple[Figure, Axes]:
+    """
+    Given an operator, plot the sparisity as a cumulative sum.
+
+    Parameters
+    ----------
+    operator : Operator[BasisLike[Any, Any], BasisLike[Any, Any]]
+    ax : Axes | None, optional
+        axis, by default None
+    measure : Measure, optional
+        measure, by default "abs"
+    scale : Scale, optional
+        scale, by default "linear"
+
+    Returns
+    -------
+    tuple[Figure, Axes]
+    """
     fig, ax = get_figure(ax)
     measured = get_measured_data(operator["data"], measure)
 
@@ -61,8 +89,8 @@ def plot_operator_sparsity(
     return fig, ax
 
 
-def plot_eigenstate_occupations_operator(
-    hamiltonian: SingleBasisOperator[BasisLike[Any, Any]],
+def plot_eigenstate_occupations(
+    operator: SingleBasisOperator[BasisLike[Any, Any]],
     temperature: float,
     *,
     ax: Axes | None = None,
@@ -84,12 +112,14 @@ def plot_eigenstate_occupations_operator(
     -------
     tuple[Figure, Axes, Line2D]
     """
-    eigenstates = calculate_eigenvectors(hamiltonian)
-    return plot_eigenstate_occupations(eigenstates, temperature, ax=ax, scale=scale)
+    eigenstates = calculate_eigenvectors(operator)
+    return plot_eigenstate_occupations_states(
+        eigenstates, temperature, ax=ax, scale=scale
+    )
 
 
-def plot_eigenvalues_operator(
-    hamiltonian: SingleBasisOperator[BasisLike[Any, Any]],
+def plot_eigenvalues(
+    operator: SingleBasisOperator[BasisLike[Any, Any]],
     *,
     hermitian: bool = False,
     ax: Axes | None = None,
@@ -113,8 +143,122 @@ def plot_eigenvalues_operator(
     tuple[Figure, Axes, Line2D]
     """
     eigenstates = (
-        calculate_eigenvectors_hermitian(hamiltonian)
+        calculate_eigenvectors_hermitian(operator)
         if hermitian
-        else calculate_eigenvectors(hamiltonian)
+        else calculate_eigenvectors(operator)
     )
-    return plot_eigenvalues(eigenstates, ax=ax, scale=scale, measure=measure)
+    return plot_eigenvalues_states(eigenstates, ax=ax, scale=scale, measure=measure)
+
+
+def plot_diagonal_operator_along_diagonal(
+    operator: DiagonalOperator[BasisLike[Any, Any], BasisLike[Any, Any]],
+    *,
+    ax: Axes | None = None,
+    scale: Scale = "linear",
+    measure: Measure = "abs",
+) -> tuple[Figure, Axes, Line2D]:
+    """
+    Plot the expected occupation of eigenstates at the given temperature.
+
+    Parameters
+    ----------
+    eigenstates : EigenstateList[BasisLike[Any, Any], BasisLike[Any, Any]]
+    temperature : float
+    ax : Axes | None, optional
+        ax, by default None
+    scale : Scale, optional
+        scale, by default "linear"
+
+    Returns
+    -------
+    tuple[Figure, Axes, Line2D]
+    """
+    fig, ax = get_figure(ax)
+
+    (line,) = ax.plot(get_measured_data(operator["data"], measure))
+    ax.set_yscale(scale)
+    line.set_label(f"{measure} operator")
+    return fig, ax, line
+
+
+def plot_operator_along_diagonal(
+    operator: SingleBasisOperator[BasisLike[Any, Any]],
+    *,
+    ax: Axes | None = None,
+    scale: Scale = "linear",
+    measure: Measure = "abs",
+) -> tuple[Figure, Axes, Line2D]:
+    """
+    Plot the expected occupation of eigenstates at the given temperature.
+
+    Parameters
+    ----------
+    eigenstates : EigenstateList[BasisLike[Any, Any], BasisLike[Any, Any]]
+    temperature : float
+    ax : Axes | None, optional
+        ax, by default None
+    scale : Scale, optional
+        scale, by default "linear"
+
+    Returns
+    -------
+    tuple[Figure, Axes, Line2D]
+    """
+    diagonal = as_diagonal_operator(operator)
+    return plot_diagonal_operator_along_diagonal(
+        diagonal, ax=ax, scale=scale, measure=measure
+    )
+
+
+def plot_operator_2d(
+    operator: SingleBasisOperator[BasisLike[Any, Any]],
+    *,
+    ax: Axes | None = None,
+    measure: Measure = "abs",
+) -> tuple[Figure, Axes, QuadMesh]:
+    """
+    Plot the expected occupation of eigenstates at the given temperature.
+
+    Parameters
+    ----------
+    eigenstates : EigenstateList[BasisLike[Any, Any], BasisLike[Any, Any]]
+    temperature : float
+    ax : Axes | None, optional
+        ax, by default None
+    scale : Scale, optional
+        scale, by default "linear"
+
+    Returns
+    -------
+    tuple[Figure, Axes, Line2D]
+    """
+    fig, ax = get_figure(ax)
+    data = operator["data"].reshape(operator["basis"].shape)
+    mesh = ax.pcolormesh(get_measured_data(data, measure))
+    fig.colorbar(mesh, ax=ax, format="%4.1e")
+    return fig, ax, mesh
+
+
+def plot_operator_2d_diagonal(
+    operator: SingleBasisDiagonalOperator[BasisLike[Any, Any]],
+    *,
+    ax: Axes | None = None,
+    measure: Measure = "abs",
+) -> tuple[Figure, Axes, QuadMesh]:
+    """
+    Plot the expected occupation of eigenstates at the given temperature.
+
+    Parameters
+    ----------
+    eigenstates : EigenstateList[BasisLike[Any, Any], BasisLike[Any, Any]]
+    temperature : float
+    ax : Axes | None, optional
+        ax, by default None
+    scale : Scale, optional
+        scale, by default "linear"
+
+    Returns
+    -------
+    tuple[Figure, Axes, Line2D]
+    """
+    return plot_operator_2d(as_operator(operator), ax=ax, measure=measure)

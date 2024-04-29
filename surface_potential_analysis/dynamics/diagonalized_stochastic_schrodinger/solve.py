@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, Literal, TypeVar, overload
 
 import numpy as np
-from sse_solver_py import solve_sse_euler
+from sse_solver_py import solve_sse_euler_bra_ket
 
 from surface_potential_analysis.basis.basis import FundamentalBasis
 from surface_potential_analysis.basis.stacked_basis import StackedBasis
@@ -101,7 +101,7 @@ def solve_stochastic_schrodinger_equation(  # type: ignore bad overload
         amplitudes.append(operator["data"].item())
 
     for i in range(n_trajectories):
-        out = solve_sse_euler(
+        out = solve_sse_euler_bra_ket(
             list(initial_state["data"]),
             list(hamiltonian["data"]),
             amplitudes,

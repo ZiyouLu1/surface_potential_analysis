@@ -54,10 +54,10 @@ class ExplicitBasis(BasisLike[_NF0_co, _N0_co]):
     @classmethod
     def from_state_vectors(
         cls: type[ExplicitBasis[_NF0_co, _N0_co]],
-        vectors: StateVectorList[BasisLike[Any, Any], BasisLike[_NF0_co, Any]],
+        vectors: StateVectorList[Any, Any],
     ) -> ExplicitBasis[_NF0_co, _N0_co]:
         converted = convert_state_vector_list_to_basis(
-            vectors, basis_as_fundamental_basis(vectors["basis"])
+            vectors, basis_as_fundamental_basis(vectors["basis"][1])
         )["data"].reshape(vectors["basis"][0].n, -1)
         return cls(converted)
 
@@ -87,7 +87,7 @@ class ExplicitBasis(BasisLike[_NF0_co, _N0_co]):
         vectors: np.ndarray[_S0Inv, np.dtype[np.complex128] | np.dtype[np.float64]],
         axis: int = -1,
     ) -> np.ndarray[tuple[int, ...], np.dtype[np.complex128]]:
-        transformed = np.tensordot(vectors, self.vectors, axes=([axis], [0]))
+        transformed = np.tensordot(vectors, self.vectors, axes=([axis], [1]))
         return np.moveaxis(transformed, -1, axis)
 
     def __from_transformed__(
@@ -105,7 +105,7 @@ class ExplicitBasis(BasisLike[_NF0_co, _N0_co]):
         axis: int = -1,
     ) -> np.ndarray[tuple[int, ...], np.dtype[np.complex128]]:
         transformed_vectors = self._transformed_vectors
-        transformed = np.tensordot(vectors, transformed_vectors, axes=([axis], [0]))
+        transformed = np.tensordot(vectors, transformed_vectors, axes=([axis], [1]))
         return np.moveaxis(transformed, -1, axis)
 
     def __convert_vector_into__(
