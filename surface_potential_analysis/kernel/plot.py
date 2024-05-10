@@ -4,11 +4,7 @@ from typing import TYPE_CHECKING, Any
 
 import numpy as np
 
-from surface_potential_analysis.basis.basis import FundamentalBasis
-from surface_potential_analysis.basis.stacked_basis import StackedBasis
 from surface_potential_analysis.kernel.kernel import (
-    get_diagonal_noise_kernel,
-    get_noise_kernel,
     get_single_factorized_noise_operators,
     get_single_factorized_noise_operators_diagonal,
 )
@@ -131,33 +127,18 @@ def plot_kernel_truncation_error(
     fig, ax = get_figure(ax)
 
     operators = get_single_factorized_noise_operators(kernel)
-    arg_sort = np.argsort(np.abs(operators["eigenvalue"]))
+    sorted_eigenvalues = np.sort(np.abs(operators["eigenvalue"]))
+    cumulative = np.empty(sorted_eigenvalues.size + 1)
+    cumulative[0] = 0
+    np.cumsum(sorted_eigenvalues, out=cumulative[1:])
 
-    n_operators = operators["basis"][0].n
-    data = list[np.float64]()
     truncations = (
-        list(range(0, n_operators, n_operators // 100))
+        list(range(0, cumulative.size, cumulative.size // 100))
         if truncations is None
         else truncations
     )
 
-    for truncation in truncations:
-        args = arg_sort[truncation::]
-        truncated = get_noise_kernel(
-            {
-                "basis": StackedBasis(
-                    FundamentalBasis(n_operators - truncation), operators["basis"][1]
-                ),
-                "data": operators["data"].reshape(n_operators, -1)[args].ravel(),
-                "eigenvalue": operators["eigenvalue"][args],
-            }
-        )
-        data.append(np.linalg.norm(truncated["data"] - kernel["data"]))
-
-    data.append(np.linalg.norm(kernel["data"]))
-    truncations.append(n_operators)
-
-    ax.plot(truncations, data)
+    ax.plot(truncations, cumulative[truncations])
     ax.set_yscale(scale)
 
     return fig, ax
@@ -172,25 +153,14 @@ def plot_diagonal_kernel_truncation_error(
     fig, ax = get_figure(ax)
 
     operators = get_single_factorized_noise_operators_diagonal(kernel)
-    arg_sort = np.argsort(np.abs(operators["eigenvalue"]))
+    eigenvalues = np.sort(np.abs(operators["eigenvalue"]))
+    cumulative = np.empty(eigenvalues.size + 1)
+    cumulative[0] = 0
+    np.cumsum(eigenvalues, out=cumulative[1:])
 
-    n_operators = operators["basis"][0].n
-    data = []
-    for truncation in range(n_operators):
-        args = arg_sort[truncation::]
-        truncated = get_diagonal_noise_kernel(
-            {
-                "basis": StackedBasis(
-                    FundamentalBasis(n_operators - truncation), operators["basis"][1]
-                ),
-                "data": operators["data"].reshape(n_operators, -1)[args].ravel(),
-                "eigenvalue": operators["eigenvalue"][args],
-            }
-        )
-        data.append(np.linalg.norm(truncated["data"] - kernel["data"]))
-    data.append(np.linalg.norm(kernel["data"]))
+    truncations = np.arange(cumulative.size)
 
-    ax.plot(data)
+    ax.plot(truncations, cumulative)
     ax.set_yscale(_get_scale_with_lim(scale, ax.get_ylim()))
 
     return fig, ax

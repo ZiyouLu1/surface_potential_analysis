@@ -33,9 +33,11 @@ def timed(f: Callable[_P, _R]) -> Callable[_P, _R]:
     @wraps(f)
     def wrap(*args: _P.args, **kw: _P.kwargs) -> _R:
         ts = datetime.datetime.now(tz=datetime.UTC)
-        result = f(*args, **kw)
-        te = datetime.datetime.now(tz=datetime.UTC)
-        print(f"func: {f.__name__} took: {(te - ts).total_seconds()} sec")  # noqa: T201
+        try:
+            result = f(*args, **kw)
+        finally:
+            te = datetime.datetime.now(tz=datetime.UTC)
+            print(f"func: {f.__name__} took: {(te - ts).total_seconds()} sec")  # noqa: T201
         return result
 
     return wrap  # type: ignore[return-value]

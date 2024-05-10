@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import contextlib
 from typing import TYPE_CHECKING, Any, Literal, TypeVar, overload
 
 import numpy as np
@@ -30,8 +29,35 @@ from surface_potential_analysis.state_vector.state_vector_list import (
     get_weighted_state_vector,
 )
 
-with contextlib.suppress(ImportError):
-    from sse_solver_py import solve_sse_euler
+try:
+    from sse_solver_py import solve_sse_euler, solve_sse_euler_banded
+except ImportError:
+    # if sse_solver_py is not installed, create a dummy functions
+
+    def solve_sse_euler(  # noqa: PLR0913, PLR0917, D103
+        initial_state: list[complex],  # noqa: ARG001
+        hamiltonian: list[list[complex]],  # noqa: ARG001
+        operators: list[list[list[complex]]],  # noqa: ARG001
+        n: int,  # noqa: ARG001
+        step: int,  # noqa: ARG001
+        dt: float,  # noqa: ARG001
+    ) -> list[complex]:
+        msg = "sse_solver_py not installed, add sse_solver_py feature"
+        raise NotImplementedError(msg)
+
+    def solve_sse_euler_banded(  # noqa: PLR0913, PLR0917, D103
+        initial_state: list[complex],  # noqa: ARG001
+        hamiltonian_diagonal: list[list[complex]],  # noqa: ARG001
+        hamiltonian_offset: list[int],  # noqa: ARG001
+        operators_diagonals: list[list[list[complex]]],  # noqa: ARG001
+        operators_offsets: list[list[int]],  # noqa: ARG001
+        n: int,  # noqa: ARG001
+        step: int,  # noqa: ARG001
+        dt: float,  # noqa: ARG001
+    ) -> list[complex]:
+        msg = "sse_solver_py not installed, add sse_solver_py feature"
+        raise NotImplementedError(msg)
+
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -359,6 +385,128 @@ def solve_stochastic_schrodinger_equation_rust(  # type: ignore bad overload
                 [list(x / np.sqrt(hbar)) for x in o["data"].reshape(o["basis"].shape)]
                 for o in collapse_operators
             ],
+            times.n,
+            times.step,
+            times.fundamental_dt,
+        )
+        data[i] = np.array(out).reshape(times.n, -1)
+
+    return {
+        "basis": StackedBasis(
+            StackedBasis(FundamentalBasis(n_trajectories), times),
+            hamiltonian["basis"][0],
+        ),
+        "data": data.ravel(),
+    }
+
+
+def _get_operator_diagonals(
+    operator: list[list[complex]],
+) -> list[list[complex]]:
+    return [
+        np.diag(np.roll(operator, shift=-i, axis=0)).tolist()
+        for i in range(len(operator))
+    ]
+
+
+def _get_banded_operator(
+    operator: list[list[complex]], threshold: float
+) -> tuple[list[list[complex]], list[int]]:
+    diagonals = _get_operator_diagonals(operator)
+    above_threshold = np.linalg.norm(diagonals, axis=1) > threshold
+
+    diagonals_filtered = np.array(diagonals)[above_threshold].tolist()
+    offsets = np.arange(len(operator))[above_threshold].tolist()
+    return (diagonals_filtered, offsets)
+
+
+def _get_banded_operators(
+    operators: list[list[list[complex]]], threshold: float
+) -> list[tuple[list[list[complex]], list[int]]]:
+    return [_get_banded_operator(o, threshold) for o in operators]
+
+
+@overload
+def solve_stochastic_schrodinger_equation_rust_banded(
+    initial_state: StateVector[_B1Inv],
+    times: _AX0Inv,
+    hamiltonian: SingleBasisOperator[_B1Inv],
+    collapse_operators: list[SingleBasisOperator[_B1Inv]] | None = None,
+    *,
+    n_trajectories: _L1Inv,
+) -> StateVectorList[StackedBasisLike[FundamentalBasis[_L1Inv], _AX0Inv], _B1Inv]:
+    ...
+
+
+@overload
+def solve_stochastic_schrodinger_equation_rust_banded(
+    initial_state: StateVector[_B1Inv],
+    times: _AX0Inv,
+    hamiltonian: SingleBasisOperator[_B1Inv],
+    collapse_operators: list[SingleBasisOperator[_B1Inv]] | None = None,
+    *,
+    n_trajectories: Literal[1] = 1,
+) -> StateVectorList[StackedBasisLike[FundamentalBasis[Literal[1]], _AX0Inv], _B1Inv]:
+    ...
+
+
+def solve_stochastic_schrodinger_equation_rust_banded(  # type: ignore bad overload
+    initial_state: StateVector[_B1Inv],
+    times: _AX0Inv,
+    hamiltonian: SingleBasisOperator[_B1Inv],
+    collapse_operators: list[SingleBasisOperator[_B1Inv]] | None = None,
+    *,
+    n_trajectories: _L1Inv | Literal[1] = 1,
+    r_threshold: float = 1e-8,
+) -> (
+    StateVectorList[StackedBasisLike[FundamentalBasis[Literal[1]], _AX0Inv], _B1Inv]
+    | StateVectorList[StackedBasisLike[FundamentalBasis[_L1Inv], _AX0Inv], _B1Inv]
+):
+    """
+    Given an initial state, use the stochastic schrodinger equation to solve the dynamics of the system.
+
+    Parameters
+    ----------
+    initial_state : StateVector[_B0Inv]
+    times : np.ndarray[tuple[int], np.dtype[np.float_]]
+    hamiltonian : SingleBasisOperator[_B0Inv]
+    collapse_operators : list[SingleBasisOperator[_B0Inv]]
+
+    Returns
+    -------
+    StateVectorList[_B0Inv, _L0Inv]
+    """
+    data = np.zeros(
+        (n_trajectories, times.n, initial_state["data"].size), dtype=np.complex128
+    )
+    collapse_operators = [] if collapse_operators is None else collapse_operators
+    # TODO: how to set relative threshold
+    r_threshold / times.dt
+    banded_collapse = _get_banded_operators(
+        [
+            [list(x / np.sqrt(hbar)) for x in o["data"].reshape(o["basis"].shape)]
+            for o in collapse_operators
+        ],
+        r_threshold / times.dt,
+    )
+
+    banded_h = _get_banded_operator(
+        [
+            list(x / hbar)
+            for x in hamiltonian["data"].reshape(hamiltonian["basis"].shape)
+        ],
+        r_threshold / times.dt,
+    )
+    print(len(banded_h[0]))
+    print([len(b[0]) for b in banded_collapse])
+
+    for i in range(n_trajectories):
+        out = solve_sse_euler_banded(
+            list(initial_state["data"]),
+            banded_h[0],
+            banded_h[1],
+            [b[0] for b in banded_collapse],
+            [b[1] for b in banded_collapse],
             times.n,
             times.step,
             times.fundamental_dt,

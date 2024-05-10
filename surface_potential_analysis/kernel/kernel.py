@@ -244,10 +244,10 @@ def get_single_factorized_noise_operators_diagonal(
     data = kernel["data"].reshape(kernel["basis"][0][0].n, -1)
     # Find the n^2 operators which are independent
     # I think this is always true
-    np.testing.assert_array_almost_equal(data, np.conj(np.transpose(data)))
+    np.testing.assert_allclose(data, np.conj(np.transpose(data)))
     res = np.linalg.eigh(data)
 
-    np.testing.assert_array_almost_equal(
+    np.testing.assert_allclose(
         data,
         np.einsum(
             "k,ak,kb->ab",

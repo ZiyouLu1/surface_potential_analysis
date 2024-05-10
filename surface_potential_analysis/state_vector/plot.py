@@ -49,9 +49,12 @@ if TYPE_CHECKING:
     from matplotlib.figure import Figure
     from matplotlib.lines import Line2D
 
-    from surface_potential_analysis.basis.basis import BasisLike
+    from surface_potential_analysis.basis.basis import BasisLike, FundamentalBasis
     from surface_potential_analysis.basis.stacked_basis import StackedBasisLike
-    from surface_potential_analysis.operator.operator import SingleBasisOperator
+    from surface_potential_analysis.operator.operator import (
+        Operator,
+        SingleBasisOperator,
+    )
     from surface_potential_analysis.state_vector.state_vector import StateVector
     from surface_potential_analysis.state_vector.state_vector_list import (
         StateVectorList,
@@ -560,6 +563,20 @@ def plot_state_along_path(
     return fig, ax, line
 
 
+def _get_band_occupation(
+    hamiltonian: SingleBasisOperator[_B0Inv],
+    states: StateVectorList[BasisLike[Any, Any], _B0Inv],
+) -> tuple[
+    np.ndarray[tuple[int], np.dtype[np.float64]],
+    Operator[BasisLike[Any, Any], FundamentalBasis[int]],
+]:
+    eigenstates = calculate_eigenvectors_hermitian(hamiltonian)
+    energies = eigenstates["eigenvalue"]
+    energies -= np.min(energies)
+    occupations = calculate_inner_products(states, eigenstates)
+    return (energies, occupations)
+
+
 def plot_all_band_occupations(
     hamiltonian: SingleBasisOperator[_B0Inv],
     states: StateVectorList[BasisLike[Any, Any], _B0Inv],
@@ -585,10 +602,7 @@ def plot_all_band_occupations(
     """
     fig, ax = get_figure(ax)
 
-    eigenstates = calculate_eigenvectors_hermitian(hamiltonian)
-    energies = eigenstates["eigenvalue"]
-    energies -= np.min(energies)
-    occupations = calculate_inner_products(states, eigenstates)
+    energies, occupations = _get_band_occupation(hamiltonian, states)
 
     n_states = states["basis"][0].n
     for i, occupation in enumerate(occupations["data"].reshape(n_states, -1)):
@@ -630,10 +644,7 @@ def animate_all_band_occupations(
     """
     fig, ax = get_figure(ax)
 
-    eigenstates = calculate_eigenvectors_hermitian(hamiltonian)
-    energies = eigenstates["eigenvalue"]
-    energies -= np.min(energies)
-    occupations = calculate_inner_products(states, eigenstates)
+    energies, occupations = _get_band_occupation(hamiltonian, states)
 
     frames: list[list[Line2D]] = []
     n_states = states["basis"][0].n
@@ -659,7 +670,7 @@ def plot_band_occupation(
     *,
     ax: Axes | None = None,
     scale: Scale = "linear",
-) -> tuple[Figure, Axes, Line2D]:
+) -> tuple[Figure, Axes]:
     """
     Plot the occupation of the state against energy.
 
@@ -679,3 +690,44 @@ def plot_band_occupation(
     return plot_all_band_occupations(
         hamiltonian, as_state_vector_list([state]), ax=ax, scale=scale
     )
+
+
+def plot_average_band_occupation(
+    hamiltonian: SingleBasisOperator[_B0Inv],
+    states: StateVectorList[BasisLike[Any, Any], _B0Inv],
+    *,
+    ax: Axes | None = None,
+    scale: Scale = "linear",
+) -> tuple[Figure, Axes, Line2D]:
+    """
+    Plot the occupation of the state against energy.
+
+    Parameters
+    ----------
+    hamiltonian : SingleBasisOperator[_B0Inv]
+    state : StateVector[_B0Inv]
+    ax : Axes | None, optional
+        axis, by default None
+    scale : Scale, optional
+        scale, by default "linear"
+
+    Returns
+    -------
+    tuple[Figure, Axes, Line2D]
+    """
+    fig, ax = get_figure(ax)
+
+    energies, occupations = _get_band_occupation(hamiltonian, states)
+
+    n_states = states["basis"][0].n
+    occupations["data"].reshape(n_states, -1)
+    probabilities = np.abs(occupations["data"].reshape(n_states, -1)) ** 2
+    average = np.average(probabilities, axis=0)
+
+    (line,) = ax.plot(energies, average)
+
+    ax.set_yscale(scale)
+    ax.set_xlabel("Occupation")
+    ax.set_xlabel("Energy /J")
+    ax.set_title("Plot of Average Occupation against Energy")
+    return fig, ax, line

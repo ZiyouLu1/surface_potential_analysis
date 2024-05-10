@@ -378,7 +378,7 @@ def get_commutator_operator_list(
     """
     Given two operators lhs, rhs, calculate the commutator.
 
-    This is equivalent to ths rhs - rhs lhs
+    This is equivalent to lhs rhs - rhs lhs
 
     Parameters
     ----------

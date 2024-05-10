@@ -89,6 +89,59 @@ def plot_operator_sparsity(
     return fig, ax
 
 
+def _get_operator_diagonals(
+    operator: Operator[BasisLike[Any, Any], BasisLike[Any, Any]],
+) -> np.ndarray[tuple[int, int], np.dtype[np.complex128]]:
+    stacked = operator["data"].reshape(operator["basis"].shape)
+    out = np.zeros_like(stacked)
+    for i in range(stacked.shape[0]):
+        out[i] = np.diag(np.roll(stacked, shift=i, axis=0))
+    return out
+
+
+def plot_operator_diagonal_sparsity(
+    operator: Operator[BasisLike[Any, Any], BasisLike[Any, Any]],
+    *,
+    ax: Axes | None = None,
+    scale: Scale = "linear",
+) -> tuple[Figure, Axes]:
+    """
+    Given an operator, plot the sparisity as a cumulative sum.
+
+    Parameters
+    ----------
+    operator : Operator[BasisLike[Any, Any], BasisLike[Any, Any]]
+    ax : Axes | None, optional
+        axis, by default None
+    measure : Measure, optional
+        measure, by default "abs"
+    scale : Scale, optional
+        scale, by default "linear"
+
+    Returns
+    -------
+    tuple[Figure, Axes]
+    """
+    fig, ax = get_figure(ax)
+    diagonals = _get_operator_diagonals(operator)
+    size = np.linalg.norm(diagonals, axis=1)
+
+    values, bins = np.histogram(
+        size,
+        bins=np.logspace(-22, np.log10(np.max(size)), 10000),
+    )
+
+    cumulative = np.cumsum(values)
+    ax.plot(bins[:-1], cumulative)
+
+    ax.set_yscale(scale)
+    ax.set_xlabel("Value")
+    ax.set_ylabel("Density")
+    ax.set_xscale("log")
+
+    return fig, ax
+
+
 def plot_eigenstate_occupations(
     operator: SingleBasisOperator[BasisLike[Any, Any]],
     temperature: float,
