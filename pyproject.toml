@@ -15,8 +15,7 @@ numpy = "^1.26.3"
 matplotlib = "^3.8.2"
 scipy = "^1.11.0"
 # hamiltonian_generator = { path = "./lib/hamiltonian_generator" }
-qutip = "5.0.0b1"
-# sse_solver_py = { path = "./lib/sse_solver/sse_solver_py" }
+qutip = "^5.0.0"
 sse_solver_py = { path = "lib/sse_solver/sse_solver_py" }
 hamiltonian_generator = { path = "lib/hamiltonian_generator" }
 
