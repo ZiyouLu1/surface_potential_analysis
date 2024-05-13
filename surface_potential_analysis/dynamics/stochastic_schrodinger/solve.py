@@ -480,25 +480,30 @@ def solve_stochastic_schrodinger_equation_rust_banded(  # type: ignore bad overl
         (n_trajectories, times.n, initial_state["data"].size), dtype=np.complex128
     )
     collapse_operators = [] if collapse_operators is None else collapse_operators
-    # TODO: how to set relative threshold
-    r_threshold / times.dt
+
+    operators_data = [o["data"].reshape(o["basis"].shape) for o in collapse_operators]
+    operators_norm = [np.linalg.norm(o) for o in operators_data]
+
+    # We get the best numerical performace if we set the norm of the largest collapse operators
+    # to be one. This prevents us from accumulating large errors when multiplying state * dt * operator * conj_operator
+    max_norm = np.max(operators_norm)
+    dt = (times.fundamental_dt * max_norm**2 / hbar).item()
+
     banded_collapse = _get_banded_operators(
         [
-            [list(x / np.sqrt(hbar)) for x in o["data"].reshape(o["basis"].shape)]
+            [list(x / max_norm) for x in o["data"].reshape(o["basis"].shape)]
             for o in collapse_operators
         ],
-        r_threshold / times.dt,
+        r_threshold / dt,
     )
 
     banded_h = _get_banded_operator(
         [
-            list(x / hbar)
+            list(x / max_norm**2)
             for x in hamiltonian["data"].reshape(hamiltonian["basis"].shape)
         ],
-        r_threshold / times.dt,
+        r_threshold / dt,
     )
-    print(len(banded_h[0]))
-    print([len(b[0]) for b in banded_collapse])
 
     for i in range(n_trajectories):
         out = solve_sse_euler_banded(
@@ -509,7 +514,7 @@ def solve_stochastic_schrodinger_equation_rust_banded(  # type: ignore bad overl
             [b[1] for b in banded_collapse],
             times.n,
             times.step,
-            times.fundamental_dt,
+            dt,
         )
         data[i] = np.array(out).reshape(times.n, -1)
 
