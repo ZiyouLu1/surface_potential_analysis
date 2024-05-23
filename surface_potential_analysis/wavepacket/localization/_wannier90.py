@@ -136,7 +136,7 @@ def _build_k_points_block(
     mp_grid = np.ones(3, dtype=np.int_)
     mp_grid[:n_dim] = np.array(list_basis.shape)
 
-    # TODO(matt): declare inline in python 3.12  # noqa: TD003, FIX002
+    # TODO(matt): declare inline in python 3.12  # noqa: FIX002
     newline = "\n"
     return f"""mp_grid : {" ".join(str(x) for x in mp_grid)}
 begin kpoints

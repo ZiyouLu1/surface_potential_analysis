@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, TypedDict, TypeVar
+from typing import TYPE_CHECKING, Any, Generic, TypedDict, TypeVar
 
 import numpy as np
 
@@ -31,6 +31,13 @@ _L1 = TypeVar("_L1", bound=int)
 _B0_co = TypeVar("_B0_co", bound=BasisLike[Any, Any], covariant=True)
 _B1_co = TypeVar("_B1_co", bound=BasisLike[Any, Any], covariant=True)
 _B0 = TypeVar("_B0", bound=BasisLike[Any, Any])
+
+
+class ValueList(TypedDict, Generic[_B0_co]):
+    """Represents some data listed over some basis."""
+
+    basis: _B0_co
+    data: np.ndarray[tuple[int], np.dtype[np.complex128]]
 
 
 class Eigenstate(StateVector[_B0_co], TypedDict):

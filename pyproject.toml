@@ -28,12 +28,23 @@ unsafe-fixes = true
 [tool.ruff.lint]
 select = ["ALL"]
 preview = true
-ignore = ["COM812", "E501", "ANN101", "S101", "PT009", "D100", "D105", "CPY001"]
+ignore = [
+    "COM812",
+    "E501",
+    "ANN101",
+    "S101",
+    "PT009",
+    "D100",
+    "D105",
+    "CPY001",
+    "TD003",
+    "TD002",
+]
 exclude = ["typings/**/*", "lib/**/*"]
 
 
-[tool.ruff.extend-per-file-ignores]
-"tests/**/*" = ["PLR6301", "PLC2701", "PLR0914", "D101", "D102"]
+[tool.ruff.lint.extend-per-file-ignores]
+"tests/**/*" = ["PLR6301", "PLC2701", "PLR0914", "D101", "D102", "D103", "D104"]
 
 [tool.ruff.lint.pylint]
 allow-dunder-method-names = [
@@ -46,10 +57,10 @@ allow-dunder-method-names = [
     "__convert_vector_into__",
 ]
 
-[tool.ruff.pydocstyle]
+[tool.ruff.lint.pydocstyle]
 convention = "numpy"
 
-[tool.ruff.isort]
+[tool.ruff.lint.isort]
 required-imports = ["from __future__ import annotations"]
 
 [build-system]

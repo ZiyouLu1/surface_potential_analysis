@@ -6,8 +6,16 @@ import numpy as np
 import scipy.linalg
 
 from surface_potential_analysis.basis.basis import FundamentalBasis
-from surface_potential_analysis.basis.basis_like import BasisLike
-from surface_potential_analysis.basis.stacked_basis import StackedBasis
+from surface_potential_analysis.basis.basis_like import BasisLike, BasisWithLengthLike
+from surface_potential_analysis.basis.explicit_basis import (
+    ExplicitBasis,
+    ExplicitStackedBasisWithLength,
+)
+from surface_potential_analysis.basis.stacked_basis import (
+    StackedBasis,
+    StackedBasisLike,
+)
+from surface_potential_analysis.basis.util import BasisUtil
 from surface_potential_analysis.util.decorators import timed
 
 if TYPE_CHECKING:
@@ -113,4 +121,55 @@ def calculate_operator_inner_product(
             operator["data"].reshape(operator["basis"].shape),
             vector["data"],
         ]
+    )
+
+
+def get_eigenstate_basis_from_hamiltonian(
+    hamiltonian: SingleBasisOperator[_B0Inv],
+    subset_by_index: tuple[IntLike_co, IntLike_co] | None = None,
+) -> ExplicitBasis[Any, Any]:
+    """
+    Given a hamiltonian, get the basis of the eigenstates given by subset_by_index.
+
+    Parameters
+    ----------
+    hamiltonian : SingleBasisOperator[_B0Inv]
+    subset_by_index : tuple[IntLike_co, IntLike_co] | None, optional
+        subset_by_index, by default None
+
+    Returns
+    -------
+    ExplicitBasis[Any, Any]
+    """
+    eigenvectors = calculate_eigenvectors_hermitian(hamiltonian, subset_by_index)
+    return ExplicitBasis[Any, Any].from_state_vectors(eigenvectors)
+
+
+_SB0 = TypeVar(
+    "_SB0", bound=StackedBasisLike[*tuple[BasisWithLengthLike[Any, Any, Any], ...]]
+)
+
+
+def get_eigenstate_basis_stacked_from_hamiltonian(
+    hamiltonian: SingleBasisOperator[_SB0],
+    subset_by_index: tuple[IntLike_co, IntLike_co] | None = None,
+) -> ExplicitStackedBasisWithLength[Any, Any, Any]:
+    """
+    Given a hamiltonian, get the basis of the eigenstates given by subset_by_index.
+
+    Parameters
+    ----------
+    hamiltonian : SingleBasisOperator[_SB0]
+    subset_by_index : tuple[IntLike_co, IntLike_co] | None, optional
+        subset_by_index, by default None
+
+    Returns
+    -------
+    ExplicitStackedBasisWithLength[Any, Any, Any]
+    """
+    eigenvectors = calculate_eigenvectors_hermitian(hamiltonian, subset_by_index)
+    delta_x = BasisUtil(hamiltonian["basis"][0]).delta_x_stacked
+    fundamental_shape = hamiltonian["basis"][0].fundamental_shape
+    return ExplicitStackedBasisWithLength[Any, Any, Any].from_state_vectors_with_shape(
+        eigenvectors, delta_x_stacked=delta_x, fundamental_shape=fundamental_shape
     )

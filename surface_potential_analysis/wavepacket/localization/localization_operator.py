@@ -93,6 +93,18 @@ def get_localized_hamiltonian_from_eigenvalues(
     hamiltonian: SingleBasisDiagonalOperatorList[_B2, _SB1],
     operator: LocalizationOperator[_SB1, _B1, _B2],
 ) -> OperatorList[_SB1, _B1, _B1]:
+    """
+    Localize the hamiltonian according to the Localization Operator.
+
+    Parameters
+    ----------
+    hamiltonian : SingleBasisDiagonalOperatorList[_B2, _SB1]
+    operator : LocalizationOperator[_SB1, _B1, _B2]
+
+    Returns
+    -------
+    OperatorList[_SB1, _B1, _B1]
+    """
     hamiltonian_stacked = hamiltonian["data"].reshape(
         hamiltonian["basis"][0].n, hamiltonian["basis"][1][0].n
     )

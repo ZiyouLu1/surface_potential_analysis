@@ -30,7 +30,11 @@ from surface_potential_analysis.state_vector.state_vector_list import (
 )
 
 try:
-    from sse_solver_py import solve_sse_euler, solve_sse_euler_banded
+    from sse_solver_py import (
+        solve_sse_euler,
+        solve_sse_normalized_euler_banded,
+        solve_sse_second_order_banded,
+    )
 except ImportError:
     # if sse_solver_py is not installed, create a dummy functions
 
@@ -45,7 +49,20 @@ except ImportError:
         msg = "sse_solver_py not installed, add sse_solver_py feature"
         raise NotImplementedError(msg)
 
-    def solve_sse_euler_banded(  # noqa: PLR0913, PLR0917, D103
+    def solve_sse_normalized_euler_banded(  # noqa: PLR0913, PLR0917, D103
+        initial_state: list[complex],  # noqa: ARG001
+        hamiltonian_diagonal: list[list[complex]],  # noqa: ARG001
+        hamiltonian_offset: list[int],  # noqa: ARG001
+        operators_diagonals: list[list[list[complex]]],  # noqa: ARG001
+        operators_offsets: list[list[int]],  # noqa: ARG001
+        n: int,  # noqa: ARG001
+        step: int,  # noqa: ARG001
+        dt: float,  # noqa: ARG001
+    ) -> list[complex]:
+        msg = "sse_solver_py not installed, add sse_solver_py feature"
+        raise NotImplementedError(msg)
+
+    def solve_sse_second_order_banded(  # noqa: PLR0913, PLR0917, D103
         initial_state: list[complex],  # noqa: ARG001
         hamiltonian_diagonal: list[list[complex]],  # noqa: ARG001
         hamiltonian_offset: list[int],  # noqa: ARG001
@@ -415,7 +432,15 @@ def _get_banded_operator(
     diagonals = _get_operator_diagonals(operator)
     above_threshold = np.linalg.norm(diagonals, axis=1) > threshold
 
-    diagonals_filtered = np.array(diagonals)[above_threshold].tolist()
+    diagonals_filtered = np.array(diagonals)[above_threshold]
+
+    zero_imag = np.abs(np.imag(diagonals_filtered)) < threshold
+    diagonals_filtered[zero_imag] = np.real(diagonals_filtered[zero_imag])
+    zero_real = np.abs(np.real(diagonals_filtered)) < threshold
+    diagonals_filtered[zero_real] = 1j * np.imag(diagonals_filtered[zero_real])
+
+    diagonals_filtered = diagonals_filtered.tolist()
+
     offsets = np.arange(len(operator))[above_threshold].tolist()
     return (diagonals_filtered, offsets)
 
@@ -434,6 +459,8 @@ def solve_stochastic_schrodinger_equation_rust_banded(
     collapse_operators: list[SingleBasisOperator[_B1Inv]] | None = None,
     *,
     n_trajectories: _L1Inv,
+    r_threshold: float = 1e-8,
+    method: Literal["euler", "order2"] = "euler",
 ) -> StateVectorList[StackedBasisLike[FundamentalBasis[_L1Inv], _AX0Inv], _B1Inv]:
     ...
 
@@ -446,6 +473,8 @@ def solve_stochastic_schrodinger_equation_rust_banded(
     collapse_operators: list[SingleBasisOperator[_B1Inv]] | None = None,
     *,
     n_trajectories: Literal[1] = 1,
+    r_threshold: float = 1e-8,
+    method: Literal["euler", "order2"] = "euler",
 ) -> StateVectorList[StackedBasisLike[FundamentalBasis[Literal[1]], _AX0Inv], _B1Inv]:
     ...
 
@@ -458,6 +487,7 @@ def solve_stochastic_schrodinger_equation_rust_banded(  # type: ignore bad overl
     *,
     n_trajectories: _L1Inv | Literal[1] = 1,
     r_threshold: float = 1e-8,
+    method: Literal["euler", "order2"] = "euler",
 ) -> (
     StateVectorList[StackedBasisLike[FundamentalBasis[Literal[1]], _AX0Inv], _B1Inv]
     | StateVectorList[StackedBasisLike[FundamentalBasis[_L1Inv], _AX0Inv], _B1Inv]
@@ -506,15 +536,28 @@ def solve_stochastic_schrodinger_equation_rust_banded(  # type: ignore bad overl
     )
 
     for i in range(n_trajectories):
-        out = solve_sse_euler_banded(
-            list(initial_state["data"]),
-            banded_h[0],
-            banded_h[1],
-            [b[0] for b in banded_collapse],
-            [b[1] for b in banded_collapse],
-            times.n,
-            times.step,
-            dt,
+        out = (
+            solve_sse_normalized_euler_banded(
+                list(initial_state["data"]),
+                banded_h[0],
+                banded_h[1],
+                [b[0] for b in banded_collapse],
+                [b[1] for b in banded_collapse],
+                times.n,
+                times.step,
+                dt,
+            )
+            if method == "euler"
+            else solve_sse_second_order_banded(
+                list(initial_state["data"]),
+                banded_h[0],
+                banded_h[1],
+                [b[0] for b in banded_collapse],
+                [b[1] for b in banded_collapse],
+                times.n,
+                times.step,
+                dt,
+            )
         )
         data[i] = np.array(out).reshape(times.n, -1)
 

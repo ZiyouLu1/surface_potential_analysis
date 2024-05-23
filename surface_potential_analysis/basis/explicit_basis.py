@@ -1,15 +1,20 @@
 from __future__ import annotations
 
-from typing import Any, Literal, TypeVar
+from itertools import starmap
+from typing import TYPE_CHECKING, Any, Generic, TypeVar
 
 import numpy as np
 
+from surface_potential_analysis.basis.basis import (
+    FundamentalPositionBasis,
+)
 from surface_potential_analysis.basis.basis_like import (
     AxisVector,
     BasisLike,
     BasisWithLengthLike,
 )
 from surface_potential_analysis.basis.conversion import basis_as_fundamental_basis
+from surface_potential_analysis.basis.stacked_basis import StackedBasis
 from surface_potential_analysis.basis.util import BasisUtil
 from surface_potential_analysis.state_vector.conversion import (
     convert_state_vector_list_to_basis,
@@ -18,6 +23,9 @@ from surface_potential_analysis.state_vector.state_vector_list import (
     StateVectorList,
     get_basis_states,
 )
+
+if TYPE_CHECKING:
+    from surface_potential_analysis.basis.stacked_basis import StackedBasisLike
 
 _NF0_co = TypeVar("_NF0_co", bound=int, covariant=True)
 _N0_co = TypeVar("_N0_co", bound=int, covariant=True)
@@ -143,14 +151,6 @@ class ExplicitBasisWithLength(
         return self._delta_x
 
 
-ExplicitBasis1d = ExplicitBasisWithLength[_NF0Inv, _N0Inv, Literal[1]]
-"""An basis with vectors given as explicit states with a 1d basis vector."""
-ExplicitBasis2d = ExplicitBasisWithLength[_NF0Inv, _N0Inv, Literal[2]]
-"""An basis with vectors given as explicit states with a 2d basis vector."""
-ExplicitBasis3d = ExplicitBasisWithLength[_NF0Inv, _N0Inv, Literal[3]]
-"""An basis with vectors given as explicit states with a 3d basis vector."""
-
-
 def basis_as_explicit_position_basis(
     axis: BasisWithLengthLike[_NF0Inv, _N0Inv, _ND0Inv],
 ) -> ExplicitBasisWithLength[_NF0Inv, _N0Inv, _ND0Inv]:
@@ -192,3 +192,60 @@ def basis_as_orthonormal_basis(
         orthonormal_vectors[i] = vector / np.linalg.norm(vector)
 
     return ExplicitBasisWithLength(axis.delta_x, orthonormal_vectors)
+
+
+class ExplicitStackedBasisWithLength(
+    ExplicitBasis[_NF0_co, _N0_co], Generic[_NF0_co, _N0_co, _ND0Inv]
+):
+    """An basis with vectors given as explicit states."""
+
+    def __init__(
+        self,
+        delta_x_stacked: np.ndarray[tuple[int, int], np.dtype[np.float64]],
+        fundamental_shape: tuple[int, ...],
+        vectors: np.ndarray[tuple[_N0_co, _NF0_co], np.dtype[np.complex128]],
+    ) -> None:
+        self._fundamental_shape = fundamental_shape
+        self._delta_x = delta_x_stacked
+        super().__init__(vectors)
+
+    @property
+    def delta_x_stacked(self) -> np.ndarray[tuple[int, int], np.dtype[np.float64]]:
+        return self.delta_x_stacked
+
+    @property
+    def fundamental_shape(self) -> tuple[int, ...]:
+        return self._fundamental_shape
+
+    @classmethod
+    def from_state_vectors_with_shape(
+        cls: type[ExplicitStackedBasisWithLength[_NF0_co, _N0_co, _ND0Inv]],
+        vectors: StateVectorList[Any, Any],
+        *,
+        delta_x_stacked: np.ndarray[tuple[int, int], np.dtype[np.float64]],
+        fundamental_shape: tuple[int, ...],
+    ) -> ExplicitStackedBasisWithLength[_NF0_co, _N0_co, _ND0Inv]:
+        converted = convert_state_vector_list_to_basis(
+            vectors, basis_as_fundamental_basis(vectors["basis"][1])
+        )["data"].reshape(vectors["basis"][0].n, -1)
+        return cls(delta_x_stacked, fundamental_shape, converted)
+
+
+def explicit_stacked_basis_as_fundamental(
+    basis: ExplicitStackedBasisWithLength[Any, Any, Any],
+) -> StackedBasisLike[*tuple[FundamentalPositionBasis[Any, Any], ...]]:
+    """
+    Get the fundamental basis for a given explicit stacked basis.
+
+    Returns
+    -------
+    StackedBasisLike[*tuple[FundamentalPositionBasis[Any, Any], ...]]
+    """
+    return StackedBasis(
+        *tuple(
+            starmap(
+                FundamentalPositionBasis[Any, Any],
+                zip(basis.delta_x_stacked, basis.fundamental_shape),
+            )
+        )
+    )
