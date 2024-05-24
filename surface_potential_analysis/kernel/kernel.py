@@ -1,24 +1,21 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Generic, TypedDict, TypeVar
+from typing import Any, Generic, TypedDict, TypeVar
 
 import numpy as np
 
 from surface_potential_analysis.basis.basis import FundamentalBasis
-from surface_potential_analysis.basis.basis_like import BasisLike
+from surface_potential_analysis.basis.basis_like import BasisLike, BasisWithLengthLike
 from surface_potential_analysis.basis.stacked_basis import (
     StackedBasis,
+    StackedBasisLike,
 )
+from surface_potential_analysis.operator.conversion import sample_operator_list
 from surface_potential_analysis.operator.operator import DiagonalOperator, Operator
 from surface_potential_analysis.operator.operator_list import (
     DiagonalOperatorList,
     OperatorList,
 )
-
-if TYPE_CHECKING:
-    from surface_potential_analysis.basis.stacked_basis import (
-        StackedBasisLike,
-    )
 
 _B0_co = TypeVar("_B0_co", bound=BasisLike[Any, Any], covariant=True)
 _B1_co = TypeVar("_B1_co", bound=BasisLike[Any, Any], covariant=True)
@@ -318,3 +315,36 @@ def truncate_noise_kernel(
             "eigenvalue": operators["eigenvalue"][args],
         }
     )
+
+
+def get_noise_operators_sampled(
+    operators: SingleBasisNoiseOperatorList[
+        _B0, StackedBasisLike[*tuple[BasisWithLengthLike[Any, Any, Any], ...]]
+    ],
+    *,
+    n: int | None = None,
+) -> SingleBasisNoiseOperatorList[_B0, Any]:
+    """
+    Given a set of noise operators, get the equivalent operators in a sampled basis.
+
+    This is useful to remove the periodicity in momentum space.
+    For example by removing any scattering between neighboring k from +k_n/2 to -k_n/2.
+
+    This is because these states are far apart in the large (over sampled) basis.
+
+
+    Returns
+    -------
+    SingleBasisNoiseOperatorList[_B0, _SB0]
+
+    """
+    sampled = sample_operator_list(
+        operators,
+        sample=(operators["basis"][1][0].fundamental_n // 2 if n is None else n,),
+    )
+
+    return {
+        "basis": sampled["basis"],
+        "data": sampled["data"],
+        "eigenvalue": operators["eigenvalue"],
+    }
