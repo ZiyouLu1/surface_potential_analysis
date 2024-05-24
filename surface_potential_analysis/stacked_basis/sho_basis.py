@@ -1,4 +1,5 @@
 """Utility functions to help with the generation of a sho basis."""
+
 from __future__ import annotations
 
 import math
@@ -13,7 +14,6 @@ from surface_potential_analysis.basis.basis import (
     FundamentalPositionBasis,
 )
 from surface_potential_analysis.basis.explicit_basis import (
-    ExplicitBasis3d,
     ExplicitBasisWithLength,
 )
 from surface_potential_analysis.basis.stacked_basis import StackedBasis
@@ -127,7 +127,7 @@ def get_sho_potential_basis_config(
 
 def sho_basis_3d_from_config(
     parent: BasisWithLengthLike3d[_LF0Inv, _L0Inv], config: SHOBasisConfig, n: _L0Inv
-) -> ExplicitBasis3d[_LF0Inv, _L0Inv]:
+) -> ExplicitBasisWithLength[_LF0Inv, _L0Inv, Literal[3]]:
     """
     Calculate the exact sho basis for a given basis, by directly diagonalizing the sho wavefunction in this basis.
 
@@ -176,5 +176,5 @@ def infinate_sho_basis_3d_from_config(
         ]
     )
     util = BasisUtil(parent)
-    vectors = vectors * np.sqrt(np.linalg.norm(util.fundamental_dx))
+    vectors *= np.sqrt(np.linalg.norm(util.fundamental_dx))
     return ExplicitBasisWithLength(parent.delta_x, vectors)

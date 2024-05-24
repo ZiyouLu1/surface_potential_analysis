@@ -11,7 +11,6 @@ from surface_potential_analysis.basis.basis import (
 )
 from surface_potential_analysis.basis.basis_like import BasisWithLengthLike
 from surface_potential_analysis.basis.explicit_basis import (
-    ExplicitBasis1d,
     ExplicitBasisWithLength,
 )
 from surface_potential_analysis.basis.stacked_basis import (
@@ -78,7 +77,7 @@ def get_potential_basis_config_eigenstates(
 
 def get_potential_basis_config_basis(
     config: PotentialBasisConfig[_B1d0Inv, _N0Inv],
-) -> ExplicitBasis1d[Any, _N0Inv]:
+) -> ExplicitBasisWithLength[Any, _N0Inv, Literal[1]]:
     """
     Get the explicit basis for the potential basis config.
 
