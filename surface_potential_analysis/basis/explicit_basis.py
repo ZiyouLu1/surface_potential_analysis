@@ -87,7 +87,7 @@ class ExplicitBasis(BasisLike[_NF0_co, _N0_co]):
         vectors: np.ndarray[_S0Inv, np.dtype[np.complex128] | np.dtype[np.float64]],
         axis: int = -1,
     ) -> np.ndarray[tuple[int, ...], np.dtype[np.complex128]]:
-        transformed = np.tensordot(np.conj(self.vectors), vectors, axes=([0], [axis]))
+        transformed = np.tensordot(np.conj(self.vectors), vectors, axes=([1], [axis]))
         return np.moveaxis(transformed, 0, axis)
 
     def __into_fundamental__(
@@ -95,7 +95,7 @@ class ExplicitBasis(BasisLike[_NF0_co, _N0_co]):
         vectors: np.ndarray[_S0Inv, np.dtype[np.complex128] | np.dtype[np.float64]],
         axis: int = -1,
     ) -> np.ndarray[tuple[int, ...], np.dtype[np.complex128]]:
-        transformed = np.tensordot(vectors, self.vectors, axes=([axis], [1]))
+        transformed = np.tensordot(vectors, self.vectors, axes=([axis], [0]))
         return np.moveaxis(transformed, -1, axis)
 
     def __from_transformed__(
@@ -104,7 +104,7 @@ class ExplicitBasis(BasisLike[_NF0_co, _N0_co]):
         axis: int = -1,
     ) -> np.ndarray[tuple[int, ...], np.dtype[np.complex128]]:
         transformed_vectors = np.conj(self._transformed_vectors)
-        transformed = np.tensordot(transformed_vectors, vectors, axes=([0], [axis]))
+        transformed = np.tensordot(transformed_vectors, vectors, axes=([1], [axis]))
         return np.moveaxis(transformed, 0, axis)
 
     def __into_transformed__(
@@ -113,7 +113,7 @@ class ExplicitBasis(BasisLike[_NF0_co, _N0_co]):
         axis: int = -1,
     ) -> np.ndarray[tuple[int, ...], np.dtype[np.complex128]]:
         transformed_vectors = self._transformed_vectors
-        transformed = np.tensordot(vectors, transformed_vectors, axes=([axis], [1]))
+        transformed = np.tensordot(vectors, transformed_vectors, axes=([axis], [0]))
         return np.moveaxis(transformed, -1, axis)
 
     def __convert_vector_into__(
@@ -206,12 +206,12 @@ class ExplicitStackedBasisWithLength(
         vectors: np.ndarray[tuple[_N0_co, _NF0_co], np.dtype[np.complex128]],
     ) -> None:
         self._fundamental_shape = fundamental_shape
-        self._delta_x = delta_x_stacked
+        self._delta_x_stacked = delta_x_stacked
         super().__init__(vectors)
 
     @property
     def delta_x_stacked(self) -> np.ndarray[tuple[int, int], np.dtype[np.float64]]:
-        return self.delta_x_stacked
+        return self._delta_x_stacked
 
     @property
     def fundamental_shape(self) -> tuple[int, ...]:
