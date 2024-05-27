@@ -41,11 +41,12 @@ from surface_potential_analysis.wavepacket.get_eigenstate import (
     get_tight_binding_state,
     get_wavepacket_state_vector,
 )
-from surface_potential_analysis.wavepacket.localization.localization_operator import (
+from surface_potential_analysis.wavepacket.localization_operator import (
     LocalizationOperator,
     get_localized_wavepackets,
 )
 from surface_potential_analysis.wavepacket.wavepacket import (
+    BlochWavefunctionListBasis,
     BlochWavefunctionListList,
     as_wavepacket_list,
     get_unfurled_basis,
@@ -120,6 +121,7 @@ def get_localization_operator_for_projections(
         wavepackets,
         stacked_basis_as_fundamental_momentum_basis(wavepackets["basis"][1]),
     )
+    # Note here we localize each bloch k seperately
     states = [
         get_states_at_bloch_idx(converted, idx)  # type: ignore can't ensure WavepacketList is a stacked fundamental basis, and still have the right return type
         for idx in range(converted["basis"][0][1].n)
@@ -423,3 +425,32 @@ def localize_wavepacket_gaussian_projection(
     # Better performace if we provide the projection in transformed basis
     projection = convert_state_vector_to_momentum_basis(projection)
     return localize_single_band_wavepacket_projection(wavepacket, projection)
+
+
+def get_evenly_spaced_points(
+    basis: BlochWavefunctionListBasis[Any, Any], shape: tuple[int, ...]
+) -> StateVectorList[
+    StackedBasis[*tuple[FundamentalBasis[int]]],
+    StackedBasisLike[*tuple[FundamentalPositionBasis[Any, Any], ...]],
+]:
+    fundamental_basis = stacked_basis_as_fundamental_position_basis(
+        get_unfurled_basis(basis)
+    )
+    util = BasisUtil(fundamental_basis)
+
+    out = np.zeros((np.prod(shape), fundamental_basis.n), dtype=np.complex128)
+
+    for i, idx in enumerate(np.ndindex(shape)):
+        sample_point = tuple(
+            (n * idx_i) // s
+            for (n, idx_i, s) in zip(util.shape, idx, shape, strict=True)
+        )
+        out[i, util.get_flat_index(sample_point)] = 1
+
+    return {
+        "basis": StackedBasis(
+            StackedBasis(*tuple(FundamentalBasis(s) for s in shape)),
+            fundamental_basis,
+        ),
+        "data": out.ravel(),
+    }

@@ -49,7 +49,7 @@ from surface_potential_analysis.wavepacket.get_eigenstate import (
     get_bloch_state_vector,
     get_states_at_bloch_idx,
 )
-from surface_potential_analysis.wavepacket.localization.localization_operator import (
+from surface_potential_analysis.wavepacket.localization_operator import (
     get_localized_wavepackets,
 )
 from surface_potential_analysis.wavepacket.wavepacket import (
@@ -68,7 +68,7 @@ if TYPE_CHECKING:
         FundamentalTransformedPositionBasis,
     )
     from surface_potential_analysis.state_vector.state_vector import StateVector
-    from surface_potential_analysis.wavepacket.localization.localization_operator import (
+    from surface_potential_analysis.wavepacket.localization_operator import (
         LocalizationOperator,
     )
 
@@ -508,6 +508,18 @@ def _write_localization_files_wannier90(
 
 # ruff: noqa: S603, S607, S108
 def _run_wannier90(directory: Path) -> None:
+    subprocess.run(
+        [
+            "wannier90.x",
+            "spa.win",
+        ],
+        check=True,
+        cwd=directory,
+    )
+
+
+# ruff: noqa: S603, S607, S108
+def _run_wannier90_in_container(directory: Path) -> None:
     container = "f776014440144052e94a86044eaf6ee4ce131f80ae12df0bd0d2bdcf24206bfa"
     subprocess.run(
         ["docker", "exec", container, "rm", "-r", "/tmp/scratch_w90"],
@@ -568,7 +580,7 @@ def get_localization_operator_wannier90(
     Returns
     -------
     WavepacketList[_B1, _SB0, _SBL0]
-        Localized wavepackets, with each wavepacket correspondign to a different projection
+        Localized wavepackets, with each wavepacket corresponding to a different projection
     """
     with tempfile.TemporaryDirectory() as tmp_dir:
         tmp_dir_path = Path(tmp_dir)

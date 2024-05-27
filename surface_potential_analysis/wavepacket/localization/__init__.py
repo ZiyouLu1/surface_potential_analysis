@@ -7,6 +7,8 @@ from ._operator import (
     localize_position_operator_many_band_individual,
 )
 from ._projection import (
+    get_evenly_spaced_points,
+    get_localization_operator_for_projections,
     localize_exponential_decay_projection,
     localize_single_band_wavepacket_projection,
     localize_single_point_projection,
@@ -28,6 +30,8 @@ from ._wannier90 import (
 
 __all__ = [
     "Wannier90Options",
+    "get_evenly_spaced_points",
+    "get_localization_operator_for_projections",
     "get_localization_operator_wannier90",
     "get_localization_operator_wannier90_individual_bands",
     "localize_exponential_decay_projection",
