@@ -421,5 +421,5 @@ def localize_wavepacket_gaussian_projection(
     # multiplied by an exponential
     projection = get_state_vector(get_gaussian_states(wavepacket), 0)
     # Better performace if we provide the projection in transformed basis
-    convert_state_vector_to_momentum_basis(projection)
+    projection = convert_state_vector_to_momentum_basis(projection)
     return localize_single_band_wavepacket_projection(wavepacket, projection)

@@ -133,7 +133,7 @@ def plot_kernel_truncation_error(
     np.cumsum(sorted_eigenvalues, out=cumulative[1:])
 
     truncations = (
-        list(range(0, cumulative.size, cumulative.size // 100))
+        list(range(0, cumulative.size, 1 + cumulative.size // 100))
         if truncations is None
         else truncations
     )

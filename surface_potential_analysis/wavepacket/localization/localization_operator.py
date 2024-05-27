@@ -72,6 +72,8 @@ def get_wavepacket_hamiltonian(
     """
     Get the Hamiltonian in the Wavepacket basis.
 
+    This is a list of hamiltonians, one for each bloch k
+
     Parameters
     ----------
     wavepackets : WavepacketWithEigenvaluesList[_B0, _SB1, _SB0]

@@ -130,7 +130,9 @@ class _SurfaceHamiltonianUtil(
     ) -> StackedBasisLike[
         TransformedPositionBasis[_NF0Inv, _N0Inv, Literal[3]],
         TransformedPositionBasis[_NF1Inv, _N1Inv, Literal[3]],
-        ExplicitBasisWithLength[_NF2Inv, _N2Inv, Literal[3]],
+        ExplicitBasisWithLength[
+            FundamentalBasis[_N2Inv], FundamentalPositionBasis3d[_NF2Inv]
+        ],
     ]:
         return StackedBasis(
             TransformedPositionBasis(
@@ -144,8 +146,13 @@ class _SurfaceHamiltonianUtil(
                 self._potential["basis"][1].n,
             ),
             ExplicitBasisWithLength(
-                self._potential["basis"][2].delta_x,
-                state_vectors_z["data"].reshape(state_vectors_z["basis"].shape),  # type: ignore[arg-type]
+                {
+                    "basis": StackedBasis(
+                        FundamentalBasis[_N2Inv](state_vectors_z["basis"].shape[0]),
+                        self._potential["basis"][2],
+                    ),
+                    "data": state_vectors_z["data"],
+                }
             ),
         )
 
@@ -163,7 +170,9 @@ class _SurfaceHamiltonianUtil(
         StackedBasisLike[
             TransformedPositionBasis[_NF0Inv, _N0Inv, Literal[3]],
             TransformedPositionBasis[_NF1Inv, _N1Inv, Literal[3]],
-            ExplicitBasisWithLength[_NF2Inv, _N2Inv, Literal[3]],
+            ExplicitBasisWithLength[
+                FundamentalBasis[_N2Inv], FundamentalPositionBasis3d[_NF2Inv]
+            ],
         ]
     ]:
         state_vectors_z = get_potential_basis_config_eigenstates(
@@ -188,7 +197,9 @@ class _SurfaceHamiltonianUtil(
         StackedBasisLike[
             TransformedPositionBasis[_NF0Inv, _N0Inv, Literal[3]],
             TransformedPositionBasis[_NF1Inv, _N1Inv, Literal[3]],
-            ExplicitBasisWithLength[_NF2Inv, _N2Inv, Literal[3]],
+            ExplicitBasisWithLength[
+                FundamentalBasis[_N2Inv], FundamentalPositionBasis3d[_NF2Inv]
+            ],
         ],
     ]:
         z_hamiltonian = self.bloch_z_hamiltonian(self._bloch_fraction.item(2))
@@ -243,7 +254,9 @@ def total_surface_hamiltonian(
     StackedBasisLike[
         TransformedPositionBasis[_NF0Inv, _N0Inv, Literal[3]],
         TransformedPositionBasis[_NF1Inv, _N1Inv, Literal[3]],
-        ExplicitBasisWithLength[_NF2Inv, _N2Inv, Literal[3]],
+        ExplicitBasisWithLength[
+            FundamentalBasis[_N2Inv], FundamentalPositionBasis3d[_NF2Inv]
+        ],
     ]
 ]:
     """
@@ -279,7 +292,9 @@ def total_surface_hamiltonian_as_fundamental(
     StackedBasisLike[
         FundamentalTransformedPositionBasis[_N0Inv, Literal[3]],
         FundamentalTransformedPositionBasis[_N1Inv, Literal[3]],
-        ExplicitBasisWithLength[_NF2Inv, _N2Inv, Literal[3]],
+        ExplicitBasisWithLength[
+            FundamentalBasis[_N2Inv], FundamentalPositionBasis3d[_NF2Inv]
+        ],
     ]
 ]:
     """

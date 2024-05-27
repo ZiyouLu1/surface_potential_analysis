@@ -46,7 +46,10 @@ if TYPE_CHECKING:
     from collections.abc import Callable, Iterable
 
     from surface_potential_analysis.operator.operator import SingleBasisOperator
-    from surface_potential_analysis.types import ShapeLike, SingleFlatIndexLike
+    from surface_potential_analysis.types import (
+        ShapeLike,
+        SingleFlatIndexLike,
+    )
 
 _L0Inv = TypeVar("_L0Inv", bound=int)
 _L1Inv = TypeVar("_L1Inv", bound=int)

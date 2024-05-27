@@ -2,26 +2,37 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, TypeVar
 
+from surface_potential_analysis.kernel.kernel import (
+    DiagonalNoiseKernel,
+    DiagonalNoiseOperatorList,
+    NoiseKernel,
+    get_noise_kernel,
+    get_single_factorized_noise_operators,
+    get_single_factorized_noise_operators_diagonal,
+)
 from surface_potential_analysis.operator.conversion import (
+    convert_diagonal_operator_list_to_basis,
     convert_operator_list_to_basis,
 )
 
 if TYPE_CHECKING:
     from surface_potential_analysis.basis.basis_like import BasisLike
     from surface_potential_analysis.basis.stacked_basis import StackedBasisLike
-    from surface_potential_analysis.kernel.kernel import NoiseOperatorList
+    from surface_potential_analysis.kernel.kernel import (
+        NoiseOperatorList,
+    )
 
-    _B0Inv = TypeVar("_B0Inv", bound=BasisLike[Any, Any])
-    _B1Inv = TypeVar("_B1Inv", bound=BasisLike[Any, Any])
-    _B2Inv = TypeVar("_B2Inv", bound=BasisLike[Any, Any])
-    _B3Inv = TypeVar("_B3Inv", bound=BasisLike[Any, Any])
+    _B0 = TypeVar("_B0", bound=BasisLike[Any, Any])
+    _B1 = TypeVar("_B1", bound=BasisLike[Any, Any])
+    _B2 = TypeVar("_B2", bound=BasisLike[Any, Any])
+    _B3 = TypeVar("_B3", bound=BasisLike[Any, Any])
     _B4 = TypeVar("_B4", bound=BasisLike[Any, Any])
 
 
 def convert_noise_operator_list_to_basis(
-    operator: NoiseOperatorList[_B4, _B0Inv, _B1Inv],
-    basis: StackedBasisLike[_B2Inv, _B3Inv],
-) -> NoiseOperatorList[_B4, _B2Inv, _B3Inv]:
+    operator: NoiseOperatorList[_B4, _B0, _B1],
+    basis: StackedBasisLike[_B2, _B3],
+) -> NoiseOperatorList[_B4, _B2, _B3]:
     """Given a noise operator, convert it to the given basis.
 
     Parameters
@@ -39,3 +50,66 @@ def convert_noise_operator_list_to_basis(
         "data": converted["data"],
         "eigenvalue": operator["eigenvalue"],
     }
+
+
+def convert_diagonal_noise_operator_list_to_basis(
+    operator: DiagonalNoiseOperatorList[_B4, _B0, _B1],
+    basis: StackedBasisLike[_B2, _B3],
+) -> NoiseOperatorList[_B4, _B2, _B3]:
+    """Given a noise operator, convert it to the given basis.
+
+    Parameters
+    ----------
+    operator : NoiseOperatorList[_B4, _B0Inv, _B1Inv]
+    basis : StackedBasisLike[_B2Inv, _B3Inv]
+
+    Returns
+    -------
+    NoiseOperatorList[_B4, _B2Inv, _B3Inv]
+    """
+    converted = convert_diagonal_operator_list_to_basis(operator, basis)
+    return {
+        "basis": converted["basis"],
+        "data": converted["data"],
+        "eigenvalue": operator["eigenvalue"],
+    }
+
+
+def convert_kernel_to_basis(
+    kernel: NoiseKernel[_B0, _B1, _B0, _B1],
+    basis: StackedBasisLike[_B2, _B3],
+) -> NoiseKernel[_B2, _B3, _B2, _B3]:
+    """Convert the kernel to the given basis.
+
+    Parameters
+    ----------
+    kernel : NoiseKernel[_B0, _B1, _B0, _B1]
+    basis : StackedBasisLike[_B2Inv, _B3Inv]
+
+    Returns
+    -------
+    NoiseKernel[_B0, _B1, _B0, _B1]
+    """
+    operators = get_single_factorized_noise_operators(kernel)
+    converted = convert_noise_operator_list_to_basis(operators, basis)
+    return get_noise_kernel(converted)
+
+
+def convert_diagonal_kernel_to_basis(
+    kernel: DiagonalNoiseKernel[_B0, _B1, _B0, _B1],
+    basis: StackedBasisLike[_B2, _B3],
+) -> NoiseKernel[_B2, _B3, _B2, _B3]:
+    """Convert the kernel to the given basis.
+
+    Parameters
+    ----------
+    kernel : NoiseKernel[_B0, _B1, _B0, _B1]
+    basis : StackedBasisLike[_B2Inv, _B3Inv]
+
+    Returns
+    -------
+    NoiseKernel[_B0, _B1, _B0, _B1]
+    """
+    operators = get_single_factorized_noise_operators_diagonal(kernel)
+    converted = convert_diagonal_noise_operator_list_to_basis(operators, basis)
+    return get_noise_kernel(converted)

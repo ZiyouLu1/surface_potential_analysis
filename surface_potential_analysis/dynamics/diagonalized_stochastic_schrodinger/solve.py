@@ -41,9 +41,7 @@ def solve_stochastic_schrodinger_equation(
     initial_state: StateVector[_B1Inv],
     times: _AX0Inv,
     hamiltonian: SingleBasisOperator[_B1Inv],
-    collapse_operators: list[
-        SingleBasisDiagonalNoiseOperator[ExplicitBasis[Any, Literal[1]]]
-    ]
+    collapse_operators: list[SingleBasisDiagonalNoiseOperator[ExplicitBasis[Any, Any]]]
     | None = None,
     *,
     n_trajectories: _L1Inv,
@@ -56,9 +54,7 @@ def solve_stochastic_schrodinger_equation(
     initial_state: StateVector[_B1Inv],
     times: _AX0Inv,
     hamiltonian: SingleBasisOperator[_B1Inv],
-    collapse_operators: list[
-        SingleBasisDiagonalNoiseOperator[ExplicitBasis[Any, Literal[1]]]
-    ]
+    collapse_operators: list[SingleBasisDiagonalNoiseOperator[ExplicitBasis[Any, Any]]]
     | None = None,
     *,
     n_trajectories: Literal[1] = 1,
@@ -70,9 +66,7 @@ def solve_stochastic_schrodinger_equation(  # type: ignore bad overload
     initial_state: StateVector[_B1Inv],
     times: _AX0Inv,
     hamiltonian: SingleBasisOperator[_B1Inv],
-    collapse_operators: list[
-        SingleBasisDiagonalNoiseOperator[ExplicitBasis[Any, Literal[1]]]
-    ]
+    collapse_operators: list[SingleBasisDiagonalNoiseOperator[ExplicitBasis[Any, Any]]]
     | None = None,
     *,
     n_trajectories: int = 1,

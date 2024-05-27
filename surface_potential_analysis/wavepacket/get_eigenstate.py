@@ -11,6 +11,9 @@ from surface_potential_analysis.basis.basis import (
 from surface_potential_analysis.basis.evenly_spaced_basis import (
     EvenlySpacedTransformedPositionBasis,
 )
+from surface_potential_analysis.basis.explicit_basis import (
+    ExplicitStackedBasisWithLength,
+)
 from surface_potential_analysis.basis.stacked_basis import (
     StackedBasis,
 )
@@ -26,7 +29,10 @@ from surface_potential_analysis.state_vector.conversion import (
     convert_state_vector_list_to_basis,
     convert_state_vector_to_position_basis,
 )
-from surface_potential_analysis.state_vector.state_vector_list import get_state_vector
+from surface_potential_analysis.state_vector.state_vector_list import (
+    StateVectorList,
+    get_state_vector,
+)
 from surface_potential_analysis.types import (
     IntLike_co,
 )
@@ -38,6 +44,7 @@ from surface_potential_analysis.wavepacket.wavepacket import (
     BlochWavefunctionListBasis,
     BlochWavefunctionListList,
     BlochWavefunctionListWithEigenvalues,
+    BlochWavefunctionListWithEigenvaluesList,
     get_sample_basis,
     get_wavepacket_basis,
 )
@@ -51,11 +58,9 @@ if TYPE_CHECKING:
     from surface_potential_analysis.basis.stacked_basis import (
         StackedBasisLike,
     )
+    from surface_potential_analysis.operator.operator import SingleBasisDiagonalOperator
     from surface_potential_analysis.state_vector.eigenstate_collection import Eigenstate
     from surface_potential_analysis.state_vector.state_vector import StateVector
-    from surface_potential_analysis.state_vector.state_vector_list import (
-        StateVectorList,
-    )
     from surface_potential_analysis.types import (
         SingleIndexLike,
         SingleStackedIndexLike,
@@ -325,3 +330,114 @@ def get_states_at_bloch_idx(
         .reshape(*converted["basis"][0].shape, -1)[:, idx]
         .reshape(-1),
     }
+
+
+def _get_compressed_bloch_states_at_bloch_idx(
+    wavepackets: BlochWavefunctionListList[_B0, _SB0, _SB1], idx: int
+) -> StateVectorList[_B0, _SB1]:
+    return {
+        "basis": StackedBasis(wavepackets["basis"][0][0], wavepackets["basis"][1]),
+        "data": wavepackets["data"]
+        .reshape(*wavepackets["basis"][0].shape, -1)[:, idx, :]
+        .ravel(),
+    }
+
+
+def _uncompress_bloch_wavefunctions(
+    wavepackets: BlochWavefunctionListList[_B0, _SB0, _SB1],
+) -> StateVectorList[
+    StackedBasisLike[_B0, _SB0],
+    StackedBasisLike[*tuple[FundamentalTransformedPositionBasis[Any, Any], ...]],
+]:
+    """
+    Uncompress bloch wavefunction list.
+
+    A bloch wavefunction list is implicitly compressed, as each wavefunction in the list
+    only stores the state at the relevant non-zero bloch k. This function undoes this implicit
+    compression
+
+    Parameters
+    ----------
+    wavepacket : BlochWavefunctionListList[_B0, _SB0, _SB1]
+        The wavepacket to decompress
+
+    Returns
+    -------
+    StateVectorList[
+    StackedBasisLike[_B0, _SB0],
+    StackedBasisLike[*tuple[FundamentalTransformedPositionBasis[Any, Any], ...]],
+    ]
+    """
+    util = BasisUtil(wavepackets["basis"][0][1])
+
+    converted_basis = stacked_basis_as_fundamental_momentum_basis(
+        wavepackets["basis"][1]
+    )
+    converted = convert_state_vector_list_to_basis(wavepackets, converted_basis)
+
+    decompressed_basis = StackedBasis(
+        *tuple(
+            FundamentalTransformedPositionBasis[Any, Any](
+                b1.delta_x * b0.n, b0.n * b1.n
+            )
+            for (b0, b1) in zip(
+                wavepackets["basis"][0][1], wavepackets["basis"][1], strict=True
+            )
+        )
+    )
+    out = np.zeros(
+        (*wavepackets["basis"][0].shape, decompressed_basis.n), dtype=np.complex128
+    )
+
+    # for each bloch k
+    for idx in range(converted["basis"][0][1].n):
+        offset = util.get_stacked_index(idx)
+
+        states = _get_compressed_bloch_states_at_bloch_idx(converted, idx)
+        # Re-interpret as a sampled state, and convert to a full state
+        full_states = convert_state_vector_list_to_basis(
+            {
+                "basis": StackedBasis(
+                    states["basis"][0],
+                    _get_sampled_basis(
+                        StackedBasis(wavepackets["basis"][0][1], converted_basis),
+                        offset,
+                    ),
+                ),
+                "data": states["data"],
+            },
+            decompressed_basis,
+        )
+
+        out[:, idx, :] = full_states["data"].reshape(
+            wavepackets["basis"][0][0].n, decompressed_basis.n
+        )
+
+    return {
+        "basis": StackedBasis(wavepackets["basis"][0], decompressed_basis),
+        "data": out.ravel(),
+    }
+
+
+def get_bloch_basis(
+    wavefunctions: BlochWavefunctionListList[_B0, _SB0, _SB1],
+) -> ExplicitStackedBasisWithLength[
+    StackedBasisLike[_B0, _SB0],
+    StackedBasisLike[*tuple[FundamentalTransformedPositionBasis[Any, Any], ...]],
+]:
+    return ExplicitStackedBasisWithLength(
+        _uncompress_bloch_wavefunctions(wavefunctions)
+    )
+
+
+def get_bloch_hamiltonian(
+    wavefunctions: BlochWavefunctionListWithEigenvaluesList[_B0, _SB0, _SB1],
+) -> SingleBasisDiagonalOperator[
+    ExplicitStackedBasisWithLength[
+        StackedBasisLike[_B0, _SB0],
+        StackedBasisLike[*tuple[FundamentalTransformedPositionBasis[Any, Any], ...]],
+    ]
+]:
+    basis = get_bloch_basis(wavefunctions)
+
+    return {"basis": StackedBasis(basis, basis), "data": wavefunctions["eigenvalue"]}

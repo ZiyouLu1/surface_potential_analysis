@@ -13,6 +13,7 @@ from surface_potential_analysis.basis.basis_like import (
     convert_matrix,
 )
 from surface_potential_analysis.basis.stacked_basis import StackedBasis
+from surface_potential_analysis.operator.operator_list import as_operator_list
 from surface_potential_analysis.stacked_basis.conversion import (
     stacked_basis_as_fundamental_momentum_basis,
 )
@@ -25,6 +26,7 @@ if TYPE_CHECKING:
         SingleBasisOperator,
     )
     from surface_potential_analysis.operator.operator_list import (
+        DiagonalOperatorList,
         OperatorList,
         SingleBasisOperatorList,
     )
@@ -87,6 +89,25 @@ def convert_operator_list_to_basis(
         "basis": StackedBasis(operator["basis"][0], basis),
         "data": converted.reshape(-1),
     }
+
+
+def convert_diagonal_operator_list_to_basis(
+    operator: DiagonalOperatorList[_B4, _B0Inv, _B1Inv],
+    basis: StackedBasisLike[_B2Inv, _B3Inv],
+) -> OperatorList[_B4, _B2Inv, _B3Inv]:
+    """Given an operator, convert it to the given basis.
+
+    Parameters
+    ----------
+    operator : OperatorList[_B4, _B0Inv, _B1Inv]
+    basis : StackedBasisLike[_B2Inv, _B3Inv]
+
+    Returns
+    -------
+    OperatorList[_B4, _B2Inv, _B3Inv]
+    """
+    full = as_operator_list(operator)
+    return convert_operator_list_to_basis(full, basis)
 
 
 def sample_operator(

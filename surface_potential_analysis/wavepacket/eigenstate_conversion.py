@@ -200,6 +200,9 @@ def unfurl_wavepacket_list(
     """
     Convert a wavepacket list into a StateVectorList.
 
+    This produces a set of fundamental states, which are (usually, but not guaranteed)
+    to be located at the origin
+
     Parameters
     ----------
     wavepacket : Wavepacket[_NS0, _NS1, MomentumBasis[_L0], MomentumBasis[_L1], _BX2]

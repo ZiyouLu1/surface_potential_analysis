@@ -77,7 +77,10 @@ def get_potential_basis_config_eigenstates(
 
 def get_potential_basis_config_basis(
     config: PotentialBasisConfig[_B1d0Inv, _N0Inv],
-) -> ExplicitBasisWithLength[Any, _N0Inv, Literal[1]]:
+) -> ExplicitBasisWithLength[
+    FundamentalBasis[_N0Inv],
+    StackedBasisLike[_B1d0Inv],
+]:
     """
     Get the explicit basis for the potential basis config.
 
@@ -90,10 +93,7 @@ def get_potential_basis_config_basis(
     ExplicitBasis[_L1Inv, PositionBasis[_L0Inv]]
     """
     eigenstates = get_potential_basis_config_eigenstates(config)
-    return ExplicitBasisWithLength(
-        eigenstates["basis"][0].delta_x,
-        eigenstates["data"],  # type: ignore[arg-type]
-    )
+    return ExplicitBasisWithLength(eigenstates)
 
 
 def select_minimum_potential_3d(
