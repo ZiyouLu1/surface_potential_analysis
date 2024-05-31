@@ -30,54 +30,47 @@ from surface_potential_analysis.state_vector.state_vector_list import (
 )
 
 try:
-    from sse_solver_py import (
-        solve_sse_euler,
-        solve_sse_normalized_euler_banded,
-        solve_sse_second_order_banded,
-    )
+    from sse_solver_py import SimulationConfig, solve_sse, solve_sse_banded
 except ImportError:
     # if sse_solver_py is not installed, create a dummy functions
 
-    def solve_sse_euler(  # noqa: PLR0913, PLR0917, D103
+    def solve_sse(  # noqa: D103
         initial_state: list[complex],  # noqa: ARG001
         hamiltonian: list[list[complex]],  # noqa: ARG001
         operators: list[list[list[complex]]],  # noqa: ARG001
-        n: int,  # noqa: ARG001
-        step: int,  # noqa: ARG001
-        dt: float,  # noqa: ARG001
+        config: SimulationConfig,  # noqa: ARG001
     ) -> list[complex]:
         msg = "sse_solver_py not installed, add sse_solver_py feature"
         raise NotImplementedError(msg)
 
-    def solve_sse_normalized_euler_banded(  # noqa: PLR0913, PLR0917, D103
+    def solve_sse_banded(  # noqa: PLR0913, PLR0917, D103
         initial_state: list[complex],  # noqa: ARG001
         hamiltonian_diagonal: list[list[complex]],  # noqa: ARG001
         hamiltonian_offset: list[int],  # noqa: ARG001
         operators_diagonals: list[list[list[complex]]],  # noqa: ARG001
         operators_offsets: list[list[int]],  # noqa: ARG001
-        n: int,  # noqa: ARG001
-        step: int,  # noqa: ARG001
-        dt: float,  # noqa: ARG001
+        config: SimulationConfig,  # noqa: ARG001
     ) -> list[complex]:
         msg = "sse_solver_py not installed, add sse_solver_py feature"
         raise NotImplementedError(msg)
 
-    def solve_sse_second_order_banded(  # noqa: PLR0913, PLR0917, D103
-        initial_state: list[complex],  # noqa: ARG001
-        hamiltonian_diagonal: list[list[complex]],  # noqa: ARG001
-        hamiltonian_offset: list[int],  # noqa: ARG001
-        operators_diagonals: list[list[list[complex]]],  # noqa: ARG001
-        operators_offsets: list[list[int]],  # noqa: ARG001
-        n: int,  # noqa: ARG001
-        step: int,  # noqa: ARG001
-        dt: float,  # noqa: ARG001
-    ) -> list[complex]:
-        msg = "sse_solver_py not installed, add sse_solver_py feature"
-        raise NotImplementedError(msg)
+    class SimulationConfig:
+        def __init__(  # noqa: PLR0913
+            self: SimulationConfig,
+            *,
+            n: int,
+            step: int,
+            dt: float,
+            n_trajectories: int = 1,
+            method: SSEMethod,
+        ) -> None:
+            ...
 
 
 if TYPE_CHECKING:
     from collections.abc import Callable
+
+    from sse_solver_py import SSEMethod
 
     from surface_potential_analysis.basis.basis_like import BasisLike
     from surface_potential_analysis.dynamics.incoherent_propagation.tunnelling_matrix import (
@@ -386,34 +379,33 @@ def solve_stochastic_schrodinger_equation_rust(  # type: ignore bad overload
     -------
     StateVectorList[_B0Inv, _L0Inv]
     """
-    data = np.zeros(
-        (n_trajectories, times.n, initial_state["data"].size), dtype=np.complex128
-    )
     collapse_operators = [] if collapse_operators is None else collapse_operators
 
-    for i in range(n_trajectories):
-        out = solve_sse_euler(
-            list(initial_state["data"]),
-            [
-                list(x / hbar)
-                for x in hamiltonian["data"].reshape(hamiltonian["basis"].shape)
-            ],
-            [
-                [list(x / np.sqrt(hbar)) for x in o["data"].reshape(o["basis"].shape)]
-                for o in collapse_operators
-            ],
-            times.n,
-            times.step,
-            times.fundamental_dt,
-        )
-        data[i] = np.array(out).reshape(times.n, -1)
+    data = solve_sse(
+        list(initial_state["data"]),
+        [
+            list(x / hbar)
+            for x in hamiltonian["data"].reshape(hamiltonian["basis"].shape)
+        ],
+        [
+            [list(x / np.sqrt(hbar)) for x in o["data"].reshape(o["basis"].shape)]
+            for o in collapse_operators
+        ],
+        SimulationConfig(
+            n=times.n,
+            step=times.step,
+            dt=times.dt,
+            n_trajectories=n_trajectories,
+            method="Euler",
+        ),
+    )
 
     return {
         "basis": StackedBasis(
             StackedBasis(FundamentalBasis(n_trajectories), times),
             hamiltonian["basis"][0],
         ),
-        "data": data.ravel(),
+        "data": np.array(data).ravel(),
     }
 
 
@@ -460,7 +452,7 @@ def solve_stochastic_schrodinger_equation_rust_banded(
     *,
     n_trajectories: _L1Inv,
     r_threshold: float = 1e-8,
-    method: Literal["euler", "order2"] = "euler",
+    method: SSEMethod = "euler",
 ) -> StateVectorList[StackedBasisLike[FundamentalBasis[_L1Inv], _AX0Inv], _B1Inv]:
     ...
 
@@ -474,7 +466,7 @@ def solve_stochastic_schrodinger_equation_rust_banded(
     *,
     n_trajectories: Literal[1] = 1,
     r_threshold: float = 1e-8,
-    method: Literal["euler", "order2"] = "euler",
+    method: SSEMethod = "euler",
 ) -> StateVectorList[StackedBasisLike[FundamentalBasis[Literal[1]], _AX0Inv], _B1Inv]:
     ...
 
@@ -487,7 +479,7 @@ def solve_stochastic_schrodinger_equation_rust_banded(  # type: ignore bad overl
     *,
     n_trajectories: _L1Inv | Literal[1] = 1,
     r_threshold: float = 1e-8,
-    method: Literal["euler", "order2"] = "euler",
+    method: SSEMethod = "Euler",
 ) -> (
     StateVectorList[StackedBasisLike[FundamentalBasis[Literal[1]], _AX0Inv], _B1Inv]
     | StateVectorList[StackedBasisLike[FundamentalBasis[_L1Inv], _AX0Inv], _B1Inv]
@@ -534,39 +526,27 @@ def solve_stochastic_schrodinger_equation_rust_banded(  # type: ignore bad overl
         ],
         r_threshold / dt,
     )
-
-    for i in range(n_trajectories):
-        out = (
-            solve_sse_normalized_euler_banded(
-                list(initial_state["data"]),
-                banded_h[0],
-                banded_h[1],
-                [b[0] for b in banded_collapse],
-                [b[1] for b in banded_collapse],
-                times.n,
-                times.step,
-                dt,
-            )
-            if method == "euler"
-            else solve_sse_second_order_banded(
-                list(initial_state["data"]),
-                banded_h[0],
-                banded_h[1],
-                [b[0] for b in banded_collapse],
-                [b[1] for b in banded_collapse],
-                times.n,
-                times.step,
-                dt,
-            )
-        )
-        data[i] = np.array(out).reshape(times.n, -1)
+    data = solve_sse_banded(
+        list(initial_state["data"]),
+        banded_h[0],
+        banded_h[1],
+        [b[0] for b in banded_collapse],
+        [b[1] for b in banded_collapse],
+        SimulationConfig(
+            n=times.n,
+            step=times.step,
+            dt=dt,
+            n_trajectories=n_trajectories,
+            method=method,
+        ),
+    )
 
     return {
         "basis": StackedBasis(
             StackedBasis(FundamentalBasis(n_trajectories), times),
             hamiltonian["basis"][0],
         ),
-        "data": data.ravel(),
+        "data": np.array(data).ravel(),
     }
 
 
