@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING, Any, TypeVar
 import numpy as np
 from matplotlib.animation import ArtistAnimation
 
+from surface_potential_analysis.basis.time_basis_like import BasisWithTimeLike
 from surface_potential_analysis.basis.util import (
     BasisUtil,
 )
@@ -55,6 +56,7 @@ if TYPE_CHECKING:
         Operator,
         SingleBasisOperator,
     )
+    from surface_potential_analysis.state_vector.eigenstate_collection import ValueList
     from surface_potential_analysis.state_vector.state_vector import StateVector
     from surface_potential_analysis.state_vector.state_vector_list import (
         StateVectorList,
@@ -731,3 +733,76 @@ def plot_average_band_occupation(
     ax.set_xlabel("Energy /J")
     ax.set_title("Plot of Average Occupation against Energy")
     return fig, ax, line
+
+
+def _get_max_occupation_x(
+    states: StateVectorList[
+        _B0Inv,
+        StackedBasisLike[*tuple[Any, ...]],
+    ],
+) -> ValueList[_B0Inv]:
+    states_x = convert_state_vector_list_to_basis(
+        states,
+        stacked_basis_as_fundamental_position_basis(states["basis"][1]),
+    )
+
+    return {
+        "basis": states_x["basis"][0],
+        "data": np.argmax(
+            np.abs(states_x["data"].reshape(states_x["basis"].shape)),
+            axis=1,
+        ),
+    }
+
+
+_BT0 = TypeVar("_BT0", bound=BasisWithTimeLike[Any, Any])
+
+
+def plot_max_occupation_1d_x(
+    states: StateVectorList[
+        StackedBasisLike[Any, _BT0],
+        StackedBasisLike[*tuple[Any, ...]],
+    ],
+    axes: tuple[int] = (0,),
+    *,
+    ax: Axes | None = None,
+    unravel: bool = False,
+) -> tuple[Figure, Axes]:
+    """
+    Plot the max occupation against time in 1d for each trajectory against time.
+
+    Parameters
+    ----------
+    states : StateVectorList[ StackedBasisLike[Any, _BT0], StackedBasisLike[_
+    axes : tuple[int], optional
+        direction to plot along, by default (0,)
+    ax : Axes | None, optional
+        plot axis, by default None
+    unravel : bool, optional
+        should the trajectories be unravelled, by default False
+
+    Returns
+    -------
+    tuple[Figure, Axes]
+    """
+    fig, ax = get_figure(ax)
+    basis_x = stacked_basis_as_fundamental_position_basis(states["basis"][1])
+    occupation_x = _get_max_occupation_x(states)
+
+    util = BasisUtil(basis_x)
+    for max_idx in occupation_x["data"].reshape(occupation_x["basis"].shape):
+        stacked_idx = np.array(util.get_stacked_index(max_idx))[axes[0]].astype(
+            np.float64
+        )
+        if unravel:
+            stacked_idx = np.unwrap(
+                stacked_idx,
+                period=float(states["basis"][1][axes[0]].fundamental_n),
+            )
+
+        max_x = stacked_idx * util.dx_stacked[axes[0]]
+        ax.plot(occupation_x["basis"][1].times, max_x)
+
+    ax.set_xlabel("Times /s")
+    ax.set_ylabel("Distance /m")
+    return fig, ax

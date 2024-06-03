@@ -62,6 +62,10 @@ class EvenlySpacedTimeBasis(
     def fundamental_dt(self) -> float:
         return self._delta_t / self.fundamental_n
 
+    @property
+    def nt_points(self) -> np.ndarray[tuple[int], np.dtype[np.int_]]:
+        return np.arange(self.offset, self.n * self.step + self.offset, self.step)
+
 
 class FundamentalTimeBasis(EvenlySpacedTimeBasis[_N0_co, Literal[1], Literal[0]]):
     """A axis with vectors that are the fundamental position states."""

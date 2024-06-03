@@ -40,6 +40,12 @@ class ValueList(TypedDict, Generic[_B0_co]):
     data: np.ndarray[tuple[int], np.dtype[np.complex128]]
 
 
+class StatisticalValueList(ValueList[_B0_co]):
+    """Represents some data listed over some basis."""
+
+    standard_deviation: np.ndarray[tuple[int], np.dtype[np.float64]]
+
+
 class Eigenstate(StateVector[_B0_co], TypedDict):
     """A State vector which is the eigenvector of some operator."""
 
