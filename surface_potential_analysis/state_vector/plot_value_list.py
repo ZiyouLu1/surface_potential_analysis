@@ -27,16 +27,11 @@ def plot_value_list_against_time(
     measure: Measure = "abs",
 ) -> tuple[Figure, Axes, Line2D]:
     """
-    Plot data along axes in the k basis.
+    Plot value list in its basis.
 
     Parameters
     ----------
-    basis : TupleBasisLike
-    data : np.ndarray[tuple[_L0Inv], np.dtype[np.complex_]]
-    axes : tuple[int, int], optional
-        axes to plot in, by default (0, 1)
-    idx : SingleStackedIndexLike | None, optional
-        index to plot, by default None
+    values : value list to be plotted
     ax : Axes | None, optional
         plot axis, by default None
     scale : Scale, optional

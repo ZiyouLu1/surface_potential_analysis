@@ -19,6 +19,7 @@ from surface_potential_analysis.basis.basis import (
     FundamentalPositionBasis3d,
 )
 from surface_potential_analysis.basis.stacked_basis import (
+    StackedBasisLike,
     TupleBasis,
     TupleBasisLike,
 )
@@ -45,7 +46,7 @@ _L1Inv = TypeVar("_L1Inv", bound=int)
 _L2Inv = TypeVar("_L2Inv", bound=int)
 
 # TODO: report bug in pylance - not possible to use TupleBasisLike[*tuple[Any, ...]]
-_SB0 = TypeVar("_SB0", bound=TupleBasisLike)  # type: ignore use TupleBasisLike[*tuple[Any, ...]]
+_SB0 = TypeVar("_SB0", bound=StackedBasisLike[Any, Any, Any])  # type: ignore use TupleBasisLike[*tuple[Any, ...]]
 
 
 class Potential(TypedDict, Generic[_SB0]):
