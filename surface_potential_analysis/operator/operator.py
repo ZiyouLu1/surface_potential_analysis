@@ -15,7 +15,6 @@ from surface_potential_analysis.basis.util import (
     BasisUtil,
 )
 from surface_potential_analysis.state_vector.conversion import (
-    convert_state_vector_list_to_basis,
     convert_state_vector_to_basis,
 )
 
@@ -25,18 +24,13 @@ if TYPE_CHECKING:
     )
     from surface_potential_analysis.state_vector.eigenstate_collection import (
         Eigenstate,
-        EigenstateList,
     )
     from surface_potential_analysis.state_vector.state_vector import StateVector
-    from surface_potential_analysis.state_vector.state_vector_list import (
-        StateVectorList,
-    )
     from surface_potential_analysis.types import SingleFlatIndexLike
 
 _B0 = TypeVar("_B0", bound=BasisLike[Any, Any])
 _B1 = TypeVar("_B1", bound=BasisLike[Any, Any])
 _B2 = TypeVar("_B2", bound=BasisLike[Any, Any])
-_B3 = TypeVar("_B3", bound=BasisLike[Any, Any])
 
 
 _B0_co = TypeVar("_B0_co", bound=BasisLike[Any, Any], covariant=True)
@@ -309,54 +303,3 @@ def apply_operator_to_state(
     )
     norm = np.sqrt(np.sum(np.abs(np.square(data))))
     return {"basis": lhs["basis"][0], "data": data / norm, "eigenvalue": norm}
-
-
-def apply_operator_to_states(
-    lhs: Operator[_B0, _B1], states: StateVectorList[_B2, _B3]
-) -> EigenstateList[_B2, _B0]:
-    """
-    Applies an operator on a state vector list.
-
-    Parameters
-    ----------
-    a : Operator[_B0Inv]
-    b : state vector list[_B0Inv]
-
-    Returns
-    -------
-    Operator[_B0Inv]
-    """
-    converted = convert_state_vector_list_to_basis(states, lhs["basis"][1])
-    data = np.einsum(
-        "ik,jk->ji",
-        lhs["data"].reshape(lhs["basis"].shape),
-        converted["data"].reshape(converted["basis"].shape),
-    )
-    norm = np.sqrt(np.sum(np.abs(np.square(data)), axis=1))
-    return {
-        "basis": TupleBasis(converted["basis"][0], lhs["basis"][0]),
-        "data": data / norm.reshape(norm.size, 1),
-        "eigenvalue": norm,
-    }
-
-
-def get_commutator(
-    lhs: SingleBasisOperator[_B0], rhs: SingleBasisOperator[_B0]
-) -> SingleBasisOperator[_B0]:
-    """
-    Given two operators lhs, rhs, calculate the commutator.
-
-    This is equivalent to ths rhs - rhs lhs
-
-    Parameters
-    ----------
-    lhs : SingleBasisOperator[_B0]
-    rhs : SingleBasisOperator[_B0]
-
-    Returns
-    -------
-    SingleBasisOperator[_B0]
-    """
-    lhs_rhs = matmul_operator(lhs, rhs)
-    rhs_lhs = matmul_operator(rhs, lhs)
-    return subtract_operator(lhs_rhs, rhs_lhs)
