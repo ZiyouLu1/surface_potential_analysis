@@ -11,6 +11,9 @@ from scipy.constants import hbar
 from surface_potential_analysis.basis.stacked_basis import (
     TupleBasis,
 )
+from surface_potential_analysis.state_vector.conversion import (
+    convert_state_vector_to_basis,
+)
 from surface_potential_analysis.state_vector.eigenstate_calculation import (
     calculate_eigenvectors_hermitian,
 )
@@ -135,7 +138,10 @@ def solve_schrodinger_equation_diagonal(
     -------
     StateVectorList[_B0Inv, _L0Inv]
     """
-    data = initial_state["data"][np.newaxis, :] * np.exp(
+    converted_state = convert_state_vector_to_basis(
+        initial_state, hamiltonian["basis"][0]
+    )
+    data = converted_state["data"][np.newaxis, :] * np.exp(
         -1j * (hamiltonian["data"][np.newaxis, :]) * times.times[:, np.newaxis] / hbar
     )
     return {"basis": TupleBasis(times, hamiltonian["basis"][0]), "data": data}

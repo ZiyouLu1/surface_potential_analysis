@@ -781,7 +781,7 @@ def get_periodic_x_operator(
     -------
     SingleBasisOperator[_SB0]
     """
-    direction = tuple(1 for _ in range(basis.ndim))
+    direction = tuple(1 for _ in range(basis.ndim)) if direction is None else direction
     basis_x = stacked_basis_as_fundamental_position_basis(basis)
     util = BasisUtil(basis_x)
     dk = tuple(n / f for (n, f) in zip(direction, util.shape))
