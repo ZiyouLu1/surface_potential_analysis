@@ -281,6 +281,7 @@ def plot_data_2d(
     ax: Axes | None = None,
     scale: Scale = "linear",
     measure: Measure = "abs",
+    get_colour_bar: bool = True,
 ) -> tuple[Figure, Axes, QuadMesh]:
     ...
 
@@ -293,6 +294,7 @@ def plot_data_2d(
     ax: Axes | None = None,
     scale: Scale = "linear",
     measure: Measure = "abs",
+    get_colour_bar: bool = True,
 ) -> tuple[Figure, Axes, QuadMesh]:
     ...
 
@@ -304,6 +306,7 @@ def plot_data_2d(
     ax: Axes | None = None,
     scale: Scale = "linear",
     measure: Measure = "abs",
+    get_colour_bar: bool = True,
 ) -> tuple[Figure, Axes, QuadMesh]:
     fig, ax = get_figure(ax)
 
@@ -319,7 +322,8 @@ def plot_data_2d(
     mesh.set_norm(norm)
     mesh.set_clim(*clim)
     ax.set_aspect("equal", adjustable="box")
-    fig.colorbar(mesh, ax=ax, format="%4.1e")
+    if get_colour_bar:
+        fig.colorbar(mesh, ax=ax, format="%4.1e")
     return fig, ax, mesh
 
 
@@ -332,6 +336,7 @@ def plot_data_2d_k(
     ax: Axes | None = None,
     scale: Scale = "linear",
     measure: Measure = "abs",
+    get_colour_bar: bool = True,
 ) -> tuple[Figure, Axes, QuadMesh]:
     """
     Plot the data in a 2d slice in k along the given axis.
@@ -364,7 +369,12 @@ def plot_data_2d_k(
     shifted_coordinates = np.fft.fftshift(coordinates, axes=(1, 2))
 
     fig, ax, mesh = plot_data_2d(
-        shifted_data, shifted_coordinates, ax=ax, scale=scale, measure=measure
+        shifted_data,
+        shifted_coordinates,
+        ax=ax,
+        scale=scale,
+        measure=measure,
+        get_colour_bar=get_colour_bar,
     )
 
     ax.set_xlabel(f"k{axes[0]} axis")
@@ -389,6 +399,7 @@ def plot_data_2d_x(
     ax: Axes | None = None,
     scale: Scale = "linear",
     measure: Measure = "abs",
+    get_colour_bar: bool = True,
 ) -> tuple[Figure, Axes, QuadMesh]:
     """
     Plot the data in 2d along the x axis in the given basis.
@@ -426,6 +437,7 @@ def plot_data_2d_x(
         ax=ax,
         scale=scale,
         measure=measure,
+        get_colour_bar=get_colour_bar,
     )
 
     ax.set_xlabel(f"x{axes[0]} axis")
@@ -595,6 +607,138 @@ def animate_data_through_list_1d_x(
         )
         frames.append([line])
         line.set_color(frames[0][0].get_color())
+
+    ani = ArtistAnimation(fig, frames)
+    return fig, ax, ani
+
+
+def animate_data_through_list_2d_k(
+    basis: TupleBasisLike[*tuple[Any, ...]],
+    data: np.ndarray[tuple[int, int], np.dtype[np.complex128]],
+    axes: tuple[int, int] = (0, 1),
+    idx: SingleStackedIndexLike | None = None,
+    *,
+    ax: Axes | None = None,
+    scale: Scale = "linear",
+    measure: Measure = "abs",
+) -> tuple[Figure, Axes, ArtistAnimation]:
+    """
+    Given data, animate along the given direction.
+
+    Parameters
+    ----------
+    basis : TupleBasisLike
+    data : np.ndarray[tuple[_L0Inv], np.dtype[np.complex_]]
+    axes : tuple[int, int, int], optional
+        plot axes (z, y, z), by default (0, 1, 2)
+    idx : SingleStackedIndexLike | None, optional
+        idx in remaining dimensions, by default None
+    ax : Axes | None, optional
+        plot ax, by default None
+    scale : Scale, optional
+        scale, by default "linear"
+    measure : Measure, optional
+        measure, by default "abs"
+
+    Returns
+    -------
+    tuple[Figure, Axes, ArtistAnimation]
+    """
+    fig, ax = get_figure(ax)
+
+    frames: list[list[QuadMesh]] = []
+    i = 0
+    for data_i in data:
+        if i == 0:
+            _, _, mesh = plot_data_2d_k(
+                basis,
+                data_i,
+                axes,
+                idx,
+                ax=ax,
+                scale=scale,
+                measure=measure,
+                get_colour_bar=True,
+            )
+            i += 1
+        else:
+            _, _, mesh = plot_data_2d_k(
+                basis,
+                data_i,
+                axes,
+                idx,
+                ax=ax,
+                scale=scale,
+                measure=measure,
+                get_colour_bar=False,
+            )
+        frames.append([mesh])
+
+    ani = ArtistAnimation(fig, frames)
+    return fig, ax, ani
+
+
+def animate_data_through_list_2d_x(
+    basis: TupleBasisLike[*tuple[Any, ...]],
+    data: np.ndarray[tuple[int, int], np.dtype[np.complex128]],
+    axes: tuple[int, int] = (0, 1),
+    idx: SingleStackedIndexLike | None = None,
+    *,
+    ax: Axes | None = None,
+    scale: Scale = "linear",
+    measure: Measure = "abs",
+) -> tuple[Figure, Axes, ArtistAnimation]:
+    """
+    Given data, animate along the given direction.
+
+    Parameters
+    ----------
+    basis : TupleBasisLike
+    data : np.ndarray[tuple[_L0Inv], np.dtype[np.complex_]]
+    axes : tuple[int, int, int], optional
+        plot axes (z, y, z), by default (0, 1, 2)
+    idx : SingleStackedIndexLike | None, optional
+        idx in remaining dimensions, by default None
+    ax : Axes | None, optional
+        plot ax, by default None
+    scale : Scale, optional
+        scale, by default "linear"
+    measure : Measure, optional
+        measure, by default "abs"
+
+    Returns
+    -------
+    tuple[Figure, Axes, ArtistAnimation]
+    """
+    fig, ax = get_figure(ax)
+
+    frames: list[list[QuadMesh]] = []
+    i = 0
+    for data_i in data:
+        if i == 0:
+            _, _, mesh = plot_data_2d_x(
+                basis,
+                data_i,
+                axes,
+                idx,
+                ax=ax,
+                scale=scale,
+                measure=measure,
+                get_colour_bar=True,
+            )
+            i += 1
+        else:
+            _, _, mesh = plot_data_2d_x(
+                basis,
+                data_i,
+                axes,
+                idx,
+                ax=ax,
+                scale=scale,
+                measure=measure,
+                get_colour_bar=False,
+            )
+        frames.append([mesh])
 
     ani = ArtistAnimation(fig, frames)
     return fig, ax, ani
