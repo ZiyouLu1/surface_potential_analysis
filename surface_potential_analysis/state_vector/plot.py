@@ -56,6 +56,8 @@ from surface_potential_analysis.state_vector.state_vector_list import (
 from surface_potential_analysis.util.plot import (
     animate_data_through_list_1d_k,
     animate_data_through_list_1d_x,
+    animate_data_through_list_2d_k,
+    animate_data_through_list_2d_x,
     animate_data_through_surface_x,
     get_figure,
     plot_data_1d_k,
@@ -215,6 +217,100 @@ def animate_state_over_list_1d_x(
     )
 
     fig, ax, ani = animate_data_through_list_1d_x(
+        converted["basis"][1],
+        converted["data"].reshape(converted["basis"].shape),
+        axes,
+        idx,
+        ax=ax,
+        scale=scale,
+        measure=measure,
+    )
+    ax.set_ylabel("State /Au")
+    return fig, ax, ani
+
+
+def animate_state_over_list_2d_k(
+    states: StateVectorList[_B0, _SB0],
+    axes: tuple[int, int] = (0, 1),
+    idx: SingleStackedIndexLike | None = None,
+    *,
+    ax: Axes | None = None,
+    measure: Measure = "abs",
+    scale: Scale = "linear",
+) -> tuple[Figure, Axes, ArtistAnimation]:
+    """
+    Plot an state in 2d along the given axis in momentum space, over time.
+
+    Parameters
+    ----------
+    states : StateVectorList[BasisLike[Any, Any], TupleBasisLike[*tuple[Any, ...]]]
+    axes : tuple[int, int, int], optional
+        axes to plot in, by default (0, 1)
+    idx : SingleStackedIndexLike | None, optional
+        index to plot, by default None
+    ax : Axes | None, optional
+        plot axis, by default None
+    scale : Scale, optional
+        scale, by default "linear"
+    measure : Measure, optional
+        measure, by default "abs"
+
+    Returns
+    -------
+    tuple[Figure, Axes, ArtistAnimation]
+    """
+    converted = convert_state_vector_list_to_basis(
+        states, stacked_basis_as_fundamental_momentum_basis(states["basis"][1])
+    )
+
+    fig, ax, ani = animate_data_through_list_2d_k(
+        converted["basis"][1],
+        converted["data"].reshape(converted["basis"].shape),
+        axes,
+        idx,
+        ax=ax,
+        scale=scale,
+        measure=measure,
+    )
+    ax.set_ylabel("State /Au")
+    return fig, ax, ani
+
+
+def animate_state_over_list_2d_x(
+    states: StateVectorList[_B0, _SB0],
+    axes: tuple[int, int] = (0, 1),
+    idx: SingleStackedIndexLike | None = None,
+    *,
+    ax: Axes | None = None,
+    measure: Measure = "abs",
+    scale: Scale = "linear",
+) -> tuple[Figure, Axes, ArtistAnimation]:
+    """
+    Plot an state in 2d along the given axis in position space, over time.
+
+    Parameters
+    ----------
+    states : StateVectorList[BasisLike[Any, Any], TupleBasisLike[*tuple[Any, ...]]]
+    axes : tuple[int, int, int], optional
+        axes to plot in, by default (0, 1)
+    idx : SingleStackedIndexLike | None, optional
+        index to plot, by default None
+    ax : Axes | None, optional
+        plot axis, by default None
+    scale : Scale, optional
+        scale, by default "linear"
+    measure : Measure, optional
+        measure, by default "abs"
+
+    Returns
+    -------
+    tuple[Figure, Axes, ArtistAnimation]
+    """
+    converted = convert_state_vector_list_to_basis(
+        states, stacked_basis_as_fundamental_position_basis(states["basis"][1])
+    )
+
+    fig, ax, ani = animate_data_through_list_2d_x(
         converted["basis"][1],
         converted["data"].reshape(converted["basis"].shape),
         axes,
