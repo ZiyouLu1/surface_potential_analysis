@@ -273,6 +273,13 @@ def plot_data_1d_x(
     return fig, ax, line
 
 
+def _has_colorbar(axis: Axes) -> bool:
+    for artist in axis.get_children():
+        if isinstance(artist, plt.cm.ScalarMappable) and artist.colorbar is not None:
+            return True
+    return False
+
+
 @overload
 def plot_data_2d(
     data: np.ndarray[tuple[int], np.dtype[np.complex128]],
@@ -281,7 +288,6 @@ def plot_data_2d(
     ax: Axes | None = None,
     scale: Scale = "linear",
     measure: Measure = "abs",
-    get_colour_bar: bool = True,
 ) -> tuple[Figure, Axes, QuadMesh]:
     ...
 
@@ -294,7 +300,6 @@ def plot_data_2d(
     ax: Axes | None = None,
     scale: Scale = "linear",
     measure: Measure = "abs",
-    get_colour_bar: bool = True,
 ) -> tuple[Figure, Axes, QuadMesh]:
     ...
 
@@ -306,7 +311,6 @@ def plot_data_2d(
     ax: Axes | None = None,
     scale: Scale = "linear",
     measure: Measure = "abs",
-    get_colour_bar: bool = True,
 ) -> tuple[Figure, Axes, QuadMesh]:
     fig, ax = get_figure(ax)
 
@@ -322,7 +326,7 @@ def plot_data_2d(
     mesh.set_norm(norm)
     mesh.set_clim(*clim)
     ax.set_aspect("equal", adjustable="box")
-    if get_colour_bar:
+    if not _has_colorbar(ax):
         fig.colorbar(mesh, ax=ax, format="%4.1e")
     return fig, ax, mesh
 
@@ -336,7 +340,6 @@ def plot_data_2d_k(
     ax: Axes | None = None,
     scale: Scale = "linear",
     measure: Measure = "abs",
-    get_colour_bar: bool = True,
 ) -> tuple[Figure, Axes, QuadMesh]:
     """
     Plot the data in a 2d slice in k along the given axis.
@@ -374,7 +377,6 @@ def plot_data_2d_k(
         ax=ax,
         scale=scale,
         measure=measure,
-        get_colour_bar=get_colour_bar,
     )
 
     ax.set_xlabel(f"k{axes[0]} axis")
@@ -399,7 +401,6 @@ def plot_data_2d_x(
     ax: Axes | None = None,
     scale: Scale = "linear",
     measure: Measure = "abs",
-    get_colour_bar: bool = True,
 ) -> tuple[Figure, Axes, QuadMesh]:
     """
     Plot the data in 2d along the x axis in the given basis.
@@ -437,7 +438,6 @@ def plot_data_2d_x(
         ax=ax,
         scale=scale,
         measure=measure,
-        get_colour_bar=get_colour_bar,
     )
 
     ax.set_xlabel(f"x{axes[0]} axis")
@@ -647,31 +647,16 @@ def animate_data_through_list_2d_k(
     fig, ax = get_figure(ax)
 
     frames: list[list[QuadMesh]] = []
-    i = 0
     for data_i in data:
-        if i == 0:
-            _, _, mesh = plot_data_2d_k(
-                basis,
-                data_i,
-                axes,
-                idx,
-                ax=ax,
-                scale=scale,
-                measure=measure,
-                get_colour_bar=True,
-            )
-            i += 1
-        else:
-            _, _, mesh = plot_data_2d_k(
-                basis,
-                data_i,
-                axes,
-                idx,
-                ax=ax,
-                scale=scale,
-                measure=measure,
-                get_colour_bar=False,
-            )
+        _, _, mesh = plot_data_2d_k(
+            basis,
+            data_i,
+            axes,
+            idx,
+            ax=ax,
+            scale=scale,
+            measure=measure,
+        )
         frames.append([mesh])
 
     ani = ArtistAnimation(fig, frames)
@@ -713,31 +698,17 @@ def animate_data_through_list_2d_x(
     fig, ax = get_figure(ax)
 
     frames: list[list[QuadMesh]] = []
-    i = 0
+
     for data_i in data:
-        if i == 0:
-            _, _, mesh = plot_data_2d_x(
-                basis,
-                data_i,
-                axes,
-                idx,
-                ax=ax,
-                scale=scale,
-                measure=measure,
-                get_colour_bar=True,
-            )
-            i += 1
-        else:
-            _, _, mesh = plot_data_2d_x(
-                basis,
-                data_i,
-                axes,
-                idx,
-                ax=ax,
-                scale=scale,
-                measure=measure,
-                get_colour_bar=False,
-            )
+        _, _, mesh = plot_data_2d_x(
+            basis,
+            data_i,
+            axes,
+            idx,
+            ax=ax,
+            scale=scale,
+            measure=measure,
+        )
         frames.append([mesh])
 
     ani = ArtistAnimation(fig, frames)

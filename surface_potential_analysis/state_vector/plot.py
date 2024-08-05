@@ -243,25 +243,25 @@ def animate_state_over_list_2d_k(
     scale: Scale = "linear",
 ) -> tuple[Figure, Axes, ArtistAnimation]:
     """
-    Plot an state in 2d along the given axis, over time.
+    Plot an state in 2d along the given axis in momentum space, over time.
 
     Parameters
     ----------
     states : StateVectorList[BasisLike[Any, Any], TupleBasisLike[*tuple[Any, ...]]]
-    idx : SingleStackedIndexLike, optional
-        index in the perpendicular directions, by default (0,0)
-    axis : int, optional
-        axis along which to plot, by default 0,1
+    axes : tuple[int, int, int], optional
+        axes to plot in, by default (0, 1)
+    idx : SingleStackedIndexLike | None, optional
+        index to plot, by default None
     ax : Axes | None, optional
         plot axis, by default None
+    scale : Scale, optional
+        scale, by default "linear"
     measure : Measure, optional
         measure, by default "abs"
-    scale : Literal[&quot;symlog&quot;, &quot;linear&quot;], optional
-        scale, by default "linear"
 
     Returns
     -------
-    tuple[Figure, Axes, Line2D]
+    tuple[Figure, Axes, ArtistAnimation]
     """
     converted = convert_state_vector_list_to_basis(
         states, stacked_basis_as_fundamental_momentum_basis(states["basis"][1])
@@ -290,25 +290,25 @@ def animate_state_over_list_2d_x(
     scale: Scale = "linear",
 ) -> tuple[Figure, Axes, ArtistAnimation]:
     """
-    Plot an state in 2d along the given axis, over time.
+    Plot an state in 2d along the given axis in position space, over time.
 
     Parameters
     ----------
     states : StateVectorList[BasisLike[Any, Any], TupleBasisLike[*tuple[Any, ...]]]
-    idx : SingleStackedIndexLike, optional
-        index in the perpendicular directions, by default (0,0)
-    axis : int, optional
-        axis along which to plot, by default 0,1
+    axes : tuple[int, int, int], optional
+        axes to plot in, by default (0, 1)
+    idx : SingleStackedIndexLike | None, optional
+        index to plot, by default None
     ax : Axes | None, optional
         plot axis, by default None
+    scale : Scale, optional
+        scale, by default "linear"
     measure : Measure, optional
         measure, by default "abs"
-    scale : Literal[&quot;symlog&quot;, &quot;linear&quot;], optional
-        scale, by default "linear"
 
     Returns
     -------
-    tuple[Figure, Axes, Line2D]
+    tuple[Figure, Axes, ArtistAnimation]
     """
     converted = convert_state_vector_list_to_basis(
         states, stacked_basis_as_fundamental_position_basis(states["basis"][1])
