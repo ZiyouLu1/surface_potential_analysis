@@ -15,6 +15,7 @@ from surface_potential_analysis.util.plot import (
 from surface_potential_analysis.util.util import get_measured_data
 
 if TYPE_CHECKING:
+    from coherent_rates.isf import MomentumBasis
     from matplotlib.axes import Axes
     from matplotlib.figure import Figure
     from matplotlib.lines import Line2D
@@ -278,3 +279,37 @@ def plot_value_list_distribution(
 
     ax.set_ylabel("Occupation")
     return fig, ax
+
+
+def plot_value_list_against_momentum(
+    values: ValueList[MomentumBasis],
+    *,
+    ax: Axes | None = None,
+    scale: Scale = "linear",
+    measure: Measure = "abs",
+) -> tuple[Figure, Axes, Line2D]:
+    fig, ax, line = plot_data_1d(
+        values["data"], values["basis"].k_points, scale=scale, measure=measure, ax=ax
+    )
+
+    ax.set_xlabel("k /m^-1")
+    return fig, ax, line
+
+
+def plot_value_list_against_momentum_squared(
+    values: ValueList[MomentumBasis],
+    *,
+    ax: Axes | None = None,
+    scale: Scale = "linear",
+    measure: Measure = "abs",
+) -> tuple[Figure, Axes, Line2D]:
+    fig, ax, line = plot_data_1d(
+        values["data"],
+        np.square(values["basis"].k_points),
+        scale=scale,
+        measure=measure,
+        ax=ax,
+    )
+
+    ax.set_xlabel("k^2 /m^-2")
+    return fig, ax, line
