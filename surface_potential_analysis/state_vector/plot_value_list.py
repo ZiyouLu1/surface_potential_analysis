@@ -292,7 +292,7 @@ def plot_value_list_against_momentum(
         values["data"], values["basis"].k_points, scale=scale, measure=measure, ax=ax
     )
 
-    ax.set_xlabel("k /m^-1")
+    ax.set_xlabel("$k /m^{-1}$")
     return fig, ax, line
 
 
@@ -311,5 +311,5 @@ def plot_value_list_against_momentum_squared(
         ax=ax,
     )
 
-    ax.set_xlabel("k^2 /m^-2")
+    ax.set_xlabel("$k^{2} /m^{-2}$")
     return fig, ax, line
