@@ -20,6 +20,7 @@ from surface_potential_analysis.stacked_basis.util import (
     get_max_idx,
     get_x_coordinates_in_axes,
 )
+from surface_potential_analysis.util.squared_scale import SquaredScale
 
 from .util import Measure, get_data_in_axes, get_measured_data
 
@@ -37,7 +38,7 @@ if TYPE_CHECKING:
     from surface_potential_analysis.types import SingleStackedIndexLike
 
 
-Scale = Literal["symlog", "linear"]
+Scale = Literal["symlog", "linear", "squared"]
 _B0 = TypeVar("_B0", bound=BasisLike[Any, Any])
 
 
@@ -98,6 +99,8 @@ def _get_norm_with_lim(
                 vmax=lim[1],
                 linthresh=1 if max_abs <= 0 else 1e-3 * max_abs,  # type: ignore No parameter named "linthresh"
             )
+        case "squared":
+            return Normalize(vmin=lim[0], vmax=lim[1])
 
 
 def _get_scale_with_lim(
@@ -113,6 +116,8 @@ def _get_scale_with_lim(
                 axis=None,
                 linthresh=1 if max_abs <= 0 else 1e-3 * max_abs,
             )
+        case "squared":
+            return SquaredScale(axis=None)
 
 
 # https://stackoverflow.com/questions/49382105/set-different-margins-for-left-and-right-side
@@ -298,7 +303,8 @@ def plot_data_2d(
     ax: Axes | None = None,
     scale: Scale = "linear",
     measure: Measure = "abs",
-) -> tuple[Figure, Axes, QuadMesh]: ...
+) -> tuple[Figure, Axes, QuadMesh]:
+    ...
 
 
 @overload
@@ -309,7 +315,8 @@ def plot_data_2d(
     ax: Axes | None = None,
     scale: Scale = "linear",
     measure: Measure = "abs",
-) -> tuple[Figure, Axes, QuadMesh]: ...
+) -> tuple[Figure, Axes, QuadMesh]:
+    ...
 
 
 def plot_data_2d(
