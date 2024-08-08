@@ -1,12 +1,22 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Callable, TypeVar
+from typing import TYPE_CHECKING, Any, Callable, Iterable, TypeVar
 
-from scipy.constants import Boltzmann
+import numpy as np
+from scipy.constants import Boltzmann  # type: ignore no stub
 
+from surface_potential_analysis.basis.basis import FundamentalBasis
+from surface_potential_analysis.basis.stacked_basis import TupleBasis
 from surface_potential_analysis.basis.util import get_displacements_x
 from surface_potential_analysis.kernel.kernel import (
+    DiagonalNoiseKernel,
     SingleBasisNoiseOperatorList,
+    get_diagonal_kernel_from_operators,
+    get_full_kernel_from_operators,
+)
+from surface_potential_analysis.kernel.solve import (
+    get_noise_operators_diagonal_eigenvalue,
+    get_noise_operators_eigenvalue,
 )
 from surface_potential_analysis.operator.conversion import convert_operator_to_basis
 from surface_potential_analysis.operator.operations import (
@@ -19,8 +29,6 @@ from surface_potential_analysis.operator.operator import SingleBasisOperator
 from surface_potential_analysis.operator.operator_list import as_operator_list
 
 if TYPE_CHECKING:
-    import numpy as np
-
     from surface_potential_analysis.basis.basis import FundamentalPositionBasis
     from surface_potential_analysis.basis.basis_like import BasisLike
     from surface_potential_analysis.basis.stacked_basis import (
@@ -28,7 +36,10 @@ if TYPE_CHECKING:
         TupleBasisWithLengthLike,
     )
     from surface_potential_analysis.kernel.kernel import (
+        DiagonalNoiseOperatorList,
         IsotropicNoiseKernel,
+        NoiseKernel,
+        NoiseOperatorList,
         SingleBasisDiagonalNoiseOperatorList,
         SingleBasisNoiseOperatorList,
     )
@@ -189,3 +200,97 @@ def get_temperature_corrected_diagonal_noise_operators(
         "data": corrected_operators["data"],
         "eigenvalue": operators["eigenvalue"],
     }
+
+
+def truncate_diagonal_noise_operator_list(
+    operators: DiagonalNoiseOperatorList[_B2, _B0, _B1],
+    truncation: Iterable[int],
+) -> DiagonalNoiseOperatorList[FundamentalBasis[int], _B0, _B1]:
+    """
+    Get a truncated list of diagonal operators.
+
+    Parameters
+    ----------
+    operators : DiagonalNoiseOperatorList[FundamentalBasis[int], _B0, _B1]
+    truncation : Iterable[int]
+
+    Returns
+    -------
+    DiagonalNoiseOperatorList[FundamentalBasis[int], _B0, _B1]
+    """
+    args = np.argsort(operators["eigenvalue"])[::-1][np.array(list(truncation))]
+    data = operators["data"].reshape(operators["basis"][0].n, -1)[args, :]
+    return {
+        "basis": TupleBasis(FundamentalBasis(data.shape[0]), operators["basis"][1]),
+        "data": data,
+        "eigenvalue": operators["eigenvalue"][args],
+    }
+
+
+def truncate_noise_operator_list(
+    operators: NoiseOperatorList[_B2, _B0, _B1],
+    truncation: Iterable[int],
+) -> NoiseOperatorList[FundamentalBasis[int], _B0, _B1]:
+    """
+    Get a truncated list of operators.
+
+    Parameters
+    ----------
+    operators : NoiseOperatorList[FundamentalBasis[int], _B0, _B1]
+    truncation : Iterable[int]
+
+    Returns
+    -------
+    NoiseOperatorList[FundamentalBasis[int], _B0, _B1]
+    """
+    args = np.argsort(operators["eigenvalue"])[::-1][np.array(list(truncation))]
+    data = operators["data"].reshape(operators["basis"][0].n, -1)[args, :]
+    return {
+        "basis": TupleBasis(FundamentalBasis(data.shape[0]), operators["basis"][1]),
+        "data": data,
+        "eigenvalue": operators["eigenvalue"][args],
+    }
+
+
+def truncate_noise_kernel(
+    kernel: NoiseKernel[_B0, _B1, _B0, _B1],
+    truncation: Iterable[int],
+) -> NoiseKernel[_B0, _B1, _B0, _B1]:
+    """
+    Given a noise kernel, retain only the first n noise operators.
+
+    Parameters
+    ----------
+    kernel : NoiseKernel[_B0, _B1, _B0, _B1]
+    n : int
+
+    Returns
+    -------
+    NoiseKernel[_B0, _B1, _B0, _B1]
+    """
+    operators = get_noise_operators_eigenvalue(kernel)
+
+    truncated = truncate_noise_operator_list(operators, truncation)
+    return get_full_kernel_from_operators(truncated)
+
+
+def truncate_diagonal_noise_kernel(
+    kernel: DiagonalNoiseKernel[_B0, _B1, _B0, _B1],
+    truncation: Iterable[int],
+) -> DiagonalNoiseKernel[_B0, _B1, _B0, _B1]:
+    """
+    Given a noise kernel, retain only the first n noise operators.
+
+    Parameters
+    ----------
+    kernel : NoiseKernel[_B0, _B1, _B0, _B1]
+    n : int
+
+    Returns
+    -------
+    NoiseKernel[_B0, _B1, _B0, _B1]
+    """
+    operators = get_noise_operators_diagonal_eigenvalue(kernel)
+
+    truncated = truncate_diagonal_noise_operator_list(operators, truncation)
+    return get_diagonal_kernel_from_operators(truncated)
