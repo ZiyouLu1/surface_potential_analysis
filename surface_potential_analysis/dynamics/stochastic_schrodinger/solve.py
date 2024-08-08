@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import datetime
 from typing import TYPE_CHECKING, Any, Literal, TypeVar, overload
 
 import numpy as np
@@ -32,10 +33,17 @@ from surface_potential_analysis.state_vector.state_vector_list import (
     get_state_vector,
     get_weighted_state_vector,
 )
+from surface_potential_analysis.util.decorators import timed
 
 try:
     from sse_solver_py import SimulationConfig, SSEMethod, solve_sse, solve_sse_banded
+
 except ImportError:
+    import warnings
+
+    warnings.warn(
+        "sse_solver_py is not installed, unable to use any solvers", stacklevel=1
+    )
     # if sse_solver_py is not installed, create a dummy functions
 
     def solve_sse(  # noqa: D103
@@ -407,11 +415,19 @@ def solve_stochastic_schrodinger_equation_rust(  # type: ignore bad overload
 
 def _get_operator_diagonals(
     operator: list[list[complex]],
-) -> list[list[complex]]:
-    return [
-        np.diag(np.roll(operator, shift=-i, axis=0)).tolist()
-        for i in range(len(operator))
-    ]
+) -> np.ndarray[tuple[int, int], np.dtype[np.complex128]]:
+    operator = np.array(operator)
+    return np.array(
+        [
+            np.concatenate(
+                [
+                    np.diag(operator, k=-i),
+                    np.diag(operator, k=len(operator) - i),
+                ]
+            )
+            for i in range(len(operator))
+        ]
+    )
 
 
 def _get_banded_operator(
@@ -469,6 +485,7 @@ def solve_stochastic_schrodinger_equation_rust_banded(
     ...
 
 
+@timed
 def solve_stochastic_schrodinger_equation_rust_banded(  # type: ignore bad overload
     initial_state: StateVector[_B2],
     times: _AX0Inv,
@@ -530,6 +547,8 @@ def solve_stochastic_schrodinger_equation_rust_banded(  # type: ignore bad overl
     initial_state_converted = convert_state_vector_to_basis(
         initial_state, hamiltonian["basis"][0]
     )
+    ts = datetime.datetime.now(tz=datetime.UTC)
+
     data = solve_sse_banded(
         list(initial_state_converted["data"]),
         banded_h[0],
@@ -545,6 +564,9 @@ def solve_stochastic_schrodinger_equation_rust_banded(  # type: ignore bad overl
             method=method,
         ),
     )
+
+    te = datetime.datetime.now(tz=datetime.UTC)
+    print(f"solve rust banded took: {(te - ts).total_seconds()} sec")  # noqa: T201
 
     return {
         "basis": TupleBasis(
