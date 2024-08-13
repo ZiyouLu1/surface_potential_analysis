@@ -472,6 +472,19 @@ class BlochBasis(
             list_basis=TupleBasis(wavefunctions["basis"][0][0], converted_list_basis),
         )
 
+    @property
+    def n(self) -> int:
+        # Number of bloch k * number of bands
+        return self.wavefunctions["basis"][0][1].n * self.wavefunctions["basis"][0][0].n
+
+    @property
+    def fundamental_n(self) -> int:
+        # Number of fundmental bloch k * number of states
+        return (
+            self.wavefunctions["basis"][0][1].fundamental_n
+            * self.wavefunctions["basis"][1].fundamental_n
+        )
+
     @cached_property
     def _vectors(
         self: Self,
@@ -485,7 +498,7 @@ class BlochBasis(
     ]:
         return get_bloch_states(self.wavefunctions)
 
-    @cached_property
+    @property
     def wavefunctions(
         self: Self,
     ) -> BlochWavefunctionListList[
@@ -524,7 +537,7 @@ class BlochBasis(
 
 def get_bloch_basis(
     wavefunctions: BlochWavefunctionListList[_B0, _SB0, _SBV0],
-) -> BlochBasis[_B0, _SB0]:
+) -> BlochBasis[_B0]:
     """
     Get the basis, with the bloch wavefunctions as eigenstates.
 
