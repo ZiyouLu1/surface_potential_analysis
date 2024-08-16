@@ -135,7 +135,7 @@ def _set_ymargin(ax: Axes, bottom: float = 0.0, top: float = 0.3) -> None:
 def plot_data_1d(
     data: np.ndarray[tuple[int], np.dtype[np.complex128]],
     coordinates: np.ndarray[tuple[int], np.dtype[np.float64]],
-    y_errors: np.ndarray[tuple[int], np.dtype[np.float64]],
+    y_errors: np.ndarray[tuple[int], np.dtype[np.float64]] | None = None,
     *,
     ax: Axes | None = None,
     scale: Scale = "linear",
