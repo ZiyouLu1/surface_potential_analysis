@@ -19,7 +19,6 @@ from surface_potential_analysis.operator.conversion import convert_operator_to_b
 from surface_potential_analysis.state_vector.conversion import (
     convert_state_vector_to_basis,
 )
-from surface_potential_analysis.util.decorators import timed
 
 if TYPE_CHECKING:
     from surface_potential_analysis.operator.operator import (
@@ -47,7 +46,6 @@ _B2 = TypeVar("_B2", bound=BasisLike[Any, Any])
 _B3 = TypeVar("_B3", bound=BasisLike[Any, Any])
 
 
-@timed
 def calculate_eigenvectors_hermitian(
     operator: SingleBasisOperator[_B0],
     subset_by_index: tuple[IntLike_co, IntLike_co] | None = None,
