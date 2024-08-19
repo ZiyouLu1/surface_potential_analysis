@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Iterable, Literal, TypeVarTuple
+from typing import TYPE_CHECKING, Any, Iterable, Literal, TypeVar, TypeVarTuple
 
 import numpy as np
 from scipy.constants import hbar  # type: ignore no stub
@@ -14,6 +14,7 @@ from surface_potential_analysis.kernel.build import (
     truncate_diagonal_noise_operator_list,
 )
 from surface_potential_analysis.kernel.conversion import (
+    convert_isotropic_kernel_to_basis,
     convert_noise_operator_list_to_basis,
 )
 from surface_potential_analysis.kernel.kernel import (
@@ -49,6 +50,7 @@ if TYPE_CHECKING:
         FundamentalBasis,
         FundamentalPositionBasis,
     )
+    from surface_potential_analysis.basis.basis_like import BasisLike
     from surface_potential_analysis.basis.stacked_basis import (
         StackedBasisWithVolumeLike,
     )
@@ -61,9 +63,14 @@ if TYPE_CHECKING:
         SingleBasisDiagonalNoiseKernel,
         SingleBasisDiagonalNoiseOperatorList,
     )
+    from surface_potential_analysis.state_vector.eigenstate_list import ValueList
     from surface_potential_analysis.types import SingleStackedIndexLike
 
     _B0s = TypeVarTuple("_B0s")
+    _B0 = TypeVar("_B0", bound=BasisLike[Any, Any])
+    _B1 = TypeVar("_B1", bound=BasisLike[Any, Any])
+    _SBV0 = TypeVar("_SBV0", bound=StackedBasisWithVolumeLike[Any, Any, Any])
+    _SBV1 = TypeVar("_SBV1", bound=StackedBasisWithVolumeLike[Any, Any, Any])
 
 
 def plot_diagonal_kernel_2d(
@@ -537,3 +544,27 @@ def plot_isotropic_noise_kernel_2d_x(  # noqa: PLR0913
         kernel["basis"], kernel["data"], axes, idx, ax=ax, scale=scale, measure=measure
     )
     return fig, ax, mesh
+
+
+def _get_noise_kernel_percentage_error(
+    true_kernel: IsotropicNoiseKernel[_B0],
+    fitted_kernel: IsotropicNoiseKernel[_B1],
+) -> ValueList[_B0]:
+    converted = convert_isotropic_kernel_to_basis(fitted_kernel, true_kernel["basis"])
+    return {
+        "basis": true_kernel["basis"],
+        "data": (converted["data"] - true_kernel["data"]) * 100 / true_kernel["data"],
+    }
+
+
+def plot_isotropic_kernel_error(
+    true_kernel: IsotropicNoiseKernel[_SBV0],
+    fitted_kernel: IsotropicNoiseKernel[_SBV1],
+    *,
+    ax: Axes | None = None,
+) -> tuple[Figure, Axes, Line2D]:
+    """Compare the errors between true kernel and fitted kernel."""
+    percentage_error = _get_noise_kernel_percentage_error(true_kernel, fitted_kernel)[
+        "data"
+    ]
+    return plot_data_1d_x(true_kernel["basis"], percentage_error, ax=ax, measure="real")

@@ -428,7 +428,7 @@ def get_operators_for_real_isotropic_stacked_noise(
 
         sin_slice = slice_along_axis(slice(sin_start_idx, None), axis)
         conj_sin_slice = slice_along_axis(slice(cos_end_idx, 0, -1), axis)
-        data[sin_slice] = (cloned[sin_slice] - cloned[conj_sin_slice]) / np.sqrt(2)
+        data[sin_slice] = (cloned[sin_slice] - cloned[conj_sin_slice]) * 1j / np.sqrt(2)
 
     return {
         "basis": complex_operators["basis"],
@@ -596,64 +596,6 @@ def get_noise_operators_real_isotropic_taylor_expansion(
         "basis": operators["basis"],
         "data": operators["data"],
         "eigenvalue": operator_coefficients,
-    }
-
-
-def get_diagonal_noise_operators_eigenvalue(
-    kernel: DiagonalNoiseKernel[_B0, _B1, _B0, _B1],
-) -> DiagonalNoiseOperatorList[FundamentalBasis[int], _B0, _B1]:
-    r"""
-    For a diagonal kernel it is possible to find N independent noise sources, each of which is diagonal.
-
-    Each of these will be represented by a particular noise operator
-    ```latex
-    Z_i \ket{i}\bra{i}
-    ```
-    Note we return a list of noise operators, rather than a single noise operator,
-    as it is not currently possible to represent a sparse StackedBasis (unless it can
-    be represented as a StackedBasis of individual sparse Basis)
-
-    Parameters
-    ----------
-    kernel : DiagonalNoiseKernel[_B0, _B0, _B0, _B0]
-        _description_
-
-    Returns
-    -------
-    DiagonalNoiseOperator[BasisLike[Any, Any], BasisLike[Any, Any]]
-        _description_
-    """
-    data = kernel["data"].reshape(kernel["basis"][0][0].n, -1)
-    # Find the n^2 operators which are independent
-
-    # This should be true if our operators are hermitian - a requirement
-    # for our finite temperature correction.
-    # For isotropic noise, it is always possible to force this to be true
-    # As long as we have evenly spaced k (we have to take symmetric and antisymmetric combinations)
-    np.testing.assert_allclose(
-        data, np.conj(np.transpose(data)), err_msg="kernel non hermitian"
-    )
-    res = np.linalg.eigh(data)
-
-    np.testing.assert_allclose(
-        data,
-        np.einsum(  # type: ignore unknown
-            "k,ak,kb->ab",
-            res.eigenvalues,
-            res.eigenvectors,
-            np.conj(np.transpose(res.eigenvectors)),
-        ),
-        rtol=1e-4,
-    )
-    # The original kernel has the noise operators as \ket{i}\bra{j}
-    # When we diagonalize we have \hat{Z}'_\beta = U^\dagger_{\beta, \alpha} \hat{Z}_\alpha
-    # np.conj(res.eigenvectors) is U^\dagger_{\beta, \alpha}
-    return {
-        "basis": TupleBasis(
-            FundamentalBasis(kernel["basis"][0][0].n), kernel["basis"][0]
-        ),
-        "data": np.conj(np.transpose(res.eigenvectors)).reshape(-1),
-        "eigenvalue": res.eigenvalues,
     }
 
 
